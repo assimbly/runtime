@@ -1,0 +1,12 @@
+org\assimbly\connector\connect\Connector.class
+org\assimbly\connector\connect\util\ConnectorUtil.class
+org\assimbly\connector\routes\DefaultRoute.class
+org\assimbly\connector\routes\PollingJdbcRoute$1.class
+org\assimbly\connector\connect\impl\CamelConnector.class
+org\assimbly\connector\routes\DefaultRoute$SummaryTask.class
+org\assimbly\connector\routes\DefaultRoute$ErrorProcessor.class
+org\assimbly\connector\routes\DefaultRoute$1.class
+org\assimbly\connector\routes\PollingJdbcRoute.class
+org\assimbly\connector\connect\impl\BaseConnector.class
+org\assimbly\connector\connect\Connection.class
+org\assimbly\connector\configuration\XMLFileConfiguration.class
