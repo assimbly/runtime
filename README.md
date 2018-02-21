@@ -1,12 +1,12 @@
 # Connector
 This API is meant to configure and manage point-to-point connections (alpha status).
 
-Currently this build on top of Apache Camel. 
+Currently the API is build on top of Apache Camel. 
 
 ## Configuration
 
 Configuration is done with a Java Treemap. Easiest way is to generate the Treemap from an XML file. Currently supported
-Camel components are File, Stream, JDBC, SJMS, SFTP, HTTP4, SONICMQ 
+Camel components are File, Stream, JDBC, SJMS, SFTP, HTTP4, ACTIVEMQ and SONICMQ. 
 
 ## Management
 
@@ -18,11 +18,11 @@ The following lifecycle management actions are supported:
 * pause
 * resume
 
-You can also call the Camel Context to get the full
+The API simplifies common management tasks. You can however also get the Camel Context to access the full API of Camel.
 
 ## Development
 
-You can build this project with maven (mvn install). After building you can call this from your java application like this: 
+The project is build with maven (mvn install). After building you can call this from your java application like this: 
 
 ```java
 
@@ -34,7 +34,7 @@ connector.startRoute(routeID);
 
 ```
 
-For example we have the following XML configuration to move files from a one directory to another.
+For example the following XML configuration moves files from a one directory to another.
 
 ```xml
 
@@ -46,7 +46,7 @@ For example we have the following XML configuration to move files from a one dir
 		
 		<!-- example file to file --> 		
 		<connector>
-			<id>example.filetofile</id>
+			<id>filetofile</id>
 			<from>
 				<uri>file://C:/Test1</uri>
 			</from>
@@ -69,7 +69,7 @@ connector.startRoute("example.filetofile");
 
 ```
 
-## Longer XML Configuration Example
+## Longer XML configuration example
 
 ```xml
 
