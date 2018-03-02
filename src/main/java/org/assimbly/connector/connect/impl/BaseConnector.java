@@ -1,6 +1,5 @@
 package org.assimbly.connector.connect.impl;
 
-import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,30 +10,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.connect.Connector;
-import org.assimbly.connector.connect.util.ConnectorUtil;
 
 
 public abstract class BaseConnector implements Connector {
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.BaseConnector");
 
-	
-	private String configuration;
 	private List<TreeMap<String,String>> properties = new ArrayList<>();
 	private List<TreeMap<String,String>> connections = new ArrayList<>();
+
+	@Override
+	public void setRouteConfiguration(TreeMap<String,String> configuration) throws Exception {
+		this.properties.add(configuration);
+	}	
+
+
+	@Override
+	public TreeMap<String,String> getRouteConfiguration(String id) throws Exception {
+		TreeMap<String,String> configuration = null;
+		for (TreeMap<String, String> props : getConfiguration()) {
+			if (props.get("id").equals(id)) {
+				configuration = props;
+			}
+		}
+		
+		return configuration;
+	}	
+
+	
 	
 	@Override
-	public List<TreeMap<String,String>> getConfigurations() throws Exception {
+	public List<TreeMap<String,String>> getConfiguration() throws Exception {
 		return this.properties;
 	}
 		
-	@Override
-	public void addConfiguration(TreeMap<String,String> properties) throws Exception {
-		this.properties.add(properties);
-	}	
 	
 	@Override
-	public List<TreeMap<String,String>> getConnections() throws Exception {
+	public List<TreeMap<String,String>> getServices() throws Exception {
 		return this.connections;
 	}
     	
@@ -62,38 +74,19 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	//initial setup of configuration from external source (for example XML file)
-	public void addConfiguration(String connectorID, String configuration) throws Exception {
-		
-			URI configurationUri;
-			
-			if(ConnectorUtil.isValidURI(configuration)){
-				 	configurationUri = new URI(configuration);
-				 	
-			}
-			else{
-				File file = new File(configuration);
-				configurationUri = file.toURI();				
-			}
-			addConfiguration(connectorID, configurationUri);
+	public TreeMap<String, String> convertXMLToRouteConfiguration(String connectorID, String configuration) throws Exception {
+		return new XMLFileConfiguration().get(connectorID, configuration);
 	}
 
-	public void addConfiguration(String connectorID, URI configurationUri) throws Exception {
-
-		String uriPath = configurationUri.getRawPath();
-		
-		if (uriPath.contains(":")){
-			uriPath = uriPath.substring(uriPath.indexOf("/")+1);
-		}
-	
-		String extension = uriPath.substring(uriPath.lastIndexOf(".") + 1);
-
-		if(extension.equals("xml")){
-	        this.properties.add(new XMLFileConfiguration().set(connectorID, configurationUri));
-		}else{
-    		logger.error("Extension " + extension + "for URI " + configuration + " is not support");
-    		throw new Exception("Extension " + extension + "for URI " + configuration + " is not support");        		        	
-		}
+	public TreeMap<String, String> convertXMLToRouteConfiguration(String connectorID, URI configurationUri) throws Exception {
+		return new XMLFileConfiguration().get(connectorID, configurationUri);
 	}	
+	
+	@Override
+	public String convertConfigurationToXML(String gatewayid, List<TreeMap<String, String>> configuration) throws Exception {
+        return new XMLFileConfiguration().create(gatewayid, configuration);
+	}
+	
 	
 	//--> abstract methods (needs to be implemented in the subclass
 	

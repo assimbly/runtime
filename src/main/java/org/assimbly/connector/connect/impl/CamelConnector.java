@@ -1,6 +1,7 @@
 package org.assimbly.connector.connect.impl;
 
 
+import java.net.URI;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -8,7 +9,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
-import org.apache.camel.ShutdownRunningTask;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.slf4j.Logger;
@@ -30,12 +30,16 @@ public class CamelConnector extends BaseConnector {
 	public CamelConnector() {
 
 	}
-
-	public CamelConnector(String connectorID, String configuration)
-			throws Exception {
-		addConfiguration(connectorID, configuration);
+	
+	public CamelConnector(String connectorID, String configuration) throws Exception {
+		setRouteConfiguration(convertXMLToRouteConfiguration(connectorID, configuration));
 	}
 
+	public CamelConnector(String connectorID, URI configuration) throws Exception {
+		setRouteConfiguration(convertXMLToRouteConfiguration(connectorID, configuration));
+	}
+	
+	
 	public void start() throws Exception {
 
 		SimpleRegistry registry = new SimpleRegistry();
@@ -51,7 +55,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void stop() throws Exception {
-		super.getConfigurations().clear();
+		super.getConfiguration().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
 				context.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
@@ -119,7 +123,7 @@ public class CamelConnector extends BaseConnector {
 
 	public void startRoute(String id) throws Exception {
 		if(!hasRoute(id)) {
-			for (TreeMap<String, String> props : super.getConfigurations()) {
+			for (TreeMap<String, String> props : super.getConfiguration()) {
 				if (props.get("id").equals(id)) {
 					logger.info("Adding route with ids: " + id);
 					addRoute(props);
@@ -137,7 +141,7 @@ public class CamelConnector extends BaseConnector {
 		int count = 1;
 		
         do {
-        	status = context.getStatus();
+        	status = context.getRouteStatus(id);
         	Thread.sleep(10);
         	count++;
         	
@@ -152,7 +156,7 @@ public class CamelConnector extends BaseConnector {
 	
 	public void stopRoute(String id) throws Exception {
 		if(hasRoute(id)) {
-			status = context.getStatus();
+        	status = context.getRouteStatus(id);
 			if(status.isStoppable()) {
 				context.stopRoute(id);	
 			}
@@ -161,7 +165,7 @@ public class CamelConnector extends BaseConnector {
 
 	public void pauseRoute(String id) throws Exception {
 		if(hasRoute(id)) {
-			status = context.getStatus();
+        	status = context.getRouteStatus(id);
 			if(status.isSuspendable()) {
 				context.suspendRoute(id);	
 			}
@@ -170,7 +174,7 @@ public class CamelConnector extends BaseConnector {
 
 	public void resumeRoute(String id) throws Exception {
 		if(hasRoute(id)) {
-			status = context.getStatus();
+        	status = context.getRouteStatus(id);
 			if(status.isSuspended()) {
 				context.resumeRoute(id);	
 			}

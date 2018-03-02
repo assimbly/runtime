@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.TreeMap;
 
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -23,7 +22,7 @@ import org.w3c.dom.Document;
 public class XMLFileConfiguration {
 	
 	private TreeMap<String, String> properties;
-	private String connectorID;
+	private String routeID;
 	
 	private XMLConfiguration conf;
 
@@ -35,10 +34,24 @@ public class XMLFileConfiguration {
 	private String component;
 	private String options;
 	private String headerID;
+	
+	public TreeMap<String, String> get(String routeID, String xml) throws Exception {
 
-	public TreeMap<String, String> set(String connectorID, URI uri) throws Exception {
+	    this.routeID = routeID;
+	
+	    conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+	    FileHandler fh = new FileHandler(conf);
+	    fh.load(ConnectorUtil.convertStringToStream(xml));
+	    
+	   setProperties();
 
-	   this.connectorID = connectorID;
+	   return properties;
+	
+	}
+	
+	public TreeMap<String, String> get(String routeID, URI uri) throws Exception {
+
+	   this.routeID = routeID;
 
 	   String scheme = uri.getScheme();
 	   //load uri to configuration 
@@ -68,6 +81,7 @@ public class XMLFileConfiguration {
 			   // This will throw a ConfigurationException if the XML document does not
 			   // conform to its Schema.
 			   conf = builder.getConfiguration();				
+
 		}else if (scheme.startsWith("http")) {
 			
 			URL Url = uri.toURL();
@@ -86,64 +100,87 @@ public class XMLFileConfiguration {
     		throw new Exception("URI scheme for " + uri.getRawPath() + " is not supported");        		        	
 		}
 
-	   //create Treemap from configuration
-	   properties = new TreeMap<String, String>();
-
-	   //set general properties
-	   setGeneralPropertiesFromXMLFile();
-	   
-	   //set from properties
-	   setURIfromXMLFile("from");
-	   setServiceFromXMLFile("from");
-	   setHeaderFromXMLFile("from");
-	   
-	   //set to properties
-	   setURIfromXMLFile("to");		   
-	   setServiceFromXMLFile("to");
-	   setHeaderFromXMLFile("to");
-	   
-	   //set error properties
-	   setURIfromXMLFile("error");
-	   setServiceFromXMLFile("error");
-	   setHeaderFromXMLFile("error");
-	   
-	   //set up defaults settings if null -->
-		if(connectorID == null){    			
-			connectorID = "route" + System.currentTimeMillis();					
-		}
-		properties.put("id",connectorID);	
-	   
-	   	if(properties.get("from.uri") != null){
-			properties.put("route","default");
-		}else{
-			properties.put("route", "none");
-		}
-
-		if(properties.get("to.uri") == null){
-			properties.put("to.uri","mock:wastebin");		
-		}
-   	   	   
-		properties.put("header.contenttype", "text/xml;charset=UTF-8");
+	   setProperties();
 	   
 	   return properties;
 	}
 
-	private void setURIfromXMLFile(String type) throws ConfigurationException {
+	
+	private void setProperties() throws Exception{
+		
+		   //create Treemap from configuration
+		   properties = new TreeMap<String, String>();
+
+		   //set general properties
+		   getGeneralPropertiesFromXMLFile();
+		   
+		   //set from properties
+		   getURIfromXMLFile("from");
+		   getServiceFromXMLFile("from");
+		   getHeaderFromXMLFile("from");
+		   
+		   //set to properties
+		   getURIfromXMLFile("to");		   
+		   getServiceFromXMLFile("to");
+		   getHeaderFromXMLFile("to");
+		   
+		   //set error properties
+		   getURIfromXMLFile("error");
+		   getServiceFromXMLFile("error");
+		   getHeaderFromXMLFile("error");
+		   
+		   //set up defaults settings if null -->
+			if(routeID == null){    			
+				routeID = "route" + System.currentTimeMillis();					
+			}
+			properties.put("id",routeID);	
+		   
+		   	if(properties.get("from.uri") != null){
+				properties.put("route","default");
+			}else{
+				properties.put("route", "none");
+			}
+
+			if(properties.get("to.uri") == null){
+				properties.put("to.uri","mock:wastebin");		
+			}
+	   	   	   
+			properties.put("header.contenttype", "text/xml;charset=UTF-8");
+		
+	}
+
+	private void getGeneralPropertiesFromXMLFile() throws Exception{
+		
+		Document doc = conf.getDocument();
+		   
+	    XPath xPath = XPathFactory.newInstance().newXPath();
+	    routeID = xPath.evaluate("//routes/route[id='" + routeID + "']/id",doc);
+		
+		if(routeID==null || routeID.isEmpty()) {throw new ConfigurationException("ID (route) doesn't exists in XML Configuration");}
+
+		connectorXPath = "routes/route[id='" + routeID + "']";
+
+		List<String> connectorProporties = ConnectorUtil.getXMLParameters(conf, connectorXPath);
+		
+		if(!connectorProporties.isEmpty()){
+	  	   for(String connectorProperty : connectorProporties){
+	  		   properties.put(connectorProperty.substring(connectorXPath.length() + 1), conf.getString(connectorProperty));
+    	   }
+		}
+	}
+	
+	private void getURIfromXMLFile(String type) throws Exception {
 
 		   options = "";	
 		   
 		   Document doc = conf.getDocument();
 		   
 		   XPath xPath = XPathFactory.newInstance().newXPath();
-		   try {
-			component = xPath.evaluate("//connectors/connector[id='" + connectorID + "']/" + type + "/uri",doc);
-		   } catch (XPathExpressionException e) {
-			   e.printStackTrace();
-		   }
+		   component = xPath.evaluate("//routes/route[id='" + routeID + "']/" + type + "/uri",doc);
 		   
 		   if(component == null || component.isEmpty()){return;};
 		   
-		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connectors/connector[id='" + connectorID + "']/" + type + "/options");
+		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "routes/route[id='" + routeID + "']/" + type + "/options");
 		   
 	  	   for(String optionProperty : optionProperties){
 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
@@ -160,9 +197,9 @@ public class XMLFileConfiguration {
 	  	   
 	}
 
-	private void setServiceFromXMLFile(String type) throws ConfigurationException {
+	private void getServiceFromXMLFile(String type) throws ConfigurationException {
 		   	
-	    connectionID = conf.getString("connectors/connector[id='" + connectorID + "']/" + type + "/connection_id");
+	    connectionID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/connection_id");
 	    if(connectionID == null){return;};
 	    
 	    properties.put(type + ".connection_id", connectionID);
@@ -177,22 +214,12 @@ public class XMLFileConfiguration {
 		}
 	}
 	
-	private void setGeneralPropertiesFromXMLFile() throws ConfigurationException{
-		connectorXPath = "connectors/connector[id='" + connectorID + "']";
-		List<String> connectorProporties = ConnectorUtil.getXMLParameters(conf, connectorXPath);
-		if(!connectorProporties.isEmpty()){
-	  	   for(String connectorProperty : connectorProporties){
-	  		   properties.put(connectorProperty.substring(connectorXPath.length() + 1), conf.getString(connectorProperty));
-    	   }
-		}
-	}
-	
-	private void setHeaderFromXMLFile(String type) throws ConfigurationException {
+	private void getHeaderFromXMLFile(String type) throws ConfigurationException {
 	   	
-	    headerID = conf.getString("connectors/connector[id='" + connectorID + "']/" + type + "/header_id");
+	    headerID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/header_id");
 
 	    if(headerID == null){return;};
-		   	    
+	    
 	    properties.put(type + ".header_id", headerID);
 	    
 	    connectionXPath = "headers/header[id='" + headerID + "']";
@@ -206,5 +233,22 @@ public class XMLFileConfiguration {
 	  		   }
     	   }
 		}
-	}	
+	}
+
+	public String create(String gatewayid, List<TreeMap<String, String>> configurations) throws Exception {
+
+	    conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+
+
+	    conf.setRootElementName("connector");
+	    conf.setProperty("connector/id", gatewayid);
+
+	    Document doc = conf.getDocument();
+	    
+	    String xmlconfiguration = ConnectorUtil.convertDocToString(doc);
+	    
+		return xmlconfiguration;
+	}
+	
+	
 }

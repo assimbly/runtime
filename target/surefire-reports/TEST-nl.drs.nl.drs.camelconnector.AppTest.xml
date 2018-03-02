@@ -28,7 +28,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="user.variant" value=""/>
     <property name="os.name" value="Windows 8.1"/>
-    <property name="classworlds.conf" value="C:\Users\user\Documents\workspace-jhipster\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf8575602232854212971.tmp"/>
+    <property name="classworlds.conf" value="C:\Users\user\Documents\workspace-jhipster\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf2971661672670983051.tmp"/>
     <property name="sun.jnu.encoding" value="Cp1252"/>
     <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_144\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:/Program Files/Java/jdk1.8.0_144/jre/bin/server;C:/Program Files/Java/jdk1.8.0_144/jre/bin;C:/Program Files/Java/jdk1.8.0_144/jre/lib/amd64;C:\ProgramData\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\nodejs\;C:\Program Files (x86)\Yarn\bin;C:\Program Files\Git\cmd;C:\Program Files (x86)\Brackets\command;C:\Users\user\AppData\Roaming\npm;C:\Users\user\AppData\Local\Yarn\bin;C:\Users\user\Documents\rad\sts-4.0.0.M7;;."/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
