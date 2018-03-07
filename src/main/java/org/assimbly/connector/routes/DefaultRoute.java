@@ -156,7 +156,5 @@ public class DefaultRoute extends RouteBuilder{
 		}
 		
 	}
-	
-	
 
 }
