@@ -1,4 +1,4 @@
-package org.assimbly.connector.connect.impl;
+package org.assimbly.connector.impl;
 
 
 import java.net.URI;
@@ -13,9 +13,9 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.assimbly.connector.connect.Connection;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
+import org.assimbly.connector.service.Connection;
 
 public class CamelConnector extends BaseConnector {
 
@@ -193,7 +193,6 @@ public class CamelConnector extends BaseConnector {
 		return context;
 		
 	}	
-	
 	
 	public void send(Object messageBody, ProducerTemplate template) {
 		template.sendBody(messageBody);

@@ -1,4 +1,4 @@
-package org.assimbly.connector.connect;
+package org.assimbly.connector.service;
 
 import java.util.Random;
 import java.util.TreeMap;
@@ -35,14 +35,14 @@ public class Connection {
 	}
 	
 	public TreeMap<String, String> start() throws Exception{
-		if(properties.get("from.connection_id")!=null){
+		if(properties.get("from.service.id")!=null){
 			startConnection("from");
 		}
-		if(properties.get("to.connection_id")!=null){
+		if(properties.get("to.service.id")!=null){
 			startConnection("to");
 		}
 		
-		if(properties.get("to.connection_id")!=null){
+		if(properties.get("error.service.id")!=null){
 			startConnection("error");
 		}
 		return properties; 
@@ -96,10 +96,10 @@ public class Connection {
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
 		String componentName = "activemq";
-		String url = properties.get(direction + ".url");
-		String conType = properties.get(direction + ".conType");
-		String maxConnections = properties.get(direction + ".maxConnections");
-		String concurentConsumers = properties.get(direction + ".concurentConsumers");
+		String url = properties.get(direction + ".service.url");
+		String conType = properties.get(direction + ".service.conType");
+		String maxConnections = properties.get(direction + ".service.maxConnections");
+		String concurentConsumers = properties.get(direction + ".service.concurentConsumers");
 		
 		if (conType == null){
 			logger.info("No connection type specified. Setting up basic connection for activemq.");
@@ -176,10 +176,10 @@ public class Connection {
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		String componentName = "sonicmq." + connectionID;
 		String connectorId = properties.get("id");
-		String url = properties.get(direction + ".url");
-		String username = properties.get(direction + ".username");
-		String password = properties.get(direction + ".password");
-		String faultTolerant = properties.get(direction + ".faultTolerant");
+		String url = properties.get(direction + ".service.url");
+		String username = properties.get(direction + ".service.username");
+		String password = properties.get(direction + ".service.password");
+		String faultTolerant = properties.get(direction + ".service.faultTolerant");
 
 		if(context.hasComponent(componentName) == null){
 			if(url!=null || username !=null || password != null){
@@ -208,10 +208,10 @@ public class Connection {
 	
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
-		String driver = properties.get(direction + ".driver");
-		String url = properties.get(direction + ".url");		
-		String username = properties.get(direction + ".username");
-		String password = properties.get(direction + ".password");
+		String driver = properties.get(direction + ".service.driver");
+		String url = properties.get(direction + ".service.url");		
+		String username = properties.get(direction + ".service.username");
+		String password = properties.get(direction + ".service.password");
 		  
 		DriverManagerDataSource ds = new DriverManagerDataSource();
 		ds.setDriverClassName(driver);

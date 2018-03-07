@@ -3,7 +3,7 @@
 This API is meant to configure and manage point-to-point connections (beta). For example by sending data from a database to
 a message broker.
 
-   * Connector: A collections of point-to-point connections
+   * Connector: A collection of point-to-point connections
    * Route: One point-point connection
    * Endpoint: A source or destination
    

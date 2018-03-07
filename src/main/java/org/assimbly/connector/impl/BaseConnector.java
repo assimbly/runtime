@@ -1,4 +1,4 @@
-package org.assimbly.connector.connect.impl;
+package org.assimbly.connector.impl;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import org.apache.camel.ProducerTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
-import org.assimbly.connector.connect.Connector;
+import org.assimbly.connector.Connector;
 
 
 public abstract class BaseConnector implements Connector {
@@ -19,13 +19,10 @@ public abstract class BaseConnector implements Connector {
 	private List<TreeMap<String,String>> properties = new ArrayList<>();
 	private List<TreeMap<String,String>> connections = new ArrayList<>();
 
-	@Override
 	public void setRouteConfiguration(TreeMap<String,String> configuration) throws Exception {
 		this.properties.add(configuration);
 	}	
 
-
-	@Override
 	public TreeMap<String,String> getRouteConfiguration(String id) throws Exception {
 		TreeMap<String,String> configuration = null;
 		for (TreeMap<String, String> props : getConfiguration()) {
@@ -37,26 +34,18 @@ public abstract class BaseConnector implements Connector {
 		return configuration;
 	}	
 
-	
-	
-	@Override
 	public List<TreeMap<String,String>> getConfiguration() throws Exception {
 		return this.properties;
 	}
-		
-	
-	@Override
+
 	public List<TreeMap<String,String>> getServices() throws Exception {
 		return this.connections;
 	}
     	
-	
-	@Override
 	public void addConnection(TreeMap<String,String> properties) throws Exception {
 		this.connections.add(properties);
 	}
 	
-	@Override
 	public boolean removeConnection(String id) throws Exception {
 		TreeMap<String, String> con = null;
 		for (TreeMap<String, String> connection : connections){
@@ -81,6 +70,11 @@ public abstract class BaseConnector implements Connector {
 	public TreeMap<String, String> convertXMLToRouteConfiguration(String connectorID, URI configurationUri) throws Exception {
 		return new XMLFileConfiguration().get(connectorID, configurationUri);
 	}	
+	
+	@Override
+	public String convertRouteConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
+		return new XMLFileConfiguration().create(configuration);
+	}
 	
 	@Override
 	public String convertConfigurationToXML(String gatewayid, List<TreeMap<String, String>> configuration) throws Exception {

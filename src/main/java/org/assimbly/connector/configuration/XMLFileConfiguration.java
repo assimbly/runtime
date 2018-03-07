@@ -5,8 +5,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
@@ -18,6 +21,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 public class XMLFileConfiguration {
 	
@@ -26,14 +30,21 @@ public class XMLFileConfiguration {
 	
 	private XMLConfiguration conf;
 
-	private String connectionID;
-	private String connectionXPath;
+	private String serviceID;
+	private String serviceXPath;
 	private String connectorXPath;
 	
 	private String uri;
 	private String component;
 	private String options;
 	private String headerID;
+	private Element rootElement;
+	private Document doc;
+	private Element routes;
+	private Element services;
+	private Element headers;
+	private Element route;
+	private String xmlconfiguration;
 	
 	public TreeMap<String, String> get(String routeID, String xml) throws Exception {
 
@@ -199,17 +210,17 @@ public class XMLFileConfiguration {
 
 	private void getServiceFromXMLFile(String type) throws ConfigurationException {
 		   	
-	    connectionID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/connection_id");
-	    if(connectionID == null){return;};
+	    serviceID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/service_id");
+	    if(serviceID == null){return;};
 	    
-	    properties.put(type + ".connection_id", connectionID);
+	    properties.put(type + ".service_id", serviceID);
 	    
-	    connectionXPath = "connections/connection[connection_id='" + connectionID + "']";
-		List<String> connectionProporties = ConnectorUtil.getXMLParameters(conf, connectionXPath);
+	    serviceXPath = "services/services[service_id='" + serviceID + "']";
+		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
-		if(!connectionProporties.isEmpty()){
-	  	   for(String connectionProperty : connectionProporties){
-	  		   properties.put(type + "." + connectionProperty.substring(connectionXPath.length() + 1), conf.getString(connectionProperty));
+		if(!serviceProporties.isEmpty()){
+	  	   for(String serviceProperty : serviceProporties){
+	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
     	   }
 		}
 	}
@@ -222,14 +233,14 @@ public class XMLFileConfiguration {
 	    
 	    properties.put(type + ".header_id", headerID);
 	    
-	    connectionXPath = "headers/header[id='" + headerID + "']";
-		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, connectionXPath);
+	    serviceXPath = "headers/header[id='" + headerID + "']";
+		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!headerProporties.isEmpty()){
 	  	   for(String headerProperty : headerProporties){
 	  		   String headerType = conf.getString(headerProperty + "/@type");
 	  		   if(headerType!=null){
-		  		   properties.put(type + ".header." + headerType + "." + headerProperty.substring(connectionXPath.length() + 1), conf.getString(headerProperty));
+		  		   properties.put(type + ".header." + headerType + "." + headerProperty.substring(serviceXPath.length() + 1), conf.getString(headerProperty));
 	  		   }
     	   }
 		}
@@ -237,18 +248,176 @@ public class XMLFileConfiguration {
 
 	public String create(String gatewayid, List<TreeMap<String, String>> configurations) throws Exception {
 
-	    conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+	    doc = docBuilder.newDocument();
+		
+	    setGeneralProperties(gatewayid);
 
+		for (TreeMap<String, String> configuration : configurations) {
+		    setRouteFromConfiguration(configuration);
+		}
 
-	    conf.setRootElementName("connector");
-	    conf.setProperty("connector/id", gatewayid);
-
-	    Document doc = conf.getDocument();
-	    
 	    String xmlconfiguration = ConnectorUtil.convertDocToString(doc);
+	    
+		return xmlconfiguration;
+
+	}
+	
+
+	public String create(TreeMap<String, String> configuration) throws Exception {
+
+	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+	    doc = docBuilder.newDocument();
+		
+	    setGeneralProperties("live");
+	    
+	    setRouteFromConfiguration(configuration);
+	    
+	    if(doc!=null) {
+		    xmlconfiguration = ConnectorUtil.convertDocToString(doc);
+	    }else {
+	    	xmlconfiguration = "Can't create XML File";
+	    }
 	    
 		return xmlconfiguration;
 	}
 	
+	private void setGeneralProperties(String gatewayid) {
+		
+	    rootElement = doc.createElement("connector");
+	    doc.appendChild(rootElement);
+
+	    Element id = doc.createElement("id");
+	    id.appendChild(doc.createTextNode(gatewayid));
+	    rootElement.appendChild(id);
+	    
+	    routes = doc.createElement("routes");
+	    services = doc.createElement("services");
+	    headers = doc.createElement("headers");
+	    
+	    rootElement.appendChild(routes);
+	    rootElement.appendChild(services);
+	    rootElement.appendChild(headers);
+		
+	}
 	
+	
+	private void setRouteFromConfiguration(TreeMap<String, String> configuration) throws Exception {
+
+	    route = doc.createElement("route");
+	    routes.appendChild(route);
+	    
+	    //set id
+	    String routeID = configuration.get("id");	    
+	    Element id = doc.createElement("id");
+	    id.appendChild(doc.createTextNode(routeID));
+	    route.appendChild(id);
+
+	    //set id
+	    String routeType = configuration.get("route");	    
+	    Element routeTypeNode = doc.createElement("route");
+	    routeTypeNode.appendChild(doc.createTextNode(routeType));
+	    route.appendChild(routeTypeNode);	    
+	    
+	    //set endpoints
+	    setRouteEndpoint("from",configuration);
+	    setRouteEndpoint("to",configuration);
+	    setRouteEndpoint("error",configuration);
+	    
+	}
+	
+	private void setRouteEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
+
+		String confUri = configuration.get(type + ".uri");
+		String confServiceId = configuration.get(type + ".service.id");
+		String confHeaderId = configuration.get(type + ".header.id");
+
+	    Element endpoint = doc.createElement(type);
+	    Element uri = doc.createElement("uri");
+	    Element options = doc.createElement("options");
+	    Element serviceid = doc.createElement("service_id");
+	    Element headerid = doc.createElement("header_id");
+
+		if(confUri!=null) {
+
+			route.appendChild(endpoint);
+
+			String[] confUriSplitted = confUri.split("\\?");
+			
+			if(confUriSplitted.length<=1) {
+			    uri.setTextContent(confUri);	
+				endpoint.appendChild(uri);
+			}else {
+			    uri.setTextContent(confUriSplitted[0]);
+			    endpoint.appendChild(uri);
+			    endpoint.appendChild(options);
+			    
+			    String[] confOptions = confUriSplitted[1].split(",");
+			    
+			    for(String confOption : confOptions) {
+			    	String[] confOptionSplitted = confOption.split("=");
+
+			    	if(confOptionSplitted.length>1){
+			    		Element option = doc.createElement(confOptionSplitted[0]);
+					    option.setTextContent(confOptionSplitted[1]);	
+			    		options.appendChild(option);
+			    	}
+			    }
+			}
+			
+		    if(confServiceId!=null) {
+			    serviceid.setTextContent(confServiceId);
+		    	endpoint.appendChild(serviceid);
+			    setServiceFromConfiguration(confServiceId, type, configuration);
+			}
+
+		    if(confHeaderId!=null) {
+			    endpoint.appendChild(headerid);
+			    headerid.setTextContent(confHeaderId);
+			    setHeaderFromConfiguration(confHeaderId, type, configuration);
+			}
+		}
+	}
+
+	private void setServiceFromConfiguration(String serviceid, String type, TreeMap<String, String> configuration) throws Exception {
+
+	    Element service = doc.createElement("service");
+	    services.appendChild(service);
+
+		for(Map.Entry<String,String> entry : configuration.entrySet()) {
+			  String key = entry.getKey();
+			  String parameterValue = entry.getValue();
+			  
+			  if(key.startsWith(type + ".service") && parameterValue!=null) {
+				  String parameterName = key.substring(key.lastIndexOf(".service.") + 9);				  
+				  Element serviceParameter = doc.createElement(parameterName);
+				  serviceParameter.setTextContent(parameterValue);
+				  service.appendChild(serviceParameter);
+			  }
+		 }
+	}
+	
+	private void setHeaderFromConfiguration(String headerid, String type, TreeMap<String, String> configuration) throws Exception {
+
+	    Element header = doc.createElement("header");
+	    Element id = doc.createElement("id");
+	    
+	    headers.appendChild(header);
+	    id.appendChild(doc.createTextNode(headerid));
+	    header.appendChild(id);
+
+		for(Map.Entry<String,String> entry : configuration.entrySet()) {
+		  String key = entry.getKey();
+		  String parameterValue = entry.getValue();
+		  
+		  if(key.startsWith(type + ".header") && parameterValue!=null) {
+			  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
+			  Element headerParameter = doc.createElement(parameterName);
+			  headerParameter.setTextContent(parameterValue);
+			  header.appendChild(headerParameter);
+		  }
+		}
+	}	
 }
