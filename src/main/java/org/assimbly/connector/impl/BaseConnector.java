@@ -14,16 +14,27 @@ import org.assimbly.connector.Connector;
 
 public abstract class BaseConnector implements Connector {
 	
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.BaseConnector");
+	@SuppressWarnings("unused")
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.impl.BaseConnector");
 
 	private List<TreeMap<String,String>> properties = new ArrayList<>();
 	private List<TreeMap<String,String>> connections = new ArrayList<>();
+	
+	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception {
+		for (TreeMap<String, String> flowConfiguration : configuration){
+			setFlowConfiguration(flowConfiguration);
+		}		
+	}
+	
+	public List<TreeMap<String,String>> getConfiguration() throws Exception {
+		return this.properties;
+	}
 
-	public void setRouteConfiguration(TreeMap<String,String> configuration) throws Exception {
+	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception {
 		this.properties.add(configuration);
 	}	
 
-	public TreeMap<String,String> getRouteConfiguration(String id) throws Exception {
+	public TreeMap<String,String> getFlowConfiguration(String id) throws Exception {
 		TreeMap<String,String> configuration = null;
 		for (TreeMap<String, String> props : getConfiguration()) {
 			if (props.get("id").equals(id)) {
@@ -34,19 +45,18 @@ public abstract class BaseConnector implements Connector {
 		return configuration;
 	}	
 
-	public List<TreeMap<String,String>> getConfiguration() throws Exception {
-		return this.properties;
-	}
-
-	public List<TreeMap<String,String>> getServices() throws Exception {
+	@SuppressWarnings("unused")
+	private List<TreeMap<String,String>> getServices() throws Exception {
 		return this.connections;
 	}
     	
-	public void addConnection(TreeMap<String,String> properties) throws Exception {
+	@SuppressWarnings("unused")
+	private void addService(TreeMap<String,String> properties) throws Exception {
 		this.connections.add(properties);
 	}
 	
-	public boolean removeConnection(String id) throws Exception {
+	@SuppressWarnings("unused")
+	private boolean removeService(String id) throws Exception {
 		TreeMap<String, String> con = null;
 		for (TreeMap<String, String> connection : connections){
 			if (connection.get("connection_id").equals(id)){
@@ -62,25 +72,30 @@ public abstract class BaseConnector implements Connector {
 		}
 	}
 	
-	//initial setup of configuration from external source (for example XML file)
-	public TreeMap<String, String> convertXMLToRouteConfiguration(String connectorID, String configuration) throws Exception {
-		return new XMLFileConfiguration().get(connectorID, configuration);
+	//convert methods
+	public String convertConfigurationToXML(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
+        return new XMLFileConfiguration().createConfiguration(connectorid, configuration);
 	}
 
-	public TreeMap<String, String> convertXMLToRouteConfiguration(String connectorID, URI configurationUri) throws Exception {
-		return new XMLFileConfiguration().get(connectorID, configurationUri);
+	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, String configuration) throws Exception {
+		return new XMLFileConfiguration().getConfiguration(connectorid, configuration);
+	}
+
+	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, URI configurationUri) throws Exception {
+		return new XMLFileConfiguration().getConfiguration(connectorid, configurationUri);
+	}
+	
+	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorID, String configuration) throws Exception {
+		return new XMLFileConfiguration().getFlowConfiguration(connectorID, configuration);
+	}
+
+	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorID, URI configurationUri) throws Exception {
+		return new XMLFileConfiguration().getFlowConfiguration(connectorID, configurationUri);
 	}	
 	
-	@Override
-	public String convertRouteConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
-		return new XMLFileConfiguration().create(configuration);
+	public String convertFlowConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
+		return new XMLFileConfiguration().createFlowConfiguration(configuration);
 	}
-	
-	@Override
-	public String convertConfigurationToXML(String gatewayid, List<TreeMap<String, String>> configuration) throws Exception {
-        return new XMLFileConfiguration().create(gatewayid, configuration);
-	}
-	
 	
 	//--> abstract methods (needs to be implemented in the subclass
 	
@@ -90,23 +105,21 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract void stop() throws Exception;
 
-	public abstract void addRoute(TreeMap<String, String> props) throws Exception;
-	
-	public abstract void removeRoute(String id) throws Exception;
+	public abstract void removeFlow(String id) throws Exception;
 
-	public abstract boolean hasRoute(String id);
+	public abstract boolean hasFlow(String id);
 	
-	public abstract void startRoute(String id) throws Exception;
+	public abstract void startFlow(String id) throws Exception;
 
-	public abstract void restartRoute(String id) throws Exception;
+	public abstract void restartFlow(String id) throws Exception;
 	
-	public abstract void stopRoute(String id) throws Exception;
+	public abstract void stopFlow(String id) throws Exception;
 
-	public abstract void pauseRoute(String id) throws Exception;
+	public abstract void pauseFlow(String id) throws Exception;
 	
-	public abstract void resumeRoute(String id) throws Exception;
+	public abstract void resumeFlow(String id) throws Exception;
 
-	public abstract String getRouteStatus(String id) throws Exception;
+	public abstract String getFlowStatus(String id) throws Exception;
 	
 	public abstract Object getContext() throws Exception;
 	

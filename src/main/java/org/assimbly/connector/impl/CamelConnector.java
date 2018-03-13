@@ -31,12 +31,12 @@ public class CamelConnector extends BaseConnector {
 
 	}
 	
-	public CamelConnector(String connectorID, String configuration) throws Exception {
-		setRouteConfiguration(convertXMLToRouteConfiguration(connectorID, configuration));
+	public CamelConnector(String connectorId, String configuration) throws Exception {
+		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
-	public CamelConnector(String connectorID, URI configuration) throws Exception {
-		setRouteConfiguration(convertXMLToRouteConfiguration(connectorID, configuration));
+	public CamelConnector(String connectorId, URI configuration) throws Exception {
+		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 	
 	
@@ -82,29 +82,29 @@ public class CamelConnector extends BaseConnector {
 		String route  = props.get("route");
 		if (route == null){
 			logger.info("add default route");
-			addDefaultRoute(props);
+			addDefaultFlow(props);
 		}else if(route.equals("default")){
 			logger.info("add default route");
-			addDefaultRoute(props);			
+			addDefaultFlow(props);			
 		}else if(route.equals("fromJdbcTimer")){
-			addRouteFromJdbcTimer(props);
+			addFlowFromJdbcTimer(props);
 		}
 		else{
 			logger.info("Invalid route.");
 		}
 	}
 
-	public void addDefaultRoute(final TreeMap<String, String> props) throws Exception {
+	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		logger.info("defaultroutes");
 		context.addRoutes(new DefaultRoute(props));
 	}
 		
-	public void addRouteFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
+	public void addFlowFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
 		context.addRoutes(new PollingJdbcRoute(props));
 		
 	}
 
-	public boolean hasRoute(String id) {
+	public boolean hasFlow(String id) {
 		boolean routeFound = false;
 		if (context != null){
 			for (Route route : context.getRoutes()) {
@@ -117,12 +117,12 @@ public class CamelConnector extends BaseConnector {
 	}
 
 
-	public void removeRoute(String id) throws Exception {
+	public void removeFlow(String id) throws Exception {
 		context.removeRoute(id);
 	}
 
-	public void startRoute(String id) throws Exception {
-		if(!hasRoute(id)) {
+	public void startFlow(String id) throws Exception {
+		if(!hasFlow(id)) {
 			for (TreeMap<String, String> props : super.getConfiguration()) {
 				if (props.get("id").equals(id)) {
 					logger.info("Adding route with ids: " + id);
@@ -134,9 +134,9 @@ public class CamelConnector extends BaseConnector {
 		context.startRoute(id);
 	}
 
-	public void restartRoute(String id) throws Exception {
+	public void restartFlow(String id) throws Exception {
 				
-		stopRoute(id);
+		stopFlow(id);
 		
 		int count = 1;
 		
@@ -150,12 +150,12 @@ public class CamelConnector extends BaseConnector {
         if(count==3000) {
 			logger.error("Timed out after 30 seconds while stopping route with id: " + id);
         }else {
-        	startRoute(id);	
+        	startFlow(id);	
         }	
 	}
 	
-	public void stopRoute(String id) throws Exception {
-		if(hasRoute(id)) {
+	public void stopFlow(String id) throws Exception {
+		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isStoppable()) {
 				context.stopRoute(id);	
@@ -163,8 +163,8 @@ public class CamelConnector extends BaseConnector {
 		}
 	}
 
-	public void pauseRoute(String id) throws Exception {
-		if(hasRoute(id)) {
+	public void pauseFlow(String id) throws Exception {
+		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isSuspendable()) {
 				context.suspendRoute(id);	
@@ -172,8 +172,8 @@ public class CamelConnector extends BaseConnector {
 		}
 	}
 
-	public void resumeRoute(String id) throws Exception {
-		if(hasRoute(id)) {
+	public void resumeFlow(String id) throws Exception {
+		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isSuspended()) {
 				context.resumeRoute(id);	
@@ -181,7 +181,7 @@ public class CamelConnector extends BaseConnector {
 		}
 	}	
 	
-	public String getRouteStatus(String id) {
+	public String getFlowStatus(String id) {
 	
 		ServiceStatus status = context.getRouteStatus(id);
 		return status.toString();

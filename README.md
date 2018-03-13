@@ -1,10 +1,10 @@
 # Connector
 
-This API is meant to configure and manage point-to-point connections (beta). For example by sending data from a database to
+This API is meant to configure and manage (point-to-point) flows (beta). For example by sending data from a database to
 a message broker.
 
-   * Connector: A collection of point-to-point connections
-   * Route: One point-point connection
+   * Connector: A collection of flows
+   * Flow: connects endpoints
    * Endpoint: A source or destination
    
 Currently the API is build on top of [Apache Camel](https://github.com/apache/camel). Supported
@@ -12,14 +12,15 @@ Camel components are File, Stream, JDBC, SJMS, SFTP, HTTP4, ACTIVEMQ and SONICMQ
 
 ## Configuration
 
-Configuration of a route is done with a Java Treemap. Easiest way is to generate the Treemap from an XML file. Configuration
-can also be done with a GUI, see [Apache Camel](https://github.com/assimbly/gateway). 
+A flow is configured with key-values. The key-values are stored in a [Java Treemap](https://beginnersbook.com/2013/12/treemap-in-java-with-example/)
+Multiple flows in a connector can be configure with a list of Treemaps. 
+
+The easiest way to generate the Treemap is to convert it from an XML file. Another possibility is using the
+GUI of Assimbly gateway. See [Apache Camel](https://github.com/assimbly/gateway). 
 
 ## Management
 
-The API simplifies common management tasks. You can however also get the Camel Context to access the full API of Camel.
-
-The following lifecycle management actions are supported:
+The API simplifies common management tasks. The following lifecycle management actions are supported:
 
 * start
 * stop
@@ -37,16 +38,16 @@ The project is build with maven (mvn install). After building you can call the A
 Connector connector = new CamelConnector();
 
 connector.start();
-Treemap<String,String> routeconfiguration = connector.convertXMLToRouteConfiguration(routeID, configurationUri) );
-setRouteConfiguration(routeconfiguration);
-connector.startRoute(routeID);
+Treemap<String,String> flowConfiguration = connector.convertXMLToFlowConfiguration(flowID, configurationUri);
+setFlowConfiguration(flowConfiguration);
+connector.startFlow(flowID);
 
 or 
 
-Connector connector = new CamelConnector(routeID, configurationUri);
+Connector connector = new CamelConnector(flowID, configurationUri);
 
 connector.start();
-connector.startRoute(routeID);
+connector.startFlow(flowID);
 
 ```
 
@@ -59,10 +60,10 @@ The following XML configuration moves files from a one directory to another.
 <?xml version="1.0" encoding="UTF-8"?>
 <connector>
 	<id>example</id>
-	<routes>
+	<flows>
 		
 		<!-- example file to file --> 		
-		<route>
+		<flow>
 			<id>filetofile</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -70,8 +71,8 @@ The following XML configuration moves files from a one directory to another.
 			<to>
 				<uri>file://C:/Test2</uri>
 			</to>
-		</route>
-	</routes>		
+		</flow>
+	</flows>		
 </connector>
 
 ```
@@ -81,7 +82,7 @@ The following XML configuration moves files from a one directory to another.
 Connector connector = new CamelConnector("example", "file://C:/conf/conf.xml");
 
 connector.start();
-connector.startRoute("example.filetofile");
+connector.startFlow("example.filetofile");
 
 ```
 
@@ -89,14 +90,14 @@ connector.startRoute("example.filetofile");
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<route>
+<connector>
 	<id>example</id>
-	<routes>
+	<flows>
 
 		<!-- FILE Producer Examples -->
 
 		<!-- example file to wastebin -->
-		<route>
+		<flow>
 			<id>exampe.filetowastebin</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -104,10 +105,10 @@ connector.startRoute("example.filetofile");
 			<to>
 				<uri>wastebin</uri>
 			</to>	
-		</route>
+		</flow>
 		
 		<!-- example file to file --> 		
-		<route>
+		<flow>
 			<id>example.filetofile</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -115,10 +116,10 @@ connector.startRoute("example.filetofile");
 			<to>
 				<uri>file://C:/Test2</uri>
 			</to>
-		</route>
+		</flow>
 
 		<!-- example file to streamm (prints message) --> 		
-		<route>
+		<flow>
 			<id>example.filetostream</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -126,10 +127,10 @@ connector.startRoute("example.filetofile");
 			<to>
 				<uri>stream:out</uri>
 			</to>
-		</route>
+		</flow>
 
 		<!-- example file to sonicmq --> 		
-		<route>
+		<flow>
 			<id>example.filetosonicmq</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -144,10 +145,10 @@ connector.startRoute("example.filetofile");
 			<error>
 				<uri>file://C:/Test2</uri>
 			</error>
-		</route>
+		</flow>
 
 		<!-- example file to sftp  -->
-		<route>
+		<flow>
 			<id>example.filetosftp</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -158,10 +159,10 @@ connector.startRoute("example.filetofile");
 					<password>S0n1c2015!</password>
 				</options>
 			</to>	
-		</route>
+		</flow>
 
 		<!-- example file to sql  -->
-		<route>
+		<flow>
 			<id>example.filetosql</id>
 			<from>
 				<uri>file://C:/Test1</uri>
@@ -174,27 +175,27 @@ connector.startRoute("example.filetofile");
 				<connection_id>test.db</connection_id>
 				<header_id>mapper</header_id>
 			</to>	
-		</route>
+		</flow>
 					
-	</routes>
+	</flows>
 	
 	<!-- connections with for example MQ or Databases -->
-	<connections>
-		<connection>
+	<services>
+		<service>
 			<id>local.mgmt</id>
 			<username>Administrator</username>
 			<password>Administrator</password>
 			<url>tcp://localhost:2506</url>
-		</connection>
+		</service>
 		
-		<connection>
+		<service>
 			<id>test.db</id>
 			<username>username</username>
 			<password>example</password>
 			<url>jdbc:mysql://localhost/dbname</url>
 			<driver>com.mysql.jdbc.Driver</driver>
-		</connection>		
-	</connections>
+		</service>		
+	</services>
 	
 	<!-- headers -->
 	<headers>
@@ -208,5 +209,5 @@ connector.startRoute("example.filetofile");
 		</header>
 	</headers>
 		
-</route>
+</connector>
 ```

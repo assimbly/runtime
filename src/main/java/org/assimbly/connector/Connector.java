@@ -4,51 +4,205 @@ import java.net.URI;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.apache.camel.ProducerTemplate;
-
+/**
+* <pre>
+* This interface is meant to configure and manage a connector.
+*
+* A <b>Connector</b> is a collection of flows.
+* A <b>Flow</b> connects one or more endpoints for example a database and a directory.
+* 
+* Each flow configuration consists of a Treemap&lt;key,value&gt;. The connector configuration
+* consists of a list of flow configurations.
+*
+* For a valid flow configuration see
+* <a href="https://github.com/assimbly/connector">https://github.com/assimbly/connector</a>
+* </pre>
+*/
 public interface Connector {
 
 	//configure connector
-	//public void setConfiguration(List<TreeMap<String,String>>) throws Exception;
+	/**
+	* Sets the connector configuration from a list of flow configurations (TreeMaps). This list
+	* is cleared after a connector is reinitialized.
+	*
+	* @param  configuration list of flow configurations (Treemaps)
+	* @throws Exception if configuration can't be set
+	*/
+	public void setConfiguration(List<TreeMap<String,String>> configuration) throws Exception;
+	/**
+	* gets the connector configuration currently set (in use)
+	*
+	* @return list of flow configurations
+	* @throws Exception if configuration can't be retrieved or is not available
+	*/
 	public List<TreeMap<String,String>> getConfiguration() throws Exception;
-	public List<TreeMap<String,String>> getServices() throws Exception;
 
-	//convert configuration
-	public String convertConfigurationToXML(String connectorid,List<TreeMap<String,String>> configuration) throws Exception;
-	//public List<TreeMap<String,String>> convertXMLToConfiguration(String configuration) throws Exception;
-	//public List<TreeMap<String,String>> convertXMLToConfiguration(URI configurationUri) throws Exception;
+	//convert connector configuration
+	/**
+	* Converts the configuration currently in use to XML
+	*
+	* @param  connectorId the id of a connector
+	* @param  configuration list of flow configurations
+	* @return returns XML Configuration as String
+	* @throws Exception if XML can't be created
+	*/
+	public String convertConfigurationToXML(String connectorId,List<TreeMap<String,String>> configuration) throws Exception;
+	/**
+	* Converts a XML configuration to a connector configuration (list of flow configurations)
+	*
+	* @param  connectorId the id of a connector
+	* @param  xmlConfiguration XML configuration in String format
+	* @return returns connector configuration (List of flow configurations)
+	* @throws Exception if XML can't be converted to a Treemap
+	*/
+	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, String xmlConfiguration) throws Exception;
+	/**
+	* Converts a XML configuration to a connector configuration (list of flow configurations)
+	*
+	* @param  connectorId the id of a connector
+	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
+	* @return returns connector configuration (List of flow configurations)
+	* @throws Exception if XML can't be converted to a Treemap
+	*/
+	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, URI configurationUri) throws Exception;
 	
-	//configure route
-	public void setRouteConfiguration(TreeMap<String,String> configuration) throws Exception;	
-	public TreeMap<String,String> getRouteConfiguration(String id) throws Exception;
+	//configure flow
+	/**
+	* Sets the flow configuration from a Tree (keyvalues). This list
+	* is cleared after a connector is reinitialized.
+	*
+	* @param  configuration of a flow configuration
+	* @throws Exception if configuration can't be set
+	*/
+	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception;	
 
-	//convert route configuration
-	public TreeMap<String,String> convertXMLToRouteConfiguration(String id, String configuration) throws Exception;
-	public TreeMap<String,String> convertXMLToRouteConfiguration(String id, URI configurationUri) throws Exception;
-	public String convertRouteConfigurationToXML(TreeMap<String,String> configuration) throws Exception;
+	/**
+	* gets the flow configuration for a specific if currently set
+	*
+	* @param  flowId the id of a flow
+	* @return flow configuration
+	* @throws Exception if configuration can't be retrieved or is not available
+	*/	
+	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
+
+	//convert flow configuration
+	/**
+	* Converts a XML configuration to a flow configuration
+	*
+	* @param  flowId the id of a flow
+	* @param  configuration XML configuration as string
+	* @return returns flow configuration (Treemap)
+	* @throws Exception if XML can't be converted to a Treemap
+	*/	
+	public TreeMap<String,String> convertXMLToFlowConfiguration(String flowId, String configuration) throws Exception;
+	
+	/**
+	* Converts a XML configuration to a flow configuration
+	*
+	* @param  flowId the id of a flow
+	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
+	* @return returns flow configuration (Treemap)
+	* @throws Exception if XML can't be converted to a Treemap
+	*/
+	public TreeMap<String,String> convertXMLToFlowConfiguration(String flowId, URI configurationUri) throws Exception;
+	
+	/**
+	* Converts a flow configuration to a XML configuration
+	*
+	* @param  configuration treemap
+	* @return returns XML as String
+	* @throws Exception if XML can't be converted to a Treemap
+	*/
+	public String convertFlowConfigurationToXML(TreeMap<String,String> configuration) throws Exception;
 	
 	//manage connector
+	/**
+	* Starts a connector. The connector acts like a container for flows.  
+	* After starting it can be configured
+	*
+	* @throws Exception if connector doesn't start
+	*/
 	public void start() throws Exception;
+
+	/**
+	* Stops a connector
+	*
+	* @throws Exception if connector doesn't start
+	*/
 	public void stop() throws Exception;
+
+	/**
+	* Checks if a connector is started  
+	*
+	* @return returns true if connector is started
+	*/
 	public boolean isStarted();
 	
-	//manage route
-	public void addRoute(TreeMap<String,String> properties) throws Exception;
-	public void removeRoute(String id) throws Exception;
-	public boolean hasRoute(String id);
-	public void addConnection(TreeMap<String,String> connections) throws Exception;	
-	public boolean removeConnection(String id) throws Exception;	
+	//manage flow
+	/**
+	* Checks if a flow is a part of connector
+	*
+	* @param  flowId the id of a flow
+	* @return returns true if started.
+	*/
+	public boolean hasFlow(String flowId);
+
 	
-	public void startRoute(String id) throws Exception;
-	public void restartRoute(String id) throws Exception;
-	public void stopRoute(String id) throws Exception;
-	public void resumeRoute(String id) throws Exception;
-	public void pauseRoute(String id) throws Exception;
-	public String getRouteStatus(String id) throws Exception;
+	/**
+	* Starts a flow
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	*/	
+	public void startFlow(String flowId) throws Exception;
+
+	/**
+	* Restarts a flow
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	*/
+	public void restartFlow(String flowId) throws Exception;
+	
+	/**
+	* Stops a flow
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	*/
+	public void stopFlow(String flowId) throws Exception;
+	
+	/**
+	* Resumes a flow if paused
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	*/
+	public void resumeFlow(String flowId) throws Exception;
+
+	/**
+	* Pauses a flow if started
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	*/
+	public void pauseFlow(String flowId) throws Exception;
+	
+	/**
+	* Gets the status of a flow 
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns true (stopped, started, paused).
+	*/
+	public String getFlowStatus(String flowId) throws Exception;
+
+	/**
+	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
+	*
+	* @return returns context as object
+	* @throws Exception if context can't be found
+	*/
 	public Object getContext() throws Exception;
-	
-	//send messages 
-	public void send(Object messageBody, ProducerTemplate template);
-	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
 	
 }

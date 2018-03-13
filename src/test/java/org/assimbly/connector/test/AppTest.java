@@ -1,4 +1,4 @@
-package nl.drs.nl.drs.camelconnector;
+package org.assimbly.connector.test;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

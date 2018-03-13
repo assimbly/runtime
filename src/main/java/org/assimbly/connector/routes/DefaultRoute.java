@@ -33,7 +33,7 @@ import org.xml.sax.InputSource;
 public class DefaultRoute extends RouteBuilder{
 	
 	Map<String, String> props;
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.routes.DefaultRoute");
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	
 	private int interval;
 	private int intervalNrOfMessages = 0;
@@ -106,6 +106,7 @@ public class DefaultRoute extends RouteBuilder{
 	
 	
 		
+	@SuppressWarnings("unused")
 	private String getContent(Object input){
 		String text;
 		if (input instanceof GenericFile<?>){

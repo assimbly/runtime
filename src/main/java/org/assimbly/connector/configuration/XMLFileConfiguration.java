@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -11,6 +12,8 @@ import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -22,47 +25,92 @@ import org.apache.commons.configuration2.io.FileHandler;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class XMLFileConfiguration {
 	
 	private TreeMap<String, String> properties;
-	private String routeID;
+	private List<TreeMap<String, String>> propertiesList;
+
+	private String flowId;
 	
 	private XMLConfiguration conf;
 
-	private String serviceID;
+	private String serviceId;
 	private String serviceXPath;
 	private String connectorXPath;
 	
 	private String uri;
 	private String component;
 	private String options;
-	private String headerID;
+	private String headerId;
 	private Element rootElement;
 	private Document doc;
-	private Element routes;
+	private Element flows;
 	private Element services;
 	private Element headers;
-	private Element route;
-	private String xmlconfiguration;
+	private Element flow;
+	private String xmlFlowConfiguration;
 	
-	public TreeMap<String, String> get(String routeID, String xml) throws Exception {
 
-	    this.routeID = routeID;
+	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
+		
+		propertiesList = new ArrayList<>();
+		Document doc = ConnectorUtil.convertStringToDoc(xml);
+
+		List<String> flowIds = getFlowIds(connectorId,doc); 
+ 		
+  	   for(String flowId : flowIds){
+  		 
+	  		TreeMap<String, String> flowConfiguration = getFlowConfiguration(flowId, xml);
+	  		 
+	  		if(flowConfiguration!=null) {
+	  	  		 propertiesList.add(flowConfiguration);
+	  		}
+  	   }
+  	   
+	   return propertiesList;
 	
-	    conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
-	    FileHandler fh = new FileHandler(conf);
-	    fh.load(ConnectorUtil.convertStringToStream(xml));
-	    
-	   setProperties();
+	}
+
+	public List<TreeMap<String, String>> getConfiguration(String connectorId, URI uri) throws Exception {
+
+		propertiesList = new ArrayList<>();
+		Document doc = ConnectorUtil.convertUriToDoc(uri);
+
+		List<String> flowIds = getFlowIds(connectorId,doc); 
+ 		
+  	   for(String flowId : flowIds){
+  		   TreeMap<String, String> flowConfiguration = getFlowConfiguration(flowId, uri);
+  		 
+  		if(flowConfiguration!=null) {
+  	  		 propertiesList.add(flowConfiguration);
+  		}
+  	   }
+  	   
+	   return propertiesList;
+	
+	}
+	
+	
+	
+	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
+
+	   this.flowId = flowId;
+
+	   conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+	   FileHandler fh = new FileHandler(conf);
+	   fh.load(ConnectorUtil.convertStringToStream(xml));
+
+  	   setProperties();
 
 	   return properties;
 	
 	}
 	
-	public TreeMap<String, String> get(String routeID, URI uri) throws Exception {
+	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 
-	   this.routeID = routeID;
+	   this.flowId = flowId;
 
 	   String scheme = uri.getScheme();
 	   //load uri to configuration 
@@ -91,8 +139,8 @@ public class XMLFileConfiguration {
 
 			   // This will throw a ConfigurationException if the XML document does not
 			   // conform to its Schema.
-			   conf = builder.getConfiguration();				
-
+			   conf = builder.getConfiguration();
+			   
 		}else if (scheme.startsWith("http")) {
 			
 			URL Url = uri.toURL();
@@ -116,6 +164,46 @@ public class XMLFileConfiguration {
 	   return properties;
 	}
 
+	public String createConfiguration(String connectorId, List<TreeMap<String, String>> configurations) throws Exception {
+
+	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+	    doc = docBuilder.newDocument();
+		
+	    setGeneralProperties(connectorId);
+
+		for (TreeMap<String, String> configuration : configurations) {
+		    setFlowFromConfiguration(configuration);
+		}
+
+	    String xmlConfiguration = ConnectorUtil.convertDocToString(doc);
+	    
+		return xmlConfiguration;
+
+	}
+	
+
+	public String createFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
+
+	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+	    doc = docBuilder.newDocument();
+		
+	    setGeneralProperties("live");
+	    
+	    setFlowFromConfiguration(configuration);
+	    
+	    if(doc!=null) {
+		    xmlFlowConfiguration = ConnectorUtil.convertDocToString(doc);
+	    }else {
+	    	xmlFlowConfiguration = "Can't create XML File";
+	    }
+	    
+		return xmlFlowConfiguration;
+	}
+	
+
+	//--> private get/set methods
 	
 	private void setProperties() throws Exception{
 		
@@ -141,15 +229,15 @@ public class XMLFileConfiguration {
 		   getHeaderFromXMLFile("error");
 		   
 		   //set up defaults settings if null -->
-			if(routeID == null){    			
-				routeID = "route" + System.currentTimeMillis();					
+			if(flowId == null){    			
+				flowId = "flow" + System.currentTimeMillis();					
 			}
-			properties.put("id",routeID);	
+			properties.put("id",flowId);	
 		   
 		   	if(properties.get("from.uri") != null){
-				properties.put("route","default");
+				properties.put("flow","default");
 			}else{
-				properties.put("route", "none");
+				properties.put("flow", "none");
 			}
 
 			if(properties.get("to.uri") == null){
@@ -161,15 +249,15 @@ public class XMLFileConfiguration {
 	}
 
 	private void getGeneralPropertiesFromXMLFile() throws Exception{
-		
+
 		Document doc = conf.getDocument();
 		   
 	    XPath xPath = XPathFactory.newInstance().newXPath();
-	    routeID = xPath.evaluate("//routes/route[id='" + routeID + "']/id",doc);
+	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
 		
-		if(routeID==null || routeID.isEmpty()) {throw new ConfigurationException("ID (route) doesn't exists in XML Configuration");}
+		if(flowId==null || flowId.isEmpty()) {throw new ConfigurationException("Id (flow) doesn't exists in XML Configuration");}
 
-		connectorXPath = "routes/route[id='" + routeID + "']";
+		connectorXPath = "flows/flow[id='" + flowId + "']";
 
 		List<String> connectorProporties = ConnectorUtil.getXMLParameters(conf, connectorXPath);
 		
@@ -187,11 +275,11 @@ public class XMLFileConfiguration {
 		   Document doc = conf.getDocument();
 		   
 		   XPath xPath = XPathFactory.newInstance().newXPath();
-		   component = xPath.evaluate("//routes/route[id='" + routeID + "']/" + type + "/uri",doc);
+		   component = xPath.evaluate("//flows/flow[id='" + flowId + "']/" + type + "/uri",doc);
 		   
 		   if(component == null || component.isEmpty()){return;};
 		   
-		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "routes/route[id='" + routeID + "']/" + type + "/options");
+		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "flows/flow[id='" + flowId + "']/" + type + "/options");
 		   
 	  	   for(String optionProperty : optionProperties){
 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
@@ -210,12 +298,12 @@ public class XMLFileConfiguration {
 
 	private void getServiceFromXMLFile(String type) throws ConfigurationException {
 		   	
-	    serviceID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/service_id");
-	    if(serviceID == null){return;};
+	    serviceId = conf.getString("flows/flow[id='" + flowId + "']/" + type + "/service_id");
+	    if(serviceId == null){return;};
 	    
-	    properties.put(type + ".service_id", serviceID);
+	    properties.put(type + ".service_id", serviceId);
 	    
-	    serviceXPath = "services/services[service_id='" + serviceID + "']";
+	    serviceXPath = "services/services[service_id='" + serviceId + "']";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!serviceProporties.isEmpty()){
@@ -227,13 +315,13 @@ public class XMLFileConfiguration {
 	
 	private void getHeaderFromXMLFile(String type) throws ConfigurationException {
 	   	
-	    headerID = conf.getString("routes/route[id='" + routeID + "']/" + type + "/header_id");
+	    headerId = conf.getString("flows/flow[id='" + flowId + "']/" + type + "/header_id");
 
-	    if(headerID == null){return;};
+	    if(headerId == null){return;};
 	    
-	    properties.put(type + ".header_id", headerID);
+	    properties.put(type + ".header_id", headerId);
 	    
-	    serviceXPath = "headers/header[id='" + headerID + "']";
+	    serviceXPath = "headers/header[id='" + headerId + "']";
 		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!headerProporties.isEmpty()){
@@ -246,89 +334,70 @@ public class XMLFileConfiguration {
 		}
 	}
 
-	public String create(String gatewayid, List<TreeMap<String, String>> configurations) throws Exception {
+    private static List<String> getFlowIds(String connectorId, Document doc)  throws Exception {
 
-	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-	    doc = docBuilder.newDocument();
-		
-	    setGeneralProperties(gatewayid);
+        // Create XPath object
+        XPathFactory xpathFactory = XPathFactory.newInstance();
+        XPath xpath = xpathFactory.newXPath();
+        XPathExpression expr = xpath.compile("/connector[id=" + connectorId +"]/flows/flow/id/text()");
+    	
+        // Create list of Ids
+    	List<String> list = new ArrayList<>();
+        NodeList nodes = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+        for (int i = 0; i < nodes.getLength(); i++) {
+            list.add(nodes.item(i).getNodeValue());
+        }
+        
+        return list;
+    }
 
-		for (TreeMap<String, String> configuration : configurations) {
-		    setRouteFromConfiguration(configuration);
-		}
-
-	    String xmlconfiguration = ConnectorUtil.convertDocToString(doc);
-	    
-		return xmlconfiguration;
-
-	}
 	
-
-	public String create(TreeMap<String, String> configuration) throws Exception {
-
-	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-	    doc = docBuilder.newDocument();
-		
-	    setGeneralProperties("live");
-	    
-	    setRouteFromConfiguration(configuration);
-	    
-	    if(doc!=null) {
-		    xmlconfiguration = ConnectorUtil.convertDocToString(doc);
-	    }else {
-	    	xmlconfiguration = "Can't create XML File";
-	    }
-	    
-		return xmlconfiguration;
-	}
 	
-	private void setGeneralProperties(String gatewayid) {
+	private void setGeneralProperties(String connectorId) {
 		
 	    rootElement = doc.createElement("connector");
 	    doc.appendChild(rootElement);
 
 	    Element id = doc.createElement("id");
-	    id.appendChild(doc.createTextNode(gatewayid));
+	    id.appendChild(doc.createTextNode(connectorId));
 	    rootElement.appendChild(id);
 	    
-	    routes = doc.createElement("routes");
+	    flows = doc.createElement("flows");
 	    services = doc.createElement("services");
 	    headers = doc.createElement("headers");
 	    
-	    rootElement.appendChild(routes);
+	    rootElement.appendChild(flows);
 	    rootElement.appendChild(services);
 	    rootElement.appendChild(headers);
 		
 	}
 	
 	
-	private void setRouteFromConfiguration(TreeMap<String, String> configuration) throws Exception {
+	private void setFlowFromConfiguration(TreeMap<String, String> configuration) throws Exception {
 
-	    route = doc.createElement("route");
-	    routes.appendChild(route);
+	    flow = doc.createElement("flow");
+	    flows.appendChild(flow);
 	    
 	    //set id
-	    String routeID = configuration.get("id");	    
+	    String flowId = configuration.get("id");	    
 	    Element id = doc.createElement("id");
-	    id.appendChild(doc.createTextNode(routeID));
-	    route.appendChild(id);
+	    id.appendChild(doc.createTextNode(flowId));
+	    flow.appendChild(id);
 
 	    //set id
-	    String routeType = configuration.get("route");	    
-	    Element routeTypeNode = doc.createElement("route");
-	    routeTypeNode.appendChild(doc.createTextNode(routeType));
-	    route.appendChild(routeTypeNode);	    
+	    String flowType = configuration.get("flow");	    
+	    Element flowTypeNode = doc.createElement("flow");
+	    flowTypeNode.appendChild(doc.createTextNode(flowType));
+	    flow.appendChild(flowTypeNode);	    
 	    
 	    //set endpoints
-	    setRouteEndpoint("from",configuration);
-	    setRouteEndpoint("to",configuration);
-	    setRouteEndpoint("error",configuration);
+	    setFlowEndpoint("from",configuration);
+	    setFlowEndpoint("to",configuration);
+	    setFlowEndpoint("error",configuration);
 	    
 	}
 	
-	private void setRouteEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
+	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
 
 		String confUri = configuration.get(type + ".uri");
 		String confServiceId = configuration.get(type + ".service.id");
@@ -342,7 +411,7 @@ public class XMLFileConfiguration {
 
 		if(confUri!=null) {
 
-			route.appendChild(endpoint);
+			flow.appendChild(endpoint);
 
 			String[] confUriSplitted = confUri.split("\\?");
 			
@@ -409,15 +478,15 @@ public class XMLFileConfiguration {
 	    header.appendChild(id);
 
 		for(Map.Entry<String,String> entry : configuration.entrySet()) {
-		  String key = entry.getKey();
-		  String parameterValue = entry.getValue();
-		  
-		  if(key.startsWith(type + ".header") && parameterValue!=null) {
-			  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
-			  Element headerParameter = doc.createElement(parameterName);
-			  headerParameter.setTextContent(parameterValue);
-			  header.appendChild(headerParameter);
-		  }
+			String key = entry.getKey();
+			String parameterValue = entry.getValue();
+			  
+			if(key.startsWith(type + ".header") && parameterValue!=null) {
+				  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
+				  Element headerParameter = doc.createElement(parameterName);
+				  headerParameter.setTextContent(parameterValue);
+				  header.appendChild(headerParameter);
+		    }
 		}
 	}	
 }

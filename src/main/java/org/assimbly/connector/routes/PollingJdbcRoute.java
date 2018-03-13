@@ -32,7 +32,7 @@ public class PollingJdbcRoute extends RouteBuilder {
 	Map<String, String> props;
 	CamelContext context;
 	
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.routes.PollingJdbcRoute");
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.PollingJdbcRoute");
 
 	public PollingJdbcRoute(final Map<String, String> props) {
 		this.props = props;
