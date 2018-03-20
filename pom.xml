@@ -92,11 +92,13 @@
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
 			<version>8.6.0</version>
+     		<optional>true</optional>		
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Crypto</artifactId>
 			<version>8.6.0</version>
+     		<optional>true</optional>		
 		</dependency>
 	
 		<dependency>
