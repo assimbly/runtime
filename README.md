@@ -16,7 +16,7 @@ A flow is configured with key-values. The key-values are stored in a [Java Treem
 Multiple flows in a connector can be configure with a list of Treemaps. 
 
 The easiest way to generate the Treemap is to convert it from an XML file. Another possibility is using the
-GUI of Assimbly gateway. See [Apache Camel](https://github.com/assimbly/gateway). 
+GUI of [Assimbly Gateway](https://github.com/assimbly/gateway). 
 
 ## Management
 
