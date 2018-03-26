@@ -73,7 +73,7 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addRoute(TreeMap<String, String> props) throws Exception {
 		for (String key : props.keySet()){
-			if (key.contains("connection_id")){
+			if (key.contains("service.id")){
 				props = new Connection(context, props).start();
 			}
 		}

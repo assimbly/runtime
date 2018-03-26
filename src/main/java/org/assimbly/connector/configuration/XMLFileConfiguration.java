@@ -303,7 +303,7 @@ public class XMLFileConfiguration {
 	    
 	    properties.put(type + ".service_id", serviceId);
 	    
-	    serviceXPath = "services/services[service_id='" + serviceId + "']";
+	    serviceXPath = "services/services[id='" + serviceId + "']";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!serviceProporties.isEmpty()){

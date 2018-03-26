@@ -52,7 +52,7 @@ public class Connection {
 	
 	private void startConnection(String type) throws Exception{
 		uri = properties.get(type + ".uri");
-		connectionID = properties.get(type + ".connection_id");
+		connectionID = properties.get(type + ".service.id");
 
 		if(uri!=null){
 			
