@@ -9,6 +9,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
+import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.slf4j.Logger;
@@ -46,6 +47,8 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
+		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
+		
 		
 		// start Camel context
 		context.start();
@@ -187,6 +190,15 @@ public class CamelConnector extends BaseConnector {
 		return status.toString();
 		
 	}
+
+	public String getFlowUptime(String id) {
+		
+		Route route = context.getRoute(id);
+		
+		return route.getUptime();
+		
+	}
+	
 	
 	public Object getContext() {
 		

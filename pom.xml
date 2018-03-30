@@ -68,7 +68,11 @@
 		    <artifactId>camel-cxf</artifactId>
 			<version>${org.apache.camel-version}</version>
 		</dependency>		
-		
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-metrics</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>		
 
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
@@ -92,13 +96,13 @@
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
 			<version>8.6.0</version>
-     		<optional>true</optional>		
+     		<!-- <optional>true</optional> -->		
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Crypto</artifactId>
 			<version>8.6.0</version>
-     		<optional>true</optional>		
+     		<!-- <optional>true</optional> -->		
 		</dependency>
 	
 		<dependency>

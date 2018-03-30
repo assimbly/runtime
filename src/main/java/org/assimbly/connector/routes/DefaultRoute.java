@@ -137,6 +137,14 @@ public class DefaultRoute extends RouteBuilder{
 		} 
 	}	
 	
+	public class getNumberOfMessages{
+		
+		public int run() {
+			return totalNrOfMessages;
+		}
+	}
+	
+	
 	private class SummaryTask extends TimerTask{
 
 		@Override
@@ -153,7 +161,6 @@ public class DefaultRoute extends RouteBuilder{
 		@Override
 		public void process(Exchange exchange) throws Exception {
 			logger.debug("Unrecoverable error occured.");
-			System.exit(0);
 		}
 		
 	}

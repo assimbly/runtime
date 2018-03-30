@@ -44,8 +44,8 @@ or
 
 ```java
 Connector connector = new CamelConnector();
-
 connector.start();
+
 Treemap<String,String> flowConfiguration = connector.convertXMLToFlowConfiguration(flowID, configurationUri);
 connector.setFlowConfiguration(flowConfiguration);
 connector.startFlow(flowID);
@@ -64,7 +64,7 @@ connector.startFlow("filetofile");
 
 ```
 
-
+conf.xml
 ```xml
 
 <?xml version="1.0" encoding="UTF-8"?>

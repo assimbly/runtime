@@ -19,6 +19,27 @@
 *.tar
 *.zip
 
+######################
+# Eclipse
+######################
+*.pydevproject
+.project
+.metadata
+tmp/
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+.sts4-cache/
+.sts-cache/
+local.properties
+.classpath
+.settings/
+.loadpath
+.factorypath
+/src/main/resources/rebel.xml
+
 # Logs and databases #
 ######################
 *.log
