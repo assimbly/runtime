@@ -120,6 +120,8 @@ public abstract class BaseConnector implements Connector {
 	public abstract void resumeFlow(String id) throws Exception;
 
 	public abstract String getFlowStatus(String id) throws Exception;
+
+	public abstract String getFlowUptime(String id) throws Exception;
 	
 	public abstract Object getContext() throws Exception;
 	

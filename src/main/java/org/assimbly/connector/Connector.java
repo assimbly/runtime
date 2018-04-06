@@ -198,7 +198,18 @@ public interface Connector {
 	public String getFlowStatus(String flowId) throws Exception;
 
 	/**
+	* Gets the status of a flow 
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns true (stopped, started, paused).
+	*/
+	public String getFlowUptime(String flowId) throws Exception;	
+	
+	
+	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
+	* Note: Calling this you're on your own...
 	*
 	* @return returns context as object
 	* @throws Exception if context can't be found
