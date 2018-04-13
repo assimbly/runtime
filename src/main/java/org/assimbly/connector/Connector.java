@@ -37,7 +37,7 @@ public interface Connector {
 	*/
 	public List<TreeMap<String,String>> getConfiguration() throws Exception;
 
-	//convert connector configuration
+	//convert connector configuration from/to XML
 	/**
 	* Converts the configuration currently in use to XML
 	*
@@ -65,6 +65,18 @@ public interface Connector {
 	* @throws Exception if XML can't be converted to a Treemap
 	*/
 	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, URI configurationUri) throws Exception;
+
+	//convert connector configuration from/to JSON
+	/**
+	* Converts the configuration currently in use to JSON
+	*
+	* @param  connectorId the id of a connector
+	* @param  configuration list of flow configurations
+	* @return returns XML Configuration as String
+	* @throws Exception if XML can't be created
+	*/
+	public String convertConfigurationToJSON(String connectorId,List<TreeMap<String,String>> configuration) throws Exception;
+
 	
 	//configure flow
 	/**
@@ -85,7 +97,8 @@ public interface Connector {
 	*/	
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
 
-	//convert flow configuration
+	
+	//convert flow configuration from/to XML
 	/**
 	* Converts a XML configuration to a flow configuration
 	*
@@ -103,7 +116,7 @@ public interface Connector {
 	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
 	* @return returns flow configuration (Treemap)
 	* @throws Exception if XML can't be converted to a Treemap
-	*/
+	*/	
 	public TreeMap<String,String> convertXMLToFlowConfiguration(String flowId, URI configurationUri) throws Exception;
 	
 	/**
@@ -114,6 +127,40 @@ public interface Connector {
 	* @throws Exception if XML can't be converted to a Treemap
 	*/
 	public String convertFlowConfigurationToXML(TreeMap<String,String> configuration) throws Exception;
+
+	
+	//convert flow configuration from/to JSON
+	/**
+	* Converts a JSON configuration to a flow configuration
+	*
+	* @param  flowId the id of a flow
+	* @param  configuration JSON configuration as string
+	* @return returns flow configuration (Treemap)
+	* @throws Exception if JSON can't be converted to a Treemap
+	*/	
+	//todo
+	//public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception;
+	
+	/**
+	* Converts a JSON configuration to a flow configuration
+	*
+	* @param  flowId the id of a flow
+	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
+	* @return returns flow configuration (Treemap)
+	* @throws Exception if JSON can't be converted to a Treemap
+	*/	
+	//todo
+	//public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, URI configurationUri) throws Exception;
+	
+	/**
+	* Converts a flow configuration to a JSON configuration
+	*
+	* @param  configuration treemap
+	* @return returns JSON as String
+	* @throws Exception if JSON can't be converted to a Treemap
+	*/
+	public String convertFlowConfigurationToJSON(TreeMap<String,String> configuration) throws Exception;
+
 	
 	//manage connector
 	/**

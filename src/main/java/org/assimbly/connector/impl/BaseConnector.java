@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import org.apache.camel.ProducerTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.Connector;
 
@@ -77,6 +78,10 @@ public abstract class BaseConnector implements Connector {
         return new XMLFileConfiguration().createConfiguration(connectorid, configuration);
 	}
 
+	public String convertConfigurationToJSON(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
+        return new JSONFileConfiguration().createConfiguration(connectorid, configuration);
+	}
+	
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, String configuration) throws Exception {
 		return new XMLFileConfiguration().getConfiguration(connectorid, configuration);
 	}
@@ -95,6 +100,10 @@ public abstract class BaseConnector implements Connector {
 	
 	public String convertFlowConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
 		return new XMLFileConfiguration().createFlowConfiguration(configuration);
+	}
+
+	public String convertFlowConfigurationToJSON(TreeMap<String, String> configuration) throws Exception {
+		return new JSONFileConfiguration().createFlowConfiguration(configuration);
 	}
 	
 	//--> abstract methods (needs to be implemented in the subclass

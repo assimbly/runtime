@@ -166,25 +166,34 @@ public class XMLFileConfiguration {
 
 	public String createConfiguration(String connectorId, List<TreeMap<String, String>> configurations) throws Exception {
 
-	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-	    doc = docBuilder.newDocument();
-		
-	    setGeneralProperties(connectorId);
+		if(configurations == null || configurations.isEmpty()) {
+			return "Error: Empty configuration (no configuration is set/running)";
+		}else {
+		    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+		    doc = docBuilder.newDocument();
+			
+		    setGeneralProperties(connectorId);
 
-		for (TreeMap<String, String> configuration : configurations) {
-		    setFlowFromConfiguration(configuration);
+			for (TreeMap<String, String> configuration : configurations) {
+			    setFlowFromConfiguration(configuration);
+			}
+
+		    String xmlConfiguration = ConnectorUtil.convertDocToString(doc);
+		    
+			return xmlConfiguration;
+			
 		}
-
-	    String xmlConfiguration = ConnectorUtil.convertDocToString(doc);
-	    
-		return xmlConfiguration;
 
 	}
 	
 
 	public String createFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
 
+		if(configuration == null || configuration.isEmpty()) {
+			return "Error: Empty configuration (no configuration is set/running)";
+		}
+		
 	    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 	    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 	    doc = docBuilder.newDocument();
@@ -196,7 +205,7 @@ public class XMLFileConfiguration {
 	    if(doc!=null) {
 		    xmlFlowConfiguration = ConnectorUtil.convertDocToString(doc);
 	    }else {
-	    	xmlFlowConfiguration = "Can't create XML File";
+	    	xmlFlowConfiguration = "Error: Can't create configuration";
 	    }
 	    
 		return xmlFlowConfiguration;
