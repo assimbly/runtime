@@ -20,6 +20,7 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.BasicConfigurationBuilder;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.ConversionHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.assimbly.connector.connect.util.ConnectorUtil;
@@ -158,7 +159,7 @@ public class XMLFileConfiguration {
 		}else {
     		throw new Exception("URI scheme for " + uri.getRawPath() + " is not supported");        		        	
 		}
-
+		
 	   setProperties();
 	   
 	   return properties;

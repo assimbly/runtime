@@ -10,10 +10,13 @@ public class JSONFileConfiguration {
 
     public static int PRETTY_PRINT_INDENT_FACTOR = 4;
 	private String jsonConfiguration;
+	private String xmlconfiguration;
+	private List<TreeMap<String, String>> gatewayProperties;
+	private TreeMap<String, String> flowproperties;
     
 	public String createConfiguration(String connectorId, List<TreeMap<String, String>> configurations) throws Exception {
 
-		String xmlconfiguration = new XMLFileConfiguration().createConfiguration(connectorId, configurations);
+		xmlconfiguration = new XMLFileConfiguration().createConfiguration(connectorId, configurations);
 
         JSONObject xmlJSONObj = XML.toJSONObject(xmlconfiguration);
         jsonConfiguration = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
@@ -32,5 +35,24 @@ public class JSONFileConfiguration {
 		return jsonConfiguration;
 	}
 
+	public List<TreeMap<String, String>> getConfiguration(String connectorId, String configuration) throws Exception {
+		
+        JSONObject json = new JSONObject(configuration);
+        xmlconfiguration = XML.toString(json);
+		
+		gatewayProperties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlconfiguration);
+		
+		return gatewayProperties;
+	}
+	
+	public TreeMap<String, String> getFlowConfiguration(String flowId, String configuration) throws Exception {
+		
+        JSONObject json = new JSONObject(configuration);
+        xmlconfiguration = XML.toString(json);
+		
+		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlconfiguration);
+		
+		return flowproperties;
+	}
 	
 }

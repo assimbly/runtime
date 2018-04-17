@@ -67,6 +67,17 @@ public interface Connector {
 	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, URI configurationUri) throws Exception;
 
 	//convert connector configuration from/to JSON
+
+	/**
+	* Converts a JSON configuration to a connector configuration (list of flow configurations)
+	*
+	* @param  connectorId the id of a connector
+	* @param  jsonConfiguration JSON configuration in String format
+	* @return returns connector configuration (List of flow configurations)
+	* @throws Exception if XML can't be converted to a Treemap
+	*/
+	public List<TreeMap<String,String>> convertJSONToConfiguration(String connectorId, String xmlConfiguration) throws Exception;
+	
 	/**
 	* Converts the configuration currently in use to JSON
 	*
@@ -138,8 +149,7 @@ public interface Connector {
 	* @return returns flow configuration (Treemap)
 	* @throws Exception if JSON can't be converted to a Treemap
 	*/	
-	//todo
-	//public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception;
+	public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception;
 	
 	/**
 	* Converts a JSON configuration to a flow configuration
@@ -194,6 +204,14 @@ public interface Connector {
 	*/
 	public boolean hasFlow(String flowId);
 
+	/**
+	* removes flow from connector
+	*
+	* @param  flowId the id of a flow
+	* @return returns true if removed.
+	 * @throws Exception 
+	*/
+	public boolean removeFlow(String flowId) throws Exception;
 	
 	/**
 	* Starts a flow

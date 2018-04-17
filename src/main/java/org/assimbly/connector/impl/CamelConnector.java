@@ -107,6 +107,10 @@ public class CamelConnector extends BaseConnector {
 		
 	}
 
+	public boolean removeFlow(String id) throws Exception {
+		return context.removeRoute(id);
+	}
+
 	public boolean hasFlow(String id) {
 		boolean routeFound = false;
 		if (context != null){
@@ -117,11 +121,6 @@ public class CamelConnector extends BaseConnector {
 			}
 		}
 		return routeFound;
-	}
-
-
-	public void removeFlow(String id) throws Exception {
-		context.removeRoute(id);
 	}
 
 	public void startFlow(String id) throws Exception {

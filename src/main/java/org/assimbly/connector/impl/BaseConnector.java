@@ -90,17 +90,25 @@ public abstract class BaseConnector implements Connector {
 		return new XMLFileConfiguration().getConfiguration(connectorid, configurationUri);
 	}
 	
-	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorID, String configuration) throws Exception {
-		return new XMLFileConfiguration().getFlowConfiguration(connectorID, configuration);
+	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorId, String configuration) throws Exception {
+		return new XMLFileConfiguration().getFlowConfiguration(connectorId, configuration);
 	}
 
-	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorID, URI configurationUri) throws Exception {
-		return new XMLFileConfiguration().getFlowConfiguration(connectorID, configurationUri);
+	public TreeMap<String, String> convertXMLToFlowConfiguration(String flowId, URI configurationUri) throws Exception {
+		return new XMLFileConfiguration().getFlowConfiguration(flowId, configurationUri);
 	}	
 	
 	public String convertFlowConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
 		return new XMLFileConfiguration().createFlowConfiguration(configuration);
 	}
+
+	public List<TreeMap<String, String>> convertJSONToConfiguration(String connectorid, String configuration) throws Exception {
+		return new JSONFileConfiguration().getConfiguration(connectorid, configuration);
+	}
+	
+	public TreeMap<String, String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception {
+		return new JSONFileConfiguration().getFlowConfiguration(flowId, configuration);
+	}	
 
 	public String convertFlowConfigurationToJSON(TreeMap<String, String> configuration) throws Exception {
 		return new JSONFileConfiguration().createFlowConfiguration(configuration);
@@ -114,7 +122,7 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract void stop() throws Exception;
 
-	public abstract void removeFlow(String id) throws Exception;
+	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);
 	
