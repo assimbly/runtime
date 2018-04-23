@@ -20,9 +20,9 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.BasicConfigurationBuilder;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.convert.ConversionHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,7 +42,6 @@ public class XMLFileConfiguration {
 	private String connectorXPath;
 	
 	private String uri;
-	private String component;
 	private String options;
 	private String headerId;
 	private Element rootElement;
@@ -99,14 +98,21 @@ public class XMLFileConfiguration {
 
 	   this.flowId = flowId;
 
-	   conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()).getConfiguration();
+	   conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
+	           .setFileName("conf.xml")
+	           .setSchemaValidation(false)
+	           .setExpressionEngine(new XPathExpressionEngine())
+			   
+			   ).getConfiguration();
 	   FileHandler fh = new FileHandler(conf);
 	   fh.load(ConnectorUtil.convertStringToStream(xml));
 
   	   setProperties();
 
+  	   ConnectorUtil.printTreemap(properties);
+  	 
 	   return properties;
-	
+	   
 	}
 	
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
@@ -136,7 +142,9 @@ public class XMLFileConfiguration {
 			       .configure(params.xml()
 			           .setFileName(xml.getName())
 			           .setFile(xml)
-			           .setSchemaValidation(false));
+			           .setSchemaValidation(false)
+			           .setExpressionEngine(new XPathExpressionEngine())
+			        );
 
 			   // This will throw a ConfigurationException if the XML document does not
 			   // conform to its Schema.
@@ -151,7 +159,9 @@ public class XMLFileConfiguration {
 			       .configure(params.xml()
 			    	   .setURL(Url)
 			           .setFileName("conf.xml")
-			           .setSchemaValidation(false));
+			           .setSchemaValidation(false)
+			           .setExpressionEngine(new XPathExpressionEngine())
+			        );
 
 			   // This will throw a ConfigurationException if the XML document does not
 			   // conform to its Schema.
@@ -223,26 +233,12 @@ public class XMLFileConfiguration {
 		   //set general properties
 		   getGeneralPropertiesFromXMLFile();
 		   
-		   //set from properties
-		   getURIfromXMLFile("from");
-		   getServiceFromXMLFile("from");
-		   getHeaderFromXMLFile("from");
-		   
-		   //set to properties
-		   getURIfromXMLFile("to");		   
-		   getServiceFromXMLFile("to");
-		   getHeaderFromXMLFile("to");
-		   
-		   //set error properties
-		   getURIfromXMLFile("error");
-		   getServiceFromXMLFile("error");
-		   getHeaderFromXMLFile("error");
-		   
-		   //set up defaults settings if null -->
-			if(flowId == null){    			
-				flowId = "flow" + System.currentTimeMillis();					
-			}
-			properties.put("id",flowId);	
+		   //set uri properties
+		   String[] types = {"from", "to", "error"};
+
+		   for(String type : types){
+	  		   getURIfromXMLFile(type);
+	  	   }
 		   
 		   	if(properties.get("from.uri") != null){
 				properties.put("flow","default");
@@ -253,8 +249,6 @@ public class XMLFileConfiguration {
 			if(properties.get("to.uri") == null){
 				properties.put("to.uri","mock:wastebin");		
 			}
-	   	   	   
-			properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		
 	}
 
@@ -269,29 +263,43 @@ public class XMLFileConfiguration {
 
 		connectorXPath = "flows/flow[id='" + flowId + "']";
 
-		List<String> connectorProporties = ConnectorUtil.getXMLParameters(conf, connectorXPath);
+	    String[] connectorProporties = conf.getStringArray(connectorXPath);
 		
-		if(!connectorProporties.isEmpty()){
+		if(connectorProporties.length > 0){
 	  	   for(String connectorProperty : connectorProporties){
 	  		   properties.put(connectorProperty.substring(connectorXPath.length() + 1), conf.getString(connectorProperty));
     	   }
 		}
+		
+	   //set up defaults settings if null -->
+		if(flowId == null){    			
+			flowId = "flow" + System.currentTimeMillis();					
+		}
+
+		properties.put("id",flowId);	
+
+		properties.put("header.contenttype", "text/xml;charset=UTF-8");
+		
 	}
 	
 	private void getURIfromXMLFile(String type) throws Exception {
+		
+		String componentsXpath = "//flows/flow[id='" + flowId + "']/" + type + "/uri";
+	   
+	    String[] components = conf.getStringArray(componentsXpath);
+	    
+	    String touri = "";
+	    
+	   int index = 1;		   
 
-		   options = "";	
-		   
-		   Document doc = conf.getDocument();
-		   
-		   XPath xPath = XPathFactory.newInstance().newXPath();
-		   component = xPath.evaluate("//flows/flow[id='" + flowId + "']/" + type + "/uri",doc);
-		   
-		   if(component == null || component.isEmpty()){return;};
-		   
-		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "flows/flow[id='" + flowId + "']/" + type + "/options");
+	   for(String component : components){
+
+  		   options = "";	
+
+		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/options");
 		   
 	  	   for(String optionProperty : optionProperties){
+	  		 System.out.println("optie: " + optionProperty);
 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 	  	   }
 	  	   
@@ -300,15 +308,30 @@ public class XMLFileConfiguration {
 	  	   }else{
 	  		 options = options.substring(0,options.length() -1);
 	  		 uri = component + "?" + options;  
-	  	   }
+	  	   }	  	   
 	  	   
-	  	   properties.put(type + ".uri", uri);
-	  	   
+		   getServiceFromXMLFile(type, index);
+		   getHeaderFromXMLFile(type, index);
+  		 
+		   if(type.equals("from")||type.equals("error")) {
+		  	   properties.put(type + ".uri", uri);
+			   break;
+		   }else {
+			   if(touri.isEmpty()) {
+				   touri = uri;
+			   }else {
+				   touri = touri + "," + uri;
+			   }
+			   
+		  	   properties.put(type + ".uri", touri);
+			   index++;   
+		   }			   
+  	   }	  	   
 	}
 
-	private void getServiceFromXMLFile(String type) throws ConfigurationException {
+	private void getServiceFromXMLFile(String type, int index) throws ConfigurationException {
 		   	
-	    serviceId = conf.getString("flows/flow[id='" + flowId + "']/" + type + "/service_id");
+	    serviceId = conf.getString("flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/service_id");
 	    if(serviceId == null){return;};
 	    
 	    properties.put(type + ".service_id", serviceId);
@@ -323,9 +346,9 @@ public class XMLFileConfiguration {
 		}
 	}
 	
-	private void getHeaderFromXMLFile(String type) throws ConfigurationException {
+	private void getHeaderFromXMLFile(String type, int index) throws ConfigurationException {
 	   	
-	    headerId = conf.getString("flows/flow[id='" + flowId + "']/" + type + "/header_id");
+	    headerId = conf.getString("flows/flow[id='" + flowId + "'][\" + index + \"]/" + type + "/header_id");
 
 	    if(headerId == null){return;};
 	    

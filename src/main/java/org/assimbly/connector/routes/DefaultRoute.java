@@ -39,7 +39,6 @@ public class DefaultRoute extends RouteBuilder{
 	private int intervalNrOfMessages = 0;
 	private int totalNrOfMessages = 0;
 	
-	
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
 		if (this.props.containsKey("summaryInterval")){
@@ -75,37 +74,51 @@ public class DefaultRoute extends RouteBuilder{
 					.logExhaustedMessageHistory(true));
 		}
 		
-		from(props.get("from.uri")).doTry().process(new Processor() {
-			public void process(Exchange exchange) {
-				Message in = exchange.getIn();
-				intervalNrOfMessages++;
-				totalNrOfMessages++;
-				for (Map.Entry<String, String> entry : props.entrySet()) {
-					if (entry.getKey().startsWith("to.header.constant")) {
-						String key = entry.getKey();
-						in.setHeader(key.substring(19),
-								entry.getValue());
-					} else if (entry.getKey().startsWith(
-							"to.header.xpath")) {
-						String key = entry.getKey();
-						in.setHeader(
-								key.substring(16),
-								XPathBuilder.xpath(entry.getValue())
-										.evaluate(exchange,
-												String.class));
+		from(props.get("from.uri"))
+			.doTry().process(new Processor() {
+				public void process(Exchange exchange) {
+					Message in = exchange.getIn();
+					intervalNrOfMessages++;
+					totalNrOfMessages++;
+					for (Map.Entry<String, String> entry : props.entrySet()) {
+						if (entry.getKey().startsWith("to.header.constant")) {
+							String key = entry.getKey();
+							in.setHeader(key.substring(19),
+									entry.getValue());
+						} else if (entry.getKey().startsWith(
+								"to.header.xpath")) {
+							String key = entry.getKey();
+							in.setHeader(
+									key.substring(16),
+									XPathBuilder.xpath(entry.getValue())
+											.evaluate(exchange,
+													String.class));
+						}
 					}
-				}
-				in.setHeader("Content-Type", props.get("header.contentype"));
-								
-			}
-		})
-		.convertBodyTo(String.class, "UTF-8")		
-		.to(props.get("to.uri")).routeId(props.get("id")).doCatch(Exception.class).process(new ErrorProcessor());
-	
+					in.setHeader("Content-Type", props.get("header.contentype"));									
+					}
+				})
+				.convertBodyTo(String.class, "UTF-8")
+				.doCatch(Exception.class)
+				.process(new ErrorProcessor())
+			.end()
+			.multicast()
+			.shareUnitOfWork()
+			.parallelProcessing()
+			.doTry()
+				.to(getToUriList()).routeId(props.get("id"))
+				.doCatch(Exception.class)
+				.process(new ErrorProcessor())
+			.end();		
+	}
+
+	//create arraylist from touri
+	private String[] getToUriList() {
+		String toUri = props.get("to.uri");
+		String[] toUriArray = toUri.split(",");
+		return toUriArray;
 	}
 	
-	
-		
 	@SuppressWarnings("unused")
 	private String getContent(Object input){
 		String text;

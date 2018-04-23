@@ -75,13 +75,24 @@ public class CamelConnector extends BaseConnector {
 	
 	
 	public void addRoute(TreeMap<String, String> props) throws Exception {
+		
+		//create connections if needed
 		for (String key : props.keySet()){
 			if (key.contains("service.id")){
 				props = new Connection(context, props).start();
 			}
 		}
+		
+		//create arraylist from touri
+		String toUri = props.get("to.uri");
+		String[] toUriArray = toUri.split(",");
+		
+		//set first to endpoint asdefault
 		template = context.createProducerTemplate();
-		template.setDefaultEndpointUri(props.get("to.uri"));
+		template.setDefaultEndpointUri(toUriArray[0]);
+		
+		
+		//set up route by type
 		String route  = props.get("route");
 		if (route == null){
 			logger.info("add default route");
@@ -98,13 +109,13 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
-		logger.info("defaultroutes");
+		logger.info("add default route");
 		context.addRoutes(new DefaultRoute(props));
 	}
 		
 	public void addFlowFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
+		logger.info("add jdbc route");
 		context.addRoutes(new PollingJdbcRoute(props));
-		
 	}
 
 	public boolean removeFlow(String id) throws Exception {
