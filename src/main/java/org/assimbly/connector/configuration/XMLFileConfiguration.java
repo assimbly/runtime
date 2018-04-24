@@ -246,7 +246,7 @@ public class XMLFileConfiguration {
 				properties.put("flow", "none");
 			}
 
-			if(properties.get("to.uri") == null){
+			if(properties.get("to.uri") == null  || properties.get("to.uri").startsWith("wastebin")){
 				properties.put("to.uri","mock:wastebin");		
 			}
 		
@@ -299,7 +299,6 @@ public class XMLFileConfiguration {
 		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/options");
 		   
 	  	   for(String optionProperty : optionProperties){
-	  		 System.out.println("optie: " + optionProperty);
 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 	  	   }
 	  	   
@@ -332,15 +331,15 @@ public class XMLFileConfiguration {
 	private void getServiceFromXMLFile(String type, int index) throws ConfigurationException {
 		   	
 	    serviceId = conf.getString("flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/service_id");
+	    
 	    if(serviceId == null){return;};
-	    
-	    properties.put(type + ".service_id", serviceId);
-	    
-	    serviceXPath = "services/services[id='" + serviceId + "']";
+
+	    serviceXPath = "services/service[id='" + serviceId + "']";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!serviceProporties.isEmpty()){
-	  	   for(String serviceProperty : serviceProporties){
+
+			for(String serviceProperty : serviceProporties){
 	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
     	   }
 		}
@@ -351,8 +350,6 @@ public class XMLFileConfiguration {
 	    headerId = conf.getString("flows/flow[id='" + flowId + "'][\" + index + \"]/" + type + "/header_id");
 
 	    if(headerId == null){return;};
-	    
-	    properties.put(type + ".header_id", headerId);
 	    
 	    serviceXPath = "headers/header[id='" + headerId + "']";
 		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);

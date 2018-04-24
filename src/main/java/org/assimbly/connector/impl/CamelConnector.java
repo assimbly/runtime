@@ -1,6 +1,5 @@
 package org.assimbly.connector.impl;
 
-
 import java.net.URI;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
+import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 
 public class CamelConnector extends BaseConnector {
@@ -47,8 +47,7 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
-		
+		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());		
 		
 		// start Camel context
 		context.start();
@@ -100,6 +99,9 @@ public class CamelConnector extends BaseConnector {
 		}else if(route.equals("default")){
 			logger.info("add default route");
 			addDefaultFlow(props);			
+		}else if(route.equals("simple")){
+			logger.info("add simple route");
+			addDefaultFlow(props);			
 		}else if(route.equals("fromJdbcTimer")){
 			addFlowFromJdbcTimer(props);
 		}
@@ -109,12 +111,17 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
-		logger.info("add default route");
+		logger.info("add default flow");
 		context.addRoutes(new DefaultRoute(props));
 	}
-		
+
+	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
+		logger.info("add simple flow");
+		context.addRoutes(new SimpleRoute(props));
+	}
+	
 	public void addFlowFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
-		logger.info("add jdbc route");
+		logger.info("add jdbc flow");
 		context.addRoutes(new PollingJdbcRoute(props));
 	}
 
@@ -155,6 +162,7 @@ public class CamelConnector extends BaseConnector {
 		
         do {
         	status = context.getRouteStatus(id);
+        	if(status.isStopped()) {break;}
         	Thread.sleep(10);
         	count++;
         	
@@ -202,18 +210,12 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String getFlowUptime(String id) {
-		
 		Route route = context.getRoute(id);
-		
 		return route.getUptime();
-		
 	}
 	
-	
-	public Object getContext() {
-		
-		return context;
-		
+	public Object getContext() {		
+		return context;		
 	}	
 	
 	public void send(Object messageBody, ProducerTemplate template) {
