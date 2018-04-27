@@ -23,11 +23,12 @@ import progress.message.jclient.ConnectionFactory;
 public class Connection {
 
 	private String uri;
-	private String connectionID;
+	private String connectionId;
+	private String flowId;
 	private TreeMap<String, String> properties;
 	private CamelContext context;
 	
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.Connection");
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 	
 	public Connection(CamelContext context, TreeMap<String, String> properties) {
 		this.context = context;
@@ -52,11 +53,12 @@ public class Connection {
 	
 	private void startConnection(String type) throws Exception{
 		uri = properties.get(type + ".uri");
-		connectionID = properties.get(type + ".service.id");
-
+		connectionId = properties.get(type + ".service.id");
+		flowId = properties.get("id");
+		
 		if(uri!=null){
 			
-			if(connectionID!=null){
+			if(connectionId!=null){
 	
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
@@ -76,7 +78,7 @@ public class Connection {
 						break;
 			        case 1:
 			            setupSonicMQConnection(properties, type);
-						properties.put(type + ".uri", "sonicmq." + connectionID + ":" + endpoint);
+						properties.put(type + ".uri", "sonicmq." + connectionId + flowId + ":" + endpoint);
 			            break;
 					case 2:
 				        setupJDBCConnection(properties, type);
@@ -174,8 +176,9 @@ public class Connection {
 	
 		
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
-		String componentName = "sonicmq." + connectionID;
-		String connectorId = properties.get("id");
+		
+		String flowId = properties.get("id");
+		String componentName = "sonicmq." + connectionId + flowId;
 		String url = properties.get(direction + ".service.url");
 		String username = properties.get(direction + ".service.username");
 		String password = properties.get(direction + ".service.password");
@@ -190,7 +193,7 @@ public class Connection {
 					faultTolerant = "false";
 				}
 				connection.setFaultTolerant(Boolean.parseBoolean(faultTolerant));
-				connection.setConnectID("Camel/" + connectorId.replaceAll("\\.", "/") + "/" + new Random().nextInt(100000));			
+				connection.setConnectID("Camel/" + flowId.replaceAll("\\.", "/") + "/" + new Random().nextInt(100000));			
 				connection.setPrefetchCount(10);
 				SjmsComponent jms = new SjmsComponent();
 				
@@ -223,7 +226,7 @@ public class Connection {
 		
 		if (registry instanceof PropertyPlaceholderDelegateRegistry){
 		  registry =((PropertyPlaceholderDelegateRegistry)registry).getRegistry();
-		 ((SimpleRegistry)registry).put(connectionID, ds); 
+		 ((SimpleRegistry)registry).put(connectionId, ds); 
 		}		
 	}	
 	

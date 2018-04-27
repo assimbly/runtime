@@ -219,7 +219,7 @@ public interface Connector {
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
 	*/	
-	public void startFlow(String flowId) throws Exception;
+	public String startFlow(String flowId) throws Exception;
 
 	/**
 	* Restarts a flow
@@ -227,7 +227,7 @@ public interface Connector {
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
 	*/
-	public void restartFlow(String flowId) throws Exception;
+	public String restartFlow(String flowId) throws Exception;
 	
 	/**
 	* Stops a flow
@@ -235,7 +235,7 @@ public interface Connector {
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
 	*/
-	public void stopFlow(String flowId) throws Exception;
+	public String stopFlow(String flowId) throws Exception;
 	
 	/**
 	* Resumes a flow if paused
@@ -243,7 +243,7 @@ public interface Connector {
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
 	*/
-	public void resumeFlow(String flowId) throws Exception;
+	public String resumeFlow(String flowId) throws Exception;
 
 	/**
 	* Pauses a flow if started
@@ -251,7 +251,7 @@ public interface Connector {
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
 	*/
-	public void pauseFlow(String flowId) throws Exception;
+	public String pauseFlow(String flowId) throws Exception;
 	
 	/**
 	* Gets the status of a flow 

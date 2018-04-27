@@ -73,7 +73,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public void addRoute(TreeMap<String, String> props) throws Exception {
+	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		//create connections if needed
 		for (String key : props.keySet()){
@@ -141,20 +141,32 @@ public class CamelConnector extends BaseConnector {
 		return routeFound;
 	}
 
-	public void startFlow(String id) throws Exception {
+	public String startFlow(String id) throws Exception {
 		if(!hasFlow(id)) {
 			for (TreeMap<String, String> props : super.getConfiguration()) {
 				if (props.get("id").equals(id)) {
 					logger.info("Adding route with ids: " + id);
-					addRoute(props);
+					addFlow(props);
 				}
 			}
 		}
 
 		context.startRoute(id);
+
+		int count = 1;
+		
+        do {
+        	status = context.getRouteStatus(id);
+        	if(status.isStarted()) {break;}
+        	Thread.sleep(10);
+        	count++;
+        	
+        } while (status.isStarting() || count < 3000);
+
+		return status.toString().toLowerCase();
 	}
 
-	public void restartFlow(String id) throws Exception {
+	public String restartFlow(String id) throws Exception {
 				
 		stopFlow(id);
 		
@@ -170,42 +182,93 @@ public class CamelConnector extends BaseConnector {
 		
         if(count==3000) {
 			logger.error("Timed out after 30 seconds while stopping route with id: " + id);
+			return "Timed out after 30 seconds while stopping route with id: " + id;
         }else {
-        	startFlow(id);	
+        	return startFlow(id);	
         }	
 	}
 	
-	public void stopFlow(String id) throws Exception {
+	public String stopFlow(String id) throws Exception {
 		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isStoppable()) {
 				context.stopRoute(id);	
 			}
+			
+			int count = 1;
+			
+	        do {
+	        	status = context.getRouteStatus(id);
+	        	if(status.isStopped()) {break;}
+	        	Thread.sleep(10);
+	        	count++;
+	        	
+	        } while (status.isStopping() || count < 3000);
+	        
+	        return status.toString().toLowerCase().toLowerCase();
+			
+		}else {
+			return "Configuration not set";
 		}
+		
 	}
 
-	public void pauseFlow(String id) throws Exception {
+	public String pauseFlow(String id) throws Exception {
 		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isSuspendable()) {
-				context.suspendRoute(id);	
+				context.suspendRoute(id);
+				
+				int count = 1;
+				
+		        do {
+		        	status = context.getRouteStatus(id);
+		        	if(status.isSuspended()) {break;}
+		        	Thread.sleep(10);
+		        	count++;
+		        	
+		        } while (status.isSuspending() || count < 3000);
+		        
+		        return status.toString().toLowerCase();
+			
+				
+			}else {
+				return "Flow isn't suspendable";
 			}
+		}else {
+			return "Configuration not set";
 		}
 	}
 
-	public void resumeFlow(String id) throws Exception {
+	public String resumeFlow(String id) throws Exception {
 		if(hasFlow(id)) {
         	status = context.getRouteStatus(id);
 			if(status.isSuspended()) {
-				context.resumeRoute(id);	
+				context.resumeRoute(id);
+				
+				int count = 1;
+				
+		        do {
+		        	status = context.getRouteStatus(id);
+		        	if(status.isStarted()) {break;}
+		        	Thread.sleep(10);
+		        	count++;
+		        	
+		        } while (status.isStarting() || count < 3000);
+		        
+		        return status.toString().toLowerCase();				
+			}else {
+				return "Flow isn't suspended (nothing to resume)";
 			}
+		}else {
+			return "Configuration not set";
 		}
 	}	
 	
 	public String getFlowStatus(String id) {
 	
 		ServiceStatus status = context.getRouteStatus(id);
-		return status.toString();
+		return status.toString().toLowerCase();
 		
 	}
 

@@ -126,15 +126,15 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract boolean hasFlow(String id);
 	
-	public abstract void startFlow(String id) throws Exception;
+	public abstract String startFlow(String id) throws Exception;
 
-	public abstract void restartFlow(String id) throws Exception;
+	public abstract String restartFlow(String id) throws Exception;
 	
-	public abstract void stopFlow(String id) throws Exception;
+	public abstract String stopFlow(String id) throws Exception;
 
-	public abstract void pauseFlow(String id) throws Exception;
+	public abstract String pauseFlow(String id) throws Exception;
 	
-	public abstract void resumeFlow(String id) throws Exception;
+	public abstract String resumeFlow(String id) throws Exception;
 
 	public abstract String getFlowStatus(String id) throws Exception;
 
