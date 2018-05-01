@@ -1,6 +1,5 @@
 package org.assimbly.connector;
 
-import java.net.URI;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -22,72 +21,42 @@ public interface Connector {
 
 	//configure connector
 	/**
-	* Sets the connector configuration from a list of flow configurations (TreeMaps). This list
-	* is cleared after a connector is reinitialized.
+	* Sets the connector configuration from a list of flow configurations (TreeMaps<Key,Value>). 
+	* The configuration cleared after a connector is reinitialized.
 	*
-	* @param  configuration list of flow configurations (Treemaps)
+	* @param  configuration: list of flow configurations (Treemaps)
 	* @throws Exception if configuration can't be set
 	*/
 	public void setConfiguration(List<TreeMap<String,String>> configuration) throws Exception;
+
 	/**
-	* gets the connector configuration currently set (in use)
+	* Sets the connector configuration from a string of a specific format (XML,JSON,YAML). 
+	* The configuration cleared after a connector is reinitialized.
 	*
-	* @return list of flow configurations
-	* @throws Exception if configuration can't be retrieved or is not available
+	* @param  connctorId
+	* @param  mediatype (XML,JSON,YAML)
+	* @param  configuration (the XML, JSON or YAML file)	
+	* @throws Exception if configuration can't be set
+	*/
+	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
+	
+	/**
+	* gets the connector configuration currently set (in use). 
+	*
+	* @return list of flow configurations (Treemap<key,value>)
+	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
 	public List<TreeMap<String,String>> getConfiguration() throws Exception;
 
-	//convert connector configuration from/to XML
 	/**
-	* Converts the configuration currently in use to XML
+	* gets the connector configuration currently set (in use). 
 	*
-	* @param  connectorId the id of a connector
-	* @param  configuration list of flow configurations
-	* @return returns XML Configuration as String
-	* @throws Exception if XML can't be created
+	* @param  connctorId
+	* @param  mediatype (XML,JSON,YAML)	*
+	* @return list of flow configurations (String of mediatype)
+	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
-	public String convertConfigurationToXML(String connectorId,List<TreeMap<String,String>> configuration) throws Exception;
-	/**
-	* Converts a XML configuration to a connector configuration (list of flow configurations)
-	*
-	* @param  connectorId the id of a connector
-	* @param  xmlConfiguration XML configuration in String format
-	* @return returns connector configuration (List of flow configurations)
-	* @throws Exception if XML can't be converted to a Treemap
-	*/
-	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, String xmlConfiguration) throws Exception;
-	/**
-	* Converts a XML configuration to a connector configuration (list of flow configurations)
-	*
-	* @param  connectorId the id of a connector
-	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
-	* @return returns connector configuration (List of flow configurations)
-	* @throws Exception if XML can't be converted to a Treemap
-	*/
-	public List<TreeMap<String,String>> convertXMLToConfiguration(String connectorId, URI configurationUri) throws Exception;
-
-	//convert connector configuration from/to JSON
-
-	/**
-	* Converts a JSON configuration to a connector configuration (list of flow configurations)
-	*
-	* @param  connectorId the id of a connector
-	* @param  jsonConfiguration JSON configuration in String format
-	* @return returns connector configuration (List of flow configurations)
-	* @throws Exception if XML can't be converted to a Treemap
-	*/
-	public List<TreeMap<String,String>> convertJSONToConfiguration(String connectorId, String xmlConfiguration) throws Exception;
-	
-	/**
-	* Converts the configuration currently in use to JSON
-	*
-	* @param  connectorId the id of a connector
-	* @param  configuration list of flow configurations
-	* @return returns XML Configuration as String
-	* @throws Exception if XML can't be created
-	*/
-	public String convertConfigurationToJSON(String connectorId,List<TreeMap<String,String>> configuration) throws Exception;
-
+	public String getConfiguration(String connectorId, String mediaType) throws Exception;
 	
 	//configure flow
 	/**
@@ -100,6 +69,17 @@ public interface Connector {
 	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception;	
 
 	/**
+	* Sets the flow configuration from a string for a specific format (XML,JSON,YAML). This list
+	* is cleared after a connector is reinitialized.
+	*
+	* @param  flowID
+	* @param  mediatype (XML,JSON,YAML)
+	* @param  configuration (the XML, JSON or YAML file)
+	* @throws Exception if configuration can't be set
+	*/
+	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception;
+	
+	/**
 	* gets the flow configuration for a specific if currently set
 	*
 	* @param  flowId the id of a flow
@@ -107,69 +87,16 @@ public interface Connector {
 	* @throws Exception if configuration can't be retrieved or is not available
 	*/	
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
-
-	
-	//convert flow configuration from/to XML
-	/**
-	* Converts a XML configuration to a flow configuration
-	*
-	* @param  flowId the id of a flow
-	* @param  configuration XML configuration as string
-	* @return returns flow configuration (Treemap)
-	* @throws Exception if XML can't be converted to a Treemap
-	*/	
-	public TreeMap<String,String> convertXMLToFlowConfiguration(String flowId, String configuration) throws Exception;
 	
 	/**
-	* Converts a XML configuration to a flow configuration
+	* gets the connector configuration currently set (in use). 
 	*
-	* @param  flowId the id of a flow
-	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
-	* @return returns flow configuration (Treemap)
-	* @throws Exception if XML can't be converted to a Treemap
-	*/	
-	public TreeMap<String,String> convertXMLToFlowConfiguration(String flowId, URI configurationUri) throws Exception;
-	
-	/**
-	* Converts a flow configuration to a XML configuration
-	*
-	* @param  configuration treemap
-	* @return returns XML as String
-	* @throws Exception if XML can't be converted to a Treemap
+	* @param  flowID
+	* @param  mediatype (XML,JSON,YAML)
+	* @return list of flow configurations (String of mediatype)
+	* @throws Exception if configuration can't be retrieved or is not available
 	*/
-	public String convertFlowConfigurationToXML(TreeMap<String,String> configuration) throws Exception;
-
-	
-	//convert flow configuration from/to JSON
-	/**
-	* Converts a JSON configuration to a flow configuration
-	*
-	* @param  flowId the id of a flow
-	* @param  configuration JSON configuration as string
-	* @return returns flow configuration (Treemap)
-	* @throws Exception if JSON can't be converted to a Treemap
-	*/	
-	public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception;
-	
-	/**
-	* Converts a JSON configuration to a flow configuration
-	*
-	* @param  flowId the id of a flow
-	* @param  configurationUri URI to the XML configuration (This can be a file location or an URL)
-	* @return returns flow configuration (Treemap)
-	* @throws Exception if JSON can't be converted to a Treemap
-	*/	
-	//todo
-	//public TreeMap<String,String> convertJSONToFlowConfiguration(String flowId, URI configurationUri) throws Exception;
-	
-	/**
-	* Converts a flow configuration to a JSON configuration
-	*
-	* @param  configuration treemap
-	* @return returns JSON as String
-	* @throws Exception if JSON can't be converted to a Treemap
-	*/
-	public String convertFlowConfigurationToJSON(TreeMap<String,String> configuration) throws Exception;
+	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	
 	//manage connector
@@ -274,7 +201,7 @@ public interface Connector {
 	
 	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
-	* Note: Calling this you're on your own...
+	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
 	*
 	* @return returns context as object
 	* @throws Exception if context can't be found

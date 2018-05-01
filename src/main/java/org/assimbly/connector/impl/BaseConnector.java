@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
+import org.assimbly.connector.configuration.YAMLFileConfiguration;
 import org.assimbly.connector.Connector;
 
 
@@ -18,34 +19,107 @@ public abstract class BaseConnector implements Connector {
 	@SuppressWarnings("unused")
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.impl.BaseConnector");
 
+	//properties are (list of) key/value maps
 	private List<TreeMap<String,String>> properties = new ArrayList<>();
+	private TreeMap<String, String> flowProperties;
 	private List<TreeMap<String,String>> connections = new ArrayList<>();
+
+	//configuration are strings
+	private String configuration;
+	private String flowConfiguration;
 	
 	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception {
 		for (TreeMap<String, String> flowConfiguration : configuration){
 			setFlowConfiguration(flowConfiguration);
 		}		
 	}
+
+	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
+		
+		mediaType = mediaType.toLowerCase();
+		
+		if(mediaType.contains("xml")) {
+			this.properties = convertXMLToConfiguration(connectorId, configuration);
+		}else if(mediaType.contains("json")) {
+			this.properties = convertJSONToConfiguration(connectorId, configuration);
+		}else {
+			this.properties = convertYAMLToConfiguration(connectorId, configuration);
+		}
+        
+        setConfiguration(this.properties);
+		
+	}	
 	
 	public List<TreeMap<String,String>> getConfiguration() throws Exception {
 		return this.properties;
 	}
 
+	public String getConfiguration(String connectorId, String mediaType) throws Exception {
+		
+		this.properties = getConfiguration();
+		mediaType = mediaType.toLowerCase();
+
+		if(mediaType.contains("xml")) {
+        	configuration = convertConfigurationToXML(connectorId,this.properties);
+		}else if(mediaType.contains("json")) {
+        	configuration = convertConfigurationToJSON(connectorId,this.properties);
+		}else {
+        	configuration = convertConfigurationToYAML(connectorId,this.properties);
+		}
+        
+        return configuration;
+		
+	}
+	
 	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception {
 		this.properties.add(configuration);
 	}	
 
-	public TreeMap<String,String> getFlowConfiguration(String id) throws Exception {
-		TreeMap<String,String> configuration = null;
+	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
+		
+		mediaType = mediaType.toLowerCase();
+
+		if(mediaType.contains("xml")) {
+        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
+		}else if(mediaType.contains("json")) {
+        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
+		}else {
+        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
+		}
+        
+        setFlowConfiguration(flowProperties);
+		
+	}
+	
+	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {
+		TreeMap<String,String> flowConfiguration = null;
 		for (TreeMap<String, String> props : getConfiguration()) {
-			if (props.get("id").equals(id)) {
-				configuration = props;
+			if (props.get("id").equals(flowId)) {
+				flowConfiguration = props;
 			}
 		}
 		
-		return configuration;
+		return flowConfiguration;
 	}	
 
+	public String getFlowConfiguration(String flowId, String mediaType) throws Exception {
+		
+		this.flowProperties = getFlowConfiguration(flowId);
+		mediaType = mediaType.toLowerCase();
+
+		if(mediaType.contains("xml")) {
+        	flowConfiguration = convertFlowConfigurationToXML(this.flowProperties);
+		}else if(mediaType.contains("json")) {
+        	flowConfiguration = convertFlowConfigurationToJSON(this.flowProperties);
+		}else {
+        	flowConfiguration = convertFlowConfigurationToYAML(this.flowProperties);
+		}
+        
+        return flowConfiguration;
+		
+	}
+	
+	
 	@SuppressWarnings("unused")
 	private List<TreeMap<String,String>> getServices() throws Exception {
 		return this.connections;
@@ -73,15 +147,11 @@ public abstract class BaseConnector implements Connector {
 		}
 	}
 	
-	//convert methods
+	//--> convert methods (XML)
 	public String convertConfigurationToXML(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
         return new XMLFileConfiguration().createConfiguration(connectorid, configuration);
 	}
 
-	public String convertConfigurationToJSON(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
-        return new JSONFileConfiguration().createConfiguration(connectorid, configuration);
-	}
-	
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, String configuration) throws Exception {
 		return new XMLFileConfiguration().getConfiguration(connectorid, configuration);
 	}
@@ -101,10 +171,15 @@ public abstract class BaseConnector implements Connector {
 	public String convertFlowConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
 		return new XMLFileConfiguration().createFlowConfiguration(configuration);
 	}
-
+	
+	//--> convert methods (JSON)	
+	public String convertConfigurationToJSON(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
+        return new JSONFileConfiguration().createConfiguration(connectorid, configuration);
+	}
+	
 	public List<TreeMap<String, String>> convertJSONToConfiguration(String connectorid, String configuration) throws Exception {
 		return new JSONFileConfiguration().getConfiguration(connectorid, configuration);
-	}
+	}	
 	
 	public TreeMap<String, String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception {
 		return new JSONFileConfiguration().getFlowConfiguration(flowId, configuration);
@@ -114,7 +189,25 @@ public abstract class BaseConnector implements Connector {
 		return new JSONFileConfiguration().createFlowConfiguration(configuration);
 	}
 	
-	//--> abstract methods (needs to be implemented in the subclass
+	//--> convert methods (YAML)	
+	
+	public String convertConfigurationToYAML(String connectorid, List<TreeMap<String, String>> configuration) throws Exception {
+        return new YAMLFileConfiguration().createConfiguration(connectorid, configuration);
+	}
+	
+	public List<TreeMap<String, String>> convertYAMLToConfiguration(String connectorid, String configuration) throws Exception {
+		return new YAMLFileConfiguration().getConfiguration(connectorid, configuration);
+	}	
+	
+	public TreeMap<String, String> convertYAMLToFlowConfiguration(String flowId, String configuration) throws Exception {
+		return new YAMLFileConfiguration().getFlowConfiguration(flowId, configuration);
+	}	
+
+	public String convertFlowConfigurationToYAML(TreeMap<String, String> configuration) throws Exception {
+		return new YAMLFileConfiguration().createFlowConfiguration(configuration);
+	}
+	
+	//--> abstract methods (needs to be implemented in the subclass specific to the integration framework)
 	
 	public abstract void start() throws Exception;
 

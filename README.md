@@ -46,8 +46,7 @@ or
 Connector connector = new CamelConnector();
 connector.start();
 
-Treemap<String,String> flowConfiguration = connector.convertXMLToFlowConfiguration(flowID, configurationUri);
-connector.setFlowConfiguration(flowConfiguration);
+connector.setFlowConfiguration(flowId, mediatype, flowConfiguration);
 connector.startFlow(flowID);
 ```
 

@@ -25,6 +25,8 @@ public class CamelConnector extends BaseConnector {
 	private boolean started = false;
 	private int stopTimeout = 30;
 	private ServiceStatus status;
+	private String flowStatus;
+	private String flowUptime;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
@@ -267,14 +269,27 @@ public class CamelConnector extends BaseConnector {
 	
 	public String getFlowStatus(String id) {
 	
-		ServiceStatus status = context.getRouteStatus(id);
-		return status.toString().toLowerCase();
+		if(hasFlow(id)) {
+			ServiceStatus status = context.getRouteStatus(id);
+			flowStatus = status.toString().toLowerCase();		
+		}else {
+			flowStatus = "unconfigured";			
+		}
+		
+		return flowStatus;
 		
 	}
 
 	public String getFlowUptime(String id) {
-		Route route = context.getRoute(id);
-		return route.getUptime();
+	
+		if(hasFlow(id)) {
+			Route route = context.getRoute(id);
+			flowUptime = route.getUptime();
+		}else {
+			flowUptime = "0";
+		}
+				
+		return flowUptime;
 	}
 	
 	public Object getContext() {		
