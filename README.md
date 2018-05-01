@@ -15,7 +15,7 @@ Camel components are File, Stream, JDBC, SJMS, SFTP, HTTP4, ACTIVEMQ and SONICMQ
 A flow is configured with key-values. The key-values are stored in a [Java Treemap](https://beginnersbook.com/2013/12/treemap-in-java-with-example/)
 Multiple flows in a connector can be configure with a list of Treemaps. 
 
-The easiest way to generate the Treemap is to convert it from an file (XML,JSON or YAML are supported). Another possibility is using the
+The easiest way to generate the Treemap is to convert it from an file (XML, JSON and YAML are supported). Another possibility is using the
 GUI of [Assimbly Gateway](https://github.com/assimbly/gateway). 
 
 ## Management
