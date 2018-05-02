@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -27,6 +31,9 @@ import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 public class XMLFileConfiguration {
 	
@@ -92,18 +99,19 @@ public class XMLFileConfiguration {
 	
 	}
 	
-	
-	
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
 	   this.flowId = flowId;
 
+	   DocumentBuilder docBuilder = setDocumentBuilder("connector.xsd");
+
 	   conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
-	           .setFileName("conf.xml")
-	           .setSchemaValidation(false)
-	           .setExpressionEngine(new XPathExpressionEngine())
-			   
+	           .setFileName("connector.xml")
+	           .setDocumentBuilder(docBuilder)
+	           .setSchemaValidation(true)	           
+	           .setExpressionEngine(new XPathExpressionEngine())			   
 			   ).getConfiguration();
+
 	   FileHandler fh = new FileHandler(conf);
 	   fh.load(ConnectorUtil.convertStringToStream(xml));
 
@@ -123,6 +131,8 @@ public class XMLFileConfiguration {
 	   //load uri to configuration 
 	   Parameters params = new Parameters();
 	   
+	   DocumentBuilder docBuilder = setDocumentBuilder("connector.xsd");	   
+	   
 		if(scheme.startsWith("sonicfs")) {
 
 			URL Url = uri.toURL();
@@ -140,9 +150,10 @@ public class XMLFileConfiguration {
 			   FileBasedConfigurationBuilder<XMLConfiguration> builder =
 			       new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 			       .configure(params.xml()
-			           .setFileName(xml.getName())
+			           .setFileName("connector.xml")
 			           .setFile(xml)
-			           .setSchemaValidation(false)
+			           .setDocumentBuilder(docBuilder)
+			           .setSchemaValidation(true)
 			           .setExpressionEngine(new XPathExpressionEngine())
 			        );
 
@@ -158,8 +169,9 @@ public class XMLFileConfiguration {
 			       new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 			       .configure(params.xml()
 			    	   .setURL(Url)
-			           .setFileName("conf.xml")
-			           .setSchemaValidation(false)
+			           .setFileName("connector.xml")
+			           .setDocumentBuilder(docBuilder)
+			           .setSchemaValidation(true)
 			           .setExpressionEngine(new XPathExpressionEngine())
 			        );
 
@@ -518,5 +530,38 @@ public class XMLFileConfiguration {
 				  header.appendChild(headerParameter);
 		    }
 		}
+	}
+	
+	private DocumentBuilder setDocumentBuilder(String schemaFilename) throws SAXException, ParserConfigurationException {
+		
+		   URL schemaUrl = this.getClass().getResource("/" + schemaFilename);
+	       Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(schemaUrl);
+	    		   
+	       DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+	       docBuilderFactory.setSchema(schema);
+	  
+	        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+	        //if you want an exception to be thrown when there is invalid xml document,
+	        //you need to set your own ErrorHandler because the default
+	        //behavior is to just print an error message.
+	        docBuilder.setErrorHandler(new ErrorHandler() {
+	           @Override
+	           public void warning(SAXParseException exception) throws SAXException {
+	               throw exception;
+	           }
+
+	           @Override
+	           public void error(SAXParseException exception) throws SAXException {
+	               throw exception;
+	           }
+
+	           @Override
+	           public void fatalError(SAXParseException exception)  throws SAXException {
+	               throw exception;
+	           }  
+	       });
+	        
+	      return docBuilder;  
 	}	
+	
 }
