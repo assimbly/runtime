@@ -132,6 +132,16 @@ public interface Connector {
 	public boolean hasFlow(String flowId);
 
 	/**
+	* Gets the stats of a connector
+	*
+	* @param  type of stats ("default" or "history"
+	* @param  mediatype (xml or json)
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getStats(String statsType, String mediaType) throws Exception;	
+	
+	/**
 	* removes flow from connector
 	*
 	* @param  flowId the id of a flow
@@ -194,10 +204,55 @@ public interface Connector {
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
-	* @return returns true (stopped, started, paused).
+	* @return returns data/time in human readable format
 	*/
 	public String getFlowUptime(String flowId) throws Exception;	
-	
+
+	/**
+	* Gets the number of messages a flow has prcessed
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getFlowLastError(String flowId) throws Exception;	
+
+	/**
+	* Gets the last error of a flow
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getFlowTotalMessages(String flowId) throws Exception;	
+
+	/**
+	* Gets the total number of messages a flow has processed
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getFlowCompletedMessages(String flowId) throws Exception;	
+
+	/**
+	* Gets the total number of completed messages a flow has processed
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getFlowFailedMessages(String flowId) throws Exception;	
+
+	/**
+	* Gets the details stats of a flow
+	*
+	* @param  flowId the id of the flow
+	* @param  mediatype (xml or json)
+	* @throws Exception if flow doesn't start
+	* @return returns number of messages
+	*/
+	public String getFlowStats(String flowId, String mediaType) throws Exception;	
 	
 	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)

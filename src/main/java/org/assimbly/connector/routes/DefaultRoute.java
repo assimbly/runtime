@@ -6,8 +6,6 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,23 +33,16 @@ public class DefaultRoute extends RouteBuilder{
 	Map<String, String> props;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	
-	private int interval;
-	private int intervalNrOfMessages = 0;
-	private int totalNrOfMessages = 0;
-	
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
-		if (this.props.containsKey("summaryInterval")){
-			interval = Integer.parseInt(this.props.get("summaryInterval")) * 1000;
-			Timer timer = new Timer();
-			timer.scheduleAtFixedRate(new SummaryTask(), interval, interval);			
-		}
 	}
 
 	@Override
 	public void configure() throws Exception {
 			
 		logger.info("Configuring default route");
+		
+		Processor setHeaders = new SetHeaders();
 		
 		if (this.props.containsKey("error.uri")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))
@@ -75,29 +66,8 @@ public class DefaultRoute extends RouteBuilder{
 		}
 		
 		from(props.get("from.uri"))
-			.doTry().process(new Processor() {
-				public void process(Exchange exchange) {
-					Message in = exchange.getIn();
-					intervalNrOfMessages++;
-					totalNrOfMessages++;
-					for (Map.Entry<String, String> entry : props.entrySet()) {
-						if (entry.getKey().startsWith("to.header.constant")) {
-							String key = entry.getKey();
-							in.setHeader(key.substring(19),
-									entry.getValue());
-						} else if (entry.getKey().startsWith(
-								"to.header.xpath")) {
-							String key = entry.getKey();
-							in.setHeader(
-									key.substring(16),
-									XPathBuilder.xpath(entry.getValue())
-											.evaluate(exchange,
-													String.class));
-						}
-					}
-					in.setHeader("Content-Type", props.get("header.contentype"));									
-					}
-				})
+			.doTry()
+				.process(setHeaders)
 				.convertBodyTo(String.class, "UTF-8")
 				.doCatch(Exception.class)
 				.process(new ErrorProcessor())
@@ -111,7 +81,7 @@ public class DefaultRoute extends RouteBuilder{
 				.process(new ErrorProcessor())
 			.end();		
 	}
-
+	
 	//create arraylist from touri
 	private String[] getToUriList() {
 		String toUri = props.get("to.uri");
@@ -150,26 +120,7 @@ public class DefaultRoute extends RouteBuilder{
 		} 
 	}	
 	
-	public class getNumberOfMessages{
-		
-		public int run() {
-			return totalNrOfMessages;
-		}
-	}
-	
-	
-	private class SummaryTask extends TimerTask{
-
-		@Override
-		public void run() {
-			logger.info("Received " + intervalNrOfMessages +  " messages last " + (interval / 1000) + " seconds. Received " + totalNrOfMessages  + " messages in total.");
-			intervalNrOfMessages = 0;
-		}
-		
-	}
-	
-	private class ErrorProcessor implements Processor{
-		
+	private class ErrorProcessor implements Processor{		
 		
 		@Override
 		public void process(Exchange exchange) throws Exception {
@@ -177,5 +128,28 @@ public class DefaultRoute extends RouteBuilder{
 		}
 		
 	}
-
+	
+	public class SetHeaders implements Processor {
+		
+		  public void process(Exchange exchange) throws Exception {
+				Message in = exchange.getIn();
+				for (Map.Entry<String, String> entry : props.entrySet()) {
+					if (entry.getKey().startsWith("to.header.constant")) {
+						String key = entry.getKey();
+						in.setHeader(key.substring(19),
+								entry.getValue());
+					} else if (entry.getKey().startsWith(
+							"to.header.xpath")) {
+						String key = entry.getKey();
+						in.setHeader(
+								key.substring(16),
+								XPathBuilder.xpath(entry.getValue())
+										.evaluate(exchange,
+												String.class));
+					}
+				}
+				in.setHeader("Content-Type", props.get("header.contentype"));									
+		  }
+		  
+	}
 }

@@ -14,6 +14,8 @@ import java.util.TreeMap;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.json.JSONObject;
+import org.json.XML;
 
 import java.io.StringWriter;
 
@@ -30,7 +32,8 @@ import org.w3c.dom.Document;
 
 public final class ConnectorUtil {
 
-	
+	public static int PRETTY_PRINT_INDENT_FACTOR = 4;
+	   
     public static String convertStreamToString(InputStream is) {
         @SuppressWarnings("resource")
 		java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
@@ -77,7 +80,7 @@ public final class ConnectorUtil {
 	    return builder.parse(stream);
 	  }
     
-	public static boolean isValidURI(String name) throws Exception {
+	public static boolean isValidUri(String name) throws Exception {
 		try {
 		    URI uri = new URI(name);
 		    
@@ -93,11 +96,6 @@ public final class ConnectorUtil {
 		
 	}	
     
-    public static String getContentFromJdbc(String connectorID, URI configurationUri){
-    	
-    	return "";
-    }
-
 	public static List<String> getXMLParameters(XMLConfiguration conf, String prefix) throws ConfigurationException {
 	  	   
 	  	   Iterator<String> keys;
@@ -127,6 +125,23 @@ public final class ConnectorUtil {
 			  System.out.println(key + " => " + value);
 		}
 		
+	}
+
+	public static String convertJsonToXml(String json) {
+
+	   JSONObject jsonObj = new JSONObject(json);
+	   String xml = XML.toString(jsonObj);
+
+	   return xml;
+		
+	}
+	
+	public static String convertXmlToJson(String xml) {
+		
+        JSONObject xmlJSONObj = XML.toJSONObject(xml);
+        String json = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
+		
+		return json;		
 	}
 
 }

@@ -3,54 +3,46 @@ package org.assimbly.connector.configuration;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.json.JSONObject;
-import org.json.XML;
+import org.assimbly.connector.connect.util.ConnectorUtil;
 
 public class JSONFileConfiguration {
 
     public static int PRETTY_PRINT_INDENT_FACTOR = 4;
+
+	private List<TreeMap<String, String>> properties;
+	private TreeMap<String, String> flowproperties;
+
 	private String jsonConfiguration;
 	private String xmlConfiguration;
-	private List<TreeMap<String, String>> gatewayProperties;
-	private TreeMap<String, String> flowproperties;
-    
-	public String createConfiguration(String connectorId, List<TreeMap<String, String>> configurations) throws Exception {
 
-		xmlConfiguration = new XMLFileConfiguration().createConfiguration(connectorId, configurations);
+	public String createConfiguration(String connectorId, List<TreeMap<String, String>> properties) throws Exception {
 
-        JSONObject xmlJSONObj = XML.toJSONObject(xmlConfiguration);
-        jsonConfiguration = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
+		xmlConfiguration = new XMLFileConfiguration().createConfiguration(connectorId, properties);
+		jsonConfiguration = ConnectorUtil.convertXmlToJson(xmlConfiguration);
 		
 		return jsonConfiguration;
 
 	}
 
-	public String createFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
+	public String createFlowConfiguration(TreeMap<String, String> flowProperties) throws Exception {
 
-		xmlConfiguration = new XMLFileConfiguration().createFlowConfiguration(configuration);
-
-        JSONObject xmlJSONObj = XML.toJSONObject(xmlConfiguration);
-        
-        jsonConfiguration = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
+		xmlConfiguration = new XMLFileConfiguration().createFlowConfiguration(flowProperties);
+		jsonConfiguration = ConnectorUtil.convertXmlToJson(xmlConfiguration);
 		
 		return jsonConfiguration;
 	}
 
-	public List<TreeMap<String, String>> getConfiguration(String connectorId, String configuration) throws Exception {
+	public List<TreeMap<String, String>> getConfiguration(String connectorId, String jsonConfiguration) throws Exception {
 		
-        JSONObject json = new JSONObject(configuration);
-        xmlConfiguration = XML.toString(json);
+		xmlConfiguration = ConnectorUtil.convertJsonToXml(jsonConfiguration);
+		properties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
 		
-		gatewayProperties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
-		
-		return gatewayProperties;
+		return properties;
 	}
 	
-	public TreeMap<String, String> getFlowConfiguration(String flowId, String configuration) throws Exception {
-		
-        JSONObject json = new JSONObject(configuration);
-        xmlConfiguration = XML.toString(json);
-		
+	public TreeMap<String, String> getFlowConfiguration(String flowId, String jsonConfiguration) throws Exception {
+
+		xmlConfiguration = ConnectorUtil.convertJsonToXml(jsonConfiguration);
 		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
 		
 		return flowproperties;

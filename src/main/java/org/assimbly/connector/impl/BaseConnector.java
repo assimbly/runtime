@@ -215,6 +215,10 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract void stop() throws Exception;
 
+	public abstract String getStats(String statsType, String mediaType) throws Exception;	
+
+	public abstract Object getContext() throws Exception;
+	
 	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);
@@ -232,8 +236,16 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getFlowStatus(String id) throws Exception;
 
 	public abstract String getFlowUptime(String id) throws Exception;
+
+	public abstract String getFlowLastError(String id);	
 	
-	public abstract Object getContext() throws Exception;
+	public abstract String getFlowTotalMessages(String id) throws Exception;	
+	
+	public abstract String getFlowCompletedMessages(String id) throws Exception;
+	
+	public abstract String getFlowFailedMessages(String id) throws Exception;	
+	
+	public abstract String getFlowStats(String id, String mediaType) throws Exception;
 	
 	public abstract void send(Object messageBody, ProducerTemplate template);
 

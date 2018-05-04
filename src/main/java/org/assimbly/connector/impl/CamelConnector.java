@@ -8,11 +8,20 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
+import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
+import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
+import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
+import org.apache.camel.spi.RouteError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.MetricRegistry;
+
+import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
 import org.assimbly.connector.routes.SimpleRoute;
@@ -27,9 +36,15 @@ public class CamelConnector extends BaseConnector {
 	private ServiceStatus status;
 	private String flowStatus;
 	private String flowUptime;
+
+	private String flowStats;
+	private String connectorStats;
+	private MetricRegistry metricRegistry = new MetricRegistry();
+	private String flowStatsError;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
+   
 	public CamelConnector() {
 
 	}
@@ -42,14 +57,21 @@ public class CamelConnector extends BaseConnector {
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 	
-	
 	public void start() throws Exception {
 
 		SimpleRegistry registry = new SimpleRegistry();
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());		
+		
+		//set default metrics
+		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
+
+		//set history metrics
+	    MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+	    factory.setPrettyPrint(true);
+	    factory.setMetricsRegistry(metricRegistry);
+		context.setMessageHistoryFactory(factory);
 		
 		// start Camel context
 		context.start();
@@ -291,6 +313,114 @@ public class CamelConnector extends BaseConnector {
 				
 		return flowUptime;
 	}
+
+	public String getFlowLastError(String id) {
+		
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		
+		if(route!=null) {
+			RouteError lastError = route.getLastError();
+			flowStatsError = lastError.toString();
+		}else {
+			flowStatsError = "0";
+		}
+
+		return flowStatsError;
+	}
+	
+	
+	public String getFlowTotalMessages(String id) throws Exception {
+
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		
+		if(route!=null) {
+			long totalMessages = route.getExchangesTotal();
+			flowStats = Long.toString(totalMessages);
+		}else {
+			flowStats = "0";
+		}
+
+		return flowStats;
+
+	}
+	
+	
+	public String getFlowCompletedMessages(String id) throws Exception {
+
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		
+		if(route!=null) {
+			long completedMessages = route.getExchangesCompleted();
+			flowStats = Long.toString(completedMessages);
+		}else {
+			flowStats = "0";
+		}
+
+		return flowStats;
+
+	}
+
+	public String getFlowFailedMessages(String id) throws Exception  {
+
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		
+		if(route!=null) {
+			long failedMessages = route.getExchangesFailed();
+			flowStats = Long.toString(failedMessages);
+		}else {
+			flowStats = "0";
+		}
+
+		return flowStats;
+
+	}
+	
+	public String getFlowStats(String id, String mediaType) throws Exception {
+		
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		
+		if(route!=null) {
+			flowStats = route.dumpStatsAsXml(true);
+			if(mediaType.contains("json")) {
+				flowStats = ConnectorUtil.convertXmlToJson(flowStats);
+			}
+		}else {
+			flowStats = "0";
+		}
+		
+		return flowStats;
+	}	
+
+	public String getStats(String statsType, String mediaType) throws Exception {
+		
+		if(statsType.equals("history")) {
+
+			MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
+
+			if(historyService!=null) {
+				connectorStats = historyService.dumpStatisticsAsJson();
+				if(mediaType.contains("xml")) {
+					connectorStats = ConnectorUtil.convertJsonToXml(connectorStats);
+				}
+			}else {
+				connectorStats = "0";
+			}
+		}else {
+			MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
+			
+			if(metricsService!=null) {
+				connectorStats = metricsService.dumpStatisticsAsJson();
+				if(mediaType.contains("xml")) {
+					connectorStats = ConnectorUtil.convertJsonToXml(connectorStats);
+				}
+			}else {
+				connectorStats = "0";
+			}
+		}
+		
+		return connectorStats;
+
+	}	
 	
 	public Object getContext() {		
 		return context;		
