@@ -1,6 +1,8 @@
 package org.assimbly.connector.impl;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +42,8 @@ public class CamelConnector extends BaseConnector {
 	private String flowStats;
 	private String connectorStats;
 	private MetricRegistry metricRegistry = new MetricRegistry();
-	private String flowStatsError;
+
+	private String flowInfo;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
@@ -165,6 +168,86 @@ public class CamelConnector extends BaseConnector {
 		return routeFound;
 	}
 
+	public String startAllFlows() throws Exception {
+		logger.info("Starting all flows");
+		
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			flowStatus = startFlow(props.get("id"));
+			if(!flowStatus.equals("started")) {
+				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus; 
+			}	
+        }
+		
+		return "started";
+	}
+
+	public String restartAllFlows() throws Exception {
+		logger.info("Restarting all flows");
+		
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			flowStatus = restartFlow(props.get("id"));
+			if(!flowStatus.equals("restarted")) {
+				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus; 
+			}	
+        }
+		
+		return "restarted";
+	}
+
+	public String pauseAllFlows() throws Exception {
+		logger.info("Pause all flows");
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        
+		Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			flowStatus = restartFlow(props.get("id"));
+			if(!flowStatus.equals("restarted")) {
+				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus; 
+			}	
+        }
+		
+		return "paused";
+	}
+
+	public String resumeAllFlows() throws Exception {
+		logger.info("Resume all flows");
+		
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			flowStatus = resumeFlow(props.get("id"));
+			if(!flowStatus.equals("restarted")) {
+				return "failed to resume flow with id " + props.get("id") + ". Status is " + flowStatus; 
+			}	
+        }
+		
+		return "started";
+	}
+	
+	public String stopAllFlows() throws Exception {
+		logger.info("Stopping all flows");
+		
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			flowStatus = stopFlow(props.get("id"));
+			if(!flowStatus.equals("restarted")) {
+				return "failed to stop flow with id " + props.get("id") + ". Status is " + flowStatus; 
+			}	
+        }
+		
+		return "stopped";
+	}
+	
 	public String startFlow(String id) throws Exception {
 		if(!hasFlow(id)) {
 			for (TreeMap<String, String> props : super.getConfiguration()) {
@@ -320,12 +403,17 @@ public class CamelConnector extends BaseConnector {
 		
 		if(route!=null) {
 			RouteError lastError = route.getLastError();
-			flowStatsError = lastError.toString();
+			if(lastError!=null) {
+				flowInfo = lastError.toString();	
+			}else {
+				flowInfo = "0";
+			}
+			
 		}else {
-			flowStatsError = "0";
+			flowInfo = "0";
 		}
 
-		return flowStatsError;
+		return flowInfo;
 	}
 	
 	
@@ -335,12 +423,12 @@ public class CamelConnector extends BaseConnector {
 		
 		if(route!=null) {
 			long totalMessages = route.getExchangesTotal();
-			flowStats = Long.toString(totalMessages);
+			flowInfo = Long.toString(totalMessages);
 		}else {
-			flowStats = "0";
+			flowInfo = "0";
 		}
 
-		return flowStats;
+		return flowInfo;
 
 	}
 	
@@ -351,12 +439,12 @@ public class CamelConnector extends BaseConnector {
 		
 		if(route!=null) {
 			long completedMessages = route.getExchangesCompleted();
-			flowStats = Long.toString(completedMessages);
+			flowInfo = Long.toString(completedMessages);
 		}else {
-			flowStats = "0";
+			flowInfo = "0";
 		}
 
-		return flowStats;
+		return flowInfo;
 
 	}
 
@@ -366,20 +454,21 @@ public class CamelConnector extends BaseConnector {
 		
 		if(route!=null) {
 			long failedMessages = route.getExchangesFailed();
-			flowStats = Long.toString(failedMessages);
+			flowInfo = Long.toString(failedMessages);
 		}else {
-			flowStats = "0";
+			flowInfo = "0";
 		}
 
-		return flowStats;
+		return flowInfo;
 
 	}
 	
 	public String getFlowStats(String id, String mediaType) throws Exception {
 		
 		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+		flowStatus = getFlowStatus(id);
 		
-		if(route!=null) {
+		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);
 			if(mediaType.contains("json")) {
 				flowStats = ConnectorUtil.convertXmlToJson(flowStats);

@@ -37,16 +37,17 @@ public abstract class BaseConnector implements Connector {
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
 		
 		mediaType = mediaType.toLowerCase();
+		List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
 		
 		if(mediaType.contains("xml")) {
-			this.properties = convertXMLToConfiguration(connectorId, configuration);
+			propertiesFromFile = convertXMLToConfiguration(connectorId, configuration);
 		}else if(mediaType.contains("json")) {
-			this.properties = convertJSONToConfiguration(connectorId, configuration);
+			propertiesFromFile = convertJSONToConfiguration(connectorId, configuration);
 		}else {
-			this.properties = convertYAMLToConfiguration(connectorId, configuration);
+			propertiesFromFile = convertYAMLToConfiguration(connectorId, configuration);
 		}
         
-        setConfiguration(this.properties);
+        setConfiguration(propertiesFromFile);
 		
 	}	
 	
@@ -222,6 +223,16 @@ public abstract class BaseConnector implements Connector {
 	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);
+
+	public abstract String startAllFlows() throws Exception;
+
+	public abstract String restartAllFlows() throws Exception;
+
+	public abstract String pauseAllFlows() throws Exception;
+
+	public abstract String resumeAllFlows() throws Exception;
+
+	public abstract String stopAllFlows() throws Exception;
 	
 	public abstract String startFlow(String id) throws Exception;
 

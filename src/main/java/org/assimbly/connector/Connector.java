@@ -121,7 +121,7 @@ public interface Connector {
 	* @return returns true if connector is started
 	*/
 	public boolean isStarted();
-	
+
 	//manage flow
 	/**
 	* Checks if a flow is a part of connector
@@ -149,6 +149,41 @@ public interface Connector {
 	 * @throws Exception 
 	*/
 	public boolean removeFlow(String flowId) throws Exception;
+	
+	/**
+	* Starts all configured flows
+	*
+	* @throws Exception if one of the flows doesn't start
+	*/	
+	public String startAllFlows() throws Exception;
+
+	/**
+	* Restarts all configured flows
+	*
+	* @throws Exception if one of the flows doesn't stop
+	*/	
+	public String restartAllFlows() throws Exception;
+
+	/**
+	* Starts all configured flows
+	*
+	* @throws Exception if one of the flows doesn't start
+	*/	
+	public String pauseAllFlows() throws Exception;
+
+	/**
+	* Resume all configured flows
+	*
+	* @throws Exception if one of the flows doesn't resume
+	*/	
+	public String resumeAllFlows() throws Exception;
+
+	/**
+	* Stops all configured flows
+	*
+	* @throws Exception if one of the flows doesn't stop
+	*/	
+	public String stopAllFlows() throws Exception;
 	
 	/**
 	* Starts a flow

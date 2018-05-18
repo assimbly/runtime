@@ -58,7 +58,9 @@ public class XMLFileConfiguration {
 	private Element headers;
 	private Element flow;
 	private String xmlFlowConfiguration;
-	
+
+	private List<String> servicesList;
+    private List<String> headersList;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -253,9 +255,9 @@ public class XMLFileConfiguration {
 	  	   }
 		   
 		   	if(properties.get("from.uri") != null){
-				properties.put("flow","default");
+				properties.put("flow.type","default");
 			}else{
-				properties.put("flow", "none");
+				properties.put("flow.type", "none");
 			}
 
 			if(properties.get("to.uri") == null  || properties.get("to.uri").startsWith("wastebin")){
@@ -411,6 +413,10 @@ public class XMLFileConfiguration {
 	    rootElement.appendChild(flows);
 	    rootElement.appendChild(services);
 	    rootElement.appendChild(headers);
+	    
+	    //List to ensure no double entries
+	    servicesList = new ArrayList<String>();
+	    headersList = new ArrayList<String>();   
 		
 	}
 	
@@ -427,8 +433,8 @@ public class XMLFileConfiguration {
 	    flow.appendChild(id);
 
 	    //set id
-	    String flowType = configuration.get("flow");	    
-	    Element flowTypeNode = doc.createElement("flow");
+	    String flowType = configuration.get("flow.type");	    
+	    Element flowTypeNode = doc.createElement("type");
 	    flowTypeNode.appendChild(doc.createTextNode(flowType));
 	    flow.appendChild(flowTypeNode);	    
 	    
@@ -441,7 +447,7 @@ public class XMLFileConfiguration {
 	
 	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
 
-		String confUri = configuration.get(type + ".uri");
+		String confUriList = configuration.get(type + ".uri");
 		String confServiceId = configuration.get(type + ".service.id");
 		String confHeaderId = configuration.get(type + ".header.id");
 
@@ -450,86 +456,105 @@ public class XMLFileConfiguration {
 	    Element options = doc.createElement("options");
 	    Element serviceid = doc.createElement("service_id");
 	    Element headerid = doc.createElement("header_id");
-
-		if(confUri!=null) {
-
-			flow.appendChild(endpoint);
-
-			String[] confUriSplitted = confUri.split("\\?");
+	    
+		if(confUriList!=null) {
 			
-			if(confUriSplitted.length<=1) {
-			    uri.setTextContent(confUri);	
-				endpoint.appendChild(uri);
-			}else {
-			    uri.setTextContent(confUriSplitted[0]);
-			    endpoint.appendChild(uri);
-			    endpoint.appendChild(options);
-			    
-			    String[] confOptions = confUriSplitted[1].split(",");
-			    
-			    for(String confOption : confOptions) {
-			    	String[] confOptionSplitted = confOption.split("=");
-
-			    	if(confOptionSplitted.length>1){
-			    		Element option = doc.createElement(confOptionSplitted[0]);
-					    option.setTextContent(confOptionSplitted[1]);	
-			    		options.appendChild(option);
-			    	}
-			    }
-			}
+			String[] confUris = confUriList.split(",");
 			
-		    if(confServiceId!=null) {
-			    serviceid.setTextContent(confServiceId);
-		    	endpoint.appendChild(serviceid);
-			    setServiceFromConfiguration(confServiceId, type, configuration);
-			}
+			for(String confUri : confUris) {
 
-		    if(confHeaderId!=null) {
-			    endpoint.appendChild(headerid);
-			    headerid.setTextContent(confHeaderId);
-			    setHeaderFromConfiguration(confHeaderId, type, configuration);
+				flow.appendChild(endpoint);
+
+				String[] confUriSplitted = confUri.split("\\?");
+				
+				if(confUriSplitted.length<=1) {
+					if(confUri.startsWith("sonicmq")) {
+						confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+					}
+				    uri.setTextContent(confUri);	
+					endpoint.appendChild(uri);
+				}else {
+					if(confUriSplitted[0].startsWith("sonicmq")) {
+						confUriSplitted[0] = confUriSplitted[0].replaceFirst("sonicmq.*:", "sonicmq:");
+					}
+				    uri.setTextContent(confUriSplitted[0]);
+				    endpoint.appendChild(uri);
+				    endpoint.appendChild(options);
+				    
+				    String[] confOptions = confUriSplitted[1].split("&");
+				    
+				    for(String confOption : confOptions) {
+				    	String[] confOptionSplitted = confOption.split("=");
+
+				    	if(confOptionSplitted.length>1){
+				    		Element option = doc.createElement(confOptionSplitted[0]);
+						    option.setTextContent(confOptionSplitted[1]);	
+				    		options.appendChild(option);
+				    	}
+				    }
+				}
+				
+			    if(confServiceId!=null) {
+				    serviceid.setTextContent(confServiceId);
+			    	endpoint.appendChild(serviceid);
+				    setServiceFromConfiguration(confServiceId, type, configuration);
+				}
+
+			    if(confHeaderId!=null) {
+				    endpoint.appendChild(headerid);
+				    headerid.setTextContent(confHeaderId);
+				    setHeaderFromConfiguration(confHeaderId, type, configuration);
+				}
 			}
 		}
 	}
 
 	private void setServiceFromConfiguration(String serviceid, String type, TreeMap<String, String> configuration) throws Exception {
 
-	    Element service = doc.createElement("service");
-	    services.appendChild(service);
+		if(!servicesList.contains(serviceid)) {
+			servicesList.add(serviceid);
 
-		for(Map.Entry<String,String> entry : configuration.entrySet()) {
-			  String key = entry.getKey();
-			  String parameterValue = entry.getValue();
-			  
-			  if(key.startsWith(type + ".service") && parameterValue!=null) {
-				  String parameterName = key.substring(key.lastIndexOf(".service.") + 9);				  
-				  Element serviceParameter = doc.createElement(parameterName);
-				  serviceParameter.setTextContent(parameterValue);
-				  service.appendChild(serviceParameter);
-			  }
-		 }
+		    Element service = doc.createElement("service");
+		    services.appendChild(service);
+	
+			for(Map.Entry<String,String> entry : configuration.entrySet()) {
+				  String key = entry.getKey();
+				  String parameterValue = entry.getValue();
+				  
+				  if(key.startsWith(type + ".service") && parameterValue!=null) {
+					  String parameterName = key.substring(key.lastIndexOf(".service.") + 9);				  
+					  Element serviceParameter = doc.createElement(parameterName);
+					  serviceParameter.setTextContent(parameterValue);
+					  service.appendChild(serviceParameter);
+				  }
+			 }
+		}
 	}
 	
 	private void setHeaderFromConfiguration(String headerid, String type, TreeMap<String, String> configuration) throws Exception {
 
-	    Element header = doc.createElement("header");
-	    Element id = doc.createElement("id");
-	    
-	    headers.appendChild(header);
-	    id.appendChild(doc.createTextNode(headerid));
-	    header.appendChild(id);
+		if(!headersList.contains(headerid)) {
+			headersList.add(headerid);
 
-		for(Map.Entry<String,String> entry : configuration.entrySet()) {
-			String key = entry.getKey();
-			String parameterValue = entry.getValue();
-			  
-			if(key.startsWith(type + ".header") && parameterValue!=null) {
-				  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
-				  Element headerParameter = doc.createElement(parameterName);
-				  headerParameter.setTextContent(parameterValue);
-				  header.appendChild(headerParameter);
-		    }
-		}
+		    Element header = doc.createElement("header");
+		    Element id = doc.createElement("id");
+		    
+		    headers.appendChild(header);
+		    id.appendChild(doc.createTextNode(headerid));
+		    header.appendChild(id);
+	
+			for(Map.Entry<String,String> entry : configuration.entrySet()) {
+				String key = entry.getKey();
+				String parameterValue = entry.getValue();
+				  
+				if(key.startsWith(type + ".header") && parameterValue!=null) {
+					  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
+					  Element headerParameter = doc.createElement(parameterName);
+					  headerParameter.setTextContent(parameterValue);
+					  header.appendChild(headerParameter);
+			    }
+			}		
+		}		
 	}
 	
 	private DocumentBuilder setDocumentBuilder(String schemaFilename) throws SAXException, ParserConfigurationException {

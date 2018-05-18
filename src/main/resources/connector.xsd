@@ -18,12 +18,11 @@
 	</xs:complexType>
 	<xs:complexType name="flowType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
-			<xs:element type="xs:string" name="id" />
-			<xs:element type="fromType" name="from" />
-			<xs:element type="toType" name="to" minOccurs="0"
-				maxOccurs="unbounded" />
-			<xs:element type="errorType" name="error" minOccurs="0"
-				maxOccurs="1" />
+			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="fromType" name="from" maxOccurs="1" />
+			<xs:element type="toType" name="to" minOccurs="0" maxOccurs="unbounded" />
+			<xs:element type="errorType" name="error" minOccurs="0"	maxOccurs="1" />
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="fromType">
