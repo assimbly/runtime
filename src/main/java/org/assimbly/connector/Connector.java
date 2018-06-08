@@ -36,6 +36,7 @@ public interface Connector {
 	* @param  connctorId
 	* @param  mediatype (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)	
+	 * @return 
 	* @throws Exception if configuration can't be set
 	*/
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
@@ -75,6 +76,7 @@ public interface Connector {
 	* @param  flowID
 	* @param  mediatype (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)
+	 * @return 
 	* @throws Exception if configuration can't be set
 	*/
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception;
@@ -132,14 +134,59 @@ public interface Connector {
 	public boolean hasFlow(String flowId);
 
 	/**
+	* Validates the uri + options
+	*
+	* @param  flowId the id of a flow
+	* @return returns true if valid.
+	*/
+	public String validateFlow(String flowId);
+	
+	/**
 	* Gets the stats of a connector
 	*
-	* @param  type of stats ("default" or "history"
+	* @param  type of stats ("default" or "history")
 	* @param  mediatype (xml or json)
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
 	public String getStats(String statsType, String mediaType) throws Exception;	
+
+	/**
+	* Gets the version of documentation/integration framework 
+	*
+	* @throws Exception if version couldn't retrieved
+	* @return returns documentation version
+	*/
+	public String getDocumentationVersion() throws Exception;	
+
+	
+	/**
+	* Gets the documentation of a component
+	*
+	* @param  type of component (for example 'file')
+ 	* @param  type of dataform (xml or json)
+	* @throws Exception if documenation couldn't get found
+	* @return returns documentation
+	*/
+	public String getDocumentation(String componentType, String mediaType) throws Exception;	
+
+	/**
+	* Gets the documentation of a component
+	*
+	* @param  type of component (for example 'file')
+ 	* @param  type of dataform (xml or json)
+	* @throws Exception if documentation couldn't get found
+	* @return returns documenation
+	*/
+	public String getComponentSchema(String componentType, String mediaType) throws Exception;	
+	
+	/**
+	* Gets the last error of a connector
+	*
+	* @throws Exception if error couldn't be retrieved
+	* @return the last error or 0 if no error
+	*/
+	public String getLastError() throws Exception;	
 	
 	/**
 	* removes flow from connector

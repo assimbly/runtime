@@ -2,6 +2,7 @@ package org.assimbly.connector.impl;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -35,19 +36,23 @@ public abstract class BaseConnector implements Connector {
 	}
 
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
-		
-		mediaType = mediaType.toLowerCase();
-		List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
-		
-		if(mediaType.contains("xml")) {
-			propertiesFromFile = convertXMLToConfiguration(connectorId, configuration);
-		}else if(mediaType.contains("json")) {
-			propertiesFromFile = convertJSONToConfiguration(connectorId, configuration);
-		}else {
-			propertiesFromFile = convertYAMLToConfiguration(connectorId, configuration);
+
+		try {
+			mediaType = mediaType.toLowerCase();
+			List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
+			
+			if(mediaType.contains("xml")) {
+				propertiesFromFile = convertXMLToConfiguration(connectorId, configuration);
+			}else if(mediaType.contains("json")) {
+				propertiesFromFile = convertJSONToConfiguration(connectorId, configuration);
+			}else {
+				propertiesFromFile = convertYAMLToConfiguration(connectorId, configuration);
+			}
+	        
+	        setConfiguration(propertiesFromFile);
+		}catch (Exception e) {
+			throw new Exception(e.getCause().getMessage());
 		}
-        
-        setConfiguration(propertiesFromFile);
 		
 	}	
 	
@@ -78,17 +83,21 @@ public abstract class BaseConnector implements Connector {
 
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 		
-		mediaType = mediaType.toLowerCase();
-
-		if(mediaType.contains("xml")) {
-        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-		}else if(mediaType.contains("json")) {
-        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
-		}else {
-        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
+		try {
+			mediaType = mediaType.toLowerCase();
+	
+			if(mediaType.contains("xml")) {
+	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
+			}else if(mediaType.contains("json")) {
+	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
+			}else {
+	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
+			}
+	        
+	        setFlowConfiguration(flowProperties);
+		} catch (Exception e) {
+			throw new Exception(e.getCause().getMessage());
 		}
-        
-        setFlowConfiguration(flowProperties);
 		
 	}
 	
@@ -146,6 +155,18 @@ public abstract class BaseConnector implements Connector {
 		else{
 			return false;
 		}
+	}
+	
+	public String getLastError() {
+		
+		String error = "0";
+		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+		
+		if(stackTrace.length > 0) {
+			error = Arrays.toString(stackTrace);
+		}
+		
+		return error;
 	}
 	
 	//--> convert methods (XML)
@@ -218,12 +239,20 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getStats(String statsType, String mediaType) throws Exception;	
 
+	public abstract String getDocumentationVersion() throws Exception;
+
+	public abstract String getDocumentation(String componentType, String mediaType) throws Exception;
+
+	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
+
 	public abstract Object getContext() throws Exception;
 	
 	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);
 
+	public abstract String validateFlow(String uri);
+	
 	public abstract String startAllFlows() throws Exception;
 
 	public abstract String restartAllFlows() throws Exception;

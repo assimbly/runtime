@@ -61,6 +61,7 @@ public class XMLFileConfiguration {
 
 	private List<String> servicesList;
     private List<String> headersList;
+	private Element connector;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -275,7 +276,7 @@ public class XMLFileConfiguration {
 		
 		if(flowId==null || flowId.isEmpty()) {throw new ConfigurationException("Id (flow) doesn't exists in XML Configuration");}
 
-		connectorXPath = "flows/flow[id='" + flowId + "']";
+		connectorXPath = "connectors/connector/flows/flow[id='" + flowId + "']";
 
 	    String[] connectorProporties = conf.getStringArray(connectorXPath);
 		
@@ -310,7 +311,7 @@ public class XMLFileConfiguration {
 
   		   options = "";	
 
-		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/options");
+		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connectors/connector/flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/options");
 		   
 	  	   for(String optionProperty : optionProperties){
 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
@@ -343,29 +344,30 @@ public class XMLFileConfiguration {
 	}
 
 	private void getServiceFromXMLFile(String type, int index) throws ConfigurationException {
-		   	
-	    serviceId = conf.getString("flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/service_id");
+		
+	    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/service_id");
 	    
 	    if(serviceId == null){return;};
 
-	    serviceXPath = "services/service[id='" + serviceId + "']";
+	    serviceXPath = "connector/services/service[id='" + serviceId + "']";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!serviceProporties.isEmpty()){
-
+			
 			for(String serviceProperty : serviceProporties){
 	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
     	   }
 		}
+		
 	}
 	
 	private void getHeaderFromXMLFile(String type, int index) throws ConfigurationException {
 	   	
-	    headerId = conf.getString("flows/flow[id='" + flowId + "'][\" + index + \"]/" + type + "/header_id");
+	    headerId = conf.getString("connector/flows/flow[id='" + flowId + "'][\" + index + \"]/" + type + "/header_id");
 
 	    if(headerId == null){return;};
 	    
-	    serviceXPath = "headers/header[id='" + headerId + "']";
+	    serviceXPath = "connector/headers/header[id='" + headerId + "']";
 		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!headerProporties.isEmpty()){
@@ -383,7 +385,7 @@ public class XMLFileConfiguration {
         // Create XPath object
         XPathFactory xpathFactory = XPathFactory.newInstance();
         XPath xpath = xpathFactory.newXPath();
-        XPathExpression expr = xpath.compile("/connector[id=" + connectorId +"]/flows/flow/id/text()");
+        XPathExpression expr = xpath.compile("/connectors/connector[id=" + connectorId +"]/flows/flow/id/text()");
     	
         // Create list of Ids
     	List<String> list = new ArrayList<>();
@@ -399,20 +401,23 @@ public class XMLFileConfiguration {
 	
 	private void setGeneralProperties(String connectorId) {
 		
-	    rootElement = doc.createElement("connector");
+	    rootElement = doc.createElement("connectors");
 	    doc.appendChild(rootElement);
 
+	    connector = doc.createElement("connector");
+	    rootElement.appendChild(connector);
+	    
 	    Element id = doc.createElement("id");
 	    id.appendChild(doc.createTextNode(connectorId));
-	    rootElement.appendChild(id);
+	    connector.appendChild(id);
 	    
 	    flows = doc.createElement("flows");
 	    services = doc.createElement("services");
 	    headers = doc.createElement("headers");
 	    
-	    rootElement.appendChild(flows);
-	    rootElement.appendChild(services);
-	    rootElement.appendChild(headers);
+	    connector.appendChild(flows);
+	    connector.appendChild(services);
+	    connector.appendChild(headers);
 	    
 	    //List to ensure no double entries
 	    servicesList = new ArrayList<String>();

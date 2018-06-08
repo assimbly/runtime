@@ -73,6 +73,11 @@
 		    <artifactId>camel-metrics</artifactId>
 			<version>${org.apache.camel-version}</version>
 		</dependency>		
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-catalog</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>		
 
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>

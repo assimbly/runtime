@@ -11,6 +11,8 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -248,59 +250,45 @@ public class CamelConnector extends BaseConnector {
 		return "stopped";
 	}
 	
-	public String startFlow(String id) throws Exception {
-		if(!hasFlow(id)) {
-			for (TreeMap<String, String> props : super.getConfiguration()) {
-				if (props.get("id").equals(id)) {
-					logger.info("Adding route with ids: " + id);
-					addFlow(props);
-				}
-			}
-		}
-
-		context.startRoute(id);
-
-		int count = 1;
+	public String startFlow(String id) {
 		
-        do {
-        	status = context.getRouteStatus(id);
-        	if(status.isStarted()) {break;}
-        	Thread.sleep(10);
-        	count++;
-        	
-        } while (status.isStarting() || count < 3000);
-
-		return status.toString().toLowerCase();
-	}
-
-	public String restartFlow(String id) throws Exception {
+		try {
+		
+			if(!hasFlow(id)) {
 				
-		stopFlow(id);
-		
-		int count = 1;
-		
-        do {
-        	status = context.getRouteStatus(id);
-        	if(status.isStopped()) {break;}
-        	Thread.sleep(10);
-        	count++;
-        	
-        } while (status.isStopping() || count < 3000);
-		
-        if(count==3000) {
-			logger.error("Timed out after 30 seconds while stopping route with id: " + id);
-			return "Timed out after 30 seconds while stopping route with id: " + id;
-        }else {
-        	return startFlow(id);	
-        }	
-	}
-	
-	public String stopFlow(String id) throws Exception {
-		if(hasFlow(id)) {
-        	status = context.getRouteStatus(id);
-			if(status.isStoppable()) {
-				context.stopRoute(id);	
+				for (TreeMap<String, String> props : super.getConfiguration()) {
+					if (props.get("id").equals(id)) {
+						logger.info("Adding route with ids: " + id);
+						addFlow(props);
+					}
+				}
+				 
 			}
+	
+			context.startRoute(id);
+	
+			int count = 1;
+			
+	        do {
+	        	status = context.getRouteStatus(id);
+	        	if(status.isStarted()) {break;}
+	        	Thread.sleep(10);
+	        	count++;
+	        	
+	        } while (status.isStarting() || count < 3000);
+	
+			return status.toString().toLowerCase();
+			
+		}catch (Exception e) {
+			e.printStackTrace();
+			return e.getMessage();
+		}
+	}
+
+	public String restartFlow(String id) {
+
+		try {		
+			stopFlow(id);
 			
 			int count = 1;
 			
@@ -311,69 +299,126 @@ public class CamelConnector extends BaseConnector {
 	        	count++;
 	        	
 	        } while (status.isStopping() || count < 3000);
-	        
-	        return status.toString().toLowerCase().toLowerCase();
 			
-		}else {
-			return "Configuration not set";
+	        if(count==3000) {
+				logger.error("Timed out after 30 seconds while stopping route with id: " + id);
+				return "Timed out after 30 seconds while stopping route with id: " + id;
+	        }else {
+	        	return startFlow(id);	
+	        }
+		}catch (Exception e) {
+			e.printStackTrace();
+			return e.getMessage();
 		}
+	}
+	
+	public String stopFlow(String id) {
+		
+		try {		
+
+			if(hasFlow(id)) {
+	        	status = context.getRouteStatus(id);
+				if(status.isStoppable()) {
+					context.stopRoute(id);	
+				}
+				
+				int count = 1;
+				
+		        do {
+		        	status = context.getRouteStatus(id);
+		        	if(status.isStopped()) {break;}
+		        	Thread.sleep(10);
+		        	count++;
+		        	
+		        } while (status.isStopping() || count < 3000);
+		        
+		        return status.toString().toLowerCase().toLowerCase();
+				
+			}else {
+				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+			}
+
+		}catch (Exception e) {
+			e.printStackTrace();
+			return e.getMessage();
+		}
+
+	}
+
+	public String pauseFlow(String id) {
+		
+		try {
+		
+			if(hasFlow(id)) {
+	        	status = context.getRouteStatus(id);
+				if(status.isSuspendable()) {
+					context.suspendRoute(id);
+					
+					int count = 1;
+					
+			        do {
+			        	status = context.getRouteStatus(id);
+			        	if(status.isSuspended()) {break;}
+			        	Thread.sleep(10);
+			        	count++;
+			        	
+			        } while (status.isSuspending() || count < 3000);
+			        
+			        return status.toString().toLowerCase();
+				
+					
+				}else {
+					return "Flow isn't suspendable";
+				}
+			}else {
+				return "Configuration not set";
+			}
+		
+		}catch (Exception e) {
+			e.printStackTrace();
+			return e.getMessage();
+		}
+
 		
 	}
 
-	public String pauseFlow(String id) throws Exception {
-		if(hasFlow(id)) {
-        	status = context.getRouteStatus(id);
-			if(status.isSuspendable()) {
-				context.suspendRoute(id);
-				
-				int count = 1;
-				
-		        do {
-		        	status = context.getRouteStatus(id);
-		        	if(status.isSuspended()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isSuspending() || count < 3000);
-		        
-		        return status.toString().toLowerCase();
-			
-				
-			}else {
-				return "Flow isn't suspendable";
-			}
-		}else {
-			return "Configuration not set";
-		}
-	}
-
 	public String resumeFlow(String id) throws Exception {
-		if(hasFlow(id)) {
-        	status = context.getRouteStatus(id);
-			if(status.isSuspended()) {
-				context.resumeRoute(id);
-				
-				int count = 1;
-				
-		        do {
-		        	status = context.getRouteStatus(id);
-		        	if(status.isStarted()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isStarting() || count < 3000);
-		        
-		        return status.toString().toLowerCase();				
+
+		try {
+		
+			if(hasFlow(id)) {
+	        	status = context.getRouteStatus(id);
+				if(status.isSuspended()) {
+					context.resumeRoute(id);
+					
+					int count = 1;
+					
+			        do {
+			        	status = context.getRouteStatus(id);
+			        	if(status.isStarted()) {break;}
+			        	Thread.sleep(10);
+			        	count++;
+			        	
+			        } while (status.isStarting() || count < 3000);
+			        
+			        return status.toString().toLowerCase();				
+				}else {
+					return "Flow isn't suspended (nothing to resume)";
+				}
 			}else {
-				return "Flow isn't suspended (nothing to resume)";
+				return "Configuration not set";
 			}
-		}else {
-			return "Configuration not set";
+		
+		}catch (Exception e) {
+			e.printStackTrace();
+			return e.getMessage();
 		}
+
+		
 	}	
 	
 	public String getFlowStatus(String id) {
-	
+		
 		if(hasFlow(id)) {
 			ServiceStatus status = context.getRouteStatus(id);
 			flowStatus = status.toString().toLowerCase();		
@@ -431,7 +476,6 @@ public class CamelConnector extends BaseConnector {
 		return flowInfo;
 
 	}
-	
 	
 	public String getFlowCompletedMessages(String id) throws Exception {
 
@@ -510,6 +554,51 @@ public class CamelConnector extends BaseConnector {
 		return connectorStats;
 
 	}	
+
+	public String getDocumentation(String componentType, String mediaType) throws Exception {
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+ 		
+		String doc = catalog.componentHtmlDoc(componentType);
+		
+		return doc;		
+	}
+
+	public String getDocumentationVersion() {
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		
+		return catalog.getCatalogVersion();
+	}	
+
+	public String getComponentSchema(String componentType, String mediaType) throws Exception {
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+ 		
+		String schema = catalog.componentJSonSchema(componentType);
+		
+		if(mediaType.contains("xml")) {
+			schema = ConnectorUtil.convertJsonToXml(schema);
+		}
+		
+		return schema;		
+	}
+
+	
+	public String validateFlow(String uri) {
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+
+		EndpointValidationResult valid = catalog.validateEndpointProperties(uri);
+
+		if(valid.hasErrors()){
+			return "Error: " + valid.summaryErrorMessage(false);
+		}else {
+			return "valid";
+		}
+
+	}
+	
 	
 	public Object getContext() {		
 		return context;		
