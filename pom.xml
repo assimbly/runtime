@@ -18,6 +18,9 @@
 	</properties>
 
 	<dependencies>
+	
+		<!-- camel dependencies -->
+	
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-core</artifactId>
@@ -84,24 +87,31 @@
 			<version>${org.apache.camel-version}</version>
 		</dependency>		
 
+		<!-- activemq dependencies -->
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>activemq-broker</artifactId>
 		    <version>${org.apache.activemq-version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-camel</artifactId>
 			<version>${org.apache.activemq-version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-pool</artifactId>
 			<version>${org.apache.activemq-version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.apache.activemq</groupId>
+		    <artifactId>activemq-kahadb-store</artifactId>
+			<version>${org.apache.activemq-version}</version>
+			<scope>runtime</scope>
+		</dependency>
 
+
+		<!-- sonicmq dependencies -->
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
@@ -115,12 +125,12 @@
      		<!-- <optional>true</optional> -->		
 		</dependency>
 	
+		<!-- apache commons dependencies -->
 		<dependency>
 		  <groupId>org.apache.commons</groupId>
 		  <artifactId>commons-configuration2</artifactId>
 		  <version>2.2</version>
-		</dependency>
-		
+		</dependency>		
 		<dependency>
 			<groupId>commons-cli</groupId>
 			<artifactId>commons-cli</artifactId>
@@ -145,12 +155,15 @@
 		    <groupId>commons-beanutils</groupId>
 		    <artifactId>commons-beanutils</artifactId>
 		    <version>1.9.3</version>
-		</dependency>		
+		</dependency>
+		
+				
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>aopalliance</groupId>
 			<artifactId>aopalliance</artifactId>
