@@ -106,12 +106,10 @@ public class Connection {
 		if (conType == null){
 			logger.info("No connection type specified. Setting up basic connection for activemq.");
 			conType = "basic";
-		}
-		else if (!conType.equals("basic") && !conType.equals("pooled")){
+		}else if (!conType.equals("basic") && !conType.equals("pooled")){
 			logger.info("Invalid connection type specified. Setting up basic connection for activemq.");
 			conType = "basic";
-		}
-		else if (conType.equals("pooled")){
+		}else if (conType.equals("pooled")){
 			
 			if (maxConnections == null){
 				maxConnections = "10";
@@ -203,8 +201,17 @@ public class Connection {
 				jms.start();
 				context.addComponent(componentName, jms);
 			}else{
-				logger.error("SonicMQ connection parameters are invalid.");
-				throw new Exception("SonicMQ connection parameters are invalid.\n");
+				logger.error("SonicMQ connection parameters are invalid or missing");				
+				if(url==null) {
+					logger.error("SonicMQ connection required parameter 'url' isn't set");
+				}
+				if(username==null) {
+					logger.error("SonicMQ connection required parameter 'username' isn't set");
+				}
+				if(password==null) {
+					logger.error("SonicMQ connection required parameter 'password' isn't set");
+				}
+				throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
 			}
 		}
 	}

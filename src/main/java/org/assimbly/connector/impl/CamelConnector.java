@@ -592,7 +592,7 @@ public class CamelConnector extends BaseConnector {
 		EndpointValidationResult valid = catalog.validateEndpointProperties(uri);
 
 		if(valid.hasErrors()){
-			return "Error: " + valid.summaryErrorMessage(false);
+			return "invalid: " + valid.summaryErrorMessage(false);
 		}else {
 			return "valid";
 		}

@@ -309,13 +309,14 @@ public class XMLFileConfiguration {
 
 	   for(String component : components){
 
-  		   options = "";	
-
-		   List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connectors/connector/flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/options");
+		   System.out.println("1. uri="+component);
 		   
-	  	   for(String optionProperty : optionProperties){
-			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
-	  	   }
+  		   options = "";
+ 
+  		   	List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/options");
+	 	  	   for(String optionProperty : optionProperties){
+	 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
+	 	  	   }
 	  	   
 	  	   if(options.isEmpty()){
 	  		 uri = component;
@@ -337,15 +338,15 @@ public class XMLFileConfiguration {
 				   touri = touri + "," + uri;
 			   }
 			   
-		  	   properties.put(type + ".uri", touri);
-			   index++;   
+		  	   properties.put(type + ".uri", touri);			    
 		   }			   
+		   index++;
   	   }	  	   
 	}
 
 	private void getServiceFromXMLFile(String type, int index) throws ConfigurationException {
 		
-	    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "'][" + index + "]/" + type + "/service_id");
+	    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
 	    
 	    if(serviceId == null){return;};
 
@@ -363,7 +364,7 @@ public class XMLFileConfiguration {
 	
 	private void getHeaderFromXMLFile(String type, int index) throws ConfigurationException {
 	   	
-	    headerId = conf.getString("connector/flows/flow[id='" + flowId + "'][\" + index + \"]/" + type + "/header_id");
+	    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
 
 	    if(headerId == null){return;};
 	    

@@ -76,7 +76,8 @@ public class DefaultRoute extends RouteBuilder{
 			.shareUnitOfWork()
 			.parallelProcessing()
 			.doTry()
-				.to(getToUriList()).routeId(props.get("id"))
+				.to(getToUriList())
+				.routeId(props.get("id"))
 				.doCatch(Exception.class)
 				.process(new ErrorProcessor())
 			.end();		
