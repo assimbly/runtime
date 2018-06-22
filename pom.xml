@@ -13,6 +13,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.apache.camel-version>2.21.1</org.apache.camel-version>
 		<org.apache.activemq-version>5.15.2</org.apache.activemq-version>
+		<org.jolokia-version>1.5.0</org.jolokia-version>
+
 		<maven.compiler.source>1.8</maven.compiler.source>
   		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
@@ -123,6 +125,23 @@
 			<artifactId>sonic_Crypto</artifactId>
 			<version>8.6.0</version>
      		<!-- <optional>true</optional> -->		
+		</dependency>
+
+		<!-- jolokia dependencies -->
+		<dependency>
+		    <groupId>org.jolokia</groupId>
+		    <artifactId>jolokia-core</artifactId>
+		    <version>${org.jolokia-version}</version>
+		</dependency>		
+		<dependency>
+		    <groupId>org.jolokia</groupId>
+		    <artifactId>jolokia-jvm</artifactId>
+		    <version>${org.jolokia-version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jolokia</groupId>
+		    <artifactId>jolokia-client-java</artifactId>
+		    <version>${org.jolokia-version}</version>
 		</dependency>
 	
 		<!-- apache commons dependencies -->
