@@ -31,6 +31,7 @@ import org.xml.sax.InputSource;
 public class DefaultRoute extends RouteBuilder{
 	
 	Map<String, String> props;
+	private boolean wiretap;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	
 	public DefaultRoute(final Map<String, String> props){
@@ -43,6 +44,16 @@ public class DefaultRoute extends RouteBuilder{
 		logger.info("Configuring default route");
 		
 		Processor setHeaders = new SetHeaders();
+		
+		if (this.props.containsKey("wiretap.uri") && this.props.containsKey("wiretap")){
+			if(props.get("wiretap").equals("true")) {
+				wiretap = true;
+			}else {
+				wiretap = false;
+			}			
+		}{
+			wiretap = false;
+		}
 		
 		if (this.props.containsKey("error.uri")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))
@@ -65,7 +76,26 @@ public class DefaultRoute extends RouteBuilder{
 					.logExhaustedMessageHistory(true));
 		}
 		
-		from(props.get("from.uri"))
+		if(wiretap) {
+			from(props.get("from.uri"))
+			.doTry()
+				.process(setHeaders)
+				.convertBodyTo(String.class, "UTF-8")
+				.doCatch(Exception.class)
+				.process(new ErrorProcessor())
+			.end()
+			.wireTap(props.get("wiretap.uri"))
+			.multicast()
+			.shareUnitOfWork()
+			.parallelProcessing()
+			.doTry()
+				.to(getToUriList())
+				.routeId(props.get("id"))
+				.doCatch(Exception.class)
+				.process(new ErrorProcessor())
+			.end();
+		}else {
+			from(props.get("from.uri"))
 			.doTry()
 				.process(setHeaders)
 				.convertBodyTo(String.class, "UTF-8")
@@ -80,7 +110,9 @@ public class DefaultRoute extends RouteBuilder{
 				.routeId(props.get("id"))
 				.doCatch(Exception.class)
 				.process(new ErrorProcessor())
-			.end();		
+			.end();
+		}
+				
 	}
 	
 	//create arraylist from touri
@@ -92,7 +124,9 @@ public class DefaultRoute extends RouteBuilder{
 	
 	@SuppressWarnings("unused")
 	private String getContent(Object input){
+		
 		String text;
+		
 		if (input instanceof GenericFile<?>){
 			try {
 				GenericFile<?> gFile = (GenericFile<?>) input;
@@ -105,6 +139,7 @@ public class DefaultRoute extends RouteBuilder{
 		else{
 			text = input.toString();
 		}
+		
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
