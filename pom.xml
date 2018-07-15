@@ -62,7 +62,12 @@
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-kafka</artifactId>
 			<version>${org.apache.camel-version}</version>
-		</dependency>		
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-mail</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>				
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-metrics</artifactId>
@@ -98,7 +103,11 @@
 			<artifactId>camel-stream</artifactId>
 			<version>${org.apache.camel-version}</version>
 		</dependency>
-
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-telegram</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>
 
 		<!-- activemq dependencies -->
 		<dependency>

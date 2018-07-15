@@ -10,9 +10,20 @@
 	<xs:complexType name="connectorType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" />
+			<xs:element type="offloadingType" name="offloading" maxOccurs="1"/>
 			<xs:element type="flowsType" name="flows" />
 			<xs:element type="servicesType" name="services" />
 			<xs:element type="headersType" name="headers" />
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="offloadingType">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element type="xs:string" name="id" minOccurs="1" maxOccurs="1"/>
+			<xs:element type="xs:string" name="name" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="uri" />
+			<xs:element type="optionsType" name="options" minOccurs="0" />
+			<xs:element type="xs:string" name="service_id" minOccurs="0" />
+			<xs:element type="xs:string" name="header_id" minOccurs="0" />
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="flowsType">
@@ -25,6 +36,7 @@
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="xs:string" name="name" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="offloading" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="fromType" name="from" maxOccurs="1" />
 			<xs:element type="toType" name="to" minOccurs="0" maxOccurs="unbounded" />

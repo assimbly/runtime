@@ -31,7 +31,6 @@ import org.xml.sax.InputSource;
 public class DefaultRoute extends RouteBuilder{
 	
 	Map<String, String> props;
-	private boolean wiretap;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	
 	public DefaultRoute(final Map<String, String> props){
@@ -44,16 +43,6 @@ public class DefaultRoute extends RouteBuilder{
 		logger.info("Configuring default route");
 		
 		Processor setHeaders = new SetHeaders();
-		
-		if (this.props.containsKey("wiretap.uri") && this.props.containsKey("wiretap")){
-			if(props.get("wiretap").equals("true")) {
-				wiretap = true;
-			}else {
-				wiretap = false;
-			}			
-		}{
-			wiretap = false;
-		}
 		
 		if (this.props.containsKey("error.uri")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))
@@ -75,50 +64,40 @@ public class DefaultRoute extends RouteBuilder{
 					.logHandled(false).logExhausted(true)
 					.logExhaustedMessageHistory(true));
 		}
-		
-		if(wiretap) {
-			from(props.get("from.uri"))
-			.doTry()
-				.process(setHeaders)
-				.convertBodyTo(String.class, "UTF-8")
-				.doCatch(Exception.class)
-				.process(new ErrorProcessor())
-			.end()
-			.wireTap(props.get("wiretap.uri"))
-			.multicast()
-			.shareUnitOfWork()
-			.parallelProcessing()
-			.doTry()
-				.to(getToUriList())
-				.routeId(props.get("id"))
-				.doCatch(Exception.class)
-				.process(new ErrorProcessor())
-			.end();
-		}else {
-			from(props.get("from.uri"))
-			.doTry()
-				.process(setHeaders)
-				.convertBodyTo(String.class, "UTF-8")
-				.doCatch(Exception.class)
-				.process(new ErrorProcessor())
-			.end()
-			.multicast()
-			.shareUnitOfWork()
-			.parallelProcessing()
-			.doTry()
-				.to(getToUriList())
-				.routeId(props.get("id"))
-				.doCatch(Exception.class)
-				.process(new ErrorProcessor())
-			.end();
-		}
+
+		//the default Camel route
+		from(props.get("from.uri"))
+		.doTry()
+			.process(setHeaders)
+			.convertBodyTo(String.class, "UTF-8")				
+			.doCatch(Exception.class)
+			.process(new ErrorProcessor())
+		.end()
+		.multicast()
+		.shareUnitOfWork()
+		.parallelProcessing()
+		.doTry()
+			.to(getToUriList())
+			.routeId(props.get("id"))
+			.doCatch(Exception.class)
+			.process(new ErrorProcessor())
+		.end();
 				
 	}
 	
-	//create arraylist from touri
+	//create a string array for all consumers
 	private String[] getToUriList() {
+		
 		String toUri = props.get("to.uri");
+		
+		if (this.props.containsKey("wiretap.uri") && this.props.containsKey("offloading")){
+			if(props.get("offloading").equals("true")) {
+				toUri = toUri + "," + props.get("wiretap.uri");
+			}
+		}
+		
 		String[] toUriArray = toUri.split(",");
+		
 		return toUriArray;
 	}
 	
@@ -170,22 +149,21 @@ public class DefaultRoute extends RouteBuilder{
 		  public void process(Exchange exchange) throws Exception {
 				Message in = exchange.getIn();
 				for (Map.Entry<String, String> entry : props.entrySet()) {
-					if (entry.getKey().startsWith("to.header.constant")) {
+					if (entry.getKey().startsWith("from.header.constant") || entry.getKey().startsWith("to.header.constant")) {
 						String key = entry.getKey();
-						in.setHeader(key.substring(19),
-								entry.getValue());
-					} else if (entry.getKey().startsWith(
-							"to.header.xpath")) {
+						in.setHeader(key.substring(key.lastIndexOf("constant") + 9),	entry.getValue());
+					} else if (entry.getKey().startsWith("from.header.xpath") || entry.getKey().startsWith("to.header.xpath")) {
 						String key = entry.getKey();
 						in.setHeader(
-								key.substring(16),
+								key.substring(key.lastIndexOf("xpath") + 6),
 								XPathBuilder.xpath(entry.getValue())
 										.evaluate(exchange,
 												String.class));
 					}
 				}
-				in.setHeader("Content-Type", props.get("header.contentype"));									
-		  }
-		  
+				in.setHeader("Content-Type", props.get("header.contentype"));
+				in.setHeader("FlowID", props.get("id"));
+				in.setHeader("Source", props.get("from.uri"));
+		  }		  
 	}
 }

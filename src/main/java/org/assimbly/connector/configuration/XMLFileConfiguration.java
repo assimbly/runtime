@@ -62,6 +62,10 @@ public class XMLFileConfiguration {
 	private List<String> servicesList;
     private List<String> headersList;
 	private Element connector;
+	private String headerXPath;
+	private String flowOffloading;
+	private Object offloadingId;
+	private String wireTapUri;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -247,6 +251,8 @@ public class XMLFileConfiguration {
 
 		   //set general properties
 		   getGeneralPropertiesFromXMLFile();
+
+		   getOffloadingfromXMLFile();
 		   
 		   //set uri properties
 		   String[] types = {"from", "to", "error"};
@@ -273,6 +279,7 @@ public class XMLFileConfiguration {
 		   
 	    XPath xPath = XPathFactory.newInstance().newXPath();
 	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
+	    flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
 		
 		if(flowId==null || flowId.isEmpty()) {throw new ConfigurationException("Id (flow) doesn't exists in XML Configuration");}
 
@@ -291,10 +298,54 @@ public class XMLFileConfiguration {
 			flowId = "flow" + System.currentTimeMillis();					
 		}
 
+		if(flowOffloading == null){    			
+			flowOffloading = "false";					
+		}
+		
 		properties.put("id",flowId);	
 
+		properties.put("offloading",flowOffloading);
+		
 		properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		
+	}
+
+	private void getOffloadingfromXMLFile() throws Exception {
+
+		offloadingId = conf.getString("connector/offloading/id");
+
+		if (offloadingId != null) {
+
+			options = "";
+
+			wireTapUri = conf.getString("connector/offloading/uri");
+
+			List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/offloading/options");
+			for (String optionProperty : optionProperties) {
+				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
+			}
+
+			if (options.isEmpty()) {
+				uri = wireTapUri;
+			} else {
+				options = options.substring(0, options.length() - 1);
+				uri = wireTapUri + "?" + options;
+			}
+
+			properties.put("wiretap.uri", uri);
+
+			serviceId = conf.getString("connector/offloading/service_id");
+
+			if (serviceId != null) {
+				getServiceFromXMLFile("offloading", serviceId);
+			}
+
+			headerId = conf.getString("connector/offloading/header_id");
+
+			if (headerId != null) {
+				getHeaderFromXMLFile("offloading", headerId);
+			}
+		}
 	}
 	
 	private void getURIfromXMLFile(String type) throws Exception {
@@ -309,8 +360,6 @@ public class XMLFileConfiguration {
 
 	   for(String component : components){
 
-		   System.out.println("1. uri="+component);
-		   
   		   options = "";
  
   		   	List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/options");
@@ -324,37 +373,42 @@ public class XMLFileConfiguration {
 	  		 options = options.substring(0,options.length() -1);
 	  		 uri = component + "?" + options;  
 	  	   }	  	   
-	  	   
-		   getServiceFromXMLFile(type, index);
-		   getHeaderFromXMLFile(type, index);
-  		 
-		   if(type.equals("from")||type.equals("error")) {
-		  	   properties.put(type + ".uri", uri);
-			   break;
-		   }else {
-			   if(touri.isEmpty()) {
-				   touri = uri;
+
+		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
+
+		    if(serviceId != null){
+		    	getServiceFromXMLFile(type, serviceId);
+		    };
+		   
+		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
+
+		    if(headerId != null){
+			   getHeaderFromXMLFile(type, headerId);
+		    };
+
+			   if(type.equals("from")||type.equals("error")) {
+			  	   properties.put(type + ".uri", uri);
+				   break;
 			   }else {
-				   touri = touri + "," + uri;
+				   if(touri.isEmpty()) {
+					   touri = uri;
+				   }else {
+					   touri = touri + "," + uri;
+				   }
+				   
+			  	   properties.put(type + ".uri", touri);			    
 			   }
 			   
-		  	   properties.put(type + ".uri", touri);			    
-		   }			   
 		   index++;
   	   }	  	   
 	}
 
-	private void getServiceFromXMLFile(String type, int index) throws ConfigurationException {
-		
-	    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
-	    
-	    if(serviceId == null){return;};
+	private void getServiceFromXMLFile(String type, String serviceId) throws ConfigurationException {
 
 	    serviceXPath = "connector/services/service[id='" + serviceId + "']";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
-		if(!serviceProporties.isEmpty()){
-			
+		if(!serviceProporties.isEmpty()){			
 			for(String serviceProperty : serviceProporties){
 	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
     	   }
@@ -362,21 +416,30 @@ public class XMLFileConfiguration {
 		
 	}
 	
-	private void getHeaderFromXMLFile(String type, int index) throws ConfigurationException {
+	private void getHeaderFromXMLFile(String type, String headerId) throws ConfigurationException {
 	   	
-	    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
-
-	    if(headerId == null){return;};
 	    
-	    serviceXPath = "connector/headers/header[id='" + headerId + "']";
-		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
+	    headerXPath = "connector/headers/header[id='" + headerId + "']";
+		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, headerXPath);
 		
 		if(!headerProporties.isEmpty()){
 	  	   for(String headerProperty : headerProporties){
-	  		   String headerType = conf.getString(headerProperty + "/@type");
-	  		   if(headerType!=null){
-		  		   properties.put(type + ".header." + headerType + "." + headerProperty.substring(serviceXPath.length() + 1), conf.getString(headerProperty));
-	  		   }
+	  		 if(!headerProperty.endsWith("type") && !headerProperty.endsWith("id") && !headerProperty.endsWith("name")) {
+	  			
+	  			String headerKey = headerProperty.substring(headerXPath.length() + 1);
+	  			String headerValue = conf.getString(headerProperty);
+	  			String headerType = conf.getString(headerProperty + "/@type");
+		  		
+	  			if(headerType==null){
+			  	   headerType = conf.getString(headerProperty + "/type");
+		  		} 
+	  			properties.put(type + ".header." + headerType + "." + headerKey, headerValue);
+	  		 }else if(headerProperty.endsWith("name") || headerProperty.endsWith("id")) {
+		  			String headerKey = headerProperty.substring(headerXPath.length() + 1);
+		  			String headerValue = conf.getString(headerProperty);
+
+		  			properties.put(type + ".header." + headerKey, headerValue);
+	  		 }
     	   }
 		}
 	}
@@ -540,25 +603,34 @@ public class XMLFileConfiguration {
 	private void setHeaderFromConfiguration(String headerid, String type, TreeMap<String, String> configuration) throws Exception {
 
 		if(!headersList.contains(headerid)) {
+
 			headersList.add(headerid);
 
 		    Element header = doc.createElement("header");
-		    Element id = doc.createElement("id");
-		    
 		    headers.appendChild(header);
-		    id.appendChild(doc.createTextNode(headerid));
-		    header.appendChild(id);
 	
 			for(Map.Entry<String,String> entry : configuration.entrySet()) {
 				String key = entry.getKey();
 				String parameterValue = entry.getValue();
 				  
-				if(key.startsWith(type + ".header") && parameterValue!=null) {
+				if(key.startsWith(type + ".header.xpath") && parameterValue!=null) {
+					  String parameterName = key.substring(key.lastIndexOf(".xpath.") + 7);			  
+					  Element headerParameter = doc.createElement(parameterName);
+					  headerParameter.setTextContent(parameterValue);
+					  headerParameter.setAttribute("type", "xpath");
+					  header.appendChild(headerParameter);
+			    }else if(key.startsWith(type + ".header.constant") && parameterValue!=null) {
+					  String parameterName = key.substring(key.lastIndexOf(".constant.") + 10);			  
+					  Element headerParameter = doc.createElement(parameterName);
+					  headerParameter.setTextContent(parameterValue);
+					  headerParameter.setAttribute("type", "constant");
+					  header.appendChild(headerParameter);
+			    }else if(key.startsWith(type + ".header") && parameterValue!=null) {
 					  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
 					  Element headerParameter = doc.createElement(parameterName);
 					  headerParameter.setTextContent(parameterValue);
 					  header.appendChild(headerParameter);
-			    }
+			    }		  
 			}		
 		}		
 	}
