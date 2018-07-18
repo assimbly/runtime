@@ -51,9 +51,14 @@ public abstract class BaseConnector implements Connector {
 	        
 	        setConfiguration(propertiesFromFile);
 		}catch (Exception e) {
-			throw new Exception(e.getCause().getMessage());
-		}
-		
+			
+			try {
+				String errorCause = e.getCause().getMessage();
+				throw new Exception(errorCause);
+			}catch (Exception ex) {	
+				throw new Exception(ex);	
+			}
+		}		
 	}	
 	
 	public List<TreeMap<String,String>> getConfiguration() throws Exception {
@@ -96,9 +101,14 @@ public abstract class BaseConnector implements Connector {
 	        
 	        setFlowConfiguration(flowProperties);
 		} catch (Exception e) {
-			throw new Exception(e.getCause().getMessage());
-		}
-		
+			
+			try {
+				String errorCause = e.getCause().getMessage();
+				throw new Exception(errorCause);
+			}catch (Exception ex) {	
+				throw new Exception(ex);	
+			}			
+		}		
 	}
 	
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {

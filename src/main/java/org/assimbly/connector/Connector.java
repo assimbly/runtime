@@ -53,7 +53,7 @@ public interface Connector {
 	* gets the connector configuration currently set (in use). 
 	*
 	* @param  connctorId
-	* @param  mediatype (XML,JSON,YAML)	*
+	* @param  mediatype (XML,JSON,YAML)
 	* @return list of flow configurations (String of mediatype)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/

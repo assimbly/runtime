@@ -281,7 +281,11 @@ public class XMLFileConfiguration {
 	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
 	    flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
 		
-		if(flowId==null || flowId.isEmpty()) {throw new ConfigurationException("Id (flow) doesn't exists in XML Configuration");}
+		if(flowId==null || flowId.isEmpty()) {
+			ConfigurationException configurationException = new ConfigurationException("The flow ID doesn't exists in XML Configuration");
+			configurationException.initCause(new Throwable("The flow ID doesn't exists in XML Configuration"));
+			throw configurationException;
+		}
 
 		connectorXPath = "connectors/connector/flows/flow[id='" + flowId + "']";
 

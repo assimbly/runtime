@@ -155,6 +155,9 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public boolean removeFlow(String id) throws Exception {
+		
+		if(!hasFlow(id)) {throw new Exception("Flow ID isn't set");}
+		
 		return context.removeRoute(id);
 	}
 
@@ -252,32 +255,37 @@ public class CamelConnector extends BaseConnector {
 	
 	public String startFlow(String id) {
 		
+		boolean flowAdded = false;
+		
 		try {
 		
-			if(!hasFlow(id)) {
+			for (TreeMap<String, String> props : super.getConfiguration()) {
 				
-				for (TreeMap<String, String> props : super.getConfiguration()) {
-					if (props.get("id").equals(id)) {
-						logger.info("Adding route with ids: " + id);
-						addFlow(props);
-					}
+				if (props.get("id").equals(id)) {
+					logger.info("Adding route with ids: " + id);
+					addFlow(props);
+					flowAdded = true;
 				}
-				 
 			}
-	
-			context.startRoute(id);
-	
-			int count = 1;
 			
-	        do {
-	        	status = context.getRouteStatus(id);
-	        	if(status.isStarted()) {break;}
-	        	Thread.sleep(10);
-	        	count++;
-	        	
-	        } while (status.isStarting() || count < 3000);
-	
-			return status.toString().toLowerCase();
+			if(flowAdded){
+				context.startRoute(id);
+				
+				int count = 1;
+				
+		        do {
+		        	status = context.getRouteStatus(id);
+		        	if(status.isStarted()) {break;}
+		        	Thread.sleep(10);
+		        	count++;
+		        	
+		        } while (status.isStarting() || count < 3000);
+		
+				return status.toString().toLowerCase();
+				
+			}else {
+				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+			}
 			
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -288,24 +296,32 @@ public class CamelConnector extends BaseConnector {
 	public String restartFlow(String id) {
 
 		try {		
-			stopFlow(id);
-			
-			int count = 1;
-			
-	        do {
-	        	status = context.getRouteStatus(id);
-	        	if(status.isStopped()) {break;}
-	        	Thread.sleep(10);
-	        	count++;
-	        	
-	        } while (status.isStopping() || count < 3000);
-			
-	        if(count==3000) {
-				logger.error("Timed out after 30 seconds while stopping route with id: " + id);
-				return "Timed out after 30 seconds while stopping route with id: " + id;
-	        }else {
-	        	return startFlow(id);	
-	        }
+
+			if(hasFlow(id)) {
+
+				stopFlow(id);
+				
+				int count = 1;
+				
+		        do {
+		        	status = context.getRouteStatus(id);
+		        	if(status.isStopped()) {break;}
+		        	Thread.sleep(10);
+		        	count++;
+		        	
+		        } while (status.isStopping() || count < 3000);
+				
+		        if(count==3000) {
+					logger.error("Timed out after 30 seconds while stopping route with id: " + id);
+					return "Timed out after 30 seconds while stopping route with id: " + id;
+		        }else {
+		        	return startFlow(id);	
+		        }
+	        
+			}else {
+				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+			}
+	        
 		}catch (Exception e) {
 			e.printStackTrace();
 			return e.getMessage();
@@ -371,7 +387,7 @@ public class CamelConnector extends BaseConnector {
 					return "Flow isn't suspendable";
 				}
 			}else {
-				return "Configuration not set";
+				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 			}
 		
 		}catch (Exception e) {
@@ -406,7 +422,7 @@ public class CamelConnector extends BaseConnector {
 					return "Flow isn't suspended (nothing to resume)";
 				}
 			}else {
-				return "Configuration not set";
+				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 			}
 		
 		}catch (Exception e) {
@@ -560,6 +576,10 @@ public class CamelConnector extends BaseConnector {
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
  		
 		String doc = catalog.componentHtmlDoc(componentType);
+
+		if(doc==null || doc.isEmpty()) {
+			doc = "Unknown component";
+		}
 		
 		return doc;		
 	}
@@ -577,7 +597,9 @@ public class CamelConnector extends BaseConnector {
  		
 		String schema = catalog.componentJSonSchema(componentType);
 		
-		if(mediaType.contains("xml")) {
+		if(schema==null || schema.isEmpty()) {
+			schema = "Unknown component";
+		}else if(mediaType.contains("xml")) {
 			schema = ConnectorUtil.convertJsonToXml(schema);
 		}
 		
@@ -597,8 +619,7 @@ public class CamelConnector extends BaseConnector {
 			return "valid";
 		}
 
-	}
-	
+	}	
 	
 	public Object getContext() {		
 		return context;		
