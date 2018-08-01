@@ -44,14 +44,15 @@ public class DefaultRoute extends RouteBuilder{
 		
 		Processor setHeaders = new SetHeaders();
 		
-		if (this.props.containsKey("error.uri")){
+		if (this.props.containsKey("error.uria")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))
-					.maximumRedeliveries(3).redeliveryDelay(1000)
+					.maximumRedeliveries(1).redeliveryDelay(1000)
 					.maximumRedeliveryDelay(60000).backOffMultiplier(2)
 					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
 					.logRetryStackTrace(false).logStackTrace(true)
-					.logHandled(false).logExhausted(true)
+					.log(log)
+					.logHandled(true).logExhausted(true)
 					.logExhaustedMessageHistory(true));
 		}
 		else{
@@ -60,28 +61,23 @@ public class DefaultRoute extends RouteBuilder{
 					.backOffMultiplier(2)
 					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.logRetryStackTrace(false).logStackTrace(true)
-					.logHandled(false).logExhausted(true)
-					.logExhaustedMessageHistory(true));
+					.logRetryStackTrace(true)
+					.logStackTrace(true)
+					.logHandled(true)
+					.logExhausted(true)
+					.logExhaustedMessageHistory(true)
+					.log(logger));
 		}
 
 		//the default Camel route
 		from(props.get("from.uri"))
-		.doTry()
 			.process(setHeaders)
 			.convertBodyTo(String.class, "UTF-8")				
-			.doCatch(Exception.class)
-			.process(new ErrorProcessor())
-		.end()
-		.multicast()
-		.shareUnitOfWork()
-		.parallelProcessing()
-		.doTry()
-			.to(getToUriList())
-			.routeId(props.get("id"))
-			.doCatch(Exception.class)
-			.process(new ErrorProcessor())
-		.end();
+			.multicast()
+			.shareUnitOfWork()
+			.parallelProcessing()
+				.to(getToUriList())
+				.routeId(props.get("id"));
 				
 	}
 	
@@ -92,11 +88,13 @@ public class DefaultRoute extends RouteBuilder{
 		
 		if (this.props.containsKey("wiretap.uri") && this.props.containsKey("offloading")){
 			if(props.get("offloading").equals("true")) {
-				toUri = toUri + "," + props.get("wiretap.uri");
+				toUri = toUri + ",\"" + props.get("wiretap.uri") + "\"";
 			}
 		}
 		
-		String[] toUriArray = toUri.split(",");
+		toUri = toUri.substring(1, toUri.length()-1);
+		
+		String[] toUriArray = toUri.split("\",\"");
 		
 		return toUriArray;
 	}
@@ -135,14 +133,14 @@ public class DefaultRoute extends RouteBuilder{
 		} 
 	}	
 	
+	/*
 	private class ErrorProcessor implements Processor{		
 		
 		@Override
 		public void process(Exchange exchange) throws Exception {
 			logger.debug("Unrecoverable error occured.");
-		}
-		
-	}
+		}		
+	}*/
 	
 	public class SetHeaders implements Processor {
 		

@@ -267,8 +267,12 @@ public class XMLFileConfiguration {
 				properties.put("flow.type", "none");
 			}
 
-			if(properties.get("to.uri") == null  || properties.get("to.uri").startsWith("wastebin")){
-				properties.put("to.uri","mock:wastebin");		
+			if(properties.get("to.uri") == null){
+				properties.put("to.uri","stream:out");
+			}else if(properties.get("to.uri").contains("wastebin")){
+				String uri = properties.get("to.uri");
+				uri = uri.replace("wastebin:", "mock:wastebin");
+				properties.put("to.uri",uri);		
 			}
 		
 	}
@@ -395,9 +399,9 @@ public class XMLFileConfiguration {
 				   break;
 			   }else {
 				   if(touri.isEmpty()) {
-					   touri = uri;
+					   touri = "\"" + uri + "\"";
 				   }else {
-					   touri = touri + "," + uri;
+					   touri = touri + ",\"" + uri + "\"";
 				   }
 				   
 			  	   properties.put(type + ".uri", touri);			    
@@ -409,26 +413,33 @@ public class XMLFileConfiguration {
 
 	private void getServiceFromXMLFile(String type, String serviceId) throws ConfigurationException {
 
-	    serviceXPath = "connector/services/service[id='" + serviceId + "']";
+	    serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
 		if(!serviceProporties.isEmpty()){			
 			for(String serviceProperty : serviceProporties){
 	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
     	   }
+			
+			properties.put(type + ".service.id", serviceId);
+
+		    String serviceName = conf.getString("connector/services/service[id='" + serviceId + "']/name");
+		    if(!serviceName.isEmpty()) {
+		    	properties.put(type + ".service.name", serviceName);	
+		    }
+			
 		}
 		
 	}
 	
 	private void getHeaderFromXMLFile(String type, String headerId) throws ConfigurationException {
-	   	
-	    
-	    headerXPath = "connector/headers/header[id='" + headerId + "']";
+		
+	    headerXPath = "connector/headers/header[id='" + headerId + "']/keys";
 		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, headerXPath);
 		
 		if(!headerProporties.isEmpty()){
 	  	   for(String headerProperty : headerProporties){
-	  		 if(!headerProperty.endsWith("type") && !headerProperty.endsWith("id") && !headerProperty.endsWith("name")) {
+	  		 if(!headerProperty.endsWith("type")) {
 	  			
 	  			String headerKey = headerProperty.substring(headerXPath.length() + 1);
 	  			String headerValue = conf.getString(headerProperty);
@@ -438,13 +449,15 @@ public class XMLFileConfiguration {
 			  	   headerType = conf.getString(headerProperty + "/type");
 		  		} 
 	  			properties.put(type + ".header." + headerType + "." + headerKey, headerValue);
-	  		 }else if(headerProperty.endsWith("name") || headerProperty.endsWith("id")) {
-		  			String headerKey = headerProperty.substring(headerXPath.length() + 1);
-		  			String headerValue = conf.getString(headerProperty);
+	  		 }	
+	  	   }
 
-		  			properties.put(type + ".header." + headerKey, headerValue);
-	  		 }
-    	   }
+			properties.put(type + ".header.id", headerId);
+
+		    String headerName = conf.getString("connector/headers/header[id='" + headerId + "']/name");
+		    if(!headerName.isEmpty()) {
+		    	properties.put(type + ".header.name", headerName);	
+		    }
 		}
 	}
 

@@ -50,8 +50,66 @@ public class Connection {
 		
     }
 
+	public TreeMap<String, String> stop() throws Exception{
+		if(properties.get("from.service.id")!=null){
+			stopConnection("from");
+		}
+		if(properties.get("to.service.id")!=null){
+			stopConnection("to");
+		}
+		
+		if(properties.get("error.service.id")!=null){
+			stopConnection("error");
+		}
+		return properties; 
+		
+    }
+	
 	
 	private void startConnection(String type) throws Exception{
+		uri = properties.get(type + ".uri");
+		connectionId = properties.get(type + ".service.id");
+		flowId = properties.get("id");
+		
+		if(uri!=null){
+			
+			if(connectionId!=null){
+	
+				String[] uriSplitted = uri.split(":",2);
+				String component = uriSplitted[0];
+				
+				String options[] = {"activemq", "sonicmq", "sql"};
+				int i;
+				for (i = 0; i < options.length; i++) {
+					if (component != null && component.contains(options[i])) {
+						break;
+					}
+				}
+				
+				switch (i) {
+					case 0:
+						setupActiveMQConnection(properties, type);
+						break;
+			        case 1:
+			            setupSonicMQConnection(properties, type);
+			            uri = uri.replace("sonicmq:", "sonicmq." + connectionId + flowId + ":");
+						properties.put(type + ".uri", uri);						
+			            break;
+					case 2:
+				        setupJDBCConnection(properties, type);
+				        break;			            
+			        default:
+			        	logger.error("Connection parameters for component " + component + " are not implemented");
+			            throw new Exception("Connection parameters for component " + component + " are not implemented");
+				}
+		
+	
+			}
+		}
+		
+	}
+
+	private void stopConnection(String type) throws Exception{
 		uri = properties.get(type + ".uri");
 		connectionId = properties.get(type + ".service.id");
 		flowId = properties.get("id");
@@ -74,24 +132,21 @@ public class Connection {
 				
 				switch (i) {
 					case 0:
-						setupActiveMQConnection(properties, type);
+						//removeActiveMQConnection(properties, type);
 						break;
 			        case 1:
-			            setupSonicMQConnection(properties, type);
-						properties.put(type + ".uri", "sonicmq." + connectionId + flowId + ":" + endpoint);
+			            removeSonicMQConnection(properties, type);
+			            properties.remove(type + ".uri", "sonicmq." + connectionId + flowId + ":" + endpoint);
 			            break;
 					case 2:
-				        setupJDBCConnection(properties, type);
+				        //removeJDBCConnection(properties, type);
 				        break;			            
 			        default:
 			        	logger.error("Connection parameters for component " + component + " are not implemented");
 			            throw new Exception("Connection parameters for component " + component + " are not implemented");
 				}
-		
-	
 			}
-		}
-		
+		}		
 	}
 	
 	
@@ -174,7 +229,7 @@ public class Connection {
 	
 		
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
-		
+
 		String flowId = properties.get("id");
 		String componentName = "sonicmq." + connectionId + flowId;
 		String url = properties.get(direction + ".service.url");
@@ -182,7 +237,10 @@ public class Connection {
 		String password = properties.get(direction + ".service.password");
 		String faultTolerant = properties.get(direction + ".service.faultTolerant");
 
-		if(context.hasComponent(componentName) == null){
+			if(context.hasComponent(componentName) != null){
+				context.removeComponent(componentName);
+			}	
+			
 			if(url!=null || username !=null || password != null){
 				ConnectionFactory connection = new ConnectionFactory (url,username, password);	
 				try {
@@ -193,13 +251,58 @@ public class Connection {
 				connection.setFaultTolerant(Boolean.parseBoolean(faultTolerant));
 				connection.setConnectID("Camel/" + flowId.replaceAll("\\.", "/") + "/" + new Random().nextInt(100000));			
 				connection.setPrefetchCount(10);
+				
 				SjmsComponent jms = new SjmsComponent();
 				
 				jms.setConnectionFactory(connection);
 				jms.setCamelContext(context);
 				
+				if(jms.getStatus().isStarted()){
+					jms.stop();
+					
+				}
 				jms.start();
 				context.addComponent(componentName, jms);
+			}else{
+				logger.error("SonicMQ connection parameters are invalid or missing");				
+				if(url==null) {
+					logger.error("SonicMQ connection required parameter 'url' isn't set");
+				}
+				if(username==null) {
+					logger.error("SonicMQ connection required parameter 'username' isn't set");
+				}
+				if(password==null) {
+					logger.error("SonicMQ connection required parameter 'password' isn't set");
+				}
+				throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
+			}
+		
+	}
+
+	private void removeSonicMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
+
+		String flowId = properties.get("id");
+		String componentName = "sonicmq." + connectionId + flowId;
+		String url = properties.get(direction + ".service.url");
+		String username = properties.get(direction + ".service.username");
+		String password = properties.get(direction + ".service.password");
+		String faultTolerant = properties.get(direction + ".service.faultTolerant");
+
+		if(context.hasComponent(componentName) != null){
+			if(url!=null || username !=null || password != null){
+				
+				ConnectionFactory connection = new ConnectionFactory (url,username, password);	
+				connection.setFaultTolerant(Boolean.parseBoolean(faultTolerant));
+				connection.setConnectID("Camel/" + flowId.replaceAll("\\.", "/") + "/" + new Random().nextInt(100000));			
+				connection.setPrefetchCount(10);
+				SjmsComponent jms = new SjmsComponent();
+				
+				jms.setConnectionFactory(connection);
+				jms.setCamelContext(context);
+				
+				jms.stop();
+				context.removeComponent(componentName);
+				
 			}else{
 				logger.error("SonicMQ connection parameters are invalid or missing");				
 				if(url==null) {
@@ -222,7 +325,7 @@ public class Connection {
 		String url = properties.get(direction + ".service.url");		
 		String username = properties.get(direction + ".service.username");
 		String password = properties.get(direction + ".service.password");
-		  
+		
 		DriverManagerDataSource ds = new DriverManagerDataSource();
 		ds.setDriverClassName(driver);
 		ds.setUrl(url);

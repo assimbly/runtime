@@ -68,7 +68,7 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
+
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
 
@@ -94,6 +94,7 @@ public class CamelConnector extends BaseConnector {
 			}
 			context.stop();
 			started = false;
+			logger.info("Connector stopped");
 		}
 	}	
 
@@ -113,25 +114,26 @@ public class CamelConnector extends BaseConnector {
 		
 		//create arraylist from touri
 		String toUri = props.get("to.uri");
-		String[] toUriArray = toUri.split(",");
+		toUri = toUri.substring(1, toUri.length()-1);
+		String[] toUriArray = toUri.split("\",\"");
 		
-		//set first to endpoint asdefault
+		//set first to endpoint as default
 		template = context.createProducerTemplate();
 		template.setDefaultEndpointUri(toUriArray[0]);
-		
 		
 		//set up route by type
 		String route  = props.get("route");
 		if (route == null){
-			logger.info("add default route");
+			logger.info("Add default flow");
 			addDefaultFlow(props);
 		}else if(route.equals("default")){
-			logger.info("add default route");
+			logger.info("Add default flow");
 			addDefaultFlow(props);			
 		}else if(route.equals("simple")){
-			logger.info("add simple route");
+			logger.info("Add simple flow");
 			addDefaultFlow(props);			
 		}else if(route.equals("fromJdbcTimer")){
+			logger.info("Add scheduled flow");
 			addFlowFromJdbcTimer(props);
 		}
 		else{
@@ -140,25 +142,25 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
-		logger.info("add default flow");
 		context.addRoutes(new DefaultRoute(props));
 	}
 
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
-		logger.info("add simple flow");
 		context.addRoutes(new SimpleRoute(props));
 	}
 	
 	public void addFlowFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
-		logger.info("add jdbc flow");
 		context.addRoutes(new PollingJdbcRoute(props));
 	}
-
+	
 	public boolean removeFlow(String id) throws Exception {
 		
-		if(!hasFlow(id)) {throw new Exception("Flow ID isn't set");}
+		if(!hasFlow(id)) {
+			return false;
+		}else {
+			return context.removeRoute(id);	
+		}		
 		
-		return context.removeRoute(id);
 	}
 
 	public boolean hasFlow(String id) {
@@ -254,6 +256,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String startFlow(String id) {
+		logger.info("Start flow " + id);
 		
 		boolean flowAdded = false;
 		
@@ -262,7 +265,8 @@ public class CamelConnector extends BaseConnector {
 			for (TreeMap<String, String> props : super.getConfiguration()) {
 				
 				if (props.get("id").equals(id)) {
-					logger.info("Adding route with ids: " + id);
+					
+					logger.info("Adding route with id: " + id);
 					addFlow(props);
 					flowAdded = true;
 				}
@@ -281,6 +285,7 @@ public class CamelConnector extends BaseConnector {
 		        	
 		        } while (status.isStarting() || count < 3000);
 		
+				logger.info("Started flow " + id);
 				return status.toString().toLowerCase();
 				
 			}else {
@@ -295,31 +300,17 @@ public class CamelConnector extends BaseConnector {
 
 	public String restartFlow(String id) {
 
+		logger.info("Restart flow " + id);
 		try {		
 
 			if(hasFlow(id)) {
 
 				stopFlow(id);
 				
-				int count = 1;
-				
-		        do {
-		        	status = context.getRouteStatus(id);
-		        	if(status.isStopped()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isStopping() || count < 3000);
-				
-		        if(count==3000) {
-					logger.error("Timed out after 30 seconds while stopping route with id: " + id);
-					return "Timed out after 30 seconds while stopping route with id: " + id;
-		        }else {
-		        	return startFlow(id);	
-		        }
+	        	return startFlow(id);	
 	        
 			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				return "Configuration is not set and running";
 			}
 	        
 		}catch (Exception e) {
@@ -329,7 +320,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String stopFlow(String id) {
-		
+		logger.info("Stop flow " + id);		
 		try {		
 
 			if(hasFlow(id)) {
@@ -347,7 +338,11 @@ public class CamelConnector extends BaseConnector {
 		        	count++;
 		        	
 		        } while (status.isStopping() || count < 3000);
-		        
+
+				//removeFlow if already configured
+		        context.removeRoute(id);
+
+				logger.info("Stopped flow " + id);		
 		        return status.toString().toLowerCase().toLowerCase();
 				
 			}else {
@@ -362,24 +357,34 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String pauseFlow(String id) {
+		logger.info("Pause flow " + id);		
 		
 		try {
 		
 			if(hasFlow(id)) {
 	        	status = context.getRouteStatus(id);
 				if(status.isSuspendable()) {
-					context.suspendRoute(id);
 					
+					context.suspendRoute(id);
+						
 					int count = 1;
 					
 			        do {
 			        	status = context.getRouteStatus(id);
-			        	if(status.isSuspended()) {break;}
+			        	if(status.isSuspended()) {
+							logger.info("Paused (suspend) flow " + id);		
+			        		break;
+			        	}else if(status.isStopped()){
+							logger.info("Paused (stopped) flow " + id);		
+
+			        		break;			        		
+			        	}
+			        	
 			        	Thread.sleep(10);
 			        	count++;
 			        	
-			        } while (status.isSuspending() || count < 3000);
-			        
+			        } while (status.isSuspending() || count < 6000);
+			  
 			        return status.toString().toLowerCase();
 				
 					
@@ -399,12 +404,14 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String resumeFlow(String id) throws Exception {
-
+		logger.info("Resume flow " + id);
+		
 		try {
 		
 			if(hasFlow(id)) {
 	        	status = context.getRouteStatus(id);
 				if(status.isSuspended()) {
+					
 					context.resumeRoute(id);
 					
 					int count = 1;
@@ -417,7 +424,11 @@ public class CamelConnector extends BaseConnector {
 			        	
 			        } while (status.isStarting() || count < 3000);
 			        
+			        logger.info("Resumed flow " + id);
 			        return status.toString().toLowerCase();				
+				}else if(status.isStopped()) {
+					logger.info("Starting flow as flow " + id + " is currently stopped (not suspended)");
+					return startFlow(id);
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
 				}
