@@ -261,15 +261,19 @@ public class CamelConnector extends BaseConnector {
 		boolean flowAdded = false;
 		
 		try {
-		
-			for (TreeMap<String, String> props : super.getConfiguration()) {
-				
+
+			List<TreeMap<String, String>> allProps = super.getConfiguration();
+			
+			for(int i = 0; i < allProps.size(); i++){
+				TreeMap<String, String> props = allProps.get(i);
+			
 				if (props.get("id").equals(id)) {
 					
 					logger.info("Adding route with id: " + id);
 					addFlow(props);
 					flowAdded = true;
 				}
+			
 			}
 			
 			if(flowAdded){
