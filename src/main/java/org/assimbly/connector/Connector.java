@@ -3,6 +3,8 @@ package org.assimbly.connector;
 import java.util.List;
 import java.util.TreeMap;
 
+import org.apache.camel.spi.EventNotifier;
+
 /**
 * <pre>
 * This interface is meant to configure and manage a connector.
@@ -124,6 +126,14 @@ public interface Connector {
 	*/
 	public boolean isStarted();
 
+	/**
+	* Adds event notifier to notified about events  
+	* 
+	*/
+	public void addEventNotifier(EventNotifier eventNotifier) throws Exception;
+
+	
+	
 	//manage flow
 	/**
 	* Checks if a flow is a part of connector
@@ -318,7 +328,7 @@ public interface Connector {
 	public String getFlowCompletedMessages(String flowId) throws Exception;	
 
 	/**
-	* Gets the total number of completed messages a flow has processed
+	* Gets the total number of failed messages a flow has processed
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
@@ -326,6 +336,43 @@ public interface Connector {
 	*/
 	public String getFlowFailedMessages(String flowId) throws Exception;	
 
+	/**
+	* Gets the failure log for the specified flow
+	*
+	* @param  flowId the id of the flow
+	* @param  numberOfEntries (maximum number of entries to return)
+	* @throws Exception if log cannot be retrieved
+	* @return failure log events (comma separated)
+	*/	
+	public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception;	
+
+	/**
+	* Gets number of entries in (todays) failed log of flow
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if log cannot be retrieved
+	* @return number of flow failures
+	*/	
+	public String getFlowAlertsCount(String id) throws Exception;	
+
+	/**
+	* Gets number of entries in (todays) failed log of all configured/running flows
+	*
+	* @throws Exception if log cannot be retrieved
+	* @return failure log events (comma separated)
+	*/	
+	public TreeMap<String, String> getConnectorAlertsCount() throws Exception;
+	
+	/**
+	* Gets the event log for the specified flow (start events,stop events and message failures)
+	*
+	* @param  flowId the id of the flow
+	* @param  numberOfEntries (maximum number of entries to return)
+	* @throws Exception if log cannot be retrieved
+	* @return flow log events (comma separated)
+	*/		
+	public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
+	
 	/**
 	* Gets the details stats of a flow
 	*

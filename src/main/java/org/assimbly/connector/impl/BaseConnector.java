@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.apache.camel.ProducerTemplate;
+import org.apache.camel.spi.EventNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.assimbly.connector.configuration.JSONFileConfiguration;
@@ -247,6 +248,8 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract void stop() throws Exception;
 
+	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
+
 	public abstract String getStats(String statsType, String mediaType) throws Exception;	
 
 	public abstract String getDocumentationVersion() throws Exception;
@@ -294,6 +297,14 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getFlowCompletedMessages(String id) throws Exception;
 	
 	public abstract String getFlowFailedMessages(String id) throws Exception;	
+
+	public abstract String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception;	
+
+	public abstract String getFlowAlertsCount(String id) throws Exception;	
+
+	public abstract TreeMap<String, String> getConnectorAlertsCount() throws Exception;	
+	
+	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
 	public abstract String getFlowStats(String id, String mediaType) throws Exception;
 	

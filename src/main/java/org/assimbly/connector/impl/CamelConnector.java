@@ -1,6 +1,9 @@
 package org.assimbly.connector.impl;
 
+import java.io.File;
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
@@ -19,17 +22,22 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
+import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.RouteError;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
 import org.assimbly.connector.connect.util.ConnectorUtil;
+import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
+
 
 public class CamelConnector extends BaseConnector {
 
@@ -46,24 +54,29 @@ public class CamelConnector extends BaseConnector {
 	private MetricRegistry metricRegistry = new MetricRegistry();
 
 	private String flowInfo;
+
+	private final String userHomeDir = System.getProperty("user.home");
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
-   
 	public CamelConnector() {
-
+		setBasicSettings();
 	}
 	
+
 	public CamelConnector(String connectorId, String configuration) throws Exception {
+		setBasicSettings();
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
 	public CamelConnector(String connectorId, URI configuration) throws Exception {
+		setBasicSettings();
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
-	
-	public void start() throws Exception {
 
+	public void setBasicSettings() {
+
+		//set basic settings
 		SimpleRegistry registry = new SimpleRegistry();
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
@@ -77,6 +90,13 @@ public class CamelConnector extends BaseConnector {
 	    factory.setPrettyPrint(true);
 	    factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
+
+		//collect events
+		context.getManagementStrategy().addEventNotifier(new EventCollector());
+
+	}
+	
+	public void start() throws Exception {
 		
 		// start Camel context
 		context.start();
@@ -140,18 +160,26 @@ public class CamelConnector extends BaseConnector {
 			logger.info("Invalid route.");
 		}
 	}
-
+	
+	
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
-		context.addRoutes(new DefaultRoute(props));
+		DefaultRoute flow = new DefaultRoute(props);
+		context.addRoutes(flow);		
 	}
 
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
 		context.addRoutes(new SimpleRoute(props));
 	}
 	
-	public void addFlowFromJdbcTimer(final TreeMap<String, String> props)	throws Exception {
+	public void addFlowFromJdbcTimer(final TreeMap<String, String> props) throws Exception {
 		context.addRoutes(new PollingJdbcRoute(props));
 	}
+
+	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
+		System.out.println("voeg event notifier toe");
+		context.getManagementStrategy().addEventNotifier(eventNotifier);
+	}
+
 	
 	public boolean removeFlow(String id) throws Exception {
 		
@@ -480,7 +508,7 @@ public class CamelConnector extends BaseConnector {
 		if(route!=null) {
 			RouteError lastError = route.getLastError();
 			if(lastError!=null) {
-				flowInfo = lastError.toString();	
+				flowInfo = lastError.toString();
 			}else {
 				flowInfo = "0";
 			}
@@ -524,7 +552,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String getFlowFailedMessages(String id) throws Exception  {
-
+						
 		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
 		
 		if(route!=null) {
@@ -537,7 +565,76 @@ public class CamelConnector extends BaseConnector {
 		return flowInfo;
 
 	}
+
+	public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception  {
+		  
+		  Date date = new Date();
+		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
+		  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		
+		  if(file.exists()) {
+		  List<String> lines = FileUtils.readLines(file, "utf-8");
+		  if(numberOfEntries!=null && numberOfEntries < lines.size()) {
+			  lines = lines.subList(lines.size()-numberOfEntries, lines.size());
+		  }	  
+		  	  String alertsLog = StringUtils.join(lines, ','); 
+		  
+		  	  return alertsLog;
+		  }else {
+			  return "0";
+		  }
+	}
+
+	public TreeMap<String, String> getConnectorAlertsCount() throws Exception  {
+		  
+		TreeMap<String, String> numberOfEntriesList = new TreeMap<String, String>();
+		List<TreeMap<String, String>> allProps = super.getConfiguration();
+        Iterator<TreeMap<String, String>> it = allProps.iterator();
+        while(it.hasNext()){
+            TreeMap<String, String> props = it.next();
+			String flowId = props.get("id");
+			String numberOfEntries =  getFlowAlertsCount(flowId);
+			numberOfEntriesList.put(flowId, numberOfEntries);			
+        }
+		return numberOfEntriesList;
+		
+	}
 	
+	public String getFlowAlertsCount(String id) throws Exception  {
+		  
+		  Date date = new Date();
+		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
+		  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		
+		  if(file.exists()) {
+			  List<String> lines = FileUtils.readLines(file, "utf-8");
+			  String numberOfEntries = Integer.toString(lines.size());
+		   	  return numberOfEntries;
+		  }else {
+			  return "0";
+		  }
+	}
+	
+	public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception  {
+		  
+		  Date date = new Date();
+		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
+		  File file = new File(userHomeDir + "/assimbly/logs/events/" + id + "/" + today + "_events.log");
+		
+		  if(file.exists()) {
+		  List<String> lines = FileUtils.readLines(file, "utf-8");
+		  if(numberOfEntries!=null && numberOfEntries < lines.size()) {
+			  lines = lines.subList(lines.size()-numberOfEntries, lines.size());
+		  }	  
+		  	  String eventLog = StringUtils.join(lines, ','); 
+		  
+		  	  return eventLog;
+		  }else {
+			  return "0";
+		  }
+	}
+	
+
 	public String getFlowStats(String id, String mediaType) throws Exception {
 		
 		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
@@ -586,6 +683,8 @@ public class CamelConnector extends BaseConnector {
 
 	}	
 
+
+	
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();

@@ -1,11 +1,18 @@
 package org.assimbly.connector.routes;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,13 +29,15 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
 import org.apache.camel.component.file.GenericFile;
+import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 
-public class DefaultRoute extends RouteBuilder{
+public class DefaultRoute extends RouteBuilder {
 	
 	Map<String, String> props;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
@@ -37,42 +46,64 @@ public class DefaultRoute extends RouteBuilder{
 		this.props = props;
 	}
 
+	public DefaultRoute() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public interface FailureProcessorListener {
+		 public void onFailure();
+  	}
+	
 	@Override
 	public void configure() throws Exception {
 			
 		logger.info("Configuring default route");
 		
 		Processor setHeaders = new SetHeaders();
+		Processor failureProcessor = new FailureProcessor();
 		
-		if (this.props.containsKey("error.uria")){
+		if (this.props.containsKey("error.uri")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))
-					.maximumRedeliveries(1).redeliveryDelay(1000)
-					.maximumRedeliveryDelay(60000).backOffMultiplier(2)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.logRetryStackTrace(false).logStackTrace(true)
-					.log(log)
-					.logHandled(true).logExhausted(true)
-					.logExhaustedMessageHistory(true));
-		}
-		else{
-			errorHandler(defaultErrorHandler().maximumRedeliveries(0)
-					.redeliveryDelay(1000).maximumRedeliveryDelay(60000)
+					.maximumRedeliveries(1)
+					.redeliveryDelay(1000)
+					.maximumRedeliveryDelay(60000)
 					.backOffMultiplier(2)
 					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.logRetryStackTrace(true)
+					.onExceptionOccurred(failureProcessor)
+					.log(log)
+					.logRetryStackTrace(false)
+					.logStackTrace(true)
+					.logHandled(true)
+					.logExhausted(true)
+					.logExhaustedMessageHistory(true)					
+					);
+		}
+		else{
+			errorHandler(defaultErrorHandler()
+					.maximumRedeliveries(1)
+					.redeliveryDelay(1000)
+					.maximumRedeliveryDelay(60000)
+					.backOffMultiplier(2)
+					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+					.onExceptionOccurred(failureProcessor)
+					.logRetryStackTrace(false)
 					.logStackTrace(true)
 					.logHandled(true)
 					.logExhausted(true)
 					.logExhaustedMessageHistory(true)
-					.log(logger));
+					.log(logger)
+					);
 		}
-
+	    
+		
+		
 		//the default Camel route
 		from(props.get("from.uri"))
+	       // -- Handle Exceptions
 			.process(setHeaders)
-			.convertBodyTo(String.class, "UTF-8")				
+			.convertBodyTo(String.class, "UTF-8")			
 			.multicast()
 			.shareUnitOfWork()
 			.parallelProcessing()
@@ -133,15 +164,6 @@ public class DefaultRoute extends RouteBuilder{
 		} 
 	}	
 	
-	/*
-	private class ErrorProcessor implements Processor{		
-		
-		@Override
-		public void process(Exchange exchange) throws Exception {
-			logger.debug("Unrecoverable error occured.");
-		}		
-	}*/
-	
 	public class SetHeaders implements Processor {
 		
 		  public void process(Exchange exchange) throws Exception {
@@ -164,4 +186,26 @@ public class DefaultRoute extends RouteBuilder{
 				in.setHeader("Source", props.get("from.uri"));
 		  }		  
 	}
+	
+	public class FailureProcessor implements Processor {
+		
+  	    private final String userHomeDir = System.getProperty("user.home");
+  	    private FlowEvent flowEvent;
+  	    private Queue<String> queue = new ConcurrentLinkedQueue<String>();
+  	  
+		public void process(Exchange exchange) throws Exception {
+			  
+			  Date date = new Date();
+			  String today = new SimpleDateFormat("yyyyMMdd").format(date);
+			  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
+			  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
+			  			  
+			  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
+			  List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
+			  FileUtils.writeLines(file, line, true);
+			
+		  }
+		
+	}
+
 }
