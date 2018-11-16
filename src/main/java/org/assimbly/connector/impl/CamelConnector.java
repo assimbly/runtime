@@ -176,7 +176,6 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
-		System.out.println("voeg event notifier toe");
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
 
@@ -356,9 +355,10 @@ public class CamelConnector extends BaseConnector {
 		try {		
 
 			if(hasFlow(id)) {
+			
 	        	status = context.getRouteStatus(id);
 				if(status.isStoppable()) {
-					context.stopRoute(id);	
+					context.stopRoute(id);
 				}
 				
 				int count = 1;
@@ -372,6 +372,7 @@ public class CamelConnector extends BaseConnector {
 		        } while (status.isStopping() || count < 3000);
 
 				//removeFlow if already configured
+		        context.removeEndpoints("sonicmq*");
 		        context.removeRoute(id);
 
 				logger.info("Stopped flow " + id);		
@@ -638,6 +639,7 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowStats(String id, String mediaType) throws Exception {
 		
 		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+
 		flowStatus = getFlowStatus(id);
 		
 		if(route!=null && flowStatus.equals("started")) {

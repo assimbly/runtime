@@ -3,6 +3,7 @@ package org.assimbly.connector.impl;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -84,9 +85,29 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception {
+
+		removeFlowConfigurationIfExist(configuration);
+		
 		this.properties.add(configuration);
+		
 	}	
 
+	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) throws Exception {
+
+		String newId = configuration.get("id");
+
+		Iterator<TreeMap<String, String>> i = this.properties.iterator();
+		
+		while (i.hasNext()) {
+		   TreeMap<String, String> currentConfiguration = i.next(); // must be called before you can call i.remove()
+		   String oldId= currentConfiguration.get("id");
+		   if(newId.equals(oldId)){
+				i.remove();
+			}
+		}
+	}	
+	
+	
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 		
 		try {

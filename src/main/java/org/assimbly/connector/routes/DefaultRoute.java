@@ -11,8 +11,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,6 +24,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
+import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
 import org.apache.camel.component.file.GenericFile;
@@ -40,6 +39,7 @@ import org.xml.sax.InputSource;
 public class DefaultRoute extends RouteBuilder {
 	
 	Map<String, String> props;
+	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	
 	public DefaultRoute(final Map<String, String> props){
@@ -63,45 +63,42 @@ public class DefaultRoute extends RouteBuilder {
 		Processor failureProcessor = new FailureProcessor();
 		
 		if (this.props.containsKey("error.uri")){
-			errorHandler(deadLetterChannel(props.get("error.uri"))
-					.maximumRedeliveries(1)
-					.redeliveryDelay(1000)
-					.maximumRedeliveryDelay(60000)
-					.backOffMultiplier(2)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.log(log)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true)					
-					);
+			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
+			.maximumRedeliveries(1)
+			.redeliveryDelay(1000)
+			.maximumRedeliveryDelay(60000)
+			.backOffMultiplier(2)
+			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+			.onExceptionOccurred(failureProcessor)
+			.log(log)
+			.logRetryStackTrace(false)
+			.logStackTrace(true)
+			.logHandled(true)
+			.logExhausted(true)
+			.logExhaustedMessageHistory(true);					
 		}
 		else{
-			errorHandler(defaultErrorHandler()
-					.maximumRedeliveries(1)
-					.redeliveryDelay(1000)
-					.maximumRedeliveryDelay(60000)
-					.backOffMultiplier(2)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true)
-					.log(logger)
-					);
+			routeErrorHandler = defaultErrorHandler()
+			.maximumRedeliveries(1)
+			.redeliveryDelay(1000)
+			.maximumRedeliveryDelay(60000)
+			.backOffMultiplier(2)
+			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+			.onExceptionOccurred(failureProcessor)
+			.logRetryStackTrace(false)
+			.logStackTrace(true)
+			.logHandled(true)
+			.logExhausted(true)
+			.logExhaustedMessageHistory(true)
+			.log(logger);
 		}
-	    
 		
 		
 		//the default Camel route
-		from(props.get("from.uri"))
-	       // -- Handle Exceptions
+		from(props.get("from.uri"))			
+	        .errorHandler(routeErrorHandler)
 			.process(setHeaders)
 			.convertBodyTo(String.class, "UTF-8")			
 			.multicast()
@@ -191,7 +188,6 @@ public class DefaultRoute extends RouteBuilder {
 		
   	    private final String userHomeDir = System.getProperty("user.home");
   	    private FlowEvent flowEvent;
-  	    private Queue<String> queue = new ConcurrentLinkedQueue<String>();
   	  
 		public void process(Exchange exchange) throws Exception {
 			  

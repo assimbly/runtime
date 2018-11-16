@@ -4,27 +4,32 @@ import java.net.URI;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.command.ActiveMQDestination;
 
 public class Broker {
 
+	BrokerService broker = new BrokerService();
+
 	public void start() throws Exception {
-		
-		BrokerService broker = new BrokerService();
-		
-		
-		ActiveMQDestination activeMQDestinationMQ =  ActiveMQDestination.createDestination("order",  (byte) 1 );	
-	
-		ActiveMQDestination[] destinations = new ActiveMQDestination[]{activeMQDestinationMQ};
-		
 		
 		TransportConnector connector = new TransportConnector();
 		connector.setUri(new URI("tcp://localhost:61616"));
-		//broker.setBrokerName("embedded");
-		broker.setDestinations(destinations);
 		broker.addConnector(connector);
-		broker.start();
-		
+		if(!broker.isStarted()) {
+			broker.start();
+		}
+	}
+
+	public void stop() throws Exception {
+		if(broker.isStarted()) {
+			broker.stop();
+		}
 	}
 	
+	public String status() throws Exception {
+		if(broker.isStarted())
+			return "started";
+		else {
+			return "stopped";
+		}
+	}
 }
