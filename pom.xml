@@ -146,7 +146,12 @@
 			<version>8.6.0</version>
      		<!-- <optional>true</optional> -->		
 		</dependency>
-
+		<dependency>
+			<groupId>com.progress.sonic.mq</groupId>
+			<artifactId>sonic_XMessage</artifactId>
+			<version>8.6.0</version>
+     		<!-- <optional>true</optional> -->		
+		</dependency>
 
 		<!-- jolokia dependencies -->
 		<dependency>
