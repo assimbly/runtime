@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
-import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
+import org.assimbly.docconverter.DocConverter;
 
 
 public class CamelConnector extends BaseConnector {
@@ -645,7 +645,7 @@ public class CamelConnector extends BaseConnector {
 		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);
 			if(mediaType.contains("json")) {
-				flowStats = ConnectorUtil.convertXmlToJson(flowStats);
+				flowStats = DocConverter.convertXmlToJson(flowStats);
 			}
 		}else {
 			flowStats = "0";
@@ -663,7 +663,7 @@ public class CamelConnector extends BaseConnector {
 			if(historyService!=null) {
 				connectorStats = historyService.dumpStatisticsAsJson();
 				if(mediaType.contains("xml")) {
-					connectorStats = ConnectorUtil.convertJsonToXml(connectorStats);
+					connectorStats = DocConverter.convertJsonToXml(connectorStats);
 				}
 			}else {
 				connectorStats = "0";
@@ -674,7 +674,7 @@ public class CamelConnector extends BaseConnector {
 			if(metricsService!=null) {
 				connectorStats = metricsService.dumpStatisticsAsJson();
 				if(mediaType.contains("xml")) {
-					connectorStats = ConnectorUtil.convertJsonToXml(connectorStats);
+					connectorStats = DocConverter.convertJsonToXml(connectorStats);
 				}
 			}else {
 				connectorStats = "0";
@@ -716,7 +716,7 @@ public class CamelConnector extends BaseConnector {
 		if(schema==null || schema.isEmpty()) {
 			schema = "Unknown component";
 		}else if(mediaType.contains("xml")) {
-			schema = ConnectorUtil.convertJsonToXml(schema);
+			schema = DocConverter.convertJsonToXml(schema);
 		}
 		
 		return schema;		

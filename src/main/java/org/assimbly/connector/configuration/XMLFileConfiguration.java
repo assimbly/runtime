@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.connector.connect.util.ConnectorUtil;
+import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -70,7 +71,7 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
 		propertiesList = new ArrayList<>();
-		Document doc = ConnectorUtil.convertStringToDoc(xml);
+		Document doc = DocConverter.convertStringToDoc(xml);
 
 		List<String> flowIds = getFlowIds(connectorId,doc); 
  		
@@ -90,7 +91,7 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, URI uri) throws Exception {
 
 		propertiesList = new ArrayList<>();
-		Document doc = ConnectorUtil.convertUriToDoc(uri);
+		Document doc = DocConverter.convertUriToDoc(uri);
 
 		List<String> flowIds = getFlowIds(connectorId,doc); 
  		
@@ -120,7 +121,7 @@ public class XMLFileConfiguration {
 			   ).getConfiguration();
 
 	   FileHandler fh = new FileHandler(conf);
-	   fh.load(ConnectorUtil.convertStringToStream(xml));
+	   fh.load(DocConverter.convertStringToStream(xml));
 
   	   setProperties();
 
@@ -209,7 +210,7 @@ public class XMLFileConfiguration {
 			    setFlowFromConfiguration(configuration);
 			}
 
-		    String xmlConfiguration = ConnectorUtil.convertDocToString(doc);
+		    String xmlConfiguration = DocConverter.convertDocToString(doc);
 		    
 			return xmlConfiguration;
 			
@@ -233,7 +234,7 @@ public class XMLFileConfiguration {
 	    setFlowFromConfiguration(configuration);
 	    
 	    if(doc!=null) {
-		    xmlFlowConfiguration = ConnectorUtil.convertDocToString(doc);
+		    xmlFlowConfiguration = DocConverter.convertDocToString(doc);
 	    }else {
 	    	xmlFlowConfiguration = "Error: Can't create configuration";
 	    }

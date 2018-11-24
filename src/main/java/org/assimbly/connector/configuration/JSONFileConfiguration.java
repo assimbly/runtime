@@ -3,7 +3,7 @@ package org.assimbly.connector.configuration;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.assimbly.connector.connect.util.ConnectorUtil;
+import org.assimbly.docconverter.DocConverter;
 
 public class JSONFileConfiguration {
 
@@ -18,7 +18,7 @@ public class JSONFileConfiguration {
 	public String createConfiguration(String connectorId, List<TreeMap<String, String>> properties) throws Exception {
 
 		xmlConfiguration = new XMLFileConfiguration().createConfiguration(connectorId, properties);
-		jsonConfiguration = ConnectorUtil.convertXmlToJson(xmlConfiguration);
+		jsonConfiguration = DocConverter.convertXmlToJson(xmlConfiguration);
 		
 		return jsonConfiguration;
 
@@ -27,14 +27,14 @@ public class JSONFileConfiguration {
 	public String createFlowConfiguration(TreeMap<String, String> flowProperties) throws Exception {
 
 		xmlConfiguration = new XMLFileConfiguration().createFlowConfiguration(flowProperties);
-		jsonConfiguration = ConnectorUtil.convertXmlToJson(xmlConfiguration);
+		jsonConfiguration = DocConverter.convertXmlToJson(xmlConfiguration);
 		
 		return jsonConfiguration;
 	}
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String jsonConfiguration) throws Exception {
 		
-		xmlConfiguration = ConnectorUtil.convertJsonToXml(jsonConfiguration);
+		xmlConfiguration = DocConverter.convertJsonToXml(jsonConfiguration);
 		properties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
 		
 		return properties;
@@ -42,7 +42,7 @@ public class JSONFileConfiguration {
 	
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String jsonConfiguration) throws Exception {
 
-		xmlConfiguration = ConnectorUtil.convertJsonToXml(jsonConfiguration);
+		xmlConfiguration = DocConverter.convertJsonToXml(jsonConfiguration);
 		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
 		
 		return flowproperties;

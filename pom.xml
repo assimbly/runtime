@@ -226,7 +226,13 @@
 		    <version>1.1.11</version>
 		</dependency>
 
-		<!-- json (for conversions) -->
+		<!-- for doc conversions -->
+		<dependency>
+		    <groupId>org.assimbly</groupId>
+		    <artifactId>docconverter</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
 		<dependency>
 		    <groupId>org.json</groupId>
 		    <artifactId>json</artifactId>
