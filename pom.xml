@@ -228,22 +228,9 @@
 
 		<!-- for doc conversions -->
 		<dependency>
-		    <groupId>org.assimbly</groupId>
+		    <groupId>io.github.assimbly</groupId>
 		    <artifactId>docconverter</artifactId>
 		    <version>1.0.0</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.json</groupId>
-		    <artifactId>json</artifactId>
-		    <version>20180813</version>
-		</dependency>
-
-		<!-- yaml (for conversions)-->
-		<dependency>
-		    <groupId>com.fasterxml.jackson.dataformat</groupId>
-		    <artifactId>jackson-dataformat-yaml</artifactId>
-		    <version>2.9.7</version>
 		</dependency>
 		
 		<!-- database drivers -->
