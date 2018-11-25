@@ -18,7 +18,7 @@ public class YAMLFileConfiguration {
 
 		xmlConfiguration = new XMLFileConfiguration().createConfiguration(connectorId, configurations);
 
-		yamlConfiguration = DocConverter.convertXMLtoYAML(xmlConfiguration);
+		yamlConfiguration = DocConverter.convertXmltoYaml(xmlConfiguration);
 		        
         return yamlConfiguration;
 
@@ -28,7 +28,7 @@ public class YAMLFileConfiguration {
 
 		xmlConfiguration = new XMLFileConfiguration().createFlowConfiguration(configuration);
 
-		yamlConfiguration = DocConverter.convertXMLtoYAML(xmlConfiguration);
+		yamlConfiguration = DocConverter.convertXmltoYaml(xmlConfiguration);
         
         return yamlConfiguration;
         
@@ -36,7 +36,7 @@ public class YAMLFileConfiguration {
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String configuration) throws Exception {
 
-		xmlConfiguration = DocConverter.convertYAMLtoXML(configuration);
+		xmlConfiguration = DocConverter.convertYamltoXml(configuration);
 		
 		gatewayProperties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
 		
@@ -45,7 +45,7 @@ public class YAMLFileConfiguration {
 	
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String configuration) throws Exception {
 
-		xmlConfiguration = DocConverter.convertYAMLtoXML(configuration);
+		xmlConfiguration = DocConverter.convertYamltoXml(configuration);
 		
 		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
 		
