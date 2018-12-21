@@ -266,7 +266,6 @@ public class Connection {
 		String password = properties.get(direction + ".service.password");
 			
 			if(url!=null || username !=null || password != null){
-
 				
 				if(properties.get(direction + ".service.faultTolerant")!=null) {
 					try {

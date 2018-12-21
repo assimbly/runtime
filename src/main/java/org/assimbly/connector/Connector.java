@@ -181,7 +181,7 @@ public interface Connector {
 	public String getDocumentation(String componentType, String mediaType) throws Exception;	
 
 	/**
-	* Gets the documentation of a component
+	* Gets the documentation/schema of a component
 	*
 	* @param  type of component (for example 'file')
  	* @param  type of dataform (xml or json)
@@ -189,6 +189,16 @@ public interface Connector {
 	* @return returns documenation
 	*/
 	public String getComponentSchema(String componentType, String mediaType) throws Exception;	
+
+	/**
+	* Gets the parameters of a component
+	*
+	* @param  type of component (for example 'file')
+ 	* @param  type of dataform (xml or json)
+	* @throws Exception if documentation couldn't get found
+	* @return returns list of options
+	*/
+	public String getComponentParameters(String componentType, String mediaType) throws Exception;		
 	
 	/**
 	* Gets the last error of a connector

@@ -4,7 +4,6 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>connector</artifactId>
-	<packaging>jar</packaging>
 
 	<name>org.assimbly.camelconnector</name>
 	<url>http://maven.apache.org</url>
@@ -230,7 +229,7 @@
 		<dependency>
 		    <groupId>io.github.assimbly</groupId>
 		    <artifactId>docconverter</artifactId>
-		    <version>1.0.0</version>
+		    <version>1.1.0</version>
 		</dependency>
 		
 		<!-- database drivers -->

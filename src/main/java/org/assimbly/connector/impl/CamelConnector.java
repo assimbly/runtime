@@ -722,6 +722,19 @@ public class CamelConnector extends BaseConnector {
 		return schema;		
 	}
 
+	@Override
+	public String getComponentParameters(String componentType, String mediaType) throws Exception {
+		
+		String parameters = context.explainComponentJson(componentType, true);
+		
+		if(parameters==null || parameters.isEmpty()) {
+			parameters = "Unknown component";
+		}else if(mediaType.contains("xml")) {
+			parameters = DocConverter.convertJsonToXml(parameters);
+		}
+		
+		return parameters;		
+	}
 	
 	public String validateFlow(String uri) {
 
@@ -749,5 +762,6 @@ public class CamelConnector extends BaseConnector {
 			TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
 	}
+
 
 }
