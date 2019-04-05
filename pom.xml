@@ -10,8 +10,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.apache.camel-version>2.21.3</org.apache.camel-version>
-		<org.apache.activemq-version>5.15.7</org.apache.activemq-version>
+		<org.apache.camel-version>2.22.3</org.apache.camel-version>
+		<org.apache.activemq-version>5.15.9</org.apache.activemq-version>
 		<org.jolokia-version>1.6.0</org.jolokia-version>
 
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -21,7 +21,16 @@
 	<dependencies>
 	
 		<!-- camel dependencies in alphabetic order-->
-
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-amqp</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-as2</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>		
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-catalog</artifactId>
@@ -36,7 +45,12 @@
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-cxf</artifactId>
 			<version>${org.apache.camel-version}</version>
-		</dependency>		
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-elasticsearch-rest</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>				
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-ftp</artifactId>
@@ -52,6 +66,11 @@
 			<artifactId>camel-jdbc</artifactId>
 			<version>${org.apache.camel-version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-jetty</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>			
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-jms</artifactId>
@@ -83,6 +102,11 @@
 			<version>${org.apache.camel-version}</version>
 		</dependency>
 		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-rabbitmq</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>		
+		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-sjms</artifactId>
 			<version>${org.apache.camel-version}</version>
@@ -92,6 +116,11 @@
 			<artifactId>camel-sql</artifactId>
 			<version>${org.apache.camel-version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-slack</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-spring</artifactId>
@@ -168,7 +197,6 @@
 		    <artifactId>jolokia-client-java</artifactId>
 		    <version>${org.jolokia-version}</version>
 		</dependency>
-
 	
 		<!-- apache commons dependencies -->
 		<dependency>
@@ -205,6 +233,12 @@
 		    <groupId>commons-beanutils</groupId>
 		    <artifactId>commons-beanutils</artifactId>
 		    <version>1.9.3</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.5.8</version>
 		</dependency>
 				
 		<dependency>
@@ -243,6 +277,12 @@
 		    <artifactId>postgresql</artifactId>
 		    <version>42.2.5</version>
 		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>7.0.0.jre8</version>
+		    <scope>test</scope>
+		</dependency>		
 
 		<dependency>
 		    <groupId>junit</groupId>

@@ -178,7 +178,7 @@ public class DefaultRoute extends RouteBuilder {
 												String.class));
 					}
 				}
-				in.setHeader("Content-Type", props.get("header.contentype"));
+				//in.setHeader("Content-Type", props.get("header.contentype"));
 				in.setHeader("FlowID", props.get("id"));
 				in.setHeader("Source", props.get("from.uri"));
 		  }		  
@@ -196,7 +196,7 @@ public class DefaultRoute extends RouteBuilder {
 			  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 			  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
 			  			  
-			  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
+			  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
 			  List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
 			  FileUtils.writeLines(file, line, true);
 			

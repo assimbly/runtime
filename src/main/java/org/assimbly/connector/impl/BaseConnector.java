@@ -282,7 +282,9 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
 	
 	public abstract Object getContext() throws Exception;
-	
+
+	public abstract void setCertificates(String url) throws Exception;
+
 	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);

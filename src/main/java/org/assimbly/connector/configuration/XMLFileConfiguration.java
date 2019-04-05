@@ -315,7 +315,7 @@ public class XMLFileConfiguration {
 
 		properties.put("offloading",flowOffloading);
 		
-		properties.put("header.contenttype", "text/xml;charset=UTF-8");
+		//properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		
 	}
 

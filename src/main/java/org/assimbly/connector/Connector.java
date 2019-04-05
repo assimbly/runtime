@@ -207,6 +207,16 @@ public interface Connector {
 	* @return the last error or 0 if no error
 	*/
 	public String getLastError() throws Exception;	
+
+	/**
+	* Sets TLS certificates for a url.
+	*  
+	* First step is download the chain of certificates
+	* Second step is import certificates to truststore (jks) used by the connector
+	*
+	* @throws Exception if certificates cannot be downloaded or imported
+	*/
+	public void setCertificates(String url) throws Exception;	
 	
 	/**
 	* removes flow from connector

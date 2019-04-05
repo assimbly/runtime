@@ -1,7 +1,12 @@
 package org.assimbly.connector.impl;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -24,6 +29,11 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.RouteError;
+import org.apache.camel.SSLContextParametersAware;
+import org.apache.camel.util.jsse.KeyManagersParameters;
+import org.apache.camel.util.jsse.KeyStoreParameters;
+import org.apache.camel.util.jsse.SSLContextParameters;
+import org.apache.camel.util.jsse.TrustManagersParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
+import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
@@ -60,7 +71,12 @@ public class CamelConnector extends BaseConnector {
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
 	public CamelConnector() {
-		setBasicSettings();
+		try {
+			setBasicSettings();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 
@@ -74,13 +90,22 @@ public class CamelConnector extends BaseConnector {
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
-	public void setBasicSettings() {
+	public void setBasicSettings() throws Exception {
 
 		//set basic settings
 		SimpleRegistry registry = new SimpleRegistry();
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
+
+		//setting transport security globally
+        context.setSSLContextParameters(createSSLContextParameters());
+        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("https4")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("netty4")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
 
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -571,7 +596,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
 		
 		  if(file.exists()) {
 		  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -605,7 +630,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
 		
 		  if(file.exists()) {
 			  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -620,7 +645,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/assimbly/logs/events/" + id + "/" + today + "_events.log");
+		  File file = new File(userHomeDir + "/.assimbly/logs/events/" + id + "/" + today + "_events.log");
 		
 		  if(file.exists()) {
 		  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -763,5 +788,77 @@ public class CamelConnector extends BaseConnector {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
 	}
 
+	public void setCertificates(String url) {
+    	try {
+    		ConnectorUtil util = new ConnectorUtil();
+    		Certificate[] certificates = util.downloadCertificate(url);
+    		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
+    		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+    		util.importCertificate(truststorePath, certificates);
+    		util.importCertificate(keystorePath, certificates);
 
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}		
+	}
+	
+    private SSLContextParameters createSSLContextParameters() {
+
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+
+    	File securityPath = new File(userHomeDir + "/.assimbly/security");
+    	File trustStorePath = new File(userHomeDir + "/.assimbly/security/truststore.jks");
+    	File keyStorePath = new File(userHomeDir + "/.assimbly/security/keystore.jks");
+
+    	if(!securityPath.exists()){ 
+    		securityPath.mkdirs();
+    	}
+    	
+    	if(!trustStorePath.exists()){ 
+    		try {
+    			trustStorePath.createNewFile();
+    			InputStream is = classloader.getResourceAsStream("truststore.jks");
+    			Files.copy(is, trustStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        		is.close();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+
+    	if(!keyStorePath.exists()){ 
+    		try {
+    			keyStorePath.createNewFile();
+    			InputStream is = classloader.getResourceAsStream("keystore.jks");
+    			Files.copy(is, keyStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);        	
+        		is.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+        KeyStoreParameters ksp = new KeyStoreParameters();
+        ksp.setResource(userHomeDir + "/.assimbly/security/keystore.jks");
+        ksp.setPassword("supersecret");
+        KeyManagersParameters kmp = new KeyManagersParameters();
+        kmp.setKeyPassword("secret");
+        kmp.setKeyStore(ksp);
+
+        KeyStoreParameters tsp = new KeyStoreParameters();
+        tsp.setResource(userHomeDir + "/.assimbly/security/truststore.jks");
+        tsp.setPassword("supersecret");      
+        TrustManagersParameters tmp = new TrustManagersParameters();
+        tmp.setKeyStore(tsp);
+        
+        
+        SSLContextParameters sslContextParameters = new SSLContextParameters();
+        sslContextParameters.setKeyManagers(kmp);
+        sslContextParameters.setTrustManagers(tmp);
+                
+        return sslContextParameters;
+    }
+    
 }
