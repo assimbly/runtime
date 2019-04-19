@@ -1,10 +1,12 @@
 package org.assimbly.connector.impl;
 
 import java.net.URI;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.camel.ProducerTemplate;
@@ -283,7 +285,15 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract Object getContext() throws Exception;
 
+	public abstract Certificate[] getCertificates(String url) throws Exception;	
+	
+	public abstract Certificate getCertificate(String certificateName) throws Exception;	
+
 	public abstract void setCertificates(String url) throws Exception;
+
+	public abstract Map<String,Certificate> importCertificates(Certificate[] certificates) throws Exception;
+
+	public abstract void deleteCertificates(String certificateName) throws Exception;
 
 	public abstract boolean removeFlow(String id) throws Exception;
 

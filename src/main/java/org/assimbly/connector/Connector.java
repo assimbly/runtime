@@ -1,6 +1,8 @@
 package org.assimbly.connector;
 
+import java.security.cert.Certificate;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.camel.spi.EventNotifier;
@@ -209,14 +211,51 @@ public interface Connector {
 	public String getLastError() throws Exception;	
 
 	/**
-	* Sets TLS certificates for a url.
+	* Gets TLS certificates for a url.
 	*  
-	* First step is download the chain of certificates
-	* Second step is import certificates to truststore (jks) used by the connector
+	* Download the chain of certificates for the specified url
 	*
-	* @throws Exception if certificates cannot be downloaded or imported
+	* @throws Exception if certificates cannot be downloaded
+	*/
+	public Certificate[] getCertificates(String url) throws Exception;	
+
+	/**
+	* Gets TLS certificates for a url.
+	*  
+	* Download the chain of certificates for the specified url
+	*
+	* @throws Exception if certificates cannot be downloaded
+	*/
+	public Certificate getCertificate(String certificateName) throws Exception;	
+
+	
+	/**
+	* Sets TLS certificates.
+	*  
+	* Download and import certificates to truststore (jks) used by the connector
+	*
+	* @throws Exception if certificates cannot be imported
 	*/
 	public void setCertificates(String url) throws Exception;	
+
+	
+	/**
+	* Import TLS certificates.
+	*  
+	* Import certificates to truststore (jks) used by the connector
+	*
+	* @throws Exception if certificates cannot be imported
+	*/
+	public Map<String,Certificate> importCertificates(Certificate[] certificates) throws Exception;
+	
+	/**
+	* Delete certificate from key/truststore
+	*  
+	* @throws Exception if certificates cannot be deleted
+	*/
+	public void deleteCertificates(String certificateName) throws Exception;	
+
+	
 	
 	/**
 	* removes flow from connector

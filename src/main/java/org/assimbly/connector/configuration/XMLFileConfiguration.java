@@ -65,6 +65,8 @@ public class XMLFileConfiguration {
 	private Element connector;
 	private String headerXPath;
 	private String flowOffloading;
+	private String flowMaximumRedeliveries;
+	private String flowRedeliveryDelay;
 	private Object offloadingId;
 	private String wireTapUri;
 
@@ -285,6 +287,8 @@ public class XMLFileConfiguration {
 	    XPath xPath = XPathFactory.newInstance().newXPath();
 	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
 	    flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
+	    flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
+	    flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
 		
 		if(flowId==null || flowId.isEmpty()) {
 			ConfigurationException configurationException = new ConfigurationException("The flow ID doesn't exists in XML Configuration");
@@ -311,9 +315,19 @@ public class XMLFileConfiguration {
 			flowOffloading = "false";					
 		}
 		
+		if(flowMaximumRedeliveries == null){    			
+			flowMaximumRedeliveries = "false";					
+		}
+		
+		if(flowRedeliveryDelay == null){    			
+			flowRedeliveryDelay = "false";					
+		}
+		
 		properties.put("id",flowId);	
 
 		properties.put("offloading",flowOffloading);
+		properties.put("maximumRedeliveries",flowMaximumRedeliveries);
+		properties.put("redeliveryDelay",flowRedeliveryDelay);
 		
 		//properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		

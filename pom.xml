@@ -10,7 +10,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.apache.camel-version>2.22.3</org.apache.camel-version>
+		<org.apache.camel-version>2.22.4</org.apache.camel-version>
 		<org.apache.activemq-version>5.15.9</org.apache.activemq-version>
 		<org.jolokia-version>1.6.0</org.jolokia-version>
 

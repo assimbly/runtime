@@ -29,6 +29,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,9 @@ public class DefaultRoute extends RouteBuilder {
 	Map<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
+	private int maximumRedeliveries;
+	private int redeliveryDelay;
+	private int maximumRedeliveryDelay;
 	
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
@@ -62,11 +66,36 @@ public class DefaultRoute extends RouteBuilder {
 		Processor setHeaders = new SetHeaders();
 		Processor failureProcessor = new FailureProcessor();
 		
+		if (this.props.containsKey("maximumRedeliveries")){
+			String maximumRedeliveriesAsString = props.get("maximumRedeliveries");
+			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
+				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
+			}else {
+				maximumRedeliveries = 0;
+			}
+		}else {
+			maximumRedeliveries = 0;
+		}
+		
+		if (this.props.containsKey("redeliveryDelay")){
+			String RedeliveryDelayAsString = props.get("redeliveryDelay");
+			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
+				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
+				maximumRedeliveryDelay = redeliveryDelay * 10;
+			}else {
+				redeliveryDelay = 3000;
+				maximumRedeliveryDelay = 60000;
+			}
+		}else {
+			redeliveryDelay = 3000;
+			maximumRedeliveryDelay = 60000;
+		}
+		
 		if (this.props.containsKey("error.uri")){
 			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
-			.maximumRedeliveries(1)
-			.redeliveryDelay(1000)
-			.maximumRedeliveryDelay(60000)
+			.maximumRedeliveries(maximumRedeliveries)
+			.redeliveryDelay(redeliveryDelay)
+			.maximumRedeliveryDelay(maximumRedeliveryDelay)
 			.backOffMultiplier(2)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
@@ -80,9 +109,9 @@ public class DefaultRoute extends RouteBuilder {
 		}
 		else{
 			routeErrorHandler = defaultErrorHandler()
-			.maximumRedeliveries(1)
-			.redeliveryDelay(1000)
-			.maximumRedeliveryDelay(60000)
+			.maximumRedeliveries(maximumRedeliveries)
+			.redeliveryDelay(redeliveryDelay)
+			.maximumRedeliveryDelay(maximumRedeliveryDelay)
 			.backOffMultiplier(2)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)

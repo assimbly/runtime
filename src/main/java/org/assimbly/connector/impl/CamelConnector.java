@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -788,20 +789,58 @@ public class CamelConnector extends BaseConnector {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
 	}
 
-	public void setCertificates(String url) {
+	public Certificate[] getCertificates(String url) {
     	try {
     		ConnectorUtil util = new ConnectorUtil();
     		Certificate[] certificates = util.downloadCertificate(url);
-    		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
-    		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
-    		util.importCertificate(truststorePath, certificates);
-    		util.importCertificate(keystorePath, certificates);
-
-		} catch (IOException e1) {
+    		return certificates;
+		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}		
+		}
+    	return null;
+	}	
+
+	public Certificate getCertificate(String certificateName) {
+		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		ConnectorUtil util = new ConnectorUtil();
+    	return util.getCertificate(truststorePath, certificateName); 
+	}	
+
+	
+	
+	public Map<String,Certificate> importCertificates(Certificate[] certificates) {
+
+		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
+		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		
+		ConnectorUtil util = new ConnectorUtil();
+		util.importCertificate(keystorePath, certificates);    	
+    	return util.importCertificate(truststorePath, certificates); 
+				
 	}
+
+	public void setCertificates(String url) {
+
+		try {
+    		ConnectorUtil util = new ConnectorUtil();
+    		Certificate[] certificates = util.downloadCertificate(url);
+    		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+        	util.importCertificate(truststorePath, certificates);
+    	} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}			
+	}
+	
+	
+	public void deleteCertificates(String certificateName) {
+		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		
+		ConnectorUtil util = new ConnectorUtil();
+    	util.deleteCertificate(truststorePath, certificateName);
+	}
+	
 	
     private SSLContextParameters createSSLContextParameters() {
 

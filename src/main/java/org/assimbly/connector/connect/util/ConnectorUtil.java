@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -145,10 +146,48 @@ public final class ConnectorUtil {
         return peercertificates;
 		
 	}
+
+
+	public Certificate getCertificate(String keyStorePath, String certificateName) {
+
+    	try {
+    		//load keystore
+    		File trustStore = new File(keyStorePath);
+    		InputStream is = new FileInputStream(trustStore);
+    		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+	        String password = "supersecret";
+	        keystore.load(is, password.toCharArray());
+	        Certificate certificate = keystore.getCertificate(certificateName);
+	        is.close();
+			
+	        // Save the new keystore contents
+			FileOutputStream out = new FileOutputStream(trustStore);
+	        keystore.store(out, password.toCharArray());
+	        out.close();
+	    
+	        return certificate;
+	        
+		}catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (CertificateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;   	
+
+	}
 	
-	public void importCertificate(String keyStorePath, Certificate[] certificates) {
+	
+	
+	public Map<String,Certificate> importCertificate(String keyStorePath, Certificate[] certificates) {
 
         System.out.println("Importing certificates");
+        Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
 
     	try {
     		//load keystore
@@ -160,7 +199,7 @@ public final class ConnectorUtil {
 	        is.close();
 	
 	        // Add the certificate to the store
-            for (Certificate certificate : certificates){
+            for (Certificate certificate : certificates){            	
                 X509Certificate real = (X509Certificate) certificate;
                 System.out.println("----------------------------------------");
                 System.out.println("Type: " + real.getType());
@@ -170,7 +209,11 @@ public final class ConnectorUtil {
                 System.out.println("Not After: " + DateUtils.formatDate(real.getNotAfter(), "dd-MM-yyyy"));
                 System.out.println("Not Before: " + DateUtils.formatDate(real.getNotBefore(), "dd-MM-yyyy"));
                 String alias = UUID.randomUUID().toString();
+                certificateMap.put(alias, certificate);
                 keystore.setCertificateEntry(alias, certificate);
+                System.out.println("original alias:" + alias);
+                System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
+                
             }
 			
 	        // Save the new keystore contents
@@ -189,7 +232,39 @@ public final class ConnectorUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
+    	return certificateMap;
+	}
+
+	public void deleteCertificate(String keyStorePath, String certificateName) {
+
+    	try {
+    		//load keystore
+    		File trustStore = new File(keyStorePath);
+    		InputStream is = new FileInputStream(trustStore);
+    		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+	        String password = "supersecret";
+	        keystore.load(is, password.toCharArray());
+	        keystore.deleteEntry(certificateName);
+	        is.close();
+			
+	        // Save the new keystore contents
+			FileOutputStream out = new FileOutputStream(trustStore);
+	        keystore.store(out, password.toCharArray());
+	        out.close();
+	        
+		}catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (CertificateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }
