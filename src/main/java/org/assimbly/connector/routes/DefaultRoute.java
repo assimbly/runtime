@@ -45,6 +45,7 @@ public class DefaultRoute extends RouteBuilder {
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
+	private int backOffMultiplier;
 	
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
@@ -91,12 +92,25 @@ public class DefaultRoute extends RouteBuilder {
 			maximumRedeliveryDelay = 60000;
 		}
 		
+		if (this.props.containsKey("backOffMultiplier")){
+			String backOffMultiplierAsString = props.get("backOffMultiplier");
+			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
+				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
+			}else {
+				backOffMultiplier = 0;
+			}
+		}else {
+			backOffMultiplier = 0;
+		}
+		
 		if (this.props.containsKey("error.uri")){
-			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
+			routeErrorHandler = deadLetterChannel(props.get("error.uri"))		
+			.allowRedeliveryWhileStopping(false)
+			.asyncDelayedRedelivery()			
 			.maximumRedeliveries(maximumRedeliveries)
 			.redeliveryDelay(redeliveryDelay)
-			.maximumRedeliveryDelay(maximumRedeliveryDelay)
-			.backOffMultiplier(2)
+			.maximumRedeliveryDelay(maximumRedeliveryDelay)			
+			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
 			.onExceptionOccurred(failureProcessor)
@@ -109,10 +123,12 @@ public class DefaultRoute extends RouteBuilder {
 		}
 		else{
 			routeErrorHandler = defaultErrorHandler()
+			.allowRedeliveryWhileStopping(false)
+			.asyncDelayedRedelivery()
 			.maximumRedeliveries(maximumRedeliveries)
 			.redeliveryDelay(redeliveryDelay)
 			.maximumRedeliveryDelay(maximumRedeliveryDelay)
-			.backOffMultiplier(2)
+			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
 			.onExceptionOccurred(failureProcessor)
@@ -124,18 +140,20 @@ public class DefaultRoute extends RouteBuilder {
 			.log(logger);
 		}
 		
+		routeErrorHandler.setAsyncDelayedRedelivery(true);
 		
 		//the default Camel route
 		from(props.get("from.uri"))			
-	        .errorHandler(routeErrorHandler)
+			.errorHandler(routeErrorHandler)	
 			.process(setHeaders)
-			.convertBodyTo(String.class, "UTF-8")			
+			.convertBodyTo(String.class, "UTF-8")
 			.multicast()
 			.shareUnitOfWork()
-			.parallelProcessing()
+			.parallelProcessing()				
 				.to(getToUriList())
-				.routeId(props.get("id"));
-				
+				.routeId(props.get("id")
+		);
+		
 	}
 	
 	//create a string array for all consumers
