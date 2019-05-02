@@ -398,7 +398,7 @@ public class CamelConnector extends BaseConnector {
 		        } while (status.isStopping() || count < 3000);
 
 				//removeFlow if already configured
-		        context.removeEndpoints("sonicmq*");
+		        context.removeEndpoints("sonicmq." + id + "*");
 		        context.removeRoute(id);
 
 				logger.info("Stopped flow " + id);		

@@ -109,7 +109,7 @@ public class Connection {
 			        	if(type.equals("to")) {
 							String newUri = null;
 							for(String toUri : uri.split(",")) {
-								connectId = type + connectionId + flowId + new Random().nextInt(1000000);
+								connectId = type + connectionId + new Random().nextInt(1000000);
 								setupSonicMQConnection(properties, type, connectId);
 								if(newUri==null) {
 									newUri = toUri.replace("sonicmq:", "sonicmq." + connectId + ":");
@@ -119,9 +119,9 @@ public class Connection {
 							} 
 				            uri = newUri;
 			        	}else {
-							connectId = type + connectionId + flowId + new Random().nextInt(1000000);
+							connectId = type + connectionId + new Random().nextInt(1000000);
 			        		setupSonicMQConnection(properties, type, connectId);				            
-				            uri = uri.replace("sonicmq:", "sonicmq." + connectId + ":");
+				            uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 			        	}
 						properties.put(type + ".uri", uri);						
 			            break;
@@ -260,7 +260,7 @@ public class Connection {
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
 
 		String flowId = properties.get("id");
-		String componentName = "sonicmq." + connectId;
+		String componentName = "sonicmq." + flowId + connectId;
 		String url = properties.get(direction + ".service.url");
 		String username = properties.get(direction + ".service.username");
 		String password = properties.get(direction + ".service.password");
@@ -281,12 +281,12 @@ public class Connection {
 				if(context.hasComponent(componentName) == null){
 					ConnectionFactory connection = new ConnectionFactory (url,username, password);
 					connection.setFaultTolerant(faultTolerant);
-					connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId  + "/" + connectId);
+					connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
 					connection.setPrefetchCount(10);
 					
 					SjmsComponent jms = new SjmsComponent();
 					jms.setConnectionFactory(connection);
-					jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId  + "/" + connectId);
+					jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/"  + flowId + "/" + connectId);
 					jms.setCamelContext(context);
 					jms.start();
 				
