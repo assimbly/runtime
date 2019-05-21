@@ -29,6 +29,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
@@ -146,12 +147,17 @@ public class DefaultRoute extends RouteBuilder {
 		from(props.get("from.uri"))			
 			.errorHandler(routeErrorHandler)	
 			.process(setHeaders)
-			.convertBodyTo(String.class, "UTF-8")
+			 .choice()
+			    .when(header("convertBodyTo").isEqualTo("bytes"))
+			    	.convertBodyTo(byte[].class, "UTF-8")
+			    .otherwise()
+					.convertBodyTo(String.class, "UTF-8")
+			 .end()
 			.multicast()
 			.shareUnitOfWork()
 			.parallelProcessing()				
 				.to(getToUriList())
-				.routeId(props.get("id")
+				.routeId(props.get("id")						
 		);
 		
 	}
@@ -213,10 +219,16 @@ public class DefaultRoute extends RouteBuilder {
 		  public void process(Exchange exchange) throws Exception {
 				Message in = exchange.getIn();
 				for (Map.Entry<String, String> entry : props.entrySet()) {
+					
 					if (entry.getKey().startsWith("from.header.constant") || entry.getKey().startsWith("to.header.constant")) {
 						String key = entry.getKey();
 						in.setHeader(key.substring(key.lastIndexOf("constant") + 9),	entry.getValue());
-					} else if (entry.getKey().startsWith("from.header.xpath") || entry.getKey().startsWith("to.header.xpath")) {
+					}else if (entry.getKey().startsWith("from.header.simple") || entry.getKey().startsWith("to.header.simple")) {
+						String key = entry.getKey();
+						in.setHeader(
+								key.substring(key.lastIndexOf("simple") + 7),
+								simple(entry.getValue()).evaluate(exchange, String.class));
+					}else if (entry.getKey().startsWith("from.header.xpath") || entry.getKey().startsWith("to.header.xpath")) {
 						String key = entry.getKey();
 						in.setHeader(
 								key.substring(key.lastIndexOf("xpath") + 6),

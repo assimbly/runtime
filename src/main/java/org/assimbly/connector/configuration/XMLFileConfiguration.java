@@ -18,6 +18,7 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -69,6 +70,7 @@ public class XMLFileConfiguration {
 	private String flowRedeliveryDelay;
 	private Object offloadingId;
 	private String wireTapUri;
+	private String flowName;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -286,6 +288,8 @@ public class XMLFileConfiguration {
 		   
 	    XPath xPath = XPathFactory.newInstance().newXPath();
 	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
+	    flowName = xPath.evaluate("//flows/flow[id='" + flowId + "']/name",doc);
+
 	    flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
 	    flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
 	    flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
@@ -324,6 +328,7 @@ public class XMLFileConfiguration {
 		}
 		
 		properties.put("id",flowId);	
+		properties.put("flow.name",flowName);	
 
 		properties.put("offloading",flowOffloading);
 		properties.put("maximumRedeliveries",flowMaximumRedeliveries);
@@ -457,7 +462,7 @@ public class XMLFileConfiguration {
 	  		 if(!headerProperty.endsWith("type")) {
 	  			
 	  			String headerKey = headerProperty.substring(headerXPath.length() + 1);
-	  			String headerValue = conf.getString(headerProperty);
+	  			String headerValue = conf.getProperty(headerProperty).toString();
 	  			String headerType = conf.getString(headerProperty + "/@type");
 		  		
 	  			if(headerType==null){

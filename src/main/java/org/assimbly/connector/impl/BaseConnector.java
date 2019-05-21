@@ -122,8 +122,9 @@ public abstract class BaseConnector implements Connector {
 			}else {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
-	        
+
 	        setFlowConfiguration(flowProperties);
+
 		} catch (Exception e) {
 			
 			try {
@@ -132,7 +133,7 @@ public abstract class BaseConnector implements Connector {
 			}catch (Exception ex) {	
 				throw new Exception(ex);	
 			}			
-		}		
+		}
 	}
 	
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {
