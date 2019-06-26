@@ -10,7 +10,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.apache.camel-version>2.22.5</org.apache.camel-version>
+<!-- 		<org.apache.camel-version>2.22.5</org.apache.camel-version> -->
+		<org.apache.camel-version>2.23.1</org.apache.camel-version>
 		<org.apache.activemq-version>5.15.9</org.apache.activemq-version>
 		<org.jolokia-version>1.6.0</org.jolokia-version>
 
@@ -135,6 +136,21 @@
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-telegram</artifactId>
 			<version>${org.apache.camel-version}</version>
+		</dependency>
+
+		<!-- as of 240619 -->
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
+		    <artifactId>camel-saxon</artifactId>
+			<version>${org.apache.camel-version}</version>
+		</dependency>
+
+		<!-- testing as of 190619 -->
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-test</artifactId>
+			<version>${org.apache.camel-version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- activemq dependencies -->

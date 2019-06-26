@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
@@ -31,11 +33,14 @@ import org.apache.camel.component.file.GenericFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.xml.resolver.helpers.Namespaces;
 import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+
+import net.sf.saxon.xpath.XPathFactoryImpl;
 
 
 public class DefaultRoute extends RouteBuilder {
@@ -230,11 +235,20 @@ public class DefaultRoute extends RouteBuilder {
 								simple(entry.getValue()).evaluate(exchange, String.class));
 					}else if (entry.getKey().startsWith("from.header.xpath") || entry.getKey().startsWith("to.header.xpath")) {
 						String key = entry.getKey();
+						
+						//System.out.println("routed XML payload = \"" + exchange.getIn().getBody(String.class) + "\"");
+						//System.out.println("xpath expr key = \"" + key + "\", value = \"" + entry.getValue() + "\"");
+						
+						// We replace (on 26 june 2019)the old stuff of previous release (Xerxces XPath 1.0), by Saxon XPath 2.0+ and handle NS prefix tag based XPath via /path/to/*:somenode expressions for Header info,
+						// see also http://saxon.sourceforge.net/saxon7.9.1/expressions.html:
+						//
+				        XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
 						in.setHeader(
 								key.substring(key.lastIndexOf("xpath") + 6),
 								XPathBuilder.xpath(entry.getValue())
+										.factory(fac)
 										.evaluate(exchange,
-												String.class));
+												String.class));						
 					}
 				}
 				//in.setHeader("Content-Type", props.get("header.contentype"));
