@@ -10,13 +10,14 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<!-- 		<org.apache.camel-version>2.22.5</org.apache.camel-version> -->
-		<org.apache.camel-version>2.23.1</org.apache.camel-version>
-		<org.apache.activemq-version>5.15.9</org.apache.activemq-version>
-		<org.jolokia-version>1.6.0</org.jolokia-version>
 
 		<maven.compiler.source>1.8</maven.compiler.source>
   		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<org.apache.camel-version>2.22.5</org.apache.camel-version>
+		<org.apache.activemq-version>5.15.9</org.apache.activemq-version>
+		<org.jolokia-version>1.6.2</org.jolokia-version>
+
 	</properties>
 
 	<dependencies>

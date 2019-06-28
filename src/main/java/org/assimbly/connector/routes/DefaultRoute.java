@@ -224,27 +224,19 @@ public class DefaultRoute extends RouteBuilder {
 		  public void process(Exchange exchange) throws Exception {
 				Message in = exchange.getIn();
 				for (Map.Entry<String, String> entry : props.entrySet()) {
-					
-					if (entry.getKey().startsWith("from.header.constant") || entry.getKey().startsWith("to.header.constant")) {
-						String key = entry.getKey();
-						in.setHeader(key.substring(key.lastIndexOf("constant") + 9),	entry.getValue());
-					}else if (entry.getKey().startsWith("from.header.simple") || entry.getKey().startsWith("to.header.simple")) {
-						String key = entry.getKey();
+
+					String key = entry.getKey();
+
+					if (key.startsWith("from.header.constant") || key.startsWith("to.header.constant")) {
+						in.setHeader(key.substring(key.lastIndexOf("header.constant") + 16),	entry.getValue());
+					}else if (key.startsWith("from.header.simple") || key.startsWith("to.header.simple")) {
 						in.setHeader(
-								key.substring(key.lastIndexOf("simple") + 7),
+								key.substring(key.lastIndexOf("header.simple") + 14),
 								simple(entry.getValue()).evaluate(exchange, String.class));
-					}else if (entry.getKey().startsWith("from.header.xpath") || entry.getKey().startsWith("to.header.xpath")) {
-						String key = entry.getKey();
-						
-						//System.out.println("routed XML payload = \"" + exchange.getIn().getBody(String.class) + "\"");
-						//System.out.println("xpath expr key = \"" + key + "\", value = \"" + entry.getValue() + "\"");
-						
-						// We replace (on 26 june 2019)the old stuff of previous release (Xerxces XPath 1.0), by Saxon XPath 2.0+ and handle NS prefix tag based XPath via /path/to/*:somenode expressions for Header info,
-						// see also http://saxon.sourceforge.net/saxon7.9.1/expressions.html:
-						//
-				        XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+					}else if (key.startsWith("from.header.xpath") || key.startsWith("to.header.xpath")) {
+						XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
 						in.setHeader(
-								key.substring(key.lastIndexOf("xpath") + 6),
+								key.substring(key.lastIndexOf("header.xpath") + 13),
 								XPathBuilder.xpath(entry.getValue())
 										.factory(fac)
 										.evaluate(exchange,
