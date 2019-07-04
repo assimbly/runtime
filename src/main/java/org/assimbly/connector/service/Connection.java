@@ -6,9 +6,15 @@ import java.util.TreeMap;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+//import org.apache.activemq.ActiveMQConnection;
+//import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
-import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
+//import org.apache.activemq.camel.component.ActiveMQComponent;
+//import org.apache.activemq.camel.component.ActiveMQConfiguration;
+//import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
@@ -92,7 +98,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "sonicmq", "sql"};
+				String options[] = {"activemq", "sonicmq", "sjms","sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -126,6 +132,9 @@ public class Connection {
 						properties.put(type + ".uri", uri);						
 			            break;
 					case 2:
+						setupJMSConnection(properties, type);
+						break;
+			        case 3:
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -151,7 +160,7 @@ public class Connection {
 			String component = uriSplitted[0];
 			String endpoint = uriSplitted[1];
 			
-			String options[] = {"activemq", "sonicmq", "jdbc"};
+			String options[] = {"activemq", "sonicmq", "sjms","jdbc"};
 			int i;
 			for (i = 0; i < options.length; i++) {
 				if (component != null && component.contains(options[i])) {
@@ -256,7 +265,36 @@ public class Connection {
 		}		
 	}
 	
+
+	private void setupJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
+		String componentName = "sjms";
+		String url = properties.get(direction + ".service.url");
+
+		System.out.println("-------setup jms connection");
+		if(url!=null){
+			System.out.println("+++++komt hierrrrr");
+			
+			if(context.hasComponent(componentName) == null){
+				
+				org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory cf = new ActiveMQJMSConnectionFactory(url);
+				
+				SjmsComponent component = new SjmsComponent();
+				
+				component.setConnectionFactory(cf);
+				context.addComponent("sjms", component);
+			}
+			
+		}
+	}
+	
+	
+	
+	private ConnectionFactory createFactory(String string, int i, String string2, String string3, String string4) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
 
 		String flowId = properties.get("id");
