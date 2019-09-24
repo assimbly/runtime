@@ -222,7 +222,7 @@ public class Connection {
 					ActiveMQConnection connection = (ActiveMQConnection) activeMQConnectionFactory.createConnection();
 					connection.start();
 					context.addComponent(componentName, JmsComponent.jmsComponentAutoAcknowledge(activeMQConnectionFactory));
-					logger.info("Started basic connection for activemq.");
+					logger.info("Started basic connection for ActiveMQ.");
 				}
 				else{
 					try {
@@ -237,7 +237,7 @@ public class Connection {
 						
 						ActiveMQComponent component = new ActiveMQComponent(configuration);	
 						context.addComponent(componentName, component);
-						logger.info("Started pooled connection for activemq.");
+						logger.info("Started pooled connection for ActiveMQ.");
 						logger.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -270,17 +270,25 @@ public class Connection {
 		
 		String componentName = "sjms";
 		String url = properties.get(direction + ".service.url");
-
-		System.out.println("-------setup jms connection");
+		String username = properties.get(direction + ".service.username");
+		String password = properties.get(direction + ".service.password");
+		
+		logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
 		if(url!=null){
-			System.out.println("+++++komt hierrrrr");
 			
 			if(context.hasComponent(componentName) == null){
 				
-				org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory cf = new ActiveMQJMSConnectionFactory(url);
+				org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
+				
+				if(username == null || password == null) {
+					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
+					cf.setConnectionTTL(-1);
+				}else {
+					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
+					cf.setConnectionTTL(-1);
+				}
 				
 				SjmsComponent component = new SjmsComponent();
-				
 				component.setConnectionFactory(cf);
 				context.addComponent("sjms", component);
 			}
@@ -288,8 +296,7 @@ public class Connection {
 		}
 	}
 	
-	
-	
+
 	private ConnectionFactory createFactory(String string, int i, String string2, String string3, String string4) {
 		// TODO Auto-generated method stub
 		return null;

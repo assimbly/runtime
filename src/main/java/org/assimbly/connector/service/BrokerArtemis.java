@@ -25,7 +25,8 @@ public class BrokerArtemis {
 			broker.setConfigResourcePath(fileConfig);
 		}else {
 			logger.warn("No config file 'broker.xml' found. Start broker in local mode on url: tcp://127.0.0.1:61616");
-			
+			logger.info("The 'broker.xml' should be store in following directory: " + brokerFile.getAbsolutePath());			
+			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
 			Configuration config = new ConfigurationImpl();
 
 			config.addAcceptorConfiguration("in-vm", "vm://0");
