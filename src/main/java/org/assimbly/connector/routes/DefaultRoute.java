@@ -160,10 +160,17 @@ public class DefaultRoute extends RouteBuilder {
 			 .end()
 			.multicast()
 			.shareUnitOfWork()
-			.parallelProcessing()				
-				.to(getToUriList())
-				.routeId(props.get("id")						
+			.parallelProcessing()
+         	  .choice()    		    
+    		    .when(header("ReplyTo").isNotNull())
+    		    	.to(getToUriList())
+    		    	.toD("vm://${header.ReplyTo}")
+    		    .otherwise()
+    		    	.to(getToUriList())
+    		  .end()
+			.routeId(props.get("id")			
 		);
+		
 		
 	}
 	
