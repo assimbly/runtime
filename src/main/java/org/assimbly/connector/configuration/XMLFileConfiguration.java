@@ -71,6 +71,7 @@ public class XMLFileConfiguration {
 	private Object offloadingId;
 	private String wireTapUri;
 	private String flowName;
+	private String endpointId;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -272,13 +273,14 @@ public class XMLFileConfiguration {
 				properties.put("flow.type", "none");
 			}
 
+		   	/*
 			if(properties.get("to.uri") == null){
 				properties.put("to.uri","stream:out");
 			}else if(properties.get("to.uri").contains("wastebin")){
 				String uri = properties.get("to.uri");
 				uri = uri.replace("wastebin:", "mock:wastebin");
 				properties.put("to.uri",uri);		
-			}
+			}*/
 		
 	}
 
@@ -330,9 +332,9 @@ public class XMLFileConfiguration {
 		properties.put("id",flowId);	
 		properties.put("flow.name",flowName);	
 
-		properties.put("offloading",flowOffloading);
-		properties.put("maximumRedeliveries",flowMaximumRedeliveries);
-		properties.put("redeliveryDelay",flowRedeliveryDelay);
+		properties.put("flow.offloading",flowOffloading);
+		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
+		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
 		
 		//properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		
@@ -371,7 +373,7 @@ public class XMLFileConfiguration {
 			headerId = conf.getString("connector/offloading/header_id");
 
 			if (headerId != null) {
-				getHeaderFromXMLFile("offloading", headerId);
+				getHeaderFromXMLFile("offloading","0", headerId);
 			}
 		}
 	}
@@ -383,6 +385,7 @@ public class XMLFileConfiguration {
 	    String[] components = conf.getStringArray(componentsXpath);
 	    
 	    String touri = "";
+	    String offrampUri = "";
 	    
 	   int index = 1;		   
 
@@ -402,6 +405,20 @@ public class XMLFileConfiguration {
 	  		 uri = component + "?" + options;  
 	  	   }	  	   
 
+	  	   endpointId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/id");
+
+		  	if(endpointId != null){
+			   if(offrampUri.isEmpty()) {
+				   offrampUri = "direct:flow=" + flowId + "endpoint=" + endpointId;
+			   }else {
+				   offrampUri = offrampUri + ",direct:flow=" + flowId + "endpoint=" + endpointId;
+			   }
+	  	 	}
+	  	 
+		    if(serviceId != null){
+		    	getServiceFromXMLFile(type, serviceId);
+		    };
+	  	   
 		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
 
 		    if(serviceId != null){
@@ -411,20 +428,15 @@ public class XMLFileConfiguration {
 		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
 
 		    if(headerId != null){
-			   getHeaderFromXMLFile(type, headerId);
+			   getHeaderFromXMLFile(type,endpointId, headerId);
 		    };
 
 			   if(type.equals("from")||type.equals("error")) {
 			  	   properties.put(type + ".uri", uri);
 				   break;
-			   }else {
-				   if(touri.isEmpty()) {
-					   touri = "\"" + uri + "\"";
-				   }else {
-					   touri = touri + ",\"" + uri + "\"";
-				   }
-				   
-			  	   properties.put(type + ".uri", touri);			    
+			   }else {				    
+   		  	       properties.put(type + "." + endpointId + ".uri", uri);
+   		  	       properties.put("offramp.uri.list", offrampUri);
 			   }
 			   
 		   index++;
@@ -452,7 +464,7 @@ public class XMLFileConfiguration {
 		
 	}
 	
-	private void getHeaderFromXMLFile(String type, String headerId) throws ConfigurationException {
+	private void getHeaderFromXMLFile(String type, String endpointId, String headerId) throws ConfigurationException {
 		
 	    headerXPath = "connector/headers/header[id='" + headerId + "']/keys";
 		List<String> headerProporties = ConnectorUtil.getXMLParameters(conf, headerXPath);
@@ -468,15 +480,20 @@ public class XMLFileConfiguration {
 	  			if(headerType==null){
 			  	   headerType = conf.getString(headerProperty + "/type");
 		  		} 
-	  			properties.put(type + ".header." + headerType + "." + headerKey, headerValue);
+	  			properties.put("header." + headerId + "." + headerType + "." + headerKey, headerValue);
 	  		 }	
 	  	   }
 
-			properties.put(type + ".header.id", headerId);
+	  	   if(type.equals("from")) {
+	  		 properties.put(type + ".header.id", headerId);   
+	  	   }else {
+	  		 properties.put(type + "." + endpointId + ".header.id", headerId);
+	  	   }
+			
 
 		    String headerName = conf.getString("connector/headers/header[id='" + headerId + "']/name");
 		    if(!headerName.isEmpty()) {
-		    	properties.put(type + ".header.name", headerName);	
+		    	properties.put("header." + headerId + ".name", headerName);	
 		    }
 		}
 	}

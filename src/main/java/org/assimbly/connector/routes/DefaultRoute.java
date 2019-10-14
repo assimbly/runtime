@@ -1,25 +1,12 @@
 package org.assimbly.connector.routes;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.camel.Exchange;
@@ -29,18 +16,11 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
-import org.apache.camel.component.file.GenericFile;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.xml.resolver.helpers.Namespaces;
 import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
-import net.sf.saxon.xpath.XPathFactoryImpl;
 
 
 public class DefaultRoute extends RouteBuilder {
@@ -48,10 +28,13 @@ public class DefaultRoute extends RouteBuilder {
 	Map<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
+	private String flowId;
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
+	
+	private String[] offrampUriList;
 	
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
@@ -72,9 +55,11 @@ public class DefaultRoute extends RouteBuilder {
 		
 		Processor setHeaders = new SetHeaders();
 		Processor failureProcessor = new FailureProcessor();
+		offrampUriList = getOfframpUriList();
+		flowId = props.get("id");
 		
-		if (this.props.containsKey("maximumRedeliveries")){
-			String maximumRedeliveriesAsString = props.get("maximumRedeliveries");
+		if (this.props.containsKey("flow.maximumRedeliveries")){
+			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
 			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
 				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
 			}else {
@@ -84,8 +69,8 @@ public class DefaultRoute extends RouteBuilder {
 			maximumRedeliveries = 0;
 		}
 		
-		if (this.props.containsKey("redeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("redeliveryDelay");
+		if (this.props.containsKey("flowredeliveryDelay")){
+			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
 			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
 				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
 				maximumRedeliveryDelay = redeliveryDelay * 10;
@@ -98,8 +83,8 @@ public class DefaultRoute extends RouteBuilder {
 			maximumRedeliveryDelay = 60000;
 		}
 		
-		if (this.props.containsKey("backOffMultiplier")){
-			String backOffMultiplierAsString = props.get("backOffMultiplier");
+		if (this.props.containsKey("flow.backOffMultiplier")){
+			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
 			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
 				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
 			}else {
@@ -108,6 +93,7 @@ public class DefaultRoute extends RouteBuilder {
 		}else {
 			backOffMultiplier = 0;
 		}
+		
 		
 		if (this.props.containsKey("error.uri")){
 			routeErrorHandler = deadLetterChannel(props.get("error.uri"))		
@@ -148,9 +134,30 @@ public class DefaultRoute extends RouteBuilder {
 		
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
 		
-		//the default Camel route
+		//The default Camel route (onramp)
 		from(props.get("from.uri"))			
 			.errorHandler(routeErrorHandler)	
+			.setHeader("AssimblyFlowID", constant(flowId))
+			.setHeader("AssimblyHeaderId", constant(props.get("from.header.id")))
+			.setHeader("AssimblyFrom", constant(props.get("from.uri")))
+			.process(setHeaders)
+			.multicast()
+			.shareUnitOfWork()
+			.parallelProcessing()
+			.to(offrampUriList)
+        	.routeId(props.get("id"));        			
+        
+        //The default Camel route (offramp)		
+		for (String offrampUri : offrampUriList) 
+		{	
+
+			String endpointId = StringUtils.substringAfterLast(offrampUri, "endpoint=");			
+			String toUri = props.get("to." + endpointId + ".uri");
+			String headerId = props.get("to." + endpointId + ".header.id");
+			from(offrampUri)			
+			.errorHandler(routeErrorHandler)
+			.setHeader("AssimblyHeaderId", constant(headerId))
+			.setHeader("AssimblyTo", constant(toUri))
 			.process(setHeaders)
 			 .choice()
 			    .when(header("convertBodyTo").isEqualTo("bytes"))
@@ -158,101 +165,54 @@ public class DefaultRoute extends RouteBuilder {
 			    .otherwise()
 					.convertBodyTo(String.class, "UTF-8")
 			 .end()
-			.multicast()
-			.shareUnitOfWork()
-			.parallelProcessing()
-         	  .choice()    		    
-    		    .when(header("ReplyTo").isNotNull())
-    		    	.to(getToUriList())
-    		    	.toD("vm://${header.ReplyTo}")
-    		    .otherwise()
-    		    	.to(getToUriList())
-    		  .end()
-			.routeId(props.get("id")			
-		);
-		
-		
-	}
-	
-	//create a string array for all consumers
-	private String[] getToUriList() {
-		
-		String toUri = props.get("to.uri");
-		
-		if (this.props.containsKey("wiretap.uri") && this.props.containsKey("offloading")){
-			if(props.get("offloading").equals("true")) {
-				toUri = toUri + ",\"" + props.get("wiretap.uri") + "\"";
-			}
-		}
-		
-		toUri = toUri.substring(1, toUri.length()-1);
-		
-		String[] toUriArray = toUri.split("\",\"");
-		
-		return toUriArray;
-	}
-	
-	@SuppressWarnings("unused")
-	private String getContent(Object input){
-		
-		String text;
-		
-		if (input instanceof GenericFile<?>){
-			try {
-				GenericFile<?> gFile = (GenericFile<?>) input;
-				String path = gFile.getAbsoluteFilePath();
-				text = new String (Files.readAllBytes(Paths.get(path)));
-			} catch (IOException e) {
-				text = input.toString();
-			}
-		}
-		else{
-			text = input.toString();
-		}
-		
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document document = builder.parse(new InputSource(new StringReader(text)));
-			Transformer t = TransformerFactory.newInstance().newTransformer();
-			t.setOutputProperty(OutputKeys.INDENT, "yes");
-			t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			t.transform(new DOMSource(document), new StreamResult(out));
-			return new String(out.toByteArray());
-		} catch (Exception e) {
-			return text;
+			.choice()    		    
+	  		    .when(header("ReplyTo").isNotNull())
+	  		    	.to(toUri)
+	  		    	.toD("vm://${header.ReplyTo}")
+	  		    .otherwise()
+	  		    	.to(toUri)
+  		  .end()
+  		  .routeId(flowId + endpointId);
 			
-		} 
+		   
+		}
+		
+	}
+	
+	//create a string array for all offramps
+	private String[] getOfframpUriList() {
+		
+		String offrampUri = props.get("offramp.uri.list");
+		
+		String[] offrampUriArray = offrampUri.split(",");
+		
+		return offrampUriArray;
 	}	
 	
+	//set headers for each endpoint
 	public class SetHeaders implements Processor {
 		
 		  public void process(Exchange exchange) throws Exception {
+			  
 				Message in = exchange.getIn();
+				String endpointId = in.getHeader("AssimblyHeaderId").toString();
+				
 				for (Map.Entry<String, String> entry : props.entrySet()) {
 
 					String key = entry.getKey();
 
-					if (key.startsWith("from.header.constant") || key.startsWith("to.header.constant")) {
-						in.setHeader(key.substring(key.lastIndexOf("header.constant") + 16),	entry.getValue());
-					}else if (key.startsWith("from.header.simple") || key.startsWith("to.header.simple")) {
-						in.setHeader(
-								key.substring(key.lastIndexOf("header.simple") + 14),
-								simple(entry.getValue()).evaluate(exchange, String.class));
-					}else if (key.startsWith("from.header.xpath") || key.startsWith("to.header.xpath")) {
+					if (key.startsWith("header." + endpointId + ".constant")) {
+						in.setHeader(StringUtils.substringAfterLast(key, "constant."), entry.getValue());
+					}else if (key.startsWith("header." + endpointId + ".simple")) {
+						in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple(entry.getValue()).evaluate(exchange, String.class));
+					}else if (key.startsWith("header." + endpointId + ".xpath")) {
 						XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-						in.setHeader(
-								key.substring(key.lastIndexOf("header.xpath") + 13),
+						in.setHeader(StringUtils.substringAfterLast(key, "xpath."),
 								XPathBuilder.xpath(entry.getValue())
-										.factory(fac)
-										.evaluate(exchange,
-												String.class));						
+											.factory(fac)
+											.evaluate(exchange,	String.class));						
 					}
 				}
-				//in.setHeader("Content-Type", props.get("header.contentype"));
-				in.setHeader("FlowID", props.get("id"));
-				in.setHeader("Source", props.get("from.uri"));
 		  }		  
 	}
 	

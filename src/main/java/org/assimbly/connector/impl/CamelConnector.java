@@ -158,17 +158,8 @@ public class CamelConnector extends BaseConnector {
 			}
 		}
 		
-		//create arraylist from touri
-		String toUri = props.get("to.uri");
-		toUri = toUri.substring(1, toUri.length()-1);
-		String[] toUriArray = toUri.split("\",\"");
-		
-		//set first to endpoint as default
-		template = context.createProducerTemplate();
-		template.setDefaultEndpointUri(toUriArray[0]);
-		
 		//set up route by type
-		String route  = props.get("route");
+		String route  = props.get("flow.type");
 		if (route == null){
 			logger.info("Add default flow");
 			addDefaultFlow(props);
