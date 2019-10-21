@@ -107,7 +107,7 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty4")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-
+        
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
 
@@ -117,6 +117,9 @@ public class CamelConnector extends BaseConnector {
 	    factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
 
+		
+		
+		
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
 

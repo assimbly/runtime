@@ -18,7 +18,6 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -28,6 +27,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;
@@ -384,7 +384,6 @@ public class XMLFileConfiguration {
 	   
 	    String[] components = conf.getStringArray(componentsXpath);
 	    
-	    String touri = "";
 	    String offrampUri = "";
 	    
 	   int index = 1;		   
@@ -448,18 +447,23 @@ public class XMLFileConfiguration {
 	    serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 		
-		if(!serviceProporties.isEmpty()){			
-			for(String serviceProperty : serviceProporties){
-	  		   properties.put(type + ".service." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
-    	   }
+		if(!serviceProporties.isEmpty()){
 			
-			properties.put(type + ".service.id", serviceId);
+			for(String serviceProperty : serviceProporties){
+	  		   properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
+    	   }
+	
+	  	   if(type.equals("from")||type.equals("error")) {
+	  		 properties.put(type + ".service.id", serviceId);   
+	  	   }else {
+	  		 properties.put(type + "." + endpointId + ".service.id", serviceId);
+	  	   }
+			
 
 		    String serviceName = conf.getString("connector/services/service[id='" + serviceId + "']/name");
 		    if(!serviceName.isEmpty()) {
 		    	properties.put(type + ".service.name", serviceName);	
 		    }
-			
 		}
 		
 	}
@@ -484,7 +488,7 @@ public class XMLFileConfiguration {
 	  		 }	
 	  	   }
 
-	  	   if(type.equals("from")) {
+	  	   if(type.equals("from")||type.equals("error")) {
 	  		 properties.put(type + ".header.id", headerId);   
 	  	   }else {
 	  		 properties.put(type + "." + endpointId + ".header.id", headerId);
@@ -570,68 +574,100 @@ public class XMLFileConfiguration {
 	
 	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
 
-		String confUriList = configuration.get(type + ".uri");
-		String confServiceId = configuration.get(type + ".service.id");
-		String confHeaderId = configuration.get(type + ".header.id");
+		System.out.println("type"+type);
 
-	    Element endpoint = doc.createElement(type);
-	    Element uri = doc.createElement("uri");
-	    Element options = doc.createElement("options");
-	    Element serviceid = doc.createElement("service_id");
-	    Element headerid = doc.createElement("header_id");
+		String confOfframpUriList = configuration.get("offramp.uri.list");
 	    
-		if(confUriList!=null) {
+		if(confOfframpUriList!=null && type.equals("to")) {
 			
-			String[] confUris = confUriList.split(",");
+			String[] confOfframpUris = confOfframpUriList.split(",");
 			
-			for(String confUri : confUris) {
+			for(String confOffrmapUri : confOfframpUris) {
 
-				flow.appendChild(endpoint);
+				String confEndpointId = StringUtils.substringAfterLast(confOffrmapUri, "endpoint=");
 
-				String[] confUriSplitted = confUri.split("\\?");
+				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
+				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
+				String confUri = configuration.get(type + "." + confEndpointId + ".uri");
+
+				System.out.println("confOffrmapUri="+confOffrmapUri);
+				System.out.println("endpointId="+ confEndpointId);
+				System.out.println("confUri"+confUri);
 				
-				if(confUriSplitted.length<=1) {
-					if(confUri.startsWith("sonicmq")) {
-						confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
-					}
-				    uri.setTextContent(confUri);	
-					endpoint.appendChild(uri);
-				}else {
-					if(confUriSplitted[0].startsWith("sonicmq")) {
-						confUriSplitted[0] = confUriSplitted[0].replaceFirst("sonicmq.*:", "sonicmq:");
-					}
-				    uri.setTextContent(confUriSplitted[0]);
-				    endpoint.appendChild(uri);
-				    endpoint.appendChild(options);
-				    
-				    String[] confOptions = confUriSplitted[1].split("&");
-				    
-				    for(String confOption : confOptions) {
-				    	String[] confOptionSplitted = confOption.split("=");
-
-				    	if(confOptionSplitted.length>1){
-				    		Element option = doc.createElement(confOptionSplitted[0]);
-						    option.setTextContent(confOptionSplitted[1]);	
-				    		options.appendChild(option);
-				    	}
-				    }
-				}
+				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
 				
-			    if(confServiceId!=null) {
-				    serviceid.setTextContent(confServiceId);
-			    	endpoint.appendChild(serviceid);
-				    setServiceFromConfiguration(confServiceId, type, configuration);
-				}
-
-			    if(confHeaderId!=null) {
-				    endpoint.appendChild(headerid);
-				    headerid.setTextContent(confHeaderId);
-				    setHeaderFromConfiguration(confHeaderId, type, configuration);
-				}
+				
 			}
+		}else {
+			
+			String confServiceId = configuration.get(type + ".service.id");
+			String confHeaderId = configuration.get(type + ".header.id");
+			String confUri = configuration.get(type + ".uri");
+
+			System.out.println("confUri"+confUri);
+			
+			setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
+			
 		}
 	}
 
+	private void setEndpointFromConfiguration(String type, String confUri, String confServiceId, String confHeaderId, TreeMap<String, String> configuration) throws Exception {
+		
+	    Element endpoint = doc.createElement(type);
+	    Element uri = doc.createElement("uri");
+	    Element endpointId = doc.createElement("id");
+	    Element options = doc.createElement("options");
+	    Element serviceid = doc.createElement("service_id");
+	    Element headerid = doc.createElement("header_id");
+		
+		flow.appendChild(endpoint);
+
+		String[] confUriSplitted = confUri.split("\\?");
+		
+		if(confUriSplitted.length<=1) {
+			if(confUri.startsWith("sonicmq")) {
+				confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+			}
+		    uri.setTextContent(confUri);	
+			endpoint.appendChild(uri);
+		}else {
+			if(confUriSplitted[0].startsWith("sonicmq")) {
+				confUriSplitted[0] = confUriSplitted[0].replaceFirst("sonicmq.*:", "sonicmq:");
+			}
+		    uri.setTextContent(confUriSplitted[0]);
+		    endpoint.appendChild(endpointId);
+		    endpoint.appendChild(uri);
+		    endpoint.appendChild(options);
+		    
+		    String[] confOptions = confUriSplitted[1].split("&");
+		    
+		    for(String confOption : confOptions) {
+		    	String[] confOptionSplitted = confOption.split("=");
+
+		    	if(confOptionSplitted.length>1){
+		    		Element option = doc.createElement(confOptionSplitted[0]);
+				    option.setTextContent(confOptionSplitted[1]);	
+		    		options.appendChild(option);
+		    	}
+		    }
+		}
+		
+	    if(confServiceId!=null) {
+		    serviceid.setTextContent(confServiceId);
+	    	endpoint.appendChild(serviceid);
+		    setServiceFromConfiguration(confServiceId, type, configuration);
+		}
+
+	    if(confHeaderId!=null) {
+		    endpoint.appendChild(headerid);
+		    headerid.setTextContent(confHeaderId);
+		    setHeaderFromConfiguration(confHeaderId, type, configuration);
+		}
+
+		
+	}
+	
+	
 	private void setServiceFromConfiguration(String serviceid, String type, TreeMap<String, String> configuration) throws Exception {
 
 		if(!servicesList.contains(serviceid)) {
@@ -639,13 +675,17 @@ public class XMLFileConfiguration {
 
 		    Element service = doc.createElement("service");
 		    services.appendChild(service);
-	
+
+            Element serviceIdParameter = doc.createElement("id");
+			serviceIdParameter.setTextContent(serviceid);
+			service.appendChild(serviceIdParameter);
+
 			for(Map.Entry<String,String> entry : configuration.entrySet()) {
 				  String key = entry.getKey();
 				  String parameterValue = entry.getValue();
 				  
-				  if(key.startsWith(type + ".service") && parameterValue!=null) {
-					  String parameterName = key.substring(key.lastIndexOf(".service.") + 9);				  
+				  if(key.startsWith("service." + serviceid) && parameterValue!=null) {
+					  String parameterName = StringUtils.substringAfterLast(key, "service." + serviceid + ".");			  
 					  Element serviceParameter = doc.createElement(parameterName);
 					  serviceParameter.setTextContent(parameterValue);
 					  service.appendChild(serviceParameter);
@@ -662,25 +702,35 @@ public class XMLFileConfiguration {
 
 		    Element header = doc.createElement("header");
 		    headers.appendChild(header);
-	
+
+            Element headerIdParameter = doc.createElement("id");
+			headerIdParameter.setTextContent(headerid);
+			header.appendChild(headerIdParameter);
+		    
 			for(Map.Entry<String,String> entry : configuration.entrySet()) {
 				String key = entry.getKey();
 				String parameterValue = entry.getValue();
 				  
-				if(key.startsWith(type + ".header.xpath") && parameterValue!=null) {
-					  String parameterName = key.substring(key.lastIndexOf(".xpath.") + 7);			  
+				if(key.startsWith("header." + headerid + ".xpath") && parameterValue!=null) {
+					  String parameterName = StringUtils.substringAfterLast(key, "xpath.");			  
 					  Element headerParameter = doc.createElement(parameterName);
 					  headerParameter.setTextContent(parameterValue);
 					  headerParameter.setAttribute("type", "xpath");
 					  header.appendChild(headerParameter);
-			    }else if(key.startsWith(type + ".header.constant") && parameterValue!=null) {
-					  String parameterName = key.substring(key.lastIndexOf(".constant.") + 10);			  
+			    }else if(key.startsWith("header." + headerid +  ".constant") && parameterValue!=null) {
+					  String parameterName = StringUtils.substringAfterLast(key, "constant.");			  
 					  Element headerParameter = doc.createElement(parameterName);
 					  headerParameter.setTextContent(parameterValue);
 					  headerParameter.setAttribute("type", "constant");
 					  header.appendChild(headerParameter);
-			    }else if(key.startsWith(type + ".header") && parameterValue!=null) {
-					  String parameterName = key.substring(key.lastIndexOf(".header.") + 8);			  
+			    }else if(key.startsWith("header." + headerid +  ".simple") && parameterValue!=null) {
+					  String parameterName = StringUtils.substringAfterLast(key, "simple.");			  
+					  Element headerParameter = doc.createElement(parameterName);
+					  headerParameter.setTextContent(parameterValue);
+					  headerParameter.setAttribute("type", "simple");
+					  header.appendChild(headerParameter);					  
+			    }else if(key.startsWith("header." + headerid) && parameterValue!=null) {
+					  String parameterName = StringUtils.substringAfterLast(key, "header." + headerid + ".");			  
 					  Element headerParameter = doc.createElement(parameterName);
 					  headerParameter.setTextContent(parameterValue);
 					  header.appendChild(headerParameter);
