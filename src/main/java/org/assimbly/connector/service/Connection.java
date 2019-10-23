@@ -21,6 +21,7 @@ import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.spi.Registry;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -33,32 +34,42 @@ public class Connection {
 	private String connectionId;
 	private String flowId;
 	private TreeMap<String, String> properties;
+	private String key;
 	private CamelContext context;
 	private String connectId;
 	private boolean faultTolerant;
+	private Object endpointId;
+	private String serviceId;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 	
-	public Connection(CamelContext context, TreeMap<String, String> properties) {
+	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
 		this.properties = properties;
+		this.key = key;
 	}
 	
 	public TreeMap<String, String> start() throws Exception{
 		
-		if(properties.get("from.service.id")!=null){
+		serviceId = properties.get(key);
+		System.out.println("komt hier start");
+		
+		if(key.startsWith("from")){
 			uri = properties.get("from.uri");
 			startConnection(uri,"from");
 		}
-		if(properties.get("to.service.id")!=null){
-			uri = properties.get("to.uri");
+		if(key.startsWith("to")){
+			endpointId = StringUtils.substringBetween(key, "to.", ".service.id");
+			System.out.println("enpointId="+endpointId);
+			uri = properties.get("to." + endpointId + ".uri");
 			startConnection(uri,"to");
 		}
 		
-		if(properties.get("error.service.id")!=null){
+		if(key.startsWith("to")){
 			uri = properties.get("error.uri");
 			startConnection(uri, "error");
 		}
+		
 		return properties; 
 		
     }
@@ -88,15 +99,26 @@ public class Connection {
 	
 	private void startConnection(String uri, String type) throws Exception{
 		
-		connectionId = properties.get(type + ".service.id");
+		if(type.equals("to")) {
+			connectionId = properties.get("to." + endpointId + ".service.id");
+		}else {
+			connectionId = properties.get(type + ".service.id");
+		}
 		flowId = properties.get("id");
+		
+        System.out.println("connectionId="+connectionId);
+		
 		
 		if(uri!=null){
 			
 			if(connectionId!=null){
 	
+				System.out.println("komt hier uri" + uri);
+				
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
+				
+				System.out.println("component hier uri" + component);
 				
 				String options[] = {"activemq", "sonicmq", "sjms","sql"};
 				int i;
@@ -112,24 +134,22 @@ public class Connection {
 						break;
 			        case 1:	
 			        	
-			        	if(type.equals("to")) {
-							String newUri = null;
-							for(String toUri : uri.split(",")) {
-								connectId = type + connectionId + new Random().nextInt(1000000);
-								setupSonicMQConnection(properties, type, connectId);
-								if(newUri==null) {
-									newUri = toUri.replace("sonicmq:", "sonicmq." + connectId + ":");
-								}else {
-									newUri = newUri + "," + toUri.replace("sonicmq:", "sonicmq." + connectId + ":");;
-								}
-							} 
-				            uri = newUri;
-			        	}else {
-							connectId = type + connectionId + new Random().nextInt(1000000);
-			        		setupSonicMQConnection(properties, type, connectId);				            
-				            uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-			        	}
-						properties.put(type + ".uri", uri);						
+			        	System.out.println("komt hier12");
+			        	
+						connectId = type + connectionId + new Random().nextInt(1000000);
+			        	setupSonicMQConnection(properties, type, connectId);				            
+			        	System.out.println("komt hier13");
+			        	uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
+			        	
+				        System.out.println("type="+type);
+				        System.out.println("uri="+uri);
+				        
+				        if(type.equals("to")) {
+				        	System.out.println(type + "." + endpointId + ".uri");
+							properties.put(type + "." + endpointId + ".uri", uri);
+				        }else {
+							properties.put(type + ".uri", uri);						
+				        }
 			            break;
 					case 2:
 						setupJMSConnection(properties, type);
@@ -151,7 +171,12 @@ public class Connection {
 	@SuppressWarnings("unused")
 	private void stopConnection(String uri, String type) throws Exception{
 
-		connectionId = properties.get(type + ".service.id");
+		if(type.equals("to")) {
+			connectionId = properties.get("to." + endpointId + ".service.id");
+		}else {
+			connectionId = properties.get(type + ".service.id");
+		}
+		
 		flowId = properties.get("id");
 		
 		if(uri!=null && connectionId!=null){
@@ -192,10 +217,11 @@ public class Connection {
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
 		String componentName = "activemq";
-		String url = properties.get(direction + ".service.url");
-		String conType = properties.get(direction + ".service.conType");
-		String maxConnections = properties.get(direction + ".service.maxConnections");
-		String concurentConsumers = properties.get(direction + ".service.concurentConsumers");
+		
+		String url = properties.get("service." + serviceId +".url");
+		String conType = properties.get("service." + serviceId +".conType");
+		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
+		String concurentConsumers = properties.get("service." + serviceId +"service.concurentConsumers");
 		
 		if (conType == null){
 			logger.info("No connection type specified. Setting up basic connection for activemq.");
@@ -268,10 +294,14 @@ public class Connection {
 
 	private void setupJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
+		if(direction.equals("to")) {
+			direction = direction + "." + endpointId;
+		}
+		
 		String componentName = "sjms";
-		String url = properties.get(direction + ".service.url");
-		String username = properties.get(direction + ".service.username");
-		String password = properties.get(direction + ".service.password");
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
 		
 		logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
 		if(url!=null){
@@ -306,15 +336,15 @@ public class Connection {
 
 		String flowId = properties.get("id");
 		String componentName = "sonicmq." + flowId + connectId;
-		String url = properties.get(direction + ".service.url");
-		String username = properties.get(direction + ".service.username");
-		String password = properties.get(direction + ".service.password");
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service." + serviceId + ".password");
 			
 			if(url!=null || username !=null || password != null){
 				
-				if(properties.get(direction + ".service.faultTolerant")!=null) {
+				if(properties.get("service." + serviceId + ".faultTolerant")!=null) {
 					try {
-						Boolean.parseBoolean(properties.get(direction + ".service.faultTolerant"));
+						Boolean.parseBoolean(properties.get("service." + serviceId + ".faultTolerant"));
 					} catch (Exception e) {
 						faultTolerant = true;
 					}
@@ -359,9 +389,9 @@ public class Connection {
 	private void removeSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
 
 		String componentNamePrefix = "sonicmq." + connectId;
-		String url = properties.get(direction + ".service.url");
-		String username = properties.get(direction + ".service.username");
-		String password = properties.get(direction + ".service.password");
+		String url = properties.get("service. " + serviceId + " .url");
+		String username = properties.get("service." + serviceId + ".username");
+		String password = properties.get("service." + serviceId + ".password");
 
 		List<String> componentNames = context.getComponentNames();
 
@@ -398,10 +428,10 @@ public class Connection {
 	
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
-		String driver = properties.get(direction + ".service.driver");
-		String url = properties.get(direction + ".service.url");		
-		String username = properties.get(direction + ".service.username");
-		String password = properties.get(direction + ".service.password");
+		String driver = properties.get("service."  + serviceId + ".driver");
+		String url = properties.get("service" + serviceId + "url");		
+		String username = properties.get("service." + serviceId + ".username");
+		String password = properties.get("service." + serviceId + ".password");
 		
 		DriverManagerDataSource ds = new DriverManagerDataSource();
 		ds.setDriverClassName(driver);

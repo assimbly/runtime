@@ -156,8 +156,8 @@ public class CamelConnector extends BaseConnector {
 		
 		//create connections if needed
 		for (String key : props.keySet()){
-			if (key.contains("service.id")){
-				props = new Connection(context, props).start();
+			if (key.endsWith("service.id")){
+				props = new Connection(context, props, key).start();
 			}
 		}
 		

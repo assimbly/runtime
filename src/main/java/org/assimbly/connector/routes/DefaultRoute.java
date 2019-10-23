@@ -195,22 +195,27 @@ public class DefaultRoute extends RouteBuilder {
 		  public void process(Exchange exchange) throws Exception {
 			  
 				Message in = exchange.getIn();
-				String endpointId = in.getHeader("AssimblyHeaderId").toString();
+				Object endpointIdObject = in.getHeader("AssimblyHeaderId");
 				
-				for (Map.Entry<String, String> entry : props.entrySet()) {
+				if(endpointIdObject!=null) {
+					
+					String endpointId = endpointIdObject.toString();
+					
+					for (Map.Entry<String, String> entry : props.entrySet()) {
 
-					String key = entry.getKey();
+						String key = entry.getKey();
 
-					if (key.startsWith("header." + endpointId + ".constant")) {
-						in.setHeader(StringUtils.substringAfterLast(key, "constant."), entry.getValue());
-					}else if (key.startsWith("header." + endpointId + ".simple")) {
-						in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple(entry.getValue()).evaluate(exchange, String.class));
-					}else if (key.startsWith("header." + endpointId + ".xpath")) {
-						XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-						in.setHeader(StringUtils.substringAfterLast(key, "xpath."),
-								XPathBuilder.xpath(entry.getValue())
-											.factory(fac)
-											.evaluate(exchange,	String.class));						
+						if (key.startsWith("header." + endpointId + ".constant")) {
+							in.setHeader(StringUtils.substringAfterLast(key, "constant."), entry.getValue());
+						}else if (key.startsWith("header." + endpointId + ".simple")) {
+							in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple(entry.getValue()).evaluate(exchange, String.class));
+						}else if (key.startsWith("header." + endpointId + ".xpath")) {
+							XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+							in.setHeader(StringUtils.substringAfterLast(key, "xpath."),
+									XPathBuilder.xpath(entry.getValue())
+												.factory(fac)
+												.evaluate(exchange,	String.class));						
+						}
 					}
 				}
 		  }		  

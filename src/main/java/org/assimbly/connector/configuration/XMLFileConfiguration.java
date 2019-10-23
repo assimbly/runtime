@@ -413,10 +413,6 @@ public class XMLFileConfiguration {
 				   offrampUri = offrampUri + ",direct:flow=" + flowId + "endpoint=" + endpointId;
 			   }
 	  	 	}
-	  	 
-		    if(serviceId != null){
-		    	getServiceFromXMLFile(type, serviceId);
-		    };
 	  	   
 		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
 
@@ -457,15 +453,18 @@ public class XMLFileConfiguration {
 	  		 properties.put(type + ".service.id", serviceId);   
 	  	   }else {
 	  		 properties.put(type + "." + endpointId + ".service.id", serviceId);
-	  	   }
-			
+	  	   }			
 
 		    String serviceName = conf.getString("connector/services/service[id='" + serviceId + "']/name");
 		    if(!serviceName.isEmpty()) {
-		    	properties.put(type + ".service.name", serviceName);	
+		    	if(type.equals("from")||type.equals("error")) {
+	    		properties.put(type + ".service.name", serviceName);   
+		  	   }else {
+		  		 properties.put(type + "." + endpointId + ".service.name", serviceName);
+		  	   }		    		
 		    }
-		}
-		
+		    
+		}		
 	}
 	
 	private void getHeaderFromXMLFile(String type, String endpointId, String headerId) throws ConfigurationException {
@@ -574,8 +573,6 @@ public class XMLFileConfiguration {
 	
 	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
 
-		System.out.println("type"+type);
-
 		String confOfframpUriList = configuration.get("offramp.uri.list");
 	    
 		if(confOfframpUriList!=null && type.equals("to")) {
@@ -589,13 +586,8 @@ public class XMLFileConfiguration {
 				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
 				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
 				String confUri = configuration.get(type + "." + confEndpointId + ".uri");
-
-				System.out.println("confOffrmapUri="+confOffrmapUri);
-				System.out.println("endpointId="+ confEndpointId);
-				System.out.println("confUri"+confUri);
-				
+			
 				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
-				
 				
 			}
 		}else {
@@ -604,8 +596,6 @@ public class XMLFileConfiguration {
 			String confHeaderId = configuration.get(type + ".header.id");
 			String confUri = configuration.get(type + ".uri");
 
-			System.out.println("confUri"+confUri);
-			
 			setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
 			
 		}
