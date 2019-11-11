@@ -344,6 +344,7 @@ public class CamelConnector extends BaseConnector {
 			}
 			
 		}catch (Exception e) {
+			stopFlow(id);
 			e.printStackTrace();
 			return e.getMessage();
 		}
@@ -365,6 +366,7 @@ public class CamelConnector extends BaseConnector {
 			}
 	        
 		}catch (Exception e) {
+			stopFlow(id);
 			e.printStackTrace();
 			return e.getMessage();
 		}
@@ -374,33 +376,14 @@ public class CamelConnector extends BaseConnector {
 		logger.info("Stop flow " + id);		
 		try {		
 
-			if(hasFlow(id)) {
-			
-	        	status = context.getRouteStatus(id);
-				if(status.isStoppable()) {
-					context.stopRoute(id);
+			for (Route route : context.getRoutes()) {
+				if(route.getId().startsWith(id)) {
+					context.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
+					context.removeRoute(route.getId());	
 				}
-				
-				int count = 1;
-				
-		        do {
-		        	status = context.getRouteStatus(id);
-		        	if(status.isStopped()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isStopping() || count < 3000);
-
-				//removeFlow if already configured
-		        context.removeEndpoints("sonicmq." + id + "*");
-		        context.removeRoute(id);
-
-				logger.info("Stopped flow " + id);		
-		        return status.toString().toLowerCase().toLowerCase();
-				
-			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 			}
+
+	        return "stopped";
 
 		}catch (Exception e) {
 			e.printStackTrace();

@@ -52,7 +52,6 @@ public class Connection {
 	public TreeMap<String, String> start() throws Exception{
 		
 		serviceId = properties.get(key);
-		System.out.println("komt hier start");
 		
 		if(key.startsWith("from")){
 			uri = properties.get("from.uri");
@@ -60,12 +59,11 @@ public class Connection {
 		}
 		if(key.startsWith("to")){
 			endpointId = StringUtils.substringBetween(key, "to.", ".service.id");
-			System.out.println("enpointId="+endpointId);
 			uri = properties.get("to." + endpointId + ".uri");
 			startConnection(uri,"to");
 		}
 		
-		if(key.startsWith("to")){
+		if(key.startsWith("error")){
 			uri = properties.get("error.uri");
 			startConnection(uri, "error");
 		}
@@ -106,19 +104,12 @@ public class Connection {
 		}
 		flowId = properties.get("id");
 		
-        System.out.println("connectionId="+connectionId);
-		
-		
 		if(uri!=null){
 			
 			if(connectionId!=null){
-	
-				System.out.println("komt hier uri" + uri);
-				
+			
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
-				
-				System.out.println("component hier uri" + component);
 				
 				String options[] = {"activemq", "sonicmq", "sjms","sql"};
 				int i;
@@ -134,18 +125,11 @@ public class Connection {
 						break;
 			        case 1:	
 			        	
-			        	System.out.println("komt hier12");
-			        	
 						connectId = type + connectionId + new Random().nextInt(1000000);
 			        	setupSonicMQConnection(properties, type, connectId);				            
-			        	System.out.println("komt hier13");
 			        	uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 			        	
-				        System.out.println("type="+type);
-				        System.out.println("uri="+uri);
-				        
 				        if(type.equals("to")) {
-				        	System.out.println(type + "." + endpointId + ".uri");
 							properties.put(type + "." + endpointId + ".uri", uri);
 				        }else {
 							properties.put(type + ".uri", uri);						
@@ -161,13 +145,11 @@ public class Connection {
 			        	logger.error("Connection parameters for component " + component + " are not implemented");
 			            throw new Exception("Connection parameters for component " + component + " are not implemented");
 				}
-		
-	
 			}
 		}
-		
 	}
 
+	
 	@SuppressWarnings("unused")
 	private void stopConnection(String uri, String type) throws Exception{
 
@@ -313,13 +295,21 @@ public class Connection {
 				if(username == null || password == null) {
 					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
 					cf.setConnectionTTL(-1);
+					cf.setReconnectAttempts(-1);
+					cf.setRetryInterval(1000);
+					cf.setRetryIntervalMultiplier(2.0);
+					cf.setMaxRetryInterval(3600000);
 				}else {
 					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
 					cf.setConnectionTTL(-1);
+					cf.setReconnectAttempts(-1);
+					cf.setRetryInterval(1000);
+					cf.setRetryIntervalMultiplier(2.0);
+					cf.setMaxRetryInterval(3600000);
 				}
 				
 				SjmsComponent component = new SjmsComponent();
-				component.setConnectionFactory(cf);
+				component.setConnectionFactory(cf);				
 				context.addComponent("sjms", component);
 			}
 			
@@ -355,9 +345,11 @@ public class Connection {
 
 				if(context.hasComponent(componentName) == null){
 					ConnectionFactory connection = new ConnectionFactory (url,username, password);
-					connection.setFaultTolerant(faultTolerant);
 					connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
 					connection.setPrefetchCount(10);
+					connection.setReconnectInterval(60);
+					connection.setFaultTolerant(faultTolerant);
+					connection.setFaultTolerantReconnectTimeout(3600);
 					
 					SjmsComponent jms = new SjmsComponent();
 					jms.setConnectionFactory(connection);

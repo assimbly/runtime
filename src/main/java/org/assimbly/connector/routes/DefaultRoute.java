@@ -145,7 +145,7 @@ public class DefaultRoute extends RouteBuilder {
 			.shareUnitOfWork()
 			.parallelProcessing()
 			.to(offrampUriList)
-        	.routeId(props.get("id"));        			
+        	.routeId(flowId);        			
         
         //The default Camel route (offramp)		
 		for (String offrampUri : offrampUriList) 
@@ -172,8 +172,7 @@ public class DefaultRoute extends RouteBuilder {
 	  		    .otherwise()
 	  		    	.to(toUri)
   		  .end()
-  		  .routeId(flowId + endpointId);
-			
+  		  .routeId(flowId + endpointId);			
 		   
 		}
 		
