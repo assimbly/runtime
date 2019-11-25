@@ -271,7 +271,7 @@
 		<dependency>
 		    <groupId>commons-beanutils</groupId>
 		    <artifactId>commons-beanutils</artifactId>
-		    <version>1.9.3</version>
+		    <version>1.9.4</version>
 		</dependency>
 		
 		<dependency>
@@ -295,7 +295,18 @@
 		<dependency>
 		    <groupId>ch.qos.logback</groupId>
 		    <artifactId>logback-classic</artifactId>
-		    <version>1.1.11</version>
+		    <version>1.2.3</version>
+		        <exclusions>
+				      <exclusion> 
+				        <groupId>org.slf4j</groupId>
+				        <artifactId>slf4j-log4j12</artifactId>
+				      </exclusion>
+				      <exclusion> 
+				        <groupId>log4j</groupId>
+				        <artifactId>log4j</artifactId>
+				      </exclusion>
+				    </exclusions>
+		    
 		</dependency>
 
 		<!-- for doc conversions -->
@@ -309,7 +320,7 @@
 		<dependency>
 		    <groupId>mysql</groupId>
 		    <artifactId>mysql-connector-java</artifactId>
-		    <version>8.0.17</version>
+		    <version>8.0.18</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.postgresql</groupId>
@@ -358,6 +369,26 @@
 	    <url>https://maven.oracle.com</url>
 	  </pluginRepository>
 	</pluginRepositories>
+
+
+	<reporting>
+	  <plugins>
+	    <plugin>
+	      <groupId>org.codehaus.mojo</groupId>
+	      <artifactId>versions-maven-plugin</artifactId>
+	      <version>2.7</version>
+	      <reportSets>
+	        <reportSet>
+	          <reports>
+	            <report>dependency-updates-report</report>
+	            <report>plugin-updates-report</report>
+	            <report>property-updates-report</report>
+	          </reports>
+	        </reportSet>
+	      </reportSets>
+	    </plugin>
+	  </plugins>
+	</reporting>
 
 
 	<!-- for building a jar with all dependencies

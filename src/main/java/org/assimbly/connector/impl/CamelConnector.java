@@ -22,6 +22,7 @@ import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.http4.HttpComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -117,8 +118,9 @@ public class CamelConnector extends BaseConnector {
 	    factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
 
-		
-		
+		//set HTTP as scheme (instead of HTTP4 and HTTPS4)
+		context.addComponent("http", new HttpComponent());
+		context.addComponent("https", new HttpComponent());
 		
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
@@ -377,7 +379,7 @@ public class CamelConnector extends BaseConnector {
 		try {		
 
 			for (Route route : context.getRoutes()) {
-				if(route.getId().startsWith(id)) {
+				if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
 					context.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
 					context.removeRoute(route.getId());	
 				}

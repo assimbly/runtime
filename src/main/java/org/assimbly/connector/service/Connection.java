@@ -6,16 +6,11 @@ import java.util.TreeMap;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-//import org.apache.activemq.ActiveMQConnection;
-//import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
-//import org.apache.activemq.camel.component.ActiveMQComponent;
-//import org.apache.activemq.camel.component.ActiveMQConfiguration;
-//import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Component;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
@@ -40,6 +35,8 @@ public class Connection {
 	private boolean faultTolerant;
 	private Object endpointId;
 	private String serviceId;
+	private ActiveMQConnectionFactory activeMQConnectionFactory;
+	private SjmsComponent component;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 	
@@ -201,6 +198,9 @@ public class Connection {
 		String componentName = "activemq";
 		
 		String url = properties.get("service." + serviceId +".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
+		
 		String conType = properties.get("service." + serviceId +".conType");
 		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
 		String concurentConsumers = properties.get("service." + serviceId +"service.concurentConsumers");
@@ -225,7 +225,13 @@ public class Connection {
 		if(context.hasComponent(componentName) == null){
 			if(url!=null){
 				
-				ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
+				if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
+					activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
+				}else {
+					activeMQConnectionFactory = new ActiveMQConnectionFactory(url,username,password);
+				}
+
+				
 				if (conType.equals("basic")){
 					ActiveMQConnection connection = (ActiveMQConnection) activeMQConnectionFactory.createConnection();
 					connection.start();
@@ -287,41 +293,40 @@ public class Connection {
 		
 		logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
 		if(url!=null){
+							
+			org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
 			
-			if(context.hasComponent(componentName) == null){
-				
-				org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
-				
-				if(username == null || password == null) {
-					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
-					cf.setConnectionTTL(-1);
-					cf.setReconnectAttempts(-1);
-					cf.setRetryInterval(1000);
-					cf.setRetryIntervalMultiplier(2.0);
-					cf.setMaxRetryInterval(3600000);
-				}else {
-					cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
-					cf.setConnectionTTL(-1);
-					cf.setReconnectAttempts(-1);
-					cf.setRetryInterval(1000);
-					cf.setRetryIntervalMultiplier(2.0);
-					cf.setMaxRetryInterval(3600000);
-				}
-				
-				SjmsComponent component = new SjmsComponent();
-				component.setConnectionFactory(cf);				
-				context.addComponent("sjms", component);
+			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
+				cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
+				cf.setConnectionTTL(-1);
+				cf.setReconnectAttempts(-1);
+				cf.setRetryInterval(1000);
+				cf.setRetryIntervalMultiplier(2.0);
+				cf.setMaxRetryInterval(3600000);
+			}else {
+				cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
+				cf.setConnectionTTL(-1);
+				cf.setReconnectAttempts(-1);
+				cf.setRetryInterval(1000);
+				cf.setRetryIntervalMultiplier(2.0);
+				cf.setMaxRetryInterval(3600000);
 			}
 			
+			if(context.hasComponent(componentName)== null){
+				component = new SjmsComponent();
+				component.setConnectionFactory(cf);
+				context.addComponent(componentName, component);
+			}else {
+				context.removeComponent(componentName);
+				component = new SjmsComponent();
+				component.setConnectionFactory(cf);
+				context.addComponent(componentName, component);
+			}
+				
 		}
+		
 	}
 	
-
-	private ConnectionFactory createFactory(String string, int i, String string2, String string3, String string4) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
 
 		String flowId = properties.get("id");

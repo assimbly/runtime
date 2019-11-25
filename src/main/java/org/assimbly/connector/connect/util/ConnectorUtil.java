@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLSession;
 
@@ -36,12 +37,15 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public final class ConnectorUtil {
 	
     public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
-	    
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.util.ConnectorUtil");
+	
 	public static boolean isValidUri(String name) throws Exception {
 		try {
 		    URI uri = new URI(name);
@@ -78,15 +82,125 @@ public final class ConnectorUtil {
 	}
 
 	public static void printTreemap(TreeMap<String, String> treeMap) throws Exception {
+
+	    Map<String, String> id = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().equals("id"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+
 		
-		for(Map.Entry<String,String> entry : treeMap.entrySet()) {
+	    Map<String, String> flow = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("flow"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+
+	    Map<String, String> from = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("from"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+	    
+	    Map<String, String> to = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("to"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+	    
+	    Map<String, String> error = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("error"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+
+	    Map<String, String> header = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("header"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+	    
+	    Map<String, String> service = treeMap.entrySet()
+	    	      .stream()
+	    	      .filter(map -> map.getKey().startsWith("service"))
+	    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+	    
+		System.out.println("");
+		System.out.println("FLOW CONFIGURATION");
+		System.out.println("-----------------------------------------------------------\n");
+
+		for(Map.Entry<String,String> entry : id.entrySet()) {
 
 			  String key = entry.getKey();
 			  String value = entry.getValue();
+			  System.out.printf("%-30s %s\n", key + ":", value);  
+			  
+		}
 
-			  System.out.println(key + " => " + value);
+		for(Map.Entry<String,String> entry : flow.entrySet()) {
+
+			  String key = entry.getKey();
+			  String value = entry.getValue();
+			  System.out.printf("%-30s %s\n", key + ":", value);  
+			  
+		}
+
+		System.out.println("\nENDPOINTS\n");
+		
+		for(Map.Entry<String,String> entry : from.entrySet()) {
+
+			  String key = entry.getKey();
+			  String value = entry.getValue();
+			  System.out.printf("%-30s %s\n", key + ":", value);  
+			  
 		}
 		
+		for(Map.Entry<String,String> entry : to.entrySet()) {
+
+			  String key = entry.getKey();
+			  String value = entry.getValue();
+			  System.out.printf("%-30s %s\n", key + ":", value);  
+			  
+		}
+
+		for(Map.Entry<String,String> entry : error.entrySet()) {
+
+			  String key = entry.getKey();
+			  String value = entry.getValue();
+			  System.out.printf("%-30s %s\n", key + ":", value);  
+			  
+		}
+
+		if(!header.isEmpty()) {
+			
+			System.out.println("\nHEADERS\n");
+		
+			for(Map.Entry<String,String> entry : header.entrySet()) {
+	
+				  String key = entry.getKey();
+				  String value = entry.getValue();
+				  if(key.contains("password"))
+					  System.out.printf("%-30s %s\n", key + ":", "***********");
+				  else {
+					  System.out.printf("%-30s %s\n", key + ":", value);  
+				  }
+				  
+			}
+		}
+
+		if(!service.isEmpty()) {
+
+			System.out.println("\nSERVICES\n");
+			
+			for(Map.Entry<String,String> entry : service.entrySet()) {
+	
+				  String key = entry.getKey();
+				  String value = entry.getValue();
+				  if(key.contains("password"))
+					  System.out.printf("%-30s %s\n", key + ":", "***********");
+				  else {
+					  System.out.printf("%-30s %s\n", key + ":", value);  
+				  }
+				  
+			}
+		}
+		
+		System.out.println("-----------------------------------------------------------\n");
+
 	}
 	
 	public Certificate[] downloadCertificate(String url) throws IOException {

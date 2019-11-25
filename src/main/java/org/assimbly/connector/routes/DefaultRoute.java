@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.xml.xpath.XPathFactory;
 
@@ -172,7 +173,7 @@ public class DefaultRoute extends RouteBuilder {
 	  		    .otherwise()
 	  		    	.to(toUri)
   		  .end()
-  		  .routeId(flowId + endpointId);			
+  		  .routeId(flowId + "-" + endpointId);			
 		   
 		}
 		
@@ -199,8 +200,14 @@ public class DefaultRoute extends RouteBuilder {
 				if(endpointIdObject!=null) {
 					
 					String endpointId = endpointIdObject.toString();
+				
+				    Map<String, String> headers = props.entrySet()
+				    	      .stream()
+				    	      .filter(map -> map.getKey().startsWith("header." + endpointId))
+				    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 					
-					for (Map.Entry<String, String> entry : props.entrySet()) {
+					
+					for (Map.Entry<String, String> entry : headers.entrySet()) {
 
 						String key = entry.getKey();
 
@@ -210,10 +217,8 @@ public class DefaultRoute extends RouteBuilder {
 							in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple(entry.getValue()).evaluate(exchange, String.class));
 						}else if (key.startsWith("header." + endpointId + ".xpath")) {
 							XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-							in.setHeader(StringUtils.substringAfterLast(key, "xpath."),
-									XPathBuilder.xpath(entry.getValue())
-												.factory(fac)
-												.evaluate(exchange,	String.class));						
+							String xpathResult = XPathBuilder.xpath(entry.getValue()).factory(fac).evaluate(exchange, String.class);
+							in.setHeader(StringUtils.substringAfterLast(key, "xpath."),xpathResult);						
 						}
 					}
 				}
