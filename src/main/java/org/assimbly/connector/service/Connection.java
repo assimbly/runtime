@@ -10,7 +10,6 @@ import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-import org.apache.camel.Component;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
@@ -99,6 +98,7 @@ public class Connection {
 		}else {
 			connectionId = properties.get(type + ".service.id");
 		}
+		
 		flowId = properties.get("id");
 		
 		if(uri!=null){
@@ -425,8 +425,14 @@ public class Connection {
 	
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
+		if(direction.equals("to")) {
+			connectionId = properties.get("to." + endpointId + ".service.id");
+		}else {
+			connectionId = properties.get(direction + ".service.id");
+		}
+		
 		String driver = properties.get("service."  + serviceId + ".driver");
-		String url = properties.get("service" + serviceId + "url");		
+		String url = properties.get("service." + serviceId + ".url");		
 		String username = properties.get("service." + serviceId + ".username");
 		String password = properties.get("service." + serviceId + ".password");
 		

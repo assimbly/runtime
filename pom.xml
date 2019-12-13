@@ -14,8 +14,8 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
   		<maven.compiler.target>1.8</maven.compiler.target>
 
-		<org.apache.camel-version>2.24.2</org.apache.camel-version>
-		<org.apache.activemq-version>5.15.10</org.apache.activemq-version>
+		<camel-version>2.24.2</camel-version>
+		<activemq-version>5.15.10</activemq-version>
 		<org.jolokia-version>1.6.2</org.jolokia-version>
 
 	</properties>
@@ -25,132 +25,137 @@
 		<!-- camel dependencies in alphabetic order-->
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
+    		<artifactId>camel-aws</artifactId>
+		    <version>${camel-version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-amqp</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-as2</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-catalog</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-core</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-cxf</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-elasticsearch-rest</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>				
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-ftp</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-http4</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-jdbc</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-jetty</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>			
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-jms</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-kafka</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-mail</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>				
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-metrics</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-netty4</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-quartz2</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-rabbitmq</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-sjms</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-sql</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-slack</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-spring</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-stream</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-telegram</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 
 		<!-- as of 240619 -->
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-saxon</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 		</dependency>
 
 		<!-- testing as of 190619 -->
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-test</artifactId>
-			<version>${org.apache.camel-version}</version>
+			<version>${camel-version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -158,22 +163,22 @@
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>activemq-broker</artifactId>
-		    <version>${org.apache.activemq-version}</version>
+		    <version>${activemq-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-camel</artifactId>
-			<version>${org.apache.activemq-version}</version>
+			<version>${activemq-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
 			<artifactId>activemq-pool</artifactId>
-			<version>${org.apache.activemq-version}</version>
+			<version>${activemq-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>activemq-kahadb-store</artifactId>
-			<version>${org.apache.activemq-version}</version>
+			<version>${activemq-version}</version>
 			<scope>runtime</scope>
 		</dependency>
 

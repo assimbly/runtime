@@ -100,9 +100,14 @@ public class CamelConnector extends BaseConnector {
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
 
+		//set HTTP as scheme (instead of HTTP4 and HTTPS4)
+		context.addComponent("http", new HttpComponent());
+		context.addComponent("https", new HttpComponent());
+
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
         ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("https4")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
@@ -117,10 +122,6 @@ public class CamelConnector extends BaseConnector {
 	    factory.setPrettyPrint(true);
 	    factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
-
-		//set HTTP as scheme (instead of HTTP4 and HTTPS4)
-		context.addComponent("http", new HttpComponent());
-		context.addComponent("https", new HttpComponent());
 		
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
