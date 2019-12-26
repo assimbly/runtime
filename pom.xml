@@ -14,8 +14,8 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
   		<maven.compiler.target>1.8</maven.compiler.target>
 
-		<camel-version>2.24.2</camel-version>
-		<activemq-version>5.15.10</activemq-version>
+		<camel-version>2.24.3</camel-version>
+		<activemq-version>5.15.11</activemq-version>
 		<org.jolokia-version>1.6.2</org.jolokia-version>
 
 	</properties>
@@ -185,17 +185,17 @@
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-server</artifactId>
-		    <version>2.10.0</version>
+		    <version>2.10.1</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-commons</artifactId>
-		    <version>2.10.0</version>
+		    <version>2.10.1</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-jms-client-all</artifactId>
-		    <version>2.10.0</version>
+		    <version>2.10.1</version>
 		</dependency>		
 		
 		
