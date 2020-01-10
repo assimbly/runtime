@@ -41,9 +41,7 @@ public class DefaultRoute extends RouteBuilder {
 		this.props = props;
 	}
 
-	public DefaultRoute() {
-		// TODO Auto-generated constructor stub
-	}
+	public DefaultRoute() {}
 
 	public interface FailureProcessorListener {
 		 public void onFailure();
@@ -187,9 +185,8 @@ public class DefaultRoute extends RouteBuilder {
 		
 		String offrampUri = props.get("offramp.uri.list");
 		
-		String[] offrampUriArray = offrampUri.split(",");
+		return offrampUri.split(",");
 		
-		return offrampUriArray;
 	}	
 	
 	//set headers for each endpoint
