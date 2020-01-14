@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
-import org.assimbly.connector.connect.util.ConnectorUtil;
+import org.assimbly.connector.connect.util.CertificatesUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.PollingJdbcRoute;
@@ -113,6 +113,7 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty4")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("sftp")).setUseGlobalSslContextParameters(true);
         
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -771,8 +772,8 @@ public class CamelConnector extends BaseConnector {
 
 	public Certificate[] getCertificates(String url) {
     	try {
-    		ConnectorUtil util = new ConnectorUtil();
-    		Certificate[] certificates = util.downloadCertificate(url);
+    		CertificatesUtil util = new CertificatesUtil();
+    		Certificate[] certificates = util.downloadCertificates(url);
     		return certificates;
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
@@ -781,32 +782,43 @@ public class CamelConnector extends BaseConnector {
     	return null;
 	}	
 
-	public Certificate getCertificate(String certificateName) {
+	public Certificate getCertificateFromTruststore(String certificateName) {
 		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
-		ConnectorUtil util = new ConnectorUtil();
+		CertificatesUtil util = new CertificatesUtil();
     	return util.getCertificate(truststorePath, certificateName); 
 	}	
 
-	
-	
-	public Map<String,Certificate> importCertificates(Certificate[] certificates) {
+
+	public String importCertificateInTruststore(String certificateName, Certificate certificate) {
 
 		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
 		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
 		
-		ConnectorUtil util = new ConnectorUtil();
-		util.importCertificate(keystorePath, certificates);    	
-    	return util.importCertificate(truststorePath, certificates); 
+		CertificatesUtil util = new CertificatesUtil();
+		util.importCertificate(keystorePath, certificateName,certificate);    	
+    	return util.importCertificate(truststorePath, certificateName,certificate); 
 				
 	}
 
-	public void setCertificates(String url) {
+	
+	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) {
+
+		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
+		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		
+		CertificatesUtil util = new CertificatesUtil();
+		util.importCertificates(keystorePath, certificates);    	
+    	return util.importCertificates(truststorePath, certificates); 
+				
+	}
+
+	public void setCertificatesInTruststore(String url) {
 
 		try {
-    		ConnectorUtil util = new ConnectorUtil();
-    		Certificate[] certificates = util.downloadCertificate(url);
+			CertificatesUtil util = new CertificatesUtil();
+    		Certificate[] certificates = util.downloadCertificates(url);
     		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
-        	util.importCertificate(truststorePath, certificates);
+        	util.importCertificates(truststorePath, certificates);
     	} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -814,10 +826,10 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public void deleteCertificates(String certificateName) {
+	public void deleteCertificatesInTruststore(String certificateName) {
 		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
 		
-		ConnectorUtil util = new ConnectorUtil();
+		CertificatesUtil util = new CertificatesUtil();
     	util.deleteCertificate(truststorePath, certificateName);
 	}
 	

@@ -226,7 +226,7 @@ public interface Connector {
 	*
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate getCertificate(String certificateName) throws Exception;	
+	public Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
 
 	
 	/**
@@ -236,8 +236,18 @@ public interface Connector {
 	*
 	* @throws Exception if certificates cannot be imported
 	*/
-	public void setCertificates(String url) throws Exception;	
+	public void setCertificatesInTruststore(String url) throws Exception;	
 
+	
+	/**
+	* Import TLS certificate.
+	*  
+	* Import certificate into truststore (jks) used by the connector
+	*
+	* @throws Exception if certificates cannot be imported
+	*/
+	public String importCertificateInTruststore(String certificateName, Certificate certificate) throws Exception;
+	
 	
 	/**
 	* Import TLS certificates.
@@ -246,14 +256,14 @@ public interface Connector {
 	*
 	* @throws Exception if certificates cannot be imported
 	*/
-	public Map<String,Certificate> importCertificates(Certificate[] certificates) throws Exception;
+	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
 	
 	/**
 	* Delete certificate from key/truststore
 	*  
 	* @throws Exception if certificates cannot be deleted
 	*/
-	public void deleteCertificates(String certificateName) throws Exception;	
+	public void deleteCertificatesInTruststore(String certificateName) throws Exception;	
 
 	
 	

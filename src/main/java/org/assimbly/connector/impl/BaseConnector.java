@@ -288,13 +288,13 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;	
 	
-	public abstract Certificate getCertificate(String certificateName) throws Exception;	
+	public abstract Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
 
-	public abstract void setCertificates(String url) throws Exception;
+	public abstract void setCertificatesInTruststore(String url) throws Exception;
 
-	public abstract Map<String,Certificate> importCertificates(Certificate[] certificates) throws Exception;
+	public abstract Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
 
-	public abstract void deleteCertificates(String certificateName) throws Exception;
+	public abstract void deleteCertificatesInTruststore(String certificateName) throws Exception;
 
 	public abstract boolean removeFlow(String id) throws Exception;
 
