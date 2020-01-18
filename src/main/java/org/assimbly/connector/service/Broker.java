@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,6 +16,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +67,7 @@ public class Broker {
 				broker.start();
 			}
 
-	}
-	
+	}	
 
 	public void stop() throws Exception {
 		broker.stop();
@@ -112,10 +113,20 @@ public class Broker {
 	}
 	
 	public String setFileConfiguration(String brokerConfiguration) throws IOException {
+
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
+			
+			URL schemaFile = classloader.getResource("activemq.xsd");
+			String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
+			if(!xmlValidation.equals("xml is valid")) {
+				return xmlValidation;
+			} 
+
+			
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 			brokerFile.createNewFile();
 			InputStream is = classloader.getResourceAsStream("activemq.xml");
 			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);

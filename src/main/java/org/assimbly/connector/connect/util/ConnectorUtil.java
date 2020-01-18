@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
@@ -37,8 +38,18 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.*;
+import java.net.URL;
+import org.xml.sax.SAXException;
+import java.io.IOException;
+
 
 
 public final class ConnectorUtil {
@@ -61,6 +72,25 @@ public final class ConnectorUtil {
 		
 	}	
     
+	public static String isValidXML(URL schemaFile, String xml) {
+		
+		String result = null;
+
+		Source xmlFile = new StreamSource(new StringReader(xml));
+		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try {
+		  Schema schema = schemaFactory.newSchema(schemaFile);
+		  Validator validator = schema.newValidator();
+		  validator.validate(xmlFile);
+		  result = "xml is valid";
+		} catch (SAXException e) {
+		  result = "xml is NOT valid. Reason:" + e;
+		} catch (IOException e) {}
+		
+		return result;
+		
+	}
+	
 	public static List<String> getXMLParameters(XMLConfiguration conf, String prefix) throws ConfigurationException {
 	  	   
 	  	   Iterator<String> keys;

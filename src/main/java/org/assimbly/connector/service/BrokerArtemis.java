@@ -3,6 +3,7 @@ package org.assimbly.connector.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ public class BrokerArtemis {
 		if(brokerFile.exists()) {
 			String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 			logger.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
+
 			broker.setConfigResourcePath(fileConfig);
 		}else {
 			this.setFileConfiguration("");
@@ -58,7 +61,6 @@ public class BrokerArtemis {
 			config.addAcceptorConfiguration("tcp", "tcp://127.0.0.1:61616");
 			config.setSecurityEnabled(false);
 			broker.setConfiguration(config);
-		
 			broker.start();
 
 	}
@@ -115,10 +117,21 @@ public class BrokerArtemis {
 	}
 	
 	public String setFileConfiguration(String brokerConfiguration) throws IOException {
+		
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
+
+			URL schemaFile = classloader.getResource("broker.xsd");
+			String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
+			if(!xmlValidation.equals("xml is valid")) {
+				return xmlValidation;
+			} 
+			
+			InputStream is = classloader.getResourceAsStream("broker.xml");
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+			
 			brokerFile.createNewFile();
 			InputStream is = classloader.getResourceAsStream("broker.xml");
 			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
