@@ -19,6 +19,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.xml.XPathBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.event.FlowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class DefaultRoute extends RouteBuilder {
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	
 	private String[] offrampUriList;
 	
@@ -227,7 +229,6 @@ public class DefaultRoute extends RouteBuilder {
 	
 	public class FailureProcessor implements Processor {
 		
-  	    private final String userHomeDir = System.getProperty("user.home");
   	    private FlowEvent flowEvent;
   	  
 		public void process(Exchange exchange) throws Exception {
@@ -237,7 +238,7 @@ public class DefaultRoute extends RouteBuilder {
 			  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 			  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
 			  			  
-			  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
+			  File file = new File(baseDir + "/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
 			  List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
 			  FileUtils.writeLines(file, line, true);
 			

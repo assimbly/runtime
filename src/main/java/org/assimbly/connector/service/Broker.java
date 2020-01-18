@@ -10,12 +10,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,9 @@ public class Broker {
 
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Broker");
 
-	File brokerFile = new File("./activemq.xml");
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+
+	File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
 	BrokerService broker = new BrokerService();
 
@@ -98,7 +99,7 @@ public class Broker {
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 			
     		try {
-    			brokerFile.createNewFile();
+    			FileUtils.touch(brokerFile);
     			InputStream is = classloader.getResourceAsStream("activemq.xml");
     			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         		is.close();
@@ -127,7 +128,7 @@ public class Broker {
 			
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
-			brokerFile.createNewFile();
+			FileUtils.touch(brokerFile);
 			InputStream is = classloader.getResourceAsStream("activemq.xml");
 			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			is.close();

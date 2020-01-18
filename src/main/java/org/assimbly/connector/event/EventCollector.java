@@ -13,12 +13,13 @@ import org.apache.camel.management.event.RouteStartedEvent;
 import org.apache.camel.management.event.RouteStoppedEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.connect.util.BaseDirectory;
 
 //Check following page for all EventObject instances: http://camel.apache.org/maven/current/camel-core/apidocs/org/apache/camel/management/event/package-summary.html
 
 public class EventCollector extends EventNotifierSupport {
 
-    private final String userHomeDir = System.getProperty("user.home");
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private Date date = new Date();
 	private String error;
 	private String today = new SimpleDateFormat("yyyyMMdd").format(date);
@@ -30,7 +31,7 @@ public class EventCollector extends EventNotifierSupport {
 	    	
 	    	RouteStartedEvent routeStartedEvent = (RouteStartedEvent) eventObject;
 	    	String flowId =  routeStartedEvent.getRoute().getId();
-	    	File file = new File(userHomeDir + "/.assimbly/logs/events/" + flowId + "/" + today + "_events.log");
+	    	File file = new File(baseDir + "/events/" + flowId + "/" + today + "_events.log");
 			List<String> line = Arrays.asList(timestamp + " : flow started");
 			FileUtils.writeLines(file, line, true);
 
@@ -38,7 +39,7 @@ public class EventCollector extends EventNotifierSupport {
 	    	
 	    	RouteStoppedEvent routeStoppedEvent = (RouteStoppedEvent) eventObject;
 	    	String flowId =  routeStoppedEvent.getRoute().getId();
-	    	File file = new File(userHomeDir + "/.assimbly/logs/events/" + flowId + "/" + today + "_events.log");
+	    	File file = new File(baseDir + "/events/" + flowId + "/" + today + "_events.log");
 			List<String> line = Arrays.asList(timestamp + " : flow stopped");
 			FileUtils.writeLines(file, line, true);
 	    	
@@ -59,7 +60,7 @@ public class EventCollector extends EventNotifierSupport {
 	        
 	        
 	        error = exchangeFailedEvent.getExchange().getException().getMessage();
-	    	File file = new File(userHomeDir + "/.assimbly/logs/events/" + flowId + "/" + today + "_events.log");
+	    	File file = new File(baseDir + "/events/" + flowId + "/" + today + "_events.log");
 	        List<String> line = Arrays.asList(timestamp + " : flow error (unhandled) --> " + error);
 			FileUtils.writeLines(file, line, true);
 			
@@ -78,7 +79,7 @@ public class EventCollector extends EventNotifierSupport {
 	        	error = "Message " + exchangeId + " is sent to error endpoint: " + deadLetterUri + " (check gateway log for error details)";
 	        }
 
-	    	File file = new File(userHomeDir + "/.assimbly/logs/events/" + flowId + "/" + today + "_events.log");
+	    	File file = new File(baseDir + "/events/" + flowId + "/" + today + "_events.log");
 	        List<String> line = Arrays.asList(timestamp + " : flow error --> " + error);
 			FileUtils.writeLines(file, line, true);
 			

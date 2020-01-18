@@ -105,6 +105,15 @@ public interface Connector {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	
+	/**
+	* sets the connector base directory. In this directory everything is stored (alert, events) 
+	*
+	* @param  baseDirectory (path) 
+	* @return list of flow configurations (String of mediatype)
+	* @throws Exception if base directory can't be set is not available
+	*/
+	public void setBaseDirectory(String baseDirectory) throws Exception;
+	
 	//manage connector
 	/**
 	* Starts a connector. The connector acts like a container for flows.  

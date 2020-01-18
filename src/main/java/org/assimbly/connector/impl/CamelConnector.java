@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
+import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.connect.util.CertificatesUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
@@ -68,7 +69,7 @@ public class CamelConnector extends BaseConnector {
 
 	private String flowInfo;
 
-	private final String userHomeDir = System.getProperty("user.home");
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
@@ -577,7 +578,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		  File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
 		
 		  if(file.exists()) {
 		  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -611,7 +612,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/.assimbly/logs/alerts/" + id + "/" + today + "_alerts.log");
+		  File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
 		
 		  if(file.exists()) {
 			  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -626,7 +627,7 @@ public class CamelConnector extends BaseConnector {
 		  
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  File file = new File(userHomeDir + "/.assimbly/logs/events/" + id + "/" + today + "_events.log");
+		  File file = new File(baseDir + "/events/" + id + "/" + today + "_events.log");
 		
 		  if(file.exists()) {
 		  List<String> lines = FileUtils.readLines(file, "utf-8");
@@ -782,7 +783,7 @@ public class CamelConnector extends BaseConnector {
 	}	
 
 	public Certificate getCertificateFromTruststore(String certificateName) {
-		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		String truststorePath = baseDir + "/security/truststore.jks";
 		CertificatesUtil util = new CertificatesUtil();
     	return util.getCertificate(truststorePath, certificateName); 
 	}	
@@ -790,8 +791,8 @@ public class CamelConnector extends BaseConnector {
 
 	public String importCertificateInTruststore(String certificateName, Certificate certificate) {
 
-		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
-		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		String keystorePath = baseDir + "/security/keystore.jks";
+		String truststorePath = baseDir + "/security/truststore.jks";
 		
 		CertificatesUtil util = new CertificatesUtil();
 		util.importCertificate(keystorePath, certificateName,certificate);    	
@@ -802,8 +803,8 @@ public class CamelConnector extends BaseConnector {
 	
 	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) {
 
-		String keystorePath = userHomeDir + "/.assimbly/security/keystore.jks";
-		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		String keystorePath = baseDir + "/security/keystore.jks";
+		String truststorePath = baseDir + "/security/truststore.jks";
 		
 		CertificatesUtil util = new CertificatesUtil();
 		util.importCertificates(keystorePath, certificates);    	
@@ -816,7 +817,7 @@ public class CamelConnector extends BaseConnector {
 		try {
 			CertificatesUtil util = new CertificatesUtil();
     		Certificate[] certificates = util.downloadCertificates(url);
-    		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+    		String truststorePath = baseDir + "/security/truststore.jks";
         	util.importCertificates(truststorePath, certificates);
     	} catch (Exception e1) {
 			// TODO Auto-generated catch block
@@ -826,7 +827,7 @@ public class CamelConnector extends BaseConnector {
 	
 	
 	public void deleteCertificatesInTruststore(String certificateName) {
-		String truststorePath = userHomeDir + "/.assimbly/security/truststore.jks";
+		String truststorePath = baseDir + "/security/truststore.jks";
 		
 		CertificatesUtil util = new CertificatesUtil();
     	util.deleteCertificate(truststorePath, certificateName);
@@ -837,9 +838,9 @@ public class CamelConnector extends BaseConnector {
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-    	File securityPath = new File(userHomeDir + "/.assimbly/security");
-    	File trustStorePath = new File(userHomeDir + "/.assimbly/security/truststore.jks");
-    	File keyStorePath = new File(userHomeDir + "/.assimbly/security/keystore.jks");
+    	File securityPath = new File(baseDir + "/security");
+    	File trustStorePath = new File(baseDir + "/security/truststore.jks");
+    	File keyStorePath = new File(baseDir + "/security/keystore.jks");
 
     	if(!securityPath.exists()){ 
     		securityPath.mkdirs();
@@ -871,14 +872,14 @@ public class CamelConnector extends BaseConnector {
     	}
     	
         KeyStoreParameters ksp = new KeyStoreParameters();
-        ksp.setResource(userHomeDir + "/.assimbly/security/keystore.jks");
+        ksp.setResource(baseDir + "/security/keystore.jks");
         ksp.setPassword("supersecret");
         KeyManagersParameters kmp = new KeyManagersParameters();
         kmp.setKeyPassword("secret");
         kmp.setKeyStore(ksp);
 
         KeyStoreParameters tsp = new KeyStoreParameters();
-        tsp.setResource(userHomeDir + "/.assimbly/security/truststore.jks");
+        tsp.setResource(baseDir + "/security/truststore.jks");
         tsp.setPassword("supersecret");      
         TrustManagersParameters tmp = new TrustManagersParameters();
         tmp.setKeyStore(tsp);

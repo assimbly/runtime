@@ -15,6 +15,7 @@ import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
@@ -25,8 +26,9 @@ public class BrokerArtemis {
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.BrokerArtemis");
 
 	EmbeddedActiveMQ broker = new EmbeddedActiveMQ();
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-	File brokerFile = new File("./broker.xml");
+	File brokerFile = new File(baseDir + "/broker/broker.xml");
 	
 	public void start() throws Exception {
 
@@ -36,9 +38,10 @@ public class BrokerArtemis {
 
 			broker.setConfigResourcePath(fileConfig);
 		}else {
+			
 			this.setFileConfiguration("");
 			logger.warn("No config file 'broker.xml' found.");
-			logger.info("Create default 'broker.xml' stored in following directory: " + brokerFile.getAbsolutePath());			
+			logger.info("Create default 'broker.xml' stored in following directory: " + baseDir + "/broker");			
 			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
 			logger.info("");
 			logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
@@ -61,6 +64,7 @@ public class BrokerArtemis {
 			config.addAcceptorConfiguration("tcp", "tcp://127.0.0.1:61616");
 			config.setSecurityEnabled(false);
 			broker.setConfiguration(config);
+			
 			broker.start();
 
 	}
@@ -102,7 +106,7 @@ public class BrokerArtemis {
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 			
     		try {
-    			brokerFile.createNewFile();
+    			FileUtils.touch(brokerFile);
     			InputStream is = classloader.getResourceAsStream("broker.xml");
     			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         		is.close();
@@ -131,8 +135,7 @@ public class BrokerArtemis {
 			InputStream is = classloader.getResourceAsStream("broker.xml");
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
-			
-			brokerFile.createNewFile();
+			FileUtils.touch(brokerFile);
 			InputStream is = classloader.getResourceAsStream("broker.xml");
 			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			is.close();

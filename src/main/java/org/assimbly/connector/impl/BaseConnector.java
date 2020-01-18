@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.configuration.YAMLFileConfiguration;
+import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.Connector;
 
 
@@ -262,6 +263,10 @@ public abstract class BaseConnector implements Connector {
 
 	public String convertFlowConfigurationToYAML(TreeMap<String, String> configuration) throws Exception {
 		return new YAMLFileConfiguration().createFlowConfiguration(configuration);
+	}
+
+	public void setBaseDirectory(String baseDirectory) {
+		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
 	}
 	
 	//--> abstract methods (needs to be implemented in the subclass specific to the integration framework)
