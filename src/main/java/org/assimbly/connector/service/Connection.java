@@ -195,11 +195,17 @@ public class Connection {
 	
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
+		System.out.println("set up active");
+		
 		String componentName = "activemq";
 		
 		String url = properties.get("service." + serviceId +".url");
 		String username = properties.get("service."  + serviceId + ".username");
 		String password = properties.get("service."  + serviceId + ".password");
+
+		System.out.println("url" + url);
+		System.out.println("username" + username);
+		System.out.println("password" + password);
 		
 		String conType = properties.get("service." + serviceId +".conType");
 		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
@@ -228,7 +234,7 @@ public class Connection {
 				if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
 					activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
 				}else {
-					activeMQConnectionFactory = new ActiveMQConnectionFactory(url,username,password);
+					activeMQConnectionFactory = new ActiveMQConnectionFactory(username,password,url);					
 				}
 
 				

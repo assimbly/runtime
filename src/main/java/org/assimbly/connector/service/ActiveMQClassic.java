@@ -10,16 +10,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.connector.Broker;
 import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Broker {
+public class ActiveMQClassic implements Broker {
 
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Broker");
 
@@ -27,10 +30,15 @@ public class Broker {
 
 	File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
-	BrokerService broker = new BrokerService();
+	BrokerService broker;
 
+	public void setBaseDirectory(String baseDirectory) {
+		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
+	}
 	
-	public void start() throws Exception {
+	public String start() throws Exception {
+
+		broker = new BrokerService();
 
 		if(brokerFile.exists()) {
 			logger.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
@@ -39,7 +47,7 @@ public class Broker {
 		}else {
 			this.setFileConfiguration("");
 			logger.warn("No config file 'activemq.xml' found.");
-			logger.info("Create default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());			
+			logger.info("Created default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());			
 			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
 			logger.info("");
 			logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
@@ -51,11 +59,15 @@ public class Broker {
 		if(!broker.isStarted()) {
 			broker.start();
 		}
+		
+		return status();
 
 	}
 
 
-	public void startEmbedded() throws Exception {
+	public String startEmbedded() throws Exception {
+
+			broker = new BrokerService();
 
 			logger.warn("Start broker in local mode on url: tcp://127.0.0.1:61616");
 			
@@ -67,25 +79,37 @@ public class Broker {
 			if(!broker.isStarted()) {
 				broker.start();
 			}
+			
+			return status();
 
 	}	
 
-	public void stop() throws Exception {
+	public String stop() throws Exception {
 		broker.stop();
+		
+		return status();
 	}
 
 	
-	public void restart() throws Exception {
+	public String restart() throws Exception {
 		this.stop();
 		this.start();
+		
+		return status();
 	}
 
-	public void restartEmbedded() throws Exception {
+	public String restartEmbedded() throws Exception {
 		this.stop();
 		this.startEmbedded();
+		
+		return status();
 	}
 	
 	public String status() throws Exception {
+		if(broker==null) {
+			broker = new BrokerService();
+		}
+		
 		if(broker.isStarted())
 			return "started";
 		else {
@@ -135,6 +159,33 @@ public class Broker {
 		}	
 		
 		return "configuration set";
+	}
+
+
+	@Override
+	public String info() throws Exception {
+		if(status().equals("started")) {
+
+			BrokerView adminView = broker.getAdminView();
+			
+			String info = "uptime="+ broker.getUptime()
+					 + 	",totalConnections=" + broker.getTotalConnections()
+					 + ",totalConsumers=" + adminView.getTotalConsumerCount()
+					 + ",totalMessages=" + adminView.getTotalMessageCount()
+					 + ",nodeId=" + adminView.getBrokerId()
+					 + ",state=" + broker.isStarted()
+					 + ",version=" + adminView.getBrokerVersion();
+			return info;
+		}else {
+			return "no info. broker not running";
+		}
+
+	}
+
+
+	@Override
+	public Object getBroker() throws Exception {
+		return broker;
 	}
 	
 	
