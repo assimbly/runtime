@@ -100,7 +100,7 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-
+		
 		//set HTTP as scheme (instead of HTTP4 and HTTPS4)
 		context.addComponent("http", new HttpComponent());
 		context.addComponent("https", new HttpComponent());

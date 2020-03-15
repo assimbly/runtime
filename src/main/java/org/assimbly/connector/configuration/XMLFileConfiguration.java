@@ -72,6 +72,7 @@ public class XMLFileConfiguration {
 	private String wireTapUri;
 	private String flowName;
 	private String endpointId;
+	private String flowLogLevel;
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
 		
@@ -295,7 +296,9 @@ public class XMLFileConfiguration {
 	    flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
 	    flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
 	    flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
-		
+	    flowLogLevel = xPath.evaluate("//flows/flow[id='" + flowId + "']/logLevel",doc);
+
+	    
 		if(flowId==null || flowId.isEmpty()) {
 			ConfigurationException configurationException = new ConfigurationException("The flow ID doesn't exists in XML Configuration");
 			configurationException.initCause(new Throwable("The flow ID doesn't exists in XML Configuration"));
@@ -329,12 +332,17 @@ public class XMLFileConfiguration {
 			flowRedeliveryDelay = "false";					
 		}
 		
+		if(flowLogLevel == null){    			
+			flowLogLevel = "OFF";					
+		}
+		
 		properties.put("id",flowId);	
 		properties.put("flow.name",flowName);	
 
 		properties.put("flow.offloading",flowOffloading);
 		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
 		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
+		properties.put("flow.logLevel",flowLogLevel);
 		
 		//properties.put("header.contenttype", "text/xml;charset=UTF-8");
 		

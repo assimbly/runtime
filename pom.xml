@@ -335,8 +335,8 @@
 		<dependency>
 		    <groupId>com.microsoft.sqlserver</groupId>
 		    <artifactId>mssql-jdbc</artifactId>
-    		<version>7.4.1.jre8</version>
-		</dependency>		
+   			<version>8.1.1.jre8</version>
+		</dependency>	
 		<!-- check https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides -->
 		<dependency>
 			<groupId>com.oracle.jdbc</groupId>

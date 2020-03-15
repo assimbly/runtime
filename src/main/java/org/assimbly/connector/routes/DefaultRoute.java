@@ -1,26 +1,15 @@
 package org.assimbly.connector.routes;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import javax.xml.xpath.XPathFactory;
-
-import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
-import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.builder.xml.XPathBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.connector.connect.util.BaseDirectory;
-import org.assimbly.connector.event.FlowEvent;
+import org.assimbly.connector.processors.ConvertProcessor;
+import org.assimbly.connector.processors.FailureProcessor;
+import org.assimbly.connector.processors.HeadersProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +24,7 @@ public class DefaultRoute extends RouteBuilder {
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
-    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+	private String logMessage;
 	
 	private String[] offrampUriList;
 	
@@ -54,8 +43,12 @@ public class DefaultRoute extends RouteBuilder {
 			
 		logger.info("Configuring default route");
 		
-		Processor setHeaders = new SetHeaders();
+		getContext().setTracing(true); 
+		
+		Processor headerProcessor = new HeadersProcessor(props);
 		Processor failureProcessor = new FailureProcessor();
+		Processor convertProcessor = new ConvertProcessor();
+
 		offrampUriList = getOfframpUriList();
 		flowId = props.get("id");
 		
@@ -95,6 +88,14 @@ public class DefaultRoute extends RouteBuilder {
 			backOffMultiplier = 0;
 		}
 		
+		if (this.props.containsKey("flow.logLevel")){
+			String logLevelAsString = props.get("flow.logLevel");
+			String routeName = props.get("flow.name");
+			logMessage = "log:RouteName." + routeName + "?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed";
+		}else {
+			String routeName = props.get("flow.name");
+			logMessage = "log:RouteName." + routeName + "level=OFF&showAll=true&multiline=true&style=Fixed";
+		}		
 		
 		if (this.props.containsKey("error.uri")){
 			routeErrorHandler = deadLetterChannel(props.get("error.uri"))		
@@ -135,13 +136,16 @@ public class DefaultRoute extends RouteBuilder {
 		
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
 		
+		
+		
 		//The default Camel route (onramp)
-		from(props.get("from.uri"))			
+		from(props.get("from.uri"))	
 			.errorHandler(routeErrorHandler)	
 			.setHeader("AssimblyFlowID", constant(flowId))
 			.setHeader("AssimblyHeaderId", constant(props.get("from.header.id")))
 			.setHeader("AssimblyFrom", constant(props.get("from.uri")))
-			.process(setHeaders)
+			.to(logMessage)
+			.process(headerProcessor)
 			.multicast()
 			.shareUnitOfWork()
 			.parallelProcessing()
@@ -155,28 +159,25 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringAfterLast(offrampUri, "endpoint=");			
 			String toUri = props.get("to." + endpointId + ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
+			
 			from(offrampUri)			
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
 			.setHeader("AssimblyTo", constant(toUri))
-			.process(setHeaders)
-			 .choice()
-			    .when(header("convertBodyTo").isEqualTo("bytes"))
-			    	.convertBodyTo(byte[].class, "UTF-8")
-			    .otherwise()
-					.convertBodyTo(String.class, "UTF-8")
-			 .end()
-			.choice()    		    
+			.process(headerProcessor)
+			.process(convertProcessor)
+     	    .choice()    		    
 	  		    .when(header("ReplyTo").contains(":"))
-			    	.to(toUri)
+			    	.to(toUri)			    	
 			    	.toD("${header.ReplyTo}")
 	  		    .when(header("ReplyTo").isNotNull())
 	  		    	.to(toUri)
 	  		    	.toD("vm://${header.ReplyTo}")
 	  		    .otherwise()
 	  		    	.to(toUri)
-  		  .end()
-  		  .routeId(flowId + "-" + endpointId);			
+	  		 .end()
+	  		 .to(logMessage)
+	  		 .routeId(flowId + "-" + endpointId);			
 		   
 		}
 		
@@ -190,60 +191,5 @@ public class DefaultRoute extends RouteBuilder {
 		return offrampUri.split(",");
 		
 	}	
-	
-	//set headers for each endpoint
-	public class SetHeaders implements Processor {
-		
-		  public void process(Exchange exchange) throws Exception {
-			  
-				Message in = exchange.getIn();
-				Object endpointIdObject = in.getHeader("AssimblyHeaderId");
-				
-				if(endpointIdObject!=null) {
-					
-					String endpointId = endpointIdObject.toString();
-				
-				    Map<String, String> headers = props.entrySet()
-				    	      .stream()
-				    	      .filter(map -> map.getKey().startsWith("header." + endpointId))
-				    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
-					
-					
-					for (Map.Entry<String, String> entry : headers.entrySet()) {
-
-						String key = entry.getKey();
-
-						if (key.startsWith("header." + endpointId + ".constant")) {
-							in.setHeader(StringUtils.substringAfterLast(key, "constant."), entry.getValue());
-						}else if (key.startsWith("header." + endpointId + ".simple")) {
-							in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple(entry.getValue()).evaluate(exchange, String.class));
-						}else if (key.startsWith("header." + endpointId + ".xpath")) {
-							XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-							String xpathResult = XPathBuilder.xpath(entry.getValue()).factory(fac).evaluate(exchange, String.class);
-							in.setHeader(StringUtils.substringAfterLast(key, "xpath."),xpathResult);						
-						}
-					}
-				}
-		  }		  
-	}
-	
-	public class FailureProcessor implements Processor {
-		
-  	    private FlowEvent flowEvent;
-  	  
-		public void process(Exchange exchange) throws Exception {
-			  
-			  Date date = new Date();
-			  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-			  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
-			  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
-			  			  
-			  File file = new File(baseDir + "/alerts/" + flowEvent.getFlowId() + "/" + today + "_alerts.log");
-			  List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
-			  FileUtils.writeLines(file, line, true);
-			
-		  }
-		
-	}
 
 }
