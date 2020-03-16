@@ -30,10 +30,10 @@ public class ConvertProcessor implements Processor {
 	            	convertedBody = DocConverter.convertXmlToJson(body); 
 	                break; 
 	            case "XML2YAML":
-	            	convertedBody = body; //DocConverter.convertXmltoYaml(body);
+	            	convertedBody = DocConverter.convertXmlToYaml(body);
 	                break; 
 	            case "XML2CSV": 
-	            	convertedBody = body; //DocConverter.convertXmltoCsv(body);
+	            	convertedBody = DocConverter.convertXmlToCsv(body);
 	                break;	         
 	            case "JSON2XML": 
 	            	convertedBody = DocConverter.convertJsonToXml(body); 
