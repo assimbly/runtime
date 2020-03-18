@@ -462,6 +462,16 @@ public interface Connector {
 	public String getFlowStats(String flowId, String mediaType) throws Exception;	
 	
 	/**
+	* Gets the details stats of a flow
+	*
+	* @param  flowId the id of the flow
+	* @param  mediatype (xml or json)
+	* @throws Exception if flow doesn't start
+	* @return returns the Camel Route Configuration in its own format
+	*/
+	public String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;	
+	
+	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
 	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
 	*

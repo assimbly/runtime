@@ -643,6 +643,25 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 
+	public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
+		
+		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
+
+		String camelRouteConfiguration;
+		
+		if(route!=null) {
+			camelRouteConfiguration = route.dumpRouteAsXml(true);
+			if(mediaType.contains("json")) {
+				camelRouteConfiguration = DocConverter.convertXmlToJson(camelRouteConfiguration);
+			}
+		}else {
+			camelRouteConfiguration = "0";
+		}
+		
+		return camelRouteConfiguration;
+	}	
+
+	
 	public String getFlowStats(String id, String mediaType) throws Exception {
 		
 		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
