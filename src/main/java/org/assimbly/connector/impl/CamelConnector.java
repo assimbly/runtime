@@ -19,6 +19,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
+import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
@@ -644,18 +645,28 @@ public class CamelConnector extends BaseConnector {
 	
 
 	public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
-		
-		ManagedRouteMBean route = context.getManagedRoute(id, ManagedRouteMBean.class);
 
-		String camelRouteConfiguration;
+		String camelRouteConfiguration = "";
+
+		for (Route route : context.getRoutes()) {
+			if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
+				ManagedRouteMBean managedRoute = context.getManagedRoute(route.getId(), ManagedRouteMBean.class);
+				String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
+				xmlConfiguration = xmlConfiguration.replaceAll("\\<\\?xml(.+?)\\?\\>", "").trim();
+				camelRouteConfiguration = camelRouteConfiguration + xmlConfiguration;	
+			}
+		}
+
 		
-		if(route!=null) {
-			camelRouteConfiguration = route.dumpRouteAsXml(true);
+		if(camelRouteConfiguration.isEmpty()) {
+			camelRouteConfiguration = "0";
+		}else {
+			camelRouteConfiguration = "<routes xmlns=\"http://camel.apache.org/schema/spring\">" +
+					camelRouteConfiguration +
+					"</routes>";
 			if(mediaType.contains("json")) {
 				camelRouteConfiguration = DocConverter.convertXmlToJson(camelRouteConfiguration);
 			}
-		}else {
-			camelRouteConfiguration = "0";
 		}
 		
 		return camelRouteConfiguration;
