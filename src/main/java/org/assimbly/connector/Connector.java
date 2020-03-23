@@ -462,14 +462,24 @@ public interface Connector {
 	public String getFlowStats(String flowId, String mediaType) throws Exception;	
 	
 	/**
-	* Gets the details stats of a flow
+	* Gets a running route as XML/JSON by id
 	*
 	* @param  flowId the id of the flow
 	* @param  mediatype (xml or json)
-	* @throws Exception if flow doesn't start
-	* @return returns the Camel Route Configuration in its own format
+	* @throws Exception if configuration can't be retrieved
+	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/
 	public String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;	
+
+	/**
+	* Gets all the running routes as XML/JSON by id
+	*
+	* @param  flowId the id of the flow
+	* @param  mediatype (xml or json)
+	* @throws Exception if configuration can't be retrieved
+	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
+	*/	
+	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception;	
 	
 	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)

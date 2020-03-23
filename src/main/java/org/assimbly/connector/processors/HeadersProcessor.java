@@ -8,7 +8,7 @@ import javax.xml.xpath.XPathFactory;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
-import org.apache.camel.builder.xml.XPathBuilder;
+import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.Language;
 import org.apache.commons.lang3.StringUtils;
 

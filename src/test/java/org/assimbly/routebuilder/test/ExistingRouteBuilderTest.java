@@ -1,17 +1,8 @@
 package org.assimbly.routebuilder.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-
-import org.apache.camel.Exchange;
-import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.assimbly.connector.routes.DefaultRoute;
-import org.junit.Test;
-
-
 
 
 /**

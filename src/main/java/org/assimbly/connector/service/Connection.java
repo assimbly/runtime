@@ -12,9 +12,8 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
-import org.apache.camel.impl.PropertyPlaceholderDelegateRegistry;
-import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -428,7 +427,7 @@ public class Connection {
 			}
 		}
 	}
-	
+
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
 		if(direction.equals("to")) {
@@ -450,10 +449,10 @@ public class Connection {
 	
 		Registry registry = context.getRegistry();
 		
-		if (registry instanceof PropertyPlaceholderDelegateRegistry){
-		  registry =((PropertyPlaceholderDelegateRegistry)registry).getRegistry();
-		 ((SimpleRegistry)registry).put(connectionId, ds); 
-		}		
-	}	
+		//if (registry instanceof PropertyPlaceholderDelegateRegistry){
+		  //registry =((PropertyPlaceholderDelegateRegistry)registry).getRegistry();
+		 //((SimpleRegistry)registry).put(connectionId, ds); 
+		//}		
+	}
 	
 }

@@ -7,12 +7,16 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.assimbly.docconverter.DocConverter;
+import org.springframework.jmx.export.annotation.ManagedOperation;
+import org.springframework.jmx.export.annotation.ManagedResource;
 
 
+@ManagedResource(description = "Type and DataFormat Conversion")
 public class ConvertProcessor implements Processor {
 	
 	private String convertedBody;
-	
+
+	  @ManagedOperation(description="Add two numbers")
 	public void process(Exchange exchange) throws Exception {
 		  
 		Message in = exchange.getIn();
@@ -91,6 +95,7 @@ public class ConvertProcessor implements Processor {
 					
 		}
 		
-	}	
+	}
+	
 	
 }

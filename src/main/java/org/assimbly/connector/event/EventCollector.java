@@ -7,10 +7,11 @@ import java.util.Date;
 import java.util.EventObject;
 import java.util.List;
 
-import org.apache.camel.management.event.ExchangeFailedEvent;
-import org.apache.camel.management.event.ExchangeFailureHandledEvent;
-import org.apache.camel.management.event.RouteStartedEvent;
-import org.apache.camel.management.event.RouteStoppedEvent;
+import org.apache.camel.impl.event.ExchangeFailedEvent;
+import org.apache.camel.impl.event.ExchangeFailureHandledEvent;
+import org.apache.camel.impl.event.RouteStartedEvent;
+import org.apache.camel.impl.event.RouteStoppedEvent;
+import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.connector.connect.util.BaseDirectory;
@@ -98,5 +99,11 @@ public class EventCollector extends EventNotifierSupport {
     protected void doStop() throws Exception {
         // noop
     }
+
+	@Override
+	public void notify(CamelEvent event) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
