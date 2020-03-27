@@ -45,11 +45,13 @@ import com.codahale.metrics.MetricRegistry;
 
 import org.assimbly.connector.connect.util.BaseDirectory;
 import org.assimbly.connector.connect.util.CertificatesUtil;
+import org.assimbly.connector.connect.util.DependencyUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
+import org.json.JSONObject;
 
 
 public class CamelConnector extends BaseConnector {
@@ -104,8 +106,8 @@ public class CamelConnector extends BaseConnector {
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
-        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
+        //((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        //((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
@@ -754,7 +756,7 @@ public class CamelConnector extends BaseConnector {
 	public String getComponentSchema(String componentType, String mediaType) throws Exception {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
- 		
+ 	
 		String schema = catalog.componentJSonSchema(componentType);
 		
 		if(schema==null || schema.isEmpty()) {
@@ -769,7 +771,6 @@ public class CamelConnector extends BaseConnector {
 	@Override
 	public String getComponentParameters(String componentType, String mediaType) throws Exception {
 				
-		//String parameters = managed.explainComponentJson(componentType, true);
 		String parameters = managed.getManagedCamelContext().componentParameterJsonSchema(componentType);
 		
 		if(parameters==null || parameters.isEmpty()) {
@@ -794,6 +795,46 @@ public class CamelConnector extends BaseConnector {
 		}
 
 	}	
+
+	public String resolveDependency(String scheme) {
+		
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		String jsonString = catalog.componentJSonSchema(scheme);
+			
+		JSONObject componentSchema = new JSONObject(jsonString);
+		JSONObject component = componentSchema.getJSONObject("component");
+		
+		String groupId = component.getString("groupId");
+		String artifactId = component.getString("artifactId");
+		String version = component.getString("version");
+		
+		String result = resolveDependency(groupId, artifactId, version);
+
+		//This maybe needed to activate the component
+		//Component component2 = context.getComponent("file");
+		
+		return result;
+			
+	}
+
+	
+	public String resolveDependency(String groupId, String artifactId, String version) {
+		
+		String result;
+		DependencyUtil dependencyUtil = new DependencyUtil();
+		String dependency = groupId + ":" + artifactId + ":" + version;
+		
+		try {
+			dependencyUtil.resolveDependency(groupId, artifactId, version);
+			result = "Dependency " + dependency + "resolved";
+		} catch (Exception e) {
+			result = "Dependency " + dependency + "resolved failed. Error message: "  + e.getMessage();
+		}
+		
+		return result;
+			
+	}
+	
 	
 	public Object getContext() {		
 		return context;		

@@ -66,7 +66,7 @@
 		</dependency>		
 		<dependency>
 			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-core</artifactId>
+			<artifactId>camel-core-engine</artifactId>
 			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
@@ -84,11 +84,6 @@
 		    <artifactId>camel-dataset</artifactId>
 			<version>${camel-version}</version>
 		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-main</artifactId>
-			<version>${camel-version}</version>
-		</dependency>	
 		<dependency>
 		  <groupId>org.apache.camel</groupId>
 		  <artifactId>camel-management</artifactId>
@@ -120,6 +115,11 @@
 			<version>${camel-version}</version>
 		</dependency>		
 		<dependency>
+	      <groupId>org.apache.camel</groupId>
+	      <artifactId>camel-validator</artifactId>
+			<version>${camel-version}</version>
+	    </dependency>
+		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-xpath</artifactId>
 			<version>${camel-version}</version>
@@ -129,12 +129,16 @@
 		    <artifactId>camel-xslt</artifactId>
 			<version>${camel-version}</version>
 		</dependency>		
+	    <dependency>
+	      <groupId>org.apache.camel</groupId>
+	      <artifactId>camel-xml-jaxb</artifactId>
+			<version>${camel-version}</version>
+	    </dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-xslt-saxon</artifactId>
 			<version>${camel-version}</version>
 		</dependency>
-
 		
 		
 		<!-- camel component dependencies in alphabetic order-->
@@ -151,7 +155,7 @@
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-aws-s3</artifactId>
-		    <version>3.1.0</version>
+			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
@@ -173,16 +177,17 @@
 		    <artifactId>camel-elasticsearch-rest</artifactId>
 			<version>${camel-version}</version>
 		</dependency>				
-		<dependency>
+		 <dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-file</artifactId>
 			<version>${camel-version}</version>
+			<!-- <scope>provided</scope> -->			
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-ftp</artifactId>
 			<version>${camel-version}</version>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-http</artifactId>
@@ -317,13 +322,14 @@
 		</dependency>
 
 		<!-- testing as of 190619 -->
+		<!-- 
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-test</artifactId>
 			<version>${camel-version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		 -->
 
 		<!-- activemq dependencies -->
 		<dependency>
@@ -538,7 +544,12 @@
 		    <artifactId>jaxb-impl</artifactId>
 		    <version>2.3.2</version>
 		</dependency>
-		
+
+		<dependency>
+		    <groupId>dev.jeka</groupId>
+		    <artifactId>jeka-core</artifactId>
+		    <version>0.8.20.RELEASE</version>
+		</dependency>		
 
 	</dependencies>
 
@@ -583,8 +594,8 @@
 	  </plugins>
 	</reporting>
 
-	<!-- for building a jar with all dependencies
-	<build>
+	<!-- for building a jar with all dependencies -->
+	<!-- <build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -612,8 +623,8 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-		</plugins>
-	</build>
-	 -->
+		</plugins> 
+	</build>-->
+	
 	<version>1.1.0</version>
 </project>

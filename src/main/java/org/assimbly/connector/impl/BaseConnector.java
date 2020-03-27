@@ -352,6 +352,10 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 
 	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
+
+	public abstract String resolveDependency(String schema);
+
+	public abstract String resolveDependency(String groupId, String artifactId, String version);
 	
 	public abstract void send(Object messageBody, ProducerTemplate template);
 

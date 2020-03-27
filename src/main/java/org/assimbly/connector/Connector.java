@@ -482,6 +482,25 @@ public interface Connector {
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception;	
 	
 	/**
+	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
+	*
+	* @param  name of the scheme
+	* @return Message on succes or failure
+	*/
+	public String resolveDependency(String schema);
+	
+	/**
+	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
+	*
+	* @param  name of the (Maven) GroupID
+	* @param  name of the (Maven) ArtifactID
+	* @param  name of the (Maven) Version
+	* @return Message on succes or failure
+	*/	public String resolveDependency(String groupId, String artifactId, String version);
+	
+	
+	
+	/**
 	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
 	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
 	*
