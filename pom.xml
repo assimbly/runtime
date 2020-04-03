@@ -219,6 +219,11 @@
 			<version>${camel-version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-ldap</artifactId>
+			<version>${camel-version}</version>
+		</dependency>
+		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-log</artifactId>
 			<version>${camel-version}</version>
