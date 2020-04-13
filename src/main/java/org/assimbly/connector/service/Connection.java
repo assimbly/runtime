@@ -13,7 +13,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.Registry;
-import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +96,7 @@ public class Connection {
 		}else {
 			connectionId = properties.get(type + ".service.id");
 		}
-		
+
 		flowId = properties.get("id");
 		
 		if(uri!=null){
@@ -107,7 +106,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "sonicmq", "sjms","sql"};
+				String options[] = {"activemq", "sonicmq", "sjms", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -135,6 +134,7 @@ public class Connection {
 						setupJMSConnection(properties, type);
 						break;
 			        case 3:
+			    		logger.info("case=3");
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -354,13 +354,17 @@ public class Connection {
 				
 
 				if(context.hasComponent(componentName) == null){
+
 					ConnectionFactory connection = new ConnectionFactory (url,username, password);
 					connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
 					connection.setPrefetchCount(10);
 					connection.setReconnectInterval(60);
 					connection.setFaultTolerant(faultTolerant);
 					connection.setFaultTolerantReconnectTimeout(3600);
+					connection.setInitialConnectTimeout(15);
 					
+					logger.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");				
+
 					SjmsComponent jms = new SjmsComponent();
 					jms.setConnectionFactory(connection);
 					jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/"  + flowId + "/" + connectId);
@@ -429,30 +433,33 @@ public class Connection {
 	}
 
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
-		
+
 		if(direction.equals("to")) {
 			connectionId = properties.get("to." + endpointId + ".service.id");
 		}else {
 			connectionId = properties.get(direction + ".service.id");
 		}
 		
+		//Create datasource
 		String driver = properties.get("service."  + serviceId + ".driver");
 		String url = properties.get("service." + serviceId + ".url");		
 		String username = properties.get("service." + serviceId + ".username");
 		String password = properties.get("service." + serviceId + ".password");
+		
+		logger.info("Create datasource for url: " + url + "(driver=" + driver + ")");
 		
 		DriverManagerDataSource ds = new DriverManagerDataSource();
 		ds.setDriverClassName(driver);
 		ds.setUrl(url);
 		ds.setUsername(username);
 		ds.setPassword(password);
-	
+
+		//Add datasource to registry
 		Registry registry = context.getRegistry();
-		
-		//if (registry instanceof PropertyPlaceholderDelegateRegistry){
-		  //registry =((PropertyPlaceholderDelegateRegistry)registry).getRegistry();
-		 //((SimpleRegistry)registry).put(connectionId, ds); 
-		//}		
+		registry.bind(connectionId, ds); 
+
+		logger.info("Datasource has been created");
+				
 	}
 	
 }
