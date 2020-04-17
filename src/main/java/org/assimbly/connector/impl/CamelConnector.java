@@ -826,7 +826,7 @@ public class CamelConnector extends BaseConnector {
 		
 		try {
 			dependencyUtil.resolveDependency(groupId, artifactId, version);
-			result = "Dependency " + dependency + "resolved";
+			result = "Dependency " + dependency + " resolved";
 		} catch (Exception e) {
 			result = "Dependency " + dependency + "resolved failed. Error message: "  + e.getMessage();
 		}
