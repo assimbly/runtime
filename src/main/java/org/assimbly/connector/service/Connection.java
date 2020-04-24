@@ -106,7 +106,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "sonicmq", "sjms", "sql"};
+				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -118,8 +118,10 @@ public class Connection {
 					case 0:
 						setupActiveMQConnection(properties, type);
 						break;
-			        case 1:	
-			        	
+					case 1:
+						setupActiveMQConnection(properties, type);
+						break;	
+			        case 2:	
 						connectId = type + connectionId + new Random().nextInt(1000000);
 			        	setupSonicMQConnection(properties, type, connectId);				            
 			        	uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
@@ -130,11 +132,10 @@ public class Connection {
 							properties.put(type + ".uri", uri);						
 				        }
 			            break;
-					case 2:
+					case 3:
 						setupJMSConnection(properties, type);
 						break;
-			        case 3:
-			    		logger.info("case=3");
+			        case 4:
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -194,7 +195,7 @@ public class Connection {
 	
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
-		System.out.println("set up active");
+		logger.info("Setting up jms client connection for ActiveMQ.");
 		
 		String componentName = "activemq";
 		
@@ -202,10 +203,6 @@ public class Connection {
 		String username = properties.get("service."  + serviceId + ".username");
 		String password = properties.get("service."  + serviceId + ".password");
 
-		System.out.println("url" + url);
-		System.out.println("username" + username);
-		System.out.println("password" + password);
-		
 		String conType = properties.get("service." + serviceId +".conType");
 		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
 		String concurentConsumers = properties.get("service." + serviceId +"service.concurentConsumers");

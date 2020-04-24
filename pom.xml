@@ -86,6 +86,16 @@
 		</dependency>
 		<dependency>
 		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-groovy</artifactId>
+		  <version>${camel-version}</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-jsonpath</artifactId>
+		  <version>${camel-version}</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.camel</groupId>
 		  <artifactId>camel-management</artifactId>
 		  <version>${camel-version}</version>
 		</dependency>

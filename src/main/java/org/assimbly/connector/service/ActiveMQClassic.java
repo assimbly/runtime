@@ -143,7 +143,7 @@ public class ActiveMQClassic implements Broker {
 
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 			
-			URL schemaFile = classloader.getResource("activemq.xsd");
+			URL schemaFile = classloader.getResource("spring-beans.xsd");
 			String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
 			if(!xmlValidation.equals("xml is valid")) {
 				return xmlValidation;
@@ -174,7 +174,8 @@ public class ActiveMQClassic implements Broker {
 					 + ",totalMessages=" + adminView.getTotalMessageCount()
 					 + ",nodeId=" + adminView.getBrokerId()
 					 + ",state=" + broker.isStarted()
-					 + ",version=" + adminView.getBrokerVersion();
+					 + ",version=" + adminView.getBrokerVersion()
+					 + ",type=ActiveMQ Classic";
 			return info;
 		}else {
 			return "no info. broker not running";
