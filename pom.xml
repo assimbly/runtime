@@ -16,7 +16,7 @@
 
 		<camel-version>3.2.0</camel-version>
 		<activemq-classic-version>5.15.12</activemq-classic-version>
-		<activemq-artemis-version>2.11.0</activemq-artemis-version>
+		<activemq-artemis-version>2.12.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
 
 	</properties>
@@ -509,17 +509,17 @@
 		<dependency>
 		    <groupId>mysql</groupId>
 		    <artifactId>mysql-connector-java</artifactId>
-		    <version>8.0.19</version>
+		    <version>8.0.20</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.postgresql</groupId>
 		    <artifactId>postgresql</artifactId>
-		    <version>42.2.11</version>
+		    <version>42.2.12</version>
 		</dependency>
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>8.2.1.jre8</version>
+			<version>8.2.2.jre8</version>
 		</dependency>
 		<!-- check https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides -->
 		<dependency>

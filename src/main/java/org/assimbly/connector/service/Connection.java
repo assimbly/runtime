@@ -116,10 +116,10 @@ public class Connection {
 				
 				switch (i) {
 					case 0:
-						setupActiveMQConnection(properties, type);
+						setupActiveMQConnection(properties, type,"activemq");
 						break;
 					case 1:
-						setupActiveMQConnection(properties, type);
+						setupActiveMQConnection(properties, type,"amazonmq");
 						break;	
 			        case 2:	
 						connectId = type + connectionId + new Random().nextInt(1000000);
@@ -193,11 +193,9 @@ public class Connection {
 	
 	
 	
-	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
+	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction, String componentName) throws Exception{
 		
 		logger.info("Setting up jms client connection for ActiveMQ.");
-		
-		String componentName = "activemq";
 		
 		String url = properties.get("service." + serviceId +".url");
 		String username = properties.get("service."  + serviceId + ".username");

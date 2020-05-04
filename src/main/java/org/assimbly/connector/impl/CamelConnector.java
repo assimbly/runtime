@@ -28,6 +28,7 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFa
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
+import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.RouteController;
@@ -106,8 +107,8 @@ public class CamelConnector extends BaseConnector {
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
-        //((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        //((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
