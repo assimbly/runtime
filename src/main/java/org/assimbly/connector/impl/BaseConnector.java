@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.camel.CamelContext;
+import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.configuration.YAMLFileConfiguration;
 import org.assimbly.connector.connect.util.BaseDirectory;
+import org.assimbly.connector.connect.util.ConnectorUtil;
 import org.assimbly.connector.Connector;
 
 
@@ -124,6 +127,7 @@ public abstract class BaseConnector implements Connector {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
 
+		  	ConnectorUtil.printTreemap(flowProperties);
 	        setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
@@ -289,7 +293,6 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
 	
-	public abstract Object getContext() throws Exception;
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;	
 	
@@ -327,6 +330,8 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract String resumeFlow(String id) throws Exception;
 
+	public abstract boolean isFlowStarted(String id) throws Exception;
+	
 	public abstract String getFlowStatus(String id) throws Exception;
 
 	public abstract String getFlowUptime(String id) throws Exception;
@@ -356,6 +361,12 @@ public abstract class BaseConnector implements Connector {
 	public abstract String resolveDependency(String schema);
 
 	public abstract String resolveDependency(String groupId, String artifactId, String version);
+
+	public abstract CamelContext getContext() throws Exception;
+	
+	public abstract ProducerTemplate getProducerTemplate() throws Exception;
+	
+	public abstract ConsumerTemplate getConsumerTemplate() throws Exception;
 	
 	public abstract void send(Object messageBody, ProducerTemplate template);
 

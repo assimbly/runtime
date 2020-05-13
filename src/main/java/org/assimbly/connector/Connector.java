@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.camel.CamelContext;
+import org.apache.camel.ConsumerTemplate;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 
 /**
@@ -359,7 +362,16 @@ public interface Connector {
 	* @throws Exception if flow doesn't start
 	*/
 	public String pauseFlow(String flowId) throws Exception;
-	
+
+	/**
+	* Checks if a flow is started
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow status cannot retrieved
+	* @return returns true if flow is started.
+	*/
+	public boolean isFlowStarted(String flowId) throws Exception;
+		
 	/**
 	* Gets the status of a flow 
 	*
@@ -501,12 +513,28 @@ public interface Connector {
 	
 	
 	/**
-	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
-	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
+	* Get the context of connector (can be used to access extended methods by the implementation (Camel)
+	* Note: Calling this you're on your own :)
 	*
 	* @return returns context as object
 	* @throws Exception if context can't be found
 	*/
-	public Object getContext() throws Exception;
-	
+	public CamelContext getContext() throws Exception;
+
+	/**
+	* Get a producertemplate for CamelConnector
+	*
+	* @return returns ProducerTemplate
+	* @throws Exception if context can't be found
+	*/
+	public ProducerTemplate getProducerTemplate() throws Exception;
+
+	/**
+	* Get a consumer template for CamelConnector
+	*
+	* @return returns ConsumerTemplate
+	* @throws Exception if context can't be found
+	*/
+	public ConsumerTemplate getConsumerTemplate() throws Exception;
+
 }

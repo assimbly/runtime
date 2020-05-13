@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
+import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.ManagedCamelContext;
@@ -28,7 +29,6 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFa
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
-import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.RouteController;
@@ -58,7 +58,7 @@ import org.json.JSONObject;
 public class CamelConnector extends BaseConnector {
 
 	private CamelContext context;
-	private ProducerTemplate template;
+
 	private boolean started = false;
 	private int stopTimeout = 30;
 	private ServiceStatus status;
@@ -344,8 +344,11 @@ public class CamelConnector extends BaseConnector {
 			}
 			
 		}catch (Exception e) {
-			stopFlow(id);
+			if(!context.isStarted()) {
+				logger.info("Unable to start flow. Connector isn't running");
+			}	
 			e.printStackTrace();
+			stopFlow(id);			
 			return e.getMessage();
 		}
 	}
@@ -479,6 +482,17 @@ public class CamelConnector extends BaseConnector {
 
 		
 	}	
+
+	public boolean isFlowStarted(String id) {
+		
+		if(hasFlow(id)) {
+			ServiceStatus status = routeController.getRouteStatus(id);
+			return status.isStarted();			
+		}else {
+			return false;
+		}
+		
+	}
 	
 	public String getFlowStatus(String id) {
 		
@@ -837,16 +851,23 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public Object getContext() {		
+	public  CamelContext getContext() {		
 		return context;		
-	}	
+	}
+	
+	public ProducerTemplate getProducerTemplate() {		
+		return context.createProducerTemplate();		
+	}
+
+	public ConsumerTemplate getConsumerTemplate() {		
+		return context.createConsumerTemplate();		
+	}
 	
 	public void send(Object messageBody, ProducerTemplate template) {
 		template.sendBody(messageBody);
 	}
 
-	public void sendWithHeaders(Object messageBody,
-			TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
+	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
 	}
 
@@ -971,5 +992,6 @@ public class CamelConnector extends BaseConnector {
                 
         return sslContextParameters;
     }
+	
     
 }
