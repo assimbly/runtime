@@ -10,6 +10,7 @@ import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
+import org.apache.camel.component.amqp.AMQPComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.Registry;
@@ -33,7 +34,7 @@ public class Connection {
 	private Object endpointId;
 	private String serviceId;
 	private ActiveMQConnectionFactory activeMQConnectionFactory;
-	private SjmsComponent component;
+	private SjmsComponent sjmsComponent;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 	
@@ -106,7 +107,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "sql"};
+				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "amqp", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -133,9 +134,12 @@ public class Connection {
 				        }
 			            break;
 					case 3:
-						setupJMSConnection(properties, type);
+						setupSJMSConnection(properties, type);
 						break;
-			        case 4:
+					case 4:
+						setupAMQPConnection(properties);
+						break;
+					case 5:
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -280,7 +284,7 @@ public class Connection {
 	}
 	
 
-	private void setupJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
+	private void setupSJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
 		if(direction.equals("to")) {
 			direction = direction + "." + endpointId;
@@ -313,16 +317,46 @@ public class Connection {
 			}
 			
 			if(context.hasComponent(componentName)== null){
-				component = new SjmsComponent();
-				component.setConnectionFactory(cf);
-				context.addComponent(componentName, component);
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
 			}else {
 				context.removeComponent(componentName);
-				component = new SjmsComponent();
-				component.setConnectionFactory(cf);
-				context.addComponent(componentName, component);
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
 			}
 				
+		}
+		
+	}
+	private void setupAMQPConnection(TreeMap<String, String> properties) throws Exception{
+				
+		String componentName = "amqp";
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
+		
+		logger.info("Setting AMQP client connection.");
+		if(url!=null){
+
+			AMQPComponent amqpComponent = null;
+
+			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
+				amqpComponent = AMQPComponent.amqpComponent(url);
+			}else {
+				amqpComponent = AMQPComponent.amqpComponent(url, username, password);
+			}
+			
+			if(context.hasComponent(componentName)== null){
+				context.addComponent(componentName, amqpComponent);
+			}else {
+				context.removeComponent(componentName);					
+				context.addComponent(componentName, amqpComponent);
+			}
+
+		}else {
+			throw new Exception("url parameter is invalid or missing.\n");
 		}
 		
 	}
@@ -346,7 +380,7 @@ public class Connection {
 				}else {
 					faultTolerant = true;
 				}
-				
+			
 
 				if(context.hasComponent(componentName) == null){
 

@@ -106,13 +106,18 @@ public class ActiveMQClassic implements Broker {
 	}
 	
 	public String status() throws Exception {
+		System.out.println("1------------------------------------------------");
 		if(broker==null) {
 			broker = new BrokerService();
+			System.out.println("2");
 		}
 		
-		if(broker.isStarted())
+		if(broker.isStarted()){
+			System.out.println("3");
 			return "started";
+		}	
 		else {
+			System.out.println("4");
 			return "stopped";
 		}
 	}
@@ -148,7 +153,6 @@ public class ActiveMQClassic implements Broker {
 			if(!xmlValidation.equals("xml is valid")) {
 				return xmlValidation;
 			} 
-
 			
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {

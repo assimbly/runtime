@@ -20,7 +20,7 @@ public interface Broker {
 	* A default configuration is return when no configuration is found.
 	*
     * @return broker configuration as XML 
-	* @throws Exception if configuration can't be retrieved
+	* @throws IOException if configuration can't be retrieved
 	*/
 	public String getFileConfiguration() throws IOException;;
 	
@@ -29,8 +29,8 @@ public interface Broker {
 	* A default configuration is return when brokerConfiguration param is an empty string.
 	*
 	* @param  brokerConfiguration (XML)	
-	 * @return 
-	* @throws Exception if configuration can't be set
+	* @return String (confirm when configuration is set) 
+	* @throws IOException if configuration can't be set
 	*/
 	public String setFileConfiguration(String brokerConfiguration) throws IOException;
 	
@@ -39,7 +39,6 @@ public interface Broker {
 	* sets the connector base directory. In this directory everything is stored (alert, events) 
 	*
 	* @param  baseDirectory (path) 
-	* @return list of flow configurations (String of mediatype)
 	* @throws Exception if base directory can't be set is not available
 	*/
 	public void setBaseDirectory(String baseDirectory) throws Exception;
