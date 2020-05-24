@@ -6,8 +6,8 @@
 
       <persistence-enabled>false</persistence-enabled>
 
-	  <cluster-user>myUsername</cluster-user>
-	  <cluster-password>myPassword</cluster-password>
+	  <cluster-user>admin</cluster-user>
+	  <cluster-password>admin</cluster-password>
 
       <acceptors>
       

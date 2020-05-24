@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -106,18 +105,15 @@ public class ActiveMQClassic implements Broker {
 	}
 	
 	public String status() throws Exception {
-		System.out.println("1------------------------------------------------");
+
 		if(broker==null) {
 			broker = new BrokerService();
-			System.out.println("2");
 		}
 		
 		if(broker.isStarted()){
-			System.out.println("3");
 			return "started";
 		}	
 		else {
-			System.out.println("4");
 			return "stopped";
 		}
 	}
