@@ -10,10 +10,10 @@ import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
+import org.apache.camel.component.amqp.AMQPComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.Registry;
-import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class Connection {
 	private Object endpointId;
 	private String serviceId;
 	private ActiveMQConnectionFactory activeMQConnectionFactory;
-	private SjmsComponent component;
+	private SjmsComponent sjmsComponent;
 	
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 	
@@ -97,7 +97,7 @@ public class Connection {
 		}else {
 			connectionId = properties.get(type + ".service.id");
 		}
-		
+
 		flowId = properties.get("id");
 		
 		if(uri!=null){
@@ -107,7 +107,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "sonicmq", "sjms","sql"};
+				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "amqp", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -117,10 +117,12 @@ public class Connection {
 				
 				switch (i) {
 					case 0:
-						setupActiveMQConnection(properties, type);
+						setupActiveMQConnection(properties, type,"activemq");
 						break;
-			        case 1:	
-			        	
+					case 1:
+						setupActiveMQConnection(properties, type,"amazonmq");
+						break;	
+			        case 2:	
 						connectId = type + connectionId + new Random().nextInt(1000000);
 			        	setupSonicMQConnection(properties, type, connectId);				            
 			        	uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
@@ -131,10 +133,13 @@ public class Connection {
 							properties.put(type + ".uri", uri);						
 				        }
 			            break;
-					case 2:
-						setupJMSConnection(properties, type);
+					case 3:
+						setupSJMSConnection(properties, type);
 						break;
-			        case 3:
+					case 4:
+						setupAMQPConnection(properties);
+						break;
+					case 5:
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -192,20 +197,14 @@ public class Connection {
 	
 	
 	
-	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction) throws Exception{
+	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction, String componentName) throws Exception{
 		
-		System.out.println("set up active");
-		
-		String componentName = "activemq";
+		logger.info("Setting up jms client connection for ActiveMQ.");
 		
 		String url = properties.get("service." + serviceId +".url");
 		String username = properties.get("service."  + serviceId + ".username");
 		String password = properties.get("service."  + serviceId + ".password");
 
-		System.out.println("url" + url);
-		System.out.println("username" + username);
-		System.out.println("password" + password);
-		
 		String conType = properties.get("service." + serviceId +".conType");
 		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
 		String concurentConsumers = properties.get("service." + serviceId +"service.concurentConsumers");
@@ -285,7 +284,7 @@ public class Connection {
 	}
 	
 
-	private void setupJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
+	private void setupSJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
 		
 		if(direction.equals("to")) {
 			direction = direction + "." + endpointId;
@@ -318,16 +317,46 @@ public class Connection {
 			}
 			
 			if(context.hasComponent(componentName)== null){
-				component = new SjmsComponent();
-				component.setConnectionFactory(cf);
-				context.addComponent(componentName, component);
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
 			}else {
 				context.removeComponent(componentName);
-				component = new SjmsComponent();
-				component.setConnectionFactory(cf);
-				context.addComponent(componentName, component);
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
 			}
 				
+		}
+		
+	}
+	private void setupAMQPConnection(TreeMap<String, String> properties) throws Exception{
+				
+		String componentName = "amqp";
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
+		
+		logger.info("Setting AMQP client connection.");
+		if(url!=null){
+
+			AMQPComponent amqpComponent = null;
+
+			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
+				amqpComponent = AMQPComponent.amqpComponent(url);
+			}else {
+				amqpComponent = AMQPComponent.amqpComponent(url, username, password);
+			}
+			
+			if(context.hasComponent(componentName)== null){
+				context.addComponent(componentName, amqpComponent);
+			}else {
+				context.removeComponent(componentName);					
+				context.addComponent(componentName, amqpComponent);
+			}
+
+		}else {
+			throw new Exception("url parameter is invalid or missing.\n");
 		}
 		
 	}
@@ -351,16 +380,20 @@ public class Connection {
 				}else {
 					faultTolerant = true;
 				}
-				
+			
 
 				if(context.hasComponent(componentName) == null){
+
 					ConnectionFactory connection = new ConnectionFactory (url,username, password);
 					connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
 					connection.setPrefetchCount(10);
 					connection.setReconnectInterval(60);
 					connection.setFaultTolerant(faultTolerant);
 					connection.setFaultTolerantReconnectTimeout(3600);
+					connection.setInitialConnectTimeout(15);
 					
+					logger.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");				
+
 					SjmsComponent jms = new SjmsComponent();
 					jms.setConnectionFactory(connection);
 					jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/"  + flowId + "/" + connectId);
@@ -429,30 +462,33 @@ public class Connection {
 	}
 
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
-		
+
 		if(direction.equals("to")) {
 			connectionId = properties.get("to." + endpointId + ".service.id");
 		}else {
 			connectionId = properties.get(direction + ".service.id");
 		}
 		
+		//Create datasource
 		String driver = properties.get("service."  + serviceId + ".driver");
 		String url = properties.get("service." + serviceId + ".url");		
 		String username = properties.get("service." + serviceId + ".username");
 		String password = properties.get("service." + serviceId + ".password");
+		
+		logger.info("Create datasource for url: " + url + "(driver=" + driver + ")");
 		
 		DriverManagerDataSource ds = new DriverManagerDataSource();
 		ds.setDriverClassName(driver);
 		ds.setUrl(url);
 		ds.setUsername(username);
 		ds.setPassword(password);
-	
+
+		//Add datasource to registry
 		Registry registry = context.getRegistry();
-		
-		//if (registry instanceof PropertyPlaceholderDelegateRegistry){
-		  //registry =((PropertyPlaceholderDelegateRegistry)registry).getRegistry();
-		 //((SimpleRegistry)registry).put(connectionId, ds); 
-		//}		
+		registry.bind(connectionId, ds); 
+
+		logger.info("Datasource has been created");
+				
 	}
 	
 }

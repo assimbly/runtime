@@ -16,7 +16,7 @@ public class ConvertProcessor implements Processor {
 	
 	private String convertedBody;
 
-	  @ManagedOperation(description="Add two numbers")
+	@ManagedOperation(description="Conversions")
 	public void process(Exchange exchange) throws Exception {
 		  
 		Message in = exchange.getIn();
@@ -95,7 +95,6 @@ public class ConvertProcessor implements Processor {
 					
 		}
 		
-	}
-	
+	}	
 	
 }

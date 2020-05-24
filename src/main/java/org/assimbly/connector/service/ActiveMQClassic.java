@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -106,12 +105,14 @@ public class ActiveMQClassic implements Broker {
 	}
 	
 	public String status() throws Exception {
+
 		if(broker==null) {
 			broker = new BrokerService();
 		}
 		
-		if(broker.isStarted())
+		if(broker.isStarted()){
 			return "started";
+		}	
 		else {
 			return "stopped";
 		}
@@ -143,12 +144,11 @@ public class ActiveMQClassic implements Broker {
 
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 			
-			URL schemaFile = classloader.getResource("activemq.xsd");
+			URL schemaFile = classloader.getResource("spring-beans.xsd");
 			String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
 			if(!xmlValidation.equals("xml is valid")) {
 				return xmlValidation;
 			} 
-
 			
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
@@ -174,7 +174,8 @@ public class ActiveMQClassic implements Broker {
 					 + ",totalMessages=" + adminView.getTotalMessageCount()
 					 + ",nodeId=" + adminView.getBrokerId()
 					 + ",state=" + broker.isStarted()
-					 + ",version=" + adminView.getBrokerVersion();
+					 + ",version=" + adminView.getBrokerVersion()
+					 + ",type=ActiveMQ Classic";
 			return info;
 		}else {
 			return "no info. broker not running";

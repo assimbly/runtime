@@ -132,7 +132,8 @@ public class ActiveMQArtemis implements Broker {
 					 + ",totalMessages=" + activeBroker.getTotalMessageCount()
 					 + ",nodeId=" + activeBroker.getNodeID()
 					 + ",state=" + activeBroker.getState()
-					 + ",version=" + activeBroker.getVersion().getFullVersion();
+					 + ",version=" + activeBroker.getVersion().getFullVersion()
+					 + ",type=ActiveMQ Artemis";
 			return info;
 		}else {
 			return "no info. broker not running";

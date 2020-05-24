@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
+import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Route;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.ManagedCamelContext;
@@ -57,7 +58,7 @@ import org.json.JSONObject;
 public class CamelConnector extends BaseConnector {
 
 	private CamelContext context;
-	private ProducerTemplate template;
+
 	private boolean started = false;
 	private int stopTimeout = 30;
 	private ServiceStatus status;
@@ -106,8 +107,8 @@ public class CamelConnector extends BaseConnector {
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
-        //((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        //((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
@@ -343,8 +344,11 @@ public class CamelConnector extends BaseConnector {
 			}
 			
 		}catch (Exception e) {
-			stopFlow(id);
+			if(!context.isStarted()) {
+				logger.info("Unable to start flow. Connector isn't running");
+			}	
 			e.printStackTrace();
+			stopFlow(id);			
 			return e.getMessage();
 		}
 	}
@@ -478,6 +482,17 @@ public class CamelConnector extends BaseConnector {
 
 		
 	}	
+
+	public boolean isFlowStarted(String id) {
+		
+		if(hasFlow(id)) {
+			ServiceStatus status = routeController.getRouteStatus(id);
+			return status.isStarted();			
+		}else {
+			return false;
+		}
+		
+	}
 	
 	public String getFlowStatus(String id) {
 		
@@ -826,7 +841,7 @@ public class CamelConnector extends BaseConnector {
 		
 		try {
 			dependencyUtil.resolveDependency(groupId, artifactId, version);
-			result = "Dependency " + dependency + "resolved";
+			result = "Dependency " + dependency + " resolved";
 		} catch (Exception e) {
 			result = "Dependency " + dependency + "resolved failed. Error message: "  + e.getMessage();
 		}
@@ -836,16 +851,23 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public Object getContext() {		
+	public  CamelContext getContext() {		
 		return context;		
-	}	
+	}
+	
+	public ProducerTemplate getProducerTemplate() {		
+		return context.createProducerTemplate();		
+	}
+
+	public ConsumerTemplate getConsumerTemplate() {		
+		return context.createConsumerTemplate();		
+	}
 	
 	public void send(Object messageBody, ProducerTemplate template) {
 		template.sendBody(messageBody);
 	}
 
-	public void sendWithHeaders(Object messageBody,
-			TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
+	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
 	}
 
@@ -970,5 +992,6 @@ public class CamelConnector extends BaseConnector {
                 
         return sslContextParameters;
     }
+	
     
 }

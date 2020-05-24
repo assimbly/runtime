@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.camel.CamelContext;
+import org.apache.camel.ConsumerTemplate;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 
 /**
@@ -25,7 +28,7 @@ public interface Connector {
 
 	//configure connector
 	/**
-	* Sets the connector configuration from a list of flow configurations (TreeMaps<Key,Value>). 
+	* Sets the connector configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;). 
 	* The configuration cleared after a connector is reinitialized.
 	*
 	* @param  configuration: list of flow configurations (Treemaps)
@@ -37,10 +40,9 @@ public interface Connector {
 	* Sets the connector configuration from a string of a specific format (XML,JSON,YAML). 
 	* The configuration cleared after a connector is reinitialized.
 	*
-	* @param  connctorId
-	* @param  mediatype (XML,JSON,YAML)
+	* @param  connectorId ID of the connector 
+	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)	
-	 * @return 
 	* @throws Exception if configuration can't be set
 	*/
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
@@ -48,7 +50,7 @@ public interface Connector {
 	/**
 	* gets the connector configuration currently set (in use). 
 	*
-	* @return list of flow configurations (Treemap<key,value>)
+	* @return list of flow configurations (Treemap&lt;key,value&gt;)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
 	public List<TreeMap<String,String>> getConfiguration() throws Exception;
@@ -56,9 +58,9 @@ public interface Connector {
 	/**
 	* gets the connector configuration currently set (in use). 
 	*
-	* @param  connctorId
-	* @param  mediatype (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediatype)
+	* @param  connectorId ID of the connector
+	* @param  mediaType (XML,JSON,YAML)
+	* @return list of flow configurations (String of mediaType)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
 	public String getConfiguration(String connectorId, String mediaType) throws Exception;
@@ -77,10 +79,9 @@ public interface Connector {
 	* Sets the flow configuration from a string for a specific format (XML,JSON,YAML). This list
 	* is cleared after a connector is reinitialized.
 	*
-	* @param  flowID
-	* @param  mediatype (XML,JSON,YAML)
+	* @param  flowId Id of the flow (String)
+	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)
-	 * @return 
 	* @throws Exception if configuration can't be set
 	*/
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception;
@@ -97,19 +98,17 @@ public interface Connector {
 	/**
 	* gets the connector configuration currently set (in use). 
 	*
-	* @param  flowID
-	* @param  mediatype (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediatype)
+	* @param  flowId ID of the flow (String)
+	* @param  mediaType (XML,JSON,YAML)
+	* @return list of flow configurations (String of mediaType)
 	* @throws Exception if configuration can't be retrieved or is not available
 	*/
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
-
 	
 	/**
 	* sets the connector base directory. In this directory everything is stored (alert, events) 
 	*
 	* @param  baseDirectory (path) 
-	* @return list of flow configurations (String of mediatype)
 	* @throws Exception if base directory can't be set is not available
 	*/
 	public void setBaseDirectory(String baseDirectory) throws Exception;
@@ -138,12 +137,11 @@ public interface Connector {
 	public boolean isStarted();
 
 	/**
-	* Adds event notifier to notified about events  
-	* 
+	* Adds event notifier to notified about events
+	* @param  eventNotifier eventNotifier object
+	* @throws Exception if eventNotifier
 	*/
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception;
-
-	
 	
 	//manage flow
 	/**
@@ -165,8 +163,8 @@ public interface Connector {
 	/**
 	* Gets the stats of a connector
 	*
-	* @param  type of stats ("default" or "history")
-	* @param  mediatype (xml or json)
+	* @param  statsType type of stats ("default" or "history")
+	* @param  mediaType (xml or json)
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
@@ -184,8 +182,8 @@ public interface Connector {
 	/**
 	* Gets the documentation of a component
 	*
-	* @param  type of component (for example 'file')
- 	* @param  type of dataform (xml or json)
+	* @param  componentType type of component (for example 'file')
+ 	* @param  mediaType type of dataform (xml or json)
 	* @throws Exception if documenation couldn't get found
 	* @return returns documentation
 	*/
@@ -194,8 +192,8 @@ public interface Connector {
 	/**
 	* Gets the documentation/schema of a component
 	*
-	* @param  type of component (for example 'file')
- 	* @param  type of dataform (xml or json)
+	* @param  componentType type of component (for example 'file')
+ 	* @param  mediaType type of dataform (xml or json)
 	* @throws Exception if documentation couldn't get found
 	* @return returns documenation
 	*/
@@ -204,8 +202,8 @@ public interface Connector {
 	/**
 	* Gets the parameters of a component
 	*
-	* @param  type of component (for example 'file')
- 	* @param  type of dataform (xml or json)
+	* @param  componentType type of component (for example 'file')
+ 	* @param  mediaType type of dataform (xml or json)
 	* @throws Exception if documentation couldn't get found
 	* @return returns list of options
 	*/
@@ -224,6 +222,8 @@ public interface Connector {
 	*  
 	* Download the chain of certificates for the specified url
 	*
+	* @param url an https url
+ 	* @return returns a map with certificates for this url
 	* @throws Exception if certificates cannot be downloaded
 	*/
 	public Certificate[] getCertificates(String url) throws Exception;	
@@ -233,6 +233,8 @@ public interface Connector {
 	*  
 	* Download the chain of certificates for the specified url
 	*
+	* @param certificateName name of the certificate
+	* @return returns the Certificate object
 	* @throws Exception if certificates cannot be downloaded
 	*/
 	public Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
@@ -243,6 +245,7 @@ public interface Connector {
 	*  
 	* Download and import certificates to truststore (jks) used by the connector
 	*
+	* @param url an https url
 	* @throws Exception if certificates cannot be imported
 	*/
 	public void setCertificatesInTruststore(String url) throws Exception;	
@@ -253,6 +256,9 @@ public interface Connector {
 	*  
 	* Import certificate into truststore (jks) used by the connector
 	*
+	* @param certificateName name of the certificate
+	* @param certificate Java certificate object
+ 	* @return returns a confirmation message
 	* @throws Exception if certificates cannot be imported
 	*/
 	public String importCertificateInTruststore(String certificateName, Certificate certificate) throws Exception;
@@ -263,31 +269,33 @@ public interface Connector {
 	*  
 	* Import certificates to truststore (jks) used by the connector
 	*
+	* @param certificates map with one or more Java certificate object
+	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
 	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
 	
 	/**
 	* Delete certificate from key/truststore
-	*  
+	* 
+	* @param certificateName name of the certificate
 	* @throws Exception if certificates cannot be deleted
 	*/
 	public void deleteCertificatesInTruststore(String certificateName) throws Exception;	
-
-	
 	
 	/**
 	* removes flow from connector
 	*
 	* @param  flowId the id of a flow
 	* @return returns true if removed.
-	 * @throws Exception 
+	 * @throws Exception if flow cannot be removed
 	*/
 	public boolean removeFlow(String flowId) throws Exception;
 	
 	/**
 	* Starts all configured flows
 	*
+	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't start
 	*/	
 	public String startAllFlows() throws Exception;
@@ -295,6 +303,7 @@ public interface Connector {
 	/**
 	* Restarts all configured flows
 	*
+	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't stop
 	*/	
 	public String restartAllFlows() throws Exception;
@@ -302,6 +311,7 @@ public interface Connector {
 	/**
 	* Starts all configured flows
 	*
+	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't start
 	*/	
 	public String pauseAllFlows() throws Exception;
@@ -309,13 +319,15 @@ public interface Connector {
 	/**
 	* Resume all configured flows
 	*
+	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't resume
 	*/	
 	public String resumeAllFlows() throws Exception;
 
 	/**
 	* Stops all configured flows
-	*
+	* 
+	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't stop
 	*/	
 	public String stopAllFlows() throws Exception;
@@ -324,6 +336,7 @@ public interface Connector {
 	* Starts a flow
 	*
 	* @param  flowId the id of the flow
+	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
 	public String startFlow(String flowId) throws Exception;
@@ -332,6 +345,7 @@ public interface Connector {
 	* Restarts a flow
 	*
 	* @param  flowId the id of the flow
+	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
 	public String restartFlow(String flowId) throws Exception;
@@ -340,6 +354,7 @@ public interface Connector {
 	* Stops a flow
 	*
 	* @param  flowId the id of the flow
+	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
 	public String stopFlow(String flowId) throws Exception;
@@ -348,6 +363,7 @@ public interface Connector {
 	* Resumes a flow if paused
 	*
 	* @param  flowId the id of the flow
+	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
 	public String resumeFlow(String flowId) throws Exception;
@@ -356,10 +372,20 @@ public interface Connector {
 	* Pauses a flow if started
 	*
 	* @param  flowId the id of the flow
+	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
 	public String pauseFlow(String flowId) throws Exception;
-	
+
+	/**
+	* Checks if a flow is started
+	*
+	* @param  flowId the id of the flow
+	* @throws Exception if flow status cannot retrieved
+	* @return returns true if flow is started.
+	*/
+	public boolean isFlowStarted(String flowId) throws Exception;
+		
 	/**
 	* Gets the status of a flow 
 	*
@@ -369,7 +395,7 @@ public interface Connector {
 	*/
 	public String getFlowStatus(String flowId) throws Exception;
 
-	/**
+	/*
 	* Gets the status of a flow 
 	*
 	* @param  flowId the id of the flow
@@ -422,7 +448,7 @@ public interface Connector {
 	* @throws Exception if log cannot be retrieved
 	* @return failure log events (comma separated)
 	*/	
-	public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception;	
+	public String getFlowAlertsLog(String flowId, Integer numberOfEntries) throws Exception;	
 
 	/**
 	* Gets number of entries in (todays) failed log of flow
@@ -431,7 +457,7 @@ public interface Connector {
 	* @throws Exception if log cannot be retrieved
 	* @return number of flow failures
 	*/	
-	public String getFlowAlertsCount(String id) throws Exception;	
+	public String getFlowAlertsCount(String flowId) throws Exception;	
 
 	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows
@@ -449,13 +475,13 @@ public interface Connector {
 	* @throws Exception if log cannot be retrieved
 	* @return flow log events (comma separated)
 	*/		
-	public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
+	public String getFlowEventsLog(String flowId, Integer numberOfEntries) throws Exception;	
 	
 	/**
 	* Gets the details stats of a flow
 	*
 	* @param  flowId the id of the flow
-	* @param  mediatype (xml or json)
+	* @param  mediaType (xml or json)
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
@@ -465,7 +491,7 @@ public interface Connector {
 	* Gets a running route as XML/JSON by id
 	*
 	* @param  flowId the id of the flow
-	* @param  mediatype (xml or json)
+	* @param  mediaType (xml or json)
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/
@@ -474,8 +500,7 @@ public interface Connector {
 	/**
 	* Gets all the running routes as XML/JSON by id
 	*
-	* @param  flowId the id of the flow
-	* @param  mediatype (xml or json)
+	* @param  mediaType (xml or json)
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/	
@@ -484,29 +509,45 @@ public interface Connector {
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
 	*
-	* @param  name of the scheme
+	* @param  scheme name of the scheme
 	* @return Message on succes or failure
 	*/
-	public String resolveDependency(String schema);
+	public String resolveDependency(String scheme);
 	
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
 	*
-	* @param  name of the (Maven) GroupID
-	* @param  name of the (Maven) ArtifactID
-	* @param  name of the (Maven) Version
+	* @param groupId  name of the (Maven) GroupID
+	* @param artifactId name of the (Maven) ArtifactID
+	* @param version (Maven) version number
 	* @return Message on succes or failure
 	*/	public String resolveDependency(String groupId, String artifactId, String version);
 	
 	
 	
 	/**
-	* Get the context of connector (can be used to access extended methods by the implementation (Camel, Spring)
-	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
+	* Get the context of connector (can be used to access extended methods by the implementation (Camel)
+	* Note: Calling this you're on your own :)
 	*
 	* @return returns context as object
 	* @throws Exception if context can't be found
 	*/
-	public Object getContext() throws Exception;
-	
+	public CamelContext getContext() throws Exception;
+
+	/**
+	* Get a producertemplate for CamelConnector
+	*
+	* @return returns ProducerTemplate
+	* @throws Exception if context can't be found
+	*/
+	public ProducerTemplate getProducerTemplate() throws Exception;
+
+	/**
+	* Get a consumer template for CamelConnector
+	*
+	* @return returns ConsumerTemplate
+	* @throws Exception if context can't be found
+	*/
+	public ConsumerTemplate getConsumerTemplate() throws Exception;
+
 }

@@ -1,7 +1,1 @@
 org.assimbly.connector
-org.assimbly.connector.configuration
-org.assimbly.connector.connect.util
-org.assimbly.connector.impl
-org.assimbly.connector.routes
-org.assimbly.connector.service
-org.assimbly.connector.test
