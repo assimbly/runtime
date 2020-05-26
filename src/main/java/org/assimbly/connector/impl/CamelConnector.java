@@ -167,11 +167,15 @@ public class CamelConnector extends BaseConnector {
 			if (key.endsWith("service.id")){
 				props = new Connection(context, props, key).start();
 			}
-			if (key.endsWith("from.uri")){
+			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
 				logger.info(resolveDependency(scheme));
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+				logger.info(resolveDependency(scheme));
+			}
+			if (key.startsWith("error") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
 				logger.info(resolveDependency(scheme));
 			}
