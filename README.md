@@ -1,14 +1,13 @@
 # Connector
 
-This API is meant to configure and manage (point-to-points) flows. For example by sending data from a database to
+This API is meant to configure and manage Assimbly flows. For example by sending data from a database to
 a message broker.
 
    * Connector: A collection of flows
    * Flow: connects endpoints
    * Endpoint: A source or destination
    
-Currently the API is build on top of [Apache Camel](https://github.com/apache/camel). Supported
-Camel components are File, Stream, JDBC, SJMS, SFTP, HTTP4, ACTIVEMQ and SONICMQ.
+Currently the API is build on top of [Apache Camel](https://github.com/apache/camel).
 
 ## Configuration
 
@@ -67,22 +66,47 @@ conf.xml
 ```xml
 
 <?xml version="1.0" encoding="UTF-8"?>
-<connector>
-	<id>example</id>
-	<flows>
-		
-		<!-- example file to file --> 		
-		<flow>
-			<id>filetofile</id>
-			<from>
-				<uri>file://C:/Test1</uri>
-			</from>
-			<to>
-				<uri>file://C:/Test2</uri>
-			</to>
-		</flow>
-	</flows>		
-</connector>
+<connectors>
+   <connector>
+      <id>1</id>
+      <name>default</name>
+      <type>ADAPTER</type>
+      <environmentName>Dev1</environmentName>
+      <stage>DEVELOPMENT</stage>
+      <defaultFromEndpointType>FILE</defaultFromEndpointType>
+      <defaultToEndpointType>FILE</defaultToEndpointType>
+      <defaultErrorEndpointType>FILE</defaultErrorEndpointType>
+      <offloading/>
+      <flows>
+         <flow>
+            <id>2</id>
+            <name>FILE2FILE</name>
+            <autostart>false</autostart>
+            <offloading>false</offloading>
+            <maximumRedeliveries>0</maximumRedeliveries>
+            <redeliveryDelay>3000</redeliveryDelay>
+            <logLevel>OFF</logLevel>
+            <from>
+               <id>2</id>
+               <uri>file://C:\test1</uri>
+            </from>
+            <to>
+               <id>2</id>
+               <uri>file://C:\test2</uri>
+               <options>
+                  <directoryMustExist>true</directoryMustExist>
+               </options>
+            </to>
+            <error>
+               <id>2</id>
+               <uri>file://C:\test3</uri>
+            </error>
+         </flow>
+      <services/>
+      <headers/>
+      <environmentVariables/>
+   </connector>
+</connectors>
 
 ```
 
