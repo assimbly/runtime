@@ -162,10 +162,23 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
-		//create connections if needed
+		String scheme = "";
+		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 			if (key.endsWith("service.id")){
 				props = new Connection(context, props, key).start();
+			}
+			if (key.startsWith("from") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+				logger.info(resolveDependency(scheme));
+			}
+			if (key.startsWith("to") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+				logger.info(resolveDependency(scheme));
+			}
+			if (key.startsWith("error") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+				logger.info(resolveDependency(scheme));
 			}
 		}
 		
@@ -308,7 +321,7 @@ public class CamelConnector extends BaseConnector {
 		boolean flowAdded = false;
 		
 		try {
-
+			
 			List<TreeMap<String, String>> allProps = super.getConfiguration();
 			
 			for(int i = 0; i < allProps.size(); i++){
