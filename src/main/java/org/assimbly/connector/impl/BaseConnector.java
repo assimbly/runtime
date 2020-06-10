@@ -272,6 +272,10 @@ public abstract class BaseConnector implements Connector {
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
 	}
+
+	public String testConnection(String host, int port, int timeOut) {
+		return ConnectorUtil.testConnection(host, port, timeOut);
+	}
 	
 	//--> abstract methods (needs to be implemented in the subclass specific to the integration framework)
 	

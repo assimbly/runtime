@@ -113,6 +113,17 @@ public interface Connector {
 	*/
 	public void setBaseDirectory(String baseDirectory) throws Exception;
 	
+	/**
+	* sets the connector base directory. In this directory everything is stored (alert, events) 
+	*
+	* @param  host (dnsname or ip of server)
+	* @param  port number (1 through 65535)
+	* @param  timeout in seconds 
+	* @return Message "Connection succesfully opened" or "Connection error"
+	*/
+	public String testConnection(String host, int port, int timeOut);
+
+	
 	//manage connector
 	/**
 	* Starts a connector. The connector acts like a container for flows.  
