@@ -121,18 +121,21 @@ public abstract class BaseConnector implements Connector {
 	
 			if(mediaType.contains("xml")) {
 	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-			}else if(mediaType.contains("json")) {
+			}else if(mediaType.contains("json")) { 
 	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
+
 			}else {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
 
-		  	//ConnectorUtil.printTreemap(flowProperties);
-	        setFlowConfiguration(flowProperties);
+			//ConnectorUtil.printTreemap(flowProperties);
+			
+			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
 			
 			try {
+				
 				String errorCause = e.getCause().getMessage();
 				throw new Exception(errorCause);
 			}catch (Exception ex) {	

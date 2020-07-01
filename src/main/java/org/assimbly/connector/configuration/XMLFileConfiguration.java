@@ -259,7 +259,6 @@ public class XMLFileConfiguration {
 		   //set general properties
 		   getGeneralPropertiesFromXMLFile();
 
-		   getOffloadingfromXMLFile();
 		   
 		   //set uri properties
 		   String[] types = {"from", "to", "error"};
@@ -274,6 +273,11 @@ public class XMLFileConfiguration {
 				properties.put("flow.type", "none");
 			}
 
+		   	if(properties.get("flow.offloading").equals("true")){
+		   		getOffloadingfromXMLFile();
+			}
+			
+		   	
 		   	/*
 			if(properties.get("to.uri") == null){
 				properties.put("to.uri","stream:out");
@@ -370,18 +374,20 @@ public class XMLFileConfiguration {
 				uri = wireTapUri + "?" + options;
 			}
 
-			properties.put("wiretap.uri", uri);
-
+			properties.put("wiretap.uri",uri);
+			properties.put("to.0.uri",uri);
+			properties.put("offramp.uri.list",properties.get("offramp.uri.list") + ",direct:offloadingendpoint=0");
+		   	
 			serviceId = conf.getString("connector/offloading/service_id");
 
 			if (serviceId != null) {
-				getServiceFromXMLFile("offloading", serviceId);
+				getServiceFromXMLFile("to", "0", serviceId);
 			}
 
 			headerId = conf.getString("connector/offloading/header_id");
 
 			if (headerId != null) {
-				getHeaderFromXMLFile("offloading","0", headerId);
+				getHeaderFromXMLFile("to","0", headerId);
 			}
 		}
 	}
@@ -425,7 +431,7 @@ public class XMLFileConfiguration {
 		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
 
 		    if(serviceId != null){
-		    	getServiceFromXMLFile(type, serviceId);
+		    	getServiceFromXMLFile(type, endpointId, serviceId);
 		    };
 		   
 		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
@@ -446,7 +452,7 @@ public class XMLFileConfiguration {
   	   }	  	   
 	}
 
-	private void getServiceFromXMLFile(String type, String serviceId) throws ConfigurationException {
+	private void getServiceFromXMLFile(String type, String endpointId, String serviceId) throws ConfigurationException {
 
 	    serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
@@ -740,7 +746,7 @@ public class XMLFileConfiguration {
 	private DocumentBuilder setDocumentBuilder(String schemaFilename) throws SAXException, ParserConfigurationException {
 		
 		   URL schemaUrl = this.getClass().getResource("/" + schemaFilename);
-	       Schema schema = SchemaFactory.newInstance(XMLConstants.DEFAULT_NS_PREFIX).newSchema(schemaUrl);
+	       Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(schemaUrl);
 	    		   
 	       DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 	       docBuilderFactory.setSchema(schema);

@@ -54,7 +54,7 @@ public final class ConnectorUtil {
 		String result = null;
 
 		Source xmlFile = new StreamSource(new StringReader(xml));
-		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.DEFAULT_NS_PREFIX);
+		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try {
 		  Schema schema = schemaFactory.newSchema(schemaFile);
 		  Validator validator = schema.newValidator();
