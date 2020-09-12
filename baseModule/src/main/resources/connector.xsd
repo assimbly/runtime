@@ -50,6 +50,9 @@
 			<xs:element type="xs:string" name="maximumRedeliveries" minOccurs="0"/>
 			<xs:element type="xs:string" name="redeliveryDelay" minOccurs="0"/>
 			<xs:element type="xs:string" name="logLevel" minOccurs="0"/>
+			<xs:element type="xs:string" name="version" minOccurs="0"/>
+			<xs:element type="xs:string" name="created" minOccurs="0"/>
+			<xs:element type="xs:string" name="lastModified" minOccurs="0"/>
 			<xs:element type="fromType" name="from" maxOccurs="1" />
 			<xs:element type="toType" name="to" minOccurs="0" maxOccurs="unbounded" />
 			<xs:element type="errorType" name="error" minOccurs="0"	maxOccurs="1" />
