@@ -53,42 +53,18 @@
 			<xs:element type="xs:string" name="version" minOccurs="0"/>
 			<xs:element type="xs:string" name="created" minOccurs="0"/>
 			<xs:element type="xs:string" name="lastModified" minOccurs="0"/>
-			<xs:element type="fromType" name="from" maxOccurs="1" />
-			<xs:element type="toType" name="to" minOccurs="0" maxOccurs="unbounded" />
-			<xs:element type="errorType" name="error" minOccurs="0"	maxOccurs="1" />
+			<xs:element type="endpointType" name="endpoint" minOccurs="0" />
 		</xs:choice>
 	</xs:complexType>
-	<xs:complexType name="fromType">
+	<xs:complexType name="endpointType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
-			<xs:element type="xs:string" name="uri" />
+			<xs:element type="xs:string" name="type" minOccurs="1" maxOccurs="1"/>
+			<xs:element type="xs:string" name="uri" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="optionsType" name="options" minOccurs="0" />
 			<xs:element type="xs:string" name="service_id" minOccurs="0" />
 			<xs:element type="xs:string" name="header_id" minOccurs="0" />
-		</xs:choice>
-	</xs:complexType>
-	<xs:complexType name="toType">
-		<xs:choice minOccurs="0" maxOccurs="unbounded">
-			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
-			<xs:element type="xs:string" name="uri" />
-			<xs:element type="optionsType" name="options"
-				minOccurs="0" />
-			<xs:element type="xs:string" name="service_id"
-				minOccurs="0" />
-			<xs:element type="xs:string" name="header_id"
-				minOccurs="0" />
-		</xs:choice>
-	</xs:complexType>
-	<xs:complexType name="errorType">
-		<xs:choice minOccurs="0" maxOccurs="unbounded">
-			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
-			<xs:element type="xs:string" name="uri" />
-			<xs:element type="optionsType" name="options"
-				minOccurs="0" />
-			<xs:element type="xs:string" name="service_id"
-				minOccurs="0" />
-			<xs:element type="xs:string" name="header_id"
-				minOccurs="0" />
+			<xs:element type="xs:string" name="route_id" minOccurs="0" />
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="optionsType">

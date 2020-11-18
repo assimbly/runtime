@@ -292,7 +292,7 @@ public class XMLFileConfiguration {
 	private void getGeneralPropertiesFromXMLFile() throws Exception{
 
 		Document doc = conf.getDocument();
-		   
+
 	    XPath xPath = XPathFactory.newInstance().newXPath();
 	    flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
 	    flowName = xPath.evaluate("//flows/flow[id='" + flowId + "']/name",doc);
@@ -394,8 +394,12 @@ public class XMLFileConfiguration {
 	
 	private void getURIfromXMLFile(String type) throws Exception {
 		
-		String componentsXpath = "//flows/flow[id='" + flowId + "']/" + type + "/uri";
-	   
+		System.out.println("1. getURIfromXMLFile type=" + type);
+		
+		String componentsXpath = "//flows/flow[id='" + flowId + "']/endpoint[type='" + type + "']/uri";
+
+		System.out.println("1b xpath componentsXpath=" + componentsXpath);
+		
 	    String[] components = conf.getStringArray(componentsXpath);
 	    
 	    String offrampUri = "";
@@ -404,22 +408,28 @@ public class XMLFileConfiguration {
 
 	   for(String component : components){
 
+	   		System.out.println("2. komt hier component=" + component);
+
   		   options = "";
  
-  		   	List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/options");
+  		   	List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/options");
 	 	  	   for(String optionProperty : optionProperties){
 	 			   options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 	 	  	   }
-	  	   
+
+			   
 	  	   if(options.isEmpty()){
 	  		 uri = component;
 	  	   }else{
 	  		 options = options.substring(0,options.length() -1);
 	  		 uri = component + "?" + options;  
+			 
+	   		System.out.println("2a. komt hier options=" + options);
 	  	   }	  	   
 
-	  	   endpointId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/id");
-
+	  	   endpointId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/id");
+			System.out.println("2b. komt hier endpointId=" + endpointId);
+		   
 		  	if(endpointId != null){
 			   if(offrampUri.isEmpty()) {
 				   offrampUri = "direct:flow=" + flowId + "endpoint=" + endpointId;
@@ -428,18 +438,21 @@ public class XMLFileConfiguration {
 			   }
 	  	 	}
 	  	   
-		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/service_id");
+		    serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/service_id");
 
 		    if(serviceId != null){
 		    	getServiceFromXMLFile(type, endpointId, serviceId);
 		    };
 		   
-		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/" + type + "[" + index + "]/header_id");
+		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/header_id");
 
 		    if(headerId != null){
 			   getHeaderFromXMLFile(type,endpointId, headerId);
 		    };
 
+				   		System.out.println("3. uri=" + uri);
+
+			
 			   if(type.equals("from")||type.equals("error")) {
 			  	   properties.put(type + ".uri", uri);
 				   break;
@@ -615,10 +628,11 @@ public class XMLFileConfiguration {
 		}
 	}
 
-	private void setEndpointFromConfiguration(String type, String confUri, String confServiceId, String confHeaderId, TreeMap<String, String> configuration) throws Exception {
+	private void setEndpointFromConfiguration(String confType, String confUri, String confServiceId, String confHeaderId, TreeMap<String, String> configuration) throws Exception {
 		
-	    Element endpoint = doc.createElement(type);
+	    Element endpoint = doc.createElement("endpoint");
 	    Element uri = doc.createElement("uri");
+	    Element type = doc.createElement("type");
 	    Element endpointId = doc.createElement("id");
 	    Element options = doc.createElement("options");
 	    Element serviceid = doc.createElement("service_id");
@@ -641,6 +655,7 @@ public class XMLFileConfiguration {
 		    uri.setTextContent(confUriSplitted[0]);
 		    endpoint.appendChild(endpointId);
 		    endpoint.appendChild(uri);
+		    endpoint.appendChild(type);
 		    endpoint.appendChild(options);
 		    
 		    String[] confOptions = confUriSplitted[1].split("&");
@@ -659,13 +674,13 @@ public class XMLFileConfiguration {
 	    if(confServiceId!=null) {
 		    serviceid.setTextContent(confServiceId);
 	    	endpoint.appendChild(serviceid);
-		    setServiceFromConfiguration(confServiceId, type, configuration);
+		    setServiceFromConfiguration(confServiceId, confType, configuration);
 		}
 
 	    if(confHeaderId!=null) {
 		    endpoint.appendChild(headerid);
 		    headerid.setTextContent(confHeaderId);
-		    setHeaderFromConfiguration(confHeaderId, type, configuration);
+		    setHeaderFromConfiguration(confHeaderId, confType, configuration);
 		}
 
 		
