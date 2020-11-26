@@ -14,9 +14,9 @@
 			<xs:element type="xs:string" name="type" minOccurs="0" />
 			<xs:element type="xs:string" name="environmentName" minOccurs="0" />
 			<xs:element type="xs:string" name="stage" minOccurs="0" />
-			<xs:element type="xs:string" name="defaultFromEndpointType" minOccurs="0" />
-			<xs:element type="xs:string" name="defaultToEndpointType" minOccurs="0" />
-			<xs:element type="xs:string" name="defaultErrorEndpointType" minOccurs="0" />
+			<xs:element type="xs:string" name="defaultFromComponentType" minOccurs="0" />
+			<xs:element type="xs:string" name="defaultToComponentType" minOccurs="0" />
+			<xs:element type="xs:string" name="defaultErrorComponentType" minOccurs="0" />
 			<xs:element type="offloadingType" name="offloading" maxOccurs="1"/>
 			<xs:element type="flowsType" name="flows" />
 			<xs:element type="servicesType" name="services" />
