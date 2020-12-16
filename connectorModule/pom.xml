@@ -18,8 +18,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -619,12 +618,12 @@
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+		<!--  <dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-hipchat</artifactId>
 			<version>${camel-version}</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>-->
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-iec60870</artifactId>
@@ -655,12 +654,12 @@
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency>
-	    	<groupId>org.apache.camel</groupId>
-		    <artifactId>camel-ipfs</artifactId>
-			<version>${camel-version}</version>
-			<scope>provided</scope>
-		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 	    	<groupId>org.apache.camel</groupId> -->
+<!-- 		    <artifactId>camel-ipfs</artifactId> -->
+<!-- 			<version>${camel-version}</version> -->
+<!-- 			<scope>provided</scope> -->
+<!-- 		</dependency> -->
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-irc</artifactId>

@@ -62,6 +62,7 @@
 			<xs:element type="xs:string" name="type" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="xs:string" name="uri" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="optionsType" name="options" minOccurs="0" />
+			<xs:element type="xs:string" name="response_id" minOccurs="0" />
 			<xs:element type="xs:string" name="service_id" minOccurs="0" />
 			<xs:element type="xs:string" name="header_id" minOccurs="0" />
 			<xs:element type="xs:string" name="route_id" minOccurs="0" />

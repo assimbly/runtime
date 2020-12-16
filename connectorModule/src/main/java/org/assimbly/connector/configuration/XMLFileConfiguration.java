@@ -394,12 +394,8 @@ public class XMLFileConfiguration {
 	
 	private void getURIfromXMLFile(String type) throws Exception {
 		
-		System.out.println("1. getURIfromXMLFile type=" + type);
-		
 		String componentsXpath = "//flows/flow[id='" + flowId + "']/endpoint[type='" + type + "']/uri";
 
-		System.out.println("1b xpath componentsXpath=" + componentsXpath);
-		
 	    String[] components = conf.getStringArray(componentsXpath);
 	    
 	    String offrampUri = "";
@@ -407,8 +403,6 @@ public class XMLFileConfiguration {
 	   int index = 1;		   
 
 	   for(String component : components){
-
-	   		System.out.println("2. komt hier component=" + component);
 
   		   options = "";
  
@@ -423,12 +417,10 @@ public class XMLFileConfiguration {
 	  	   }else{
 	  		 options = options.substring(0,options.length() -1);
 	  		 uri = component + "?" + options;  
-			 
-	   		System.out.println("2a. komt hier options=" + options);
+
 	  	   }	  	   
 
 	  	   endpointId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/id");
-			System.out.println("2b. komt hier endpointId=" + endpointId);
 		   
 		  	if(endpointId != null){
 			   if(offrampUri.isEmpty()) {
@@ -449,10 +441,7 @@ public class XMLFileConfiguration {
 		    if(headerId != null){
 			   getHeaderFromXMLFile(type,endpointId, headerId);
 		    };
-
-				   		System.out.println("3. uri=" + uri);
-
-			
+		
 			   if(type.equals("from")||type.equals("error")) {
 			  	   properties.put(type + ".uri", uri);
 				   break;

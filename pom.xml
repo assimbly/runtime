@@ -10,13 +10,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<maven.compiler.source>1.8</maven.compiler.source>
-  		<maven.compiler.target>1.8</maven.compiler.target>
-
-		<camel-version>3.4.3</camel-version>
+    	<maven.compiler.release>11</maven.compiler.release>
+    
+		<camel-version>3.7.0</camel-version>
 		<activemq-classic-version>5.16.0</activemq-classic-version>
-		<activemq-artemis-version>2.15.0</activemq-artemis-version>
+		<activemq-artemis-version>2.16.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
 
 	</properties>

@@ -105,6 +105,8 @@ public class CamelConnector extends BaseConnector {
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
 		
+		context.setTracing(true);
+		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
         ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
