@@ -105,7 +105,7 @@ public class CamelConnector extends BaseConnector {
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
 		
-		context.setTracing(true);
+		context.setTracing(false);
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
