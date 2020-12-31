@@ -1,399 +1,25 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>connector</artifactId>
-
+	<packaging>pom</packaging>
 	<name>org.assimbly.camelconnector</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<maven.compiler.source>1.8</maven.compiler.source>
-  		<maven.compiler.target>1.8</maven.compiler.target>
-
-		<camel-version>3.3.0</camel-version>
-		<activemq-classic-version>5.15.12</activemq-classic-version>
-		<activemq-artemis-version>2.12.0</activemq-artemis-version>
+    	<maven.compiler.release>11</maven.compiler.release>
+    
+		<camel-version>3.7.0</camel-version>
+		<activemq-classic-version>5.16.0</activemq-classic-version>
+		<activemq-artemis-version>2.16.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
 
 	</properties>
 
-	<dependencies>
-	
-		<!-- camel core dependencies in alphabetic order-->
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-api</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-base</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-bean</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-browse</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-caffeine-lrucache</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-catalog</artifactId>
-			<version>${camel-version}</version>
-		</dependency>	 
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-cloud</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-		    <artifactId>camel-controlbus</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-core-engine</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-core-catalog</artifactId>
-		    <version>3.1.0</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-dataformat</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-dataset</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-groovy</artifactId>
-		  <version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-jsonpath</artifactId>
-		  <version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-management</artifactId>
-		  <version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-management-api</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-metrics</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-support</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-util</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-util-json</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-	      <groupId>org.apache.camel</groupId>
-	      <artifactId>camel-validator</artifactId>
-			<version>${camel-version}</version>
-	    </dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-xpath</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-xslt</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-	    <dependency>
-	      <groupId>org.apache.camel</groupId>
-	      <artifactId>camel-xml-jaxb</artifactId>
-			<version>${camel-version}</version>
-	    </dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-xslt-saxon</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		
-		
-		<!-- camel component dependencies in alphabetic order-->
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-amqp</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-as2</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-aws-s3</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-cxf</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-direct</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-directvm</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-elasticsearch-rest</artifactId>
-			<version>${camel-version}</version>
-		</dependency>				
-		 <dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-file</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-ftp</artifactId>
-			<version>${camel-version}</version>
-		</dependency> 
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-http</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-jdbc</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-jetty</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-jms</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-kafka</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-language</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-ldap</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-log</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-mail</artifactId>
-			<version>${camel-version}</version>
-		</dependency>				
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-mock</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-	 	<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-netty</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-rabbitmq</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-ref</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-rest</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-saga</artifactId>
-			<version>${camel-version}</version>
-		</dependency>				
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-scheduler</artifactId>
-			<version>${camel-version}</version>
-		</dependency>				
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-seda</artifactId>
-			<version>${camel-version}</version>
-		</dependency>				
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-sjms</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-sql</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-slack</artifactId>
-			<version>${camel-version}</version>
-		</dependency>		
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-spring</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-stream</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-stub</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-telegram</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-	    	<groupId>org.apache.camel</groupId>
-		    <artifactId>camel-timer</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-vm</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-
-		<!-- as of 240619 -->
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-saxon</artifactId>
-			<version>${camel-version}</version>
-		</dependency>
-
-		<!-- testing as of 190619 -->
-		<!-- 
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-test</artifactId>
-			<version>${camel-version}</version>
-			<scope>test</scope>
-		</dependency>
-		 -->
-
-		<!-- activemq dependencies -->
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>activemq-broker</artifactId>
-		    <version>${activemq-classic-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-camel</artifactId>
-			<version>${activemq-classic-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-pool</artifactId>
-			<version>${activemq-classic-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>activemq-kahadb-store</artifactId>
-			<version>${activemq-classic-version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>activemq-amqp</artifactId>
-			<version>${activemq-classic-version}</version>
-		</dependency>
-
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>artemis-server</artifactId>
-		    <version>${activemq-artemis-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>artemis-commons</artifactId>
-		    <version>${activemq-artemis-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>artemis-jms-client-all</artifactId>
-		    <version>${activemq-artemis-version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.activemq</groupId>
-		    <artifactId>artemis-amqp-protocol</artifactId>
-		    <version>${activemq-artemis-version}</version>
-		</dependency>
-			
+	<dependencies>					
 
 		<!-- sonicmq dependencies -->
 		<dependency>
@@ -574,7 +200,13 @@
 		    <groupId>dev.jeka</groupId>
 		    <artifactId>jeka-core</artifactId>
 		    <version>0.8.20.RELEASE</version>
-		</dependency>		
+		</dependency>	
+		
+		<dependency>
+		    <groupId>com.codahale.metrics</groupId>
+		    <artifactId>metrics-core</artifactId>
+		    <version>3.0.2</version>
+		</dependency>	
 
 	</dependencies>
 
@@ -651,5 +283,10 @@
 		</plugins> 
 	</build>-->
 	
-	<version>3.0.0</version>
+	<version>3.1.0</version>
+	<modules>
+		<module>baseModule</module>  	
+		<module>connectorModule</module>
+		<module>brokerModule</module>
+  </modules>
 </project>
