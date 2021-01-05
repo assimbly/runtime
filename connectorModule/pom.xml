@@ -4,17 +4,15 @@
   <parent>
     <artifactId>connector</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.1.0</version>
+    <version>3.2.0</version>
   </parent>
 
   <packaging>jar</packaging>
   <groupId>org.assimbly</groupId>
   <artifactId>connectorModule</artifactId>
-  <version>3.1.0</version>
+  <version>3.2.0</version>
 
   <name>connectorModule</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -155,7 +153,7 @@
 			<version>${camel-version}</version>
 		</dependency>
 		
-		<!-- Dynamically loaded camel components -->
+		<!-- Dynamically loaded camel components
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-ahc-ws</artifactId>
@@ -165,12 +163,6 @@
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-ahc</artifactId>
-			<version>${camel-version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-amqp</artifactId>
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
@@ -648,12 +640,6 @@
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 	    	<groupId>org.apache.camel</groupId> -->
-<!-- 		    <artifactId>camel-ipfs</artifactId> -->
-<!-- 			<version>${camel-version}</version> -->
-<!-- 			<scope>provided</scope> -->
-<!-- 		</dependency> -->
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-irc</artifactId>
@@ -714,12 +700,6 @@
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency>
-	    	<groupId>org.apache.camel</groupId>
-		    <artifactId>camel-jira</artifactId>
-			<version>${camel-version}</version>
-			<scope>provided</scope>
-		</dependency> -->
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-jmx</artifactId>
@@ -1266,12 +1246,6 @@
 			<version>${camel-version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency>
-		    <groupId>org.apache.camel</groupId>
-		    <artifactId>camel-weka</artifactId>
-			<version>${camel-version}</version>
-			<scope>provided</scope>
-		</dependency> -->
 		<dependency>
 	    	<groupId>org.apache.camel</groupId>
 		    <artifactId>camel-wordpress</artifactId>
@@ -1319,9 +1293,15 @@
 		    <artifactId>camel-zookeeper</artifactId>
 			<version>${camel-version}</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency>-->
 
-    <!-- camel component dependencies in alphabetic order-->	
+    <!-- camel component dependencies in alphabetic order-->
+	  <dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-amqp</artifactId>
+		  <version>${camel-version}</version>
+		  <scope>provided</scope>
+	  </dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-direct</artifactId>
@@ -1473,49 +1453,27 @@
 		</dependency>
   </dependencies>
 
-  <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
-      <plugins>
-        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
-        </plugin>
-        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>2.5.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
-        </plugin>
-        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.7.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.0.0</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-toolchains-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>toolchain</goal>
+						</goals>
+						<configuration>
+							<toolchains>
+								<jdk>
+									<version>11</version>
+								</jdk>
+							</toolchains>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
