@@ -48,3 +48,4 @@ local.properties
 # Directories #
 ######################
 target/
+.idea/
