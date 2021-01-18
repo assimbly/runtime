@@ -135,7 +135,7 @@ public class DefaultRoute extends RouteBuilder {
 		}
 		
 		routeErrorHandler.setAsyncDelayedRedelivery(true);			
-		
+		Long timestamp = System.currentTimeMillis();
 		//The default Camel route (onramp)
 		from(props.get("from.uri"))	
 			.errorHandler(routeErrorHandler)	
@@ -143,6 +143,7 @@ public class DefaultRoute extends RouteBuilder {
 			.setHeader("AssimblyHeaderId", constant(props.get("from.header.id")))
 			.setHeader("AssimblyFrom", constant(props.get("from.uri")))
 			.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+			.setHeader("AssimblyTimestamp", constant(timestamp))
 			.to(logMessage)
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId)
@@ -164,6 +165,7 @@ public class DefaultRoute extends RouteBuilder {
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
 			.setHeader("AssimblyTo", constant(toUri))
+			.setHeader("AssimblyTimestamp", constant(timestamp))
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)
