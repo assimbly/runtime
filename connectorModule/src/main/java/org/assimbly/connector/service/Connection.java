@@ -45,9 +45,9 @@ public class Connection {
 	}
 	
 	public TreeMap<String, String> start() throws Exception{
-		
+
 		serviceId = properties.get(key);
-		
+
 		if(key.startsWith("from")){
 			uri = properties.get("from.uri");
 			startConnection(uri,"from");
@@ -107,20 +107,20 @@ public class Connection {
 				String[] uriSplitted = uri.split(":",2);
 				String component = uriSplitted[0];
 				
-				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "amqp", "sql"};
+				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "amqp", "amqps", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
 						break;
 					}
 				}
-				
+
 				switch (i) {
 					case 0:
-						setupActiveMQConnection(properties, type,"activemq");
+						setupActiveMQConnection(properties, "activemq");
 						break;
 					case 1:
-						setupActiveMQConnection(properties, type,"amazonmq");
+						setupActiveMQConnection(properties, "amazonmq");
 						break;	
 			        case 2:	
 						connectId = type + connectionId + new Random().nextInt(1000000);
@@ -134,12 +134,15 @@ public class Connection {
 				        }
 			            break;
 					case 3:
-						setupSJMSConnection(properties, type);
+						setupSJMSConnection(properties, "sjms", type);
 						break;
 					case 4:
-						setupAMQPConnection(properties);
+						setupAMQPConnection(properties, "amqp");
 						break;
 					case 5:
+						setupAMQPConnection(properties, "amqps");
+						break;
+					case 6:
 				        setupJDBCConnection(properties, type);
 				        break;			            
 			        default:
@@ -197,7 +200,7 @@ public class Connection {
 	
 	
 	
-	private void setupActiveMQConnection(TreeMap<String, String> properties, String direction, String componentName) throws Exception{
+	private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 		
 		logger.info("Setting up jms client connection for ActiveMQ.");
 		
@@ -284,17 +287,16 @@ public class Connection {
 	}
 	
 
-	private void setupSJMSConnection(TreeMap<String, String> properties, String direction) throws Exception{
+	private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
 		
 		if(direction.equals("to")) {
 			direction = direction + "." + endpointId;
 		}
-		
-		String componentName = "sjms";
+
 		String url = properties.get("service." + serviceId + ".url");
 		String username = properties.get("service."  + serviceId + ".username");
 		String password = properties.get("service."  + serviceId + ".password");
-		
+
 		logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
 		if(url!=null){
 							
@@ -330,9 +332,8 @@ public class Connection {
 		}
 		
 	}
-	private void setupAMQPConnection(TreeMap<String, String> properties) throws Exception{
+	private void setupAMQPConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 				
-		String componentName = "amqp";
 		String url = properties.get("service." + serviceId + ".url");
 		String username = properties.get("service."  + serviceId + ".username");
 		String password = properties.get("service."  + serviceId + ".password");

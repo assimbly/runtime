@@ -104,7 +104,17 @@ public interface Connector {
 	* @throws Exception if configuration can't be retrieved or is not available
 	*/
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
-	
+
+	/**
+	 * gets the connector configuration currently set (in use).
+	 *
+	 * @param  props Properties of service
+	 * @param  endpointType (from,to or error)
+	 * @return properties of service
+	 * @throws Exception if connection can't be set
+	 */
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+
 	/**
 	* sets the connector base directory. In this directory everything is stored (alert, events) 
 	*
@@ -118,7 +128,7 @@ public interface Connector {
 	*
 	* @param  host (dnsname or ip of server)
 	* @param  port number (1 through 65535)
-	* @param  timeout in seconds 
+	* @param  timeOut in seconds
 	* @return Message "Connection succesfully opened" or "Connection error"
 	*/
 	public String testConnection(String host, int port, int timeOut);
@@ -189,7 +199,6 @@ public interface Connector {
 	*/
 	public String getDocumentationVersion() throws Exception;	
 
-	
 	/**
 	* Gets the documentation of a component
 	*
@@ -560,5 +569,58 @@ public interface Connector {
 	* @throws Exception if context can't be found
 	*/
 	public ConsumerTemplate getConsumerTemplate() throws Exception;
+
+	/**
+	 * Send a message to (default producer)
+	 *
+	 * @param messageBody Content of the body
+	 * @param template for the producer
+	 */
+	public void send(Object messageBody, ProducerTemplate template);
+
+	/**
+	 * Send a message with headers to (default producer)
+	 *
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 * @param template for the producer
+	 */
+	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param numberOfTimes Number of times the message is sent
+	 */
+	public void send(String uri,Object messageBody, Integer numberOfTimes);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 * @param numberOfTimes Number of times the message is sent
+	 */
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 */
+	public String sendRequest(String uri,Object messageBody);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 */
+	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
 }
