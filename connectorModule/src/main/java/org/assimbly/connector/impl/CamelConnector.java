@@ -8,11 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
@@ -165,6 +161,7 @@ public class CamelConnector extends BaseConnector {
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		String scheme = "";
+
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 			if (key.endsWith("service.id")){
@@ -172,15 +169,21 @@ public class CamelConnector extends BaseConnector {
 			}
 			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("error") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 		}
 		
