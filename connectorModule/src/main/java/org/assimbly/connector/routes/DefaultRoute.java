@@ -6,6 +6,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
+import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.processors.ConvertProcessor;
 import org.assimbly.connector.processors.FailureProcessor;
@@ -143,6 +144,7 @@ public class DefaultRoute extends RouteBuilder {
 			.setHeader("AssimblyHeaderId", constant(props.get("from.header.id")))
 			.setHeader("AssimblyFrom", constant(props.get("from.uri")))
 			.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+			.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
 			.to(logMessage)
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId)
@@ -164,6 +166,7 @@ public class DefaultRoute extends RouteBuilder {
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
 			.setHeader("AssimblyTo", constant(toUri))
+			.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)
