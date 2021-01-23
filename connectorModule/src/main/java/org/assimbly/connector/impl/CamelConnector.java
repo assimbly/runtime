@@ -88,7 +88,6 @@ public class CamelConnector extends BaseConnector {
 			e.printStackTrace();
 		}
 	}
-	
 
 	public CamelConnector(String connectorId, String configuration) throws Exception {
 		setBasicSettings();
@@ -107,8 +106,6 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
-		context.setTracing(false);
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
@@ -164,6 +161,13 @@ public class CamelConnector extends BaseConnector {
 		return started;
 	}
 	
+	public void setTracing(boolean tracing) {
+        context.setTracing(tracing);
+	}
+
+	public void setDebugging(boolean debugging) {
+        context.setDebugging(debugging);
+	}
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
