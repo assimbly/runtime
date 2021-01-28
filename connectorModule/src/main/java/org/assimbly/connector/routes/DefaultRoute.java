@@ -8,6 +8,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
+import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.processors.ConvertProcessor;
 import org.assimbly.connector.processors.FailureProcessor;
@@ -137,7 +138,7 @@ public class DefaultRoute extends RouteBuilder {
 			.logExhaustedMessageHistory(true)
 			.log(logger);
 		}
-		
+
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
 
 			//The default Camel route (onramp)
@@ -151,9 +152,10 @@ public class DefaultRoute extends RouteBuilder {
 			from(uri)
 					.errorHandler(routeErrorHandler)
 					.setHeader("AssimblyFlowID", constant(flowId))
-					.setHeader("AssimblyHeaderId", constant(headerId)) //TODO: Wat doet deze?
-					.setHeader("AssimblyFrom", constant(uri))
+					.setHeader("AssimblyHeaderId", constant(props.get("from." + endpointId + ".header.id")))
+					.setHeader("AssimblyFrom", constant(props.get("from." + endpointId + ".uri")))
 					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+					.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
 					.to(logMessage)
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
@@ -176,6 +178,7 @@ public class DefaultRoute extends RouteBuilder {
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
 			.setHeader("AssimblyTo", constant(toUri))
+			.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)

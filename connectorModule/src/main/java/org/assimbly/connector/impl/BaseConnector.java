@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
@@ -284,9 +285,13 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract void start() throws Exception;
 
+	public abstract void stop() throws Exception;
+
 	public abstract boolean isStarted();
 
-	public abstract void stop() throws Exception;
+	public abstract void setTracing(boolean tracing);
+
+	public abstract void setDebugging(boolean debugging);
 
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 
@@ -299,7 +304,6 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
-	
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;	
 	
@@ -365,6 +369,8 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
 
+	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+
 	public abstract String resolveDependency(String schema);
 
 	public abstract String resolveDependency(String groupId, String artifactId, String version);
@@ -378,5 +384,13 @@ public abstract class BaseConnector implements Connector {
 	public abstract void send(Object messageBody, ProducerTemplate template);
 
 	public abstract void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
-	
+
+	public abstract void send(String uri,Object messageBody, Integer numberOfTimes);
+
+	public abstract void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
+
+	public abstract String sendRequest(String uri,Object messageBody);
+
+	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
+
 }

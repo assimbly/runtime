@@ -11,15 +11,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.Route;
-import org.apache.camel.ServiceStatus;
+import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.builder.ExchangeBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -27,9 +25,11 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.EventNotifier;
+import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
-import org.apache.camel.SSLContextParametersAware;
+import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
@@ -51,6 +51,13 @@ import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
 import org.json.JSONObject;
 
+import javax.xml.xpath.XPathFactory;
+
+import static org.apache.camel.builder.Builder.constant;
+import static org.apache.camel.builder.SimpleBuilder.simple;
+import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
+import static org.apache.camel.language.xpath.XPathBuilder.xpath;
+import static org.apache.camel.language.spel.SpelExpression.spel;
 
 public class CamelConnector extends BaseConnector {
 
@@ -82,7 +89,6 @@ public class CamelConnector extends BaseConnector {
 			e.printStackTrace();
 		}
 	}
-	
 
 	public CamelConnector(String connectorId, String configuration) throws Exception {
 		setBasicSettings();
@@ -101,8 +107,6 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
-		context.setTracing(false);
 		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
@@ -158,26 +162,40 @@ public class CamelConnector extends BaseConnector {
 		return started;
 	}
 	
+	public void setTracing(boolean tracing) {
+        context.setTracing(tracing);
+	}
+
+	public void setDebugging(boolean debugging) {
+        context.setDebugging(debugging);
+	}
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		String scheme = "";
+
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 			if (key.endsWith("service.id")){
-				props = new Connection(context, props, key).start();
+				props = setConnection(props, key);
 			}
 			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("error") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 		}
 		
@@ -827,6 +845,10 @@ public class CamelConnector extends BaseConnector {
 	}	
 
 
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
+		return new Connection(context, props, key).start();
+	}
+
 	
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
@@ -949,6 +971,89 @@ public class CamelConnector extends BaseConnector {
 
 	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
+	}
+
+
+	public void send(String uri,Object messageBody, Integer numberOfTimes) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		if(numberOfTimes.equals(1)){
+			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			template.sendBody(uri, messageBody);
+		}else{
+			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+		}
+	}
+
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
+
+		if(numberOfTimes.equals(1)){
+			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			template.send(uri,exchange);
+		}else{
+			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			Exchange finalExchange = exchange;
+			IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+		}
+
+	}
+
+	public String sendRequest(String uri,Object messageBody) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		logger.info("Sending request message to " + uri);
+
+		return template.requestBody(uri, messageBody,String.class);
+	}
+
+	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
+		exchange.setPattern(ExchangePattern.InOut);
+
+		logger.info("Sending request message to " + uri);
+		Exchange result = template.send(uri,exchange);
+
+		return result.getMessage().getBody(String.class);
+	}
+
+	public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
+		for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
+
+			String key = messageHeader.getKey();
+			String value = StringUtils.substringBetween(messageHeader.getValue().toString(),"(",")");
+			String language = StringUtils.substringBefore(messageHeader.getValue().toString(),"(");
+			String result = "";
+
+			if(value.startsWith("constant")) {
+				exchange.getIn().setHeader(key,value);
+			}else if(value.startsWith("xpath")){
+				XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+				result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}else{
+				Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+				Expression expression = resolvedLanguage.createExpression(value);
+				result = expression.evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}
+
+		}
+
+		return exchange;
 	}
 
 	public Certificate[] getCertificates(String url) {
