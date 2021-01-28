@@ -49,7 +49,8 @@ public class Connection {
 		serviceId = properties.get(key);
 		
 		if(key.startsWith("from")){
-			uri = properties.get("from.uri");
+			endpointId = StringUtils.substringBetween(key, "from.", ".service.id");
+			uri = properties.get("from." + endpointId + ".uri");
 			startConnection(uri,"from");
 		}
 		if(key.startsWith("to")){
@@ -70,7 +71,7 @@ public class Connection {
 	//unused (future purposes)
 	public TreeMap<String, String> stop() throws Exception{
 		if(properties.get("from.service.id")!=null){
-			uri = properties.get("from.uri");
+			uri = properties.get("from.uri");//TODO: Get uri using get("from.<serviceId>.uri")
 			//stopConnection(uri,"from");
 		}
 		if(properties.get("to.service.id")!=null){

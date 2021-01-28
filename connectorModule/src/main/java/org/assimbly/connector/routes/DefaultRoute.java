@@ -1,5 +1,7 @@
 package org.assimbly.connector.routes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.camel.LoggingLevel;
@@ -25,7 +27,8 @@ public class DefaultRoute extends RouteBuilder {
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
 	private String logMessage;
-	
+
+	private List<String> onrampUriKeyList;
 	private String[] offrampUriList;
 	
 	public DefaultRoute(final Map<String, String> props){
@@ -50,6 +53,7 @@ public class DefaultRoute extends RouteBuilder {
 		Processor convertProcessor = new ConvertProcessor();
 
 		offrampUriList = getOfframpUriList();
+		onrampUriKeyList = getOnrampUriKeyList();
 		flowId = props.get("id");
 		
 		if (this.props.containsKey("flow.maximumRedeliveries")){
@@ -134,29 +138,37 @@ public class DefaultRoute extends RouteBuilder {
 			.log(logger);
 		}
 		
-		routeErrorHandler.setAsyncDelayedRedelivery(true);			
-		
-		//The default Camel route (onramp)
-		from(props.get("from.uri"))	
-			.errorHandler(routeErrorHandler)	
-			.setHeader("AssimblyFlowID", constant(flowId))
-			.setHeader("AssimblyHeaderId", constant(props.get("from.header.id")))
-			.setHeader("AssimblyFrom", constant(props.get("from.uri")))
-			.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-			.to(logMessage)
-			.process(headerProcessor)
-			.id("headerProcessor" + flowId)
-			.multicast()
-			.shareUnitOfWork()
-			.parallelProcessing()
-			.to(offrampUriList)
-        	.routeId(flowId);        			
+		routeErrorHandler.setAsyncDelayedRedelivery(true);
+
+			//The default Camel route (onramp)
+
+		for(String key : onrampUriKeyList){
+			String endpointId = StringUtils.substringBetween(key, "from.", ".uri");
+			String uri = props.get(key);
+            String headerId = props.get("from." + endpointId + ".header.id");
+
+			//The default Camel route (onramp)
+			from(uri)
+					.errorHandler(routeErrorHandler)
+					.setHeader("AssimblyFlowID", constant(flowId))
+					.setHeader("AssimblyHeaderId", constant(headerId)) //TODO: Wat doet deze?
+					.setHeader("AssimblyFrom", constant(uri))
+					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+					.to(logMessage)
+					.process(headerProcessor)
+					.id("headerProcessor" + flowId + "-" + endpointId)
+					.multicast()
+					.shareUnitOfWork()
+					.parallelProcessing()
+					.to(offrampUriList)
+					.routeId(flowId + "-" + endpointId).description("from");
+		}
         
         //The default Camel route (offramp)		
 		for (String offrampUri : offrampUriList) 
 		{	
 
-			String endpointId = StringUtils.substringAfterLast(offrampUri, "endpoint=");			
+			String endpointId = StringUtils.substringAfterLast(offrampUri, "endpoint=");
 			String toUri = props.get("to." + endpointId + ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
 			
@@ -181,10 +193,9 @@ public class DefaultRoute extends RouteBuilder {
 	  		    	.to(toUri)
 	  		 .end()
 	  		 .to(logMessage)
-	  		 .routeId(flowId + "-" + endpointId);			
+	  		 .routeId(flowId + "-" + endpointId).description("to");
 		   
 		}
-		
 	}
 	
 	//create a string array for all offramps
@@ -194,6 +205,19 @@ public class DefaultRoute extends RouteBuilder {
 		
 		return offrampUri.split(",");
 		
-	}	
+	}
+
+	//create a string array for all onramps
+	private List<String> getOnrampUriKeyList() {
+		List<String> keys = new ArrayList<>();
+
+		for(String s : props.keySet()){
+			if(s.startsWith("from")){
+				keys.add(s);
+			}
+		}
+		return keys;
+
+	}
 
 }
