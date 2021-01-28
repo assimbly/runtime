@@ -451,7 +451,7 @@ public class XMLFileConfiguration {
 			   break;
 		    } else if(type.equals("from")) {
 				properties.put(type + "." + endpointId + ".uri", uri);
-			   if(index > maxFromTypes){
+			   if(index >= maxFromTypes){
 				   break;
 			   }
 		    }
