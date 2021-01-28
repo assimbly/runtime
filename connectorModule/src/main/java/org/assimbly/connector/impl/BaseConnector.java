@@ -285,9 +285,13 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract void start() throws Exception;
 
+	public abstract void stop() throws Exception;
+
 	public abstract boolean isStarted();
 
-	public abstract void stop() throws Exception;
+	public abstract void setTracing(boolean tracing);
+
+	public abstract void setDebugging(boolean debugging);
 
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 

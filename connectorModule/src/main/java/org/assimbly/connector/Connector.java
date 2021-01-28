@@ -158,6 +158,18 @@ public interface Connector {
 	public boolean isStarted();
 
 	/**
+	* Turn on/off tracing  
+	* @param  true to turn on tracing, false to turn it off
+	*/
+	public void setTracing(boolean tracing);
+
+	/**
+	* Turn on/off debugging  
+	* @param  true to turn on debugging, false to turn it off
+	*/
+	public void setDebugging(boolean debugging);
+	
+	/**
 	* Adds event notifier to notified about events
 	* @param  eventNotifier eventNotifier object
 	* @throws Exception if eventNotifier
