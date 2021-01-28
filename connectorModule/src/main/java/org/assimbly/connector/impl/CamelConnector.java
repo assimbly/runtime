@@ -1101,8 +1101,8 @@ public class CamelConnector extends BaseConnector {
         SSLContextParameters sslContextParameters = new SSLContextParameters();
         sslContextParameters.setKeyManagers(kmp);
         sslContextParameters.setTrustManagers(tmp);
-                
-        return sslContextParameters;
+
+		return sslContextParameters;
     }
 	
     

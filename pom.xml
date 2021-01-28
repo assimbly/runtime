@@ -14,7 +14,6 @@
 		<activemq-classic-version>5.16.0</activemq-classic-version>
 		<activemq-artemis-version>2.16.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
-
 	</properties>
 
 	<dependencies>					
@@ -209,8 +208,13 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-transport-native-epoll</artifactId>
-			<version>4.1.45.Final</version>
+			<version>4.1.58.Final</version>
 			<classifier>linux-x86_64</classifier>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver</artifactId>
+			<version>4.1.58.Final</version>
 		</dependency>
 
 	</dependencies>

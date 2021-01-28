@@ -1447,6 +1447,11 @@
 		    <artifactId>artemis-jms-client-all</artifactId>
 		    <version>${activemq-artemis-version}</version>
 		</dependency>
+	  <dependency>
+		  <groupId>org.apache.activemq</groupId>
+		  <artifactId>artemis-core-client</artifactId>
+		  <version>${activemq-artemis-version}</version>
+	  </dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-amqp-protocol</artifactId>

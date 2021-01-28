@@ -11,7 +11,7 @@
         <module name="brokerModule" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="11">
+    <bytecodeTargetLevel>
       <module name="baseModule" target="11" />
       <module name="brokerModule" target="11" />
       <module name="connector" target="1.5" />
