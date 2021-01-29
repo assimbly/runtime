@@ -844,7 +844,7 @@ public class CamelConnector extends BaseConnector {
 
 	}	
 
-	public String resolveDependency(String scheme) {
+	public String resolveDependency(String scheme) throws Exception {
 		
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);

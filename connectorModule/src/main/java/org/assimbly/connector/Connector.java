@@ -544,7 +544,7 @@ public interface Connector {
 	* @param  scheme name of the scheme
 	* @return Message on succes or failure
 	*/
-	public String resolveDependency(String scheme);
+	public String resolveDependency(String scheme) throws Exception;
 	
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)

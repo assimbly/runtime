@@ -371,7 +371,7 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
 
-	public abstract String resolveDependency(String schema);
+	public abstract String resolveDependency(String schema)  throws Exception;
 
 	public abstract String resolveDependency(String groupId, String artifactId, String version);
 
