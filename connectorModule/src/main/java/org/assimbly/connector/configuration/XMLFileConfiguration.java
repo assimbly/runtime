@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -266,8 +264,10 @@ public class XMLFileConfiguration {
 		   for(String type : types){
 	  		   getURIfromXMLFile(type);
 	  	   }
-		   
-		   	if(properties.get("from.uri") != null){
+
+		   Set<String> fromUriSet = properties.keySet().stream().filter(s -> s.startsWith("from.") && s.endsWith(".uri")).collect(Collectors.toSet());
+//		   	if(properties.get("from.uri") != null){
+			if(!fromUriSet.isEmpty()){
 				properties.put("flow.type","default");
 			}else{
 				properties.put("flow.type", "none");
@@ -276,8 +276,8 @@ public class XMLFileConfiguration {
 		   	if(properties.get("flow.offloading").equals("true")){
 		   		getOffloadingfromXMLFile();
 			}
-			
-		   	
+
+
 		   	/*
 			if(properties.get("to.uri") == null){
 				properties.put("to.uri","stream:out");
@@ -400,7 +400,10 @@ public class XMLFileConfiguration {
 	    
 	    String offrampUri = "";
 	    
-	   int index = 1;		   
+	   int index = 1;
+
+	   //A maximum of 3 from components per route is allowed
+	   int maxFromTypes = 3;
 
 	   for(String component : components){
 
@@ -434,21 +437,28 @@ public class XMLFileConfiguration {
 
 		    if(serviceId != null){
 		    	getServiceFromXMLFile(type, endpointId, serviceId);
-		    };
+		    }
 		   
 		    headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/header_id");
 
 		    if(headerId != null){
 			   getHeaderFromXMLFile(type,endpointId, headerId);
-		    };
-		
-			   if(type.equals("from")||type.equals("error")) {
-			  	   properties.put(type + ".uri", uri);
+		    }
+
+
+		    if(type.equals("error")) {
+				properties.put(type + ".uri", uri);
+			   break;
+		    } else if(type.equals("from")) {
+				properties.put(type + "." + endpointId + ".uri", uri);
+			   if(index >= maxFromTypes){
 				   break;
-			   }else {				    
-   		  	       properties.put(type + "." + endpointId + ".uri", uri);
-   		  	       properties.put("offramp.uri.list", offrampUri);
 			   }
+		    }
+		    else {
+				properties.put(type + "." + endpointId + ".uri", uri);
+			   properties.put("offramp.uri.list", offrampUri);
+		    }
 			   
 		   index++;
   	   }	  	   
@@ -590,7 +600,10 @@ public class XMLFileConfiguration {
 	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
 
 		String confOfframpUriList = configuration.get("offramp.uri.list");
-	    
+
+		List<String> confOnrampUriKeyList = configuration.keySet().stream()
+				.filter(k -> k.startsWith("from") && k.endsWith("uri")).collect(Collectors.toList());
+
 		if(confOfframpUriList!=null && type.equals("to")) {
 			
 			String[] confOfframpUris = confOfframpUriList.split(",");
@@ -602,17 +615,28 @@ public class XMLFileConfiguration {
 				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
 				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
 				String confUri = configuration.get(type + "." + confEndpointId + ".uri");
-			
+
 				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
 				
 			}
-		}else {
-			
+		}else if(type.equals("from")) {
+			for(String confOnrampUriKey : confOnrampUriKeyList){
+				String confUri = configuration.get(confOnrampUriKey);
+				String confEndpointId = StringUtils.substringBetween(confOnrampUriKey, "from.", ".uri");
+
+				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
+				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
+
+				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration);
+			}
+		}
+		else {
+
 			String confServiceId = configuration.get(type + ".service.id");
 			String confHeaderId = configuration.get(type + ".header.id");
 			String confUri = configuration.get(type + ".uri");
 
-			setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration); 
+			setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, configuration);
 			
 		}
 	}

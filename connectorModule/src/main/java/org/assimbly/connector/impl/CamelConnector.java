@@ -10,6 +10,7 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.camel.*;
@@ -217,7 +218,8 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		DefaultRoute flow = new DefaultRoute(props);
-		context.addRoutes(flow);		
+
+		context.addRoutes(flow);
 	}
 
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
@@ -243,7 +245,7 @@ public class CamelConnector extends BaseConnector {
 		boolean routeFound = false;
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				if (route.getId().equals(id)) {
+				if (route.getId().startsWith(id)) {
 					routeFound = true;
 				}
 			}
@@ -337,12 +339,10 @@ public class CamelConnector extends BaseConnector {
 		boolean flowAdded = false;
 		
 		try {
-			
+
 			List<TreeMap<String, String>> allProps = super.getConfiguration();
-			
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
-			
 				if (props.get("id").equals(id)) {
 					
 					logger.info("Adding route with id: " + id);
@@ -353,18 +353,31 @@ public class CamelConnector extends BaseConnector {
 			}
 			
 			if(flowAdded){
-				routeController.startRoute(id);
-				
-				int count = 1;
-				
-		        do {
-		        	status = routeController.getRouteStatus(id);
-		        	if(status.isStarted()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isStarting() || count < 3000);
-		
+
+				List<Route> routeList = getRoutesByFlowId(id);
+
+				for(Route route : routeList){
+					String routeId = route.getId();
+					status = routeController.getRouteStatus(routeId);
+					if(!status.isStarted()) {
+						logger.info("Starting route " + routeId);
+						routeController.startRoute(routeId);
+
+						int count = 1;
+
+						do {
+							if(status.isStarted()) {break;}
+							Thread.sleep(10);
+							count++;
+
+						} while (status.isStarting() || count < 3000);
+						//TODO: What happens if one route doesn't start? Throw Exception??
+
+					} else {
+						logger.info("Route " + routeId + " already started");
+					}
+				}
+
 				logger.info("Started flow " + id);
 				return status.toString().toLowerCase();
 				
@@ -385,14 +398,14 @@ public class CamelConnector extends BaseConnector {
 	public String restartFlow(String id) {
 
 		logger.info("Restart flow " + id);
-		try {		
 
+		try {
 			if(hasFlow(id)) {
 
 				stopFlow(id);
-				
-	        	return startFlow(id);	
-	        
+
+				return startFlow(id);
+
 			}else {
 				return "Configuration is not set and running";
 			}
@@ -406,13 +419,11 @@ public class CamelConnector extends BaseConnector {
 	
 	public String stopFlow(String id) {
 		logger.info("Stop flow " + id);		
-		try {		
-
-			for (Route route : context.getRoutes()) {
-				if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
-					routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
-					context.removeRoute(route.getId());	
-				}
+		try {
+			List<Route> routeList = getRoutesByFlowId(id);
+			for (Route route : routeList) {
+				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
+				context.removeRoute(route.getId());
 			}
 
 	        return "stopped";
@@ -425,46 +436,54 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String pauseFlow(String id) {
-		logger.info("Pause flow " + id);		
+		logger.info("Pause flow " + id);
 		
 		try {
-		
-			if(hasFlow(id)) {
-	        	status = routeController.getRouteStatus(id);
-				if(status.isSuspendable()) {
-					
-					routeController.suspendRoute(id);
-						
-					int count = 1;
-					
-			        do {
-			        	status = routeController.getRouteStatus(id);
-			        	if(status.isSuspended()) {
-							logger.info("Paused (suspend) flow " + id);		
-			        		break;
-			        	}else if(status.isStopped()){
-							logger.info("Paused (stopped) flow " + id);		
 
-			        		break;			        		
-			        	}
-			        	
-			        	Thread.sleep(10);
-			        	count++;
-			        	
-			        } while (status.isSuspending() || count < 6000);
-			  
-			        return status.toString().toLowerCase();
-				
-					
-				}else {
-					return "Flow isn't suspendable";
+			if(hasFlow(id)) {
+
+				List<Route> routeList = getRoutesByFlowId(id);
+				status = routeController.getRouteStatus(routeList.get(0).getId());
+
+				for(Route route : routeList){
+					if(!routeController.getRouteStatus(route.getId()).isSuspendable()){
+						return "Flow isn't suspendable (Route " + route.getId() + ")";
+					}
 				}
+
+				for(Route route : routeList){
+					String routeId = route.getId();
+
+					routeController.suspendRoute(routeId);
+
+					int count = 1;
+
+					do {
+						status = routeController.getRouteStatus(routeId);
+						if(status.isSuspended()) {
+							logger.info("Paused (suspend) flow " + id + ", route " + routeId);
+							break;
+						}else if(status.isStopped()){
+							logger.info("Paused (stopped) flow " + id + ", route " + routeId);
+
+							break;
+						}
+
+						Thread.sleep(10);
+						count++;
+
+					} while (status.isSuspending() || count < 6000);
+				}
+				logger.info("Paused flow " + id);
+				return status.toString().toLowerCase();
+
 			}else {
 				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 			}
 		
 		}catch (Exception e) {
 			e.printStackTrace();
+			stopFlow(id); //Stop flow if one of the routes cannot be pauzed. Maybe find a more elegant solution?
 			return e.getMessage();
 		}
 
@@ -477,26 +496,38 @@ public class CamelConnector extends BaseConnector {
 		try {
 		
 			if(hasFlow(id)) {
-	        	status = routeController.getRouteStatus(id);
-				if(status.isSuspended()) {
-					
-					routeController.resumeRoute(id);
-					
-					int count = 1;
-					
-			        do {
-			        	status = routeController.getRouteStatus(id);
-			        	if(status.isStarted()) {break;}
-			        	Thread.sleep(10);
-			        	count++;
-			        	
-			        } while (status.isStarting() || count < 3000);
-			        
-			        logger.info("Resumed flow " + id);
-			        return status.toString().toLowerCase();				
-				}else if(status.isStopped()) {
-					logger.info("Starting flow as flow " + id + " is currently stopped (not suspended)");
-					return startFlow(id);
+				boolean resumed = true;
+				List<Route> routeList = getRoutesByFlowId(id);
+				for(Route route : routeList){
+					String routeId = route.getId();
+					status = routeController.getRouteStatus(routeId);
+					if(status.isSuspended()){
+						routeController.resumeRoute(routeId);
+
+						int count = 1;
+
+						do {
+							status = routeController.getRouteStatus(routeId);
+							if(status.isStarted()) {break;}
+							Thread.sleep(10);
+							count++;
+
+						} while (status.isStarting() || count < 3000);
+
+						resumed = true;
+						logger.info("Resumed flow " + id + ", route " + routeId);
+
+					}
+					else if (status.isStopped()){
+
+						logger.info("Starting route as route " + id + " is currently stopped (not suspended)");
+						startFlow(routeId);
+						resumed = true;
+					}
+				}
+				if(resumed){
+					logger.info("Resumed flow " + id);
+					return status.toString().toLowerCase();
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
 				}
@@ -506,6 +537,7 @@ public class CamelConnector extends BaseConnector {
 		
 		}catch (Exception e) {
 			e.printStackTrace();
+			stopFlow(id); //Stop flow if one of the routes cannot be resumed. Maybe find an more elegant solution?
 			return e.getMessage();
 		}
 
@@ -515,8 +547,17 @@ public class CamelConnector extends BaseConnector {
 	public boolean isFlowStarted(String id) {
 		
 		if(hasFlow(id)) {
-			ServiceStatus status = routeController.getRouteStatus(id);
-			return status.isStarted();			
+			ServiceStatus status = null;
+			List routeList = getRoutesByFlowId(id);
+
+			for(Route route : getRoutesByFlowId(id)){
+				status = routeController.getRouteStatus(route.getId());
+
+				if(!status.isStarted()){
+					return false;
+				}
+			}
+			return status != null && status.isStarted();
 		}else {
 			return false;
 		}
@@ -526,7 +567,7 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowStatus(String id) {
 		
 		if(hasFlow(id)) {
-			ServiceStatus status = routeController.getRouteStatus(id);
+			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
 			flowStatus = status.toString().toLowerCase();		
 		}else {
 			flowStatus = "unconfigured";			
@@ -539,7 +580,7 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowUptime(String id) {
 	
 		if(hasFlow(id)) {
-			Route route = context.getRoute(id);
+			Route route = getRoutesByFlowId(id).get(0);
 			flowUptime = route.getUptime();
 		}else {
 			flowUptime = "0";
@@ -549,18 +590,27 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String getFlowLastError(String id) {
-		
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			org.apache.camel.api.management.mbean.RouteError lastError = route.getLastError();
-			if(lastError!=null) {
-				flowInfo = lastError.toString();
-			}else {
-				flowInfo = "0";
+
+		List<Route> routeList = getRoutesByFlowId(id);
+		StringBuilder sb = new StringBuilder();
+		for(Route r : routeList){
+			String routeId = r.getId();
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+
+			if(route != null){
+				org.apache.camel.api.management.mbean.RouteError lastError = route.getLastError();
+				if(lastError != null){
+					sb.append("RouteID: ");
+					sb.append(routeId);
+					sb.append("Error: ");
+					sb.append(lastError.toString());
+					sb.append(";");
+				}
 			}
-			
-		}else {
+		}
+		if(!sb.toString().isEmpty()){
+			flowInfo = sb.toString();
+		} else{
 			flowInfo = "0";
 		}
 
@@ -570,14 +620,21 @@ public class CamelConnector extends BaseConnector {
 	
 	public String getFlowTotalMessages(String id) throws Exception {
 
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long totalMessages = route.getExchangesTotal();
-			flowInfo = Long.toString(totalMessages);
-		}else {
-			flowInfo = "0";
+		List<Route> routeList = getRoutesByFlowId(id);
+
+		long totalMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+
+			if(route != null && "from".equals(description)){
+				totalMessages += route.getExchangesTotal();
+			}
 		}
+
+		flowInfo = Long.toString(totalMessages);
 
 		return flowInfo;
 
@@ -585,29 +642,41 @@ public class CamelConnector extends BaseConnector {
 	
 	public String getFlowCompletedMessages(String id) throws Exception {
 
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long completedMessages = route.getExchangesCompleted();
-			flowInfo = Long.toString(completedMessages);
-		}else {
-			flowInfo = "0";
+		List<Route> routeList = getRoutesByFlowId(id);
+		long completedMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null && "from".equals(description)){
+				completedMessages += route.getExchangesCompleted();
+			}
 		}
+
+		flowInfo = Long.toString(completedMessages);
 
 		return flowInfo;
 
 	}
 
 	public String getFlowFailedMessages(String id) throws Exception  {
-						
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long failedMessages = route.getExchangesFailed();
-			flowInfo = Long.toString(failedMessages);
-		}else {
-			flowInfo = "0";
+
+		List<Route> routeList = getRoutesByFlowId(id);
+		long failedMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null && "from".equals(description)){
+				failedMessages += route.getExchangesFailed();
+			}
 		}
+
+		flowInfo = Long.toString(failedMessages);
 
 		return flowInfo;
 
@@ -1108,6 +1177,15 @@ public class CamelConnector extends BaseConnector {
 
 		return sslContextParameters;
     }
+
+	/**
+	 * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.
+	 * @param id The flowID or routeID
+	 * @return A List of Routes
+	 */
+	private List<Route> getRoutesByFlowId(String id){
+		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+	}
 	
     
 }
