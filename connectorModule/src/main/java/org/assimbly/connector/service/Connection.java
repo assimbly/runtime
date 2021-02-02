@@ -1,10 +1,5 @@
 package org.assimbly.connector.service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.TreeMap;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
@@ -20,8 +15,12 @@ import org.assimbly.util.BaseDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
 import progress.message.jclient.ConnectionFactory;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.TreeMap;
 
 public class Connection {
 
@@ -107,12 +106,12 @@ public class Connection {
 
 		if(uri!=null){
 
-			if(connectionId!=null){
+			if(connectionId!=null) {
 
-				String[] uriSplitted = uri.split(":",2);
+				String[] uriSplitted = uri.split(":", 2);
 				String component = uriSplitted[0];
 
-				String options[] = {"activemq", "amazonmq","sonicmq", "sjms", "amqp", "amqps", "sql"};
+				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -132,9 +131,9 @@ public class Connection {
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 
-						if(type.equals("to")) {
+						if (type.equals("to")) {
 							properties.put(type + "." + endpointId + ".uri", uri);
-						}else {
+						} else {
 							properties.put(type + ".uri", uri);
 						}
 						break;
@@ -142,10 +141,10 @@ public class Connection {
 						setupSJMSConnection(properties, "sjms", type);
 						break;
 					case 4:
-						setupAMQPConnection(properties, "amqp", false);
+						setupAMQPConnection(properties, "amqps", true);
 						break;
 					case 5:
-						setupAMQPConnection(properties, "amqps", true);
+						setupAMQPConnection(properties, "amqp", false);
 						break;
 					case 6:
 						setupJDBCConnection(properties, type);
