@@ -363,7 +363,7 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
 
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 

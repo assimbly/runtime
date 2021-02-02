@@ -795,11 +795,13 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public String getFlowStats(String id, String mediaType) throws Exception {
-		
-		ManagedRouteMBean route = managed.getManagedRoute(id);
+	public String getFlowStats(String id, String endpointid, String mediaType) throws Exception {
 
-		flowStatus = getFlowStatus(id);
+		String routeid = id + "-" + endpointid;
+
+		ManagedRouteMBean route = managed.getManagedRoute(routeid);
+
+		flowStatus = getFlowStatus(routeid);
 		
 		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);

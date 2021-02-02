@@ -517,7 +517,7 @@ public interface Connector {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, String mediaType) throws Exception;	
+	public String getFlowStats(String flowId, String endpointid, String mediaType) throws Exception;
 	
 	/**
 	* Gets a running route as XML/JSON by id
