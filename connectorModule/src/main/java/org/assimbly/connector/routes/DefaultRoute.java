@@ -1,6 +1,7 @@
 package org.assimbly.connector.routes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +30,11 @@ public class DefaultRoute extends RouteBuilder {
 	private int backOffMultiplier;
 	private String logMessage;
 
-	private List<String> onrampUriKeyList;
+	private List<String> onrampUriKeys;
+	private List<String> offrampUriKeys;
 	private String[] offrampUriList;
-	
+	int index = 0;
+
 	public DefaultRoute(final Map<String, String> props){
 		this.props = props;
 	}
@@ -53,10 +56,11 @@ public class DefaultRoute extends RouteBuilder {
 		Processor failureProcessor = new FailureProcessor();
 		Processor convertProcessor = new ConvertProcessor();
 
-		offrampUriList = getOfframpUriList();
-		onrampUriKeyList = getOnrampUriKeyList();
 		flowId = props.get("id");
-		
+		onrampUriKeys = getUriKeys("from");
+		offrampUriKeys = getUriKeys("to");
+		offrampUriList = getOfframpUriList();
+
 		if (this.props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
 			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
@@ -143,9 +147,10 @@ public class DefaultRoute extends RouteBuilder {
 
 			//The default Camel route (onramp)
 
-		for(String key : onrampUriKeyList){
-			String endpointId = StringUtils.substringBetween(key, "from.", ".uri");
-			String uri = props.get(key);
+		for(String onrampUriKey : onrampUriKeys){
+
+			String uri = props.get(onrampUriKey);
+			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
             String headerId = props.get("from." + endpointId + ".header.id");
 
 			//The default Camel route (onramp)
@@ -167,17 +172,18 @@ public class DefaultRoute extends RouteBuilder {
 		}
         
         //The default Camel route (offramp)		
-		for (String offrampUri : offrampUriList) 
-		{	
+		for (String offrampUriKey : offrampUriKeys)
+		{
 
-			String endpointId = StringUtils.substringAfterLast(offrampUri, "endpoint=");
-			String toUri = props.get("to." + endpointId + ".uri");
+			String uri = props.get(offrampUriKey);
+			String offrampUri = offrampUriList[index++];
+			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
 			
-			from(offrampUri)			
+			from(offrampUri)
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
-			.setHeader("AssimblyTo", constant(toUri))
+			.setHeader("AssimblyTo", constant(uri))
 			.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
 			.process(headerProcessor)
 			.id("headerProcessor" + flowId + "-" + endpointId)
@@ -186,41 +192,44 @@ public class DefaultRoute extends RouteBuilder {
      	    .choice()    		    
 	  		    .when(header("ReplyTo").convertToString().contains(":"))
 	  		    	.to(logMessage)
-			    	.to(toUri)			    	
+			    	.to(uri)
 			    	.toD("${header.ReplyTo}")
 	  		    .when(header("ReplyTo").isNotNull())
 	  		    	.to(logMessage)
-	  		    	.to(toUri)
+	  		    	.to(uri)
 	  		    	.toD("vm://${header.ReplyTo}")
 	  		    .otherwise()
-	  		    	.to(toUri)
+	  		    	.to(uri)
 	  		 .end()
 	  		 .to(logMessage)
 	  		 .routeId(flowId + "-" + endpointId).description("to");
 		   
 		}
 	}
-	
+
 	//create a string array for all offramps
 	private String[] getOfframpUriList() {
-		
+
 		String offrampUri = props.get("offramp.uri.list");
-		
+
 		return offrampUri.split(",");
-		
+
 	}
 
-	//create a string array for all onramps
-	private List<String> getOnrampUriKeyList() {
+	//create a string array for all of a specific endpointType
+	private List<String> getUriKeys(String endpointType) {
+
 		List<String> keys = new ArrayList<>();
 
-		for(String s : props.keySet()){
-			if(s.startsWith("from")){
-				keys.add(s);
+		for(String prop : props.keySet()){
+			if(prop.startsWith(endpointType) && prop.endsWith("uri")){
+				keys.add(prop);
 			}
 		}
+
 		return keys;
 
 	}
+
 
 }
