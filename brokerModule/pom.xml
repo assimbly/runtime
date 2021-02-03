@@ -4,13 +4,13 @@
   <parent>
     <artifactId>connector</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.2.0</version>
+    <version>3.3.0</version>
   </parent>
 
   <packaging>jar</packaging>
   <groupId>org.assimbly</groupId>
   <artifactId>brokerModule</artifactId>
-  <version>3.2.0</version>
+  <version>3.3.0</version>
 
   <name>brokerModule</name>
 
