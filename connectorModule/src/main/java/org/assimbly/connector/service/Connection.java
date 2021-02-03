@@ -1,5 +1,7 @@
 package org.assimbly.connector.service;
 
+import com.ibm.mq.jms.MQConnectionFactory;
+import com.ibm.msg.client.wmq.compat.jms.internal.JMSC;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
@@ -111,7 +113,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":", 2);
 				String component = uriSplitted[0];
 
-				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "sql"};
+				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -131,7 +133,7 @@ public class Connection {
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 
-						if (type.equals("to")) {
+						if (type.equals("to") || type.equals("from")) {
 							properties.put(type + "." + endpointId + ".uri", uri);
 						} else {
 							properties.put(type + ".uri", uri);
@@ -147,6 +149,9 @@ public class Connection {
 						setupAMQPConnection(properties, "amqp", false);
 						break;
 					case 6:
+						setupIBMMQConnection(properties, "ibmmq", type);
+						break;
+					case 7:
 						setupJDBCConnection(properties, type);
 						break;
 					default:
@@ -293,7 +298,7 @@ public class Connection {
 
 	private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
 
-		if(direction.equals("to")) {
+		if(direction.equals("to") || direction.equals("from")) {
 			direction = direction + "." + endpointId;
 		}
 
@@ -332,10 +337,9 @@ public class Connection {
 				sjmsComponent.setConnectionFactory(cf);
 				context.addComponent(componentName, sjmsComponent);
 			}
-
 		}
-
 	}
+
 	private void setupAMQPConnection(TreeMap<String, String> properties, String componentName, boolean sslEnabled) throws Exception{
 
 		String url = properties.get("service." + serviceId + ".url");
@@ -469,6 +473,58 @@ public class Connection {
 			}
 		}
 	}
+
+
+	private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
+
+		if(direction.equals("to") || direction.equals("from")) {
+			direction = direction + "." + endpointId;
+		}
+
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
+		String channel = properties.get("service."  + serviceId + ".channel");
+
+		String host = StringUtils.defaultIfEmpty(url.split(":")[0], "localhost");
+		String portasString = StringUtils.defaultIfEmpty(url.split(":")[1], "1416");
+		int port = Integer.parseInt(portasString);
+
+		logger.info("Setting up IBM MQ client connection.");
+		if(url!=null){
+
+			MQConnectionFactory cf = new MQConnectionFactory();
+
+			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
+				cf.createConnection(username,password);
+				cf.setHostName(host);
+				cf.setChannel(channel);//communications link
+				cf.setPort(port);
+				cf.setQueueManager("QUEUE.MGR");//service provider
+				cf.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+
+			}else {
+				cf.createConnection();
+				cf.setHostName(host);
+				cf.setChannel(channel);//communications link
+				cf.setPort(port);
+				cf.setQueueManager("QUEUE.MGR");//service provider
+				cf.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+			}
+
+			if(context.hasComponent(componentName)== null){
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
+			}else {
+				context.removeComponent(componentName);
+				sjmsComponent = new SjmsComponent();
+				sjmsComponent.setConnectionFactory(cf);
+				context.addComponent(componentName, sjmsComponent);
+			}
+		}
+	}
+
 
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 
