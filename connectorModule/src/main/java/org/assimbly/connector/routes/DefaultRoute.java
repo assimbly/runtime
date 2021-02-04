@@ -194,7 +194,7 @@ public class DefaultRoute extends RouteBuilder {
 	  		    	.to(logMessage)
 			    	.to(uri)
 			    	.toD("${header.ReplyTo}")
-	  		    .when(header("ReplyTo").isNotNull())
+	  		    .when(header("ReplyTo").isNotNulgl())
 	  		    	.to(logMessage)
 	  		    	.to(uri)
 	  		    	.toD("vm://${header.ReplyTo}")
