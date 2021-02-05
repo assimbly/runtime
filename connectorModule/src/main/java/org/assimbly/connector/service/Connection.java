@@ -61,7 +61,9 @@ public class Connection {
 			uri = properties.get("to." + endpointId + ".uri");
 			startConnection(uri,"to");
 		}
-
+		if(key.startsWith("response")){
+			//TODO: Response logic goes here
+		}
 		if(key.startsWith("error")){
 			uri = properties.get("error.uri");
 			startConnection(uri, "error");
@@ -83,7 +85,10 @@ public class Connection {
 				//stopConnection(toUri,"to");
 			}
 		}
-
+		if(properties.get("response.service.id")!=null){
+			uri = properties.get("response.uri");
+			//stopConnection(toUri,"to");
+		}
 		if(properties.get("error.service.id")!=null){
 			uri = properties.get("error.uri");
 			//stopConnection(uri, "error");
@@ -96,9 +101,22 @@ public class Connection {
 
 	private void startConnection(String uri, String type) throws Exception{
 
+		properties.forEach((m, n) -> {
+			System.out.println(m + ": " + n);
+
+		});
+
+		System.out.println();
+
 		if(type.equals("to")) {
 			connectionId = properties.get("to." + endpointId + ".service.id");
-		}else {
+		} else if (type.equals("from")){
+			connectionId = properties.get("from." + endpointId + "service.id");//TODO: double check if this connectionId is correct!
+		}
+		else if (type.equals("response")){
+			connectionId = properties.get("response." + endpointId + "service.id");
+		}
+		else {
 			connectionId = properties.get(type + ".service.id");
 		}
 
@@ -131,10 +149,10 @@ public class Connection {
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 
-						if (type.equals("to")) {
-							properties.put(type + "." + endpointId + ".uri", uri);
-						} else {
+						if (type.equals("error")) {
 							properties.put(type + ".uri", uri);
+						} else {
+							properties.put(type + "." + endpointId + ".uri", uri);
 						}
 						break;
 					case 3:
@@ -161,10 +179,10 @@ public class Connection {
 	@SuppressWarnings("unused")
 	private void stopConnection(String uri, String type) throws Exception{
 
-		if(type.equals("to")) {
-			connectionId = properties.get("to." + endpointId + ".service.id");
-		}else {
+		if(type.equals("error")) {
 			connectionId = properties.get(type + ".service.id");
+		}else {
+			connectionId = properties.get("to." + endpointId + ".service.id");
 		}
 
 		flowId = properties.get("id");
@@ -294,7 +312,7 @@ public class Connection {
 	private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
 
 		if(direction.equals("to")) {
-			direction = direction + "." + endpointId;
+			direction = direction + "." + endpointId; //TODO: Also for From and/or Response endpoints??
 		}
 
 		String url = properties.get("service." + serviceId + ".url");
@@ -472,10 +490,10 @@ public class Connection {
 
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
 
-		if(direction.equals("to")) {
-			connectionId = properties.get("to." + endpointId + ".service.id");
-		}else {
+		if(direction.equals("error")) {
 			connectionId = properties.get(direction + ".service.id");
+		}else {
+			connectionId = properties.get(direction + "." + endpointId + ".service.id");//TODO: is this correct?
 		}
 
 		//Create datasource
