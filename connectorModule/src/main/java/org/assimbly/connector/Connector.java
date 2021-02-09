@@ -1,50 +1,70 @@
 package org.assimbly.connector;
 
-import java.security.cert.Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.util.EncryptionUtil;
+
+import java.security.cert.Certificate;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 
 /**
-* <pre>
-* This interface is meant to configure and manage a connector.
-*
-* A <b>Connector</b> is a collection of flows.
-* A <b>Flow</b> connects one or more endpoints for example a database and a directory.
-* 
-* Each flow configuration consists of a Treemap&lt;key,value&gt;. The connector configuration
-* consists of a list of flow configurations.
-*
-* For a valid flow configuration see
-* <a href="https://github.com/assimbly/connector">https://github.com/assimbly/connector</a>
-* </pre>
-*/
+ * <pre>
+ * This interface is meant to configure and manage a connector.
+ *
+ * A <b>Connector</b> is a collection of flows.
+ * A <b>Flow</b> connects one or more endpoints for example a database and a directory.
+ *
+ * Each flow configuration consists of a Treemap&lt;key,value&gt;. The connector configuration
+ * consists of a list of flow configurations.
+ *
+ * For a valid flow configuration see
+ * <a href="https://github.com/assimbly/connector">https://github.com/assimbly/connector</a>
+ * </pre>
+ */
 public interface Connector {
 
-	//configure connector
 	/**
-	* Sets the connector configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;). 
-	* The configuration cleared after a connector is reinitialized.
-	*
-	* @param  configuration: list of flow configurations (Treemaps)
-	* @throws Exception if configuration can't be set
-	*/
-	public void setConfiguration(List<TreeMap<String,String>> configuration) throws Exception;
+	 * Gets the connector properties
+	 */
+	public Properties getEncryptionProperties();
 
 	/**
-	* Sets the connector configuration from a string of a specific format (XML,JSON,YAML). 
-	* The configuration cleared after a connector is reinitialized.
-	*
-	* @param  connectorId ID of the connector 
-	* @param  mediaType (XML,JSON,YAML)
-	* @param  configuration (the XML, JSON or YAML file)	
-	* @throws Exception if configuration can't be set
-	*/
+	 * Sets the connector properties to pass application property variables from the application to the connector
+	 *
+	 * @param properties: set application properties
+	 */
+	public void setEncryptionProperties(Properties properties);
+
+	/**
+	 * @return encryption Utility
+	 */
+	public EncryptionUtil getEncryptionUtil();
+
+	//configure connector
+
+	/**
+	 * Sets the connector configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;).
+	 * The configuration cleared after a connector is reinitialized.
+	 *
+	 * @param configuration: list of flow configurations (Treemaps)
+	 * @throws Exception if configuration can't be set
+	 */
+	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception;
+
+	/**
+	 * Sets the connector configuration from a string of a specific format (XML,JSON,YAML).
+	 * The configuration cleared after a connector is reinitialized.
+	 *
+	 * @param connectorId   ID of the connector
+	 * @param mediaType     (XML,JSON,YAML)
+	 * @param configuration (the XML, JSON or YAML file)
+	 * @throws Exception if configuration can't be set
+	 */
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
 	
 	/**
@@ -133,40 +153,41 @@ public interface Connector {
 	*/
 	public String testConnection(String host, int port, int timeOut);
 
-	
+
 	//manage connector
+
 	/**
-	* Starts a connector. The connector acts like a container for flows.  
-	* After starting it can be configured
-	*
-	* @throws Exception if connector doesn't start
-	*/
+	 * Starts a connector. The connector acts like a container for flows.
+	 * After starting it can be configured
+	 *
+	 * @throws Exception if connector doesn't start
+	 */
 	public void start() throws Exception;
 
 	/**
-	* Stops a connector
-	*
-	* @throws Exception if connector doesn't start
-	*/
+	 * Stops a connector
+	 *
+	 * @throws Exception if connector doesn't start
+	 */
 	public void stop() throws Exception;
 
 	/**
-	* Checks if a connector is started  
-	*
-	* @return returns true if connector is started
-	*/
+	 * Checks if a connector is started
+	 *
+	 * @return returns true if connector is started
+	 */
 	public boolean isStarted();
 
 	/**
-	* Turn on/off tracing  
-	* @param  true to turn on tracing, false to turn it off
-	*/
+	 * Turn on/off tracing
+	 * @param tracing to turn on tracing, false to turn it off
+	 */
 	public void setTracing(boolean tracing);
 
 	/**
-	* Turn on/off debugging  
-	* @param  true to turn on debugging, false to turn it off
-	*/
+	 * Turn on/off debugging
+	 * @param debugging to turn on debugging, false to turn it off
+	 */
 	public void setDebugging(boolean debugging);
 	
 	/**

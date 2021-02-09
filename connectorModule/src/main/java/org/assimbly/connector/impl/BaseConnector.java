@@ -1,47 +1,51 @@
 package org.assimbly.connector.impl;
 
-import java.net.URI;
-import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.IntStream;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.assimbly.connector.Connector;
 import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.configuration.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
-import org.assimbly.connector.Connector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.security.cert.Certificate;
+import java.util.*;
 
 
 public abstract class BaseConnector implements Connector {
-	
+
 	@SuppressWarnings("unused")
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.impl.BaseConnector");
 
 	//properties are (list of) key/value maps
-	private List<TreeMap<String,String>> properties = new ArrayList<>();
+	private List<TreeMap<String, String>> properties = new ArrayList<>();
 	private TreeMap<String, String> flowProperties;
-	private List<TreeMap<String,String>> connections = new ArrayList<>();
+	private List<TreeMap<String, String>> connections = new ArrayList<>();
 
 	//configuration are strings
 	private String configuration;
 	private String flowConfiguration;
-	
+
+	private Properties encryptionProperties;
+
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+	}
+
+	public Properties getEncryptionProperties() {
+		return encryptionProperties;
+	}
+
 	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception {
-		for (TreeMap<String, String> flowConfiguration : configuration){
+		for (TreeMap<String, String> flowConfiguration : configuration) {
 			setFlowConfiguration(flowConfiguration);
-		}		
+		}
 	}
 
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
@@ -75,7 +79,7 @@ public abstract class BaseConnector implements Connector {
 	}
 
 	public String getConfiguration(String connectorId, String mediaType) throws Exception {
-		
+
 		this.properties = getConfiguration();
 		mediaType = mediaType.toLowerCase();
 

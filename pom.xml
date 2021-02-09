@@ -16,14 +16,26 @@
 		<jolokia-version>1.6.2</jolokia-version>
 	</properties>
 
-	<dependencies>					
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
+		<dependency>
+			<groupId>org.jasypt</groupId>
+			<artifactId>jasypt</artifactId>
+			<version>1.9.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jasypt</artifactId>
+			<version>${camel-version}</version>
+			<!-- use the same version as your Camel core version -->
+		</dependency>
 
 		<!-- sonicmq dependencies -->
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
 			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<!-- <optional>true</optional> -->
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>

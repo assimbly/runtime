@@ -1,5 +1,44 @@
 package org.assimbly.connector.impl;
 
+import com.codahale.metrics.MetricRegistry;
+import org.apache.camel.*;
+import org.apache.camel.api.management.ManagedCamelContext;
+import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.jasypt.JasyptPropertiesParser;
+import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
+import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
+import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
+import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
+import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.spi.EventNotifier;
+import org.apache.camel.spi.Language;
+import org.apache.camel.spi.RouteController;
+import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.jsse.KeyManagersParameters;
+import org.apache.camel.support.jsse.KeyStoreParameters;
+import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.support.jsse.TrustManagersParameters;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.assimbly.connector.event.EventCollector;
+import org.assimbly.connector.routes.DefaultRoute;
+import org.assimbly.connector.routes.SimpleRoute;
+import org.assimbly.connector.service.Connection;
+import org.assimbly.docconverter.DocConverter;
+import org.assimbly.util.BaseDirectory;
+import org.assimbly.util.CertificatesUtil;
+import org.assimbly.util.DependencyUtil;
+import org.assimbly.util.EncryptionUtil;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,57 +52,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.camel.*;
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
-import org.apache.camel.api.management.mbean.ManagedRouteMBean;
-import org.apache.camel.builder.ExchangeBuilder;
-import org.apache.camel.catalog.DefaultCamelCatalog;
-import org.apache.camel.catalog.EndpointValidationResult;
-import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
-import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
-import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
-import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.spi.Language;
-import org.apache.camel.spi.RouteController;
-import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.KeyManagersParameters;
-import org.apache.camel.support.jsse.KeyStoreParameters;
-import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.support.jsse.TrustManagersParameters;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
-
-import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.CertificatesUtil;
-import org.assimbly.util.DependencyUtil;
-import org.assimbly.connector.event.EventCollector;
-import org.assimbly.connector.routes.DefaultRoute;
-import org.assimbly.connector.routes.SimpleRoute;
-import org.assimbly.connector.service.Connection;
-import org.assimbly.docconverter.DocConverter;
-import org.json.JSONObject;
-
-import javax.xml.xpath.XPathFactory;
-
-import static org.apache.camel.builder.Builder.constant;
-import static org.apache.camel.builder.SimpleBuilder.simple;
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-import static org.apache.camel.language.xpath.XPathBuilder.xpath;
-import static org.apache.camel.language.spel.SpelExpression.spel;
-
 public class CamelConnector extends BaseConnector {
 
 	private CamelContext context;
 
+
 	private boolean started = false;
+
+
 	private int stopTimeout = 30;
 	private ServiceStatus status;
 	private String flowStatus;
@@ -75,11 +71,14 @@ public class CamelConnector extends BaseConnector {
 
 	private String flowInfo;
 
-    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
-	
+
+	private Properties encryptionProperties;
+
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
+
 
 	public CamelConnector() {
 		try {
@@ -100,6 +99,7 @@ public class CamelConnector extends BaseConnector {
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
+
 	public void setBasicSettings() throws Exception {
 
 		//set basic settings
@@ -107,36 +107,49 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
+		//enable jasypt encrypted properties parser
+		((PropertiesComponent) context.getPropertiesComponent()).setPropertiesParser(new JasyptPropertiesParser());
 		//setting transport security globally
-        context.setSSLContextParameters(createSSLContextParameters());
-        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-        
+		context.setSSLContextParameters(createSSLContextParameters());
+		((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
+
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
 
 		//set history metrics
-	    MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
-	    factory.setPrettyPrint(true);
-	    factory.setMetricsRegistry(metricRegistry);
+		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+		factory.setPrettyPrint(true);
+		factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
-						
+
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
 
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-		
+
 	}
-	
+
+	@Override
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		((JasyptPropertiesParser) ((PropertiesComponent) context.getPropertiesComponent()).getPropertiesParser()).setAlgorithm(encryptionProperties.getProperty("algorithm"));
+		((JasyptPropertiesParser) ((PropertiesComponent) context.getPropertiesComponent()).getPropertiesParser()).setPassword(encryptionProperties.getProperty("password"));
+	}
+
+	@Override
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("algorithm"), encryptionProperties.getProperty("password"));
+	}
+
 	public void start() throws Exception {
-		
+
 		// start Camel context
 		context.start();
 		started = true;
