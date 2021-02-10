@@ -18,25 +18,23 @@
 
 	<dependencies>					
 
-		<!-- sonicmq dependencies -->
+		<!--
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
-			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<version>8.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Crypto</artifactId>
-			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<version>8.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_XMessage</artifactId>
-			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<version>8.7.0</version>
 		</dependency>
+		-->
 
 		<!-- jolokia dependencies -->
 		<dependency>
@@ -330,5 +328,6 @@
 		<module>baseModule</module>
 		<module>connectorModule</module>
 		<module>brokerModule</module>
-  </modules>
+		<module>extraModule</module>
+	</modules>
 </project>

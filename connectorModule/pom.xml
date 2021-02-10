@@ -23,9 +23,15 @@
 		<dependency>
 			<groupId>org.assimbly</groupId>
 			<artifactId>baseModule</artifactId>
-			  <version>3.2.0</version>
+			  <version>3.3.0</version>
 			<scope>compile</scope>
 		</dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>extraModule</artifactId>
+		  <version>3.3.0</version>
+		  <scope>compile</scope>
+	  </dependency>
     	<!-- camel core dependencies in alphabetic order-->
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
