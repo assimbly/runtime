@@ -1,7 +1,6 @@
 package org.assimbly.connector.routes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -183,7 +182,7 @@ public class DefaultRoute extends RouteBuilder {
 			String offrampUri = offrampUriList[index++];
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
-			String responseId = props.get("to." + endpointId + ".response.id");//TODO: If toEndpoint has Response...
+			String responseId = props.get("to." + endpointId + ".response.id");
 
 			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
 
@@ -196,7 +195,12 @@ public class DefaultRoute extends RouteBuilder {
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)
 			.id("convertProcessor" + flowId + "-" + endpointId)
+			.log(hasResponseEndpoint.toString())
      	    .choice()
+				.when(hasResponseEndpoint)
+					.to(logMessage)
+					.to(uri)
+					.to("direct:flow=" + flowId + "endpoint=" + responseId)
 	  		    .when(header("ReplyTo").convertToString().contains(":"))
 	  		    	.to(logMessage)
 			    	.to(uri)
@@ -205,10 +209,6 @@ public class DefaultRoute extends RouteBuilder {
 	  		    	.to(logMessage)
 	  		    	.to(uri)
 	  		    	.toD("vm://${header.ReplyTo}")
-				.when(hasResponseEndpoint)
-					.to(logMessage)
-					.to(uri)
-					.to("direct:response." + responseId)
 	  		    .otherwise()
 	  		    	.to(uri)
 	  		 .end()
@@ -220,12 +220,13 @@ public class DefaultRoute extends RouteBuilder {
 		for(String responseUriKey : responseUriKeys){
 			String uri = props.get(responseUriKey);
 			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
-			String headerId = props.get("to." + endpointId + ".header.id");
+			String headerId = props.get("response." + endpointId + ".header.id");
+			String responseId = props.get("response." + endpointId + ".response.id");
 
-			from("direct:" + endpointId)
+			from("direct:flow=" + flowId + "endpoint=" + responseId)
 					.errorHandler(routeErrorHandler)
 					.setHeader("AssimblyFlowID", constant(flowId))
-					.setHeader("AssimblyHeaderId", constant(props.get(headerId)))
+					.setHeader("AssimblyHeaderId", constant(headerId))
 					.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
 					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
 					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))

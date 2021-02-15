@@ -91,13 +91,11 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public CamelConnector(String connectorId, String configuration) throws Exception {
-//		this();//TODO: use own constructor?
 		setBasicSettings();
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
 	public CamelConnector(String connectorId, URI configuration) throws Exception {
-//		this();//TODO: use own constructor?
 		setBasicSettings();
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
@@ -351,10 +349,6 @@ public class CamelConnector extends BaseConnector {
 			List<TreeMap<String, String>> allProps = super.getConfiguration();
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
-				System.out.println("Props " + i + ":");
-				props.forEach((k, v) -> {
-					System.out.println("Key: " + k + ", Value: " + v);
-				});
 
 				if (props.get("id").equals(id)) {
 					
@@ -384,7 +378,6 @@ public class CamelConnector extends BaseConnector {
 							count++;
 
 						} while (status.isStarting() || count < 3000);
-						//TODO: What happens if one route doesn't start? Throw Exception??
 
 					} else {
 						logger.info("Route " + routeId + " already started");

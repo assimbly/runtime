@@ -448,7 +448,7 @@ public class XMLFileConfiguration {
 			if(type.equals("to")){
 				responseId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/response_id");
 			} else if(type.equals("response")){
-				responseId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/id");
+				responseId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/response_id");
 			}
 
 
@@ -457,6 +457,9 @@ public class XMLFileConfiguration {
 				break;
 			} else if (type.equals("response")) {
 				properties.put(type + "." + endpointId + ".uri", uri);
+				if(responseId != null) {
+					properties.put(type + "." + endpointId + ".response.id", responseId);
+				}
 			} else if(type.equals("from")) {
 				properties.put(type + "." + endpointId + ".uri", uri);
 				if(index >= maxFromTypes){
@@ -465,7 +468,7 @@ public class XMLFileConfiguration {
 			} else {
 				properties.put(type + "." + endpointId + ".uri", uri);
 				if(responseId != null) {
-					properties.put(type + "." + endpointId + ".responseId", responseId);
+					properties.put(type + "." + endpointId + ".response.id", responseId);
 				}
 				properties.put("offramp.uri.list", offrampUri);
 			}

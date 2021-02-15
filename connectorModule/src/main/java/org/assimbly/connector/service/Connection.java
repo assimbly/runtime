@@ -64,7 +64,9 @@ public class Connection {
 			startConnection(uri,"to");
 		}
 		if(key.startsWith("response")){
-			//TODO: Response logic goes here
+			endpointId = StringUtils.substringBetween(key, "response.", ".service.id");
+			uri = properties.get("response." + endpointId + ".uri");
+			startConnection(uri, "response");
 		}
 		if(key.startsWith("error")){
 			uri = properties.get("error.uri");
@@ -103,17 +105,10 @@ public class Connection {
 
 	private void startConnection(String uri, String type) throws Exception{
 
-		properties.forEach((m, n) -> {
-			System.out.println(m + ": " + n);
-
-		});
-
-		System.out.println();
-
 		if(type.equals("to")) {
 			connectionId = properties.get("to." + endpointId + ".service.id");
 		} else if (type.equals("from")){
-			connectionId = properties.get("from." + endpointId + "service.id");//TODO: double check if this connectionId is correct!
+			connectionId = properties.get("from." + endpointId + "service.id");
 		}
 		else if (type.equals("response")){
 			connectionId = properties.get("response." + endpointId + "service.id");
@@ -549,7 +544,7 @@ public class Connection {
 		if(direction.equals("error")) {
 			connectionId = properties.get(direction + ".service.id");
 		}else {
-			connectionId = properties.get(direction + "." + endpointId + ".service.id");//TODO: is this correct?
+			connectionId = properties.get(direction + "." + endpointId + ".service.id");
 		}
 
 		//Create datasource
