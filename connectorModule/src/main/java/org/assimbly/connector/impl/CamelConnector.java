@@ -56,10 +56,7 @@ public class CamelConnector extends BaseConnector {
 
 	private CamelContext context;
 
-
 	private boolean started = false;
-
-
 	private int stopTimeout = 30;
 	private ServiceStatus status;
 	private String flowStatus;
@@ -71,14 +68,13 @@ public class CamelConnector extends BaseConnector {
 
 	private String flowInfo;
 
-	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 
 	private Properties encryptionProperties;
 
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
-
 
 	public CamelConnector() {
 		try {
@@ -99,7 +95,6 @@ public class CamelConnector extends BaseConnector {
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
-
 	public void setBasicSettings() throws Exception {
 
 		//set basic settings
@@ -107,16 +102,15 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		//enable jasypt encrypted properties parser
-		((PropertiesComponent) context.getPropertiesComponent()).setPropertiesParser(new JasyptPropertiesParser());
 		//setting transport security globally
-		context.setSSLContextParameters(createSSLContextParameters());
-		((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
+        context.setSSLContextParameters(createSSLContextParameters());
+        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
+        ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(true);
 
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -133,7 +127,7 @@ public class CamelConnector extends BaseConnector {
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-
+		
 	}
 
 	@Override

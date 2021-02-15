@@ -1,5 +1,8 @@
 package org.assimbly.connector.service;
 
+import com.ibm.mq.jms.MQConnectionFactory;
+import com.ibm.msg.client.wmq.common.CommonConstants;
+import com.ibm.msg.client.wmq.compat.jms.internal.JMSC;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
@@ -17,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import progress.message.jclient.ConnectionFactory;
 
+import javax.jms.JMSException;
+import javax.script.Bindings;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -111,7 +116,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":", 2);
 				String component = uriSplitted[0];
 
-				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "sql"};
+				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -131,7 +136,7 @@ public class Connection {
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 
-						if (type.equals("to")) {
+						if (type.equals("to") || type.equals("from")) {
 							properties.put(type + "." + endpointId + ".uri", uri);
 						} else {
 							properties.put(type + ".uri", uri);
@@ -147,6 +152,9 @@ public class Connection {
 						setupAMQPConnection(properties, "amqp", false);
 						break;
 					case 6:
+						setupIBMMQConnection(properties, "ibmmq", type);
+						break;
+					case 7:
 						setupJDBCConnection(properties, type);
 						break;
 					default:
@@ -213,8 +221,8 @@ public class Connection {
 		String password = properties.get("service."  + serviceId + ".password");
 
 		String conType = properties.get("service." + serviceId +".conType");
-		String maxConnections = properties.get("service." + serviceId +"service.maxConnections");
-		String concurentConsumers = properties.get("service." + serviceId +"service.concurentConsumers");
+		String maxConnections = properties.get("service." + serviceId +"service.maxconnections");
+		String concurentConsumers = properties.get("service." + serviceId +"service.concurentconsumers");
 
 		if (conType == null){
 			logger.info("No connection type specified. Setting up basic connection for activemq.");
@@ -293,7 +301,7 @@ public class Connection {
 
 	private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
 
-		if(direction.equals("to")) {
+		if(direction.equals("to") || direction.equals("from")) {
 			direction = direction + "." + endpointId;
 		}
 
@@ -332,10 +340,9 @@ public class Connection {
 				sjmsComponent.setConnectionFactory(cf);
 				context.addComponent(componentName, sjmsComponent);
 			}
-
 		}
-
 	}
+
 	private void setupAMQPConnection(TreeMap<String, String> properties, String componentName, boolean sslEnabled) throws Exception{
 
 		String url = properties.get("service." + serviceId + ".url");
@@ -382,7 +389,7 @@ public class Connection {
 
 			if(properties.get("service." + serviceId + ".faultTolerant")!=null) {
 				try {
-					Boolean.parseBoolean(properties.get("service." + serviceId + ".faultTolerant"));
+					Boolean.parseBoolean(properties.get("service." + serviceId + ".faulttolerant"));
 				} catch (Exception e) {
 					faultTolerant = true;
 				}
@@ -468,6 +475,110 @@ public class Connection {
 				}
 			}
 		}
+	}
+
+
+	private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
+
+		if(direction.equals("to") || direction.equals("from")) {
+			direction = direction + "." + endpointId;
+		}
+
+		logger.info("Setting up IBM MQ connection factory.");
+
+		MQConnectionFactory cf = setupIBMMQConnectionFactory(properties);
+
+		logger.info("Setting up IBM MQ client connection.");
+		if(context.hasComponent(componentName)== null){
+			sjmsComponent = new SjmsComponent();
+			sjmsComponent.setConnectionFactory(cf);
+			context.addComponent(componentName, sjmsComponent);
+		}else {
+			context.removeComponent(componentName);
+			sjmsComponent = new SjmsComponent();
+			sjmsComponent.setConnectionFactory(cf);
+			context.addComponent(componentName, sjmsComponent);
+		}
+
+	}
+
+	private MQConnectionFactory setupIBMMQConnectionFactory(TreeMap<String, String> properties) throws JMSException {
+
+		//required properties
+		String url = properties.get("service." + serviceId + ".url");
+		String username = properties.get("service."  + serviceId + ".username");
+		String password = properties.get("service."  + serviceId + ".password");
+		String queueManager = properties.get("service."  + serviceId + ".queuemanager");
+		String channel = properties.get("service."  + serviceId + ".channel");
+
+		//optional properties
+		String channelReceiveExit = properties.get("service."  + serviceId + ".channelreceiveexit");
+		String channelReceiveExitUserData = properties.get("service."  + serviceId + ".channelreceiveexituserdata");
+		String channelSendExit = properties.get("service."  + serviceId + ".channelsendexit");
+		String channelSendExitUserData = properties.get("service."  + serviceId + ".channelsendexituserdata");
+		String channelSecurityExit = properties.get("service."  + serviceId + ".channelsecurityexit");
+		String channelSecurityExitUserData = properties.get("service."  + serviceId + ".channelsecurityexituserdata");
+		String clientId = properties.get("service."  + serviceId + ".appname");
+		String appName = properties.get("service."  + serviceId + ".clientid");
+		String clientReconnectTimeOutAsString = properties.get("service."  + serviceId + ".reconnecttimeout");
+		String clientReconnectOptionsAsString = properties.get("service."  + serviceId + ".reconnectoptions");
+		String transportTypeAsString = properties.get("service."  + serviceId + ".transporttype");
+		String pollingIntervalAsString = properties.get("service."  + serviceId + ".pollinginterval");
+		String maxBufferSizeAsString = properties.get("service."  + serviceId + ".maxbuffersize");
+
+		MQConnectionFactory cf = new MQConnectionFactory();
+
+		//public static final int 	WMQ_CM_BINDINGS 				0
+		//public static final int 	WMQ_CM_CLIENT 					1
+		//public static final int 	WMQ_CM_DIRECT_TCPIP 			2
+		//public static final int 	WMQ_CM_DIRECT_HTTP 				4
+		//public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
+		if(transportTypeAsString!=null){
+			cf.setTransportType(Integer.parseInt(transportTypeAsString));
+		}else{
+			cf.setTransportType(CommonConstants.WMQ_CM_BINDINGS);
+		}
+
+		if(clientReconnectTimeOutAsString!=null){
+			cf.setClientReconnectTimeout(Integer.parseInt(clientReconnectTimeOutAsString));
+		}else{
+			cf.setClientReconnectTimeout(2);
+		}
+
+		if(clientReconnectTimeOutAsString!=null){
+			cf.setClientReconnectOptions(Integer.parseInt(clientReconnectOptionsAsString));
+		}else{
+			cf.setClientReconnectOptions(0);
+		}
+
+
+		if(channelReceiveExit!=null){cf.setReceiveExit(channelReceiveExit);}
+		if(channelReceiveExitUserData!=null){cf.setReceiveExitInit(channelReceiveExitUserData);}
+		if(channelSendExit!=null){cf.setSendExit(channelSendExit);}
+		if(channelSendExitUserData!=null){cf.setSendExitInit(channelSendExitUserData);}
+		if(channelSecurityExit!=null){cf.setSecurityExit(channelSecurityExit);}
+		if(channelSecurityExitUserData!=null){cf.setSecurityExitInit(channelSecurityExitUserData);}
+		if(appName!=null){cf.setAppName(appName);}
+		if(clientId!=null){cf.setClientID(clientId);}
+		if(pollingIntervalAsString!=null){cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));}
+		if(maxBufferSizeAsString!=null){cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));}
+
+		if(username == null || username.isEmpty()) {
+			cf.setConnectionNameList(url);
+			cf.setChannel(channel);//communications link
+			cf.setQueueManager(queueManager);//service provider
+			cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
+			cf.createConnection();
+		}else {
+			cf.setConnectionNameList(url);
+			cf.setChannel(channel);//communications link
+			cf.setQueueManager(queueManager);//service provider
+			cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
+			cf.createConnection(username,password);
+		}
+
+		return cf;
+
 	}
 
 	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{

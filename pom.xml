@@ -10,8 +10,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<camel-version>3.7.1</camel-version>
-		<activemq-classic-version>5.16.0</activemq-classic-version>
+		<camel-version>3.7.2</camel-version>
+		<activemq-classic-version>5.16.1</activemq-classic-version>
 		<activemq-artemis-version>2.16.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
 	</properties>
@@ -30,25 +30,23 @@
 			<!-- use the same version as your Camel core version -->
 		</dependency>
 
-		<!-- sonicmq dependencies -->
+		<!--
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Client</artifactId>
-			<version>8.6.0</version>
-			<!-- <optional>true</optional> -->
+			<version>8.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_Crypto</artifactId>
-			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<version>8.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.progress.sonic.mq</groupId>
 			<artifactId>sonic_XMessage</artifactId>
-			<version>8.6.0</version>
-     		<!-- <optional>true</optional> -->		
+			<version>8.7.0</version>
 		</dependency>
+		-->
 
 		<!-- jolokia dependencies -->
 		<dependency>
@@ -342,5 +340,6 @@
 		<module>baseModule</module>
 		<module>connectorModule</module>
 		<module>brokerModule</module>
-  </modules>
+		<module>extraModule</module>
+	</modules>
 </project>

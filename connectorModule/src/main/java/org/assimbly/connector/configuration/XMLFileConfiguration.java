@@ -472,7 +472,7 @@ public class XMLFileConfiguration {
 		if(!serviceProporties.isEmpty()){
 			
 			for(String serviceProperty : serviceProporties){
-	  		   properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
+	  		   properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1).toLowerCase(), conf.getString(serviceProperty));
     	   }
 	
 	  	   if(type.equals("from")||type.equals("error")) {
