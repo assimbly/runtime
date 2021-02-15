@@ -485,10 +485,10 @@ public class XMLFileConfiguration {
 		if(!serviceProporties.isEmpty()){
 
 			for(String serviceProperty : serviceProporties){
-				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1), conf.getString(serviceProperty));
+				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1).toLowerCase(), conf.getString(serviceProperty));
 			}
 
-			if(type.equals("from")||type.equals("error")) {
+			if(type.equals("error")) {
 				properties.put(type + ".service.id", serviceId);
 			}else {
 				properties.put(type + "." + endpointId + ".service.id", serviceId);
