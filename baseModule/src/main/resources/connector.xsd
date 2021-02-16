@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	attributeFormDefault="unqualified" elementFormDefault="qualified">
-	<xs:element name="connectors" type="connectorsType" />
+	<xs:element name="connectors" type="connectorsType"/>
 	<xs:complexType name="connectorsType">
-		<xs:sequence>
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="version" type="xs:string" minOccurs="0" maxOccurs="1" />
 			<xs:element name="connector" minOccurs="1" maxOccurs="unbounded" type="connectorType" />
-		</xs:sequence>
+		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="connectorType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">

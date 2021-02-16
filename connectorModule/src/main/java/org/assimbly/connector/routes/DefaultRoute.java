@@ -1,13 +1,14 @@
 package org.assimbly.connector.routes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
+import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +34,7 @@ public class DefaultRoute extends RouteBuilder {
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
 	private String[] offrampUriList;
+	private List<String> responseUriKeys;
 	int index = 0;
 
 	public DefaultRoute(final Map<String, String> props){
@@ -60,6 +62,7 @@ public class DefaultRoute extends RouteBuilder {
 		onrampUriKeys = getUriKeys("from");
 		offrampUriKeys = getUriKeys("to");
 		offrampUriList = getOfframpUriList();
+		responseUriKeys = getUriKeys("response");
 
 		if (this.props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
@@ -179,7 +182,10 @@ public class DefaultRoute extends RouteBuilder {
 			String offrampUri = offrampUriList[index++];
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
-			
+			String responseId = props.get("to." + endpointId + ".response.id");
+
+			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
+
 			from(offrampUri)
 			.errorHandler(routeErrorHandler)
 			.setHeader("AssimblyHeaderId", constant(headerId))
@@ -189,7 +195,12 @@ public class DefaultRoute extends RouteBuilder {
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)
 			.id("convertProcessor" + flowId + "-" + endpointId)
-     	    .choice()    		    
+			.log(hasResponseEndpoint.toString())
+     	    .choice()
+				.when(hasResponseEndpoint)
+					.to(logMessage)
+					.to(uri)
+					.to("direct:flow=" + flowId + "endpoint=" + responseId)
 	  		    .when(header("ReplyTo").convertToString().contains(":"))
 	  		    	.to(logMessage)
 			    	.to(uri)
@@ -203,7 +214,28 @@ public class DefaultRoute extends RouteBuilder {
 	  		 .end()
 	  		 .to(logMessage)
 	  		 .routeId(flowId + "-" + endpointId).description("to");
-		   
+
+		}
+
+		for(String responseUriKey : responseUriKeys){
+			String uri = props.get(responseUriKey);
+			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
+			String headerId = props.get("response." + endpointId + ".header.id");
+			String responseId = props.get("response." + endpointId + ".response.id");
+
+			from("direct:flow=" + flowId + "endpoint=" + responseId)
+					.errorHandler(routeErrorHandler)
+					.setHeader("AssimblyFlowID", constant(flowId))
+					.setHeader("AssimblyHeaderId", constant(headerId))
+					.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
+					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
+					.to(logMessage)
+					.process(headerProcessor)
+					.id("headerProcessor" + flowId + "-" + endpointId)
+					.to(uri)
+					.routeId(flowId + "-" + endpointId).description("response");
+
 		}
 	}
 

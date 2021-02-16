@@ -30,24 +30,6 @@
 			<!-- use the same version as your Camel core version -->
 		</dependency>
 
-		<!--
-		<dependency>
-			<groupId>com.progress.sonic.mq</groupId>
-			<artifactId>sonic_Client</artifactId>
-			<version>8.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.progress.sonic.mq</groupId>
-			<artifactId>sonic_Crypto</artifactId>
-			<version>8.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.progress.sonic.mq</groupId>
-			<artifactId>sonic_XMessage</artifactId>
-			<version>8.7.0</version>
-		</dependency>
-		-->
-
 		<!-- jolokia dependencies -->
 		<dependency>
 		    <groupId>org.jolokia</groupId>
@@ -142,13 +124,14 @@
 		    
 		</dependency>
 
+
 		<!-- for doc conversions -->
 		<dependency>
-		    <groupId>io.github.assimbly</groupId>
-		    <artifactId>docconverter</artifactId>
-		    <version>1.3.0</version>
+			<groupId>io.github.assimbly</groupId>
+			<artifactId>docconverter</artifactId>
+			<version>1.4.0</version>
 		</dependency>
-		
+
 		<!-- database drivers -->
 		<dependency>
 		    <groupId>mysql</groupId>

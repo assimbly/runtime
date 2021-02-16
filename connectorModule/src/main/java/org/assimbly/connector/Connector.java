@@ -129,7 +129,7 @@ public interface Connector {
 	 * gets the connector configuration currently set (in use).
 	 *
 	 * @param  props Properties of service
-	 * @param  endpointType (from,to or error)
+	 * @param  endpointType (from,to, response or error)
 	 * @return properties of service
 	 * @throws Exception if connection can't be set
 	 */

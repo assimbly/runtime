@@ -206,6 +206,12 @@ public class CamelConnector extends BaseConnector {
 					logger.info(resolveDependency(scheme));
 				}
 			}
+			if(key.startsWith("response") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
+			}
 			if (key.startsWith("error") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
@@ -350,7 +356,7 @@ public class CamelConnector extends BaseConnector {
 	
 	public String startFlow(String id) {
 		logger.info("Start flow " + id);
-		
+
 		boolean flowAdded = false;
 		
 		try {
@@ -358,6 +364,7 @@ public class CamelConnector extends BaseConnector {
 			List<TreeMap<String, String>> allProps = super.getConfiguration();
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
+
 				if (props.get("id").equals(id)) {
 					
 					logger.info("Adding route with id: " + id);
@@ -386,7 +393,6 @@ public class CamelConnector extends BaseConnector {
 							count++;
 
 						} while (status.isStarting() || count < 3000);
-						//TODO: What happens if one route doesn't start? Throw Exception??
 
 					} else {
 						logger.info("Route " + routeId + " already started");

@@ -29,54 +29,56 @@ import java.util.TreeMap;
 
 public class Connection {
 
-    private String uri;
-    private String connectionId;
-    private String flowId;
-    private TreeMap<String, String> properties;
-    private String key;
-    private CamelContext context;
-    private String connectId;
-    private boolean faultTolerant;
-    private Object endpointId;
-    private String serviceId;
-    private ActiveMQConnectionFactory activeMQConnectionFactory;
-    private SjmsComponent sjmsComponent;
+	private String uri;
+	private String connectionId;
+	private String flowId;
+	private TreeMap<String, String> properties;
+	private String key;
+	private CamelContext context;
+	private String connectId;
+	private boolean faultTolerant;
+	private Object endpointId;
+	private String serviceId;
+	private ActiveMQConnectionFactory activeMQConnectionFactory;
+	private SjmsComponent sjmsComponent;
 
+	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
 
-    private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.service.Connection");
+	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
+		this.context = context;
+		this.properties = properties;
+		this.key = key;
+	}
 
-    public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
-        this.context = context;
-        this.properties = properties;
-        this.key = key;
-    }
+	public TreeMap<String, String> start() throws Exception{
 
+		serviceId = properties.get(key);
 
-    public TreeMap<String, String> start() throws Exception {
+		if(key.startsWith("from")){
+			endpointId = StringUtils.substringBetween(key, "from.", ".service.id");
+			uri = properties.get("from." + endpointId + ".uri");
+			startConnection(uri,"from");
+		}
+		if(key.startsWith("to")){
+			endpointId = StringUtils.substringBetween(key, "to.", ".service.id");
+			uri = properties.get("to." + endpointId + ".uri");
+			startConnection(uri,"to");
+		}
+		if(key.startsWith("response")){
+			endpointId = StringUtils.substringBetween(key, "response.", ".service.id");
+			uri = properties.get("response." + endpointId + ".uri");
+			startConnection(uri, "response");
+		}
+		if(key.startsWith("error")){
+			uri = properties.get("error.uri");
+			startConnection(uri, "error");
+		}
 
-        serviceId = properties.get(key);
+		return properties;
 
-        if (key.startsWith("from")) {
-            endpointId = StringUtils.substringBetween(key, "from.", ".service.id");
-            uri = properties.get("from." + endpointId + ".uri");
-            startConnection(uri, "from");
-        }
-        if (key.startsWith("to")) {
-            endpointId = StringUtils.substringBetween(key, "to.", ".service.id");
-            uri = properties.get("to." + endpointId + ".uri");
-            startConnection(uri, "to");
-        }
-
-        if (key.startsWith("error")) {
-            uri = properties.get("error.uri");
-            startConnection(uri, "error");
-        }
-
-        return properties;
-
-    }
+	}
 
 	//unused (future purposes)
 	public TreeMap<String, String> stop() throws Exception{
@@ -90,7 +92,10 @@ public class Connection {
 				//stopConnection(toUri,"to");
 			}
 		}
-
+		if(properties.get("response.service.id")!=null){
+			uri = properties.get("response.uri");
+			//stopConnection(toUri,"to");
+		}
 		if(properties.get("error.service.id")!=null){
 			uri = properties.get("error.uri");
 			//stopConnection(uri, "error");
@@ -105,7 +110,13 @@ public class Connection {
 
 		if(type.equals("to")) {
 			connectionId = properties.get("to." + endpointId + ".service.id");
-		}else {
+		} else if (type.equals("from")){
+			connectionId = properties.get("from." + endpointId + "service.id");
+		}
+		else if (type.equals("response")){
+			connectionId = properties.get("response." + endpointId + "service.id");
+		}
+		else {
 			connectionId = properties.get(type + ".service.id");
 		}
 
@@ -138,10 +149,10 @@ public class Connection {
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
 
-						if (type.equals("to") || type.equals("from")) {
-							properties.put(type + "." + endpointId + ".uri", uri);
-						} else {
+						if (type.equals("error")) {
 							properties.put(type + ".uri", uri);
+						} else {
+							properties.put(type + "." + endpointId + ".uri", uri);
 						}
 						break;
 					case 3:
@@ -171,10 +182,10 @@ public class Connection {
 	@SuppressWarnings("unused")
 	private void stopConnection(String uri, String type) throws Exception{
 
-		if(type.equals("to")) {
-			connectionId = properties.get("to." + endpointId + ".service.id");
-		}else {
+		if(type.equals("error")) {
 			connectionId = properties.get(type + ".service.id");
+		}else {
+			connectionId = properties.get("to." + endpointId + ".service.id");
 		}
 
 		flowId = properties.get("id");
@@ -213,7 +224,8 @@ public class Connection {
 	}
 
 
-    private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception {
+
+	private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 
         logger.info("Setting up jms client connection for ActiveMQ.");
         EncryptableProperties decryptedProperties = decryptProperties(properties);
@@ -589,11 +601,11 @@ public class Connection {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
 
-        if (direction.equals("to")) {
-            connectionId = decryptedProperties.getProperty("to." + endpointId + ".service.id");
-        } else {
-            connectionId = decryptedProperties.getProperty(direction + ".service.id");
-        }
+		if(direction.equals("error")) {
+			connectionId = decryptedProperties.getProperty(direction + ".service.id");
+		}else {
+			connectionId = decryptedProperties.getProperty(direction + "." + endpointId + ".service.id");
+		}
 
         //Create datasource
         String driver = decryptedProperties.getProperty("service." + serviceId + ".driver");
