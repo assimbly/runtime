@@ -8,14 +8,22 @@ public class EncryptionUtil {
 
     private final StandardPBEStringEncryptor textEncryptor = new StandardPBEStringEncryptor();
 
-    public EncryptionUtil(String textEncryptorPassword, String algorithm) {
-        this.textEncryptor.setPassword(textEncryptorPassword);
+    public EncryptionUtil(String password, String algorithm) {
+        this.textEncryptor.setPassword(password);
         this.textEncryptor.setAlgorithm(algorithm);
         this.textEncryptor.setIvGenerator(new RandomIvGenerator());
     }
 
+    public StandardPBEStringEncryptor getTextEncryptor() {
+        return textEncryptor;
+    }
+
     public String encrypt(String plainText) {
-        return this.textEncryptor.encrypt(plainText);
+        //if value already encrypted do not encrypt and return
+        if (plainText.startsWith("ENC(") && plainText.endsWith(")")) {
+            return plainText;
+        }
+        return "ENC(" + this.textEncryptor.encrypt(plainText) + ")";
     }
 
     public String decrypt(String encryptedText) {

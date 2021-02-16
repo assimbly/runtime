@@ -7,7 +7,6 @@ import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
-import org.apache.camel.component.jasypt.JasyptPropertiesParser;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -34,6 +33,7 @@ import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.CertificatesUtil;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.EncryptionUtil;
+import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,19 +127,27 @@ public class CamelConnector extends BaseConnector {
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-		
+
+	}
+
+	@Override
+	public void setFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
+		super.setFlowConfiguration(configuration);
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
 	}
 
 	@Override
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
-		((JasyptPropertiesParser) ((PropertiesComponent) context.getPropertiesComponent()).getPropertiesParser()).setAlgorithm(encryptionProperties.getProperty("algorithm"));
-		((JasyptPropertiesParser) ((PropertiesComponent) context.getPropertiesComponent()).getPropertiesParser()).setPassword(encryptionProperties.getProperty("password"));
 	}
 
 	@Override
 	public EncryptionUtil getEncryptionUtil() {
-		return new EncryptionUtil(encryptionProperties.getProperty("algorithm"), encryptionProperties.getProperty("password"));
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
 	}
 
 	public void start() throws Exception {
@@ -262,17 +270,17 @@ public class CamelConnector extends BaseConnector {
 
 	public String startAllFlows() throws Exception {
 		logger.info("Starting all flows");
-		
+
 		List<TreeMap<String, String>> allProps = super.getConfiguration();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
 			flowStatus = startFlow(props.get("id"));
 			if(!flowStatus.equals("started")) {
-				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus; 
-			}	
+				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus;
+			}
         }
-		
+
 		return "started";
 	}
 
@@ -923,17 +931,17 @@ public class CamelConnector extends BaseConnector {
 	}	
 
 	public String resolveDependency(String scheme) throws Exception {
-		
+
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);
-			
+		logger.info(jsonString);
 		JSONObject componentSchema = new JSONObject(jsonString);
 		JSONObject component = componentSchema.getJSONObject("component");
-		
+
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
 		String version = component.getString("version");
-		
+
 		String result = resolveDependency(groupId, artifactId, version);
 
 		//This maybe needed to activate the component
