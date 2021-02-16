@@ -1,29 +1,17 @@
 package org.assimbly.connector.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.security.cert.Certificate;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
+import com.codahale.metrics.MetricRegistry;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
-import org.apache.camel.builder.ExchangeBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
+import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.EventNotifier;
@@ -36,28 +24,33 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
-
-import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.CertificatesUtil;
-import org.assimbly.util.DependencyUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.util.BaseDirectory;
+import org.assimbly.util.CertificatesUtil;
+import org.assimbly.util.DependencyUtil;
+import org.assimbly.util.EncryptionUtil;
+import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.xpath.XPathFactory;
-
-import static org.apache.camel.builder.Builder.constant;
-import static org.apache.camel.builder.SimpleBuilder.simple;
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-import static org.apache.camel.language.xpath.XPathBuilder.xpath;
-import static org.apache.camel.language.spel.SpelExpression.spel;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.security.cert.Certificate;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CamelConnector extends BaseConnector {
 
@@ -78,7 +71,9 @@ public class CamelConnector extends BaseConnector {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
-	
+
+	private Properties encryptionProperties;
+
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
 	public CamelConnector() {
@@ -107,7 +102,6 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
         ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
@@ -122,22 +116,43 @@ public class CamelConnector extends BaseConnector {
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
 
 		//set history metrics
-	    MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
-	    factory.setPrettyPrint(true);
-	    factory.setMetricsRegistry(metricRegistry);
+		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+		factory.setPrettyPrint(true);
+		factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
-						
+
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
 
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-		
+
+
 	}
-	
+
+	@Override
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
+
+	@Override
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
+
+	private void setEncryptedPropertiesComponent() {
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
+	}
+
+
 	public void start() throws Exception {
-		
+
 		// start Camel context
 		context.start();
 		started = true;
@@ -262,17 +277,17 @@ public class CamelConnector extends BaseConnector {
 
 	public String startAllFlows() throws Exception {
 		logger.info("Starting all flows");
-		
+
 		List<TreeMap<String, String>> allProps = super.getConfiguration();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
 			flowStatus = startFlow(props.get("id"));
 			if(!flowStatus.equals("started")) {
-				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus; 
-			}	
+				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus;
+			}
         }
-		
+
 		return "started";
 	}
 
@@ -923,17 +938,17 @@ public class CamelConnector extends BaseConnector {
 	}	
 
 	public String resolveDependency(String scheme) throws Exception {
-		
+
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);
-			
+		logger.info(jsonString);
 		JSONObject componentSchema = new JSONObject(jsonString);
 		JSONObject component = componentSchema.getJSONObject("component");
-		
+
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
 		String version = component.getString("version");
-		
+
 		String result = resolveDependency(groupId, artifactId, version);
 
 		//This maybe needed to activate the component

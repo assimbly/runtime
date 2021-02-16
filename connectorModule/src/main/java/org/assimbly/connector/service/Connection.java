@@ -2,7 +2,6 @@ package org.assimbly.connector.service;
 
 import com.ibm.mq.jms.MQConnectionFactory;
 import com.ibm.msg.client.wmq.common.CommonConstants;
-import com.ibm.msg.client.wmq.compat.jms.internal.JMSC;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
@@ -11,17 +10,18 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.amqp.AMQPComponent;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.Registry;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.util.BaseDirectory;
+import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import progress.message.jclient.ConnectionFactory;
 
 import javax.jms.JMSException;
-import javax.script.Bindings;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -227,69 +227,68 @@ public class Connection {
 
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 
-		logger.info("Setting up jms client connection for ActiveMQ.");
+        logger.info("Setting up jms client connection for ActiveMQ.");
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");//properties.get("service." + serviceId + ".password");
 
-		String url = properties.get("service." + serviceId +".url");
-		String username = properties.get("service."  + serviceId + ".username");
-		String password = properties.get("service."  + serviceId + ".password");
+        String conType = decryptedProperties.getProperty("service." + serviceId + ".conType");
+        String maxConnections = decryptedProperties.getProperty("service." + serviceId + "service.maxConnections");
+        String concurentConsumers = decryptedProperties.getProperty("service." + serviceId + "service.concurentConsumers");
 
-		String conType = properties.get("service." + serviceId +".conType");
-		String maxConnections = properties.get("service." + serviceId +"service.maxconnections");
-		String concurentConsumers = properties.get("service." + serviceId +"service.concurentconsumers");
+        if (conType == null) {
+            logger.info("No connection type specified. Setting up basic connection for activemq.");
+            conType = "basic";
+        } else if (!conType.equals("basic") && !conType.equals("pooled")) {
+            logger.info("Invalid connection type specified. Setting up basic connection for activemq.");
+            conType = "basic";
+        } else if (conType.equals("pooled")) {
 
-		if (conType == null){
-			logger.info("No connection type specified. Setting up basic connection for activemq.");
-			conType = "basic";
-		}else if (!conType.equals("basic") && !conType.equals("pooled")){
-			logger.info("Invalid connection type specified. Setting up basic connection for activemq.");
-			conType = "basic";
-		}else if (conType.equals("pooled")){
+            if (maxConnections == null) {
+                maxConnections = "10";
+            }
+            if (concurentConsumers == null) {
+                concurentConsumers = "10";
+            }
 
-			if (maxConnections == null){
-				maxConnections = "10";
-			}
-			if (concurentConsumers == null){
-				concurentConsumers = "10";
-			}
+        }
 
-		}
+        if (context.hasComponent(componentName) == null) {
+            if (url != null) {
 
-		if(context.hasComponent(componentName) == null){
-			if(url!=null){
-
-				if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
-					activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
-				}else {
-					activeMQConnectionFactory = new ActiveMQConnectionFactory(username,password,url);
-				}
+                if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                    activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
+                } else {
+                    activeMQConnectionFactory = new ActiveMQConnectionFactory(username, password, url);
+                }
 
 
-				if (conType.equals("basic")){
-					ActiveMQConnection connection = (ActiveMQConnection) activeMQConnectionFactory.createConnection();
-					connection.start();
-					context.addComponent(componentName, JmsComponent.jmsComponentAutoAcknowledge(activeMQConnectionFactory));
-					logger.info("Started basic connection for ActiveMQ.");
-				}
-				else{
-					try {
-						PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
-						pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-						pooledConnectionFactory.setMaxConnections(Integer.parseInt(maxConnections));
+                if (conType.equals("basic")) {
+                    ActiveMQConnection connection = (ActiveMQConnection) activeMQConnectionFactory.createConnection();
+                    connection.start();
+                    context.addComponent(componentName, JmsComponent.jmsComponentAutoAcknowledge(activeMQConnectionFactory));
+                    logger.info("Started basic connection for ActiveMQ.");
+                } else {
+                    try {
+                        PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
+                        pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
+                        pooledConnectionFactory.setMaxConnections(Integer.parseInt(maxConnections));
 
-						ActiveMQConfiguration configuration = new ActiveMQConfiguration();
-						configuration.setConnectionFactory(pooledConnectionFactory);
-						configuration.setConcurrentConsumers(Integer.parseInt(concurentConsumers));
-						configuration.setUsePooledConnection(true);
+                        ActiveMQConfiguration configuration = new ActiveMQConfiguration();
+                        configuration.setConnectionFactory(pooledConnectionFactory);
+                        configuration.setConcurrentConsumers(Integer.parseInt(concurentConsumers));
+                        configuration.setUsePooledConnection(true);
 
-						ActiveMQComponent component = new ActiveMQComponent(configuration);
-						context.addComponent(componentName, component);
-						logger.info("Started pooled connection for ActiveMQ.");
-						logger.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+                        ActiveMQComponent component = new ActiveMQComponent(configuration);
+                        context.addComponent(componentName, component);
+                        logger.info("Started pooled connection for ActiveMQ.");
+                        logger.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-				}
+                }
 
 
 				/*PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
@@ -303,251 +302,255 @@ public class Connection {
     			connection.start();*/
 
 
-
-			}else{
-				logger.error("ActiveMQ connection parameters are invalid.");
-				throw new Exception("ActiveMQ connection parameters are invalid.\n");
-			}
-		}
-	}
-
-
-	private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
-
-		if(direction.equals("to") || direction.equals("from")) {
-			direction = direction + "." + endpointId;
-		}
-
-		String url = properties.get("service." + serviceId + ".url");
-		String username = properties.get("service."  + serviceId + ".username");
-		String password = properties.get("service."  + serviceId + ".password");
-
-		logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
-		if(url!=null){
-
-			org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
-
-			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
-				cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
-				cf.setConnectionTTL(-1);
-				cf.setReconnectAttempts(-1);
-				cf.setRetryInterval(1000);
-				cf.setRetryIntervalMultiplier(2.0);
-				cf.setMaxRetryInterval(3600000);
-			}else {
-				cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
-				cf.setConnectionTTL(-1);
-				cf.setReconnectAttempts(-1);
-				cf.setRetryInterval(1000);
-				cf.setRetryIntervalMultiplier(2.0);
-				cf.setMaxRetryInterval(3600000);
-			}
-
-			if(context.hasComponent(componentName)== null){
-				sjmsComponent = new SjmsComponent();
-				sjmsComponent.setConnectionFactory(cf);
-				context.addComponent(componentName, sjmsComponent);
-			}else {
-				context.removeComponent(componentName);
-				sjmsComponent = new SjmsComponent();
-				sjmsComponent.setConnectionFactory(cf);
-				context.addComponent(componentName, sjmsComponent);
-			}
-		}
-	}
-
-	private void setupAMQPConnection(TreeMap<String, String> properties, String componentName, boolean sslEnabled) throws Exception{
-
-		String url = properties.get("service." + serviceId + ".url");
-		String username = properties.get("service."  + serviceId + ".username");
-		String password = properties.get("service."  + serviceId + ".password");
-
-		logger.info("Setting AMQP client connection.");
-		if(url!=null){
-
-			AMQPComponent amqpComponent = null;
-
-			if(sslEnabled){
-				url = createSSLEnabledUrl(url);
-			}
-
-			if(username == null || username.isEmpty() || password == null || password.isEmpty()) {
-				amqpComponent = AMQPComponent.amqpComponent(url);
-			}else {
-				amqpComponent = AMQPComponent.amqpComponent(url, username, password);
-			}
-
-			if(context.hasComponent(componentName)== null){
-				context.addComponent(componentName, amqpComponent);
-			}else {
-				context.removeComponent(componentName);
-				context.addComponent(componentName, amqpComponent);
-			}
-
-		}else {
-			throw new Exception("url parameter is invalid or missing.\n");
-		}
-
-	}
-
-	private void setupSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
-
-		String flowId = properties.get("id");
-		String componentName = "sonicmq." + flowId + connectId;
-		String url = properties.get("service." + serviceId + ".url");
-		String username = properties.get("service."  + serviceId + ".username");
-		String password = properties.get("service." + serviceId + ".password");
-
-		if(url!=null || username !=null || password != null){
-
-			if(properties.get("service." + serviceId + ".faultTolerant")!=null) {
-				try {
-					Boolean.parseBoolean(properties.get("service." + serviceId + ".faulttolerant"));
-				} catch (Exception e) {
-					faultTolerant = true;
-				}
-			}else {
-				faultTolerant = true;
-			}
+            } else {
+                logger.error("ActiveMQ connection parameters are invalid.");
+                throw new Exception("ActiveMQ connection parameters are invalid.\n");
+            }
+        }
+    }
 
 
-			if(context.hasComponent(componentName) == null){
+    private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
 
-				ConnectionFactory connection = new ConnectionFactory (url,username, password);
-				connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
-				connection.setPrefetchCount(10);
-				connection.setReconnectInterval(60);
-				connection.setFaultTolerant(faultTolerant);
-				connection.setFaultTolerantReconnectTimeout(3600);
-				connection.setInitialConnectTimeout(15);
+        if (direction.equals("to") || direction.equals("from")) {
+            direction = direction + "." + endpointId;
+        }
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-				logger.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");
+        logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
+        if (url != null) {
 
-				SjmsComponent jms = new SjmsComponent();
-				jms.setConnectionFactory(connection);
-				jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/"  + flowId + "/" + connectId);
-				jms.setCamelContext(context);
-				jms.start();
+            org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
 
-				context.addComponent(componentName, jms);
-			}
+            if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
+                cf.setConnectionTTL(-1);
+                cf.setReconnectAttempts(-1);
+                cf.setRetryInterval(1000);
+                cf.setRetryIntervalMultiplier(2.0);
+                cf.setMaxRetryInterval(3600000);
+            } else {
+                cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
+                cf.setConnectionTTL(-1);
+                cf.setReconnectAttempts(-1);
+                cf.setRetryInterval(1000);
+                cf.setRetryIntervalMultiplier(2.0);
+                cf.setMaxRetryInterval(3600000);
+            }
+
+            if (context.hasComponent(componentName) == null) {
+                sjmsComponent = new SjmsComponent();
+                sjmsComponent.setConnectionFactory(cf);
+                context.addComponent(componentName, sjmsComponent);
+            } else {
+                context.removeComponent(componentName);
+                sjmsComponent = new SjmsComponent();
+                sjmsComponent.setConnectionFactory(cf);
+                context.addComponent(componentName, sjmsComponent);
+            }
+        }
+    }
+
+    private void setupAMQPConnection(TreeMap<String, String> properties, String componentName, boolean sslEnabled) throws Exception {
+
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");//properties.get("service." + serviceId + ".password");
+
+        logger.info("Setting AMQP client connection.");
+        if (url != null) {
+
+            AMQPComponent amqpComponent = null;
+
+            if (sslEnabled) {
+                url = createSSLEnabledUrl(url);
+            }
+
+            if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                amqpComponent = AMQPComponent.amqpComponent(url);
+            } else {
+                amqpComponent = AMQPComponent.amqpComponent(url, username, password);
+            }
+
+            if (context.hasComponent(componentName) == null) {
+                context.addComponent(componentName, amqpComponent);
+            } else {
+                context.removeComponent(componentName);
+                context.addComponent(componentName, amqpComponent);
+            }
+
+        } else {
+            throw new Exception("url parameter is invalid or missing.\n");
+        }
+
+    }
+
+    private void setupSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception {
+
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String flowId = decryptedProperties.getProperty("id");
+        String componentName = "sonicmq." + flowId + connectId;
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+
+        if (url != null || username != null || password != null) {
+
+            if (decryptedProperties.getProperty("service." + serviceId + ".faultTolerant") != null) {
+                try {
+                    Boolean.parseBoolean(decryptedProperties.getProperty("service." + serviceId + ".faultTolerant"));
+                } catch (Exception e) {
+                    faultTolerant = true;
+                }
+            } else {
+                faultTolerant = true;
+            }
 
 
-		}else{
-			logger.error("SonicMQ connection parameters are invalid or missing");
-			if(url==null) {
-				logger.error("SonicMQ connection required parameter 'url' isn't set");
-			}
-			if(username==null) {
-				logger.error("SonicMQ connection required parameter 'username' isn't set");
-			}
-			if(password==null) {
-				logger.error("SonicMQ connection required parameter 'password' isn't set");
-			}
-			throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
-		}
+            if (context.hasComponent(componentName) == null) {
 
-	}
+                ConnectionFactory connection = new ConnectionFactory(url, username, password);
+                connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
+                connection.setPrefetchCount(10);
+                connection.setReconnectInterval(60);
+                connection.setFaultTolerant(faultTolerant);
+                connection.setFaultTolerantReconnectTimeout(3600);
+                connection.setInitialConnectTimeout(15);
 
-	@SuppressWarnings("unused")
-	private void removeSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception{
+                logger.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");
 
-		String componentNamePrefix = "sonicmq." + connectId;
-		String url = properties.get("service. " + serviceId + " .url");
-		String username = properties.get("service." + serviceId + ".username");
-		String password = properties.get("service." + serviceId + ".password");
+                SjmsComponent jms = new SjmsComponent();
+                jms.setConnectionFactory(connection);
+                jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
+                jms.setCamelContext(context);
+                jms.start();
 
-		List<String> componentNames = context.getComponentNames();
-
-		for(String componentName : componentNames) {
-
-			if(componentName.startsWith(componentNamePrefix)) {
-				if(url!=null || username !=null || password != null){
-
-					ConnectionFactory connection = new ConnectionFactory (url,username, password);
-					SjmsComponent jms = new SjmsComponent();
-
-					jms.setConnectionFactory(connection);
-					jms.setCamelContext(context);
-
-					jms.stop();
-					context.removeComponent(componentName);
-
-				}else{
-					logger.error("SonicMQ connection parameters are invalid or missing");
-					if(url==null) {
-						logger.error("SonicMQ connection required parameter 'url' isn't set");
-					}
-					if(username==null) {
-						logger.error("SonicMQ connection required parameter 'username' isn't set");
-					}
-					if(password==null) {
-						logger.error("SonicMQ connection required parameter 'password' isn't set");
-					}
-					throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
-				}
-			}
-		}
-	}
+                context.addComponent(componentName, jms);
+            }
 
 
-	private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception{
+        } else {
+            logger.error("SonicMQ connection parameters are invalid or missing");
+            if (url == null) {
+                logger.error("SonicMQ connection required parameter 'url' isn't set");
+            }
+            if (username == null) {
+                logger.error("SonicMQ connection required parameter 'username' isn't set");
+            }
+            if (password == null) {
+                logger.error("SonicMQ connection required parameter 'password' isn't set");
+            }
+            throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
+        }
 
-		if(direction.equals("to") || direction.equals("from")) {
-			direction = direction + "." + endpointId;
-		}
+    }
 
-		logger.info("Setting up IBM MQ connection factory.");
+    @SuppressWarnings("unused")
+    private void removeSonicMQConnection(TreeMap<String, String> properties, String direction, String connectId) throws Exception {
 
-		MQConnectionFactory cf = setupIBMMQConnectionFactory(properties);
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String componentNamePrefix = "sonicmq." + connectId;
+        String url = decryptedProperties.getProperty("service. " + serviceId + " .url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-		logger.info("Setting up IBM MQ client connection.");
-		if(context.hasComponent(componentName)== null){
-			sjmsComponent = new SjmsComponent();
-			sjmsComponent.setConnectionFactory(cf);
-			context.addComponent(componentName, sjmsComponent);
-		}else {
-			context.removeComponent(componentName);
-			sjmsComponent = new SjmsComponent();
-			sjmsComponent.setConnectionFactory(cf);
-			context.addComponent(componentName, sjmsComponent);
-		}
+        List<String> componentNames = context.getComponentNames();
 
-	}
+        for (String componentName : componentNames) {
+
+            if (componentName.startsWith(componentNamePrefix)) {
+                if (url != null || username != null || password != null) {
+
+                    ConnectionFactory connection = new ConnectionFactory(url, username, password);
+                    SjmsComponent jms = new SjmsComponent();
+
+                    jms.setConnectionFactory(connection);
+                    jms.setCamelContext(context);
+
+                    jms.stop();
+                    context.removeComponent(componentName);
+
+                } else {
+                    logger.error("SonicMQ connection parameters are invalid or missing");
+                    if (url == null) {
+                        logger.error("SonicMQ connection required parameter 'url' isn't set");
+                    }
+                    if (username == null) {
+                        logger.error("SonicMQ connection required parameter 'username' isn't set");
+                    }
+                    if (password == null) {
+                        logger.error("SonicMQ connection required parameter 'password' isn't set");
+                    }
+                    throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
+                }
+            }
+        }
+    }
+
+
+    private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
+
+
+        if (direction.equals("to") || direction.equals("from")) {
+            direction = direction + "." + endpointId;
+        }
+
+        logger.info("Setting up IBM MQ connection factory.");
+
+        MQConnectionFactory cf = setupIBMMQConnectionFactory(properties);
+
+        logger.info("Setting up IBM MQ client connection.");
+        if (context.hasComponent(componentName) == null) {
+            sjmsComponent = new SjmsComponent();
+            sjmsComponent.setConnectionFactory(cf);
+            context.addComponent(componentName, sjmsComponent);
+        } else {
+            context.removeComponent(componentName);
+            sjmsComponent = new SjmsComponent();
+            sjmsComponent.setConnectionFactory(cf);
+            context.addComponent(componentName, sjmsComponent);
+        }
+
+    }
 
 	private MQConnectionFactory setupIBMMQConnectionFactory(TreeMap<String, String> properties) throws JMSException {
 
-		//required properties
-		String url = properties.get("service." + serviceId + ".url");
-		String username = properties.get("service."  + serviceId + ".username");
-		String password = properties.get("service."  + serviceId + ".password");
-		String queueManager = properties.get("service."  + serviceId + ".queuemanager");
-		String channel = properties.get("service."  + serviceId + ".channel");
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        //required properties
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String queueManager = decryptedProperties.getProperty("service." + serviceId + ".queuemanager");
+        String channel = decryptedProperties.getProperty("service." + serviceId + ".channel");
 
-		//optional properties
-		String channelReceiveExit = properties.get("service."  + serviceId + ".channelreceiveexit");
-		String channelReceiveExitUserData = properties.get("service."  + serviceId + ".channelreceiveexituserdata");
-		String channelSendExit = properties.get("service."  + serviceId + ".channelsendexit");
-		String channelSendExitUserData = properties.get("service."  + serviceId + ".channelsendexituserdata");
-		String channelSecurityExit = properties.get("service."  + serviceId + ".channelsecurityexit");
-		String channelSecurityExitUserData = properties.get("service."  + serviceId + ".channelsecurityexituserdata");
-		String clientId = properties.get("service."  + serviceId + ".appname");
-		String appName = properties.get("service."  + serviceId + ".clientid");
-		String clientReconnectTimeOutAsString = properties.get("service."  + serviceId + ".reconnecttimeout");
-		String clientReconnectOptionsAsString = properties.get("service."  + serviceId + ".reconnectoptions");
-		String transportTypeAsString = properties.get("service."  + serviceId + ".transporttype");
-		String pollingIntervalAsString = properties.get("service."  + serviceId + ".pollinginterval");
-		String maxBufferSizeAsString = properties.get("service."  + serviceId + ".maxbuffersize");
+        //optional properties
+        String channelReceiveExit = decryptedProperties.getProperty("service." + serviceId + ".channelreceiveexit");
+        String channelReceiveExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelreceiveexituserdata");
+        String channelSendExit = decryptedProperties.getProperty("service." + serviceId + ".channelsendexit");
+        String channelSendExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelsendexituserdata");
+        String channelSecurityExit = decryptedProperties.getProperty("service." + serviceId + ".channelsecurityexit");
+        String channelSecurityExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelsecurityexituserdata");
+        String clientId = decryptedProperties.getProperty("service." + serviceId + ".appname");
+        String appName = decryptedProperties.getProperty("service." + serviceId + ".clientid");
+        String clientReconnectTimeOutAsString = decryptedProperties.getProperty("service." + serviceId + ".reconnecttimeout");
+        String clientReconnectOptionsAsString = decryptedProperties.getProperty("service." + serviceId + ".reconnectoptions");
+        String transportTypeAsString = decryptedProperties.getProperty("service." + serviceId + ".transporttype");
+        String pollingIntervalAsString = decryptedProperties.getProperty("service." + serviceId + ".pollinginterval");
+        String maxBufferSizeAsString = decryptedProperties.getProperty("service." + serviceId + ".maxbuffersize");
 
-		MQConnectionFactory cf = new MQConnectionFactory();
+        MQConnectionFactory cf = new MQConnectionFactory();
 
-		//public static final int 	WMQ_CM_BINDINGS 				0
-		//public static final int 	WMQ_CM_CLIENT 					1
-		//public static final int 	WMQ_CM_DIRECT_TCPIP 			2
-		//public static final int 	WMQ_CM_DIRECT_HTTP 				4
-		//public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
-		if(transportTypeAsString!=null){
-			cf.setTransportType(Integer.parseInt(transportTypeAsString));
+        //public static final int 	WMQ_CM_BINDINGS 				0
+        //public static final int 	WMQ_CM_CLIENT 					1
+        //public static final int 	WMQ_CM_DIRECT_TCPIP 			2
+        //public static final int 	WMQ_CM_DIRECT_HTTP 				4
+        //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
+        if (transportTypeAsString != null) {
+            cf.setTransportType(Integer.parseInt(transportTypeAsString));
 		}else{
 			cf.setTransportType(CommonConstants.WMQ_CM_BINDINGS);
 		}
@@ -583,87 +586,92 @@ public class Connection {
 			cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
 			cf.createConnection();
 		}else {
-			cf.setConnectionNameList(url);
-			cf.setChannel(channel);//communications link
-			cf.setQueueManager(queueManager);//service provider
-			cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
-			cf.createConnection(username,password);
-		}
+            cf.setConnectionNameList(url);
+            cf.setChannel(channel);//communications link
+            cf.setQueueManager(queueManager);//service provider
+            cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
+            cf.createConnection(username, password);
+        }
 
-		return cf;
+        return cf;
 
-	}
+    }
 
-	private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception{
+    private void setupJDBCConnection(TreeMap<String, String> properties, String direction) throws Exception {
+
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
 
 		if(direction.equals("error")) {
-			connectionId = properties.get(direction + ".service.id");
+			connectionId = decryptedProperties.getProperty(direction + ".service.id");
 		}else {
-			connectionId = properties.get(direction + "." + endpointId + ".service.id");
+			connectionId = decryptedProperties.getProperty(direction + "." + endpointId + ".service.id");
 		}
 
-		//Create datasource
-		String driver = properties.get("service."  + serviceId + ".driver");
-		String url = properties.get("service." + serviceId + ".url");
-		String username = properties.get("service." + serviceId + ".username");
-		String password = properties.get("service." + serviceId + ".password");
+        //Create datasource
+        String driver = decryptedProperties.getProperty("service." + serviceId + ".driver");
+        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-		logger.info("Create datasource for url: " + url + "(driver=" + driver + ")");
+        logger.info("Create datasource for url: " + url + "(driver=" + driver + ")");
 
-		DriverManagerDataSource ds = new DriverManagerDataSource();
-		ds.setDriverClassName(driver);
-		ds.setUrl(url);
-		ds.setUsername(username);
-		ds.setPassword(password);
+        DriverManagerDataSource ds = new DriverManagerDataSource();
+        ds.setDriverClassName(driver);
+        ds.setUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
 
-		//Add datasource to registry
-		Registry registry = context.getRegistry();
-		registry.bind(connectionId, ds);
+        //Add datasource to registry
+        Registry registry = context.getRegistry();
+        registry.bind(connectionId, ds);
 
-		logger.info("Datasource has been created");
+        logger.info("Datasource has been created");
 
-	}
+    }
 
-	private String createSSLEnabledUrl(String url){
+    private String createSSLEnabledUrl(String url) {
 
-		String baseDirURI = baseDir.replace("\\", "/");
+        String baseDirURI = baseDir.replace("\\", "/");
 
-		if(url.indexOf("?")!=-1)
-		{
+        if (url.indexOf("?") != -1) {
 
-			String[] urlSplitted = url.split("/?");
-			String[] optionsSplitted = urlSplitted[1].split("&");
+            String[] urlSplitted = url.split("/?");
+            String[] optionsSplitted = urlSplitted[1].split("&");
 
-			if(!Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)){
-				url = url + "&transport.verifyHost=false";
-			}
+            if (!Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)) {
+                url = url + "&transport.verifyHost=false";
+            }
 
-			if(!Arrays.stream(optionsSplitted).anyMatch("transport.keyStoreLocation"::startsWith)){
-				url = url + "&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks";
-			}
+            if (!Arrays.stream(optionsSplitted).anyMatch("transport.keyStoreLocation"::startsWith)) {
+                url = url + "&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks";
+            }
 
-			if(!Arrays.stream(optionsSplitted).anyMatch("transport.keyStorePassword"::startsWith)){
-				url = url + "&transport.keyStorePassword=supersecret";
-			}
+            if (!Arrays.stream(optionsSplitted).anyMatch("transport.keyStorePassword"::startsWith)) {
+                url = url + "&transport.keyStorePassword=supersecret";
+            }
 
-			if(!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)){
-				url = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
-			}
+            if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
+                url = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
+            }
 
-			if(!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)){
-				url = url + "&transport.trustStorePassword=supersecret";
-			}
+            if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
+                url = url + "&transport.trustStorePassword=supersecret";
+            }
 
-		}
-		else
-		{
-			url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.keyStorePassword=supersecret&transport.trustStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.trustStorePassword=supersecret";
-		}
+        } else {
+            url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.keyStorePassword=supersecret&transport.trustStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.trustStorePassword=supersecret";
+        }
 
-		logger.info("SSLEnabled Url: "+url);
+        logger.info("SSLEnabled Url: " + url);
 
-		return url;
+        return url;
 
-	}
+    }
+
+    private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
+        EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) context.getPropertiesComponent()).getInitialProperties();
+        decryptedProperties.putAll(properties);
+        return decryptedProperties;
+    }
 
 }
