@@ -128,11 +128,21 @@ public class CamelConnector extends BaseConnector {
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
 
+
 	}
 
 	@Override
-	public void setFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
-		super.setFlowConfiguration(configuration);
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
+
+	@Override
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
+
+	private void setEncryptedPropertiesComponent() {
 		EncryptionUtil encryptionUtil = getEncryptionUtil();
 		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
 		PropertiesComponent propertiesComponent = new PropertiesComponent();
@@ -140,15 +150,6 @@ public class CamelConnector extends BaseConnector {
 		context.setPropertiesComponent(propertiesComponent);
 	}
 
-	@Override
-	public void setEncryptionProperties(Properties encryptionProperties) {
-		this.encryptionProperties = encryptionProperties;
-	}
-
-	@Override
-	public EncryptionUtil getEncryptionUtil() {
-		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
-	}
 
 	public void start() throws Exception {
 
