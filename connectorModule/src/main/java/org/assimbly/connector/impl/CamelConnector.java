@@ -29,10 +29,7 @@ import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.CertificatesUtil;
-import org.assimbly.util.DependencyUtil;
-import org.assimbly.util.EncryptionUtil;
+import org.assimbly.util.*;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -197,18 +194,21 @@ public class CamelConnector extends BaseConnector {
 			}
 			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
+				System.out.println("scheme=" + scheme);
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
+				System.out.println("scheme=" + scheme);
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
 			}
 			if(key.startsWith("response") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
+				System.out.println("scheme=" + scheme);
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
@@ -941,7 +941,10 @@ public class CamelConnector extends BaseConnector {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);
-		logger.info(jsonString);
+
+		if(jsonString.isEmpty()){
+			return null;
+		}
 		JSONObject componentSchema = new JSONObject(jsonString);
 		JSONObject component = componentSchema.getJSONObject("component");
 

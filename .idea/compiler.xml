@@ -6,9 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="brokerModule" />
         <module name="connectorModule" />
         <module name="baseModule" />
-        <module name="brokerModule" />
+        <module name="extraModule" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -16,6 +17,7 @@
       <module name="brokerModule" target="11" />
       <module name="connector" target="1.5" />
       <module name="connectorModule" target="11" />
+      <module name="extraModule" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>

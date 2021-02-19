@@ -3,6 +3,7 @@ package org.assimbly.connector.routes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
@@ -11,17 +12,21 @@ import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
+
+import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.processors.ConvertProcessor;
 import org.assimbly.connector.processors.FailureProcessor;
 import org.assimbly.connector.processors.HeadersProcessor;
+import org.assimbly.util.EncryptionUtil;
+import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class DefaultRoute extends RouteBuilder {
 	
-	Map<String, String> props;
+	TreeMap<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	private String flowId;
@@ -37,7 +42,7 @@ public class DefaultRoute extends RouteBuilder {
 	private List<String> responseUriKeys;
 	int index = 0;
 
-	public DefaultRoute(final Map<String, String> props){
+	public DefaultRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
@@ -52,8 +57,9 @@ public class DefaultRoute extends RouteBuilder {
 			
 		logger.info("Configuring default route");
 		
-		getContext().setTracing(true); 
-		
+		getContext().setTracing(true);
+		EncryptableProperties decryptedProperties = decryptProperties(props);
+
 		Processor headerProcessor = new HeadersProcessor(props);
 		Processor failureProcessor = new FailureProcessor();
 		Processor convertProcessor = new ConvertProcessor();
@@ -153,6 +159,8 @@ public class DefaultRoute extends RouteBuilder {
 		for(String onrampUriKey : onrampUriKeys){
 
 			String uri = props.get(onrampUriKey);
+			uri = DecryptValue(uri);
+
 			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
             String headerId = props.get("from." + endpointId + ".header.id");
 
@@ -179,6 +187,7 @@ public class DefaultRoute extends RouteBuilder {
 		{
 
 			String uri = props.get(offrampUriKey);
+			uri = DecryptValue(uri);
 			String offrampUri = offrampUriList[index++];
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
@@ -263,5 +272,28 @@ public class DefaultRoute extends RouteBuilder {
 
 	}
 
+	//
+	private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
+		EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
+		decryptedProperties.putAll(properties);
+		return decryptedProperties;
+	}
+
+	private String DecryptValue(String value){
+
+		EncryptableProperties encryptionProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
+		String[] encryptedList = StringUtils.substringsBetween(value, "ENC(", ")");
+
+		if(encryptedList !=null && encryptedList.length>0){
+			for (String encrypted: encryptedList) {
+				encryptionProperties.setProperty("temp","ENC(" + encrypted + ")");
+				String decrypted = encryptionProperties.getProperty("temp");
+				value = StringUtils.replace(value, "ENC(" + encrypted + ")",decrypted);
+			}
+		}
+
+		return value;
+
+	}
 
 }

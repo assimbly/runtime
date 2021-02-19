@@ -1,6 +1,7 @@
 package org.assimbly.util;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
 
@@ -26,7 +27,7 @@ public class EncryptionUtil {
         return "ENC(" + this.textEncryptor.encrypt(plainText) + ")";
     }
 
-    public String decrypt(String encryptedText) {
+    public String decrypt(String encryptedText){
         return this.textEncryptor.decrypt(encryptedText);
     }
 
