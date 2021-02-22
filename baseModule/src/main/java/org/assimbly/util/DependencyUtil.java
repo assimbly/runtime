@@ -51,6 +51,7 @@ public class DependencyUtil {
         FILE("file"),
         FTP("ftp"),
         HTTP("http"),
+        HTTPS("https"),
         JMS("jms"),
         JETTY("jetty"),
         KAFKA("kafka"),

@@ -54,7 +54,9 @@ public class Connection {
 
 	public TreeMap<String, String> start() throws Exception{
 
-		serviceId = properties.get(key);
+        System.out.println("setup connection");
+
+        serviceId = properties.get(key);
 
 		if(key.startsWith("from")){
 			endpointId = StringUtils.substringBetween(key, "from.", ".service.id");
@@ -108,19 +110,13 @@ public class Connection {
 
 	private void startConnection(String uri, String type) throws Exception{
 
-		if(type.equals("to")) {
-			connectionId = properties.get("to." + endpointId + ".service.id");
-		} else if (type.equals("from")){
-			connectionId = properties.get("from." + endpointId + "service.id");
-		}
-		else if (type.equals("response")){
-			connectionId = properties.get("response." + endpointId + "service.id");
-		}
-		else {
-			connectionId = properties.get(type + ".service.id");
+        if(type.equals("error")) {
+            connectionId = properties.get(type + ".service.id");
+		} else {
+            connectionId = properties.get(type + "." + endpointId + ".service.id");
 		}
 
-		flowId = properties.get("id");
+        flowId = properties.get("id");
 
 		if(uri!=null){
 
@@ -129,7 +125,7 @@ public class Connection {
 				String[] uriSplitted = uri.split(":", 2);
 				String component = uriSplitted[0];
 
-				String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
+                String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
 				int i;
 				for (i = 0; i < options.length; i++) {
 					if (component != null && component.contains(options[i])) {
@@ -159,10 +155,10 @@ public class Connection {
 						setupSJMSConnection(properties, "sjms", type);
 						break;
 					case 4:
-						setupAMQPConnection(properties, "amqps", true);
+                        setupAMQPConnection(properties, "amqps", true);
 						break;
 					case 5:
-						setupAMQPConnection(properties, "amqp", false);
+                        setupAMQPConnection(properties, "amqp", false);
 						break;
 					case 6:
 						setupIBMMQConnection(properties, "ibmmq", type);

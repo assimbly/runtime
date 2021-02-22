@@ -194,21 +194,21 @@ public class CamelConnector extends BaseConnector {
 			}
 			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				System.out.println("scheme=" + scheme);
+
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				System.out.println("scheme=" + scheme);
+
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
 			}
 			if(key.startsWith("response") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				System.out.println("scheme=" + scheme);
+
 				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 					logger.info(resolveDependency(scheme));
 				}
@@ -942,7 +942,8 @@ public class CamelConnector extends BaseConnector {
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);
 
-		if(jsonString.isEmpty()){
+		if(jsonString == null || jsonString.isEmpty()){
+			logger.info("Unknown scheme: " + scheme);
 			return null;
 		}
 		JSONObject componentSchema = new JSONObject(jsonString);
