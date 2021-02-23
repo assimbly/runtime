@@ -23,42 +23,51 @@ public class HeadersProcessor implements Processor {
 	}
 
 	  public void process(Exchange exchange) throws Exception {
-		  
-			Message in = exchange.getIn();
-			Object endpointIdObject = in.getHeader("AssimblyHeaderId");
-			
-			if(endpointIdObject!=null) {
-				
-				String endpointId = endpointIdObject.toString();
-			
-			    Map<String, String> headers = props.entrySet()
-			    	      .stream()
-			    	      .filter(map -> map.getKey().startsWith("header." + endpointId))
-			    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
-				for (Map.Entry<String, String> entry : headers.entrySet()) {
+		  Message in = exchange.getIn();
+		  Object endpointIdObject = in.getHeader("AssimblyHeaderId");
 
-					String language = StringUtils.substringBetween(entry.getKey(),endpointId + ".",".");
-					String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
-					String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
-					String result = "";
+		  if (endpointIdObject != null) {
 
-					if(language==null){
-						continue;
-					}else if (language.equalsIgnoreCase("constant")) {
-						result = value;
-					}else if (language.equalsIgnoreCase("xpath")) {
-						XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-						result = XPathBuilder.xpath(value).factory(fac).evaluate(exchange, String.class);
-					}else {
-						Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
-						Expression expression = resolvedLanguage.createExpression(value);
-						result = expression.evaluate(exchange, String.class);
-					}
+			  String endpointId = endpointIdObject.toString();
 
-					in.setHeader(key, result);
+			  Map<String, String> headers = props.entrySet()
+					  .stream()
+					  .filter(map -> map.getKey().startsWith("header." + endpointId))
+					  .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
-				}
-			}
-	  }		  
+			  for (Map.Entry<String, String> entry : headers.entrySet()) {
+
+				  String language = StringUtils.substringBetween(entry.getKey(), endpointId + ".", ".");
+				  String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
+				  String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
+				  String result = "";
+
+				  if (language == null) {
+					  continue;
+				  } else if (language.equalsIgnoreCase("constant")) {
+					  result = value;
+				  } else if (language.equalsIgnoreCase("xpath")) {
+					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+					  result = XPathBuilder.xpath(value).factory(fac).evaluate(exchange, String.class);
+				  } else {
+					  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+					  Expression expression = resolvedLanguage.createExpression(value);
+					  result = expression.evaluate(exchange, String.class);
+				  }
+
+				  in.setHeader(key, result);
+
+			  }
+
+			  in.removeHeader("AssimblyHeaderId");
+		  }
+
+		  Object removeHeadersObject = in.getHeader("RemoveHeaders");
+		  if (removeHeadersObject != null) {
+			  String removeHeaders = removeHeadersObject.toString();
+			  in.removeHeaders(removeHeaders);
+		  }
+
+	  }
 }

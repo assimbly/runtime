@@ -414,7 +414,6 @@ public class XMLFileConfiguration {
 				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 			}
 
-
 			if(options.isEmpty()){
 				uri = component;
 			}else{
@@ -526,7 +525,7 @@ public class XMLFileConfiguration {
 				}
 			}
 
-			if(type.equals("from")||type.equals("error")) {
+			if(type.equals("error")) {
 				properties.put(type + ".header.id", headerId);
 			}else {
 				properties.put(type + "." + endpointId + ".header.id", headerId);
