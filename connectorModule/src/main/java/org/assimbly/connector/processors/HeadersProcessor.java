@@ -22,48 +22,52 @@ public class HeadersProcessor implements Processor {
 		this.props = props;
 	}
 
-	
 	  public void process(Exchange exchange) throws Exception {
-		  
-			Message in = exchange.getIn();
-			Object endpointIdObject = in.getHeader("AssimblyHeaderId");
-			
-			
-			if(endpointIdObject!=null) {
-				
-				String endpointId = endpointIdObject.toString();
-			
-			    Map<String, String> headers = props.entrySet()
-			    	      .stream()
-			    	      .filter(map -> map.getKey().startsWith("header." + endpointId))
-			    	      .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
-				
-				
-				for (Map.Entry<String, String> entry : headers.entrySet()) {
 
-					String key = entry.getKey();
+		  Message in = exchange.getIn();
+		  Object endpointIdObject = in.getHeader("AssimblyHeaderId");
 
-					if (key.startsWith("header." + endpointId + ".constant")) {
-						in.setHeader(StringUtils.substringAfterLast(key, "constant."), entry.getValue());
-					}else if (key.startsWith("header." + endpointId + ".groovy")) {
-						Language groovy = exchange.getContext().resolveLanguage("groovy");
-						Expression groovyExpression = groovy.createExpression(entry.getValue());
-						String groovyResult = groovyExpression.evaluate(exchange, String.class);
-						in.setHeader(StringUtils.substringAfterLast(key, "groovy."), groovyResult);
-					}else if (key.startsWith("header." + endpointId + ".jsonpath")) {
-						Language jsonPath = exchange.getContext().resolveLanguage("jsonpath");
-						Expression jsonExpression = jsonPath.createExpression(entry.getValue());
-						String jsonpathResult = jsonExpression.evaluate(exchange, String.class);
-						in.setHeader(StringUtils.substringAfterLast(key, "jsonpath."),jsonpathResult);
-					}else if (key.startsWith("header." + endpointId + ".simple")) {
-						Language simple = exchange.getContext().resolveLanguage("simple");
-						in.setHeader(StringUtils.substringAfterLast(key, "simple."), simple.createExpression(entry.getValue()).evaluate(exchange, String.class));
-					}else if (key.startsWith("header." + endpointId + ".xpath")) {
-						XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-						String xpathResult = XPathBuilder.xpath(entry.getValue()).factory(fac).evaluate(exchange, String.class);
-						in.setHeader(StringUtils.substringAfterLast(key, "xpath."),xpathResult);						
-					}
-				}
-			}
-	  }		  
+		  if (endpointIdObject != null) {
+
+			  String endpointId = endpointIdObject.toString();
+
+			  Map<String, String> headers = props.entrySet()
+					  .stream()
+					  .filter(map -> map.getKey().startsWith("header." + endpointId))
+					  .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+
+			  for (Map.Entry<String, String> entry : headers.entrySet()) {
+
+				  String language = StringUtils.substringBetween(entry.getKey(), endpointId + ".", ".");
+				  String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
+				  String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
+				  String result = "";
+
+				  if (language == null) {
+					  continue;
+				  } else if (language.equalsIgnoreCase("constant")) {
+					  result = value;
+				  } else if (language.equalsIgnoreCase("xpath")) {
+					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+					  result = XPathBuilder.xpath(value).factory(fac).evaluate(exchange, String.class);
+				  } else {
+					  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+					  Expression expression = resolvedLanguage.createExpression(value);
+					  result = expression.evaluate(exchange, String.class);
+				  }
+
+				  in.setHeader(key, result);
+
+			  }
+
+			  in.removeHeader("AssimblyHeaderId");
+		  }
+
+		  Object removeHeadersObject = in.getHeader("RemoveHeaders");
+		  if (removeHeadersObject != null) {
+			  String removeHeaders = removeHeadersObject.toString();
+			  in.removeHeaders(removeHeaders);
+		  }
+
+	  }
 }

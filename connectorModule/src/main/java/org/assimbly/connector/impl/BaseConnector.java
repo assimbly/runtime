@@ -1,46 +1,51 @@
 package org.assimbly.connector.impl;
 
-import java.net.URI;
-import java.security.cert.Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.assimbly.connector.Connector;
 import org.assimbly.connector.configuration.JSONFileConfiguration;
 import org.assimbly.connector.configuration.XMLFileConfiguration;
 import org.assimbly.connector.configuration.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
-import org.assimbly.connector.Connector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.security.cert.Certificate;
+import java.util.*;
 
 
 public abstract class BaseConnector implements Connector {
-	
+
 	@SuppressWarnings("unused")
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.impl.BaseConnector");
 
 	//properties are (list of) key/value maps
-	private List<TreeMap<String,String>> properties = new ArrayList<>();
+	private List<TreeMap<String, String>> properties = new ArrayList<>();
 	private TreeMap<String, String> flowProperties;
-	private List<TreeMap<String,String>> connections = new ArrayList<>();
+	private List<TreeMap<String, String>> connections = new ArrayList<>();
 
 	//configuration are strings
 	private String configuration;
 	private String flowConfiguration;
-	
+
+	private Properties encryptionProperties;
+
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+	}
+
+	public Properties getEncryptionProperties() {
+		return encryptionProperties;
+	}
+
 	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception {
-		for (TreeMap<String, String> flowConfiguration : configuration){
+		for (TreeMap<String, String> flowConfiguration : configuration) {
 			setFlowConfiguration(flowConfiguration);
-		}		
+		}
 	}
 
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
@@ -74,7 +79,7 @@ public abstract class BaseConnector implements Connector {
 	}
 
 	public String getConfiguration(String connectorId, String mediaType) throws Exception {
-		
+
 		this.properties = getConfiguration();
 		mediaType = mediaType.toLowerCase();
 
@@ -284,9 +289,13 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract void start() throws Exception;
 
+	public abstract void stop() throws Exception;
+
 	public abstract boolean isStarted();
 
-	public abstract void stop() throws Exception;
+	public abstract void setTracing(boolean tracing);
+
+	public abstract void setDebugging(boolean debugging);
 
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 
@@ -299,7 +308,6 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
-	
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;	
 	
@@ -359,13 +367,15 @@ public abstract class BaseConnector implements Connector {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
 
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 
 	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
 
-	public abstract String resolveDependency(String schema);
+	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+
+	public abstract String resolveDependency(String schema)  throws Exception;
 
 	public abstract String resolveDependency(String groupId, String artifactId, String version);
 
@@ -378,5 +388,13 @@ public abstract class BaseConnector implements Connector {
 	public abstract void send(Object messageBody, ProducerTemplate template);
 
 	public abstract void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
-	
+
+	public abstract void send(String uri,Object messageBody, Integer numberOfTimes);
+
+	public abstract void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
+
+	public abstract String sendRequest(String uri,Object messageBody);
+
+	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
+
 }

@@ -1,25 +1,7 @@
 package org.assimbly.connector.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.security.cert.Certificate;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.Route;
-import org.apache.camel.ServiceStatus;
+import com.codahale.metrics.MetricRegistry;
+import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
@@ -29,31 +11,43 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFa
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
+import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.EventNotifier;
+import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
-import org.apache.camel.SSLContextParametersAware;
+import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.MetricRegistry;
-
-import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.CertificatesUtil;
-import org.assimbly.util.DependencyUtil;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.util.*;
+import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.xml.xpath.XPathFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.security.cert.Certificate;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CamelConnector extends BaseConnector {
 
@@ -74,7 +68,9 @@ public class CamelConnector extends BaseConnector {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
-	
+
+	private Properties encryptionProperties;
+
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.camelconnector.connect.impl.CamelConnector");
 
 	public CamelConnector() {
@@ -85,7 +81,6 @@ public class CamelConnector extends BaseConnector {
 			e.printStackTrace();
 		}
 	}
-	
 
 	public CamelConnector(String connectorId, String configuration) throws Exception {
 		setBasicSettings();
@@ -104,9 +99,6 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		
-		context.setTracing(false);
-		
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
         ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
@@ -115,27 +107,49 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-        
+		((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(true);
+
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
 
 		//set history metrics
-	    MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
-	    factory.setPrettyPrint(true);
-	    factory.setMetricsRegistry(metricRegistry);
+		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+		factory.setPrettyPrint(true);
+		factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
-						
+
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
 
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-		
+
+
 	}
-	
+
+	@Override
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
+
+	@Override
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
+
+	private void setEncryptedPropertiesComponent() {
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
+	}
+
+
 	public void start() throws Exception {
-		
+
 		// start Camel context
 		context.start();
 		started = true;
@@ -161,26 +175,49 @@ public class CamelConnector extends BaseConnector {
 		return started;
 	}
 	
+	public void setTracing(boolean tracing) {
+        context.setTracing(tracing);
+	}
+
+	public void setDebugging(boolean debugging) {
+        context.setDebugging(debugging);
+	}
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		String scheme = "";
+
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 			if (key.endsWith("service.id")){
-				props = new Connection(context, props, key).start();
+				props = setConnection(props, key);
 			}
 			if (key.startsWith("from") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("to") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
+			}
+			if(key.startsWith("response") && key.endsWith("uri")){
+				scheme = props.get(key).split(":")[0];
+
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 			if (key.startsWith("error") && key.endsWith("uri")){
 				scheme = props.get(key).split(":")[0];
-				logger.info(resolveDependency(scheme));
+				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					logger.info(resolveDependency(scheme));
+				}
 			}
 		}
 		
@@ -203,7 +240,8 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		DefaultRoute flow = new DefaultRoute(props);
-		context.addRoutes(flow);		
+
+		context.addRoutes(flow);
 	}
 
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
@@ -229,7 +267,7 @@ public class CamelConnector extends BaseConnector {
 		boolean routeFound = false;
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				if (route.getId().equals(id)) {
+				if (route.getId().startsWith(id)) {
 					routeFound = true;
 				}
 			}
@@ -239,17 +277,17 @@ public class CamelConnector extends BaseConnector {
 
 	public String startAllFlows() throws Exception {
 		logger.info("Starting all flows");
-		
+
 		List<TreeMap<String, String>> allProps = super.getConfiguration();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
 			flowStatus = startFlow(props.get("id"));
 			if(!flowStatus.equals("started")) {
-				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus; 
-			}	
+				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus;
+			}
         }
-		
+
 		return "started";
 	}
 
@@ -319,16 +357,15 @@ public class CamelConnector extends BaseConnector {
 	
 	public String startFlow(String id) {
 		logger.info("Start flow " + id);
-		
+
 		boolean flowAdded = false;
 		
 		try {
-			
+
 			List<TreeMap<String, String>> allProps = super.getConfiguration();
-			
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
-			
+
 				if (props.get("id").equals(id)) {
 					
 					logger.info("Adding route with id: " + id);
@@ -339,18 +376,30 @@ public class CamelConnector extends BaseConnector {
 			}
 			
 			if(flowAdded){
-				routeController.startRoute(id);
-				
-				int count = 1;
-				
-		        do {
-		        	status = routeController.getRouteStatus(id);
-		        	if(status.isStarted()) {break;}
-		        	Thread.sleep(10);
-		        	count++;
-		        	
-		        } while (status.isStarting() || count < 3000);
-		
+
+				List<Route> routeList = getRoutesByFlowId(id);
+
+				for(Route route : routeList){
+					String routeId = route.getId();
+					status = routeController.getRouteStatus(routeId);
+					if(!status.isStarted()) {
+						logger.info("Starting route " + routeId);
+						routeController.startRoute(routeId);
+
+						int count = 1;
+
+						do {
+							if(status.isStarted()) {break;}
+							Thread.sleep(10);
+							count++;
+
+						} while (status.isStarting() || count < 3000);
+
+					} else {
+						logger.info("Route " + routeId + " already started");
+					}
+				}
+
 				logger.info("Started flow " + id);
 				return status.toString().toLowerCase();
 				
@@ -371,14 +420,14 @@ public class CamelConnector extends BaseConnector {
 	public String restartFlow(String id) {
 
 		logger.info("Restart flow " + id);
-		try {		
 
+		try {
 			if(hasFlow(id)) {
 
 				stopFlow(id);
-				
-	        	return startFlow(id);	
-	        
+
+				return startFlow(id);
+
 			}else {
 				return "Configuration is not set and running";
 			}
@@ -392,13 +441,11 @@ public class CamelConnector extends BaseConnector {
 	
 	public String stopFlow(String id) {
 		logger.info("Stop flow " + id);		
-		try {		
-
-			for (Route route : context.getRoutes()) {
-				if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
-					routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
-					context.removeRoute(route.getId());	
-				}
+		try {
+			List<Route> routeList = getRoutesByFlowId(id);
+			for (Route route : routeList) {
+				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
+				context.removeRoute(route.getId());
 			}
 
 	        return "stopped";
@@ -411,46 +458,54 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String pauseFlow(String id) {
-		logger.info("Pause flow " + id);		
+		logger.info("Pause flow " + id);
 		
 		try {
-		
-			if(hasFlow(id)) {
-	        	status = routeController.getRouteStatus(id);
-				if(status.isSuspendable()) {
-					
-					routeController.suspendRoute(id);
-						
-					int count = 1;
-					
-			        do {
-			        	status = routeController.getRouteStatus(id);
-			        	if(status.isSuspended()) {
-							logger.info("Paused (suspend) flow " + id);		
-			        		break;
-			        	}else if(status.isStopped()){
-							logger.info("Paused (stopped) flow " + id);		
 
-			        		break;			        		
-			        	}
-			        	
-			        	Thread.sleep(10);
-			        	count++;
-			        	
-			        } while (status.isSuspending() || count < 6000);
-			  
-			        return status.toString().toLowerCase();
-				
-					
-				}else {
-					return "Flow isn't suspendable";
+			if(hasFlow(id)) {
+
+				List<Route> routeList = getRoutesByFlowId(id);
+				status = routeController.getRouteStatus(routeList.get(0).getId());
+
+				for(Route route : routeList){
+					if(!routeController.getRouteStatus(route.getId()).isSuspendable()){
+						return "Flow isn't suspendable (Route " + route.getId() + ")";
+					}
 				}
+
+				for(Route route : routeList){
+					String routeId = route.getId();
+
+					routeController.suspendRoute(routeId);
+
+					int count = 1;
+
+					do {
+						status = routeController.getRouteStatus(routeId);
+						if(status.isSuspended()) {
+							logger.info("Paused (suspend) flow " + id + ", route " + routeId);
+							break;
+						}else if(status.isStopped()){
+							logger.info("Paused (stopped) flow " + id + ", route " + routeId);
+
+							break;
+						}
+
+						Thread.sleep(10);
+						count++;
+
+					} while (status.isSuspending() || count < 6000);
+				}
+				logger.info("Paused flow " + id);
+				return status.toString().toLowerCase();
+
 			}else {
 				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 			}
 		
 		}catch (Exception e) {
 			e.printStackTrace();
+			stopFlow(id); //Stop flow if one of the routes cannot be pauzed. Maybe find a more elegant solution?
 			return e.getMessage();
 		}
 
@@ -463,26 +518,38 @@ public class CamelConnector extends BaseConnector {
 		try {
 		
 			if(hasFlow(id)) {
-	        	status = routeController.getRouteStatus(id);
-				if(status.isSuspended()) {
-					
-					routeController.resumeRoute(id);
-					
-					int count = 1;
-					
-			        do {
-			        	status = routeController.getRouteStatus(id);
-			        	if(status.isStarted()) {break;}
-			        	Thread.sleep(10);
-			        	count++;
-			        	
-			        } while (status.isStarting() || count < 3000);
-			        
-			        logger.info("Resumed flow " + id);
-			        return status.toString().toLowerCase();				
-				}else if(status.isStopped()) {
-					logger.info("Starting flow as flow " + id + " is currently stopped (not suspended)");
-					return startFlow(id);
+				boolean resumed = true;
+				List<Route> routeList = getRoutesByFlowId(id);
+				for(Route route : routeList){
+					String routeId = route.getId();
+					status = routeController.getRouteStatus(routeId);
+					if(status.isSuspended()){
+						routeController.resumeRoute(routeId);
+
+						int count = 1;
+
+						do {
+							status = routeController.getRouteStatus(routeId);
+							if(status.isStarted()) {break;}
+							Thread.sleep(10);
+							count++;
+
+						} while (status.isStarting() || count < 3000);
+
+						resumed = true;
+						logger.info("Resumed flow " + id + ", route " + routeId);
+
+					}
+					else if (status.isStopped()){
+
+						logger.info("Starting route as route " + id + " is currently stopped (not suspended)");
+						startFlow(routeId);
+						resumed = true;
+					}
+				}
+				if(resumed){
+					logger.info("Resumed flow " + id);
+					return status.toString().toLowerCase();
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
 				}
@@ -492,6 +559,7 @@ public class CamelConnector extends BaseConnector {
 		
 		}catch (Exception e) {
 			e.printStackTrace();
+			stopFlow(id); //Stop flow if one of the routes cannot be resumed. Maybe find an more elegant solution?
 			return e.getMessage();
 		}
 
@@ -501,8 +569,17 @@ public class CamelConnector extends BaseConnector {
 	public boolean isFlowStarted(String id) {
 		
 		if(hasFlow(id)) {
-			ServiceStatus status = routeController.getRouteStatus(id);
-			return status.isStarted();			
+			ServiceStatus status = null;
+			List routeList = getRoutesByFlowId(id);
+
+			for(Route route : getRoutesByFlowId(id)){
+				status = routeController.getRouteStatus(route.getId());
+
+				if(!status.isStarted()){
+					return false;
+				}
+			}
+			return status != null && status.isStarted();
 		}else {
 			return false;
 		}
@@ -512,7 +589,7 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowStatus(String id) {
 		
 		if(hasFlow(id)) {
-			ServiceStatus status = routeController.getRouteStatus(id);
+			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
 			flowStatus = status.toString().toLowerCase();		
 		}else {
 			flowStatus = "unconfigured";			
@@ -525,7 +602,7 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowUptime(String id) {
 	
 		if(hasFlow(id)) {
-			Route route = context.getRoute(id);
+			Route route = getRoutesByFlowId(id).get(0);
 			flowUptime = route.getUptime();
 		}else {
 			flowUptime = "0";
@@ -535,18 +612,27 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String getFlowLastError(String id) {
-		
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			org.apache.camel.api.management.mbean.RouteError lastError = route.getLastError();
-			if(lastError!=null) {
-				flowInfo = lastError.toString();
-			}else {
-				flowInfo = "0";
+
+		List<Route> routeList = getRoutesByFlowId(id);
+		StringBuilder sb = new StringBuilder();
+		for(Route r : routeList){
+			String routeId = r.getId();
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+
+			if(route != null){
+				org.apache.camel.api.management.mbean.RouteError lastError = route.getLastError();
+				if(lastError != null){
+					sb.append("RouteID: ");
+					sb.append(routeId);
+					sb.append("Error: ");
+					sb.append(lastError.toString());
+					sb.append(";");
+				}
 			}
-			
-		}else {
+		}
+		if(!sb.toString().isEmpty()){
+			flowInfo = sb.toString();
+		} else{
 			flowInfo = "0";
 		}
 
@@ -556,14 +642,21 @@ public class CamelConnector extends BaseConnector {
 	
 	public String getFlowTotalMessages(String id) throws Exception {
 
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long totalMessages = route.getExchangesTotal();
-			flowInfo = Long.toString(totalMessages);
-		}else {
-			flowInfo = "0";
+		List<Route> routeList = getRoutesByFlowId(id);
+
+		long totalMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+
+			if(route != null && "from".equals(description)){
+				totalMessages += route.getExchangesTotal();
+			}
 		}
+
+		flowInfo = Long.toString(totalMessages);
 
 		return flowInfo;
 
@@ -571,29 +664,41 @@ public class CamelConnector extends BaseConnector {
 	
 	public String getFlowCompletedMessages(String id) throws Exception {
 
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long completedMessages = route.getExchangesCompleted();
-			flowInfo = Long.toString(completedMessages);
-		}else {
-			flowInfo = "0";
+		List<Route> routeList = getRoutesByFlowId(id);
+		long completedMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null && "from".equals(description)){
+				completedMessages += route.getExchangesCompleted();
+			}
 		}
+
+		flowInfo = Long.toString(completedMessages);
 
 		return flowInfo;
 
 	}
 
 	public String getFlowFailedMessages(String id) throws Exception  {
-						
-		ManagedRouteMBean route = managed.getManagedRoute(id);
-		
-		if(route!=null) {
-			long failedMessages = route.getExchangesFailed();
-			flowInfo = Long.toString(failedMessages);
-		}else {
-			flowInfo = "0";
+
+		List<Route> routeList = getRoutesByFlowId(id);
+		long failedMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+			String description = r.getDescription();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null && "from".equals(description)){
+				failedMessages += route.getExchangesFailed();
+			}
 		}
+
+		flowInfo = Long.toString(failedMessages);
 
 		return flowInfo;
 
@@ -712,11 +817,13 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-	public String getFlowStats(String id, String mediaType) throws Exception {
-		
-		ManagedRouteMBean route = managed.getManagedRoute(id);
+	public String getFlowStats(String id, String endpointid, String mediaType) throws Exception {
 
-		flowStatus = getFlowStatus(id);
+		String routeid = id + "-" + endpointid;
+
+		ManagedRouteMBean route = managed.getManagedRoute(routeid);
+
+		flowStatus = getFlowStatus(routeid);
 		
 		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);
@@ -761,6 +868,10 @@ public class CamelConnector extends BaseConnector {
 
 	}	
 
+
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
+		return new Connection(context, props, key).start();
+	}
 
 	
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
@@ -826,18 +937,22 @@ public class CamelConnector extends BaseConnector {
 
 	}	
 
-	public String resolveDependency(String scheme) {
-		
+	public String resolveDependency(String scheme) throws Exception {
+
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		String jsonString = catalog.componentJSonSchema(scheme);
-			
+
+		if(jsonString == null || jsonString.isEmpty()){
+			logger.info("Unknown scheme: " + scheme);
+			return null;
+		}
 		JSONObject componentSchema = new JSONObject(jsonString);
 		JSONObject component = componentSchema.getJSONObject("component");
-		
+
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
 		String version = component.getString("version");
-		
+
 		String result = resolveDependency(groupId, artifactId, version);
 
 		//This maybe needed to activate the component
@@ -884,6 +999,89 @@ public class CamelConnector extends BaseConnector {
 
 	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
 		template.sendBodyAndHeaders(messageBody, messageHeaders);
+	}
+
+
+	public void send(String uri,Object messageBody, Integer numberOfTimes) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		if(numberOfTimes.equals(1)){
+			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			template.sendBody(uri, messageBody);
+		}else{
+			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+		}
+	}
+
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
+
+		if(numberOfTimes.equals(1)){
+			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			template.send(uri,exchange);
+		}else{
+			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			Exchange finalExchange = exchange;
+			IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+		}
+
+	}
+
+	public String sendRequest(String uri,Object messageBody) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		logger.info("Sending request message to " + uri);
+
+		return template.requestBody(uri, messageBody,String.class);
+	}
+
+	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders) {
+
+		ProducerTemplate template = context.createProducerTemplate();
+
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
+		exchange.setPattern(ExchangePattern.InOut);
+
+		logger.info("Sending request message to " + uri);
+		Exchange result = template.send(uri,exchange);
+
+		return result.getMessage().getBody(String.class);
+	}
+
+	public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
+		for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
+
+			String key = messageHeader.getKey();
+			String value = StringUtils.substringBetween(messageHeader.getValue().toString(),"(",")");
+			String language = StringUtils.substringBefore(messageHeader.getValue().toString(),"(");
+			String result = "";
+
+			if(value.startsWith("constant")) {
+				exchange.getIn().setHeader(key,value);
+			}else if(value.startsWith("xpath")){
+				XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+				result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}else{
+				Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+				Expression expression = resolvedLanguage.createExpression(value);
+				result = expression.evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}
+
+		}
+
+		return exchange;
 	}
 
 	public Certificate[] getCertificates(String url) {
@@ -1004,9 +1202,18 @@ public class CamelConnector extends BaseConnector {
         SSLContextParameters sslContextParameters = new SSLContextParameters();
         sslContextParameters.setKeyManagers(kmp);
         sslContextParameters.setTrustManagers(tmp);
-                
-        return sslContextParameters;
+
+		return sslContextParameters;
     }
+
+	/**
+	 * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.
+	 * @param id The flowID or routeID
+	 * @return A List of Routes
+	 */
+	private List<Route> getRoutesByFlowId(String id){
+		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+	}
 	
     
 }

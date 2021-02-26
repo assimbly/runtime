@@ -1,50 +1,70 @@
 package org.assimbly.connector;
 
-import java.security.cert.Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.util.EncryptionUtil;
+
+import java.security.cert.Certificate;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 
 /**
-* <pre>
-* This interface is meant to configure and manage a connector.
-*
-* A <b>Connector</b> is a collection of flows.
-* A <b>Flow</b> connects one or more endpoints for example a database and a directory.
-* 
-* Each flow configuration consists of a Treemap&lt;key,value&gt;. The connector configuration
-* consists of a list of flow configurations.
-*
-* For a valid flow configuration see
-* <a href="https://github.com/assimbly/connector">https://github.com/assimbly/connector</a>
-* </pre>
-*/
+ * <pre>
+ * This interface is meant to configure and manage a connector.
+ *
+ * A <b>Connector</b> is a collection of flows.
+ * A <b>Flow</b> connects one or more endpoints for example a database and a directory.
+ *
+ * Each flow configuration consists of a Treemap&lt;key,value&gt;. The connector configuration
+ * consists of a list of flow configurations.
+ *
+ * For a valid flow configuration see
+ * <a href="https://github.com/assimbly/connector">https://github.com/assimbly/connector</a>
+ * </pre>
+ */
 public interface Connector {
 
-	//configure connector
 	/**
-	* Sets the connector configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;). 
-	* The configuration cleared after a connector is reinitialized.
-	*
-	* @param  configuration: list of flow configurations (Treemaps)
-	* @throws Exception if configuration can't be set
-	*/
-	public void setConfiguration(List<TreeMap<String,String>> configuration) throws Exception;
+	 * Gets the connector properties
+	 */
+	public Properties getEncryptionProperties();
 
 	/**
-	* Sets the connector configuration from a string of a specific format (XML,JSON,YAML). 
-	* The configuration cleared after a connector is reinitialized.
-	*
-	* @param  connectorId ID of the connector 
-	* @param  mediaType (XML,JSON,YAML)
-	* @param  configuration (the XML, JSON or YAML file)	
-	* @throws Exception if configuration can't be set
-	*/
+	 * Sets the connector properties to pass application property variables from the application to the connector
+	 *
+	 * @param properties: set application properties
+	 */
+	public void setEncryptionProperties(Properties properties);
+
+	/**
+	 * @return encryption Utility
+	 */
+	public EncryptionUtil getEncryptionUtil();
+
+	//configure connector
+
+	/**
+	 * Sets the connector configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;).
+	 * The configuration cleared after a connector is reinitialized.
+	 *
+	 * @param configuration: list of flow configurations (Treemaps)
+	 * @throws Exception if configuration can't be set
+	 */
+	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception;
+
+	/**
+	 * Sets the connector configuration from a string of a specific format (XML,JSON,YAML).
+	 * The configuration cleared after a connector is reinitialized.
+	 *
+	 * @param connectorId   ID of the connector
+	 * @param mediaType     (XML,JSON,YAML)
+	 * @param configuration (the XML, JSON or YAML file)
+	 * @throws Exception if configuration can't be set
+	 */
 	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
 	
 	/**
@@ -104,7 +124,17 @@ public interface Connector {
 	* @throws Exception if configuration can't be retrieved or is not available
 	*/
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
-	
+
+	/**
+	 * gets the connector configuration currently set (in use).
+	 *
+	 * @param  props Properties of service
+	 * @param  endpointType (from,to, response or error)
+	 * @return properties of service
+	 * @throws Exception if connection can't be set
+	 */
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+
 	/**
 	* sets the connector base directory. In this directory everything is stored (alert, events) 
 	*
@@ -118,35 +148,48 @@ public interface Connector {
 	*
 	* @param  host (dnsname or ip of server)
 	* @param  port number (1 through 65535)
-	* @param  timeout in seconds 
+	* @param  timeOut in seconds
 	* @return Message "Connection succesfully opened" or "Connection error"
 	*/
 	public String testConnection(String host, int port, int timeOut);
 
-	
+
 	//manage connector
+
 	/**
-	* Starts a connector. The connector acts like a container for flows.  
-	* After starting it can be configured
-	*
-	* @throws Exception if connector doesn't start
-	*/
+	 * Starts a connector. The connector acts like a container for flows.
+	 * After starting it can be configured
+	 *
+	 * @throws Exception if connector doesn't start
+	 */
 	public void start() throws Exception;
 
 	/**
-	* Stops a connector
-	*
-	* @throws Exception if connector doesn't start
-	*/
+	 * Stops a connector
+	 *
+	 * @throws Exception if connector doesn't start
+	 */
 	public void stop() throws Exception;
 
 	/**
-	* Checks if a connector is started  
-	*
-	* @return returns true if connector is started
-	*/
+	 * Checks if a connector is started
+	 *
+	 * @return returns true if connector is started
+	 */
 	public boolean isStarted();
 
+	/**
+	 * Turn on/off tracing
+	 * @param tracing to turn on tracing, false to turn it off
+	 */
+	public void setTracing(boolean tracing);
+
+	/**
+	 * Turn on/off debugging
+	 * @param debugging to turn on debugging, false to turn it off
+	 */
+	public void setDebugging(boolean debugging);
+	
 	/**
 	* Adds event notifier to notified about events
 	* @param  eventNotifier eventNotifier object
@@ -189,7 +232,6 @@ public interface Connector {
 	*/
 	public String getDocumentationVersion() throws Exception;	
 
-	
 	/**
 	* Gets the documentation of a component
 	*
@@ -496,7 +538,7 @@ public interface Connector {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, String mediaType) throws Exception;	
+	public String getFlowStats(String flowId, String endpointid, String mediaType) throws Exception;
 	
 	/**
 	* Gets a running route as XML/JSON by id
@@ -523,7 +565,7 @@ public interface Connector {
 	* @param  scheme name of the scheme
 	* @return Message on succes or failure
 	*/
-	public String resolveDependency(String scheme);
+	public String resolveDependency(String scheme) throws Exception;
 	
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
@@ -560,5 +602,58 @@ public interface Connector {
 	* @throws Exception if context can't be found
 	*/
 	public ConsumerTemplate getConsumerTemplate() throws Exception;
+
+	/**
+	 * Send a message to (default producer)
+	 *
+	 * @param messageBody Content of the body
+	 * @param template for the producer
+	 */
+	public void send(Object messageBody, ProducerTemplate template);
+
+	/**
+	 * Send a message with headers to (default producer)
+	 *
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 * @param template for the producer
+	 */
+	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param numberOfTimes Number of times the message is sent
+	 */
+	public void send(String uri,Object messageBody, Integer numberOfTimes);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 * @param numberOfTimes Number of times the message is sent
+	 */
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 */
+	public String sendRequest(String uri,Object messageBody);
+
+	/**
+	 * Send a message with headers to an uri
+	 *
+	 * @param uri Endpoint uri
+	 * @param messageBody Content of the body
+	 * @param messageHeaders Treemap<String, Object> with one or more headers
+	 */
+	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
 }

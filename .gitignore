@@ -19,6 +19,17 @@
 *.tar
 *.zip
 
+
+######################
+# Intellij
+######################
+*.iws
+*.iml
+.idea_modules/
+.idea/
+atlassian-ide-plugin.xml
+out/
+
 ######################
 # Eclipse
 ######################
@@ -48,3 +59,4 @@ local.properties
 # Directories #
 ######################
 target/
+log/
