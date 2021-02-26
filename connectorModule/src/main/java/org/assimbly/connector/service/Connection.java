@@ -1,6 +1,8 @@
 package org.assimbly.connector.service;
 
+import com.ibm.mq.constants.MQConstants;
 import com.ibm.mq.jms.MQConnectionFactory;
+import com.ibm.msg.client.wmq.WMQConstants;
 import com.ibm.msg.client.wmq.common.CommonConstants;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -53,8 +55,6 @@ public class Connection {
 	}
 
 	public TreeMap<String, String> start() throws Exception{
-
-        System.out.println("setup connection");
 
         serviceId = properties.get(key);
 
@@ -490,6 +490,8 @@ public class Connection {
 
     private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
 
+        EncryptableProperties decryptedProperties = decryptProperties(properties);
+        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
 
         if (direction.equals("to") || direction.equals("from")) {
             direction = direction + "." + endpointId;
@@ -513,7 +515,7 @@ public class Connection {
 
     }
 
-	private MQConnectionFactory setupIBMMQConnectionFactory(TreeMap<String, String> properties) throws JMSException {
+	private MQConnectionFactory setupIBMMQConnectionFactory(TreeMap<String, String> properties) throws Exception {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         //required properties
@@ -537,8 +539,29 @@ public class Connection {
         String transportTypeAsString = decryptedProperties.getProperty("service." + serviceId + ".transporttype");
         String pollingIntervalAsString = decryptedProperties.getProperty("service." + serviceId + ".pollinginterval");
         String maxBufferSizeAsString = decryptedProperties.getProperty("service." + serviceId + ".maxbuffersize");
+        String clientUserAuthenticationMQCSP = decryptedProperties.getProperty("service." + serviceId + ".userauthenticationmqcp");
 
         MQConnectionFactory cf = new MQConnectionFactory();
+
+        //Required parameters
+        if (url == null) {
+            logger.error("IBMMQ connection required parameter 'url' isn't set");
+            throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
+        }
+        if (channel == null) {
+            logger.error("IBMMQ connection required parameter 'channel' isn't set");
+            throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
+        }
+        if (queueManager == null) {
+            logger.error("IBMMQ connection required parameter 'queuemanager' isn't set");
+            throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
+        }
+
+        cf.setConnectionNameList(url);
+        cf.setChannel(channel);//communications link
+        cf.setQueueManager(queueManager);//service provider
+
+        //Optional parameters
 
         //public static final int 	WMQ_CM_BINDINGS 				0
         //public static final int 	WMQ_CM_CLIENT 					1
@@ -548,7 +571,7 @@ public class Connection {
         if (transportTypeAsString != null) {
             cf.setTransportType(Integer.parseInt(transportTypeAsString));
 		}else{
-			cf.setTransportType(CommonConstants.WMQ_CM_BINDINGS);
+			cf.setTransportType(CommonConstants.WMQ_CM_CLIENT);
 		}
 
 		if(clientReconnectTimeOutAsString!=null){
@@ -563,6 +586,11 @@ public class Connection {
 			cf.setClientReconnectOptions(0);
 		}
 
+        if(clientUserAuthenticationMQCSP!=null && clientUserAuthenticationMQCSP.equalsIgnoreCase("false")){
+            cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, false);
+        }else{
+            cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, true);
+        }
 
 		if(channelReceiveExit!=null){cf.setReceiveExit(channelReceiveExit);}
 		if(channelReceiveExitUserData!=null){cf.setReceiveExitInit(channelReceiveExitUserData);}
@@ -575,18 +603,13 @@ public class Connection {
 		if(pollingIntervalAsString!=null){cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));}
 		if(maxBufferSizeAsString!=null){cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));}
 
-		if(username == null || username.isEmpty()) {
-			cf.setConnectionNameList(url);
-			cf.setChannel(channel);//communications link
-			cf.setQueueManager(queueManager);//service provider
-			cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
-			cf.createConnection();
-		}else {
-            cf.setConnectionNameList(url);
-            cf.setChannel(channel);//communications link
-            cf.setQueueManager(queueManager);//service provider
-            cf.setIntProperty(CommonConstants.WMQ_CONNECTION_MODE, CommonConstants.WMQ_CM_CLIENT);
+		if(username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
             cf.createConnection(username, password);
+        }else if(username != null && !username.isEmpty()) {
+            cf.setStringProperty(WMQConstants.USERID, username);
+            cf.createConnection();
+        }else{
+            cf.createConnection();
         }
 
         return cf;

@@ -51,7 +51,7 @@ public class DefaultRoute extends RouteBuilder {
 	public interface FailureProcessorListener {
 		 public void onFailure();
   	}
-	
+
 	@Override
 	public void configure() throws Exception {
 			
@@ -61,7 +61,7 @@ public class DefaultRoute extends RouteBuilder {
 		EncryptableProperties decryptedProperties = decryptProperties(props);
 
 		Processor headerProcessor = new HeadersProcessor(props);
-		Processor failureProcessor = new FailureProcessor();
+		Processor failureProcessor = new FailureProcessor(props);
 		Processor convertProcessor = new ConvertProcessor();
 
 		flowId = props.get("id");
@@ -116,7 +116,7 @@ public class DefaultRoute extends RouteBuilder {
 		}		
 		
 		if (this.props.containsKey("error.uri")){
-			routeErrorHandler = deadLetterChannel(props.get("error.uri"))		
+			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
 			.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()			
 			.maximumRedeliveries(maximumRedeliveries)
@@ -126,6 +126,7 @@ public class DefaultRoute extends RouteBuilder {
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
 			.onExceptionOccurred(failureProcessor)
+			.log("This is a log message")
 			.log(log)
 			.logRetryStackTrace(false)
 			.logStackTrace(true)
@@ -154,7 +155,7 @@ public class DefaultRoute extends RouteBuilder {
 
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
 
-			//The default Camel route (onramp)
+		//The default Camel route (onramp)
 
 		for(String onrampUriKey : onrampUriKeys){
 
