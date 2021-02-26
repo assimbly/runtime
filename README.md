@@ -88,12 +88,12 @@ conf.xml
             <logLevel>OFF</logLevel>
             <endpoint>
                <id>2</id>
-               <type>from<type>
+               <type>from</type>
                <uri>file://C:\test1</uri>
             </endpoint>
             <endpoint>
                <id>2</id>
-               <type>to<type>
+               <type>to</type>
                <uri>file://C:\test2</uri>
                <options>
                   <directoryMustExist>true</directoryMustExist>
@@ -101,7 +101,7 @@ conf.xml
             </endpont>
             <error>
                <id>2</id>
-               <type>error<type>
+               <type>error</type>
                <uri>file://C:\test3</uri>
             </endpoint>
          </flow>
