@@ -86,21 +86,24 @@ conf.xml
             <maximumRedeliveries>0</maximumRedeliveries>
             <redeliveryDelay>3000</redeliveryDelay>
             <logLevel>OFF</logLevel>
-            <from>
+            <endpoint>
                <id>2</id>
+               <type>from<type>
                <uri>file://C:\test1</uri>
-            </from>
-            <to>
+            </endpoint>
+            <endpoint>
                <id>2</id>
+               <type>to<type>
                <uri>file://C:\test2</uri>
                <options>
                   <directoryMustExist>true</directoryMustExist>
                </options>
-            </to>
+            </endpont>
             <error>
                <id>2</id>
+               <type>error<type>
                <uri>file://C:\test3</uri>
-            </error>
+            </endpoint>
          </flow>
       <services/>
       <headers/>

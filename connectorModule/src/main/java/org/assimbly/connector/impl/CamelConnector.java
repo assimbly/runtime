@@ -1197,8 +1197,7 @@ public class CamelConnector extends BaseConnector {
         tsp.setPassword("supersecret");      
         TrustManagersParameters tmp = new TrustManagersParameters();
         tmp.setKeyStore(tsp);
-        
-        
+
         SSLContextParameters sslContextParameters = new SSLContextParameters();
         sslContextParameters.setKeyManagers(kmp);
         sslContextParameters.setTrustManagers(tmp);
