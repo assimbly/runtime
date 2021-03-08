@@ -318,7 +318,7 @@
 		</pluginManagement>
 	</build>
 	
-	<version>3.3.0</version>
+	<version>3.4.0</version>
 	<modules>
 		<module>baseModule</module>
 		<module>connectorModule</module>
