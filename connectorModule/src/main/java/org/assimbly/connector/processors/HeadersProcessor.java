@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.xml.xpath.XPathFactory;
 
+import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
 import org.apache.camel.Message;

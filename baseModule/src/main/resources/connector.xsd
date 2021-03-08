@@ -103,6 +103,7 @@
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="key" maxOccurs="1" />
 			<xs:element type="xs:string" name="value" maxOccurs="1" />
+			<xs:element type="xs:string" name="encrypted" maxOccurs="1" />
 		</xs:choice>
 	</xs:complexType>
 </xs:schema>

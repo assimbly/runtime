@@ -589,6 +589,9 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowStatus(String id) {
 		
 		if(hasFlow(id)) {
+			if(!id.contains("-")){
+				id = id + "-";
+			}
 			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
 			flowStatus = status.toString().toLowerCase();		
 		}else {
@@ -1213,6 +1216,5 @@ public class CamelConnector extends BaseConnector {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
-	
     
 }

@@ -133,14 +133,13 @@ public abstract class BaseConnector implements Connector {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
 
-			//ConnectorUtil.printTreemap(flowProperties);
+			ConnectorUtil.printTreemap(flowProperties);
 			
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
 			
 			try {
-				
 				String errorCause = e.getCause().getMessage();
 				throw new Exception(errorCause);
 			}catch (Exception ex) {	
