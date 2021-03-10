@@ -218,6 +218,7 @@ public class DefaultRoute extends RouteBuilder {
 							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 							.to("direct:flow=" + flowId + "endpoint=" + responseId)
 						.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 							.pollEnrich().simple(uri).timeout(20000)
 							.endChoice()
 						.otherwise()
@@ -248,6 +249,7 @@ public class DefaultRoute extends RouteBuilder {
 							.toD("vm://${header.ReplyTo}")
 					.endChoice()
 				.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.pollEnrich().simple(uri).timeout(20000)
 					.endChoice()
 				.when(hasDynamicEndpoint)
@@ -278,13 +280,15 @@ public class DefaultRoute extends RouteBuilder {
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.choice()
 					.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 						.pollEnrich().simple(uri).timeout(20000)
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 						.endChoice()
 					.otherwise()
 						.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+					.end()
 					.routeId(flowId + "-" + endpointId).description("response");
-
 		}
 	}
 
