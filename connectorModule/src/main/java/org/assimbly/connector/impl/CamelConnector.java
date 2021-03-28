@@ -14,6 +14,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.main.Main;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
@@ -125,7 +126,6 @@ public class CamelConnector extends BaseConnector {
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
 
-
 	}
 
 	@Override
@@ -220,24 +220,27 @@ public class CamelConnector extends BaseConnector {
 				}
 			}
 		}
-		
+
 		//set up route by type
 		String route  = props.get("flow.type");
 		if (route == null){
 			logger.info("Add default flow");
 			addDefaultFlow(props);
-		}else if(route.equals("default")){
+		}else if(route.equalsIgnoreCase("default")){
 			logger.info("Add default flow");
-			addDefaultFlow(props);			
-		}else if(route.equals("simple")){
+			addDefaultFlow(props);
+		}else if(route.equalsIgnoreCase("simple")){
 			logger.info("Add simple flow");
-			addDefaultFlow(props);			
+			addDefaultFlow(props);
+		}else if(route.equalsIgnoreCase("xml")){
+			logger.info("Add xml flow");
+			addXmlFlow(props);
 		}else{
 			logger.info("Invalid route.");
 		}
+
 	}
-	
-	
+
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		DefaultRoute flow = new DefaultRoute(props);
 
@@ -247,10 +250,28 @@ public class CamelConnector extends BaseConnector {
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
 		context.addRoutes(new SimpleRoute(props));
 	}
+
+	public void addXmlFlow(final TreeMap<String, String> props) throws Exception {
+
+		for (String key : props.keySet()) {
+
+			if (key.endsWith("route")){
+				String xml = props.get(key);
+				addXmlRoute(xml);
+			}
+		}
+	}
+
+	public void addXmlRoute(String xml) throws Exception {
+		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
+		managedContext.addOrUpdateRoutesFromXml(xml);
+	}
 	
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
+
+
 
 	
 	public boolean removeFlow(String id) throws Exception {

@@ -1,32 +1,29 @@
 package org.assimbly.connector.routes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.camel.*;
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Predicate;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.processors.ConvertProcessor;
 import org.assimbly.connector.processors.FailureProcessor;
 import org.assimbly.connector.processors.HeadersProcessor;
-import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
-public class DefaultRoute extends RouteBuilder {
-	
+import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
+
+
+public class XMLRoute extends RouteBuilder {
+
 	TreeMap<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
@@ -46,11 +43,11 @@ public class DefaultRoute extends RouteBuilder {
 	int index = 0;
 	private String logLevelAsString;
 
-	public DefaultRoute(final TreeMap<String, String> props){
+	public XMLRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
-	public DefaultRoute() {}
+	public XMLRoute() {}
 
 	public interface FailureProcessorListener {
 		 public void onFailure();
@@ -60,11 +57,8 @@ public class DefaultRoute extends RouteBuilder {
 	public void configure() throws Exception {
 			
 		logger.info("Configuring default route");
-
-		CamelContext context = getContext();
-		context.setTracing(true);
-		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
-
+		
+		getContext().setTracing(true);
 		EncryptableProperties decryptedProperties = decryptProperties(props);
 
 		Processor headerProcessor = new HeadersProcessor(props);
@@ -169,14 +163,6 @@ public class DefaultRoute extends RouteBuilder {
 
 			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
             String headerId = props.get("from." + endpointId + ".header.id");
-			String routeId = props.get("from." + endpointId + ".route.id");
-			Predicate hasRoute = PredicateBuilder.constant(false);
-
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("from." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
 
 			//The default Camel route (onramp)
 			from(uri)
@@ -189,12 +175,6 @@ public class DefaultRoute extends RouteBuilder {
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
-					.choice()
-					.when(hasRoute)
-						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
 					.multicast()
 					.shareUnitOfWork()
 					.parallelProcessing()
@@ -212,17 +192,9 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
 			String responseId = props.get("to." + endpointId + ".response.id");
-			String routeId = props.get("to." + endpointId + ".route.id");
 
 			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
 			Predicate hasDynamicEndpoint = PredicateBuilder.constant(uri.contains("${"));
-			Predicate hasRoute = PredicateBuilder.constant(false);
-
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("to." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
 
 			from(offrampUri)
 			.errorHandler(routeErrorHandler)
@@ -234,10 +206,6 @@ public class DefaultRoute extends RouteBuilder {
 			.id("headerProcessor" + flowId + "-" + endpointId)
 			.process(convertProcessor)
 			.id("convertProcessor" + flowId + "-" + endpointId)
-			.choice()
-				.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-				.end()
 			.log(hasResponseEndpoint.toString())
 			.choice()
 				.when(hasResponseEndpoint)
@@ -296,15 +264,6 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
 			String headerId = props.get("response." + endpointId + ".header.id");
 			String responseId = props.get("response." + endpointId + ".response.id");
-			String routeId = props.get("response." + endpointId + ".route.id");
-
-			Predicate hasRoute = PredicateBuilder.constant(false);
-
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("response." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
 
 			from("direct:flow=" + flowId + "endpoint=" + responseId)
 					.errorHandler(routeErrorHandler)
@@ -315,12 +274,6 @@ public class DefaultRoute extends RouteBuilder {
 					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
-					.choice()
-						.when(hasRoute)
-							.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.choice()
 					.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
@@ -358,11 +311,6 @@ public class DefaultRoute extends RouteBuilder {
 
 		return keys;
 
-	}
-
-	private void addXmlRoute(String xml, ManagedCamelContext managed) throws Exception {
-		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
-		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
 
 	//

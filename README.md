@@ -98,8 +98,8 @@ conf.xml
                <options>
                   <directoryMustExist>true</directoryMustExist>
                </options>
-            </endpont>
-            <error>
+            </endpoint>
+            <endpoint>
                <id>2</id>
                <type>error</type>
                <uri>file://C:\test3</uri>
