@@ -70,6 +70,7 @@ public class XMLFileConfiguration {
 	private String headerXPath;
 	private String flowName;
 	private String flowType;
+	private String flowComponents;
 	private String flowOffloading;
 	private String flowMaximumRedeliveries;
 	private String flowRedeliveryDelay;
@@ -317,6 +318,15 @@ public class XMLFileConfiguration {
 			}
 		}
 
+		List<String> componentsProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components");
+		for(String componentProperty : componentsProperties){
+			if(flowComponents==null){
+				flowComponents = conf.getString(componentProperty);
+			}else{
+				flowComponents = flowComponents + "," + conf.getString(componentProperty);
+			}
+		}
+
 		//set up defaults settings if null -->
 		if(flowId == null){
 			flowId = "flow" + System.currentTimeMillis();
@@ -345,6 +355,8 @@ public class XMLFileConfiguration {
 		properties.put("id",flowId);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
+
+		properties.put("flow.components",flowComponents);
 
 		properties.put("flow.offloading",flowOffloading);
 		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);

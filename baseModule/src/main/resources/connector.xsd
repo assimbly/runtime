@@ -46,15 +46,16 @@
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="xs:string" name="name" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="autostart" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="offloading" minOccurs="0" maxOccurs="1"/>
-			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="maximumRedeliveries" minOccurs="0"/>
 			<xs:element type="xs:string" name="redeliveryDelay" minOccurs="0"/>
 			<xs:element type="xs:string" name="logLevel" minOccurs="0"/>
 			<xs:element type="xs:string" name="version" minOccurs="0"/>
 			<xs:element type="xs:string" name="created" minOccurs="0"/>
 			<xs:element type="xs:string" name="lastModified" minOccurs="0"/>
+			<xs:element type="componentsType" name="components" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="endpointType" name="endpoint" minOccurs="0" />
 		</xs:choice>
 	</xs:complexType>
@@ -69,6 +70,11 @@
 			<xs:element type="xs:string" name="header_id" minOccurs="0" />
 			<xs:element type="xs:string" name="route_id" minOccurs="0" />
 		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="componentsType">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="optionsType">
 		<xs:sequence maxOccurs="unbounded">

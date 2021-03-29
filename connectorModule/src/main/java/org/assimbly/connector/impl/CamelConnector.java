@@ -185,40 +185,25 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
-		String scheme = "";
-
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
+
 			if (key.endsWith("service.id")){
 				props = setConnection(props, key);
 			}
-			if (key.startsWith("from") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
-			if (key.startsWith("to") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
+			if (key.equals("flow.components")){
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
-			if(key.startsWith("response") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
+				String[] schemes = StringUtils.split(props.get(key), ",");
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
+				for (String scheme : schemes) {
+					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+						logger.info(resolveDependency(scheme));
+					}
 				}
+
 			}
-			if (key.startsWith("error") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
+
 		}
 
 		//set up route by type
