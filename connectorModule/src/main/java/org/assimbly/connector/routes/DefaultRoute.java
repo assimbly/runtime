@@ -41,8 +41,10 @@ public class DefaultRoute extends RouteBuilder {
 
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
-	private String[] offrampUriList;
 	private List<String> responseUriKeys;
+	private List<String> errorUriKeys;
+	private String[] offrampUriList;
+
 	int index = 0;
 	private String logLevelAsString;
 
@@ -59,7 +61,7 @@ public class DefaultRoute extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 			
-		logger.info("Configuring default route");
+		//logger.info("Configuring default route");
 
 		CamelContext context = getContext();
 		context.setTracing(true);
@@ -72,10 +74,12 @@ public class DefaultRoute extends RouteBuilder {
 		Processor convertProcessor = new ConvertProcessor();
 
 		flowId = props.get("id");
+		errorUriKeys = getUriKeys("error");
+
 		onrampUriKeys = getUriKeys("from");
 		offrampUriKeys = getUriKeys("to");
-		offrampUriList = getOfframpUriList();
 		responseUriKeys = getUriKeys("response");
+		offrampUriList = getOfframpUriList();
 
 		if (this.props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
@@ -119,9 +123,9 @@ public class DefaultRoute extends RouteBuilder {
 		}else {
 			logLevelAsString = "OFF";
 		}
-		
-		if (this.props.containsKey("error.uri")){
-			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
+
+		if (this.props.containsKey(errorUriKeys.get(0))){
+			routeErrorHandler = deadLetterChannel(props.get(errorUriKeys.get(0)))
 			.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()			
 			.maximumRedeliveries(maximumRedeliveries)
@@ -131,7 +135,6 @@ public class DefaultRoute extends RouteBuilder {
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
 			.onExceptionOccurred(failureProcessor)
-			.log("This is a log message")
 			.log(log)
 			.logRetryStackTrace(false)
 			.logStackTrace(true)

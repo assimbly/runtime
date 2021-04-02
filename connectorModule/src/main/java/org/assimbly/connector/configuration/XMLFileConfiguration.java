@@ -50,24 +50,27 @@ public class XMLFileConfiguration {
 	private XMLConfiguration conf;
 
 	private String serviceId;
-	private String serviceXPath;
 	private String connectorXPath;
+	private String endpointXPath;
+	private String serviceXPath;
+	private String headerXPath;
 
-	private String uri;
-	private String options;
-	private String headerId;
-	private Element rootElement;
 	private Document doc;
+	private Element rootElement;
 	private Element flows;
 	private Element services;
 	private Element headers;
 	private Element flow;
+	private Element connector;
 	private String xmlFlowConfiguration;
 
 	private List<String> servicesList;
 	private List<String> headersList;
-	private Element connector;
-	private String headerXPath;
+
+	private String uri;
+	private String options;
+	private String headerId;
+
 	private String flowName;
 	private String flowType;
 	private String flowComponents;
@@ -80,6 +83,7 @@ public class XMLFileConfiguration {
 	private String endpointId;
 	private String responseId;
 	private String routeId;
+	private Element endpoints;
 
 
 	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
@@ -261,18 +265,14 @@ public class XMLFileConfiguration {
 
 	private void setProperties() throws Exception{
 
-		//create Treemap from configuration
+		//create a Treemap for the configuration
 		properties = new TreeMap<String, String>();
 
-		//set general properties
+		//set general flow properties
 		getGeneralPropertiesFromXMLFile();
 
-		//set uri properties
-		String[] types = {"from", "to", "response", "error"};
-
-		for(String type : types){
-			getEndpointFromXMLFile(type);
-		}
+		//set endpoint properties
+		getEndpointsFromXMLFile();
 
 		Set<String> fromUriSet = properties.keySet().stream().filter(s -> s.startsWith("from.") && s.endsWith(".uri")).collect(Collectors.toSet());
 		if(flowType.isEmpty() && !fromUriSet.isEmpty()){
@@ -405,9 +405,9 @@ public class XMLFileConfiguration {
 		}
 	}
 
-	private void getEndpointFromXMLFile(String type) throws Exception {
+	private void getEndpointsFromXMLFile() throws Exception {
 
-		String componentsXpath = "//flows/flow[id='" + flowId + "']/endpoint[type='" + type + "']/uri";
+		String componentsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/uri";
 
 		String[] components = conf.getStringArray(componentsXpath);
 
@@ -420,9 +420,11 @@ public class XMLFileConfiguration {
 
 		for(String component : components){
 
+			endpointXPath = "connector/flows/flow[id='" + flowId + "']/endpoints/endpoint[" + index + "]/";
 			options = "";
+			String type = conf.getString(endpointXPath + "type");
 
-			List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/options");
+			List<String> optionProperties = ConnectorUtil.getXMLParameters(conf, endpointXPath + "options");
 			for(String optionProperty : optionProperties){
 				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 			}
@@ -435,56 +437,49 @@ public class XMLFileConfiguration {
 
 			}
 
-			endpointId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/id");
+			endpointId = conf.getString(endpointXPath + "id");
 
-			if(endpointId != null){
-				if(offrampUri.isEmpty()) {
-					offrampUri = "direct:flow=" + flowId + "endpoint=" + endpointId;
-				}else {
-					offrampUri = offrampUri + ",direct:flow=" + flowId + "endpoint=" + endpointId;
-				}
-			}
+			properties.put(type + "." + endpointId + ".uri", uri);
 
-			serviceId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/service_id");
+			serviceId = conf.getString(endpointXPath + "service_id");
 
 			if(serviceId != null){
 				getServiceFromXMLFile(type, endpointId, serviceId);
 			}
 
-			headerId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/header_id");
+			headerId = conf.getString(endpointXPath + "header_id");
 
 			if(headerId != null){
 				getHeaderFromXMLFile(type,endpointId, headerId);
 			}
 
-			routeId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/route_id");
+			routeId = conf.getString(endpointXPath + "route_id");
 
 			if(routeId != null){
 				getRouteFromXMLFile(type,endpointId, routeId);
 			}
 
-			if(type.equals("to")){
-				responseId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/response_id");
-			} else if(type.equals("response")){
-				responseId = conf.getString("connector/flows/flow[id='" + flowId + "']/endpoint[type='" + type + "'][" + index + "]/response_id");
-			}
-
-
-			if(type.equals("error")) {
-				properties.put(type + ".uri", uri);
-				break;
-			} else if (type.equals("response")) {
-				properties.put(type + "." + endpointId + ".uri", uri);
+			if (type.equals("response")) {
+				responseId = conf.getString(endpointXPath + "response_id");
 				if(responseId != null) {
 					properties.put(type + "." + endpointId + ".response.id", responseId);
 				}
 			} else if(type.equals("from")) {
-				properties.put(type + "." + endpointId + ".uri", uri);
 				if(index >= maxFromTypes){
 					break;
 				}
-			} else {
-				properties.put(type + "." + endpointId + ".uri", uri);
+			} else if(type.equals("to")) {
+
+				if(endpointId != null){
+					if(offrampUri.isEmpty()) {
+						offrampUri = "direct:flow=" + flowId + "endpoint=" + endpointId;
+					}else {
+						offrampUri = offrampUri + ",direct:flow=" + flowId + "endpoint=" + endpointId;
+					}
+				}
+
+				responseId = conf.getString(endpointXPath + "response_id");
+
 				if(responseId != null) {
 					properties.put(type + "." + endpointId + ".response.id", responseId);
 				}
@@ -506,19 +501,11 @@ public class XMLFileConfiguration {
 				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1).toLowerCase(), conf.getString(serviceProperty));
 			}
 
-			if(type.equals("error")) {
-				properties.put(type + ".service.id", serviceId);
-			}else {
-				properties.put(type + "." + endpointId + ".service.id", serviceId);
-			}
+			properties.put(type + "." + endpointId + ".service.id", serviceId);
 
 			String serviceName = conf.getString("connector/services/service[id='" + serviceId + "']/name");
 			if(!serviceName.isEmpty()) {
-				if(type.equals("error")) {
-					properties.put(type + ".service.name", serviceName);
-				}else {
-					properties.put(type + "." + endpointId + ".service.name", serviceName);
-				}
+				properties.put(type + "." + endpointId + ".service.name", serviceName);
 			}
 
 		}
@@ -544,11 +531,7 @@ public class XMLFileConfiguration {
 				}
 			}
 
-			if(type.equals("error")) {
-				properties.put(type + ".header.id", headerId);
-			}else {
-				properties.put(type + "." + endpointId + ".header.id", headerId);
-			}
+			properties.put(type + "." + endpointId + ".header.id", headerId);
 
 
 			String headerName = conf.getString("connector/headers/header[id='" + headerId + "']/name");
@@ -640,85 +623,79 @@ public class XMLFileConfiguration {
 		id.appendChild(doc.createTextNode(flowId));
 		flow.appendChild(id);
 
-		//set id
+		//set type
 		String flowType = configuration.get("flow.type");
 		Element flowTypeNode = doc.createElement("type");
 		flowTypeNode.appendChild(doc.createTextNode(flowType));
 		flow.appendChild(flowTypeNode);
 
+		//set name
+		String flowName = configuration.get("flow.name");
+		Element flowNameNode = doc.createElement("name");
+		flowNameNode.appendChild(doc.createTextNode(flowName));
+		flow.appendChild(flowNameNode);
+
+		//set offloading
+		String flowOffloading = configuration.get("flow.offloading");
+		Element flowOffloadingNode = doc.createElement("offloading");
+		flowOffloadingNode.appendChild(doc.createTextNode(flowOffloading));
+		flow.appendChild(flowOffloadingNode);
+
+		//set offloading
+		String flowMaximumRedeliveries = configuration.get("flow.maximumRedeliveries");
+		Element flowMaximumRedeliveriesNode = doc.createElement("maximumRedeliveries");
+		flowMaximumRedeliveriesNode.appendChild(doc.createTextNode(flowMaximumRedeliveries));
+		flow.appendChild(flowMaximumRedeliveriesNode);
+
+		//set offloading
+		String flowRedeliveryDelay = configuration.get("flow.redeliveryDelay");
+		Element flowRedeliveryDelayNode = doc.createElement("redeliveryDelay");
+		flowRedeliveryDelayNode.appendChild(doc.createTextNode(flowRedeliveryDelay));
+		flow.appendChild(flowRedeliveryDelayNode);
+
+		//set offloading
+		String flowLogLevel = configuration.get("flow.logLevel");
+		Element flowLogLevelNode = doc.createElement("logLevel");
+		flowLogLevelNode.appendChild(doc.createTextNode(flowLogLevel));
+		flow.appendChild(flowLogLevelNode);
+
+		Element components = doc.createElement("components");
+		flow.appendChild(components);
+
+		String[] confComponentsSplitted = StringUtils.split(configuration.get("flow.components"),",");
+		for(String confComponentSplitted : confComponentsSplitted){
+			Element flowComponentNode = doc.createElement("component");
+			flowComponentNode.appendChild(doc.createTextNode(confComponentSplitted));
+			components.appendChild(flowComponentNode);
+		}
+
+		endpoints = doc.createElement("endpoints");
+		flow.appendChild(endpoints);
+
 		//set endpoints
-		setFlowEndpoint("from",configuration);
-		setFlowEndpoint("to",configuration);
-		setFlowEndpoint("response",configuration);
-		setFlowEndpoint("error",configuration);
+		setFlowEndpoints(configuration);
 
 	}
 
-	private void setFlowEndpoint(String type, TreeMap<String, String> configuration) throws Exception {
+	private void setFlowEndpoints(TreeMap<String, String> configuration) throws Exception {
 
-		String confOfframpUriList = configuration.get("offramp.uri.list");
+		List<String> confUriKeyList = configuration.keySet().stream().filter(k -> k.endsWith("uri")).collect(Collectors.toList());
 
-		List<String> confOnrampUriKeyList = configuration.keySet().stream()
-				.filter(k -> k.startsWith("from") && k.endsWith("uri")).collect(Collectors.toList());
+			for(String confUriKey : confUriKeyList){
+				String confUri = configuration.get(confUriKey);
+				String[] confUriKeySplitted = StringUtils.split(confUriKey,".");
+				String confType = confUriKeySplitted[0];
+				String confEndpointId = confUriKeySplitted[1];
 
-		List<String> confResponseUriKeyList = configuration.keySet().stream()
-				.filter(k -> k.startsWith("response") && k.endsWith("uri")).collect(Collectors.toList());
+				String confServiceId = configuration.get(confType + "." + confEndpointId + ".service.id");
+				String confHeaderId = configuration.get(confType + "." + confEndpointId + ".header.id");
+				String confRouteId = configuration.get(confType + "." + confEndpointId + ".route.id");
 
-		if(confOfframpUriList!=null && type.equals("to")) {
-
-			String[] confOfframpUris = confOfframpUriList.split(",");
-
-			for(String confOffrmapUri : confOfframpUris) {
-
-				String confEndpointId = StringUtils.substringAfterLast(confOffrmapUri, "endpoint=");
-
-				String confUri = configuration.get(type + "." + confEndpointId + ".uri");
-				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
-				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
-				String confResponseId = configuration.get(type + "." + confEndpointId + ".response.id");
-				String confRouteId = configuration.get(type + "." + confEndpointId + ".route.id");
-
-				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, confResponseId, confRouteId, configuration);
-
+				setEndpointFromConfiguration(confType, confUri, confEndpointId, confServiceId, confHeaderId, confRouteId, confRouteId, configuration);
 			}
-		}else if(type.equals("from")) {
-			for(String confOnrampUriKey : confOnrampUriKeyList){
-				String confUri = configuration.get(confOnrampUriKey);
-				String confEndpointId = StringUtils.substringBetween(confOnrampUriKey, "from.", ".uri");
-
-				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
-				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
-				String confRouteId = configuration.get(type + "." + confEndpointId + ".route.id");
-
-				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, null, confRouteId, configuration);
-			}
-		} else if (type.equals("response")){
-
-			for(String confResponseUriKey : confResponseUriKeyList) {
-				String confUri = configuration.get(confResponseUriKey);
-				String confEndpointId = StringUtils.substringBetween(confResponseUriKey, "from.", ".uri");
-
-				String confServiceId = configuration.get(type + "." + confEndpointId + ".service.id");
-				String confHeaderId = configuration.get(type + "." + confEndpointId + ".header.id");
-				String confRouteId = configuration.get(type + "." + confEndpointId + ".route.id");
-
-				setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, null, confRouteId, configuration);
-			}
-		}
-		else {
-
-			String confServiceId = configuration.get(type + ".service.id");
-			String confHeaderId = configuration.get(type + ".header.id");
-			String confUri = configuration.get(type + ".uri");
-			String confResponseId = configuration.get(type + ".response.id");
-			String confRouteId = configuration.get(type + ".route.id");
-
-			setEndpointFromConfiguration(type, confUri, confServiceId, confHeaderId, confResponseId, confRouteId,configuration);
-
-		}
 	}
 
-	private void setEndpointFromConfiguration(String confType, String confUri, String confServiceId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
+	private void setEndpointFromConfiguration(String confType, String confUri, String confEndpointId, String confServiceId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
 
 		Element endpoint = doc.createElement("endpoint");
 		Element uri = doc.createElement("uri");
@@ -730,7 +707,7 @@ public class XMLFileConfiguration {
 		Element responseId = doc.createElement("response_id");
 		Element routeId = doc.createElement("route_id");
 
-		flow.appendChild(endpoint);
+		endpoints.appendChild(endpoint);
 
 		String[] confUriSplitted = confUri.split("\\?");
 
@@ -738,17 +715,26 @@ public class XMLFileConfiguration {
 			if(confUri.startsWith("sonicmq")) {
 				confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
 			}
+
+			endpointId.setTextContent(confEndpointId);
+			type.setTextContent(confType);
 			uri.setTextContent(confUri);
+
+			endpoint.appendChild(endpointId);
+			endpoint.appendChild(type);
 			endpoint.appendChild(uri);
+
 		}else {
 			if(confUriSplitted[0].startsWith("sonicmq")) {
 				confUriSplitted[0] = confUriSplitted[0].replaceFirst("sonicmq.*:", "sonicmq:");
 			}
-			uri.setTextContent(confUriSplitted[0]);
+			endpoint.setTextContent(confEndpointId);
+			uri.setTextContent(confUri);
+			type.setTextContent(confType);
+
 			endpoint.appendChild(endpointId);
-			endpoint.appendChild(uri);
 			endpoint.appendChild(type);
-			endpoint.appendChild(responseId);
+			endpoint.appendChild(uri);
 			endpoint.appendChild(options);
 
 			String[] confOptions = confUriSplitted[1].split("&");
@@ -769,6 +755,11 @@ public class XMLFileConfiguration {
 			endpoint.appendChild(responseId);
 		}
 
+		if(confRouteId != null) {
+			responseId.setTextContent(confRouteId);
+			endpoint.appendChild(routeId);
+		}
+
 		if(confServiceId!=null) {
 			serviceid.setTextContent(confServiceId);
 			endpoint.appendChild(serviceid);
@@ -780,7 +771,6 @@ public class XMLFileConfiguration {
 			headerid.setTextContent(confHeaderId);
 			setHeaderFromConfiguration(confHeaderId, confType, configuration);
 		}
-
 
 	}
 

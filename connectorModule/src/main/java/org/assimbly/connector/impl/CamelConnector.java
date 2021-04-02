@@ -197,6 +197,9 @@ public class CamelConnector extends BaseConnector {
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
+
+					scheme = scheme.toLowerCase();
+
 					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 						logger.info(resolveDependency(scheme));
 					}
@@ -209,20 +212,22 @@ public class CamelConnector extends BaseConnector {
 		//set up route by type
 		String route  = props.get("flow.type");
 		if (route == null){
-			logger.info("Add default flow");
 			addDefaultFlow(props);
+			route = "unknown";
+			logger.info("Loaded flow configuration | type=" + route);
 		}else if(route.equalsIgnoreCase("default")){
-			logger.info("Add default flow");
 			addDefaultFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
 		}else if(route.equalsIgnoreCase("simple")){
-			logger.info("Add simple flow");
 			addDefaultFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
 		}else if(route.equalsIgnoreCase("xml")){
-			logger.info("Add xml flow");
 			addXmlFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
 		}else{
-			logger.info("Invalid route.");
+			logger.info("Unknown flow type.");
 		}
+
 
 	}
 
@@ -362,7 +367,8 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String startFlow(String id) {
-		logger.info("Start flow " + id);
+
+		logger.info("Start flow | id=" + id);
 
 		boolean flowAdded = false;
 		
@@ -374,7 +380,7 @@ public class CamelConnector extends BaseConnector {
 
 				if (props.get("id").equals(id)) {
 					
-					logger.info("Adding route with id: " + id);
+					logger.info("Load flow configuration | id=" + id);
 					addFlow(props);
 					flowAdded = true;
 				}
@@ -402,11 +408,11 @@ public class CamelConnector extends BaseConnector {
 						} while (status.isStarting() || count < 3000);
 
 					} else {
-						logger.info("Route " + routeId + " already started");
+						logger.info("Started route | id=" + routeId);
 					}
 				}
 
-				logger.info("Started flow " + id);
+				logger.info("Started flow | id=" + id);
 				return status.toString().toLowerCase();
 				
 			}else {
@@ -425,7 +431,7 @@ public class CamelConnector extends BaseConnector {
 
 	public String restartFlow(String id) {
 
-		logger.info("Restart flow " + id);
+		logger.info("Restart flow | id=" + id);
 
 		try {
 			if(hasFlow(id)) {
@@ -446,7 +452,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String stopFlow(String id) {
-		logger.info("Stop flow " + id);		
+		logger.info("Stop flow | id=" + id);
 		try {
 			List<Route> routeList = getRoutesByFlowId(id);
 			for (Route route : routeList) {
@@ -464,7 +470,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String pauseFlow(String id) {
-		logger.info("Pause flow " + id);
+		logger.info("Pause flow | id=" + id);
 		
 		try {
 
@@ -489,10 +495,10 @@ public class CamelConnector extends BaseConnector {
 					do {
 						status = routeController.getRouteStatus(routeId);
 						if(status.isSuspended()) {
-							logger.info("Paused (suspend) flow " + id + ", route " + routeId);
+							logger.info("Paused (suspend) flow | id=" + id + ", route " + routeId);
 							break;
 						}else if(status.isStopped()){
-							logger.info("Paused (stopped) flow " + id + ", route " + routeId);
+							logger.info("Paused (stopped) flow | id=" + id + ", route " + routeId);
 
 							break;
 						}
@@ -502,7 +508,7 @@ public class CamelConnector extends BaseConnector {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				logger.info("Paused flow " + id);
+				logger.info("Paused flow id=" + id);
 				return status.toString().toLowerCase();
 
 			}else {
@@ -519,7 +525,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String resumeFlow(String id) throws Exception {
-		logger.info("Resume flow " + id);
+		logger.info("Resume flow id=" + id);
 		
 		try {
 		
@@ -543,7 +549,7 @@ public class CamelConnector extends BaseConnector {
 						} while (status.isStarting() || count < 3000);
 
 						resumed = true;
-						logger.info("Resumed flow " + id + ", route " + routeId);
+						logger.info("Resumed flow id=" + id + ", route " + routeId);
 
 					}
 					else if (status.isStopped()){
@@ -554,7 +560,7 @@ public class CamelConnector extends BaseConnector {
 					}
 				}
 				if(resumed){
-					logger.info("Resumed flow " + id);
+					logger.info("Resumed flow id=" + id);
 					return status.toString().toLowerCase();
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
