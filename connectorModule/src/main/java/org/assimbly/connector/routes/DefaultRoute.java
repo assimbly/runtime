@@ -61,8 +61,6 @@ public class DefaultRoute extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 			
-		//logger.info("Configuring default route");
-
 		CamelContext context = getContext();
 		context.setTracing(true);
 		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
@@ -173,8 +171,13 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
             String headerId = props.get("from." + endpointId + ".header.id");
 			String routeId = props.get("from." + endpointId + ".route.id");
-			Predicate hasRoute = PredicateBuilder.constant(false);
 
+			Predicate hasOneDestination = PredicateBuilder.constant(false);
+			if(offrampUriList.length==1){
+				hasOneDestination = PredicateBuilder.constant(true);
+			}
+
+			Predicate hasRoute = PredicateBuilder.constant(false);
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
 				String xml = props.get("from." + endpointId + ".route");
@@ -198,10 +201,19 @@ public class DefaultRoute extends RouteBuilder {
 					.when(hasRoute)
 						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
 					.end()
-					.multicast()
-					.shareUnitOfWork()
-					.parallelProcessing()
-					.to(offrampUriList)
+					.choice()
+						.when(hasOneDestination)
+							.to(offrampUriList)
+						.endChoice()
+					.when(header("ParallelProcessing").convertToString().isEqualToIgnoreCase("false"))
+							.to(offrampUriList)
+						.endChoice()
+					.otherwise()
+						.multicast()
+						.shareUnitOfWork()
+						.parallelProcessing()
+						.to(offrampUriList)
+
 					.routeId(flowId + "-" + endpointId).description("from");
 		}
         

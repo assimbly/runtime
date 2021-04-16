@@ -113,14 +113,32 @@ public class Unmarshall {
 			}
 		}
 
-		List<String> componentsProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components");
-		for(String componentProperty : componentsProperties){
+		String componentsXpath = "connector/flows/flow[id='" + flowId + "']/components/component";
+
+		String[] components = conf.getStringArray(componentsXpath);
+
+		for(String component : components){
 			if(flowComponents==null){
-				flowComponents = conf.getString(componentProperty);
+				flowComponents = component;
 			}else{
-				flowComponents = flowComponents + "," + conf.getString(componentProperty);
+				flowComponents = flowComponents + "," + component;
 			}
 		}
+
+
+	/*
+		List<String> componentsProperties2 = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components/component");
+		System.out.println("componentsProperties2Length=" + componentsProperties2.size());
+
+		List<String> componentsProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components");
+		System.out.println("componentsPropertiesLength=" + componentsProperties.size());
+		for(String componentProperty : componentsProperties){
+			System.out.println("componentProperty=" + componentProperty);
+
+		}
+
+
+	 */
 
 		//set up defaults settings if null -->
 		if(flowId == null){
@@ -202,9 +220,9 @@ public class Unmarshall {
 
 	private void getEndpointsFromXMLFile() throws Exception {
 
-		String componentsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/uri";
+		String endpointsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/uri";
 
-		String[] components = conf.getStringArray(componentsXpath);
+		String[] endpoints = conf.getStringArray(endpointsXpath);
 
 		String offrampUri = "";
 
@@ -213,7 +231,7 @@ public class Unmarshall {
 		//A maximum of 3 from components per route is allowed
 		int maxFromTypes = 3;
 
-		for(String component : components){
+		for(String endpoint : endpoints){
 
 			endpointXPath = "connector/flows/flow[id='" + flowId + "']/endpoints/endpoint[" + index + "]/";
 			options = "";
@@ -225,10 +243,10 @@ public class Unmarshall {
 			}
 
 			if(options.isEmpty()){
-				uri = component;
+				uri = endpoint;
 			}else{
 				options = options.substring(0,options.length() -1);
-				uri = component + "?" + options;
+				uri = endpoint + "?" + options;
 
 			}
 

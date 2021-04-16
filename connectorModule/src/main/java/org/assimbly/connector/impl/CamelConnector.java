@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.camel.component.jetty.JettyHttpComponent;
 
 public class CamelConnector extends BaseConnector {
 
