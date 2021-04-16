@@ -14,7 +14,6 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.main.Main;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
@@ -36,6 +35,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
@@ -43,12 +43,15 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.apache.camel.component.jetty.JettyHttpComponent;
 
 public class CamelConnector extends BaseConnector {
 
@@ -63,7 +66,7 @@ public class CamelConnector extends BaseConnector {
 	private String flowStats;
 	private String connectorStats;
 	private MetricRegistry metricRegistry = new MetricRegistry();
-
+	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -96,7 +99,6 @@ public class CamelConnector extends BaseConnector {
 	public void setBasicSettings() throws Exception {
 
 		//set basic settings
-		org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
@@ -108,7 +110,7 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(true);
+		//((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(false);
 
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -1163,7 +1165,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-    private SSLContextParameters createSSLContextParameters() {
+    private SSLContextParameters createSSLContextParameters() throws GeneralSecurityException, IOException {
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
@@ -1204,7 +1206,7 @@ public class CamelConnector extends BaseConnector {
         ksp.setResource(baseDir + "/security/keystore.jks");
         ksp.setPassword("supersecret");
         KeyManagersParameters kmp = new KeyManagersParameters();
-        kmp.setKeyPassword("secret");
+        kmp.setKeyPassword("supersecret");
         kmp.setKeyStore(ksp);
 
         KeyStoreParameters tsp = new KeyStoreParameters();
@@ -1216,6 +1218,8 @@ public class CamelConnector extends BaseConnector {
         SSLContextParameters sslContextParameters = new SSLContextParameters();
         sslContextParameters.setKeyManagers(kmp);
         sslContextParameters.setTrustManagers(tmp);
+
+		registry.bind("ssl", sslContextParameters);
 
 		return sslContextParameters;
     }
