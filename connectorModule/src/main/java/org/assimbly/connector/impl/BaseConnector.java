@@ -138,9 +138,10 @@ public abstract class BaseConnector implements Connector {
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
-			
+
+			e.printStackTrace();
+
 			try {
-				
 				String errorCause = e.getCause().getMessage();
 				throw new Exception(errorCause);
 			}catch (Exception ex) {	

@@ -1,31 +1,28 @@
 package org.assimbly.connector.routes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.camel.*;
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Predicate;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.processors.ConvertProcessor;
 import org.assimbly.connector.processors.FailureProcessor;
 import org.assimbly.connector.processors.HeadersProcessor;
-import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
-public class DefaultRoute extends RouteBuilder {
+import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
+
+
+public class XMLRoute extends RouteBuilder {
 
 	TreeMap<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
@@ -41,30 +38,27 @@ public class DefaultRoute extends RouteBuilder {
 
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
-	private List<String> responseUriKeys;
-	private List<String> errorUriKeys;
 	private String[] offrampUriList;
-
+	private List<String> responseUriKeys;
 	int index = 0;
 	private String logLevelAsString;
 
-	public DefaultRoute(final TreeMap<String, String> props){
+	public XMLRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
-	public DefaultRoute() {}
+	public XMLRoute() {}
 
 	public interface FailureProcessorListener {
-		public void onFailure();
-	}
+		 public void onFailure();
+  	}
 
 	@Override
 	public void configure() throws Exception {
-
-		CamelContext context = getContext();
-		context.setTracing(true);
-		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
-
+			
+		logger.info("Configuring default route");
+		
+		getContext().setTracing(true);
 		EncryptableProperties decryptedProperties = decryptProperties(props);
 
 		Processor headerProcessor = new HeadersProcessor(props);
@@ -72,12 +66,10 @@ public class DefaultRoute extends RouteBuilder {
 		Processor convertProcessor = new ConvertProcessor();
 
 		flowId = props.get("id");
-		errorUriKeys = getUriKeys("error");
-
 		onrampUriKeys = getUriKeys("from");
 		offrampUriKeys = getUriKeys("to");
-		responseUriKeys = getUriKeys("response");
 		offrampUriList = getOfframpUriList();
+		responseUriKeys = getUriKeys("response");
 
 		if (this.props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
@@ -89,7 +81,7 @@ public class DefaultRoute extends RouteBuilder {
 		}else {
 			maximumRedeliveries = 0;
 		}
-
+		
 		if (this.props.containsKey("flowredeliveryDelay")){
 			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
 			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
@@ -103,7 +95,7 @@ public class DefaultRoute extends RouteBuilder {
 			redeliveryDelay = 3000;
 			maximumRedeliveryDelay = 60000;
 		}
-
+		
 		if (this.props.containsKey("flow.backOffMultiplier")){
 			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
 			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
@@ -121,42 +113,43 @@ public class DefaultRoute extends RouteBuilder {
 		}else {
 			logLevelAsString = "OFF";
 		}
-
-		if (this.props.containsKey(errorUriKeys.get(0))){
-			routeErrorHandler = deadLetterChannel(props.get(errorUriKeys.get(0)))
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.log(log)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true);
+		
+		if (this.props.containsKey("error.uri")){
+			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
+			.allowRedeliveryWhileStopping(false)
+			.asyncDelayedRedelivery()			
+			.maximumRedeliveries(maximumRedeliveries)
+			.redeliveryDelay(redeliveryDelay)
+			.maximumRedeliveryDelay(maximumRedeliveryDelay)			
+			.backOffMultiplier(backOffMultiplier)
+			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+			.onExceptionOccurred(failureProcessor)
+			.log("This is a log message")
+			.log(log)
+			.logRetryStackTrace(false)
+			.logStackTrace(true)
+			.logHandled(true)
+			.logExhausted(true)
+			.logExhaustedMessageHistory(true);					
 		}
 		else{
 			routeErrorHandler = defaultErrorHandler()
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true)
-					.log(logger);
+			.allowRedeliveryWhileStopping(false)
+			.asyncDelayedRedelivery()
+			.maximumRedeliveries(maximumRedeliveries)
+			.redeliveryDelay(redeliveryDelay)
+			.maximumRedeliveryDelay(maximumRedeliveryDelay)
+			.backOffMultiplier(backOffMultiplier)
+			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+			.onExceptionOccurred(failureProcessor)
+			.logRetryStackTrace(false)
+			.logStackTrace(true)
+			.logHandled(true)
+			.logExhausted(true)
+			.logExhaustedMessageHistory(true)
+			.log(logger);
 		}
 
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
@@ -169,20 +162,7 @@ public class DefaultRoute extends RouteBuilder {
 			uri = DecryptValue(uri);
 
 			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
-			String headerId = props.get("from." + endpointId + ".header.id");
-			String routeId = props.get("from." + endpointId + ".route.id");
-
-			Predicate hasOneDestination = PredicateBuilder.constant(false);
-			if(offrampUriList.length==1){
-				hasOneDestination = PredicateBuilder.constant(true);
-			}
-
-			Predicate hasRoute = PredicateBuilder.constant(false);
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("from." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
+            String headerId = props.get("from." + endpointId + ".header.id");
 
 			//The default Camel route (onramp)
 			from(uri)
@@ -195,28 +175,14 @@ public class DefaultRoute extends RouteBuilder {
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
-					.choice()
-					.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
-					.choice()
-					.when(hasOneDestination)
-					.to(offrampUriList)
-					.endChoice()
-					.when(header("ParallelProcessing").convertToString().isEqualToIgnoreCase("false"))
-					.to(offrampUriList)
-					.endChoice()
-					.otherwise()
 					.multicast()
 					.shareUnitOfWork()
 					.parallelProcessing()
 					.to(offrampUriList)
 					.routeId(flowId + "-" + endpointId).description("from");
 		}
-
-		//The default Camel route (offramp)
+        
+        //The default Camel route (offramp)		
 		for (String offrampUriKey : offrampUriKeys)
 		{
 
@@ -226,83 +192,71 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
 			String responseId = props.get("to." + endpointId + ".response.id");
-			String routeId = props.get("to." + endpointId + ".route.id");
 
 			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
 			Predicate hasDynamicEndpoint = PredicateBuilder.constant(uri.contains("${"));
-			Predicate hasRoute = PredicateBuilder.constant(false);
-
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("to." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
 
 			from(offrampUri)
-					.errorHandler(routeErrorHandler)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyTo", constant(uri))
-					.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
-					.process(headerProcessor)
-					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
+			.errorHandler(routeErrorHandler)
+			.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+			.setHeader("AssimblyHeaderId", constant(headerId))
+			.setHeader("AssimblyTo", constant(uri))
+			.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
+			.process(headerProcessor)
+			.id("headerProcessor" + flowId + "-" + endpointId)
+			.process(convertProcessor)
+			.id("convertProcessor" + flowId + "-" + endpointId)
+			.log(hasResponseEndpoint.toString())
+			.choice()
+				.when(hasResponseEndpoint)
 					.choice()
-					.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
-					.log(hasResponseEndpoint.toString())
+						.when(hasDynamicEndpoint)
+							.toD(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.to("direct:flow=" + flowId + "endpoint=" + responseId)
+						.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.pollEnrich().simple(uri).timeout(20000)
+							.endChoice()
+						.otherwise()
+							.to(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.to("direct:flow=" + flowId + "endpoint=" + responseId)
+					.endChoice()
+	  		    .when(header("ReplyTo").convertToString().contains(":"))
 					.choice()
-					.when(hasResponseEndpoint)
+						.when(hasDynamicEndpoint)
+							.toD(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("${header.ReplyTo}")
+						.otherwise()
+							.to(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("${header.ReplyTo}")
+						.endChoice()
+	  		    .when(header("ReplyTo").isNotNull())
 					.choice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.to("direct:flow=" + flowId + "endpoint=" + responseId)
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+						.when(hasDynamicEndpoint)
+							.toD(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("vm://${header.ReplyTo}")
+						.otherwise()
+							.to(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("vm://${header.ReplyTo}")
+					.endChoice()
+				.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.pollEnrich().simple(uri).timeout(20000)
 					.endChoice()
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.to("direct:flow=" + flowId + "endpoint=" + responseId)
-					.endChoice()
-					.when(header("ReplyTo").convertToString().contains(":"))
-					.choice()
-					.when(hasDynamicEndpoint)
+				.when(hasDynamicEndpoint)
 					.toD(uri)
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("${header.ReplyTo}")
-					.otherwise()
+				.otherwise()
 					.to(uri)
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("${header.ReplyTo}")
-					.endChoice()
-					.when(header("ReplyTo").isNotNull())
-					.choice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("vm://${header.ReplyTo}")
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("vm://${header.ReplyTo}")
-					.endChoice()
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.endChoice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.end()
-					.routeId(flowId + "-" + endpointId).description("to");
+				.end()
+	  		 .routeId(flowId + "-" + endpointId).description("to");
 		}
 
 		for(String responseUriKey : responseUriKeys){
@@ -310,15 +264,6 @@ public class DefaultRoute extends RouteBuilder {
 			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
 			String headerId = props.get("response." + endpointId + ".header.id");
 			String responseId = props.get("response." + endpointId + ".response.id");
-			String routeId = props.get("response." + endpointId + ".route.id");
-
-			Predicate hasRoute = PredicateBuilder.constant(false);
-
-			if(routeId!=null && !routeId.isEmpty()){
-				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("response." + endpointId + ".route");
-				addXmlRoute(xml, managed);
-			}
 
 			from("direct:flow=" + flowId + "endpoint=" + responseId)
 					.errorHandler(routeErrorHandler)
@@ -329,22 +274,16 @@ public class DefaultRoute extends RouteBuilder {
 					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
-					.choice()
-					.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.choice()
 					.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.endChoice()
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.pollEnrich().simple(uri).timeout(20000)
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.endChoice()
 					.otherwise()
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.toD(uri)
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
 					.routeId(flowId + "-" + endpointId).description("response");
 		}
@@ -372,11 +311,6 @@ public class DefaultRoute extends RouteBuilder {
 
 		return keys;
 
-	}
-
-	private void addXmlRoute(String xml, ManagedCamelContext managed) throws Exception {
-		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
-		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
 
 	//

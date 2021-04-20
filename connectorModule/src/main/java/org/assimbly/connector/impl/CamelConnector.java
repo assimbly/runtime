@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
@@ -42,12 +43,14 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 
 public class CamelConnector extends BaseConnector {
 
@@ -62,7 +65,7 @@ public class CamelConnector extends BaseConnector {
 	private String flowStats;
 	private String connectorStats;
 	private MetricRegistry metricRegistry = new MetricRegistry();
-
+	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -95,7 +98,6 @@ public class CamelConnector extends BaseConnector {
 	public void setBasicSettings() throws Exception {
 
 		//set basic settings
-		org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
@@ -107,7 +109,7 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(true);
+		//((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(false);
 
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -124,7 +126,6 @@ public class CamelConnector extends BaseConnector {
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-
 
 	}
 
@@ -185,59 +186,52 @@ public class CamelConnector extends BaseConnector {
 	
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
-		String scheme = "";
-
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
+
 			if (key.endsWith("service.id")){
 				props = setConnection(props, key);
 			}
-			if (key.startsWith("from") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
-			if (key.startsWith("to") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
+			if (key.equals("flow.components")){
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
-			if(key.startsWith("response") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
+				String[] schemes = StringUtils.split(props.get(key), ",");
 
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
+				for (String scheme : schemes) {
+
+					scheme = scheme.toLowerCase();
+
+					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+						logger.info(resolveDependency(scheme));
+					}
 				}
+
 			}
-			if (key.startsWith("error") && key.endsWith("uri")){
-				scheme = props.get(key).split(":")[0];
-				if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-					logger.info(resolveDependency(scheme));
-				}
-			}
+
 		}
-		
+
 		//set up route by type
 		String route  = props.get("flow.type");
 		if (route == null){
-			logger.info("Add default flow");
 			addDefaultFlow(props);
-		}else if(route.equals("default")){
-			logger.info("Add default flow");
-			addDefaultFlow(props);			
-		}else if(route.equals("simple")){
-			logger.info("Add simple flow");
-			addDefaultFlow(props);			
+			route = "unknown";
+			logger.info("Loaded flow configuration | type=" + route);
+		}else if(route.equalsIgnoreCase("default")){
+			addDefaultFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
+		}else if(route.equalsIgnoreCase("simple")){
+			addDefaultFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
+		}else if(route.equalsIgnoreCase("xml")){
+			addXmlFlow(props);
+			logger.info("Loaded flow configuration | type=" + route);
 		}else{
-			logger.info("Invalid route.");
+			logger.info("Unknown flow type.");
 		}
+
+
 	}
-	
-	
+
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		DefaultRoute flow = new DefaultRoute(props);
 
@@ -247,10 +241,28 @@ public class CamelConnector extends BaseConnector {
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
 		context.addRoutes(new SimpleRoute(props));
 	}
+
+	public void addXmlFlow(final TreeMap<String, String> props) throws Exception {
+
+		for (String key : props.keySet()) {
+
+			if (key.endsWith("route")){
+				String xml = props.get(key);
+				addXmlRoute(xml);
+			}
+		}
+	}
+
+	public void addXmlRoute(String xml) throws Exception {
+		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
+		managedContext.addOrUpdateRoutesFromXml(xml);
+	}
 	
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
+
+
 
 	
 	public boolean removeFlow(String id) throws Exception {
@@ -356,7 +368,8 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String startFlow(String id) {
-		logger.info("Start flow " + id);
+
+		logger.info("Start flow | id=" + id);
 
 		boolean flowAdded = false;
 		
@@ -368,7 +381,7 @@ public class CamelConnector extends BaseConnector {
 
 				if (props.get("id").equals(id)) {
 					
-					logger.info("Adding route with id: " + id);
+					logger.info("Load flow configuration | id=" + id);
 					addFlow(props);
 					flowAdded = true;
 				}
@@ -396,11 +409,11 @@ public class CamelConnector extends BaseConnector {
 						} while (status.isStarting() || count < 3000);
 
 					} else {
-						logger.info("Route " + routeId + " already started");
+						logger.info("Started route | id=" + routeId);
 					}
 				}
 
-				logger.info("Started flow " + id);
+				logger.info("Started flow | id=" + id);
 				return status.toString().toLowerCase();
 				
 			}else {
@@ -419,7 +432,7 @@ public class CamelConnector extends BaseConnector {
 
 	public String restartFlow(String id) {
 
-		logger.info("Restart flow " + id);
+		logger.info("Restart flow | id=" + id);
 
 		try {
 			if(hasFlow(id)) {
@@ -440,7 +453,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public String stopFlow(String id) {
-		logger.info("Stop flow " + id);		
+		logger.info("Stop flow | id=" + id);
 		try {
 			List<Route> routeList = getRoutesByFlowId(id);
 			for (Route route : routeList) {
@@ -458,7 +471,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String pauseFlow(String id) {
-		logger.info("Pause flow " + id);
+		logger.info("Pause flow | id=" + id);
 		
 		try {
 
@@ -483,10 +496,10 @@ public class CamelConnector extends BaseConnector {
 					do {
 						status = routeController.getRouteStatus(routeId);
 						if(status.isSuspended()) {
-							logger.info("Paused (suspend) flow " + id + ", route " + routeId);
+							logger.info("Paused (suspend) flow | id=" + id + ", route " + routeId);
 							break;
 						}else if(status.isStopped()){
-							logger.info("Paused (stopped) flow " + id + ", route " + routeId);
+							logger.info("Paused (stopped) flow | id=" + id + ", route " + routeId);
 
 							break;
 						}
@@ -496,7 +509,7 @@ public class CamelConnector extends BaseConnector {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				logger.info("Paused flow " + id);
+				logger.info("Paused flow id=" + id);
 				return status.toString().toLowerCase();
 
 			}else {
@@ -513,7 +526,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public String resumeFlow(String id) throws Exception {
-		logger.info("Resume flow " + id);
+		logger.info("Resume flow id=" + id);
 		
 		try {
 		
@@ -537,7 +550,7 @@ public class CamelConnector extends BaseConnector {
 						} while (status.isStarting() || count < 3000);
 
 						resumed = true;
-						logger.info("Resumed flow " + id + ", route " + routeId);
+						logger.info("Resumed flow id=" + id + ", route " + routeId);
 
 					}
 					else if (status.isStopped()){
@@ -548,7 +561,7 @@ public class CamelConnector extends BaseConnector {
 					}
 				}
 				if(resumed){
-					logger.info("Resumed flow " + id);
+					logger.info("Resumed flow id=" + id);
 					return status.toString().toLowerCase();
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
@@ -589,6 +602,9 @@ public class CamelConnector extends BaseConnector {
 	public String getFlowStatus(String id) {
 		
 		if(hasFlow(id)) {
+			if(!id.contains("-")){
+				id = id + "-";
+			}
 			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
 			flowStatus = status.toString().toLowerCase();		
 		}else {
@@ -1148,7 +1164,7 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	
-    private SSLContextParameters createSSLContextParameters() {
+    private SSLContextParameters createSSLContextParameters() throws GeneralSecurityException, IOException {
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
@@ -1189,7 +1205,7 @@ public class CamelConnector extends BaseConnector {
         ksp.setResource(baseDir + "/security/keystore.jks");
         ksp.setPassword("supersecret");
         KeyManagersParameters kmp = new KeyManagersParameters();
-        kmp.setKeyPassword("secret");
+        kmp.setKeyPassword("supersecret");
         kmp.setKeyStore(ksp);
 
         KeyStoreParameters tsp = new KeyStoreParameters();
@@ -1202,6 +1218,8 @@ public class CamelConnector extends BaseConnector {
         sslContextParameters.setKeyManagers(kmp);
         sslContextParameters.setTrustManagers(tmp);
 
+		registry.bind("ssl", sslContextParameters);
+
 		return sslContextParameters;
     }
 
@@ -1213,6 +1231,5 @@ public class CamelConnector extends BaseConnector {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
-	
     
 }

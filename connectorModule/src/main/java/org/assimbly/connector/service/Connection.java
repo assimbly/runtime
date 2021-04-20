@@ -503,14 +503,14 @@ public class Connection {
 
         logger.info("Setting up IBM MQ client connection.");
         if (context.hasComponent(componentName) == null) {
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
-            context.addComponent(componentName, sjmsComponent);
+            JmsComponent jmsComponent = new JmsComponent();
+            jmsComponent.setConnectionFactory(cf);
+            context.addComponent(componentName, jmsComponent);
         } else {
             context.removeComponent(componentName);
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
-            context.addComponent(componentName, sjmsComponent);
+            JmsComponent jmsComponent = new JmsComponent();
+            jmsComponent.setConnectionFactory(cf);
+            context.addComponent(componentName, jmsComponent);
         }
 
     }
@@ -565,13 +565,14 @@ public class Connection {
 
         //public static final int 	WMQ_CM_BINDINGS 				0
         //public static final int 	WMQ_CM_CLIENT 					1
+        //public static final int   WMQ_CLIENT_NONJMS_MQ            1
         //public static final int 	WMQ_CM_DIRECT_TCPIP 			2
         //public static final int 	WMQ_CM_DIRECT_HTTP 				4
         //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
         if (transportTypeAsString != null) {
             cf.setTransportType(Integer.parseInt(transportTypeAsString));
 		}else{
-			cf.setTransportType(CommonConstants.WMQ_CM_CLIENT);
+			cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
 		}
 
 		if(clientReconnectTimeOutAsString!=null){
@@ -591,6 +592,8 @@ public class Connection {
         }else{
             cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, true);
         }
+
+        cf.setBooleanProperty(WMQConstants.WMQ_MQMD_WRITE_ENABLED, true);
 
 		if(channelReceiveExit!=null){cf.setReceiveExit(channelReceiveExit);}
 		if(channelReceiveExitUserData!=null){cf.setReceiveExitInit(channelReceiveExitUserData);}

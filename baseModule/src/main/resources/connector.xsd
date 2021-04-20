@@ -22,6 +22,7 @@
 			<xs:element type="flowsType" name="flows" />
 			<xs:element type="servicesType" name="services" />
 			<xs:element type="headersType" name="headers" />
+			<xs:element type="routesType" name="routes" />
 			<xs:element type="environmentVariablesType" name="environmentVariables" />
 		</xs:choice>
 	</xs:complexType>
@@ -45,29 +46,40 @@
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" minOccurs="1" maxOccurs="1"/>
 			<xs:element type="xs:string" name="name" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="autostart" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="offloading" minOccurs="0" maxOccurs="1"/>
-			<xs:element type="xs:string" name="type" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="maximumRedeliveries" minOccurs="0"/>
 			<xs:element type="xs:string" name="redeliveryDelay" minOccurs="0"/>
 			<xs:element type="xs:string" name="logLevel" minOccurs="0"/>
 			<xs:element type="xs:string" name="version" minOccurs="0"/>
 			<xs:element type="xs:string" name="created" minOccurs="0"/>
 			<xs:element type="xs:string" name="lastModified" minOccurs="0"/>
-			<xs:element type="endpointType" name="endpoint" minOccurs="0" />
+			<xs:element type="componentsType" name="components" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="endpointsType" name="endpoints"  minOccurs="0" />
 		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="endpointsType">
+		<xs:sequence>
+			<xs:element type="endpointType" name="endpoint" minOccurs="1" maxOccurs="unbounded" />
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="endpointType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="xs:string" name="type" minOccurs="1" maxOccurs="1"/>
-			<xs:element type="xs:string" name="uri" minOccurs="1" maxOccurs="1"/>
+			<xs:element type="xs:string" name="uri" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="optionsType" name="options" minOccurs="0" />
 			<xs:element type="xs:string" name="response_id" minOccurs="0" />
 			<xs:element type="xs:string" name="service_id" minOccurs="0" />
 			<xs:element type="xs:string" name="header_id" minOccurs="0" />
 			<xs:element type="xs:string" name="route_id" minOccurs="0" />
 		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="componentsType">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="optionsType">
 		<xs:sequence maxOccurs="unbounded">
@@ -94,6 +106,18 @@
 			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
 		</xs:sequence>
 	</xs:complexType>
+	<xs:complexType name="routesType">
+		<xs:sequence minOccurs="0">
+			<xs:element name="route" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence minOccurs="0" maxOccurs="unbounded">
+						<xs:any namespace="##any" minOccurs="0" processContents="lax" />
+					</xs:sequence>
+					<xs:attribute name="id" type="xs:string" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:complexType name="environmentVariablesType">
 		<xs:sequence minOccurs="0">
 			<xs:element type="environmentVariableType" name="environmentVariable" minOccurs="0" maxOccurs="unbounded"/>
@@ -103,6 +127,7 @@
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element type="xs:string" name="key" maxOccurs="1" />
 			<xs:element type="xs:string" name="value" maxOccurs="1" />
+			<xs:element type="xs:string" name="encrypted" maxOccurs="1" />
 		</xs:choice>
 	</xs:complexType>
 </xs:schema>
