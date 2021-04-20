@@ -8,6 +8,14 @@
 	<name>org.assimbly.camelconnector</name>
 	<url>http://maven.apache.org</url>
 
+	<version>3.5.0</version>
+	<modules>
+		<module>baseModule</module>
+		<module>connectorModule</module>
+		<module>brokerModule</module>
+		<module>extraModule</module>
+	</modules>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<camel-version>3.7.2</camel-version>
@@ -318,11 +326,4 @@
 		</pluginManagement>
 	</build>
 	
-	<version>3.4.0</version>
-	<modules>
-		<module>baseModule</module>
-		<module>connectorModule</module>
-		<module>brokerModule</module>
-		<module>extraModule</module>
-	</modules>
 </project>
