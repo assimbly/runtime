@@ -47,6 +47,8 @@ public class Unmarshall {
 	private String flowMaximumRedeliveries;
 	private String flowRedeliveryDelay;
 	private String flowLogLevel;
+	private String flowAssimblyHeaders;
+	private String flowParallelProcessing;
 	private Object offloadingId;
 	private String wireTapUri;
 	private String endpointId;
@@ -95,6 +97,8 @@ public class Unmarshall {
 		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
 		flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
 		flowLogLevel = xPath.evaluate("//flows/flow[id='" + flowId + "']/logLevel",doc);
+		flowAssimblyHeaders = xPath.evaluate("//flows/flow[id='" + flowId + "']/assimblyHeaders",doc);
+		flowParallelProcessing = xPath.evaluate("//flows/flow[id='" + flowId + "']/parallelProcessing",doc);
 
 
 		if(flowId==null || flowId.isEmpty()) {
@@ -165,6 +169,15 @@ public class Unmarshall {
 			flowLogLevel = "OFF";
 		}
 
+		if(flowAssimblyHeaders == null){
+			flowAssimblyHeaders = "false";
+		}
+
+		if(flowParallelProcessing == null){
+			flowParallelProcessing = "false";
+		}
+
+
 		properties.put("id",flowId);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
@@ -175,6 +188,8 @@ public class Unmarshall {
 		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
 		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
 		properties.put("flow.logLevel",flowLogLevel);
+		properties.put("flow.assimblyHeaders",flowAssimblyHeaders);
+		properties.put("flow.parallelProcessing",flowParallelProcessing);
 
 	}
 

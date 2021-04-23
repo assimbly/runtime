@@ -23,13 +23,13 @@
 		<dependency>
 			<groupId>org.assimbly</groupId>
 			<artifactId>baseModule</artifactId>
-			  <version>3.4.0</version>
+			  <version>3.5.0</version>
 			<scope>compile</scope>
 		</dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>extraModule</artifactId>
-		  <version>3.4.0</version>
+		  <version>3.5.0</version>
 		  <scope>compile</scope>
 	  </dependency>
     	<!-- camel core dependencies in alphabetic order-->
@@ -1420,18 +1420,6 @@
 		  <artifactId>com.ibm.mq.allclient</artifactId>
 		  <version>9.2.1.0</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>baseModule</artifactId>
-		  <version>3.3.0</version>
-		  <scope>compile</scope>
-	  </dependency>
-      <dependency>
-          <groupId>org.assimbly</groupId>
-          <artifactId>baseModule</artifactId>
-          <version>3.3.0</version>
-          <scope>compile</scope>
-      </dependency>
 
   </dependencies>
 
