@@ -9,6 +9,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -183,6 +184,85 @@ public class ActiveMQClassic implements Broker {
 
 	}
 
+	@Override
+	public String createQueue(String queueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String deleteQueue(String queueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getQueue(String queueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getQueues() throws Exception {
+		return null;
+	}
+
+	@Override
+	public String clearQueue(String queueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String clearQueues() throws Exception {
+		return null;
+	}
+
+	@Override
+	public String listMessages(String queueName, String filter) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String removeMessage(String queueName, int message) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String browseMessage(String queueName, String message) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String browseMessages(String endpointName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String removeMessages(String queueName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String moveMessage(String sourceQueueName, String targetQueueName, String message) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String sendMessage(String queueName, Map<String,String> messageHeaders, String messageBody) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getConsumers() throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getConnections() throws Exception {
+		return null;
+	}
 
 	@Override
 	public Object getBroker() throws Exception {

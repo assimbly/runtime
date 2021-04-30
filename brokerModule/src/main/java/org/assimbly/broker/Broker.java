@@ -1,6 +1,7 @@
 package org.assimbly.broker;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
 * <pre>
@@ -100,6 +101,40 @@ public interface Broker {
 	* @throws Exception if info can't get retrieved
 	*/
 	public String info() throws Exception;
+
+	public String getConsumers() throws Exception;
+
+	public String getConnections() throws Exception;
+
+	public String createQueue(String queueName) throws Exception;
+
+	public String deleteQueue(String queueName) throws Exception;
+
+	public String getQueue(String queueName) throws Exception;
+
+	public String getQueues() throws Exception;
+
+	public String clearQueue(String queueName) throws Exception;
+
+	public String clearQueues() throws Exception;
+
+
+	public String listMessages(String endpointName, String filter) throws Exception;
+
+	public String removeMessage(String endpointName, int messageId) throws Exception;
+
+	public String removeMessages(String endpointName) throws Exception;
+
+	public String moveMessage(String sourceQueueName, String targetQueueName, String message) throws Exception;
+
+	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception;
+
+	public String browseMessage(String endpointName, String messageId) throws Exception;
+
+	public String browseMessages(String endpointName) throws Exception;
+
+	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception;
+
 
 	/**
 	* Get the broker (can be used to access extended methods by the implementation (ActiveMQ classic, ActiveMQ artemis)
