@@ -27,6 +27,7 @@
 		    <artifactId>camel-base</artifactId>
 			<version>${camel-version}</version>
 		</dependency>
+
   </dependencies>
 
   <build>

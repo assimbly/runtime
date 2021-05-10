@@ -10,20 +10,25 @@ public class CompositeDataConverter {
 
         public static String convertToJSON(CompositeData[] messages) {
 
+            System.out.println("browseMessage1");
+
             if (messages == null) {
                 return null;
             }
 
+            System.out.println("browseMessage2");
+
             JSONObject messagesAsJSON = new JSONObject();
+            JSONObject messageAsJSON = new JSONObject();
             JSONArray messagesArray = new JSONArray();
+
 
             for(CompositeData message: messages){
                 System.out.print("a message");
-                JSONObject messageAsJSON = messageToJSON(message);
-                messagesArray.put(messageAsJSON);
+                messageAsJSON.append("message",messageToJSON(message));
             }
 
-            messagesAsJSON.put("messages",messagesArray);
+            messagesAsJSON.put("messages",messageAsJSON);
 
             return messagesAsJSON.toString();
 

@@ -15,12 +15,21 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 public class ActiveMQClassic implements Broker {
 
@@ -31,6 +40,7 @@ public class ActiveMQClassic implements Broker {
 	File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
 	BrokerService broker;
+	private ManagementContext brokerManagement;
 
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -186,17 +196,47 @@ public class ActiveMQClassic implements Broker {
 
 	@Override
 	public String createQueue(String queueName) throws Exception {
-		return null;
+
+		//ActiveMQDestination activeMQDestinationMQ =  ActiveMQDestination.createDestination(queueName,  ActiveMQDestination.QUEUE_TYPE );
+		//activeMQDestinationMQ.setPhysicalName(queueName);
+
+		// setDestination(ActiveMQDestination.createDestination(topic, ActiveMQDestination.TOPIC_TYPE));
+
+		JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost:1098/jndi/rmi://localhost:1099/jmxrmi");
+		JMXConnector jmxc = JMXConnectorFactory.connect(url);
+		MBeanServerConnection conn = jmxc.getMBeanServerConnection();
+
+		String operationName="addQueue";
+		String parameter="MyNewQueue";
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost"); // new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker");
+
+		if(parameter != null) {
+			Object[] params = {parameter};
+			String[] sig = {"java.lang.String"};
+			conn.invoke(activeMQ, operationName, params, sig);
+		} else {
+			conn.invoke(activeMQ, operationName,null,null);
+		}
+
+
+
+		return "succes";
 	}
 
 	@Override
 	public String deleteQueue(String queueName) throws Exception {
+
+
+
 		return null;
 	}
 
+	//https://dzone.com/articles/managing-activemq-jmx-apis
+
 	@Override
 	public String getQueue(String queueName) throws Exception {
-		return null;
+
+		return "success";
 	}
 
 	@Override
@@ -211,6 +251,26 @@ public class ActiveMQClassic implements Broker {
 
 	@Override
 	public String clearQueues() throws Exception {
+		return null;
+	}
+
+	@Override
+	public String createTopic(String topicName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String deleteTopic(String topicName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getTopic(String topicName) throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getTopics() throws Exception {
 		return null;
 	}
 
@@ -235,7 +295,7 @@ public class ActiveMQClassic implements Broker {
 	}
 
 	@Override
-	public String browseMessages(String endpointName) throws Exception {
+	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages) throws Exception {
 		return null;
 	}
 
@@ -250,7 +310,7 @@ public class ActiveMQClassic implements Broker {
 	}
 
 	@Override
-	public String sendMessage(String queueName, Map<String,String> messageHeaders, String messageBody) throws Exception {
+	public String sendMessage(String queueName, Map<String,String> messageHeaders, String messageBody, String userName, String password) throws Exception {
 		return null;
 	}
 
@@ -261,6 +321,9 @@ public class ActiveMQClassic implements Broker {
 
 	@Override
 	public String getConnections() throws Exception {
+		//int x = broker.getCurrentConnections();
+
+
 		return null;
 	}
 

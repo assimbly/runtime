@@ -62,5 +62,15 @@
             <permission type="send" roles="user"/>
          </security-setting>
       </security-settings>
+
+       <address-settings>
+           <address-setting match="*">
+               <auto-create-addresses>true</auto-create-addresses>
+               <auto-delete-addresses>true</auto-delete-addresses>
+               <auto-delete-addresses-delay>300000</auto-delete-addresses-delay> <!-- delete auto created queues after 7 days: 604800000 -->
+               <config-delete-addresses>OFF</config-delete-addresses>
+           </address-setting>
+       </address-settings>
+
    </core>
 </configuration>
