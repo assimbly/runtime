@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class BrokerManager {
+public class ManagedBroker {
 
-    private final Logger log = LoggerFactory.getLogger(BrokerManager.class);
+    private final Logger log = LoggerFactory.getLogger(ManagedBroker.class);
 
     private Broker broker;
 
@@ -215,9 +215,16 @@ public class BrokerManager {
         return result;
     }
 
-    public String sendMessage(String brokerType, String endpointName, Map<String,String> messageHeaders, String messageBody, String userName, String password) throws Exception{
+    public String countMessages(String brokerType, String endpointName) throws Exception {
         broker = getBroker(brokerType);
-        return broker.sendMessage(endpointName, messageHeaders, messageBody, userName, password);
+        result = broker.countMessages(endpointName);
+
+        return result;
+    }
+
+    public String sendMessage(String brokerType, String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception{
+        broker = getBroker(brokerType);
+        return broker.sendMessage(endpointName, messageHeaders, messageBody);
     }
 
     public String browseMessage(String brokerType, String endpointName, String messageId, String mediaType) throws Exception{
@@ -242,7 +249,7 @@ public class BrokerManager {
         return result;
     }
 
-    public String removeMessage(String brokerType, String endpointName, int messageId) throws Exception{
+    public String removeMessage(String brokerType, String endpointName, String messageId) throws Exception{
         broker = getBroker(brokerType);
         return broker.removeMessage(endpointName, messageId);
     }

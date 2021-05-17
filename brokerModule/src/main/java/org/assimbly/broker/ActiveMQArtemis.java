@@ -11,14 +11,19 @@ import java.util.Map;
 
 import static java.util.Arrays.stream;
 
+import org.apache.activemq.artemis.api.core.Message;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.client.*;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
+import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
@@ -27,6 +32,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
@@ -222,7 +228,7 @@ public class ActiveMQArtemis implements Broker {
 			JSONObject endpoint = getEndpoint(endpointName);
 			endpointInfo.put("queue",endpoint);
 		}else{
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 		return endpointInfo.toString();
@@ -288,7 +294,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointInfo = new JSONObject();
 
 		if (queue == null) {
-			endpointInfo.put("topic","Endpoint " + endpointName + " doesn't exist.");
+			endpointInfo.put("topic","Endpoint " + endpointName + " not found");
 		}else{
 			JSONObject endpoint = getEndpoint(endpointName);
 			endpointInfo.put("topic",endpoint);
@@ -322,9 +328,9 @@ public class ActiveMQArtemis implements Broker {
 
 		endpoint.put("name",endpointName);
 		endpoint.put("address",queueControl.getAddress());
-		endpoint.put("routingType",queueControl.getRoutingType());
-		endpoint.put("durable",queueControl.isDurable());
-		endpoint.put("exclusive",queueControl.isExclusive());
+		//endpoint.put("routingType",queueControl.getRoutingType());
+		//endpoint.put("durable",queueControl.isDurable());
+		//endpoint.put("exclusive",queueControl.isExclusive());
 		endpoint.put("temporary",queueControl.isTemporary());
 		endpoint.put("numberOfMessages",queueControl.countMessages());
 		endpoint.put("numberOfConsumers",queueControl.getConsumerCount());
@@ -345,16 +351,14 @@ public class ActiveMQArtemis implements Broker {
 		}
 	}
 
-
 	//Manage Messages
 	public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
 
 		endpointExist = checkIfEndpointExist(sourceQueueName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + sourceQueueName + " doesn't exist.");
+			throw new Exception("Endpoint " + sourceQueueName + " not found");
 		}
-
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
@@ -371,7 +375,7 @@ public class ActiveMQArtemis implements Broker {
 		endpointExist = checkIfEndpointExist(sourceQueueName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + sourceQueueName + " doesn't exist.");
+			throw new Exception("Endpoint " + sourceQueueName + " not found");
 		}
 
 
@@ -385,12 +389,12 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
-	public String removeMessage(String endpointName, int messageId) throws Exception {
+	public String removeMessage(String endpointName, String messageId) throws Exception {
 
 		endpointExist = checkIfEndpointExist(endpointName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 
@@ -398,7 +402,7 @@ public class ActiveMQArtemis implements Broker {
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
 
-		boolean result = queueControl.removeMessage(messageId);
+		boolean result = queueControl.removeMessage(Integer.parseInt(messageId));
 
 		return Boolean.toString(result);
 
@@ -410,7 +414,7 @@ public class ActiveMQArtemis implements Broker {
 		endpointExist = checkIfEndpointExist(endpointName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -431,7 +435,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject messageInfo = new JSONObject();
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 		if(filter==null){
@@ -457,10 +461,30 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
+	public String countMessages(String endpointName) throws Exception {
+
+		endpointExist = checkIfEndpointExist(endpointName);
+
+		if (!endpointExist) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+
+		long numberOfMessages = queueControl.getMessageCount();
+
+		return Long.toString(numberOfMessages);
+
+	}
+
+
+
 	public String browseMessage(String endpointName, String messageId) throws Exception {
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -471,7 +495,7 @@ public class ActiveMQArtemis implements Broker {
 
 		messages = stream(messages).filter(compositeData -> compositeData.get("messageID").equals(messageId)).toArray(CompositeData[]::new);
 
-		String result = CompositeDataConverter.convertToJSON(messages);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false);
 
 		return result;
 
@@ -482,7 +506,7 @@ public class ActiveMQArtemis implements Broker {
 		endpointExist = checkIfEndpointExist(endpointName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -500,32 +524,33 @@ public class ActiveMQArtemis implements Broker {
 			if(countMessages > 10000){
 				throw new Exception("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
 			}else{
-				System.out.println("browseMessages0");
 				messages = queueControl.browse();
 			}
 
 		}
 
-		String result = CompositeDataConverter.convertToJSON(messages);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false);
 
 		return result;
 
 	}
 
-	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody, String userName, String password) throws Exception {
+	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception {
 
 		endpointExist = checkIfEndpointExist(endpointName);
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " doesn't exist.");
+			throw new Exception("Endpoint " + endpointName + " not found");
 		}
 
+		String userName = broker.getActiveMQServer().getConfiguration().getClusterUser();
+		String password = broker.getActiveMQServer().getConfiguration().getClusterPassword();
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
 
-		String result = queueControl.sendMessage(messageHeaders, 0, messageBody, true, userName, password);
+		String result = queueControl.sendMessage(messageHeaders, Message.TEXT_TYPE, messageBody, true, userName, password);
 
 		return result;
 

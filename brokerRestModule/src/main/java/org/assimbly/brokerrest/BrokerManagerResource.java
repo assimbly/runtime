@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
 import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.BrokerManager;
+import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ public class BrokerManagerResource {
     private static final String ENTITY_NAME = "broker";
 
     @Autowired
-	private BrokerManager brokermanager;
+	private ManagedBroker broker;
 
     private String result;
 
@@ -39,7 +39,7 @@ public class BrokerManagerResource {
         String status = "stopped";
 
         try {
-            status = brokermanager.getStatus(brokerType);
+            status = broker.getStatus(brokerType);
         } catch (Exception e1) {
             log.error("Can't get status", e1);
         }
@@ -63,61 +63,12 @@ public class BrokerManagerResource {
         String info = "unknown";
 
         try {
-            info = brokermanager.getInfo(brokerType);
+            info = broker.getInfo(brokerType);
         } catch (Exception e1) {
             log.error("Can't get status", e1);
         }
 
         return info;
-    }
-
-    /**
-     * GET  /brokers/:id : get the broker status by "id".
-     *
-     * @param id the id of the brokerDTO to retrieve
-     * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
-     */
-    @GetMapping("/brokers/{id}/getconfiguration")
-    public String getConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType) {
-        log.debug("REST request to get configuration of Broker : {}");
-
-        String configuration = "unknown";
-
-        try {
-            configuration = brokermanager.getConfiguration(brokerType);
-        } catch (Exception e1) {
-            log.error("Can't get status", e1);
-        }
-
-        return configuration;
-    }
-
-
-    /**
-     * POST  /brokers/:id : set the broker configuration by "id" and "configurationFile".
-     *
-     * @param id the id of the brokerDTO to retrieve
-     * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
-     * @throws Exception
-     */
-    @PostMapping(path = "/brokers/{id}/setconfiguration")
-    public ResponseEntity<String> setConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType, @RequestParam String brokerConfigurationType, @RequestBody(required = false) String brokerConfiguration) throws Exception {
-        log.debug("REST request to set configuration of Broker : {}", id);
-
-       	try {
-       		String result = brokermanager.setConfiguration(brokerType,brokerConfigurationType, brokerConfiguration);
-            if(result.equals("configuration set")) {
-            	System.out.println("result succes: " + result);
-            	return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "setConfiguration", result);
-            }else {
-            	System.out.println("result failed: " + result);
-            	return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "setConfiguration", result);
-            }
-   		} catch (Exception e) {
-   			System.out.println("result failed 2: " + e.getMessage());
-   			return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "setConfiguration", e.getMessage());
-   		}
-
     }
 
     /**
@@ -131,7 +82,7 @@ public class BrokerManagerResource {
         log.debug("REST request to start Broker : {}", id);
 
         try {
-   			brokermanager.start(brokerType,brokerConfigurationType);
+   			broker.start(brokerType,brokerConfigurationType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "started");
         } catch (Exception e) {
         	log.error("Can't start broker", e);
@@ -151,7 +102,7 @@ public class BrokerManagerResource {
         log.debug("REST request to restart Broker : {}", id);
 
         try {
-   			brokermanager.restart(brokerType,brokerConfigurationType);
+   			broker.restart(brokerType,brokerConfigurationType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", "restarted");
         } catch (Exception e) {
         	log.error("Can't restart broker", e);
@@ -173,7 +124,7 @@ public class BrokerManagerResource {
         log.debug("REST request to stop Broker : {}", id);
 
         try {
-            brokermanager.stop(brokerType);
+            broker.stop(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", "stopped");
         } catch (Exception e) {
         	log.error("Can't stop broker", e);
@@ -195,7 +146,7 @@ public class BrokerManagerResource {
         log.debug("REST request to get get connections : {}");
 
         try {
-            result = brokermanager.getConnections(brokerType, mediaType);
+            result = broker.getConnections(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
             log.error("Can't get connections", e);
@@ -216,7 +167,7 @@ public class BrokerManagerResource {
         log.debug("REST request to get get consumers : {}");
 
         try {
-            result = brokermanager.getConsumers(brokerType, mediaType);
+            result = broker.getConsumers(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", result);
         } catch (Exception e) {
             log.error("Can't get topics information", e);

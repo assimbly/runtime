@@ -222,10 +222,21 @@ public interface Broker {
 	 * list all messages on the broker
 	 *
 	 * @param  endpointName (name of queue or topic)
+	 * @param  filter (JMS Selector)
 	 * @return List of all messages
 	 * @throws Exception if list can't be retrieved
 	 */
 	public String listMessages(String endpointName, String filter) throws Exception;
+
+	/**
+	 * list all messages on the broker
+	 *
+	 * @param  endpointName (name of queue or topic)
+	 * @return List of all messages
+	 * @throws Exception if list can't be retrieved
+	 */
+	public String countMessages(String endpointName) throws Exception;
+
 
 	/**
 	 * removes a message on specified endpoint by messageId
@@ -234,7 +245,7 @@ public interface Broker {
 	 * @return confirmation if message is removed
 	 * @throws Exception if message can't be removed
 	 */
-	public String removeMessage(String endpointName, int messageId) throws Exception;
+	public String removeMessage(String endpointName, String messageId) throws Exception;
 
 	/**
 	 * removes all message on the specified endpoint
@@ -296,7 +307,7 @@ public interface Broker {
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody, String userName, String password) throws Exception;
+	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception;
 
 
 	/**

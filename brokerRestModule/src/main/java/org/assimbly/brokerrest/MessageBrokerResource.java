@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
 import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.BrokerManager;
+import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * REST controller for managing Broker.
@@ -23,7 +24,7 @@ public class MessageBrokerResource {
     private static final String ENTITY_NAME = "broker";
 
     @Autowired
-    private BrokerManager brokermanager;
+    private ManagedBroker broker;
 
     private String result;
 
@@ -44,8 +45,32 @@ public class MessageBrokerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.listMessages(brokerType, endpointName, filter, mediaType);
+            result = broker.listMessages(brokerType, endpointName, filter, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
+        } catch (Exception e) {
+            log.error("Can't list messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", e.getMessage());
+        }
+
+    }
+
+    /**
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @param endpointName, the name of the queue
+     * @param filter, the filter
+     * @return list of messages with status 200 (OK) or with status 404 (Not Found)
+     */
+    @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/count", produces = {"text/plain","application/xml","application/json"})
+    public Object countMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName)  throws Exception {
+
+        log.debug("REST request to list messages for queue : {}", endpointName);
+
+        try {
+            //brokermanager = brokerManagerResource.getBrokerManager();
+            result = broker.countMessages(brokerType, endpointName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", e.getMessage());
@@ -68,7 +93,7 @@ public class MessageBrokerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.browseMessage(brokerType,endpointName, messageId, mediaType);
+            result = broker.browseMessage(brokerType,endpointName, messageId, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);
@@ -90,7 +115,7 @@ public class MessageBrokerResource {
         log.debug("REST request to browse messages on: {}", endpointName);
 
         try {
-            result = brokermanager.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType);
+            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
         } catch (Exception e) {
             log.error("Can't browse messages", e);
@@ -108,14 +133,13 @@ public class MessageBrokerResource {
      * @param messageHeaders, the message headers
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", produces = {"text/plain","application/xml","application/json"})
-    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @RequestParam Map<String,String> messageHeaders, @RequestParam String userName, @RequestParam String password, @RequestBody String messageBody) throws Exception {
+    @PostMapping(path = "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", consumes = {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) Map<String,String> messageHeaders, @RequestBody String messageBody) throws Exception {
 
         log.debug("REST request to send messages from queue : " + endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.sendMessage(brokerType,endpointName,messageHeaders,messageBody, userName, password);
+            result = broker.sendMessage(brokerType,endpointName,messageHeaders,messageBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
         } catch (Exception e) {
             log.error("Can't send message", e);
@@ -133,13 +157,13 @@ public class MessageBrokerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/message/{endpointName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> removeMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @PathVariable int messageId)  throws Exception {
+    public ResponseEntity<String> removeMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
 
         log.debug("REST request to remove messages for queue : {}", endpointName);
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.removeMessage(brokerType,endpointName, messageId);
+            result = broker.removeMessage(brokerType,endpointName, messageId);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't remove message", e);
@@ -161,7 +185,7 @@ public class MessageBrokerResource {
         log.debug("REST request to remove messages for endpoint : {}", endpointName);
 
         try {
-            result = brokermanager.removeMessages(brokerType,endpointName);
+            result = broker.removeMessages(brokerType,endpointName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}", result);
         } catch (Exception e) {
             log.error("Can't remove messages", e);
@@ -185,7 +209,7 @@ public class MessageBrokerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
+            result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't move messsage", e);
@@ -209,7 +233,7 @@ public class MessageBrokerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.moveMessages(brokerType,sourceQueueName, targetQueueName);
+            result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
         } catch (Exception e) {
             log.error("Can't move messages", e);

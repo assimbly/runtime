@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
 import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.BrokerManager;
+import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ public class QueueManagerResource {
     private static final String ENTITY_NAME = "broker";
 
     @Autowired
-    private BrokerManager brokermanager;
+    private ManagedBroker broker;
 
 	private String result;
 
@@ -41,7 +41,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.createQueue(brokerType,queueName);
+            result = broker.createQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't create queue", e);
@@ -64,7 +64,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.deleteQueue(brokerType,queueName);
+            result = broker.deleteQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't delete queue", e);
@@ -87,7 +87,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.getQueue(brokerType,queueName, mediaType);
+            result = broker.getQueue(brokerType,queueName, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't get queue information", e);
@@ -110,7 +110,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.getQueues(brokerType, mediaType);
+            result = broker.getQueues(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queues", result);
         } catch (Exception e) {
             log.error("Can't get queues information", e);
@@ -133,7 +133,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.clearQueue(brokerType,queueName);
+            result = broker.clearQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
         } catch (Exception e) {
             log.error("Can't clear queue", e);
@@ -155,7 +155,7 @@ public class QueueManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.clearQueues(brokerType);
+            result = broker.clearQueues(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queues/clear", result);
         } catch (Exception e) {
             log.error("Can't clear queues", e);

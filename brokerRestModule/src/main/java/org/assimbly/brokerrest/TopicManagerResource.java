@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
 import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.BrokerManager;
+import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class TopicManagerResource {
     private static final String ENTITY_NAME = "broker";
 
     @Autowired
-    public BrokerManager brokermanager;
+    public ManagedBroker broker;
 
     private String result;
 
@@ -40,7 +40,7 @@ public class TopicManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.createTopic(brokerType,topicName);
+            result = broker.createTopic(brokerType,topicName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't create topic", e);
@@ -62,7 +62,7 @@ public class TopicManagerResource {
         log.debug("REST request to get delete topic : {}", topicName);
             try {
                 //brokermanager = brokerManagerResource.getBrokerManager();
-                result = brokermanager.deleteTopic(brokerType,topicName);
+                result = broker.deleteTopic(brokerType,topicName);
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
                 log.error("Can't delete topic", e);
@@ -85,7 +85,7 @@ public class TopicManagerResource {
 
             try {
                 //brokermanager = brokerManagerResource.getBrokerManager();
-                result = brokermanager.getTopic(brokerType,topicName, mediaType);
+                result = broker.getTopic(brokerType,topicName, mediaType);
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
                 log.error("Can't get topic information", e);
@@ -108,7 +108,7 @@ public class TopicManagerResource {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = brokermanager.getTopics(brokerType, mediaType);
+            result = broker.getTopics(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
             log.error("Can't get topics information", e);

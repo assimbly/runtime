@@ -9,27 +9,28 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.jmx.BrokerView;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.broker.*;
+import org.apache.activemq.broker.jmx.*;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.commons.io.FileUtils;
-import org.assimbly.broker.Broker;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+import javax.management.openmbean.CompositeData;
 
 public class ActiveMQClassic implements Broker {
 
@@ -40,7 +41,13 @@ public class ActiveMQClassic implements Broker {
 	File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
 	BrokerService broker;
-	private ManagementContext brokerManagement;
+
+	BrokerViewMBean brokerViewMBean;
+	QueueViewMBean queueViewMbean;
+
+	private MBeanServerConnection conn;
+	private String endpointExist;
+	private String endpointType;
 
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -65,11 +72,15 @@ public class ActiveMQClassic implements Broker {
 			URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
 			broker = BrokerFactory.createBroker(urlConfig);
 		}		
-		
+
 		if(!broker.isStarted()) {
 			broker.start();
 		}
-		
+
+		if(broker.isStarted()) {
+			setBrokerViewMBean();
+		}
+
 		return status();
 
 	}
@@ -89,14 +100,19 @@ public class ActiveMQClassic implements Broker {
 			if(!broker.isStarted()) {
 				broker.start();
 			}
-			
-			return status();
+
+		if(broker.isStarted()) {
+			System.out.println("Setting beans2");
+			broker.setUseJmx(true);
+			setBrokerViewMBean();
+		}
+
+		return status();
 
 	}	
 
 	public String stop() throws Exception {
 		broker.stop();
-		
 		return status();
 	}
 
@@ -194,143 +210,422 @@ public class ActiveMQClassic implements Broker {
 
 	}
 
-	@Override
 	public String createQueue(String queueName) throws Exception {
-
-		//ActiveMQDestination activeMQDestinationMQ =  ActiveMQDestination.createDestination(queueName,  ActiveMQDestination.QUEUE_TYPE );
-		//activeMQDestinationMQ.setPhysicalName(queueName);
-
-		// setDestination(ActiveMQDestination.createDestination(topic, ActiveMQDestination.TOPIC_TYPE));
-
-		JMXServiceURL url = new JMXServiceURL("service:jmx:rmi://localhost:1098/jndi/rmi://localhost:1099/jmxrmi");
-		JMXConnector jmxc = JMXConnectorFactory.connect(url);
-		MBeanServerConnection conn = jmxc.getMBeanServerConnection();
-
-		String operationName="addQueue";
-		String parameter="MyNewQueue";
-		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost"); // new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker");
-
-		if(parameter != null) {
-			Object[] params = {parameter};
-			String[] sig = {"java.lang.String"};
-			conn.invoke(activeMQ, operationName, params, sig);
-		} else {
-			conn.invoke(activeMQ, operationName,null,null);
-		}
-
-
-
-		return "succes";
+		brokerViewMBean.addQueue(queueName);
+		return "success";
 	}
 
-	@Override
 	public String deleteQueue(String queueName) throws Exception {
-
-
-
+		brokerViewMBean.removeQueue(queueName);
 		return null;
 	}
 
-	//https://dzone.com/articles/managing-activemq-jmx-apis
-
-	@Override
 	public String getQueue(String queueName) throws Exception {
+
+		JSONObject endpointInfo = new JSONObject();
+
+		JSONObject endpoint = getEndpoint("false","Queue",queueName);
+		endpointInfo.put("queue",endpoint);
+
+		return endpointInfo.toString();
+	}
+
+	public String getQueues() throws Exception {
+
+		JSONObject endpointsInfo  = new JSONObject();
+		JSONObject endpointInfo = new JSONObject();
+
+		ObjectName[] queues = brokerViewMBean.getQueues();
+
+		for(Object queue: queues){
+
+			String queueAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
+
+			endpointInfo.append("queue", getEndpoint("false","Queue",queueAsString));
+
+		}
+
+		endpointsInfo.put("queues",endpointInfo);
+
+		return endpointsInfo.toString();
+
+	}
+
+	public String clearQueue(String queueName) throws Exception {
+
+		queueViewMbean = getQueueViewMBean("Queue", queueName);
+		queueViewMbean.purge();
 
 		return "success";
 	}
 
-	@Override
-	public String getQueues() throws Exception {
-		return null;
-	}
-
-	@Override
-	public String clearQueue(String queueName) throws Exception {
-		return null;
-	}
-
-	@Override
 	public String clearQueues() throws Exception {
-		return null;
+		ObjectName[] queues = brokerViewMBean.getQueues();
+
+		for(Object queue: queues){
+			String queueAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
+			queueViewMbean = getQueueViewMBean("Queue", queueAsString);
+			queueViewMbean.purge();
+		}
+
+		return "success";
+
 	}
 
-	@Override
 	public String createTopic(String topicName) throws Exception {
-		return null;
+		brokerViewMBean.addTopic(topicName);
+		return "success";
 	}
 
-	@Override
 	public String deleteTopic(String topicName) throws Exception {
-		return null;
+		brokerViewMBean.removeTopic(topicName);
+		return "success";
 	}
 
-	@Override
 	public String getTopic(String topicName) throws Exception {
-		return null;
+		JSONObject endpointInfo = new JSONObject();
+
+		JSONObject endpoint = getEndpoint("false","Topic",topicName);
+		endpointInfo.put("topic",endpoint);
+
+		return endpointInfo.toString();
 	}
 
-	@Override
 	public String getTopics() throws Exception {
-		return null;
+
+		JSONObject endpointsInfo  = new JSONObject();
+		JSONObject endpointInfo = new JSONObject();
+
+		ObjectName[] topics = brokerViewMBean.getTopics();
+
+		for(Object topic: topics){
+			String topicAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+			endpointInfo.append("topic", getEndpoint("false","Topic",topicAsString));
+		}
+
+		endpointsInfo.put("topics",endpointInfo);
+
+		return endpointsInfo.toString();
 	}
 
-	@Override
-	public String listMessages(String queueName, String filter) throws Exception {
-		return null;
+	private String checkIfEndpointExist(String endpointName) throws Exception {
+
+		ObjectName[] queues = brokerViewMBean.getQueues();
+
+		for (Object queue : queues) {
+			String endpointAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
+			if(endpointName.equalsIgnoreCase(endpointAsString)){
+				System.out.println("isQueue");
+				return "Queue";
+			}
+		}
+
+		ObjectName[] topics = brokerViewMBean.getTopics();
+
+		for (Object topic : topics) {
+			String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+			if(endpointName.equalsIgnoreCase(endpointAsString)){
+				System.out.println("isTopic");
+				return "Topic";
+			}
+		}
+
+		return "Unknown";
+
 	}
 
-	@Override
-	public String removeMessage(String queueName, int message) throws Exception {
-		return null;
+	//Manage Messages
+
+	public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
+
+		endpointType = checkIfEndpointExist(sourceQueueName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + sourceQueueName + " not found");
+		}
+
+		queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
+
+		boolean result = queueViewMbean.moveMessageTo(messageId,targetQueueName);
+
+		return Boolean.toString(result);
 	}
 
-	@Override
 	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
-		return null;
+
+
+		endpointType = checkIfEndpointExist(sourceQueueName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + sourceQueueName + " not found");
+		}
+
+		queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
+
+		int result = queueViewMbean.moveMatchingMessagesTo("",targetQueueName);
+
+		return Integer.toString(result);
 	}
 
-	@Override
-	public String browseMessage(String queueName, String message) throws Exception {
-		return null;
+	public String removeMessage(String endpointName, String messageId) throws Exception {
+
+		endpointExist = checkIfEndpointExist(endpointName);
+
+		if (!endpointExist.equalsIgnoreCase("queue")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		queueViewMbean = getQueueViewMBean("Queue", endpointName);
+
+		boolean result = queueViewMbean.removeMessage(messageId);
+		return Boolean.toString(result);
 	}
 
-	@Override
+	public String removeMessages(String endpointName) throws Exception {
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		queueViewMbean = getQueueViewMBean(endpointType, endpointName);
+		Long queueSize = queueViewMbean.getQueueSize();
+		queueViewMbean.purge();
+
+		return Long.toString(queueSize);
+
+	}
+
+	public String browseMessage(String endpointName, String messageId) throws Exception {
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		messageId = "JMSMessageID='" + messageId + "'";
+
+		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
+
+		CompositeData[] messages = destinationViewMBean.browse(messageId);
+
+		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+
+		return result;
+
+	}
+
 	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages) throws Exception {
-		return null;
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
+
+		CompositeData[] messages = destinationViewMBean.browse();
+
+		if(page != null && numberOfMessages != null) {
+			messages =  getMessagesByPage(messages, page, numberOfMessages);
+		}
+
+		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+
+		return result;
 	}
 
-	@Override
-	public String removeMessages(String queueName) throws Exception {
-		return null;
+	public String listMessages(String endpointName, String filter) throws Exception {
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		CompositeData[] messages = getDestinationViewMBean(endpointType,endpointName).browse(filter);
+
+		String result = CompositeDataConverter.convertToJSON(messages, 1000, true);
+
+		return result;
+
 	}
 
-	@Override
-	public String moveMessage(String sourceQueueName, String targetQueueName, String message) throws Exception {
-		return null;
+	public String countMessages(String endpointName) throws Exception {
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+
+		return Long.toString(queueSize);
+
 	}
 
-	@Override
-	public String sendMessage(String queueName, Map<String,String> messageHeaders, String messageBody, String userName, String password) throws Exception {
-		return null;
+
+
+
+	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception {
+
+		endpointType = checkIfEndpointExist(endpointName);
+
+		if (endpointType.equalsIgnoreCase("unknown")) {
+			throw new Exception("Endpoint " + endpointName + " not found");
+		}
+
+		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
+
+		destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
+
+		return "success";
 	}
 
-	@Override
+
 	public String getConsumers() throws Exception {
-		return null;
+		return "n/a";
 	}
 
-	@Override
 	public String getConnections() throws Exception {
-		//int x = broker.getCurrentConnections();
+
+		JSONObject connectionsInfo  = new JSONObject();
+		JSONObject connectionInfo = new JSONObject();
+
+		Connection[] connections = broker.getRegionBroker().getClients();
+
+		JSONObject connectionDetails = new JSONObject();
+
+		for(Connection connection: connections){
+			connectionDetails.put("connectionID", connection.getConnectionId());
+			connectionDetails.put("clientAddress", connection.getRemoteAddress());
+			connectionDetails.put("creationTime", Long.toString(connection.getStatistics().getStartTime()));
+			//connectionDetails.put("sessionCount", connection.getActiveTransactionCount());
+			connectionInfo.append("connection", connectionDetails);
+		}
+
+		connectionsInfo.put("connections",connectionInfo);
+
+		return connectionsInfo.toString();
 
 
-		return null;
 	}
+
+	private CompositeData[] getMessagesByPage(CompositeData[] messages, Integer page, Integer numberOfMessages){
+
+		List<CompositeData> list = Arrays.asList(messages);
+
+		if(page == 1){
+
+			Integer startIndex = 0;
+			Integer endIndex = numberOfMessages;
+
+			if(list.size() < endIndex){
+				endIndex = list.size();
+			}
+
+			list = list.subList(startIndex, endIndex);
+
+
+		}else{
+
+			Integer startIndex = (page -1) * numberOfMessages;
+			Integer endIndex = (page) * numberOfMessages;
+
+			if(list.size() < startIndex){
+				startIndex = list.size();
+			}
+
+			if(list.size() < endIndex){
+				endIndex = list.size();
+			}
+
+			list = list.subList(startIndex, endIndex);
+		}
+
+		messages = list.toArray(new CompositeData[list.size()]);
+
+		return messages;
+
+	}
+
+
+	private JSONObject getEndpoint(String isTemporary, String endpointType, String endpointName) throws Exception {
+
+		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
+
+		//System.out.println("options=" + destinationViewMBean.getOptions());
+
+		JSONObject endpoint = new JSONObject();
+
+		endpoint.put("name",endpointName);
+		endpoint.put("address",destinationViewMBean.getName());
+		endpoint.put("temporary",isTemporary);
+		endpoint.put("numberOfMessages",destinationViewMBean.getEnqueueCount());
+		endpoint.put("numberOfConsumers",destinationViewMBean.getConsumerCount());
+
+		return endpoint;
+
+	}
+
 
 	@Override
 	public Object getBroker() throws Exception {
 		return broker;
 	}
-	
-	
+
+	public void setBrokerViewMBean() throws MalformedObjectNameException {
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName());
+		brokerViewMBean = (BrokerViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, BrokerViewMBean.class, true);
+	}
+
+	public DestinationViewMBean getDestinationViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+
+		//type=Broker,brokerName=localbroker,
+		/*
+		Hashtable<String, String> params = new Hashtable<>();
+		params.put("brokerName", broker.getBrokerName());
+		params.put("type", "Broker");
+		params.put("destinationType", "Queue");
+		params.put("destinationName", queueName);
+		ObjectName queueObjectName = ObjectName.getInstance(broker., params);
+
+				queueViewMbean  = (QueueViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, QueueViewMBean.class, true);
+
+		*/
+
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
+		DestinationViewMBean destinationViewMbean = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, DestinationViewMBean.class, true);
+
+		return destinationViewMbean;
+	}
+
+	public QueueViewMBean getQueueViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
+		QueueViewMBean queueViewMbean  = (QueueViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, QueueViewMBean.class, true);
+
+		return queueViewMbean;
+	}
+
+	public TopicViewMBean getTopicViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
+		TopicViewMBean topicViewMbean  = (TopicViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, TopicViewMBean.class, true);
+
+		return topicViewMbean;
+	}
+
+	public ConnectorViewMBean getConnectorViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+
+		ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
+		ConnectorViewMBean connectorViewMBean  = (ConnectorViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, ConnectorViewMBean.class, true);
+
+		return connectorViewMBean;
+	}
+
 }
