@@ -195,6 +195,24 @@ public interface Broker {
 	 */
 	public String deleteTopic(String topicName) throws Exception;
 
+
+	/**
+	 * Clears the specified queue. The deletes/purge all messages on the queue
+	 *
+	 * @param  topicName Name of the topic
+	 * @return String (confirmation when topic is cleared)
+	 * @throws Exception if topic can't be cleared
+	 */
+	public String clearTopic(String topicName) throws Exception;
+
+	/**
+	 * Clears all the topics. The deletes/purge all messages on the broker (use with care)
+	 *
+	 * @return String (confirmation when broker (all topics) is cleared)
+	 * @throws Exception if topics can't be cleared
+	 */
+	public String clearTopics() throws Exception;
+
 	/**
 	 * gets information about the specified queues. Information like:
 	 * - name of the topic

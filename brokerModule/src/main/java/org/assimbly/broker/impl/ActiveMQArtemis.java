@@ -1,4 +1,4 @@
-package org.assimbly.broker;
+package org.assimbly.broker.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,19 +12,17 @@ import java.util.Map;
 import static java.util.Arrays.stream;
 
 import org.apache.activemq.artemis.api.core.Message;
-import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.client.*;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
-import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.commons.io.FileUtils;
+import org.assimbly.broker.Broker;
+import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
 import org.json.JSONArray;
@@ -32,12 +30,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.broker.BrokerArtemis");
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.broker.impl.ActiveMQArtemis");
 
 	EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -265,7 +262,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		for (String queueName : manageBroker.getQueueNames()) {
+		for (String queueName : manageBroker.getQueueNames("ANYCAST")) {
 			Queue queue = activeBroker.locateQueue(new SimpleString(queueName));
 			if (queue != null) {
 				queue.deleteAllReferences();
@@ -283,6 +280,32 @@ public class ActiveMQArtemis implements Broker {
 
 	public String createTopic(String topicName) throws Exception {
 		manageBroker.createQueue(topicName, "MULTICAST", topicName,"",true,-1,false,true );
+		return "success";
+	}
+
+
+	public String clearTopic(String topicName) throws Exception {
+
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+		Queue queue = activeBroker.locateQueue(new SimpleString(topicName));
+		if (queue != null) {
+			queue.deleteAllReferences();
+		}
+
+		return "success";
+	}
+
+	public String clearTopics() throws Exception {
+
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		for (String queueName : manageBroker.getQueueNames("MULTICAST")) {
+			Queue queue = activeBroker.locateQueue(new SimpleString(queueName));
+			if (queue != null) {
+				queue.deleteAllReferences();
+			}
+		}
+
 		return "success";
 	}
 

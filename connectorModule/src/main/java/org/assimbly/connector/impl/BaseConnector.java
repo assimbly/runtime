@@ -320,6 +320,8 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract void deleteCertificatesInTruststore(String certificateName) throws Exception;
 
+	public abstract void importP12Certificate(String fileP12, String passwordP12) throws Exception;
+
 	public abstract boolean removeFlow(String id) throws Exception;
 
 	public abstract boolean hasFlow(String id);

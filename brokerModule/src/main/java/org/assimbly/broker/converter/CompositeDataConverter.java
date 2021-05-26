@@ -1,6 +1,5 @@
-package org.assimbly.broker;
+package org.assimbly.broker.converter;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.management.openmbean.CompositeData;

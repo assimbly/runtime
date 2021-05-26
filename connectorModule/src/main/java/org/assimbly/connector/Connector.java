@@ -334,8 +334,19 @@ public interface Connector {
 	* @param certificateName name of the certificate
 	* @throws Exception if certificates cannot be deleted
 	*/
-	public void deleteCertificatesInTruststore(String certificateName) throws Exception;	
-	
+	public void deleteCertificatesInTruststore(String certificateName) throws Exception;
+
+	/**
+	 * Import TLS certificate.
+	 *
+	 * Import certificate into truststore (jks) used by the connector
+	 *
+	 * @return returns a confirmation message
+	 * @throws Exception if certificates cannot be imported
+	 */
+	public void importP12Certificate(String fileP12, String passwordP12) throws Exception;
+
+
 	/**
 	* removes flow from connector
 	*

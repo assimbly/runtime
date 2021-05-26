@@ -1,35 +1,15 @@
 package org.assimbly.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
+import java.io.*;
+import java.security.*;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import javax.net.ssl.SSLSession;
 
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
-import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.http.Header;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -281,4 +261,100 @@ public final class CertificatesUtil {
 
 	}
 
+
+	public void importP12Certificate(String filep12, String passwordP12, String filePathJks, String passwordJKS) throws Exception {
+
+		KeyStore p12Store = loadKeystoreFromString(filep12, passwordP12, "pkcs12");
+
+		KeyStore jksStore = loadKeystore(filePathJks, passwordJKS, "jks");
+
+		Enumeration aliases = p12Store.aliases();
+
+		while (aliases.hasMoreElements()) {
+
+			String alias = (String)aliases.nextElement();
+
+			if (p12Store.isKeyEntry(alias)) {
+				System.out.println("Adding key for alias " + alias);
+				Key key = p12Store.getKey(alias, passwordP12.toCharArray());
+
+				Certificate[] chain = p12Store.getCertificateChain(alias);
+
+				jksStore.setKeyEntry(alias, key, passwordJKS.toCharArray(), chain);
+			}
+		}
+
+		storeKeystore(jksStore,filePathJks,passwordJKS);
+
+	}
+
+	public static String convertStringToBinary(String input) {
+
+		String bString="";
+		String temp="";
+		for(int i=0;i<input.length();i++)
+		{
+			temp=Integer.toBinaryString(input.charAt(i));
+			for(int j=temp.length();j<8;j++)
+			{
+				temp="0"+temp;
+			}
+			bString+=temp+" ";
+		}
+
+		System.out.println(bString);
+		return bString;
+
+	}
+
+
+	private KeyStore loadKeystore(String keyStoreFile, String keystorePassword, String keystoreType) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+
+		File file = new File(keyStoreFile);
+		InputStream inputStream = new FileInputStream(file);
+
+		KeyStore keystore = null;
+
+		if(keystore == null){
+			keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+		}else{
+			keystore = KeyStore.getInstance(keystoreType);
+		}
+
+		keystore.load(inputStream, keystorePassword.toCharArray());
+
+		return keystore;
+	}
+
+	private KeyStore loadKeystoreFromString(String keyStoreString, String keystorePassword, String keystoreType) throws Exception {
+
+		Base64.Decoder decoder = Base64.getDecoder();
+		byte[] decodedByte = decoder.decode(keyStoreString.split(",")[1]);
+
+
+		InputStream inputStream = new ByteArrayInputStream(decodedByte);
+
+		KeyStore keystore = null;
+
+		if(keystore == null){
+			keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+		}else{
+			keystore = KeyStore.getInstance(keystoreType);
+		}
+
+		keystore.load(inputStream, keystorePassword.toCharArray());
+
+		return keystore;
+	}
+
+	private void storeKeystore(KeyStore keystore, String keyStoreFile, String keystorePassword) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+
+		File file = new File(keyStoreFile);
+		FileOutputStream out = new FileOutputStream(file);
+		keystore.store(out, keystorePassword.toCharArray());
+		out.close();
+	}
+
 }
+
+

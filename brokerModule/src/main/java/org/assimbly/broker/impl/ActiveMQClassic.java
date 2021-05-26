@@ -1,4 +1,4 @@
-package org.assimbly.broker;
+package org.assimbly.broker.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,15 +12,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.jmx.*;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.broker.Broker;
+import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
 import org.json.JSONObject;
@@ -34,7 +32,7 @@ import javax.management.openmbean.CompositeData;
 
 public class ActiveMQClassic implements Broker {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.broker.Broker");
+	private static Logger logger = LoggerFactory.getLogger("org.assimbly.broker.impl.ActiveMQArtemis");
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
@@ -280,6 +278,27 @@ public class ActiveMQClassic implements Broker {
 	public String deleteTopic(String topicName) throws Exception {
 		brokerViewMBean.removeTopic(topicName);
 		return "success";
+	}
+
+	public String clearTopic(String topicName) throws Exception {
+
+		queueViewMbean = getQueueViewMBean("Queue", topicName);
+		queueViewMbean.purge();
+
+		return "success";
+	}
+
+	public String clearTopics() throws Exception {
+		ObjectName[] topics = brokerViewMBean.getTopics();
+
+		for(Object topic: topics){
+			String queueAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+			queueViewMbean = getQueueViewMBean("Queue", queueAsString);
+			queueViewMbean.purge();
+		}
+
+		return "success";
+
 	}
 
 	public String getTopic(String topicName) throws Exception {

@@ -101,6 +101,7 @@ public class CamelConnector extends BaseConnector {
 		context = new DefaultCamelContext(registry);
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
+
 		//setting transport security globally
         context.setSSLContextParameters(createSSLContextParameters());
         ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
@@ -108,7 +109,9 @@ public class CamelConnector extends BaseConnector {
         ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("netty-http")).setUseGlobalSslContextParameters(true);
         ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
+		((SSLContextParametersAware) context.getComponent("vertx-http")).setUseGlobalSslContextParameters(true);
 		//((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(false);
 
 		//set default metrics
@@ -1162,7 +1165,18 @@ public class CamelConnector extends BaseConnector {
 		CertificatesUtil util = new CertificatesUtil();
     	util.deleteCertificate(truststorePath, certificateName);
 	}
-	
+
+	public void importP12Certificate(String fileP12, String passwordP12) throws Exception {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/keystore.jks";
+		util.importP12Certificate(fileP12,passwordP12,keystorePath,"supersecret");
+
+		//String truststorePath = baseDir + "/security/truststore.jks";
+		//util.importP12Certificate(fileP12,passwordP12,truststorePath,"supersecret");
+
+	}
 	
     private SSLContextParameters createSSLContextParameters() throws GeneralSecurityException, IOException {
 
@@ -1204,19 +1218,19 @@ public class CamelConnector extends BaseConnector {
         KeyStoreParameters ksp = new KeyStoreParameters();
         ksp.setResource(baseDir + "/security/keystore.jks");
         ksp.setPassword("supersecret");
-        KeyManagersParameters kmp = new KeyManagersParameters();
+		KeyManagersParameters kmp = new KeyManagersParameters();
         kmp.setKeyPassword("supersecret");
-        kmp.setKeyStore(ksp);
+		kmp.setKeyStore(ksp);
 
         KeyStoreParameters tsp = new KeyStoreParameters();
         tsp.setResource(baseDir + "/security/truststore.jks");
-        tsp.setPassword("supersecret");      
+        tsp.setPassword("supersecret");
         TrustManagersParameters tmp = new TrustManagersParameters();
         tmp.setKeyStore(tsp);
 
         SSLContextParameters sslContextParameters = new SSLContextParameters();
         sslContextParameters.setKeyManagers(kmp);
-        sslContextParameters.setTrustManagers(tmp);
+        //sslContextParameters.setTrustManagers(tmp);
 
 		registry.bind("ssl", sslContextParameters);
 

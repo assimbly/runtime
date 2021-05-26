@@ -1,8 +1,8 @@
 package org.assimbly.brokerrest;
 
 import org.assimbly.broker.Broker;
-import org.assimbly.broker.ActiveMQArtemis;
-import org.assimbly.broker.ActiveMQClassic;
+import org.assimbly.broker.impl.ActiveMQArtemis;
+import org.assimbly.broker.impl.ActiveMQClassic;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +179,16 @@ public class ManagedBroker {
     public String deleteTopic(String brokerType, String topicName) throws Exception {
         broker = getBroker(brokerType);
         return broker.deleteTopic(topicName);
+    }
+
+    public String clearTopic(String brokerType, String topicName) throws Exception {
+        broker = getBroker(brokerType);
+        return broker.clearTopic(topicName);
+    }
+
+    public String clearTopics(String brokerType) throws Exception {
+        broker = getBroker(brokerType);
+        return broker.clearTopics();
     }
 
     public String getTopic(String brokerType, String topicName, String mediaType) throws Exception{

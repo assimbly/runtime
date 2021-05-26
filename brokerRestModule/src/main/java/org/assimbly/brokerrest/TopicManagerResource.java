@@ -117,4 +117,49 @@ public class TopicManagerResource {
 
     }
 
+    /**
+     * POST  /brokers/{brokerType}/topic/{topicName}/clear : clears queue (deletes all messages on specified queue).
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @param queueName, the name of the topic
+     * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
+     */
+    @PostMapping(path = "/brokers/{brokerType}/topic/{topicName}/clear", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> clearTopic(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String topicName) throws Exception {
+
+        log.debug("REST request to clear topic : {}", topicName);
+
+        try {
+            //brokermanager = brokerManagerResource.getBrokerManager();
+            result = broker.clearTopic(brokerType,topicName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", result);
+        } catch (Exception e) {
+            log.error("Can't clear topic", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", e.getMessage());
+        }
+
+    }
+
+    /**
+     * POST  /brokers/{brokerType}/topics/clear : clears all queue (deletes all topic messages on the broker).
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
+     */
+    @PostMapping(path = "/brokers/{brokerType}/topics/clear", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> clearTopics(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType)  throws Exception {
+
+        log.debug("REST request to clear topics : this removes all messages on the broker!");
+
+        try {
+            //brokermanager = brokerManagerResource.getBrokerManager();
+            result = broker.clearTopics(brokerType);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topics/clear", result);
+        } catch (Exception e) {
+            log.error("Can't clear topics", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topics/clear", e.getMessage());
+        }
+
+    }
+
 }
