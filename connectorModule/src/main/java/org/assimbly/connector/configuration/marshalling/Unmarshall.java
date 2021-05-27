@@ -1,4 +1,4 @@
-package org.assimbly.connector.configuration;
+package org.assimbly.connector.configuration.marshalling;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

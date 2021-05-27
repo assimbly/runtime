@@ -23,6 +23,8 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.assimbly.connector.configuration.marshalling.Marshall;
+import org.assimbly.connector.configuration.marshalling.Unmarshall;
 import org.assimbly.util.ConnectorUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;

@@ -18,12 +18,10 @@ import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.KeyManagersParameters;
-import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.connector.configuration.ssl.SSLConfiguration;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
@@ -35,15 +33,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -102,17 +94,8 @@ public class CamelConnector extends BaseConnector {
 		context.setStreamCaching(true);
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
 
-		//setting transport security globally
-        context.setSSLContextParameters(createSSLContextParameters());
-        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("netty-http")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-		((SSLContextParametersAware) context.getComponent("vertx-http")).setUseGlobalSslContextParameters(true);
-		//((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(false);
+		//setting global SSL/TLS certificate store
+		setSSLContext();
 
 		//set default metrics
 		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
@@ -132,25 +115,7 @@ public class CamelConnector extends BaseConnector {
 
 	}
 
-	@Override
-	public void setEncryptionProperties(Properties encryptionProperties) {
-		this.encryptionProperties = encryptionProperties;
-		setEncryptedPropertiesComponent();
-	}
-
-	@Override
-	public EncryptionUtil getEncryptionUtil() {
-		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
-	}
-
-	private void setEncryptedPropertiesComponent() {
-		EncryptionUtil encryptionUtil = getEncryptionUtil();
-		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
-		PropertiesComponent propertiesComponent = new PropertiesComponent();
-		propertiesComponent.setInitialProperties(initialProperties);
-		context.setPropertiesComponent(propertiesComponent);
-	}
-
+	//Manage connector
 
 	public void start() throws Exception {
 
@@ -186,7 +151,10 @@ public class CamelConnector extends BaseConnector {
 	public void setDebugging(boolean debugging) {
         context.setDebugging(debugging);
 	}
-	
+
+
+	//Manage flows
+
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		//create connections & install dependencies if needed
@@ -265,9 +233,6 @@ public class CamelConnector extends BaseConnector {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
 
-
-
-	
 	public boolean removeFlow(String id) throws Exception {
 		
 		if(!hasFlow(id)) {
@@ -888,6 +853,8 @@ public class CamelConnector extends BaseConnector {
 	}	
 
 
+	//Other management tasks
+
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
 		return new Connection(context, props, key).start();
 	}
@@ -1177,65 +1144,50 @@ public class CamelConnector extends BaseConnector {
 		//util.importP12Certificate(fileP12,passwordP12,truststorePath,"supersecret");
 
 	}
-	
-    private SSLContextParameters createSSLContextParameters() throws GeneralSecurityException, IOException {
 
-		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-    	File securityPath = new File(baseDir + "/security");
-    	File trustStorePath = new File(baseDir + "/security/truststore.jks");
-    	File keyStorePath = new File(baseDir + "/security/keystore.jks");
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
 
-    	if(!securityPath.exists()){ 
-    		securityPath.mkdirs();
-    	}
-    	
-    	if(!trustStorePath.exists()){ 
-    		try {
-    			trustStorePath.createNewFile();
-    			InputStream is = classloader.getResourceAsStream("truststore.jks");
-    			Files.copy(is, trustStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        		is.close();
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
 
-    	if(!keyStorePath.exists()){ 
-    		try {
-    			keyStorePath.createNewFile();
-    			InputStream is = classloader.getResourceAsStream("keystore.jks");
-    			Files.copy(is, keyStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);        	
-        		is.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
-    	
-        KeyStoreParameters ksp = new KeyStoreParameters();
-        ksp.setResource(baseDir + "/security/keystore.jks");
-        ksp.setPassword("supersecret");
-		KeyManagersParameters kmp = new KeyManagersParameters();
-        kmp.setKeyPassword("supersecret");
-		kmp.setKeyStore(ksp);
+	private void setEncryptedPropertiesComponent() {
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
+	}
 
-        KeyStoreParameters tsp = new KeyStoreParameters();
-        tsp.setResource(baseDir + "/security/truststore.jks");
-        tsp.setPassword("supersecret");
-        TrustManagersParameters tmp = new TrustManagersParameters();
-        tmp.setKeyStore(tsp);
+	private void setSSLContext() throws Exception {
 
-        SSLContextParameters sslContextParameters = new SSLContextParameters();
-        sslContextParameters.setKeyManagers(kmp);
-        //sslContextParameters.setTrustManagers(tmp);
+		File securityPath = new File(baseDir + "/security");
+
+		if (!securityPath.exists()) {
+			securityPath.mkdirs();
+		}
+
+		String keyStorePath = baseDir + "/security/keystore.jks";
+		//String trustStorePath = baseDir + "/security/truststore.jks";
+
+		SSLConfiguration sslConfiguration = new SSLConfiguration();
+
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", null, null);
 
 		registry.bind("ssl", sslContextParameters);
 
-		return sslContextParameters;
-    }
+		context.setSSLContextParameters(sslContextParameters);
+
+		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "netty", "netty-http", "smtps", "vertx-http"};
+
+		for (String sslComponent : sslComponents) {
+			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
+		}
+	}
 
 	/**
 	 * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.
