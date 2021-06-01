@@ -11,14 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Optional;
 
 
@@ -59,7 +57,7 @@ public class ConnectorResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/connector/{connectorId}/setconfiguration", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setConfiguration(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId,@RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> setConfiguration(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @RequestBody String configuration) throws Exception {
         try {
             connector.setConfiguration(connectorId.toString(), mediaType, configuration);
             return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/connector/{connectorId}/setconfiguration", "Connector configuration set");
@@ -235,10 +233,10 @@ public class ConnectorResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/connector/{connectorId}/setcertificates", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setCertificates(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId,@RequestBody String url) throws Exception {
+    public ResponseEntity<String> setCertificates(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
 
        	try {
-       		connector.setCertificatesInTruststore(url);
+       		connector.setCertificatesInKeystore(keystoreName, keystorePassword, url);
        		return ResponseUtil.createSuccessResponse(connectorId, mediaType,"/connector/{connectorId}/setcertificates/{id}","Connector certificates set");
    		} catch (Exception e) {
    			e.printStackTrace();

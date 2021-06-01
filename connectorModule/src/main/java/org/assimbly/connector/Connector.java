@@ -279,7 +279,7 @@ public interface Connector {
  	* @return returns a map with certificates for this url
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate[] getCertificates(String url) throws Exception;	
+	public Certificate[] getCertificates(String url) throws Exception;
 
 	/**
 	* Gets TLS certificates for a url.
@@ -287,10 +287,11 @@ public interface Connector {
 	* Download the chain of certificates for the specified url
 	*
 	* @param certificateName name of the certificate
+	* @param keystoreName the name of the keystore (jks file)
 	* @return returns the Certificate object
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
+	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
 
 	
 	/**
@@ -301,7 +302,7 @@ public interface Connector {
 	* @param url an https url
 	* @throws Exception if certificates cannot be imported
 	*/
-	public void setCertificatesInTruststore(String url) throws Exception;	
+	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
 
 	
 	/**
@@ -311,10 +312,11 @@ public interface Connector {
 	*
 	* @param certificateName name of the certificate
 	* @param certificate Java certificate object
+	* @param keystoreName the name of the keystore (jks file)
  	* @return returns a confirmation message
 	* @throws Exception if certificates cannot be imported
 	*/
-	public String importCertificateInTruststore(String certificateName, Certificate certificate) throws Exception;
+	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
 	
 	
 	/**
@@ -323,18 +325,12 @@ public interface Connector {
 	* Import certificates to truststore (jks) used by the connector
 	*
 	* @param certificates map with one or more Java certificate object
+	* @param keystoreName the name of the keystore (jks file)
 	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
-	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
-	
-	/**
-	* Delete certificate from key/truststore
-	* 
-	* @param certificateName name of the certificate
-	* @throws Exception if certificates cannot be deleted
-	*/
-	public void deleteCertificatesInTruststore(String certificateName) throws Exception;
+	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+
 
 	/**
 	 * Import TLS certificate.
@@ -344,7 +340,15 @@ public interface Connector {
 	 * @return returns a confirmation message
 	 * @throws Exception if certificates cannot be imported
 	 */
-	public void importP12Certificate(String fileP12, String passwordP12) throws Exception;
+	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
+
+		/**
+	* Delete certificate from key/truststore
+	* 
+	* @param certificateName name of the certificate
+	* @throws Exception if certificates cannot be deleted
+	*/
+	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
 
 
 	/**

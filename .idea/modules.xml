@@ -4,8 +4,10 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/baseModule/baseModule.iml" filepath="$PROJECT_DIR$/baseModule/baseModule.iml" />
       <module fileurl="file://$PROJECT_DIR$/brokerModule/brokerModule.iml" filepath="$PROJECT_DIR$/brokerModule/brokerModule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/brokerRestModule/brokerRestModule.iml" filepath="$PROJECT_DIR$/brokerRestModule/brokerRestModule.iml" />
       <module fileurl="file://$PROJECT_DIR$/connector.iml" filepath="$PROJECT_DIR$/connector.iml" />
       <module fileurl="file://$PROJECT_DIR$/connectorModule/connectorModule.iml" filepath="$PROJECT_DIR$/connectorModule/connectorModule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/connectorRestModule/connectorRestModule.iml" filepath="$PROJECT_DIR$/connectorRestModule/connectorRestModule.iml" />
       <module fileurl="file://$PROJECT_DIR$/extraModule/extraModule.iml" filepath="$PROJECT_DIR$/extraModule/extraModule.iml" />
     </modules>
   </component>

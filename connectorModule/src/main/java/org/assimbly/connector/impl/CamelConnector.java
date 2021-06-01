@@ -1070,6 +1070,7 @@ public class CamelConnector extends BaseConnector {
 		return exchange;
 	}
 
+
 	public Certificate[] getCertificates(String url) {
     	try {
     		CertificatesUtil util = new CertificatesUtil();
@@ -1082,68 +1083,81 @@ public class CamelConnector extends BaseConnector {
     	return null;
 	}	
 
-	public Certificate getCertificateFromTruststore(String certificateName) {
-		String truststorePath = baseDir + "/security/truststore.jks";
+	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
+		String keystorePath = baseDir + "/security/" + keystoreName;
 		CertificatesUtil util = new CertificatesUtil();
-    	return util.getCertificate(truststorePath, certificateName); 
-	}	
-
-
-	public String importCertificateInTruststore(String certificateName, Certificate certificate) {
-
-		String keystorePath = baseDir + "/security/keystore.jks";
-		String truststorePath = baseDir + "/security/truststore.jks";
-		
-		CertificatesUtil util = new CertificatesUtil();
-		util.importCertificate(keystorePath, certificateName,certificate);    	
-    	return util.importCertificate(truststorePath, certificateName,certificate); 
-				
+    	return util.getCertificate(keystorePath, keystorePassword, certificateName);
 	}
 
-	
-	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) {
-
-		String keystorePath = baseDir + "/security/keystore.jks";
-		String truststorePath = baseDir + "/security/truststore.jks";
-		
-		CertificatesUtil util = new CertificatesUtil();
-		util.importCertificates(keystorePath, certificates);    	
-    	return util.importCertificates(truststorePath, certificates); 
-				
-	}
-
-	public void setCertificatesInTruststore(String url) {
+	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
 
 		try {
 			CertificatesUtil util = new CertificatesUtil();
-    		Certificate[] certificates = util.downloadCertificates(url);
-    		String truststorePath = baseDir + "/security/truststore.jks";
-        	util.importCertificates(truststorePath, certificates);
-    	} catch (Exception e1) {
+			Certificate[] certificates = util.downloadCertificates(url);
+			String keystorePath = baseDir + "/security/" + keystoreName;
+			util.importCertificates(keystorePath, keystorePassword, certificates);
+		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}			
+		}
 	}
+
+	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+
+		File file = new File(keystorePath);
+
+		String result;
+
+		if(file.exists()) {
+			result = util.importCertificate(keystorePath, keystorePassword, certificateName,certificate);
+		}else{
+			result = "Keystore doesn't exist";
+		}
+
+    	return result;
+				
+	}
+
 	
-	
-	public void deleteCertificatesInTruststore(String certificateName) {
-		String truststorePath = baseDir + "/security/truststore.jks";
+	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+
+		File file = new File(keystorePath);
+
+		String result;
+
+		if(file.exists()) {
+			return util.importCertificates(keystorePath, keystorePassword, certificates);
+		}else{
+			throw new Exception("Keystore doesn't exist");
+		}
+
+	}
+
+	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+		return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
+
+	}
+
+	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
 		
 		CertificatesUtil util = new CertificatesUtil();
-    	util.deleteCertificate(truststorePath, certificateName);
+    	util.deleteCertificate(keystorePath, keystorePassword, certificateName);
 	}
 
-	public void importP12Certificate(String fileP12, String passwordP12) throws Exception {
-
-		CertificatesUtil util = new CertificatesUtil();
-
-		String keystorePath = baseDir + "/security/keystore.jks";
-		util.importP12Certificate(fileP12,passwordP12,keystorePath,"supersecret");
-
-		//String truststorePath = baseDir + "/security/truststore.jks";
-		//util.importP12Certificate(fileP12,passwordP12,truststorePath,"supersecret");
-
-	}
 
 
 	public void setEncryptionProperties(Properties encryptionProperties) {

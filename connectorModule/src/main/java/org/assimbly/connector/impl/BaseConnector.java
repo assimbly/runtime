@@ -287,7 +287,10 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	//--> abstract methods (needs to be implemented in the subclass specific to the integration framework)
-	
+
+
+	// Connector
+
 	public abstract void start() throws Exception;
 
 	public abstract void stop() throws Exception;
@@ -310,17 +313,9 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
 
-	public abstract Certificate[] getCertificates(String url) throws Exception;	
-	
-	public abstract Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
 
-	public abstract void setCertificatesInTruststore(String url) throws Exception;
 
-	public abstract Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
-
-	public abstract void deleteCertificatesInTruststore(String certificateName) throws Exception;
-
-	public abstract void importP12Certificate(String fileP12, String passwordP12) throws Exception;
+	//flows
 
 	public abstract boolean removeFlow(String id) throws Exception;
 
@@ -371,6 +366,25 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
 	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
+
+	//certificates
+
+	public abstract Certificate[] getCertificates(String url) throws Exception;
+
+	public abstract Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
+
+	public abstract void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
+
+	public abstract Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+
+	public abstract String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
+
+	public abstract Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
+
+	public abstract void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
+
+
+	//Misc
 
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 

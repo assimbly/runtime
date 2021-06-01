@@ -2,13 +2,12 @@ package org.assimbly.util;
 
 import java.io.*;
 import java.security.*;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+import java.security.cert.Certificate;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLSession;
-
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -97,21 +96,20 @@ public final class CertificatesUtil {
 	}
 
 
-	public Certificate getCertificate(String keyStorePath, String certificateName) {
+	public Certificate getCertificate(String keyStorePath, String keystorePassword, String certificateName) {
 
     	try {
     		//load keystore
     		File trustStore = new File(keyStorePath);
     		InputStream is = new FileInputStream(trustStore);
     		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        String password = "supersecret";
-	        keystore.load(is, password.toCharArray());
+	        keystore.load(is, keystorePassword.toCharArray());
 	        Certificate certificate = keystore.getCertificate(certificateName);
 	        is.close();
 			
 	        // Save the new keystore contents
 			FileOutputStream out = new FileOutputStream(trustStore);
-	        keystore.store(out, password.toCharArray());
+	        keystore.store(out, keystorePassword.toCharArray());
 	        out.close();
 	    
 	        return certificate;
@@ -132,7 +130,7 @@ public final class CertificatesUtil {
 	}
 	
 
-	public String importCertificate(String keyStorePath, String certificateName, Certificate certificate) {
+	public String importCertificate(String keyStorePath, String keystorePassword, String certificateName, Certificate certificate) {
 
     	try {
 
@@ -140,8 +138,7 @@ public final class CertificatesUtil {
     		File trustStore = new File(keyStorePath);
     		InputStream is = new FileInputStream(trustStore);
     		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        String password = "supersecret";
-	        keystore.load(is, password.toCharArray());
+	        keystore.load(is, keystorePassword.toCharArray());
 	        is.close();
 
 			// Add the certificate to the store
@@ -159,7 +156,7 @@ public final class CertificatesUtil {
 
 			// Save the new keystore contents
 			FileOutputStream out = new FileOutputStream(trustStore);
-	        keystore.store(out, password.toCharArray());
+	        keystore.store(out, keystorePassword.toCharArray());
 	        out.close();
 
 		}catch (KeyStoreException e) {
@@ -178,7 +175,7 @@ public final class CertificatesUtil {
 
 	}
 	
-	public Map<String,Certificate> importCertificates(String keyStorePath, Certificate[] certificates) {
+	public Map<String,Certificate> importCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
         System.out.println("Importing certificates");
         Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
@@ -188,8 +185,7 @@ public final class CertificatesUtil {
     		File trustStore = new File(keyStorePath);
     		InputStream is = new FileInputStream(trustStore);
     		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        String password = "supersecret";
-	        keystore.load(is, password.toCharArray());
+	        keystore.load(is, keystorePassword.toCharArray());
 	        is.close();
 	
 	        // Add the certificate to the store
@@ -212,7 +208,7 @@ public final class CertificatesUtil {
 			
 	        // Save the new keystore contents
 			FileOutputStream out = new FileOutputStream(trustStore);
-	        keystore.store(out, password.toCharArray());
+	        keystore.store(out, keystorePassword.toCharArray());
 	        out.close();
 	        
 		}catch (KeyStoreException e) {
@@ -230,14 +226,50 @@ public final class CertificatesUtil {
     	return certificateMap;
 	}
 
-	public void deleteCertificate(String keyStorePath, String certificateName) {
+	public Map<String,Certificate> importP12Certificate(String keyStorePath, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
+
+		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
+
+		KeyStore jksStore = loadKeystore(keyStorePath, keystorePassword, "jks");
+
+		Enumeration aliases = p12Store.aliases();
+
+		Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
+
+
+		while (aliases.hasMoreElements()) {
+
+			String alias = (String)aliases.nextElement();
+
+			if (p12Store.isKeyEntry(alias)) {
+				System.out.println("Adding key for alias " + alias);
+				Key key = p12Store.getKey(alias, p12Password.toCharArray());
+
+				Certificate[] chain = p12Store.getCertificateChain(alias);
+
+				jksStore.setKeyEntry(alias, key, p12Password.toCharArray(), chain);
+
+				for (Certificate certificate : chain){
+					certificateMap.put(alias, certificate);
+				}
+
+			}
+		}
+
+		storeKeystore(jksStore,keyStorePath,keystorePassword);
+
+		return certificateMap;
+
+	}
+
+	public void deleteCertificate(String keyStorePath, String keystorePassword, String certificateName) {
 
     	try {
     		//load keystore
     		File trustStore = new File(keyStorePath);
     		InputStream is = new FileInputStream(trustStore);
     		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        String password = "supersecret";
+	        String password = keystorePassword;
 	        keystore.load(is, password.toCharArray());
 	        keystore.deleteEntry(certificateName);
 	        is.close();
@@ -262,31 +294,6 @@ public final class CertificatesUtil {
 	}
 
 
-	public void importP12Certificate(String filep12, String passwordP12, String filePathJks, String passwordJKS) throws Exception {
-
-		KeyStore p12Store = loadKeystoreFromString(filep12, passwordP12, "pkcs12");
-
-		KeyStore jksStore = loadKeystore(filePathJks, passwordJKS, "jks");
-
-		Enumeration aliases = p12Store.aliases();
-
-		while (aliases.hasMoreElements()) {
-
-			String alias = (String)aliases.nextElement();
-
-			if (p12Store.isKeyEntry(alias)) {
-				System.out.println("Adding key for alias " + alias);
-				Key key = p12Store.getKey(alias, passwordP12.toCharArray());
-
-				Certificate[] chain = p12Store.getCertificateChain(alias);
-
-				jksStore.setKeyEntry(alias, key, passwordJKS.toCharArray(), chain);
-			}
-		}
-
-		storeKeystore(jksStore,filePathJks,passwordJKS);
-
-	}
 
 	public static String convertStringToBinary(String input) {
 
@@ -305,6 +312,39 @@ public final class CertificatesUtil {
 		System.out.println(bString);
 		return bString;
 
+	}
+
+	public static String convertX509CertificateToPem(X509Certificate certificate) throws CertificateEncodingException {
+
+		org.apache.commons.codec.binary.Base64 encoder = new org.apache.commons.codec.binary.Base64(64);
+		byte[] derCertificate = certificate.getEncoded();
+		String pemCertificate = new String(encoder.encode(derCertificate));
+
+		return "-----BEGIN CERTIFICATE-----\n" + pemCertificate + "-----END CERTIFICATE-----";
+
+	}
+
+	public static X509Certificate convertPemToX509Certificate(String pemCertificate) throws CertificateException {
+
+		org.apache.commons.codec.binary.Base64 decoder = new org.apache.commons.codec.binary.Base64(64);
+		CertificateFactory cf = CertificateFactory.getInstance("X509");
+		X509Certificate certificate = null;
+
+		try {
+			if (pemCertificate != null && !pemCertificate.trim().isEmpty()) {
+
+				Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN.*---*$(.*)^---*END.*---*$.*");
+				pemCertificate = parse.matcher(pemCertificate).replaceFirst("$1");
+
+				byte[] derCertificate = decoder.decode(pemCertificate);
+
+				certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(derCertificate));
+
+			}
+		} catch (CertificateException e) {
+			throw new CertificateException(e);
+		}
+		return certificate;
 	}
 
 
