@@ -70,41 +70,46 @@ public class CamelConnector extends BaseConnector {
 
 	public CamelConnector() {
 		try {
-			setBasicSettings();
+			initConnector(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	public CamelConnector(boolean useDefaultSettings) {
+		try {
+			initConnector(useDefaultSettings);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+
+	public CamelConnector(String connectorId, String configuration, boolean useDefaultSettings) throws Exception {
+		initConnector(useDefaultSettings);
+		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
+	}
+
 	public CamelConnector(String connectorId, String configuration) throws Exception {
-		setBasicSettings();
+		initConnector(true);
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
 	public CamelConnector(String connectorId, URI configuration) throws Exception {
-		setBasicSettings();
+		initConnector(true);
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
-	public void setBasicSettings() throws Exception {
+	public void initConnector(boolean useDefaultSettings) throws Exception {
 
 		//set basic settings
 		context = new DefaultCamelContext(registry);
-		context.setStreamCaching(true);
-		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
 
-		//setting global SSL/TLS certificate store
-		setSSLContext();
-
-		//set default metrics
-		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
-
-		//set history metrics
-		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
-		factory.setPrettyPrint(true);
-		factory.setMetricsRegistry(metricRegistry);
-		context.setMessageHistoryFactory(factory);
+		if(useDefaultSettings){
+			setDefaultSettings();
+		}
 
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
@@ -113,6 +118,62 @@ public class CamelConnector extends BaseConnector {
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
 
+	}
+
+	public void setDefaultSettings() throws Exception {
+
+		setTracing(true);
+
+		setDebugging(true);
+
+		setSuppressLoggingOnTimeout(true);
+
+		setStreamCaching(true);
+
+		setCertificateStore(true);
+
+		setCertificateStore(true);
+
+		setMetrics(true);
+
+		setHistoryMetrics(true);
+
+	}
+
+	public void setTracing(boolean tracing) {
+		context.setTracing(tracing);
+	}
+
+	public void setDebugging(boolean debugging) {
+		context.setDebugging(debugging);
+	}
+
+	public void setStreamCaching(boolean streamCaching) {
+		context.setStreamCaching(streamCaching);
+	}
+
+	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
+		context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
+	}
+
+	public void setCertificateStore(boolean certificateStore) throws Exception {
+		if(certificateStore){
+			setSSLContext();
+		}
+	}
+
+	public void setMetrics(boolean metrics){
+		if(metrics){
+			context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
+		}
+	}
+
+	public void setHistoryMetrics(boolean setHistoryMetrics){
+		//set history metrics
+		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+		factory.setPrettyPrint(true);
+		factory.setMetricsRegistry(metricRegistry);
+		context.setMessageHistoryFactory(factory);
 	}
 
 	//Manage connector
@@ -127,7 +188,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void stop() throws Exception {
-		super.getConfiguration().clear();
+		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
 				
@@ -144,13 +205,6 @@ public class CamelConnector extends BaseConnector {
 		return started;
 	}
 	
-	public void setTracing(boolean tracing) {
-        context.setTracing(tracing);
-	}
-
-	public void setDebugging(boolean debugging) {
-        context.setDebugging(debugging);
-	}
 
 
 	//Manage flows
@@ -258,7 +312,7 @@ public class CamelConnector extends BaseConnector {
 	public String startAllFlows() throws Exception {
 		logger.info("Starting all flows");
 
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -274,7 +328,7 @@ public class CamelConnector extends BaseConnector {
 	public String restartAllFlows() throws Exception {
 		logger.info("Restarting all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -289,7 +343,7 @@ public class CamelConnector extends BaseConnector {
 
 	public String pauseAllFlows() throws Exception {
 		logger.info("Pause all flows");
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
@@ -306,7 +360,7 @@ public class CamelConnector extends BaseConnector {
 	public String resumeAllFlows() throws Exception {
 		logger.info("Resume all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -322,7 +376,7 @@ public class CamelConnector extends BaseConnector {
 	public String stopAllFlows() throws Exception {
 		logger.info("Stopping all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -343,7 +397,7 @@ public class CamelConnector extends BaseConnector {
 		
 		try {
 
-			List<TreeMap<String, String>> allProps = super.getConfiguration();
+			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
 
@@ -710,7 +764,7 @@ public class CamelConnector extends BaseConnector {
 	public TreeMap<String, String> getConnectorAlertsCount() throws Exception  {
 		  
 		TreeMap<String, String> numberOfEntriesList = new TreeMap<String, String>();
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -1186,11 +1240,11 @@ public class CamelConnector extends BaseConnector {
 		}
 
 		String keyStorePath = baseDir + "/security/keystore.jks";
-		//String trustStorePath = baseDir + "/security/truststore.jks";
+		String trustStorePath = baseDir + "/security/truststore.jks";
 
 		SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", null, null);
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", trustStorePath, "supersecret");
 
 		registry.bind("ssl", sslContextParameters);
 

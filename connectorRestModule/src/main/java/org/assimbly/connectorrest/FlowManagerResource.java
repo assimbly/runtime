@@ -46,7 +46,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> startflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -70,7 +70,7 @@ public class FlowManagerResource {
     public ResponseEntity<String>  stopflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -94,7 +94,7 @@ public class FlowManagerResource {
     public ResponseEntity<String>  restartflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -118,7 +118,7 @@ public class FlowManagerResource {
     public ResponseEntity<String>  pauseflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -142,7 +142,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> resumeflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -166,7 +166,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> isFlowStarted(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -185,7 +185,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowStatus(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -202,7 +202,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowUptime(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
         try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -236,7 +236,7 @@ public class FlowManagerResource {
         plainResponse = true;
 
         try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -255,7 +255,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowLastError(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
 		try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -271,7 +271,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowTotalMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
 		try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -287,7 +287,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowCompletedMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
 		try {
-            connectorResource.init();
+            //connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();
@@ -303,7 +303,7 @@ public class FlowManagerResource {
     public ResponseEntity<String> getFlowFailedMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable Long id) throws Exception {
 
 		try {
-            connectorResource.init();
+            ////connectorResource.init();
             connector = connectorResource.getConnector();
 
             flowId = id.toString();

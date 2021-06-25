@@ -53,7 +53,7 @@ public class CertificateResource {
             Certificate[] certificates = connector.getCertificates(url);
             Map<String,Certificate> certificateMap = connector.importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
 
-            String result = certificatesAsJSon(certificateMap, url);
+            String result = certificatesAsJSon(certificateMap, url, keystoreName);
 
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/import", result);
 
@@ -92,7 +92,7 @@ public class CertificateResource {
             //import certificate into truststore
             Map<String,Certificate> certificateMap = connector.importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
 
-            String result = certificatesAsJSon(certificateMap, null);
+            String result = certificatesAsJSon(certificateMap, null, keystoreName);
 
             log.debug("Uploaded certificate: " + cert);
 
@@ -115,7 +115,7 @@ public class CertificateResource {
 
             Map<String,Certificate> certificateMap = connector.importP12CertificateInKeystore(keystoreName, keystorePassword, certificate, password);
 
-            String result = certificatesAsJSon(certificateMap, null);
+            String result = certificatesAsJSon(certificateMap, "P12", keystoreName);
 
             log.debug("Uploaded P12 certificate: ");
 
@@ -190,7 +190,7 @@ public class CertificateResource {
 
 
 
-    private String certificatesAsJSon(Map<String,Certificate> certificateMap, String certificateUrl) throws CertificateException {
+    private String certificatesAsJSon(Map<String,Certificate> certificateMap, String certificateUrl, String certificateStore) throws CertificateException {
 
         JSONObject certificatesObject  = new JSONObject();
         JSONObject certificateObject = new JSONObject();
@@ -211,6 +211,8 @@ public class CertificateResource {
 
             certificateDetails.put("certificateFile",certificateFile);
             certificateDetails.put("certificateName",certificateName);
+            certificateDetails.put("certificateStore",certificateStore);
+
             certificateDetails.put("certificateExpiry",certificateExpiry);
             certificateDetails.put("certificateUrl",certificateUrl);
 

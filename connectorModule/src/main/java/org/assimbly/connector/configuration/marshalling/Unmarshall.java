@@ -66,7 +66,7 @@ public class Unmarshall {
 		this.flowId = flowId;
 
 		//get general flow properties
-		getGeneralPropertiesFromXMLFile();
+		getFlowsFromXMLFile();
 
 		//get endpoint properties
 		getEndpointsFromXMLFile();
@@ -86,7 +86,7 @@ public class Unmarshall {
 
 	}
 
-	private void getGeneralPropertiesFromXMLFile() throws Exception{
+	private void getFlowsFromXMLFile() throws Exception{
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);

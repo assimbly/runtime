@@ -54,7 +54,7 @@ public interface Connector {
 	 * @param configuration: list of flow configurations (Treemaps)
 	 * @throws Exception if configuration can't be set
 	 */
-	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception;
+	public void setFlowConfigurations(List<TreeMap<String, String>> configuration) throws Exception;
 
 	/**
 	 * Sets the connector configuration from a string of a specific format (XML,JSON,YAML).
@@ -65,7 +65,7 @@ public interface Connector {
 	 * @param configuration (the XML, JSON or YAML file)
 	 * @throws Exception if configuration can't be set
 	 */
-	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
+	public void setFlowConfigurations(String connectorId, String mediaType, String configuration) throws Exception;
 	
 	/**
 	* gets the connector configuration currently set (in use). 
@@ -73,7 +73,7 @@ public interface Connector {
 	* @return list of flow configurations (Treemap&lt;key,value&gt;)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
-	public List<TreeMap<String,String>> getConfiguration() throws Exception;
+	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception;
 
 	/**
 	* gets the connector configuration currently set (in use). 
@@ -83,7 +83,7 @@ public interface Connector {
 	* @return list of flow configurations (String of mediaType)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
-	public String getConfiguration(String connectorId, String mediaType) throws Exception;
+	public String getFlowConfigurations(String connectorId, String mediaType) throws Exception;
 	
 	//configure flow
 	/**
@@ -189,7 +189,37 @@ public interface Connector {
 	 * @param debugging to turn on debugging, false to turn it off
 	 */
 	public void setDebugging(boolean debugging);
-	
+
+	/**
+	 * Turn on/off suppressLoggingOnTimeout
+	 * @param suppressLoggingOnTimeout to turn on debugging, false to turn it off
+	 */
+	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
+
+	/**
+	 * Turn on/off streamCaching
+	 * @param streamCaching to turn on streamCaching, false to turn it off
+	 */
+	public void setStreamCaching(boolean streamCaching);
+
+	/**
+	 * Turn on/off debugging
+	 * @param certificateStore to turn on certificateStore, false to turn it off
+	 */
+	public void setCertificateStore(boolean certificateStore) throws Exception;
+
+	/**
+	 * Turn on/off metrics
+	 * @param metrics to turn on metrics, false to turn it off
+	 */
+	public void setMetrics(boolean metrics);
+
+	/**
+	 * Turn on/off historyMetrics
+	 * @param historyMetrics to turn on historyMetrics, false to turn it off
+	 */
+	public void setHistoryMetrics(boolean historyMetrics);
+
 	/**
 	* Adds event notifier to notified about events
 	* @param  eventNotifier eventNotifier object

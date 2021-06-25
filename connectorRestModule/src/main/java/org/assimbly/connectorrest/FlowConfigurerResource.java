@@ -81,6 +81,53 @@ public class FlowConfigurerResource {
    		}
     }
 
+	/**
+	 * POST  /connector/{connectorid}/setconfiguration : Set configuration from XML.
+	 *
+	 * @param connectorId (gatewayId)
+	 * @param configuration as xml
+	 * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
+	 * @throws URISyntaxException if the Location URI syntax is incorrect
+	 */
+	@PostMapping(path = "/connector/{connectorId}/setflowconfigurations", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+	public ResponseEntity<String> setFlowConfigurations(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @RequestBody String configuration) throws Exception {
+		try {
+			connector.setFlowConfigurations(connectorId.toString(), mediaType, configuration);
+			return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/connector/{connectorId}/setconfiguration", "Connector configuration set");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.createFailureResponse(connectorId, mediaType, "/connector/{connectorId}/setconfiguration", e.getMessage());
+		}
+
+	}
+
+	/**
+	 * Get  /connector/{connectorId}/getconfiguration : get XML configuration for gateway.
+	 *
+	 * @param connectorId (gatewayId)
+	 * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
+	 * @throws URISyntaxException if the Location URI syntax is incorrect
+	 */
+	@GetMapping(path = "/connector/{connectorId}/getFlowConfigurations", produces = {"text/plain","application/xml","application/json"})
+	public ResponseEntity<String> getFlowConfigurations(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId) throws Exception {
+
+		plainResponse = true;
+
+		try {
+			String gatewayConfiguration = connector.getFlowConfigurations(connectorId.toString(), mediaType);
+			if (gatewayConfiguration.startsWith("Error") || gatewayConfiguration.startsWith("Warning")) {
+				return ResponseUtil.createFailureResponse(connectorId, mediaType, "/connector/{connectorId}/getconfiguration", gatewayConfiguration);
+			}
+			return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/connector/{connectorId}/getconfiguration", gatewayConfiguration, plainResponse);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.createFailureResponse(connectorId, mediaType, "/connector/{connectorId}/getconfiguration", e.getMessage());
+		}
+
+	}
+
+
+
     @GetMapping(path = "/connector/{connectorId}/flow/documentation/version", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getDocumentationVersion(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId) throws Exception {
 
