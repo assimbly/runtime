@@ -250,8 +250,6 @@ public class ConnectorResource {
 
     public void initConnector(){
 
-        System.out.println("0. Komt hier");
-
         if(!connector.isStarted() && !connectorIsStarting){
             try {
 

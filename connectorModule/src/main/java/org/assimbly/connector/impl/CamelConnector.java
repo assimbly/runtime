@@ -284,7 +284,6 @@ public class CamelConnector extends BaseConnector {
 	}
 	
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
-		System.out.println("adding the notifier");
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
 
