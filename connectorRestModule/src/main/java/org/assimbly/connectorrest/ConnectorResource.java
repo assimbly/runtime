@@ -250,11 +250,14 @@ public class ConnectorResource {
 
     public void initConnector(){
 
+        System.out.println("0. Komt hier");
+
         if(!connector.isStarted() && !connectorIsStarting){
             try {
 
-                connector.start();
+                //add notifier before starting connector
                 connector.addEventNotifier(failureListener);
+                connector.start();
                 connectorIsStarting = true;
 
                 int count = 1;
@@ -272,8 +275,5 @@ public class ConnectorResource {
         }
 
     }
-
-
-
 
 }

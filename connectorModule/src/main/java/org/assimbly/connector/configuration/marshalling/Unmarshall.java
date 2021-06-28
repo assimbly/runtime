@@ -320,7 +320,7 @@ public class Unmarshall {
 
 	private void getServiceFromXMLFile(String type, String endpointId, String serviceId) throws ConfigurationException {
 
-		serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
+		String serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 
 		if(!serviceProporties.isEmpty()){

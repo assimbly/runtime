@@ -35,12 +35,11 @@ public class QueueManagerResource {
      * @return the status (success or failed) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> createQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> createQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to create queue : {}", queueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.createQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
@@ -58,12 +57,11 @@ public class QueueManagerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> deleteQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> deleteQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get delete queue : {}", queueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.deleteQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
@@ -81,12 +79,11 @@ public class QueueManagerResource {
      * @return Queue destination details
      */
     @GetMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> getQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get get queue information : {}", queueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.getQueue(brokerType,queueName, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
@@ -104,12 +101,11 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path= "/brokers/{brokerType}/queues", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType) throws Exception {
+    public ResponseEntity<String> getQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
 
         log.debug("REST request to get get queues : {}");
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.getQueues(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queues", result);
         } catch (Exception e) {
@@ -127,12 +123,11 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> clearQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to clear queue : {}", queueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
         } catch (Exception e) {
@@ -149,12 +144,11 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queues/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType)  throws Exception {
+    public ResponseEntity<String> clearQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to clear queues : this removes all messages on the broker!");
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearQueues(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queues/clear", result);
         } catch (Exception e) {

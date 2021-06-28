@@ -39,7 +39,7 @@ public class MessageBrokerResource {
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/{filter}", produces = {"text/plain","application/xml","application/json"})
-    public Object listMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
+    public Object listMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
 
         log.debug("REST request to list messages for queue : {}", endpointName);
 
@@ -63,7 +63,7 @@ public class MessageBrokerResource {
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/count", produces = {"text/plain","application/xml","application/json"})
-    public Object countMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName)  throws Exception {
+    public Object countMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
 
         log.debug("REST request to list messages for queue : {}", endpointName);
 
@@ -110,7 +110,7 @@ public class MessageBrokerResource {
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/browse", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages)  throws Exception {
+    public Object browseMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages)  throws Exception {
 
         log.debug("REST request to browse messages on: {}", endpointName);
 
@@ -134,7 +134,7 @@ public class MessageBrokerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", consumes = {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) Map<String,String> messageHeaders, @RequestBody String messageBody) throws Exception {
+    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) Map<String,String> messageHeaders, @RequestBody String messageBody) throws Exception {
 
         log.debug("REST request to send messages from queue : " + endpointName);
 
@@ -157,7 +157,7 @@ public class MessageBrokerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/message/{endpointName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> removeMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
+    public ResponseEntity<String> removeMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
 
         log.debug("REST request to remove messages for queue : {}", endpointName);
 
@@ -180,7 +180,7 @@ public class MessageBrokerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/messages/{endpointName}", produces = {"text/plain","application/xml","application/json"})
-    public Object removeMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName)  throws Exception {
+    public Object removeMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
 
         log.debug("REST request to remove messages for endpoint : {}", endpointName);
 
@@ -203,7 +203,7 @@ public class MessageBrokerResource {
      * @return the status (source) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public Object moveMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, String messageId)  throws Exception {
+    public Object moveMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, String messageId)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
@@ -227,7 +227,7 @@ public class MessageBrokerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", produces = {"text/plain","application/xml","application/json"})
-    public Object moveMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName)  throws Exception {
+    public Object moveMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
