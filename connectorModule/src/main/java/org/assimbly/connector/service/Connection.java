@@ -313,39 +313,70 @@ public class Connection {
         }
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String url = decryptedProperties.getProperty("service." + serviceId + ".url");
+        String jmsProvider = decryptedProperties.getProperty("service." + serviceId + ".jmsprovider");
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
         String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-        logger.info("Setting up sjms client connection for ActiveMQ Artemis.");
+        logger.info("Setting up sjms client connection.");
+
+        System.out.println("jmsProvider=" + jmsProvider);
+
         if (url != null) {
 
-            org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
+            if(jmsProvider.equalsIgnoreCase("AMQ") || jmsProvider.equalsIgnoreCase("ActiveMQ Artemis")){
 
-            if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-                cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
-                cf.setConnectionTTL(-1);
-                cf.setReconnectAttempts(-1);
-                cf.setRetryInterval(1000);
-                cf.setRetryIntervalMultiplier(2.0);
-                cf.setMaxRetryInterval(3600000);
-            } else {
-                cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
-                cf.setConnectionTTL(-1);
-                cf.setReconnectAttempts(-1);
-                cf.setRetryInterval(1000);
-                cf.setRetryIntervalMultiplier(2.0);
-                cf.setMaxRetryInterval(3600000);
-            }
+                org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
 
-            if (context.hasComponent(componentName) == null) {
-                sjmsComponent = new SjmsComponent();
-                sjmsComponent.setConnectionFactory(cf);
-                context.addComponent(componentName, sjmsComponent);
-            } else {
-                context.removeComponent(componentName);
-                sjmsComponent = new SjmsComponent();
-                sjmsComponent.setConnectionFactory(cf);
-                context.addComponent(componentName, sjmsComponent);
+                if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                    cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
+                    cf.setConnectionTTL(-1);
+                    cf.setReconnectAttempts(-1);
+                    cf.setRetryInterval(1000);
+                    cf.setRetryIntervalMultiplier(2.0);
+                    cf.setMaxRetryInterval(3600000);
+                } else {
+                    cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
+                    cf.setConnectionTTL(-1);
+                    cf.setReconnectAttempts(-1);
+                    cf.setRetryInterval(1000);
+                    cf.setRetryIntervalMultiplier(2.0);
+                    cf.setMaxRetryInterval(3600000);
+                }
+
+                if (context.hasComponent(componentName) == null) {
+                    sjmsComponent = new SjmsComponent();
+                    sjmsComponent.setConnectionFactory(cf);
+                    context.addComponent(componentName, sjmsComponent);
+                } else {
+                    context.removeComponent(componentName);
+                    sjmsComponent = new SjmsComponent();
+                    sjmsComponent.setConnectionFactory(cf);
+                    context.addComponent(componentName, sjmsComponent);
+                }
+
+
+            }else if (jmsProvider.equalsIgnoreCase("ActiveMQ Classic")){
+                ActiveMQConnectionFactory cf = null;
+
+                if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                    cf = new ActiveMQConnectionFactory(url);
+                } else {
+                    cf = new ActiveMQConnectionFactory(username, password, url);
+                }
+
+                if (context.hasComponent(componentName) == null) {
+                    sjmsComponent = new SjmsComponent();
+                    sjmsComponent.setConnectionFactory(cf);
+                    context.addComponent(componentName, sjmsComponent);
+                } else {
+                    context.removeComponent(componentName);
+                    sjmsComponent = new SjmsComponent();
+                    sjmsComponent.setConnectionFactory(cf);
+                    context.addComponent(componentName, sjmsComponent);
+                }
+
+            }else{
+                throw new Exception("Unknown jms provider (valid are ActiveMQ Classic, AcitveMQ Artemis, AMQ).\n");
             }
         }
     }
@@ -355,7 +386,7 @@ public class Connection {
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String url = decryptedProperties.getProperty("service." + serviceId + ".url");
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");//properties.get("service." + serviceId + ".password");
+        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
         logger.info("Setting AMQP client connection.");
         if (url != null) {

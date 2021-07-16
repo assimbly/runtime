@@ -122,9 +122,9 @@ public class CamelConnector extends BaseConnector {
 
 	public void setDefaultSettings() throws Exception {
 
-		setTracing(true);
+		setTracing(false);
 
-		setDebugging(true);
+		setDebugging(false);
 
 		setSuppressLoggingOnTimeout(true);
 

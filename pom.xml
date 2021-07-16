@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<camel-version>3.7.4</camel-version>
+		<camel-version>3.7.5</camel-version>
 		<activemq-classic-version>5.16.2</activemq-classic-version>
 		<activemq-artemis-version>2.17.0</activemq-artemis-version>
 		<jolokia-version>1.6.2</jolokia-version>
