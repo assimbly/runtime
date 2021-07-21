@@ -1246,7 +1246,13 @@ public class CamelConnector extends BaseConnector {
 
 		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", trustStorePath, "supersecret");
 
-		registry.bind("ssl", sslContextParameters);
+		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", null, null);
+
+		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
+
+		registry.bind("default", sslContextParameters);
+		registry.bind("keystore", sslContextParametersKeystoreOnly);
+		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
 		context.setSSLContextParameters(sslContextParameters);
 
