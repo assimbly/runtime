@@ -1,5 +1,6 @@
 package org.assimbly.brokerrest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiParam;
 import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
@@ -87,7 +88,7 @@ public class MessageBrokerResource {
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
+    public Object browseMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
 
         log.debug("REST request to browse message on: {}", endpointName);
 
@@ -130,16 +131,21 @@ public class MessageBrokerResource {
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the endpoint (queue or topic)
-     * @param messageHeaders, the message headers
+     * @param messageHeaders, the message headers (json map)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", consumes = {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) Map<String,String> messageHeaders, @RequestBody String messageBody) throws Exception {
+    @PostMapping(path = "/brokers/{brokerType}/message/{endpointName}/send", consumes = {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+    public Object sendMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) String messageHeaders, @RequestBody String messageBody) throws Exception {
 
         log.debug("REST request to send messages from queue : " + endpointName);
 
+        Map<String,String> messageHeadersMap = null;
+        if(messageHeaders!=null){
+            messageHeadersMap = new ObjectMapper().readValue(messageHeaders, HashMap.class);
+        }
+
         try {
-            result = broker.sendMessage(brokerType,endpointName,messageHeaders,messageBody);
+            result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
         } catch (Exception e) {
             log.error("Can't send message", e);

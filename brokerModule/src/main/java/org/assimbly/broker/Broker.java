@@ -320,8 +320,6 @@ public interface Broker {
 	 * @param  endpointName (name of queue or topic)
 	 * @param  messageHeaders Map with key/values
 	 * @param  messageBody The content/playload of a messsage
-	 * @param  userName The name of the user for the broker
-	 * @param  password The password of the user for the broker
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */

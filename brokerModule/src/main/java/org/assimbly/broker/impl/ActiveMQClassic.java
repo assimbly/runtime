@@ -15,6 +15,8 @@ import java.util.Map;
 
 import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.jmx.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
@@ -334,7 +336,6 @@ public class ActiveMQClassic implements Broker {
 		for (Object queue : queues) {
 			String endpointAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
 			if(endpointName.equalsIgnoreCase(endpointAsString)){
-				System.out.println("isQueue");
 				return "Queue";
 			}
 		}
@@ -344,7 +345,6 @@ public class ActiveMQClassic implements Broker {
 		for (Object topic : topics) {
 			String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
 			if(endpointName.equalsIgnoreCase(endpointAsString)){
-				System.out.println("isTopic");
 				return "Topic";
 			}
 		}
@@ -500,8 +500,11 @@ public class ActiveMQClassic implements Broker {
 
 		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-		destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
-
+		if(!MapUtils.isEmpty(messageHeaders)){
+			destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
+		}else{
+			destinationViewMBean.sendTextMessage(messageBody);
+		}
 		return "success";
 	}
 

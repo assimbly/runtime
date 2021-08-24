@@ -94,19 +94,22 @@ public class CompositeDataConverter {
                 if(key.equals("PropertiesText")){
                     Object PropertiesText = compositeData.get("PropertiesText");
                     if(PropertiesText instanceof String){
+
                         PropertiesText = ((String) PropertiesText).substring( 1, ((String)PropertiesText).length() - 1);
-                        String[] properties = ((String) PropertiesText).split(",");
+
+                        String[] properties = ((String) PropertiesText).split(", ");
                         for(String property: properties){
                             String headerKey;
                             String headerValue;
                             if(property.contains("=")) {
                                 headerKey = property.split("=")[0];
                                 headerValue = property.split("=")[1];
-                            }else{
+                                headers.put(headerKey,headerValue);
+                            }else if(!property.isEmpty()){
                                 headerKey = "header";
                                 headerValue = property;
+                                headers.put(headerKey,headerValue);
                             }
-                            headers.put(headerKey,headerValue);
                         }
                     }
                     message.put("headers",headers);
