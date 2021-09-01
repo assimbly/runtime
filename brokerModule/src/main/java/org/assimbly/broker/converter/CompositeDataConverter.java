@@ -44,33 +44,18 @@ public class CompositeDataConverter {
 
             JSONObject message = new JSONObject();
             JSONObject headers = new JSONObject();
+            JSONObject jmsheaders = new JSONObject();
 
             for(String key : keys){
                 Object value = compositeData.get(key);
 
                 if (!(value instanceof TabularData)) {
                     switch (key) {
-                        case "JMSPriority":
-                            message.put("priority",value);
-                            break;
                         case "JMSMessageID":
-                            message.put("messageID",value);
-                            break;
-                        case "JMSDestination":
-                            message.put("address",value);
-                            break;
-                        case "JMSExpiration":
-                            message.put("expiration",value);
+                            message.put("messageid",value);
                             break;
                         case "JMSTimestamp":
                             message.put("timestamp",value);
-                            break;
-                        case "JMSDeliveryMode":
-                            if(value.equals("PERSISTENT")){
-                                message.put("durable","true");
-                            }else{
-                                message.put("durable","false");
-                            }
                             break;
                     }
                 }
@@ -86,6 +71,7 @@ public class CompositeDataConverter {
 
         JSONObject message = new JSONObject();
         JSONObject headers = new JSONObject();
+        JSONObject jmsheaders = new JSONObject();
 
         for(String key : keys){
             Object value = compositeData.get(key);
@@ -113,11 +99,28 @@ public class CompositeDataConverter {
                         }
                     }
                     message.put("headers",headers);
+                }else if(key.startsWith("JMS")){
+
+                        switch (key) {
+                            case "JMSMessageID":
+                                message.put("messageid",value);
+                                break;
+                            case "JMSTimestamp":
+                                message.put("timestamp",value);
+                                break;
+                        }
+
+                        jmsheaders.put(key,value);
+
+                }else if(key.equals("Text")) {
+                    message.put("body",value);
                 }else{
                     message.put(key,value);
                 }
             }
         }
+
+        message.put("jmsHeaders",jmsheaders);
 
         return message;
 

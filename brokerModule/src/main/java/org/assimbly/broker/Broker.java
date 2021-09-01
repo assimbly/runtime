@@ -323,7 +323,7 @@ public interface Broker {
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception;
+	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception;
 
 
 	/**

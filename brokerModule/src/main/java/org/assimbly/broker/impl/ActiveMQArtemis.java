@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
@@ -558,7 +559,7 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
-	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception {
+	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
 		endpointExist = checkIfEndpointExist(endpointName);
 
@@ -569,11 +570,15 @@ public class ActiveMQArtemis implements Broker {
 		String userName = broker.getActiveMQServer().getConfiguration().getClusterUser();
 		String password = broker.getActiveMQServer().getConfiguration().getClusterPassword();
 
+		Map<String,String> messageHeadersAsString = messageHeaders.entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
+
+
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
 
-		String result = queueControl.sendMessage(messageHeaders, Message.TEXT_TYPE, messageBody, true, userName, password);
+		String result = queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
 
 		return result;
 

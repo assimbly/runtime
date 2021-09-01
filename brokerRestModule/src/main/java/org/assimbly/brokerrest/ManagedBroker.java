@@ -232,7 +232,7 @@ public class ManagedBroker {
         return result;
     }
 
-    public String sendMessage(String brokerType, String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception{
+    public String sendMessage(String brokerType, String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception{
         broker = getBroker(brokerType);
         return broker.sendMessage(endpointName, messageHeaders, messageBody);
     }

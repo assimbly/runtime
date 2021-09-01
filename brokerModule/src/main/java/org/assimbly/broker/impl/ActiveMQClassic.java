@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.jmx.*;
-import org.apache.commons.collections4.CollectionUtils;
+
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -102,7 +102,6 @@ public class ActiveMQClassic implements Broker {
 			}
 
 		if(broker.isStarted()) {
-			System.out.println("Setting beans2");
 			broker.setUseJmx(true);
 			setBrokerViewMBean();
 		}
@@ -372,7 +371,6 @@ public class ActiveMQClassic implements Broker {
 
 	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
 
-
 		endpointType = checkIfEndpointExist(sourceQueueName);
 
 		if (endpointType.equalsIgnoreCase("unknown")) {
@@ -487,10 +485,7 @@ public class ActiveMQClassic implements Broker {
 
 	}
 
-
-
-
-	public String sendMessage(String endpointName, Map<String,String> messageHeaders, String messageBody) throws Exception {
+	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
 		endpointType = checkIfEndpointExist(endpointName);
 
@@ -501,6 +496,19 @@ public class ActiveMQClassic implements Broker {
 		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
 		if(!MapUtils.isEmpty(messageHeaders)){
+
+			if(messageHeaders.containsKey("JMSDeliveryMode")) {
+				if (messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("PERSISTENT") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("0")) {
+					messageHeaders.put("JMSDeliveryMode", 0);
+				} else {
+					messageHeaders.put("JMSDeliveryMode", 1);
+				}
+			}
+
+			if(messageHeaders.containsKey("JMSTimestamp")) {
+				messageHeaders.remove("JMSTimestamp");
+			}
+
 			destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
 		}else{
 			destinationViewMBean.sendTextMessage(messageBody);
@@ -580,14 +588,12 @@ public class ActiveMQClassic implements Broker {
 
 		DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-		//System.out.println("options=" + destinationViewMBean.getOptions());
-
 		JSONObject endpoint = new JSONObject();
 
 		endpoint.put("name",endpointName);
 		endpoint.put("address",destinationViewMBean.getName());
 		endpoint.put("temporary",isTemporary);
-		endpoint.put("numberOfMessages",destinationViewMBean.getEnqueueCount());
+		endpoint.put("numberOfMessages",destinationViewMBean.getQueueSize());
 		endpoint.put("numberOfConsumers",destinationViewMBean.getConsumerCount());
 
 		return endpoint;

@@ -60,7 +60,6 @@ public class MessageBrokerResource {
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
-     * @param filter, the filter
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/count", produces = {"text/plain","application/xml","application/json"})
@@ -71,10 +70,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.countMessages(brokerType, endpointName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", e.getMessage());
         }
 
     }
@@ -139,7 +138,7 @@ public class MessageBrokerResource {
 
         log.debug("REST request to send messages from queue : " + endpointName);
 
-        Map<String,String> messageHeadersMap = null;
+        Map<String,Object> messageHeadersMap = null;
         if(messageHeaders!=null){
             messageHeadersMap = new ObjectMapper().readValue(messageHeaders, HashMap.class);
         }
@@ -168,7 +167,6 @@ public class MessageBrokerResource {
         log.debug("REST request to remove messages for queue : {}", endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.removeMessage(brokerType,endpointName, messageId);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", result);
         } catch (Exception e) {
@@ -209,7 +207,7 @@ public class MessageBrokerResource {
      * @return the status (source) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public Object moveMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, String messageId)  throws Exception {
+    public Object moveMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, @PathVariable String messageId)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
