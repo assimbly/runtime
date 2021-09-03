@@ -121,7 +121,7 @@ public class TopicManagerResource {
      * POST  /brokers/{brokerType}/topic/{topicName}/clear : clears queue (deletes all messages on specified queue).
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param queueName, the name of the topic
+     * @param topicName, the name of the topic
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/topic/{topicName}/clear", produces = {"text/plain","application/xml","application/json"})

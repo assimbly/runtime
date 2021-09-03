@@ -44,6 +44,7 @@ public class ActiveMQClassic implements Broker {
 
 	BrokerViewMBean brokerViewMBean;
 	QueueViewMBean queueViewMbean;
+	TopicViewMBean topicViewMbean;
 
 	private MBeanServerConnection conn;
 	private String endpointExist;
@@ -283,19 +284,21 @@ public class ActiveMQClassic implements Broker {
 
 	public String clearTopic(String topicName) throws Exception {
 
-		queueViewMbean = getQueueViewMBean("Queue", topicName);
-		queueViewMbean.purge();
+		topicViewMbean = getTopicViewMBean("Topic", topicName);
+		topicViewMbean.resetStatistics();
 
 		return "success";
 	}
 
 	public String clearTopics() throws Exception {
+
 		ObjectName[] topics = brokerViewMBean.getTopics();
 
 		for(Object topic: topics){
-			String queueAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
-			queueViewMbean = getQueueViewMBean("Queue", queueAsString);
-			queueViewMbean.purge();
+			String topicAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+			topicViewMbean = getTopicViewMBean("Topic", topicAsString);
+			topicViewMbean.resetStatistics();
+
 		}
 
 		return "success";
@@ -320,7 +323,9 @@ public class ActiveMQClassic implements Broker {
 
 		for(Object topic: topics){
 			String topicAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
-			endpointInfo.append("topic", getEndpoint("false","Topic",topicAsString));
+			if(!topicAsString.startsWith("ActiveMQ")){
+				endpointInfo.append("topic", getEndpoint("false","Topic",topicAsString));
+			}
 		}
 
 		endpointsInfo.put("topics",endpointInfo);
@@ -334,7 +339,7 @@ public class ActiveMQClassic implements Broker {
 
 		for (Object queue : queues) {
 			String endpointAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
-			if(endpointName.equalsIgnoreCase(endpointAsString)){
+			if(endpointName.equals(endpointAsString)){
 				return "Queue";
 			}
 		}
@@ -343,7 +348,7 @@ public class ActiveMQClassic implements Broker {
 
 		for (Object topic : topics) {
 			String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
-			if(endpointName.equalsIgnoreCase(endpointAsString)){
+			if(endpointName.equals(endpointAsString)){
 				return "Topic";
 			}
 		}
@@ -593,7 +598,11 @@ public class ActiveMQClassic implements Broker {
 		endpoint.put("name",endpointName);
 		endpoint.put("address",destinationViewMBean.getName());
 		endpoint.put("temporary",isTemporary);
-		endpoint.put("numberOfMessages",destinationViewMBean.getQueueSize());
+		if(endpointType.equalsIgnoreCase("Topic")){
+			endpoint.put("numberOfMessages",destinationViewMBean.getEnqueueCount());
+		}else{
+			endpoint.put("numberOfMessages",destinationViewMBean.getQueueSize());
+		}
 		endpoint.put("numberOfConsumers",destinationViewMBean.getConsumerCount());
 
 		return endpoint;

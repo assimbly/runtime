@@ -47,11 +47,16 @@ public class CompositeDataConverter {
             JSONObject jmsheaders = new JSONObject();
 
             for(String key : keys){
+
                 Object value = compositeData.get(key);
 
                 if (!(value instanceof TabularData)) {
+
                     switch (key) {
                         case "JMSMessageID":
+                            message.put("messageid",value);
+                            break;
+                        case "messageID":
                             message.put("messageid",value);
                             break;
                         case "JMSTimestamp":
@@ -77,6 +82,7 @@ public class CompositeDataConverter {
             Object value = compositeData.get(key);
 
             if (!(value instanceof TabularData)) {
+
                 if(key.equals("PropertiesText")){
                     Object PropertiesText = compositeData.get("PropertiesText");
                     if(PropertiesText instanceof String){
@@ -112,7 +118,9 @@ public class CompositeDataConverter {
 
                         jmsheaders.put(key,value);
 
-                }else if(key.equals("Text")) {
+                }else if(key.equalsIgnoreCase("messageID")) {
+                    message.put("messageid", value);
+                }else if(key.equalsIgnoreCase("Text")) {
                     message.put("body",value);
                 }else{
                     message.put(key,value);
