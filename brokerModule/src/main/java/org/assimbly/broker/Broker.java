@@ -301,7 +301,7 @@ public interface Broker {
 	 * @return message with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String browseMessage(String endpointName, String messageId) throws Exception;
+	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception;
 
 	/**
 	 * browse all message on specified endpoint
@@ -312,7 +312,7 @@ public interface Broker {
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages) throws Exception;
+	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception;
 
 	/**
 	 * send a message to the specified endpoint

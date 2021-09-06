@@ -237,9 +237,9 @@ public class ManagedBroker {
         return broker.sendMessage(endpointName, messageHeaders, messageBody);
     }
 
-    public String browseMessage(String brokerType, String endpointName, String messageId, String mediaType) throws Exception{
+    public String browseMessage(String brokerType, String endpointName, String messageId, String mediaType, boolean excludeBody) throws Exception{
         broker = getBroker(brokerType);
-        result = broker.browseMessage(endpointName, messageId);
+        result = broker.browseMessage(endpointName, messageId, excludeBody);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
             result = DocConverter.convertJsonToXml(result);
@@ -248,9 +248,9 @@ public class ManagedBroker {
         return result;
     }
 
-    public String browseMessages(String brokerType, String endpointName, Integer page, Integer numberOfMessages, String mediaType) throws Exception{
+    public String browseMessages(String brokerType, String endpointName, Integer page, Integer numberOfMessages, String mediaType, boolean excludeBody) throws Exception{
         broker = getBroker(brokerType);
-        result = broker.browseMessages(endpointName, page, numberOfMessages);
+        result = broker.browseMessages(endpointName, page, numberOfMessages, excludeBody);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
             result = DocConverter.convertJsonToXml(result);

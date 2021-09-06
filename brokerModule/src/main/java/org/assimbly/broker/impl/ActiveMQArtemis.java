@@ -505,7 +505,7 @@ public class ActiveMQArtemis implements Broker {
 
 
 
-	public String browseMessage(String endpointName, String messageId) throws Exception {
+	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
 		if (!endpointExist) {
 			throw new Exception("Endpoint " + endpointName + " not found");
@@ -519,13 +519,13 @@ public class ActiveMQArtemis implements Broker {
 
 		messages = stream(messages).filter(compositeData -> compositeData.get("messageID").equals(messageId)).toArray(CompositeData[]::new);
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 		return result;
 
 	}
 
-	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages) throws Exception {
+	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception {
 
 		endpointExist = checkIfEndpointExist(endpointName);
 
@@ -553,7 +553,7 @@ public class ActiveMQArtemis implements Broker {
 
 		}
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 		return result;
 

@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -87,13 +86,13 @@ public class MessageBrokerResource {
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
+    public Object browseMessage(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
 
         log.debug("REST request to browse message on: {}", endpointName);
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = broker.browseMessage(brokerType,endpointName, messageId, mediaType);
+            result = broker.browseMessage(brokerType,endpointName, messageId, mediaType, excludeBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);
@@ -110,12 +109,12 @@ public class MessageBrokerResource {
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/messages/{endpointName}/browse", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages)  throws Exception {
+    public Object browseMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
 
         log.debug("REST request to browse messages on: {}", endpointName);
 
         try {
-            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType);
+            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
         } catch (Exception e) {
             log.error("Can't browse messages", e);

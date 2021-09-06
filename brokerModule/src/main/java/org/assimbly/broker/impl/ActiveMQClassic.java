@@ -419,7 +419,7 @@ public class ActiveMQClassic implements Broker {
 
 	}
 
-	public String browseMessage(String endpointName, String messageId) throws Exception {
+	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
 		endpointType = checkIfEndpointExist(endpointName);
 
@@ -433,13 +433,13 @@ public class ActiveMQClassic implements Broker {
 
 		CompositeData[] messages = destinationViewMBean.browse(messageId);
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 		return result;
 
 	}
 
-	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages) throws Exception {
+	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception {
 
 		endpointType = checkIfEndpointExist(endpointName);
 
@@ -455,7 +455,7 @@ public class ActiveMQClassic implements Broker {
 			messages =  getMessagesByPage(messages, page, numberOfMessages);
 		}
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false);
+		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 		return result;
 	}
@@ -470,7 +470,7 @@ public class ActiveMQClassic implements Broker {
 
 		CompositeData[] messages = getDestinationViewMBean(endpointType,endpointName).browse(filter);
 
-		String result = CompositeDataConverter.convertToJSON(messages, 1000, true);
+		String result = CompositeDataConverter.convertToJSON(messages, 1000, true, true);
 
 		return result;
 

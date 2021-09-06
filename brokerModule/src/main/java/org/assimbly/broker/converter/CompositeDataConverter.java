@@ -7,7 +7,7 @@ import javax.management.openmbean.TabularData;
 import java.util.*;
 public class CompositeDataConverter {
 
-        public static String convertToJSON(CompositeData[] messages, Integer numberOfMessages, boolean list) {
+        public static String convertToJSON(CompositeData[] messages, Integer numberOfMessages, boolean list, boolean excludeBody) {
 
             if (messages == null) {
                 return null;
@@ -28,7 +28,7 @@ public class CompositeDataConverter {
                 if(list) {
                     messageAsJSON.append("message", messageToJSONList(message));
                 }else{
-                    messageAsJSON.append("message", messageToJSON(message));
+                    messageAsJSON.append("message", messageToJSON(message, excludeBody));
                 }
             }
 
@@ -70,7 +70,7 @@ public class CompositeDataConverter {
 
     }
 
-    public static JSONObject messageToJSON(CompositeData compositeData){
+    public static JSONObject messageToJSON(CompositeData compositeData, boolean excludeBody){
 
         Set<String> keys = compositeData.getCompositeType().keySet();
 
@@ -119,9 +119,11 @@ public class CompositeDataConverter {
                         jmsheaders.put(key,value);
 
                 }else if(key.equalsIgnoreCase("messageID")) {
-                    message.put("messageid", value);
+                        message.put("messageid", value);
                 }else if(key.equalsIgnoreCase("Text")) {
-                    message.put("body",value);
+                    if(!excludeBody) {
+                        message.put("body", value);
+                    }
                 }else{
                     message.put(key,value);
                 }
