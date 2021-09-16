@@ -52,7 +52,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be started
 	*/
-	public String start() throws Exception;
+	public String start();
 
 	/**
 	* Starts an embedded broker on a localhost (use this for testing). 

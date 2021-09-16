@@ -44,8 +44,6 @@ public class BrokerManagerResource {
             log.error("Can't get status", e1);
         }
 
-        System.out.println("status=" + status);
-
         return status;
     }
 
@@ -82,8 +80,8 @@ public class BrokerManagerResource {
         log.debug("REST request to start Broker : {}", id);
 
         try {
-   			broker.start(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "started");
+   			String status = broker.start(brokerType,brokerConfigurationType);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", status);
         } catch (Exception e) {
         	log.error("Can't start broker", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
@@ -102,8 +100,8 @@ public class BrokerManagerResource {
         log.debug("REST request to restart Broker : {}", id);
 
         try {
-   			broker.restart(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", "restarted");
+            String status = broker.restart(brokerType,brokerConfigurationType);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", status);
         } catch (Exception e) {
         	log.error("Can't restart broker", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
@@ -124,8 +122,8 @@ public class BrokerManagerResource {
         log.debug("REST request to stop Broker : {}", id);
 
         try {
-            broker.stop(brokerType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", "stopped");
+            String status = broker.stop(brokerType);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", status);
         } catch (Exception e) {
         	log.error("Can't stop broker", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/stop", e.getMessage());

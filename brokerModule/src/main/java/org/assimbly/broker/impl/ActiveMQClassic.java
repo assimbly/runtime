@@ -54,35 +54,40 @@ public class ActiveMQClassic implements Broker {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
 	}
 	
-	public String start() throws Exception {
+	public String start() {
 
-		broker = new BrokerService();
+		try{
+			broker = new BrokerService();
 
-		if(brokerFile.exists()) {
-			logger.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
-			URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
-			broker = BrokerFactory.createBroker(urlConfig);
-		}else {
-			this.setFileConfiguration("");
-			logger.warn("No config file 'activemq.xml' found.");
-			logger.info("Created default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());			
-			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
-			logger.info("");
-			logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
-			
-			URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
-			broker = BrokerFactory.createBroker(urlConfig);
-		}		
+			if(brokerFile.exists()) {
+				logger.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
+				URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
+				broker = BrokerFactory.createBroker(urlConfig);
+			}else {
+				this.setFileConfiguration("");
+				logger.warn("No config file 'activemq.xml' found.");
+				logger.info("Created default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());
+				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				logger.info("");
+				logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
-		if(!broker.isStarted()) {
-			broker.start();
+				URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
+				broker = BrokerFactory.createBroker(urlConfig);
+			}
+
+			if(!broker.isStarted()) {
+				broker.start();
+			}
+
+			if(broker.isStarted()) {
+				setBrokerViewMBean();
+			}
+
+			return status();
+		}catch (Exception e) {
+			e.printStackTrace();
+			return "Failed to start broker. Reason: " + e.getMessage();
 		}
-
-		if(broker.isStarted()) {
-			setBrokerViewMBean();
-		}
-
-		return status();
 
 	}
 

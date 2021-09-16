@@ -62,14 +62,11 @@ public class BrokerConfigurerResource {
        	try {
        		String result = broker.setConfiguration(brokerType,brokerConfigurationType, brokerConfiguration);
             if(result.equals("configuration set")) {
-            	System.out.println("result succes: " + result);
             	return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "setConfiguration", result);
             }else {
-            	System.out.println("result failed: " + result);
             	return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "setConfiguration", result);
             }
    		} catch (Exception e) {
-   			System.out.println("result failed 2: " + e.getMessage());
    			return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "setConfiguration", e.getMessage());
    		}
 

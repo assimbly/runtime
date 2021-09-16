@@ -6,7 +6,7 @@
 
     <name>assimbly-artemis-broker</name>
     
-    <persistence-enabled>false</persistence-enabled>
+    <persistence-enabled>true</persistence-enabled>
 
 	<cluster-user>admin</cluster-user>
 	<cluster-password>admin</cluster-password>

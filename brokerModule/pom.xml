@@ -55,6 +55,13 @@
 			<version>${activemq-classic-version}</version>
 		</dependency>
 
+
+		  <dependency>
+			  <groupId>org.apache.activemq</groupId>
+			  <artifactId>apache-artemis</artifactId>
+			  <version>${activemq-artemis-version}</version>
+			  <type>pom</type>
+		  </dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-server</artifactId>
@@ -70,17 +77,32 @@
 		    <artifactId>artemis-jms-client-all</artifactId>
 		    <version>${activemq-artemis-version}</version>
 		</dependency>
+		  <dependency>
+			  <groupId>org.apache.activemq</groupId>
+			  <artifactId>artemis-core-client</artifactId>
+			  <version>${activemq-artemis-version}</version>
+		  </dependency>
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-amqp-protocol</artifactId>
 		    <version>${activemq-artemis-version}</version>
 		</dependency>
+	  <dependency>
+		  <groupId>org.apache.activemq</groupId>
+		  <artifactId>artemis-mqtt-protocol</artifactId>
+		  <version>${activemq-artemis-version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.activemq</groupId>
+		  <artifactId>artemis-stomp-protocol</artifactId>
+		  <version>${activemq-artemis-version}</version>
+	  </dependency>
 
 	  <!-- https://mvnrepository.com/artifact/org.apache.camel/camel-jms -->
 	  <dependency>
 		  <groupId>org.apache.camel</groupId>
 		  <artifactId>camel-jms</artifactId>
-		  <version>2.25.4</version>
+		  <version>${camel-version}</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/org.apache.qpid/proton-j -->
 	  <dependency>

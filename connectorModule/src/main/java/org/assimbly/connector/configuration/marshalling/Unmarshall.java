@@ -129,21 +129,6 @@ public class Unmarshall {
 			}
 		}
 
-
-	/*
-		List<String> componentsProperties2 = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components/component");
-		System.out.println("componentsProperties2Length=" + componentsProperties2.size());
-
-		List<String> componentsProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components");
-		System.out.println("componentsPropertiesLength=" + componentsProperties.size());
-		for(String componentProperty : componentsProperties){
-			System.out.println("componentProperty=" + componentProperty);
-
-		}
-
-
-	 */
-
 		//set up defaults settings if null -->
 		if(flowId == null){
 			flowId = "flow" + System.currentTimeMillis();

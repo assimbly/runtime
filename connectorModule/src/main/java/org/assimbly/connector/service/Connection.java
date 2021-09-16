@@ -319,8 +319,6 @@ public class Connection {
 
         logger.info("Setting up sjms client connection.");
 
-        System.out.println("jmsProvider=" + jmsProvider);
-
         if (url != null) {
 
             if(jmsProvider.equalsIgnoreCase("AMQ") || jmsProvider.equalsIgnoreCase("ActiveMQ Artemis")){

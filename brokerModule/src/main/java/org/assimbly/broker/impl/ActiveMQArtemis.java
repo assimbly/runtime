@@ -50,33 +50,41 @@ public class ActiveMQArtemis implements Broker {
 
 	//See docs https://activemq.apache.org/components/artemis/documentation/javadocs/javadoc-latest/org/apache/activemq/artemis/api/core/management/QueueControl.html
 
-	public String start() throws Exception {
+	public String start()  {
 
-		broker = new EmbeddedActiveMQ();
+		try{
+			broker = new EmbeddedActiveMQ();
 
-		if(brokerFile.exists()) {
-			String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-			logger.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
-			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
-			broker.setConfigResourcePath(fileConfig);
-		}else {
-			
-			this.setFileConfiguration("");
-			logger.warn("No config file 'broker.xml' found.");
-			logger.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");			
-			logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
-			logger.info("");
-			logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
-			
-			String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-			broker.setConfigResourcePath(fileConfig);
-		}		
-		
-		broker.start();
+			if(brokerFile.exists()) {
+				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
+				logger.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
+				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				broker.setConfigResourcePath(fileConfig);
+			}else {
+				this.setFileConfiguration("");
+				logger.warn("No config file 'broker.xml' found.");
+				logger.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");
+				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				logger.info("");
+				logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
-		setManageBroker();
+				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
+				broker.setConfigResourcePath(fileConfig);
+			}
 
-		return status();
+			broker.start();
+
+			logger.info("Started ActiveMQ Artemis broker");
+
+			setManageBroker();
+
+			return status();
+
+		}catch (Exception e) {
+			e.printStackTrace();
+			return "Failed to start broker. Reason: " + e.getMessage();
+		}
+
 	}
 
 
@@ -145,6 +153,7 @@ public class ActiveMQArtemis implements Broker {
 		
 		if(status().equals("started")) {
 			ActiveMQServer activeBroker = broker.getActiveMQServer();
+
 			String info = "uptime="+ activeBroker.getUptime() 
 					 + ",totalConnections=" + activeBroker.getTotalConnectionCount()
 					 + ",totalConsumers=" + activeBroker.getTotalConsumerCount()
@@ -237,13 +246,15 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointsInfo  = new JSONObject();
 		JSONObject endpointInfo = new JSONObject();
 
-		String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+		if(manageBroker!=null){
+			String[] endpoints = manageBroker.getQueueNames("ANYCAST");
 
-		for(String endpoint: endpoints){
-			endpointInfo.append("queue", getEndpoint(endpoint));
+			for(String endpoint: endpoints){
+				endpointInfo.append("queue", getEndpoint(endpoint));
+			}
+
+			endpointsInfo.put("queues",endpointInfo);
 		}
-
-		endpointsInfo.put("queues",endpointInfo);
 
 		return endpointsInfo.toString();
 	}
@@ -426,7 +437,7 @@ public class ActiveMQArtemis implements Broker {
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
 
-		boolean result = queueControl.removeMessage(Integer.parseInt(messageId));
+		boolean result = queueControl.removeMessage(Long.parseLong(messageId));
 
 		return Boolean.toString(result);
 
@@ -610,7 +621,6 @@ public class ActiveMQArtemis implements Broker {
 	private void setManageBroker(){
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		ActiveMQServerControlImpl activeBrokerControl = activeBroker.getActiveMQServerControl();
-
 		manageBroker = activeBrokerControl;
 	}
 
