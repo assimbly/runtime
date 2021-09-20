@@ -84,8 +84,14 @@ public class BrokerManagerResource {
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", status);
         } catch (Exception e) {
         	log.error("Can't start broker", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
-    	}
+            try {
+                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
+            } catch (Exception ex) {
+                System.out.println("waarom?");
+                ex.printStackTrace();
+                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "error");
+            }
+        }
 
     }
 

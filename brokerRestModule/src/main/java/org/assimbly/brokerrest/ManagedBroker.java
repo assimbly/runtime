@@ -46,13 +46,14 @@ public class ManagedBroker {
         status = getStatus(brokerType);
 
         if(status.equals("stopped")) {
+            log.info("Starting ActiveMQ broker");
             if (brokerConfigurationType.equals("file")) {
-                log.info("Starting ActiveMQ broker");
                 status = broker.start();
             }else if (brokerConfigurationType.equals("embedded")) {
-                log.info("Starting ActiveMQ broker");
                 status = broker.startEmbedded();
             }
+            log.info("Started ActiveMQ Artemis broker");
+
         }
 
         return status;
@@ -65,14 +66,14 @@ public class ManagedBroker {
         broker = getBroker(brokerType);
         status = getStatus(brokerType);
 
-        if(status.equals("stopped")) {
+        if(status.startsWith("started")) {
+            log.info("Restarting ActiveMQ broker");
             if (brokerConfigurationType.equals("file")) {
-                log.info("Starting ActiveMQ broker");
                 status = broker.restart();
             }else if (brokerConfigurationType.equals("embedded")) {
-                log.info("Starting ActiveMQ broker");
                 status = broker.restartEmbedded();
             }
+            log.info("Restarted ActiveMQ broker");
         }
 
         return status;
@@ -84,7 +85,7 @@ public class ManagedBroker {
         broker = getBroker(brokerType);
         status = getStatus(brokerType);
 
-        if(status.equals("started")) {
+        if(status.startsWith("started")) {
              log.info("Stopping ActiveMQ broker");
              status = broker.stop();
         }

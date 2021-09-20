@@ -63,8 +63,14 @@ public class CompositeDataConverter {
                             message.put("timestamp",value);
                             break;
                     }
+
+                    if(key.startsWith("JMS")){
+                        jmsheaders.put(key,value);
+                    }
                 }
             }
+
+            message.put("jmsHeaders",jmsheaders);
 
             return message;
 
@@ -91,12 +97,18 @@ public class CompositeDataConverter {
 
                         String[] properties = ((String) PropertiesText).split(", ");
                         for(String property: properties){
+
                             String headerKey;
                             String headerValue;
+
                             if(property.contains("=")) {
                                 headerKey = property.split("=")[0];
                                 headerValue = property.split("=")[1];
-                                headers.put(headerKey,headerValue);
+                                if(headerKey.startsWith("JMS")){
+                                    jmsheaders.put(headerKey,headerValue);
+                                }else{
+                                    headers.put(headerKey,headerValue);
+                                }
                             }else if(!property.isEmpty()){
                                 headerKey = "header";
                                 headerValue = property;

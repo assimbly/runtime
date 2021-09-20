@@ -3,6 +3,7 @@ package org.assimbly.broker.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.BindException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -50,17 +51,17 @@ public class ActiveMQArtemis implements Broker {
 
 	//See docs https://activemq.apache.org/components/artemis/documentation/javadocs/javadoc-latest/org/apache/activemq/artemis/api/core/management/QueueControl.html
 
-	public String start()  {
+	public String start() {
 
-		try{
+		try {
 			broker = new EmbeddedActiveMQ();
 
-			if(brokerFile.exists()) {
+			if (brokerFile.exists()) {
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				logger.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
 				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
 				broker.setConfigResourcePath(fileConfig);
-			}else {
+			} else {
 				this.setFileConfiguration("");
 				logger.warn("No config file 'broker.xml' found.");
 				logger.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");
@@ -74,18 +75,19 @@ public class ActiveMQArtemis implements Broker {
 
 			broker.start();
 
-			logger.info("Started ActiveMQ Artemis broker");
-
 			setManageBroker();
 
 			return status();
 
-		}catch (Exception e) {
+		} catch (Exception  e) {
 			e.printStackTrace();
 			return "Failed to start broker. Reason: " + e.getMessage();
 		}
 
+
+
 	}
+
 
 
 	public String startEmbedded() throws Exception {
@@ -143,9 +145,13 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		if(activeBroker!=null) {
 			if(activeBroker.isActive()) {
-				status = "started";	
-			}		
-		}		
+				status = "started";
+			}else if(activeBroker.getState().name().equals("STARTED")){
+				status = "started with errors";
+			}
+
+		}
+
 		return status;
 	}
 
