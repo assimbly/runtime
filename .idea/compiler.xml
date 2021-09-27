@@ -15,13 +15,23 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="baseModule" target="8" />
-      <module name="brokerModule" target="8" />
-      <module name="brokerRestModule" target="8" />
-      <module name="connector" target="8" />
-      <module name="connectorModule" target="8" />
-      <module name="connectorRestModule" target="8" />
-      <module name="extraModule" target="8" />
+      <module name="baseModule" target="11" />
+      <module name="brokerModule" target="11" />
+      <module name="brokerRestModule" target="11" />
+      <module name="connector" target="11" />
+      <module name="connectorModule" target="11" />
+      <module name="connectorRestModule" target="11" />
+      <module name="extraModule" target="11" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="baseModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="brokerModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="brokerRestModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="connectorModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="connectorRestModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="extraModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+    </option>
   </component>
 </project>

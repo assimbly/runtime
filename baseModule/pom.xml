@@ -27,6 +27,12 @@
 		    <artifactId>camel-base</artifactId>
 			<version>${camel-version}</version>
 		</dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>1.67</version>
+      <scope>compile</scope>
+    </dependency>
 
   </dependencies>
 

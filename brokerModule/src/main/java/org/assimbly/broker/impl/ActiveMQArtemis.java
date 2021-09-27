@@ -3,7 +3,7 @@ package org.assimbly.broker.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.BindException;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,6 +27,7 @@ import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.ConnectorUtil;
+import org.assimbly.util.OSUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ public class ActiveMQArtemis implements Broker {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
 	File brokerFile = new File(baseDir + "/broker/broker.xml");
+	File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
 	private ActiveMQServerControlImpl manageBroker;
 	private boolean endpointExist;
 
@@ -54,6 +56,9 @@ public class ActiveMQArtemis implements Broker {
 	public String start() {
 
 		try {
+
+			setAIO();
+
 			broker = new EmbeddedActiveMQ();
 
 			if (brokerFile.exists()) {
@@ -83,8 +88,6 @@ public class ActiveMQArtemis implements Broker {
 			e.printStackTrace();
 			return "Failed to start broker. Reason: " + e.getMessage();
 		}
-
-
 
 	}
 
@@ -138,18 +141,22 @@ public class ActiveMQArtemis implements Broker {
 	}	
 	
 	public String status() throws Exception {
+
 		String status = "stopped";
+
 		if(broker==null) {
 			broker = new EmbeddedActiveMQ();
 		}
+
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
 		if(activeBroker!=null) {
+			logger.debug("State=" + activeBroker.getState().name());
 			if(activeBroker.isActive()) {
 				status = "started";
 			}else if(activeBroker.getState().name().equals("STARTED")){
 				status = "started with errors";
 			}
-
 		}
 
 		return status;
@@ -217,6 +224,55 @@ public class ActiveMQArtemis implements Broker {
 		}
 
 		return "configuration set";
+	}
+
+	public void setAIO() throws IOException, NoSuchFieldException, IllegalAccessException {
+
+		if(OSUtil.getOS().equals(OSUtil.OS.LINUX)){
+
+			if(!aioFile.exists()) {
+
+				//Create an empty file
+				FileUtils.touch(aioFile);
+
+				//Copy file from resources into empty file
+				ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+				InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
+				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				is.close();
+
+				logger.info("AIO Directory is set to " + aioFile.getParent());
+
+			}
+
+			addDir(aioFile.getParent());
+
+		}
+	}
+
+	public static void addDir(String s) throws IOException {
+		try {
+			// This enables the java.library.path to be modified at runtime
+			// From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
+			//
+			Field field = ClassLoader.class.getDeclaredField("usr_paths");
+			field.setAccessible(true);
+			String[] paths = (String[])field.get(null);
+			for (int i = 0; i < paths.length; i++) {
+				if (s.equals(paths[i])) {
+					return;
+				}
+			}
+			String[] tmp = new String[paths.length+1];
+			System.arraycopy(paths,0,tmp,0,paths.length);
+			tmp[paths.length] = s;
+			field.set(null,tmp);
+			System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
+		} catch (IllegalAccessException e) {
+			throw new IOException("Failed to get permissions to set library path");
+		} catch (NoSuchFieldException e) {
+			throw new IOException("Failed to get field handle to set library path");
+		}
 	}
 
 
@@ -628,6 +684,9 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		ActiveMQServerControlImpl activeBrokerControl = activeBroker.getActiveMQServerControl();
 		manageBroker = activeBrokerControl;
+
+
+
 	}
 
 }

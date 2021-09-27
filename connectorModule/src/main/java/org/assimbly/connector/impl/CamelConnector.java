@@ -627,8 +627,15 @@ public class CamelConnector extends BaseConnector {
 			if(!id.contains("-")){
 				id = id + "-";
 			}
-			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
-			flowStatus = status.toString().toLowerCase();		
+			try {
+				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
+				flowStatus = status.toString().toLowerCase();
+			}catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				flowStatus = "error: " + e.getMessage();
+			}
+
 		}else {
 			flowStatus = "unconfigured";			
 		}
