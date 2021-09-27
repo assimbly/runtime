@@ -1,4 +1,4 @@
-package org.assimbly.connector.configuration;
+package org.assimbly.connector.configuration.marshalling;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -47,6 +47,8 @@ public class Unmarshall {
 	private String flowMaximumRedeliveries;
 	private String flowRedeliveryDelay;
 	private String flowLogLevel;
+	private String flowAssimblyHeaders;
+	private String flowParallelProcessing;
 	private Object offloadingId;
 	private String wireTapUri;
 	private String endpointId;
@@ -64,7 +66,7 @@ public class Unmarshall {
 		this.flowId = flowId;
 
 		//get general flow properties
-		getGeneralPropertiesFromXMLFile();
+		getFlowsFromXMLFile();
 
 		//get endpoint properties
 		getEndpointsFromXMLFile();
@@ -84,7 +86,7 @@ public class Unmarshall {
 
 	}
 
-	private void getGeneralPropertiesFromXMLFile() throws Exception{
+	private void getFlowsFromXMLFile() throws Exception{
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
@@ -95,6 +97,8 @@ public class Unmarshall {
 		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
 		flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
 		flowLogLevel = xPath.evaluate("//flows/flow[id='" + flowId + "']/logLevel",doc);
+		flowAssimblyHeaders = xPath.evaluate("//flows/flow[id='" + flowId + "']/assimblyHeaders",doc);
+		flowParallelProcessing = xPath.evaluate("//flows/flow[id='" + flowId + "']/parallelProcessing",doc);
 
 
 		if(flowId==null || flowId.isEmpty()) {
@@ -125,21 +129,6 @@ public class Unmarshall {
 			}
 		}
 
-
-	/*
-		List<String> componentsProperties2 = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components/component");
-		System.out.println("componentsProperties2Length=" + componentsProperties2.size());
-
-		List<String> componentsProperties = ConnectorUtil.getXMLParameters(conf, "connector/flows/flow[id='" + flowId + "']/components");
-		System.out.println("componentsPropertiesLength=" + componentsProperties.size());
-		for(String componentProperty : componentsProperties){
-			System.out.println("componentProperty=" + componentProperty);
-
-		}
-
-
-	 */
-
 		//set up defaults settings if null -->
 		if(flowId == null){
 			flowId = "flow" + System.currentTimeMillis();
@@ -165,6 +154,15 @@ public class Unmarshall {
 			flowLogLevel = "OFF";
 		}
 
+		if(flowAssimblyHeaders == null){
+			flowAssimblyHeaders = "false";
+		}
+
+		if(flowParallelProcessing == null){
+			flowParallelProcessing = "false";
+		}
+
+
 		properties.put("id",flowId);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
@@ -175,6 +173,8 @@ public class Unmarshall {
 		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
 		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
 		properties.put("flow.logLevel",flowLogLevel);
+		properties.put("flow.assimblyHeaders",flowAssimblyHeaders);
+		properties.put("flow.parallelProcessing",flowParallelProcessing);
 
 	}
 
@@ -305,7 +305,7 @@ public class Unmarshall {
 
 	private void getServiceFromXMLFile(String type, String endpointId, String serviceId) throws ConfigurationException {
 
-		serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
+		String serviceXPath = "connector/services/service[id='" + serviceId + "']/keys";
 		List<String> serviceProporties = ConnectorUtil.getXMLParameters(conf, serviceXPath);
 
 		if(!serviceProporties.isEmpty()){

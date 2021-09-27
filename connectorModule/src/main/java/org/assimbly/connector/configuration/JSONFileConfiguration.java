@@ -32,10 +32,10 @@ public class JSONFileConfiguration {
 		return jsonConfiguration;
 	}
 
-	public List<TreeMap<String, String>> getConfiguration(String connectorId, String jsonConfiguration) throws Exception {
+	public List<TreeMap<String, String>> getFlowConfigurations(String connectorId, String jsonConfiguration) throws Exception {
 		
 		xmlConfiguration = DocConverter.convertJsonToXml(jsonConfiguration);
-		properties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
+		properties =  new XMLFileConfiguration().getFlowConfigurations(connectorId, xmlConfiguration);
 		
 		return properties;
 	}

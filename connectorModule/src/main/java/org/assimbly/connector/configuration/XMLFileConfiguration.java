@@ -23,6 +23,8 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.assimbly.connector.configuration.marshalling.Marshall;
+import org.assimbly.connector.configuration.marshalling.Unmarshall;
 import org.assimbly.util.ConnectorUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;
@@ -42,7 +44,7 @@ public class XMLFileConfiguration {
 
 	private Document doc;
 
-	public List<TreeMap<String, String>> getConfiguration(String connectorId, String xml) throws Exception {
+	public List<TreeMap<String, String>> getFlowConfigurations(String connectorId, String xml) throws Exception {
 
 		propertiesList = new ArrayList<>();
 		Document doc = DocConverter.convertStringToDoc(xml);
@@ -62,7 +64,7 @@ public class XMLFileConfiguration {
 
 	}
 
-	public List<TreeMap<String, String>> getConfiguration(String connectorId, URI uri) throws Exception {
+	public List<TreeMap<String, String>> getFlowConfigurations(String connectorId, URI uri) throws Exception {
 
 		propertiesList = new ArrayList<>();
 		Document doc = DocConverter.convertUriToDoc(uri);
@@ -177,8 +179,6 @@ public class XMLFileConfiguration {
 			doc = new Marshall().setProperties(doc,connectorId,configurations);
 
 			String xmlConfiguration = DocConverter.convertDocToString(doc);
-
-
 
 			return xmlConfiguration;
 

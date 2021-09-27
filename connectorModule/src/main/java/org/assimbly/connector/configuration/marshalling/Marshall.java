@@ -1,4 +1,4 @@
-package org.assimbly.connector.configuration;
+package org.assimbly.connector.configuration.marshalling;
 
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;

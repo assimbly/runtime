@@ -42,13 +42,13 @@ public abstract class BaseConnector implements Connector {
 		return encryptionProperties;
 	}
 
-	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception {
+	public void setFlowConfigurations(List<TreeMap<String, String>> configuration) throws Exception {
 		for (TreeMap<String, String> flowConfiguration : configuration) {
 			setFlowConfiguration(flowConfiguration);
 		}
 	}
 
-	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception {
+	public void setFlowConfigurations(String connectorId, String mediaType, String configuration) throws Exception {
 
 		try {
 			mediaType = mediaType.toLowerCase();
@@ -62,7 +62,7 @@ public abstract class BaseConnector implements Connector {
 				propertiesFromFile = convertYAMLToConfiguration(connectorId, configuration);
 			}
 	        
-	        setConfiguration(propertiesFromFile);
+	        setFlowConfigurations(propertiesFromFile);
 		}catch (Exception e) {
 			
 			try {
@@ -74,13 +74,13 @@ public abstract class BaseConnector implements Connector {
 		}		
 	}	
 	
-	public List<TreeMap<String,String>> getConfiguration() throws Exception {
+	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception {
 		return this.properties;
 	}
 
-	public String getConfiguration(String connectorId, String mediaType) throws Exception {
+	public String getFlowConfigurations(String connectorId, String mediaType) throws Exception {
 
-		this.properties = getConfiguration();
+		this.properties = getFlowConfigurations();
 		mediaType = mediaType.toLowerCase();
 
 		if(mediaType.contains("xml")) {
@@ -152,7 +152,7 @@ public abstract class BaseConnector implements Connector {
 	
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {
 		TreeMap<String,String> flowConfiguration = null;
-		for (TreeMap<String, String> props : getConfiguration()) {
+		for (TreeMap<String, String> props : getFlowConfigurations()) {
 			if (props.get("id").equals(flowId)) {
 				flowConfiguration = props;
 			}
@@ -224,11 +224,11 @@ public abstract class BaseConnector implements Connector {
 	}
 
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, String configuration) throws Exception {
-		return new XMLFileConfiguration().getConfiguration(connectorid, configuration);
+		return new XMLFileConfiguration().getFlowConfigurations(connectorid, configuration);
 	}
 
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String connectorid, URI configurationUri) throws Exception {
-		return new XMLFileConfiguration().getConfiguration(connectorid, configurationUri);
+		return new XMLFileConfiguration().getFlowConfigurations(connectorid, configurationUri);
 	}
 	
 	public TreeMap<String, String> convertXMLToFlowConfiguration(String connectorId, String configuration) throws Exception {
@@ -249,7 +249,7 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	public List<TreeMap<String, String>> convertJSONToConfiguration(String connectorid, String configuration) throws Exception {
-		return new JSONFileConfiguration().getConfiguration(connectorid, configuration);
+		return new JSONFileConfiguration().getFlowConfigurations(connectorid, configuration);
 	}	
 	
 	public TreeMap<String, String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception {
@@ -267,7 +267,7 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	public List<TreeMap<String, String>> convertYAMLToConfiguration(String connectorid, String configuration) throws Exception {
-		return new YAMLFileConfiguration().getConfiguration(connectorid, configuration);
+		return new YAMLFileConfiguration().getFlowConfigurations(connectorid, configuration);
 	}	
 	
 	public TreeMap<String, String> convertYAMLToFlowConfiguration(String flowId, String configuration) throws Exception {
@@ -287,7 +287,10 @@ public abstract class BaseConnector implements Connector {
 	}
 	
 	//--> abstract methods (needs to be implemented in the subclass specific to the integration framework)
-	
+
+
+	// Connector
+
 	public abstract void start() throws Exception;
 
 	public abstract void stop() throws Exception;
@@ -297,6 +300,16 @@ public abstract class BaseConnector implements Connector {
 	public abstract void setTracing(boolean tracing);
 
 	public abstract void setDebugging(boolean debugging);
+
+	public abstract void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
+
+	public abstract void setStreamCaching(boolean streamCaching);
+
+	public abstract void setCertificateStore(boolean certificateStore) throws Exception;
+
+	public abstract void setMetrics(boolean metrics);
+
+	public abstract void setHistoryMetrics(boolean historyMetrics);
 
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 
@@ -310,15 +323,9 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
 
-	public abstract Certificate[] getCertificates(String url) throws Exception;	
-	
-	public abstract Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
 
-	public abstract void setCertificatesInTruststore(String url) throws Exception;
 
-	public abstract Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
-
-	public abstract void deleteCertificatesInTruststore(String certificateName) throws Exception;
+	//flows
 
 	public abstract boolean removeFlow(String id) throws Exception;
 
@@ -369,6 +376,25 @@ public abstract class BaseConnector implements Connector {
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
 	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
+
+	//certificates
+
+	public abstract Certificate[] getCertificates(String url) throws Exception;
+
+	public abstract Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
+
+	public abstract void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
+
+	public abstract Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+
+	public abstract String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
+
+	public abstract Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
+
+	public abstract void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
+
+
+	//Misc
 
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 

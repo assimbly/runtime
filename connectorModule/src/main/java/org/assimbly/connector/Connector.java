@@ -54,7 +54,7 @@ public interface Connector {
 	 * @param configuration: list of flow configurations (Treemaps)
 	 * @throws Exception if configuration can't be set
 	 */
-	public void setConfiguration(List<TreeMap<String, String>> configuration) throws Exception;
+	public void setFlowConfigurations(List<TreeMap<String, String>> configuration) throws Exception;
 
 	/**
 	 * Sets the connector configuration from a string of a specific format (XML,JSON,YAML).
@@ -65,7 +65,7 @@ public interface Connector {
 	 * @param configuration (the XML, JSON or YAML file)
 	 * @throws Exception if configuration can't be set
 	 */
-	public void setConfiguration(String connectorId, String mediaType, String configuration) throws Exception;
+	public void setFlowConfigurations(String connectorId, String mediaType, String configuration) throws Exception;
 	
 	/**
 	* gets the connector configuration currently set (in use). 
@@ -73,7 +73,7 @@ public interface Connector {
 	* @return list of flow configurations (Treemap&lt;key,value&gt;)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
-	public List<TreeMap<String,String>> getConfiguration() throws Exception;
+	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception;
 
 	/**
 	* gets the connector configuration currently set (in use). 
@@ -83,7 +83,7 @@ public interface Connector {
 	* @return list of flow configurations (String of mediaType)
 	* @throws Exception if configuration can't be retrieved or isn't available
 	*/
-	public String getConfiguration(String connectorId, String mediaType) throws Exception;
+	public String getFlowConfigurations(String connectorId, String mediaType) throws Exception;
 	
 	//configure flow
 	/**
@@ -189,7 +189,37 @@ public interface Connector {
 	 * @param debugging to turn on debugging, false to turn it off
 	 */
 	public void setDebugging(boolean debugging);
-	
+
+	/**
+	 * Turn on/off suppressLoggingOnTimeout
+	 * @param suppressLoggingOnTimeout to turn on debugging, false to turn it off
+	 */
+	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
+
+	/**
+	 * Turn on/off streamCaching
+	 * @param streamCaching to turn on streamCaching, false to turn it off
+	 */
+	public void setStreamCaching(boolean streamCaching);
+
+	/**
+	 * Turn on/off debugging
+	 * @param certificateStore to turn on certificateStore, false to turn it off
+	 */
+	public void setCertificateStore(boolean certificateStore) throws Exception;
+
+	/**
+	 * Turn on/off metrics
+	 * @param metrics to turn on metrics, false to turn it off
+	 */
+	public void setMetrics(boolean metrics);
+
+	/**
+	 * Turn on/off historyMetrics
+	 * @param historyMetrics to turn on historyMetrics, false to turn it off
+	 */
+	public void setHistoryMetrics(boolean historyMetrics);
+
 	/**
 	* Adds event notifier to notified about events
 	* @param  eventNotifier eventNotifier object
@@ -279,7 +309,7 @@ public interface Connector {
  	* @return returns a map with certificates for this url
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate[] getCertificates(String url) throws Exception;	
+	public Certificate[] getCertificates(String url) throws Exception;
 
 	/**
 	* Gets TLS certificates for a url.
@@ -287,10 +317,11 @@ public interface Connector {
 	* Download the chain of certificates for the specified url
 	*
 	* @param certificateName name of the certificate
+	* @param keystoreName the name of the keystore (jks file)
 	* @return returns the Certificate object
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate getCertificateFromTruststore(String certificateName) throws Exception;	
+	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
 
 	
 	/**
@@ -301,7 +332,7 @@ public interface Connector {
 	* @param url an https url
 	* @throws Exception if certificates cannot be imported
 	*/
-	public void setCertificatesInTruststore(String url) throws Exception;	
+	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
 
 	
 	/**
@@ -311,10 +342,11 @@ public interface Connector {
 	*
 	* @param certificateName name of the certificate
 	* @param certificate Java certificate object
+	* @param keystoreName the name of the keystore (jks file)
  	* @return returns a confirmation message
 	* @throws Exception if certificates cannot be imported
 	*/
-	public String importCertificateInTruststore(String certificateName, Certificate certificate) throws Exception;
+	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
 	
 	
 	/**
@@ -323,19 +355,32 @@ public interface Connector {
 	* Import certificates to truststore (jks) used by the connector
 	*
 	* @param certificates map with one or more Java certificate object
+	* @param keystoreName the name of the keystore (jks file)
 	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
-	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) throws Exception;
-	
+	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+
+
 	/**
+	 * Import TLS certificate.
+	 *
+	 * Import certificate into truststore (jks) used by the connector
+	 *
+	 * @return returns a confirmation message
+	 * @throws Exception if certificates cannot be imported
+	 */
+	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
+
+		/**
 	* Delete certificate from key/truststore
 	* 
 	* @param certificateName name of the certificate
 	* @throws Exception if certificates cannot be deleted
 	*/
-	public void deleteCertificatesInTruststore(String certificateName) throws Exception;	
-	
+	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
+
+
 	/**
 	* removes flow from connector
 	*

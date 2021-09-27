@@ -18,12 +18,10 @@ import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.KeyManagersParameters;
-import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.connector.configuration.ssl.SSLConfiguration;
 import org.assimbly.connector.event.EventCollector;
 import org.assimbly.connector.routes.DefaultRoute;
 import org.assimbly.connector.routes.SimpleRoute;
@@ -35,15 +33,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -78,47 +70,46 @@ public class CamelConnector extends BaseConnector {
 
 	public CamelConnector() {
 		try {
-			setBasicSettings();
+			initConnector(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	public CamelConnector(boolean useDefaultSettings) {
+		try {
+			initConnector(useDefaultSettings);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+
+	public CamelConnector(String connectorId, String configuration, boolean useDefaultSettings) throws Exception {
+		initConnector(useDefaultSettings);
+		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
+	}
+
 	public CamelConnector(String connectorId, String configuration) throws Exception {
-		setBasicSettings();
+		initConnector(true);
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
 	public CamelConnector(String connectorId, URI configuration) throws Exception {
-		setBasicSettings();
+		initConnector(true);
 		setFlowConfiguration(convertXMLToFlowConfiguration(connectorId, configuration));
 	}
 
-	public void setBasicSettings() throws Exception {
+	public void initConnector(boolean useDefaultSettings) throws Exception {
 
 		//set basic settings
 		context = new DefaultCamelContext(registry);
-		context.setStreamCaching(true);
-		context.getShutdownStrategy().setSuppressLoggingOnTimeout(true);
-		//setting transport security globally
-        context.setSSLContextParameters(createSSLContextParameters());
-        ((SSLContextParametersAware) context.getComponent("ftps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("https")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("imaps")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("kafka")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("netty")).setUseGlobalSslContextParameters(true);
-        ((SSLContextParametersAware) context.getComponent("smtps")).setUseGlobalSslContextParameters(true);
-		//((SSLContextParametersAware) context.getComponent("jetty")).setUseGlobalSslContextParameters(false);
 
-		//set default metrics
-		context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
-
-		//set history metrics
-		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
-		factory.setPrettyPrint(true);
-		factory.setMetricsRegistry(metricRegistry);
-		context.setMessageHistoryFactory(factory);
+		if(useDefaultSettings){
+			setDefaultSettings();
+		}
 
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
@@ -129,25 +120,63 @@ public class CamelConnector extends BaseConnector {
 
 	}
 
-	@Override
-	public void setEncryptionProperties(Properties encryptionProperties) {
-		this.encryptionProperties = encryptionProperties;
-		setEncryptedPropertiesComponent();
+	public void setDefaultSettings() throws Exception {
+
+		setTracing(false);
+
+		setDebugging(false);
+
+		setSuppressLoggingOnTimeout(true);
+
+		setStreamCaching(true);
+
+		setCertificateStore(true);
+
+		setCertificateStore(true);
+
+		setMetrics(true);
+
+		setHistoryMetrics(true);
+
 	}
 
-	@Override
-	public EncryptionUtil getEncryptionUtil() {
-		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	public void setTracing(boolean tracing) {
+		context.setTracing(tracing);
 	}
 
-	private void setEncryptedPropertiesComponent() {
-		EncryptionUtil encryptionUtil = getEncryptionUtil();
-		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
-		PropertiesComponent propertiesComponent = new PropertiesComponent();
-		propertiesComponent.setInitialProperties(initialProperties);
-		context.setPropertiesComponent(propertiesComponent);
+	public void setDebugging(boolean debugging) {
+		context.setDebugging(debugging);
 	}
 
+	public void setStreamCaching(boolean streamCaching) {
+		context.setStreamCaching(streamCaching);
+	}
+
+	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
+		context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
+	}
+
+	public void setCertificateStore(boolean certificateStore) throws Exception {
+		if(certificateStore){
+			setSSLContext();
+		}
+	}
+
+	public void setMetrics(boolean metrics){
+		if(metrics){
+			context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
+		}
+	}
+
+	public void setHistoryMetrics(boolean setHistoryMetrics){
+		//set history metrics
+		MetricsMessageHistoryFactory factory = new MetricsMessageHistoryFactory();
+		factory.setPrettyPrint(true);
+		factory.setMetricsRegistry(metricRegistry);
+		context.setMessageHistoryFactory(factory);
+	}
+
+	//Manage connector
 
 	public void start() throws Exception {
 
@@ -159,7 +188,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void stop() throws Exception {
-		super.getConfiguration().clear();
+		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
 				
@@ -176,14 +205,10 @@ public class CamelConnector extends BaseConnector {
 		return started;
 	}
 	
-	public void setTracing(boolean tracing) {
-        context.setTracing(tracing);
-	}
 
-	public void setDebugging(boolean debugging) {
-        context.setDebugging(debugging);
-	}
-	
+
+	//Manage flows
+
 	public void addFlow(TreeMap<String, String> props) throws Exception {
 		
 		//create connections & install dependencies if needed
@@ -262,9 +287,6 @@ public class CamelConnector extends BaseConnector {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
 	}
 
-
-
-	
 	public boolean removeFlow(String id) throws Exception {
 		
 		if(!hasFlow(id)) {
@@ -290,7 +312,7 @@ public class CamelConnector extends BaseConnector {
 	public String startAllFlows() throws Exception {
 		logger.info("Starting all flows");
 
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -306,7 +328,7 @@ public class CamelConnector extends BaseConnector {
 	public String restartAllFlows() throws Exception {
 		logger.info("Restarting all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -321,7 +343,7 @@ public class CamelConnector extends BaseConnector {
 
 	public String pauseAllFlows() throws Exception {
 		logger.info("Pause all flows");
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
@@ -338,7 +360,7 @@ public class CamelConnector extends BaseConnector {
 	public String resumeAllFlows() throws Exception {
 		logger.info("Resume all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -354,7 +376,7 @@ public class CamelConnector extends BaseConnector {
 	public String stopAllFlows() throws Exception {
 		logger.info("Stopping all flows");
 		
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -375,7 +397,7 @@ public class CamelConnector extends BaseConnector {
 		
 		try {
 
-			List<TreeMap<String, String>> allProps = super.getConfiguration();
+			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
 
@@ -605,8 +627,15 @@ public class CamelConnector extends BaseConnector {
 			if(!id.contains("-")){
 				id = id + "-";
 			}
-			ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
-			flowStatus = status.toString().toLowerCase();		
+			try {
+				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
+				flowStatus = status.toString().toLowerCase();
+			}catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				flowStatus = "error: " + e.getMessage();
+			}
+
 		}else {
 			flowStatus = "unconfigured";			
 		}
@@ -742,7 +771,7 @@ public class CamelConnector extends BaseConnector {
 	public TreeMap<String, String> getConnectorAlertsCount() throws Exception  {
 		  
 		TreeMap<String, String> numberOfEntriesList = new TreeMap<String, String>();
-		List<TreeMap<String, String>> allProps = super.getConfiguration();
+		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
         while(it.hasNext()){
             TreeMap<String, String> props = it.next();
@@ -884,6 +913,8 @@ public class CamelConnector extends BaseConnector {
 
 	}	
 
+
+	//Other management tasks
 
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
 		return new Connection(context, props, key).start();
@@ -1100,6 +1131,7 @@ public class CamelConnector extends BaseConnector {
 		return exchange;
 	}
 
+
 	public Certificate[] getCertificates(String url) {
     	try {
     		CertificatesUtil util = new CertificatesUtil();
@@ -1112,116 +1144,131 @@ public class CamelConnector extends BaseConnector {
     	return null;
 	}	
 
-	public Certificate getCertificateFromTruststore(String certificateName) {
-		String truststorePath = baseDir + "/security/truststore.jks";
+	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
+		String keystorePath = baseDir + "/security/" + keystoreName;
 		CertificatesUtil util = new CertificatesUtil();
-    	return util.getCertificate(truststorePath, certificateName); 
-	}	
-
-
-	public String importCertificateInTruststore(String certificateName, Certificate certificate) {
-
-		String keystorePath = baseDir + "/security/keystore.jks";
-		String truststorePath = baseDir + "/security/truststore.jks";
-		
-		CertificatesUtil util = new CertificatesUtil();
-		util.importCertificate(keystorePath, certificateName,certificate);    	
-    	return util.importCertificate(truststorePath, certificateName,certificate); 
-				
+    	return util.getCertificate(keystorePath, keystorePassword, certificateName);
 	}
 
-	
-	public Map<String,Certificate> importCertificatesInTruststore(Certificate[] certificates) {
-
-		String keystorePath = baseDir + "/security/keystore.jks";
-		String truststorePath = baseDir + "/security/truststore.jks";
-		
-		CertificatesUtil util = new CertificatesUtil();
-		util.importCertificates(keystorePath, certificates);    	
-    	return util.importCertificates(truststorePath, certificates); 
-				
-	}
-
-	public void setCertificatesInTruststore(String url) {
+	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
 
 		try {
 			CertificatesUtil util = new CertificatesUtil();
-    		Certificate[] certificates = util.downloadCertificates(url);
-    		String truststorePath = baseDir + "/security/truststore.jks";
-        	util.importCertificates(truststorePath, certificates);
-    	} catch (Exception e1) {
+			Certificate[] certificates = util.downloadCertificates(url);
+			String keystorePath = baseDir + "/security/" + keystoreName;
+			util.importCertificates(keystorePath, keystorePassword, certificates);
+		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}			
+		}
 	}
+
+	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+
+		File file = new File(keystorePath);
+
+		String result;
+
+		if(file.exists()) {
+			result = util.importCertificate(keystorePath, keystorePassword, certificateName,certificate);
+		}else{
+			result = "Keystore doesn't exist";
+		}
+
+    	return result;
+				
+	}
+
 	
-	
-	public void deleteCertificatesInTruststore(String certificateName) {
-		String truststorePath = baseDir + "/security/truststore.jks";
+	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+
+		File file = new File(keystorePath);
+
+		String result;
+
+		if(file.exists()) {
+			return util.importCertificates(keystorePath, keystorePassword, certificates);
+		}else{
+			throw new Exception("Keystore doesn't exist");
+		}
+
+	}
+
+	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
+
+		CertificatesUtil util = new CertificatesUtil();
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
+		return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
+
+	}
+
+	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
+
+		String keystorePath = baseDir + "/security/" + keystoreName;
 		
 		CertificatesUtil util = new CertificatesUtil();
-    	util.deleteCertificate(truststorePath, certificateName);
+    	util.deleteCertificate(keystorePath, keystorePassword, certificateName);
 	}
-	
-	
-    private SSLContextParameters createSSLContextParameters() throws GeneralSecurityException, IOException {
 
-		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-    	File securityPath = new File(baseDir + "/security");
-    	File trustStorePath = new File(baseDir + "/security/truststore.jks");
-    	File keyStorePath = new File(baseDir + "/security/keystore.jks");
 
-    	if(!securityPath.exists()){ 
-    		securityPath.mkdirs();
-    	}
-    	
-    	if(!trustStorePath.exists()){ 
-    		try {
-    			trustStorePath.createNewFile();
-    			InputStream is = classloader.getResourceAsStream("truststore.jks");
-    			Files.copy(is, trustStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        		is.close();
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
 
-    	if(!keyStorePath.exists()){ 
-    		try {
-    			keyStorePath.createNewFile();
-    			InputStream is = classloader.getResourceAsStream("keystore.jks");
-    			Files.copy(is, keyStorePath.toPath(), StandardCopyOption.REPLACE_EXISTING);        	
-        		is.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
-    	
-        KeyStoreParameters ksp = new KeyStoreParameters();
-        ksp.setResource(baseDir + "/security/keystore.jks");
-        ksp.setPassword("supersecret");
-        KeyManagersParameters kmp = new KeyManagersParameters();
-        kmp.setKeyPassword("supersecret");
-        kmp.setKeyStore(ksp);
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
 
-        KeyStoreParameters tsp = new KeyStoreParameters();
-        tsp.setResource(baseDir + "/security/truststore.jks");
-        tsp.setPassword("supersecret");      
-        TrustManagersParameters tmp = new TrustManagersParameters();
-        tmp.setKeyStore(tsp);
+	private void setEncryptedPropertiesComponent() {
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
+	}
 
-        SSLContextParameters sslContextParameters = new SSLContextParameters();
-        sslContextParameters.setKeyManagers(kmp);
-        sslContextParameters.setTrustManagers(tmp);
+	private void setSSLContext() throws Exception {
 
-		registry.bind("ssl", sslContextParameters);
+		File securityPath = new File(baseDir + "/security");
 
-		return sslContextParameters;
-    }
+		if (!securityPath.exists()) {
+			securityPath.mkdirs();
+		}
+
+		String keyStorePath = baseDir + "/security/keystore.jks";
+		String trustStorePath = baseDir + "/security/truststore.jks";
+
+		SSLConfiguration sslConfiguration = new SSLConfiguration();
+
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", trustStorePath, "supersecret");
+
+		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", null, null);
+
+		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
+
+		registry.bind("default", sslContextParameters);
+		registry.bind("keystore", sslContextParametersKeystoreOnly);
+		registry.bind("truststore", sslContextParametersTruststoreOnly);
+
+		context.setSSLContextParameters(sslContextParameters);
+
+		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "netty", "netty-http", "smtps", "vertx-http"};
+
+		for (String sslComponent : sslComponents) {
+			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
+		}
+	}
 
 	/**
 	 * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.

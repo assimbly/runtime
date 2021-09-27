@@ -34,11 +34,11 @@ public class YAMLFileConfiguration {
         
  	}
 
-	public List<TreeMap<String, String>> getConfiguration(String connectorId, String configuration) throws Exception {
+	public List<TreeMap<String, String>> getFlowConfigurations(String connectorId, String configuration) throws Exception {
 
 		xmlConfiguration = DocConverter.convertYamlToXml(configuration);
 		
-		gatewayProperties =  new XMLFileConfiguration().getConfiguration(connectorId, xmlConfiguration);
+		gatewayProperties =  new XMLFileConfiguration().getFlowConfigurations(connectorId, xmlConfiguration);
 		
 		return gatewayProperties;
 	}

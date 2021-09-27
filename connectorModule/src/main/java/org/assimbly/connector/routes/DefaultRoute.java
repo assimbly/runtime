@@ -2,7 +2,6 @@ package org.assimbly.connector.routes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.camel.*;
@@ -34,10 +33,9 @@ public class DefaultRoute extends RouteBuilder {
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
+	private boolean parallelProcessing;
+	private boolean assimblyHeaders;
 	private int backOffMultiplier;
-	private String logFromMessage;
-	private String logToMessage;
-	private String logResponseMessage;
 
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
@@ -102,6 +100,28 @@ public class DefaultRoute extends RouteBuilder {
 		}else {
 			redeliveryDelay = 3000;
 			maximumRedeliveryDelay = 60000;
+		}
+
+		if (this.props.containsKey("flow.parallelProcessing")){
+			String parallelProcessingAsString = props.get("flow.parallelProcessing");
+			if(parallelProcessingAsString.equalsIgnoreCase("true")) {
+				parallelProcessing = true;
+			}else {
+				parallelProcessing = false;
+			}
+		}else {
+			parallelProcessing = true;
+		}
+
+		if (this.props.containsKey("flow.assimblyHeaders")){
+			String assimblyHeadersAsString = props.get("flow.assimblyHeaders");
+			if(assimblyHeadersAsString.equalsIgnoreCase("true")) {
+				assimblyHeaders = true;
+			}else {
+				assimblyHeaders = false;
+			}
+		}else {
+			assimblyHeaders = true;
 		}
 
 		if (this.props.containsKey("flow.backOffMultiplier")){
@@ -172,6 +192,9 @@ public class DefaultRoute extends RouteBuilder {
 			String headerId = props.get("from." + endpointId + ".header.id");
 			String routeId = props.get("from." + endpointId + ".route.id");
 
+			Predicate hasParallelProcessing = PredicateBuilder.constant(parallelProcessing);
+			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
+
 			Predicate hasOneDestination = PredicateBuilder.constant(false);
 			if(offrampUriList.length==1){
 				hasOneDestination = PredicateBuilder.constant(true);
@@ -187,32 +210,36 @@ public class DefaultRoute extends RouteBuilder {
 			//The default Camel route (onramp)
 			from(uri)
 					.errorHandler(routeErrorHandler)
-					.setHeader("AssimblyFlowID", constant(flowId))
 					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyFrom", constant(props.get("from." + endpointId + ".uri")))
-					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-					.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
+					.choice()
+						.when(hasAssimblyHeaders)
+							.setHeader("AssimblyFlowID", constant(flowId))
+							.setHeader("AssimblyFrom", constant(props.get("from." + endpointId + ".uri")))
+							.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+							.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
+					.end()
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
 					.process(convertProcessor)
 					.id("convertProcessor" + flowId + "-" + endpointId)
 					.choice()
-					.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+						.when(hasRoute)
+							.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
 					.end()
 					.choice()
-					.when(hasOneDestination)
-					.to(offrampUriList)
-					.endChoice()
-					.when(header("ParallelProcessing").convertToString().isEqualToIgnoreCase("false"))
-					.to(offrampUriList)
-					.endChoice()
-					.otherwise()
-					.multicast()
-					.shareUnitOfWork()
-					.parallelProcessing()
-					.to(offrampUriList)
+						.when(hasOneDestination)
+							.to(offrampUriList)
+						.endChoice()
+						.when(hasParallelProcessing)
+							.to(offrampUriList)
+						.endChoice()
+						.otherwise()
+							.multicast()
+							.shareUnitOfWork()
+							.parallelProcessing()
+							.to(offrampUriList)
+					.end()
 					.routeId(flowId + "-" + endpointId).description("from");
 		}
 
@@ -228,6 +255,7 @@ public class DefaultRoute extends RouteBuilder {
 			String responseId = props.get("to." + endpointId + ".response.id");
 			String routeId = props.get("to." + endpointId + ".route.id");
 
+			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
 			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
 			Predicate hasDynamicEndpoint = PredicateBuilder.constant(uri.contains("${"));
 			Predicate hasRoute = PredicateBuilder.constant(false);
@@ -242,8 +270,11 @@ public class DefaultRoute extends RouteBuilder {
 					.errorHandler(routeErrorHandler)
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyTo", constant(uri))
-					.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
+					.choice()
+						.when(hasAssimblyHeaders)
+							.setHeader("AssimblyTo", constant(uri))
+							.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
+					.end()
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
 					.process(convertProcessor)
@@ -254,54 +285,55 @@ public class DefaultRoute extends RouteBuilder {
 					.end()
 					.log(hasResponseEndpoint.toString())
 					.choice()
-					.when(hasResponseEndpoint)
-					.choice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.to("direct:flow=" + flowId + "endpoint=" + responseId)
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.endChoice()
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.to("direct:flow=" + flowId + "endpoint=" + responseId)
-					.endChoice()
-					.when(header("ReplyTo").convertToString().contains(":"))
-					.choice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("${header.ReplyTo}")
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("${header.ReplyTo}")
-					.endChoice()
-					.when(header("ReplyTo").isNotNull())
-					.choice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("vm://${header.ReplyTo}")
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.toD("vm://${header.ReplyTo}")
-					.endChoice()
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.endChoice()
-					.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.end()
+						.when(hasResponseEndpoint)
+							.choice()
+								.when(hasDynamicEndpoint)
+									.toD(uri)
+									.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+									.to("direct:flow=" + flowId + "endpoint=" + responseId)
+								.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+									.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+									.pollEnrich().simple(uri).timeout(20000)
+								.endChoice()
+							.otherwise()
+								.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING2?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+								.to(uri)
+								.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+								.to("direct:flow=" + flowId + "endpoint=" + responseId)
+							.endChoice()
+						.when(header("ReplyTo").convertToString().contains(":"))
+							.choice()
+								.when(hasDynamicEndpoint)
+									.toD(uri)
+									.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+									.toD("${header.ReplyTo}")
+								.otherwise()
+									.to(uri)
+									.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+									.toD("${header.ReplyTo}")
+							.endChoice()
+						.when(header("ReplyTo").isNotNull())
+							.choice()
+							.when(hasDynamicEndpoint)
+							.toD(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("vm://${header.ReplyTo}")
+							.otherwise()
+							.to(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.toD("vm://${header.ReplyTo}")
+							.endChoice()
+						.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.pollEnrich().simple(uri).timeout(20000)
+							.endChoice()
+							.when(hasDynamicEndpoint)
+							.toD(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.otherwise()
+							.to(uri)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.end()
 					.routeId(flowId + "-" + endpointId).description("to");
 		}
 
@@ -312,6 +344,7 @@ public class DefaultRoute extends RouteBuilder {
 			String responseId = props.get("response." + endpointId + ".response.id");
 			String routeId = props.get("response." + endpointId + ".route.id");
 
+			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
 			Predicate hasRoute = PredicateBuilder.constant(false);
 
 			if(routeId!=null && !routeId.isEmpty()){
@@ -322,29 +355,32 @@ public class DefaultRoute extends RouteBuilder {
 
 			from("direct:flow=" + flowId + "endpoint=" + responseId)
 					.errorHandler(routeErrorHandler)
-					.setHeader("AssimblyFlowID", constant(flowId))
 					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
-					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
+					.choice()
+						.when(hasAssimblyHeaders)
+							.setHeader("AssimblyFlowID", constant(flowId))
+							.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
+							.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+							.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
+					.end()
 					.process(headerProcessor)
 					.id("headerProcessor" + flowId + "-" + endpointId)
 					.process(convertProcessor)
 					.id("convertProcessor" + flowId + "-" + endpointId)
 					.choice()
-					.when(hasRoute)
-					.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+						.when(hasRoute)
+						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
 					.end()
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.choice()
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.endChoice()
-					.otherwise()
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+							.pollEnrich().simple(uri).timeout(20000)
+							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+						.endChoice()
+						.otherwise()
+							.toD(uri)
+						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
 					.routeId(flowId + "-" + endpointId).description("response");
 		}

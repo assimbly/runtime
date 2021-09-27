@@ -6,8 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="brokerModule" />
         <module name="connectorModule" />
+        <module name="connectorRestModule" />
+        <module name="brokerModule" />
+        <module name="brokerRestModule" />
         <module name="baseModule" />
         <module name="extraModule" />
       </profile>
@@ -15,9 +17,21 @@
     <bytecodeTargetLevel>
       <module name="baseModule" target="11" />
       <module name="brokerModule" target="11" />
-      <module name="connector" target="1.5" />
+      <module name="brokerRestModule" target="11" />
+      <module name="connector" target="11" />
       <module name="connectorModule" target="11" />
-      <module name="extraModule" target="1.5" />
+      <module name="connectorRestModule" target="11" />
+      <module name="extraModule" target="11" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="baseModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="brokerModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="brokerRestModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="connectorModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="connectorRestModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+      <module name="extraModule" options="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+    </option>
   </component>
 </project>
