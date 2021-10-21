@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,9 @@ public class ActiveMQArtemis implements Broker {
 			setAIO();
 
 			broker = new EmbeddedActiveMQ();
+
+
+			//
 
 			if (brokerFile.exists()) {
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
@@ -308,11 +312,16 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointsInfo  = new JSONObject();
 		JSONObject endpointInfo = new JSONObject();
 
-		if(manageBroker!=null){
-			String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+		if(manageBroker!=null && status().equalsIgnoreCase("started")){
+			try {
+				String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+				endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
-			for(String endpoint: endpoints){
-				endpointInfo.append("queue", getEndpoint(endpoint));
+				for (String endpoint : endpoints) {
+					endpointInfo.append("queue", getEndpoint(endpoint));
+				}
+			}catch (Exception e){
+				logger.error("Error getting queues: " + e.getMessage());
 			}
 
 			endpointsInfo.put("queues",endpointInfo);
@@ -405,6 +414,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointInfo = new JSONObject();
 
 		String[] endpoints = manageBroker.getQueueNames("MULTICAST");
+		endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
 		for(String endpoint: endpoints){
 			endpointInfo.append("topic", getEndpoint(endpoint));
@@ -682,10 +692,9 @@ public class ActiveMQArtemis implements Broker {
 
 	private void setManageBroker(){
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
 		ActiveMQServerControlImpl activeBrokerControl = activeBroker.getActiveMQServerControl();
 		manageBroker = activeBrokerControl;
-
-
 
 	}
 

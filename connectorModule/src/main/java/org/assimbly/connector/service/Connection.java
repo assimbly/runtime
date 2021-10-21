@@ -24,10 +24,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import progress.message.jclient.ConnectionFactory;
 
 import javax.jms.JMSException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Connection {
 
@@ -450,7 +447,7 @@ public class Connection {
 
                 SjmsComponent jms = new SjmsComponent();
                 jms.setConnectionFactory(connection);
-                jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
+                //jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
                 jms.setCamelContext(context);
                 jms.start();
 
@@ -682,6 +679,50 @@ public class Connection {
 
     private String createSSLEnabledUrl(String url) {
 
+        String modifiedUrl = "";
+        String multipleUrls = "";
+
+        if (url.indexOf(",") != -1) {
+            logger.info("SSLEnabled Failover Url: ");
+
+            if (url.indexOf("(") != -1) {
+                multipleUrls = StringUtils.substringBetween(url,"(",")");
+            }else{
+                multipleUrls = url;
+            }
+
+            String[] failoverUrlSplitted = multipleUrls.split(",");
+
+            Integer j = Integer.valueOf(0);
+            for (Integer i = 0; i < failoverUrlSplitted.length; i++) {
+                if(i.intValue() == j.intValue()){
+                    modifiedUrl = addSSLParameterToUrl(failoverUrlSplitted[i]);
+                }else{
+                    modifiedUrl = modifiedUrl + "," + addSSLParameterToUrl(failoverUrlSplitted[i]);
+                }
+            }
+
+            if (url.indexOf("(") != -1) {
+                modifiedUrl = "failover:(" + modifiedUrl + ")";
+            }
+
+        }else{
+            logger.info("SSLEnabled Normal Url: ");
+            modifiedUrl = addSSLParameterToUrl(url);
+        }
+
+        if(!modifiedUrl.isEmpty()){
+            url = modifiedUrl;
+        }
+
+        logger.info("SSLEnabled Url: " + url);
+
+        return url;
+
+    }
+
+    private String addSSLParameterToUrl(String url){
+
         String baseDirURI = baseDir.replace("\\", "/");
 
         if (url.indexOf("?") != -1) {
@@ -693,13 +734,14 @@ public class Connection {
                 url = url + "&transport.verifyHost=false";
             }
 
+            /*
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.keyStoreLocation"::startsWith)) {
                 url = url + "&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks";
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.keyStorePassword"::startsWith)) {
                 url = url + "&transport.keyStorePassword=supersecret";
-            }
+            }*/
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
                 url = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
@@ -710,10 +752,8 @@ public class Connection {
             }
 
         } else {
-            url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.keyStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.keyStorePassword=supersecret&transport.trustStoreLocation=" + baseDirURI + "/security/keystore.jks" + "&transport.trustStorePassword=supersecret";
+            url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
         }
-
-        logger.info("SSLEnabled Url: " + url);
 
         return url;
 

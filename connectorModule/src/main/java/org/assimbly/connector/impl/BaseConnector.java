@@ -319,10 +319,11 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String getDocumentation(String componentType, String mediaType) throws Exception;
 
+	public abstract String getComponents(String mediaType) throws Exception;
+
 	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
 
 	public abstract String getComponentParameters(String componentType, String mediaType) throws Exception;
-
 
 
 	//flows

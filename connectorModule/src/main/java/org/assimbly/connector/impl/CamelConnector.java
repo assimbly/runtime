@@ -920,7 +920,7 @@ public class CamelConnector extends BaseConnector {
 		return new Connection(context, props, key).start();
 	}
 
-	
+
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
@@ -930,7 +930,7 @@ public class CamelConnector extends BaseConnector {
 		if(doc==null || doc.isEmpty()) {
 			doc = "Unknown component";
 		}
-		
+
 		return doc;		
 	}
 
@@ -939,7 +939,21 @@ public class CamelConnector extends BaseConnector {
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 		
 		return catalog.getCatalogVersion();
-	}	
+	}
+
+
+	public String getComponents(String mediaType) throws Exception {
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+
+		String components = catalog.listComponentsAsJson();
+
+		if(mediaType.contains("xml")) {
+			components = DocConverter.convertJsonToXml(components);
+		}
+
+		return components;
+	}
 
 	public String getComponentSchema(String componentType, String mediaType) throws Exception {
 

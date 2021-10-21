@@ -17,14 +17,10 @@ import java.util.Date;
 import java.io.IOException;
 import javax.net.ssl.SSLSession;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
@@ -165,17 +161,10 @@ public final class CertificatesUtil {
 
 	public String importCertificate(String keyStorePath, String keystorePassword, String certificateName, Certificate certificate) {
 
-		System.out.println("1.");
-
-
 		try {
-
-			System.out.println("2.");
 
 			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
-
-			System.out.println("3.");
 
 			// Add the certificate to the store
             X509Certificate real = (X509Certificate) certificate;
@@ -191,13 +180,8 @@ public final class CertificatesUtil {
             System.out.println("original alias:" + certificateName);
             System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
 
-			System.out.println("4.");
-
 			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
-
-			System.out.println("5.");
-
 
 		}catch (KeyStoreException e) {
 			e.printStackTrace();
@@ -266,9 +250,9 @@ public final class CertificatesUtil {
 
 	public Map<String,Certificate> importP12Certificate(String keyStorePath, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
 
-		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
-
 		KeyStore jksStore = loadKeyStore(keyStorePath, keystorePassword, null);
+
+		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
 
 		Enumeration aliases = p12Store.aliases();
 

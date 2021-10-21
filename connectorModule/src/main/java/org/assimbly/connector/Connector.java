@@ -270,7 +270,16 @@ public interface Connector {
 	* @throws Exception if documenation couldn't get found
 	* @return returns documentation
 	*/
-	public String getDocumentation(String componentType, String mediaType) throws Exception;	
+	public String getDocumentation(String componentType, String mediaType) throws Exception;
+
+	/**
+	 * Gets the all information of the components
+	 *
+	 * @param  mediaType type of dataform (xml or json)
+	 * @throws Exception if components couldn't get found
+	 * @return returns list of components
+	 */
+	public String getComponents(String mediaType) throws Exception;
 
 	/**
 	* Gets the documentation/schema of a component

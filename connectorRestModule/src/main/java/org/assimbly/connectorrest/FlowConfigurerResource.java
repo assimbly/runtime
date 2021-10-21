@@ -159,6 +159,24 @@ public class FlowConfigurerResource {
 		}
     }
 
+	@GetMapping(path = "/connector/{connectorId}/flow/components", produces = {"text/plain","application/xml","application/json"})
+	public ResponseEntity<String> getComponents(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId) throws Exception {
+
+		plainResponse = true;
+
+		try {
+			connector = connectorResource.getConnector();
+			String components = connector.getComponents(mediaType);
+			if(components.startsWith("Unknown")) {
+				return ResponseUtil.createFailureResponse(connectorId, mediaType,"/connector/{connectorId}/flow/schema/{componenttype}",components);
+			}
+			return ResponseUtil.createSuccessResponse(connectorId, mediaType,"/connector/{connectorId}/flow/schema/{componenttype}",components,plainResponse);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.createFailureResponse(connectorId, mediaType,"/connector/{connectorId}/flow/schema/{componenttype}",e.getMessage());
+		}
+	}
+
     @GetMapping(path = "/connector/{connectorId}/flow/schema/{componenttype}", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getComponentSchema(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId, @PathVariable String componenttype) throws Exception {
 
