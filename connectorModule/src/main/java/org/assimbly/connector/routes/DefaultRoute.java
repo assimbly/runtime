@@ -200,6 +200,16 @@ public class DefaultRoute extends RouteBuilder {
 				hasOneDestination = PredicateBuilder.constant(true);
 			}
 
+			//this logic should be moved to a separate method getting config from service)
+			if(uri.startsWith("rest")){
+				String restHostAndPort = StringUtils.substringBetween(uri,"host=","&");
+				if(restHostAndPort != null && !restHostAndPort.isEmpty()){
+					String restHost = restHostAndPort.split(":")[0];
+					String restPort = restHostAndPort.split(":")[1];
+					restConfiguration().host(restHost).port(restPort).enableCORS(true);
+				}
+			}
+
 			Predicate hasRoute = PredicateBuilder.constant(false);
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
