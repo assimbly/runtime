@@ -11,6 +11,7 @@
 	<version>3.5.0</version>
 	<modules>
 		<module>baseModule</module>
+		<module>baseComponentsModule</module>
 		<module>brokerModule</module>
 		<module>brokerRestModule</module>
 		<module>connectorModule</module>
@@ -20,11 +21,22 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<camel-version>3.11.3</camel-version>
 		<activemq-classic-version>5.16.3</activemq-classic-version>
 		<activemq-artemis-version>2.18.0</activemq-artemis-version>
 		<jolokia-version>1.7.1</jolokia-version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-bom</artifactId>
+				<version>3.11.4</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
@@ -36,8 +48,6 @@
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-jasypt</artifactId>
-			<version>${camel-version}</version>
-			<!-- use the same version as your Camel core version -->
 		</dependency>
 
 		<!-- jolokia dependencies -->
@@ -141,8 +151,7 @@
 				        <groupId>log4j</groupId>
 				        <artifactId>log4j</artifactId>
 				      </exclusion>
-				    </exclusions>
-		    
+			    </exclusions>
 		</dependency>
 
 
@@ -203,41 +212,12 @@
 		    <version>3.0.2</version>
 		</dependency>-->
 
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>4.1.66.Final</version>
-		</dependency>
-
 		<!-- Netty depedencies-->
-		<!--
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.1.66.Final</version>
+			<version>4.1.70.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-native-epoll</artifactId>
-			<version>4.1.65.Final</version>
-			<classifier>linux-x86_64</classifier>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-resolver</artifactId>
-			<version>4.1.66.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-resolver-dns</artifactId>
-			<version>4.1.66.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec-mqtt</artifactId>
-			<version>4.1.66.Final</version>
-		</dependency>
-		-->
 
 		<!-- spring -->
 		<dependency>
@@ -258,12 +238,12 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>5.3.10</version>
+			<version>5.3.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-messaging</artifactId>
-			<version>5.3.10</version>
+			<version>5.3.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>

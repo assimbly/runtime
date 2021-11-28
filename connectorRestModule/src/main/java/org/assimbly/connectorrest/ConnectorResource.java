@@ -172,6 +172,7 @@ public class ConnectorResource {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
+    /*
     @PostMapping(path = "/connector/{connectorId}/resolvedependency/{groupId}/{artifactId}/{version}", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> resolveDepedency(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long connectorId,@PathVariable String groupId,@PathVariable String artifactId,@PathVariable String version) throws Exception {
        	try {
@@ -182,6 +183,8 @@ public class ConnectorResource {
    			return ResponseUtil.createFailureResponse(connectorId, mediaType,"/connector/{connectorId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
    		}
     }
+    */
+
 
     /**
      * POST  /connector/{connectorId}/setcertificates : Sets TLS certificates.

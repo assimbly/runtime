@@ -23,7 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.connector.configuration.ssl.SSLConfiguration;
 import org.assimbly.connector.event.EventCollector;
-import org.assimbly.connector.routes.DefaultRoute;
+import org.assimbly.connector.routes.ConnectorRoute;
 import org.assimbly.connector.routes.SimpleRoute;
 import org.assimbly.connector.service.Connection;
 import org.assimbly.docconverter.DocConverter;
@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -227,7 +228,12 @@ public class CamelConnector extends BaseConnector {
 					scheme = scheme.toLowerCase();
 
 					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-						logger.info(resolveDependency(scheme));
+						logger.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
+						if(INetUtil.isHostAvailable("repo1.maven.org")){
+							logger.info(resolveDependency(scheme));
+						}else{
+							logger.error("Failed to resolve " + scheme + ". No available internet is found. Cannot reach http://repo1.maven.org/maven2/");
+						}
 					}
 				}
 
@@ -258,8 +264,7 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
-		DefaultRoute flow = new DefaultRoute(props);
-
+		ConnectorRoute flow = new ConnectorRoute(props);
 		context.addRoutes(flow);
 	}
 
@@ -1012,36 +1017,50 @@ public class CamelConnector extends BaseConnector {
 
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
-		String version = component.getString("version");
+		String version = catalog.getCatalogVersion();  //versionManager.getLoadedVersion(); //component.getString("version");
 
-		String result = resolveDependency(groupId, artifactId, version);
-
-		//This maybe needed to activate the component
-		//Component component2 = context.getComponent("file");
-		
-		return result;
-			
-	}
-
-	
-	public String resolveDependency(String groupId, String artifactId, String version) {
-		
-		String result;
-		DependencyUtil dependencyUtil = new DependencyUtil();
 		String dependency = groupId + ":" + artifactId + ":" + version;
-		
+		String result = "";
+
 		try {
-			dependencyUtil.resolveDependency(groupId, artifactId, version);
+			List<Class> classes = resolveMavenDependency(groupId, artifactId, version);
+			Component camelComponent = getComponent(classes, scheme);
+			context.addComponent(scheme, camelComponent);
 			result = "Dependency " + dependency + " resolved";
 		} catch (Exception e) {
-			result = "Dependency " + dependency + "resolved failed. Error message: "  + e.getMessage();
+			result = "Dependency " + dependency + " resolved failed. Error message: "  + e.getMessage();
 		}
-		
+
 		return result;
 			
 	}
-	
-	
+
+
+	public List<Class> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
+
+		DependencyUtil dependencyUtil = new DependencyUtil();
+		List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
+		List<Class> classes = dependencyUtil.loadDependency(paths);
+
+		return classes;
+
+	}
+
+    public Component getComponent(List<Class> classes, String scheme) throws Exception {
+
+		Component component = null;
+		for(Class classToLoad: classes){
+			String className = classToLoad.getName().toLowerCase();
+			if(className.endsWith(scheme + "component")){
+				Object object =  classToLoad.newInstance();
+				component = (Component) object;
+			}
+		}
+
+		return component;
+	}
+
+
 	public  CamelContext getContext() {		
 		return context;		
 	}

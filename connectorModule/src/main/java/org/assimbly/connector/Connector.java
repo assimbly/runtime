@@ -628,7 +628,8 @@ public interface Connector {
 	* @param artifactId name of the (Maven) ArtifactID
 	* @param version (Maven) version number
 	* @return Message on succes or failure
-	*/	public String resolveDependency(String groupId, String artifactId, String version);
+	*/
+	//public String resolveDependency(String groupId, String artifactId, String version);
 	
 	
 	

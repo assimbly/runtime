@@ -405,7 +405,7 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract String resolveDependency(String schema)  throws Exception;
 
-	public abstract String resolveDependency(String groupId, String artifactId, String version);
+	//public abstract String resolveDependency(String groupId, String artifactId, String version);
 
 	public abstract CamelContext getContext() throws Exception;
 	

@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class DefaultRoute extends RouteBuilder {
+public class ConnectorRoute extends RouteBuilder {
 
 	TreeMap<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
@@ -46,11 +46,11 @@ public class DefaultRoute extends RouteBuilder {
 	int index = 0;
 	private String logLevelAsString;
 
-	public DefaultRoute(final TreeMap<String, String> props){
+	public ConnectorRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
-	public DefaultRoute() {}
+	public ConnectorRoute() {}
 
 	public interface FailureProcessorListener {
 		public void onFailure();

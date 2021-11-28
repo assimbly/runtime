@@ -22,7 +22,7 @@ import java.util.TreeMap;
 import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 
-public class XMLRoute extends RouteBuilder {
+public class ESBRoute extends RouteBuilder {
 
 	TreeMap<String, String> props;
 	private DefaultErrorHandlerBuilder routeErrorHandler;
@@ -43,11 +43,11 @@ public class XMLRoute extends RouteBuilder {
 	int index = 0;
 	private String logLevelAsString;
 
-	public XMLRoute(final TreeMap<String, String> props){
+	public ESBRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
-	public XMLRoute() {}
+	public ESBRoute() {}
 
 	public interface FailureProcessorListener {
 		 public void onFailure();
