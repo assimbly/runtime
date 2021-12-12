@@ -122,6 +122,7 @@ public class DependencyUtil {
         SJMS("sjms"),
         SJMS2("sjms2"),
         SMTP("smtp"),
+        SONICMQ("sonicmq"),
         SQL("sql"),
         SLACK("slack"),
         SPRING("spring"),

@@ -148,11 +148,14 @@
 	      <groupId>org.apache.camel</groupId>
 	      <artifactId>camel-xml-jaxb</artifactId>
 	    </dependency>
+	    <dependency>
+	      <groupId>org.apache.camel</groupId>
+	      <artifactId>camel-xml-jaxb-dsl</artifactId>
+	    </dependency>	    
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-xslt-saxon</artifactId>
 		</dependency>
-
 	  <dependency>
 		    <groupId>org.apache.activemq</groupId>
 		  <artifactId>artemis-jms-client-all</artifactId>

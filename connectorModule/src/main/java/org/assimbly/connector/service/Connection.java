@@ -71,7 +71,8 @@ public class Connection {
 			startConnection(uri, "response");
 		}
 		if(key.startsWith("error")){
-			uri = properties.get("error.uri");
+			endpointId = StringUtils.substringBetween(key, "error.", ".service.id");
+			uri = properties.get("error." + endpointId + ".uri");
 			startConnection(uri, "error");
 		}
 
@@ -107,11 +108,7 @@ public class Connection {
 
 	private void startConnection(String uri, String type) throws Exception{
 
-        if(type.equals("error")) {
-            connectionId = properties.get(type + ".service.id");
-		} else {
-            connectionId = properties.get(type + "." + endpointId + ".service.id");
-		}
+        connectionId = properties.get(type + "." + endpointId + ".service.id");
 
         flowId = properties.get("id");
 
@@ -141,12 +138,7 @@ public class Connection {
 						connectId = type + connectionId + new Random().nextInt(1000000);
 						setupSonicMQConnection(properties, type, connectId);
 						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-
-						if (type.equals("error")) {
-							properties.put(type + ".uri", uri);
-						} else {
-							properties.put(type + "." + endpointId + ".uri", uri);
-						}
+						properties.put(type + "." + endpointId + ".uri", uri);						
 						break;
 					case 3:
 						setupSJMSConnection(properties, "sjms", type);

@@ -216,7 +216,13 @@ public class CamelConnector extends BaseConnector {
 		for (String key : props.keySet()){
 
 			if (key.endsWith("service.id")){
+				System.out.println("setConnection=" + key);
 				props = setConnection(props, key);
+				/*
+				for (Map.Entry<K, V> entry : props.entrySet()) {
+				     System.out.println("Key: " + entry.getKey() + ". Value: " + entry.getValue());
+				}*/		
+
 			}
 
 			if (key.equals("flow.components")){
