@@ -174,24 +174,24 @@
 	  <dependency>
 		  <groupId>com.ibm.mq</groupId>
 		  <artifactId>com.ibm.mq.allclient</artifactId>
-		  <version>9.2.1.0</version>
+		  <version>9.2.4.0</version>
 	  </dependency>
 
 	  <!-- database drivers -->
 	  <dependency>
 		  <groupId>mysql</groupId>
 		  <artifactId>mysql-connector-java</artifactId>
-		  <version>8.0.26</version>
+		  <version>8.0.27</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.postgresql</groupId>
 		  <artifactId>postgresql</artifactId>
-		  <version>42.2.23</version>
+		  <version>42.3.1</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>com.microsoft.sqlserver</groupId>
 		  <artifactId>mssql-jdbc</artifactId>
-		  <version>8.4.1.jre11</version>
+		  <version>9.4.1.jre11</version>
 	  </dependency>
 	  <!-- check https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides -->
 	  <!--<dependency>
