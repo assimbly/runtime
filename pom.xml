@@ -23,7 +23,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<activemq-classic-version>5.16.3</activemq-classic-version>
 		<activemq-artemis-version>2.18.0</activemq-artemis-version>
-		<spring-version>5.2.18.RELEASE</spring-version>
+		<spring-version>5.2.19.RELEASE</spring-version>
 		<jolokia-version>1.7.1</jolokia-version>
 	</properties>
 
@@ -142,7 +142,7 @@
 		<dependency>
 		    <groupId>ch.qos.logback</groupId>
 		    <artifactId>logback-classic</artifactId>
-		    <version>1.2.8</version>
+		    <version>1.2.9</version>
 		        <exclusions>
 				      <exclusion> 
 				        <groupId>org.slf4j</groupId>
