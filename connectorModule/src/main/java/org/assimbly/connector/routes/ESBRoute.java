@@ -58,7 +58,6 @@ public class ESBRoute extends RouteBuilder {
 			
 		logger.info("Configuring default route");
 		
-		getContext().setTracing(true);
 		EncryptableProperties decryptedProperties = decryptProperties(props);
 
 		Processor headerProcessor = new HeadersProcessor(props);

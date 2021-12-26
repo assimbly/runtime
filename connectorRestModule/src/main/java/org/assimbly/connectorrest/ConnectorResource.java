@@ -67,7 +67,7 @@ public class ConnectorResource {
                 return ResponseUtil.createFailureResponse(connectorId, mediaType, "/connector/{connectorId}/start", "Connector already running");
             } else {
                 connector.addEventNotifier(failureListener);
-                connector.setTracing(false);
+                connector.setTracing(false, "default");
                 connector.start();
                 return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/connector/{connectorId}/start", "Connector started");
             }

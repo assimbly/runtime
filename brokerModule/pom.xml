@@ -60,12 +60,12 @@
 		  <version>${activemq-classic-version}</version>
 	  </dependency>
 
-     	<dependency>
+     	<!--<dependency>
 			  <groupId>org.apache.activemq</groupId>
 			  <artifactId>apache-artemis</artifactId>
 			  <version>${activemq-artemis-version}</version>
 			   <type>pom</type>
-		  </dependency>
+		  </dependency>-->
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
 		    <artifactId>artemis-server</artifactId>

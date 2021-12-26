@@ -61,7 +61,6 @@ public class ConnectorRoute extends RouteBuilder {
 	public void configure() throws Exception {
 
 		CamelContext context = getContext();
-		context.setTracing(true);
 		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
 
 		EncryptableProperties decryptedProperties = decryptProperties(props);
@@ -183,7 +182,6 @@ public class ConnectorRoute extends RouteBuilder {
 		routeErrorHandler.setAsyncDelayedRedelivery(true);
 		
 		//The default Camel route (onramp)
-
 		for(String onrampUriKey : onrampUriKeys){
 
 			String uri = props.get(onrampUriKey);
@@ -282,7 +280,7 @@ public class ConnectorRoute extends RouteBuilder {
 			}
 
 			if(hasDynamicEndpoint) {
-				
+
 				from(offrampUri)
 				.errorHandler(routeErrorHandler)
 				.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -324,7 +322,7 @@ public class ConnectorRoute extends RouteBuilder {
 				.routeId(flowId + "-" + endpointId).description("to");
 				
 			}else {			
-				
+		
 				from(offrampUri)
 				.errorHandler(routeErrorHandler)
 				.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -364,7 +362,6 @@ public class ConnectorRoute extends RouteBuilder {
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
 				.routeId(flowId + "-" + endpointId).description("to");
-				
 			}
 				
 		}
@@ -416,6 +413,7 @@ public class ConnectorRoute extends RouteBuilder {
 					.end()
 					.routeId(flowId + "-" + endpointId).description("response");
 		}
+
 	}
 
 	//create a string array for all offramps

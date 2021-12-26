@@ -297,7 +297,7 @@ public abstract class BaseConnector implements Connector {
 
 	public abstract boolean isStarted();
 
-	public abstract void setTracing(boolean tracing);
+	public abstract void setTracing(boolean tracing, String type);
 
 	public abstract void setDebugging(boolean debugging);
 

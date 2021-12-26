@@ -17,6 +17,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.RouteController;
+import org.apache.camel.spi.Tracer;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FileUtils;
@@ -108,13 +109,16 @@ public class CamelConnector extends BaseConnector {
 		//set basic settings
 		context = new DefaultCamelContext(registry);
 
+		//setting tracing standby to true, so it can be enabled during runtime
+		//context.setTracingStandby(true);
+
 		if(useDefaultSettings){
 			setDefaultSettings();
 		}
 
 		//collect events
 		context.getManagementStrategy().addEventNotifier(new EventCollector());
-
+		
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
@@ -122,8 +126,6 @@ public class CamelConnector extends BaseConnector {
 	}
 
 	public void setDefaultSettings() throws Exception {
-
-		setTracing(false);
 
 		setDebugging(false);
 
@@ -133,17 +135,20 @@ public class CamelConnector extends BaseConnector {
 
 		setCertificateStore(true);
 
-		setCertificateStore(true);
-
 		setMetrics(true);
 
 		setHistoryMetrics(true);
 
 	}
-
-	public void setTracing(boolean tracing) {
-		context.setTracing(tracing);
-	}
+	
+	public void setTracing(boolean tracing, String traceType) {
+		if(traceType.equalsIgnoreCase("backlog")){
+			context.setBacklogTracing(true);
+		}else if (traceType.equalsIgnoreCase("default")) {
+			Tracer tracer = context.getTracer();
+			tracer.setEnabled(tracing);			
+		}
+	}	
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -271,7 +276,7 @@ public class CamelConnector extends BaseConnector {
 
 	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
 		ConnectorRoute flow = new ConnectorRoute(props);
-		context.addRoutes(flow);
+		flow.updateRoutesToCamelContext(context);
 	}
 
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
@@ -936,7 +941,7 @@ public class CamelConnector extends BaseConnector {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
  		
-		String doc = catalog.componentHtmlDoc(componentType);
+		String doc = catalog.componentJSonSchema(componentType);
 
 		if(doc==null || doc.isEmpty()) {
 			doc = "Unknown component";

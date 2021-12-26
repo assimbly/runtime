@@ -472,7 +472,7 @@ public class Connection {
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
         String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-        List<String> componentNames = context.getComponentNames();
+        Set<String> componentNames = context.getComponentNames();
 
         for (String componentName : componentNames) {
 

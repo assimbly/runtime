@@ -181,8 +181,9 @@ public interface Connector {
 	/**
 	 * Turn on/off tracing
 	 * @param tracing to turn on tracing, false to turn it off
+	 * @param type of tracing which can be default (log to default logging) or backlog (log to a backlog queue)
 	 */
-	public void setTracing(boolean tracing);
+	public void setTracing(boolean tracing, String type);
 
 	/**
 	 * Turn on/off debugging
