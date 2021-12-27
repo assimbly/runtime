@@ -31,6 +31,7 @@ public class ConnectorRoute extends RouteBuilder {
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.routes.DefaultRoute");
 	private String flowId;
+	private String flowName;
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
@@ -38,6 +39,11 @@ public class ConnectorRoute extends RouteBuilder {
 	private boolean assimblyHeaders;
 	private int backOffMultiplier;
 
+	private Processor headerProcessor;
+	private Processor failureProcessor;
+	private Processor convertProcessor;
+
+	
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
 	private List<String> responseUriKeys;
@@ -65,9 +71,9 @@ public class ConnectorRoute extends RouteBuilder {
 
 		EncryptableProperties decryptedProperties = decryptProperties(props);
 
-		Processor headerProcessor = new HeadersProcessor(props);
-		Processor failureProcessor = new FailureProcessor(props);
-		Processor convertProcessor = new ConvertProcessor();
+		headerProcessor = new HeadersProcessor(props);
+		failureProcessor = new FailureProcessor(props);
+		convertProcessor = new ConvertProcessor();
 
 		flowId = props.get("id");
 		errorUriKeys = getUriKeys("error");
@@ -77,110 +83,11 @@ public class ConnectorRoute extends RouteBuilder {
 		responseUriKeys = getUriKeys("response");
 		offrampUriList = getOfframpUriList();
 
-		if (this.props.containsKey("flow.maximumRedeliveries")){
-			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
-			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
-				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
-			}else {
-				maximumRedeliveries = 0;
-			}
-		}else {
-			maximumRedeliveries = 0;
-		}
+		setFlowSettings();
 
-		if (this.props.containsKey("flowredeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
-				maximumRedeliveryDelay = redeliveryDelay * 10;
-			}else {
-				redeliveryDelay = 3000;
-				maximumRedeliveryDelay = 60000;
-			}
-		}else {
-			redeliveryDelay = 3000;
-			maximumRedeliveryDelay = 60000;
-		}
-
-		if (this.props.containsKey("flow.parallelProcessing")){
-			String parallelProcessingAsString = props.get("flow.parallelProcessing");
-			if(parallelProcessingAsString.equalsIgnoreCase("true")) {
-				parallelProcessing = true;
-			}else {
-				parallelProcessing = false;
-			}
-		}else {
-			parallelProcessing = true;
-		}
-
-		if (this.props.containsKey("flow.assimblyHeaders")){
-			String assimblyHeadersAsString = props.get("flow.assimblyHeaders");
-			if(assimblyHeadersAsString.equalsIgnoreCase("true")) {
-				assimblyHeaders = true;
-			}else {
-				assimblyHeaders = false;
-			}
-		}else {
-			assimblyHeaders = true;
-		}
-
-		if (this.props.containsKey("flow.backOffMultiplier")){
-			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
-			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
-				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
-			}else {
-				backOffMultiplier = 0;
-			}
-		}else {
-			backOffMultiplier = 0;
-		}
-
-		String flowName = props.get("flow.name");
-		if (this.props.containsKey("flow.logLevel")){
-			logLevelAsString = props.get("flow.logLevel");
-		}else {
-			logLevelAsString = "OFF";
-		}
-
-		if (this.props.containsKey(errorUriKeys.get(0))){
-			routeErrorHandler = deadLetterChannel(props.get(errorUriKeys.get(0)))
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.log(log)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true);
-		}
-		else{
-			routeErrorHandler = defaultErrorHandler()
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true)
-					.log(logger);
-		}
-
-		routeErrorHandler.setAsyncDelayedRedelivery(true);
+		setErrorHandler();
 		
+	
 		//The default Camel route (onramp)
 		for(String onrampUriKey : onrampUriKeys){
 
@@ -252,6 +159,7 @@ public class ConnectorRoute extends RouteBuilder {
 					.routeId(flowId + "-" + endpointId).description("from");
 		}
 
+		
 		//The default Camel route (offramp)
 		for (String offrampUriKey : offrampUriKeys)
 		{
@@ -322,7 +230,7 @@ public class ConnectorRoute extends RouteBuilder {
 				.routeId(flowId + "-" + endpointId).description("to");
 				
 			}else {			
-		
+
 				from(offrampUri)
 				.errorHandler(routeErrorHandler)
 				.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -362,6 +270,7 @@ public class ConnectorRoute extends RouteBuilder {
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
 				.routeId(flowId + "-" + endpointId).description("to");
+				
 			}
 				
 		}
@@ -416,6 +325,119 @@ public class ConnectorRoute extends RouteBuilder {
 
 	}
 
+	
+	private void setFlowSettings() {
+		if (this.props.containsKey("flow.maximumRedeliveries")){
+			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
+			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
+				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
+			}else {
+				maximumRedeliveries = 0;
+			}
+		}else {
+			maximumRedeliveries = 0;
+		}
+
+		if (this.props.containsKey("flowredeliveryDelay")){
+			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
+			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
+				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
+				maximumRedeliveryDelay = redeliveryDelay * 10;
+			}else {
+				redeliveryDelay = 3000;
+				maximumRedeliveryDelay = 60000;
+			}
+		}else {
+			redeliveryDelay = 3000;
+			maximumRedeliveryDelay = 60000;
+		}
+
+		if (this.props.containsKey("flow.parallelProcessing")){
+			String parallelProcessingAsString = props.get("flow.parallelProcessing");
+			if(parallelProcessingAsString.equalsIgnoreCase("true")) {
+				parallelProcessing = true;
+			}else {
+				parallelProcessing = false;
+			}
+		}else {
+			parallelProcessing = true;
+		}
+
+		if (this.props.containsKey("flow.assimblyHeaders")){
+			String assimblyHeadersAsString = props.get("flow.assimblyHeaders");
+			if(assimblyHeadersAsString.equalsIgnoreCase("true")) {
+				assimblyHeaders = true;
+			}else {
+				assimblyHeaders = false;
+			}
+		}else {
+			assimblyHeaders = true;
+		}
+
+		if (this.props.containsKey("flow.backOffMultiplier")){
+			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
+			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
+				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
+			}else {
+				backOffMultiplier = 0;
+			}
+		}else {
+			backOffMultiplier = 0;
+		}
+
+		flowName = props.get("flow.name");
+		if (this.props.containsKey("flow.logLevel")){
+			logLevelAsString = props.get("flow.logLevel");
+		}else {
+			logLevelAsString = "OFF";
+		}
+
+	}
+	
+	private void setErrorHandler() {
+
+		if (this.props.containsKey(errorUriKeys.get(0))){
+			routeErrorHandler = deadLetterChannel(props.get(errorUriKeys.get(0)))
+					.allowRedeliveryWhileStopping(false)
+					.asyncDelayedRedelivery()
+					.maximumRedeliveries(maximumRedeliveries)
+					.redeliveryDelay(redeliveryDelay)
+					.maximumRedeliveryDelay(maximumRedeliveryDelay)
+					.backOffMultiplier(backOffMultiplier)
+					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+					.onExceptionOccurred(failureProcessor)
+					.log(log)
+					.logRetryStackTrace(false)
+					.logStackTrace(true)
+					.logHandled(true)
+					.logExhausted(true)
+					.logExhaustedMessageHistory(true);
+		}
+		else{
+			routeErrorHandler = defaultErrorHandler()
+					.allowRedeliveryWhileStopping(false)
+					.asyncDelayedRedelivery()
+					.maximumRedeliveries(maximumRedeliveries)
+					.redeliveryDelay(redeliveryDelay)
+					.maximumRedeliveryDelay(maximumRedeliveryDelay)
+					.backOffMultiplier(backOffMultiplier)
+					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
+					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
+					.onExceptionOccurred(failureProcessor)
+					.logRetryStackTrace(false)
+					.logStackTrace(true)
+					.logHandled(true)
+					.logExhausted(true)
+					.logExhaustedMessageHistory(true)
+					.log(logger);
+		}
+
+		routeErrorHandler.setAsyncDelayedRedelivery(true);
+
+	}
+	
+	
 	//create a string array for all offramps
 	private String[] getOfframpUriList() {
 
