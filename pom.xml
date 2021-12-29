@@ -3,19 +3,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.assimbly</groupId>
-	<artifactId>connector</artifactId>
+	<artifactId>modules</artifactId>
 	<packaging>pom</packaging>
 	<name>org.assimbly.camelconnector</name>
 	<url>http://maven.apache.org</url>
 
-	<version>3.5.0</version>
+	<version>3.6.0</version>
 	<modules>
 		<module>baseModule</module>
 		<module>baseComponentsModule</module>
 		<module>brokerModule</module>
 		<module>brokerRestModule</module>
-		<module>connectorModule</module>
-		<module>connectorRestModule</module>
+		<module>integrationModule</module>
+		<module>integrationRestModule</module>
 		<module>extraModule</module>
 	</modules>
 
@@ -142,7 +142,7 @@
 		<dependency>
 		    <groupId>ch.qos.logback</groupId>
 		    <artifactId>logback-classic</artifactId>
-		    <version>1.2.9</version>
+		    <version>1.2.10</version>
 		        <exclusions>
 				      <exclusion> 
 				        <groupId>org.slf4j</groupId>
