@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.processors.ConvertProcessor;
 import org.assimbly.integration.processors.FailureProcessor;
 import org.assimbly.integration.processors.HeadersProcessor;
+import org.assimbly.integration.routes.errorhandler.ErrorHandler;
 import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
@@ -27,22 +28,19 @@ import org.slf4j.LoggerFactory;
 
 public class ConnectorRoute extends RouteBuilder {
 
-	TreeMap<String, String> props;
+	private TreeMap<String, String> props;
+	
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.ConnectorRoute");
+	
 	private String flowId;
 	private String flowName;
-	private int maximumRedeliveries;
-	private int redeliveryDelay;
-	private int maximumRedeliveryDelay;
 	private boolean parallelProcessing;
 	private boolean assimblyHeaders;
-	private int backOffMultiplier;
 
 	private Processor headerProcessor;
 	private Processor failureProcessor;
 	private Processor convertProcessor;
-
 	
 	private List<String> onrampUriKeys;
 	private List<String> offrampUriKeys;
@@ -50,9 +48,20 @@ public class ConnectorRoute extends RouteBuilder {
 	private List<String> errorUriKeys;
 	private String[] offrampUriList;
 
-	int index = 0;
 	private String logLevelAsString;
 
+	private int maximumRedeliveries;
+	private int redeliveryDelay;
+	private int maximumRedeliveryDelay;
+	private int backOffMultiplier;
+	
+	private ManagedCamelContext managed;
+	
+	private EncryptableProperties decryptedProperties;
+	
+	private int index = 0;
+	
+	
 	public ConnectorRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
@@ -67,37 +76,105 @@ public class ConnectorRoute extends RouteBuilder {
 	public void configure() throws Exception {
 
 		CamelContext context = getContext();
-		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
 
-		EncryptableProperties decryptedProperties = decryptProperties(props);
+		managed = context.getExtension(ManagedCamelContext.class);
 
-		headerProcessor = new HeadersProcessor(props);
-		failureProcessor = new FailureProcessor(props);
-		convertProcessor = new ConvertProcessor();
+		decryptedProperties = decryptProperties(props);
 
 		flowId = props.get("id");
-		errorUriKeys = getUriKeys("error");
-
-		onrampUriKeys = getUriKeys("from");
-		offrampUriKeys = getUriKeys("to");
-		responseUriKeys = getUriKeys("response");
-		offrampUriList = getOfframpUriList();
 
 		setFlowSettings();
 
-		setErrorHandler();
+		setEndpointKeys();
 		
+		setProcessors();
+		
+		setErrorHandler();
 	
-		//The default Camel route (onramp)
-		for(String onrampUriKey : onrampUriKeys){
+		setFromEndpoints();
+		
+		setToEndpoints();
+		
+		setResponseEndpoints();
 
-			String uri = props.get(onrampUriKey);
-			uri = DecryptValue(uri);
+	}
+
+	private void setEndpointKeys() {
+		errorUriKeys = getUriKeys("error");
+		onrampUriKeys = getUriKeys("from");
+		offrampUriKeys = getUriKeys("to");
+		responseUriKeys = getUriKeys("response");
+	}
+	
+	private void setProcessors() {
+		headerProcessor = new HeadersProcessor(props);
+		failureProcessor = new FailureProcessor(props);
+		convertProcessor = new ConvertProcessor();
+	}
+	
+	private void setFlowSettings() {
+
+		if (this.props.containsKey("flow.parallelProcessing")){
+			String parallelProcessingAsString = props.get("flow.parallelProcessing");
+			if(parallelProcessingAsString.equalsIgnoreCase("true")) {
+				parallelProcessing = true;
+			}else {
+				parallelProcessing = false;
+			}
+		}else {
+			parallelProcessing = true;
+		}
+
+		if (this.props.containsKey("flow.assimblyHeaders")){
+			String assimblyHeadersAsString = props.get("flow.assimblyHeaders");
+			if(assimblyHeadersAsString.equalsIgnoreCase("true")) {
+				assimblyHeaders = true;
+			}else {
+				assimblyHeaders = false;
+			}
+		}else {
+			assimblyHeaders = true;
+		}
+
+		flowName = props.get("flow.name");
+		if (this.props.containsKey("flow.logLevel")){
+			logLevelAsString = props.get("flow.logLevel");
+		}else {
+			logLevelAsString = "OFF";
+		}
+		
+		String offrampUri = props.get("offramp.uri.list");
+
+		offrampUriList = offrampUri.split(",");
+
+	}
+	
+	private void setErrorHandler() throws Exception {
+
+		if (this.props.containsKey(this.errorUriKeys.get(0))){
+			String errorUri = this.props.get(this.errorUriKeys.get(0));			
+			routeErrorHandler = deadLetterChannel(errorUri);
+		}
+		else{
+			routeErrorHandler = defaultErrorHandler();
+		}
+
+		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
+		routeErrorHandler = errorHandler.configure();	
+				
+	}
+
+	private void setFromEndpoints() throws Exception {
+
+		for(String onrampUriKey : onrampUriKeys){
 
 			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
 			String headerId = props.get("from." + endpointId + ".header.id");
 			String routeId = props.get("from." + endpointId + ".route.id");
 
+			String uri = DecryptValue(props.get(onrampUriKey));
+			String fromUri = props.get("from." + endpointId + ".uri");			
+			
 			Predicate hasParallelProcessing = PredicateBuilder.constant(parallelProcessing);
 			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
 
@@ -122,50 +199,52 @@ public class ConnectorRoute extends RouteBuilder {
 				String xml = props.get("from." + endpointId + ".route");
 				addXmlRoute(xml, managed);
 			}
-
-			//The default Camel route (onramp)
+			
 			from(uri)
-					.errorHandler(routeErrorHandler)
-					.setHeader("AssimblyHeaderId", constant(headerId))
-					.choice()
-						.when(hasAssimblyHeaders)
-							.setHeader("AssimblyFlowID", constant(flowId))
-							.setHeader("AssimblyFrom", constant(props.get("from." + endpointId + ".uri")))
-							.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-							.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
-					.end()
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.process(headerProcessor)
-					.id("headerProcessor" + flowId + "-" + endpointId)
-					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
-					.choice()
-						.when(hasRoute)
-							.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
-					.end()
-					.choice()
-						.when(hasOneDestination)
-							.to(offrampUriList)
-						.endChoice()
-						.when(hasParallelProcessing)
-							.to(offrampUriList)
-						.endChoice()
-						.otherwise()
-							.multicast()
-							.shareUnitOfWork()
-							.parallelProcessing()
-							.to(offrampUriList)
-					.end()
-					.routeId(flowId + "-" + endpointId).description("from");
+				.errorHandler(routeErrorHandler)
+				.setHeader("AssimblyHeaderId", constant(headerId))
+				.choice()
+					.when(hasAssimblyHeaders)
+						.setHeader("AssimblyFlowID", constant(flowId))
+						.setHeader("AssimblyFrom", constant(fromUri))
+						.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
+						.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
+				.end()
+				.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
+				.process(headerProcessor)
+				.id("headerProcessor" + flowId + "-" + endpointId)
+				.process(convertProcessor)
+				.id("convertProcessor" + flowId + "-" + endpointId)
+				.choice()
+					.when(hasRoute)
+						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+				.end()
+				.choice()
+					.when(hasOneDestination)
+						.to(offrampUriList)
+					.endChoice()
+					.when(hasParallelProcessing)
+						.to(offrampUriList)
+					.endChoice()
+					.otherwise()
+						.multicast()
+						.shareUnitOfWork()
+						.parallelProcessing()
+						.to(offrampUriList)
+				.end()
+				.routeId(flowId + "-" + endpointId).description("from");
+					
 		}
 
-		
-		//The default Camel route (offramp)
+	}
+	
+	private void setToEndpoints()  throws Exception {
+
+		//The Connector To Camel route (offramp)
 		for (String offrampUriKey : offrampUriKeys)
 		{
 
-			String uri = props.get(offrampUriKey);
-			uri = DecryptValue(uri);
+			String uri = DecryptValue(props.get(offrampUriKey));
 			String offrampUri = offrampUriList[index++];
 			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + endpointId + ".header.id");
@@ -275,7 +354,12 @@ public class ConnectorRoute extends RouteBuilder {
 				
 		}
 
+	}
+	
+	private void setResponseEndpoints() throws Exception {
+		//The Connector Response Camel route (response)
 		for(String responseUriKey : responseUriKeys){
+
 			String uri = props.get(responseUriKey);
 			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
 			String headerId = props.get("response." + endpointId + ".header.id");
@@ -323,130 +407,8 @@ public class ConnectorRoute extends RouteBuilder {
 					.routeId(flowId + "-" + endpointId).description("response");
 		}
 
-	}
-
+	}	
 	
-	private void setFlowSettings() {
-		if (this.props.containsKey("flow.maximumRedeliveries")){
-			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
-			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
-				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
-			}else {
-				maximumRedeliveries = 0;
-			}
-		}else {
-			maximumRedeliveries = 0;
-		}
-
-		if (this.props.containsKey("flowredeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
-				maximumRedeliveryDelay = redeliveryDelay * 10;
-			}else {
-				redeliveryDelay = 3000;
-				maximumRedeliveryDelay = 60000;
-			}
-		}else {
-			redeliveryDelay = 3000;
-			maximumRedeliveryDelay = 60000;
-		}
-
-		if (this.props.containsKey("flow.parallelProcessing")){
-			String parallelProcessingAsString = props.get("flow.parallelProcessing");
-			if(parallelProcessingAsString.equalsIgnoreCase("true")) {
-				parallelProcessing = true;
-			}else {
-				parallelProcessing = false;
-			}
-		}else {
-			parallelProcessing = true;
-		}
-
-		if (this.props.containsKey("flow.assimblyHeaders")){
-			String assimblyHeadersAsString = props.get("flow.assimblyHeaders");
-			if(assimblyHeadersAsString.equalsIgnoreCase("true")) {
-				assimblyHeaders = true;
-			}else {
-				assimblyHeaders = false;
-			}
-		}else {
-			assimblyHeaders = true;
-		}
-
-		if (this.props.containsKey("flow.backOffMultiplier")){
-			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
-			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
-				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
-			}else {
-				backOffMultiplier = 0;
-			}
-		}else {
-			backOffMultiplier = 0;
-		}
-
-		flowName = props.get("flow.name");
-		if (this.props.containsKey("flow.logLevel")){
-			logLevelAsString = props.get("flow.logLevel");
-		}else {
-			logLevelAsString = "OFF";
-		}
-
-	}
-	
-	private void setErrorHandler() {
-
-		if (this.props.containsKey(errorUriKeys.get(0))){
-			routeErrorHandler = deadLetterChannel(props.get(errorUriKeys.get(0)))
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.log(log)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true);
-		}
-		else{
-			routeErrorHandler = defaultErrorHandler()
-					.allowRedeliveryWhileStopping(false)
-					.asyncDelayedRedelivery()
-					.maximumRedeliveries(maximumRedeliveries)
-					.redeliveryDelay(redeliveryDelay)
-					.maximumRedeliveryDelay(maximumRedeliveryDelay)
-					.backOffMultiplier(backOffMultiplier)
-					.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-					.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-					.onExceptionOccurred(failureProcessor)
-					.logRetryStackTrace(false)
-					.logStackTrace(true)
-					.logHandled(true)
-					.logExhausted(true)
-					.logExhaustedMessageHistory(true)
-					.log(logger);
-		}
-
-		routeErrorHandler.setAsyncDelayedRedelivery(true);
-
-	}
-	
-	
-	//create a string array for all offramps
-	private String[] getOfframpUriList() {
-
-		String offrampUri = props.get("offramp.uri.list");
-
-		return offrampUri.split(",");
-
-	}
-
 	//create a string array for all of a specific endpointType
 	private List<String> getUriKeys(String endpointType) {
 
@@ -462,6 +424,7 @@ public class ConnectorRoute extends RouteBuilder {
 
 	}
 
+	//adds XML route
 	private void addXmlRoute(String xml, ManagedCamelContext managed) throws Exception {
 		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
 		managedContext.addOrUpdateRoutesFromXml(xml);

@@ -1,48 +1,39 @@
 package org.assimbly.integration.routes;
 
-import org.apache.camel.LoggingLevel;
-import org.apache.camel.Predicate;
-import org.apache.camel.Processor;
-import org.apache.camel.builder.DefaultErrorHandlerBuilder;
-import org.apache.camel.builder.PredicateBuilder;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.commons.lang3.StringUtils;
-import org.assimbly.integration.processors.ConvertProcessor;
-import org.assimbly.integration.processors.FailureProcessor;
-import org.assimbly.integration.processors.HeadersProcessor;
-import org.jasypt.properties.EncryptableProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
+import org.apache.camel.*;
+import org.apache.camel.api.management.ManagedCamelContext;
+import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.builder.DefaultErrorHandlerBuilder;
+import org.apache.camel.builder.RouteBuilder;
+
+import org.assimbly.integration.routes.errorhandler.ErrorHandler;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ESBRoute extends RouteBuilder {
 
 	TreeMap<String, String> props;
+	
+	private ManagedCamelContextMBean managedContext;
+	
 	private DefaultErrorHandlerBuilder routeErrorHandler;
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.ESBRoute");
+	
 	private String flowId;
-	private int maximumRedeliveries;
-	private int redeliveryDelay;
-	private int maximumRedeliveryDelay;
-	private int backOffMultiplier;
-	private String logFromMessage;
-	private String logToMessage;
-	private String logResponseMessage;
+	private String flowName;
 
-	private List<String> onrampUriKeys;
-	private List<String> offrampUriKeys;
-	private String[] offrampUriList;
-	private List<String> responseUriKeys;
-	int index = 0;
-	private String logLevelAsString;
+	private List<String> errorUriKeys;
 
+	
+	
 	public ESBRoute(final TreeMap<String, String> props){
 		this.props = props;
 	}
@@ -50,254 +41,37 @@ public class ESBRoute extends RouteBuilder {
 	public ESBRoute() {}
 
 	public interface FailureProcessorListener {
-		 public void onFailure();
-  	}
+		public void onFailure();
+	}
 
 	@Override
 	public void configure() throws Exception {
-			
-		logger.info("Configuring default route");
-		
-		EncryptableProperties decryptedProperties = decryptProperties(props);
-
-		Processor headerProcessor = new HeadersProcessor(props);
-		Processor failureProcessor = new FailureProcessor(props);
-		Processor convertProcessor = new ConvertProcessor();
 
 		flowId = props.get("id");
-		onrampUriKeys = getUriKeys("from");
-		offrampUriKeys = getUriKeys("to");
-		offrampUriList = getOfframpUriList();
-		responseUriKeys = getUriKeys("response");
+		errorUriKeys = getUriKeys("error");	
 
-		if (this.props.containsKey("flow.maximumRedeliveries")){
-			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
-			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
-				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
-			}else {
-				maximumRedeliveries = 0;
-			}
-		}else {
-			maximumRedeliveries = 0;
-		}
+		//ErrorHandler errorHandler = new ErrorHandler(props, errorUriKeys);
+		//routeErrorHandler = errorHandler.setErrorHandler();
+
+		setManagedContext();
 		
-		if (this.props.containsKey("flowredeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
-				maximumRedeliveryDelay = redeliveryDelay * 10;
-			}else {
-				redeliveryDelay = 3000;
-				maximumRedeliveryDelay = 60000;
+		for(String prop : props.keySet()){
+			if(prop.endsWith("route")){
+				addXmlRoute(prop);				
 			}
-		}else {
-			redeliveryDelay = 3000;
-			maximumRedeliveryDelay = 60000;
-		}
-		
-		if (this.props.containsKey("flow.backOffMultiplier")){
-			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
-			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
-				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
-			}else {
-				backOffMultiplier = 0;
-			}
-		}else {
-			backOffMultiplier = 0;
-		}
-
-		String flowName = props.get("flow.name");
-		if (this.props.containsKey("flow.logLevel")){
-			logLevelAsString = props.get("flow.logLevel");
-		}else {
-			logLevelAsString = "OFF";
-		}
-		
-		if (this.props.containsKey("error.uri")){
-			routeErrorHandler = deadLetterChannel(props.get("error.uri"))
-			.allowRedeliveryWhileStopping(false)
-			.asyncDelayedRedelivery()			
-			.maximumRedeliveries(maximumRedeliveries)
-			.redeliveryDelay(redeliveryDelay)
-			.maximumRedeliveryDelay(maximumRedeliveryDelay)			
-			.backOffMultiplier(backOffMultiplier)
-			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.onExceptionOccurred(failureProcessor)
-			.log("This is a log message")
-			.log(log)
-			.logRetryStackTrace(false)
-			.logStackTrace(true)
-			.logHandled(true)
-			.logExhausted(true)
-			.logExhaustedMessageHistory(true);					
-		}
-		else{
-			routeErrorHandler = defaultErrorHandler()
-			.allowRedeliveryWhileStopping(false)
-			.asyncDelayedRedelivery()
-			.maximumRedeliveries(maximumRedeliveries)
-			.redeliveryDelay(redeliveryDelay)
-			.maximumRedeliveryDelay(maximumRedeliveryDelay)
-			.backOffMultiplier(backOffMultiplier)
-			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
-			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.onExceptionOccurred(failureProcessor)
-			.logRetryStackTrace(false)
-			.logStackTrace(true)
-			.logHandled(true)
-			.logExhausted(true)
-			.logExhaustedMessageHistory(true)
-			.log(logger);
-		}
-
-		routeErrorHandler.setAsyncDelayedRedelivery(true);
-
-		//The default Camel route (onramp)
-
-		for(String onrampUriKey : onrampUriKeys){
-
-			String uri = props.get(onrampUriKey);
-			uri = DecryptValue(uri);
-
-			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
-            String headerId = props.get("from." + endpointId + ".header.id");
-
-			//The default Camel route (onramp)
-			from(uri)
-					.errorHandler(routeErrorHandler)
-					.setHeader("AssimblyFlowID", constant(flowId))
-					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyFrom", constant(props.get("from." + endpointId + ".uri")))
-					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-					.setHeader("AssimblyFromTimestamp", groovy("new Date().getTime()"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.process(headerProcessor)
-					.id("headerProcessor" + flowId + "-" + endpointId)
-					.multicast()
-					.shareUnitOfWork()
-					.parallelProcessing()
-					.to(offrampUriList)
-					.routeId(flowId + "-" + endpointId).description("from");
-		}
-        
-        //The default Camel route (offramp)		
-		for (String offrampUriKey : offrampUriKeys)
-		{
-
-			String uri = props.get(offrampUriKey);
-			uri = DecryptValue(uri);
-			String offrampUri = offrampUriList[index++];
-			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
-			String headerId = props.get("to." + endpointId + ".header.id");
-			String responseId = props.get("to." + endpointId + ".response.id");
-
-			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());
-			Predicate hasDynamicEndpoint = PredicateBuilder.constant(uri.contains("${"));
-
-			from(offrampUri)
-			.errorHandler(routeErrorHandler)
-			.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDING?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-			.setHeader("AssimblyHeaderId", constant(headerId))
-			.setHeader("AssimblyTo", constant(uri))
-			.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
-			.process(headerProcessor)
-			.id("headerProcessor" + flowId + "-" + endpointId)
-			.process(convertProcessor)
-			.id("convertProcessor" + flowId + "-" + endpointId)
-			.log(hasResponseEndpoint.toString())
-			.choice()
-				.when(hasResponseEndpoint)
-					.choice()
-						.when(hasDynamicEndpoint)
-							.toD(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.to("direct:flow=" + flowId + "endpoint=" + responseId)
-						.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.pollEnrich().simple(uri).timeout(20000)
-							.endChoice()
-						.otherwise()
-							.to(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.to("direct:flow=" + flowId + "endpoint=" + responseId)
-					.endChoice()
-	  		    .when(header("ReplyTo").convertToString().contains(":"))
-					.choice()
-						.when(hasDynamicEndpoint)
-							.toD(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.toD("${header.ReplyTo}")
-						.otherwise()
-							.to(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.toD("${header.ReplyTo}")
-						.endChoice()
-	  		    .when(header("ReplyTo").isNotNull())
-					.choice()
-						.when(hasDynamicEndpoint)
-							.toD(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.toD("vm://${header.ReplyTo}")
-						.otherwise()
-							.to(uri)
-							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.toD("vm://${header.ReplyTo}")
-					.endChoice()
-				.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.pollEnrich().simple(uri).timeout(20000)
-					.endChoice()
-				.when(hasDynamicEndpoint)
-					.toD(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-				.otherwise()
-					.to(uri)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-				.end()
-	  		 .routeId(flowId + "-" + endpointId).description("to");
-		}
-
-		for(String responseUriKey : responseUriKeys){
-			String uri = props.get(responseUriKey);
-			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
-			String headerId = props.get("response." + endpointId + ".header.id");
-			String responseId = props.get("response." + endpointId + ".response.id");
-
-			from("direct:flow=" + flowId + "endpoint=" + responseId)
-					.errorHandler(routeErrorHandler)
-					.setHeader("AssimblyFlowID", constant(flowId))
-					.setHeader("AssimblyHeaderId", constant(headerId))
-					.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
-					.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
-					.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
-					.process(headerProcessor)
-					.id("headerProcessor" + flowId + "-" + endpointId)
-					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.choice()
-					.when(header("Enrich").convertToString().isEqualToIgnoreCase("response"))
-						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-						.pollEnrich().simple(uri).timeout(20000)
-						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-						.endChoice()
-					.otherwise()
-						.toD(uri)
-						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-					.end()
-					.routeId(flowId + "-" + endpointId).description("response");
 		}
 	}
 
-	//create a string array for all offramps
-	private String[] getOfframpUriList() {
-
-		String offrampUri = props.get("offramp.uri.list");
-
-		return offrampUri.split(",");
-
+	private void setManagedContext() {
+		CamelContext context = getContext();
+		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
+		managedContext = managed.getManagedCamelContext();
+	}
+	
+	private void addXmlRoute(String xml) throws Exception {
+		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
 
-	//create a string array for all of a specific endpointType
 	private List<String> getUriKeys(String endpointType) {
 
 		List<String> keys = new ArrayList<>();
@@ -311,29 +85,4 @@ public class ESBRoute extends RouteBuilder {
 		return keys;
 
 	}
-
-	//
-	private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
-		EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
-		decryptedProperties.putAll(properties);
-		return decryptedProperties;
-	}
-
-	private String DecryptValue(String value){
-
-		EncryptableProperties encryptionProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
-		String[] encryptedList = StringUtils.substringsBetween(value, "ENC(", ")");
-
-		if(encryptedList !=null && encryptedList.length>0){
-			for (String encrypted: encryptedList) {
-				encryptionProperties.setProperty("temp","ENC(" + encrypted + ")");
-				String decrypted = encryptionProperties.getProperty("temp");
-				value = StringUtils.replace(value, "ENC(" + encrypted + ")",decrypted);
-			}
-		}
-
-		return value;
-
-	}
-
 }
