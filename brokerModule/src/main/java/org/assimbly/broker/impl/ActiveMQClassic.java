@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.ConnectorUtil;
+import org.assimbly.util.IntegrationUtil;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,7 +177,7 @@ public class ActiveMQClassic implements Broker {
         if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 
             URL schemaFile = classloader.getResource("spring-beans.xsd");
-            String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
+            String xmlValidation = IntegrationUtil.isValidXML(schemaFile, brokerConfiguration);
             if(!xmlValidation.equals("xml is valid")) {
                 return xmlValidation;
             }
