@@ -9,10 +9,10 @@
 
   <packaging>jar</packaging>
   <groupId>org.assimbly</groupId>
-  <artifactId>brokerRestModule</artifactId>
+  <artifactId>integrationRestModule</artifactId>
   <version>3.6.0</version>
 
-  <name>brokerRestModule</name>
+  <name>connectorRestModule</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,7 +29,7 @@
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>brokerModule</artifactId>
+		  <artifactId>integrationModule</artifactId>
 		  <version>3.6.0</version>
 		  <scope>compile</scope>
 	  </dependency>
@@ -43,7 +43,7 @@
 		            <groupId>org.mapstruct</groupId>
 		            <artifactId>mapstruct</artifactId>
 		        </exclusion>
-		    </exclusions>	  
+		  </exclusions>
 	  </dependency>
 
   </dependencies>
