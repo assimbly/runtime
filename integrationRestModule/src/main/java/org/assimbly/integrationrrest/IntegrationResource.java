@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.integrationrest.event.FailureListener;
@@ -59,7 +59,7 @@ public class IntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @GetMapping(path = "/integration/{integrationId}/start", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> start(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> start(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
         try {
 
             if (integration.isStarted()) {
@@ -85,7 +85,7 @@ public class IntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @GetMapping(path = "/integration/{integrationId}/stop", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> stop(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> stop(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
             String config = integration.getFlowConfigurations(integrationId.toString(), mediaType);
@@ -106,7 +106,7 @@ public class IntegrationResource {
      * @throws Exception
      */
     @GetMapping(path = "/integration/{integrationId}/isStarted", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> isStarted(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
             Boolean started = integration.isStarted();
@@ -119,7 +119,7 @@ public class IntegrationResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/testconnection/{host}/{port}/{timeout}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> testConnection(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String host,@PathVariable int port, @PathVariable int timeout) throws Exception {
+    public ResponseEntity<String> testConnection(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String host,@PathVariable int port, @PathVariable int timeout) throws Exception {
 
 		try {
     		String testConnectionResult = integration.testConnection(host, port, timeout);
@@ -132,7 +132,7 @@ public class IntegrationResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/lasterror", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getLastError(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> getLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         try {
             String error = integration.getLastError();
@@ -152,7 +152,7 @@ public class IntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/integration/{integrationId}/resolvedependencybyscheme/{scheme}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> resolveDepedencyByScheme(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String scheme) throws Exception {
+    public ResponseEntity<String> resolveDepedencyByScheme(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String scheme) throws Exception {
 
        	try {
        		String result = integration.resolveDependency(scheme);
@@ -173,7 +173,7 @@ public class IntegrationResource {
      */
     /*
     @PostMapping(path = "/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> resolveDepedency(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String groupId,@PathVariable String artifactId,@PathVariable String version) throws Exception {
+    public ResponseEntity<String> resolveDepedency(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String groupId,@PathVariable String artifactId,@PathVariable String version) throws Exception {
        	try {
        		String result = integration.resolveDependency(groupId, artifactId, version);
        		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
@@ -193,7 +193,7 @@ public class IntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/integration/{integrationId}/setcertificates", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setCertificates(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
+    public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
 
        	try {
        		integration.setCertificatesInKeystore(keystoreName, keystorePassword, url);
@@ -218,7 +218,7 @@ public class IntegrationResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/stats", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getStats(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Optional<String> statsType) throws Exception {
+    public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Optional<String> statsType) throws Exception {
 
         plainResponse = true;
 

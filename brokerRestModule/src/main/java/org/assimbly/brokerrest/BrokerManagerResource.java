@@ -1,6 +1,6 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,7 +145,7 @@ public class BrokerManagerResource {
      * @return list of connections with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/connections", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getConnections(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get connections : {}");
 
@@ -166,7 +166,7 @@ public class BrokerManagerResource {
      * @return list of consumers with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/consumers", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getConsumers(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get consumers : {}");
 

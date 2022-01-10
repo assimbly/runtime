@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class FlowManagerResource {
 
     //manage flows
     @GetMapping(path = "/integration/{integrationId}/flow/start/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> startflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> startflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             ////integrationResource.init();
@@ -67,7 +67,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/stop/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String>  stopflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String>  stopflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             ////integrationResource.init();
@@ -91,7 +91,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/restart/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String>  restartflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String>  restartflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             ////integrationResource.init();
@@ -115,7 +115,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/pause/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String>  pauseflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String>  pauseflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             ////integrationResource.init();
@@ -139,7 +139,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/resume/{id}" , produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> resumeflow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> resumeflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             ////integrationResource.init();
@@ -163,7 +163,7 @@ public class FlowManagerResource {
 
 
     @GetMapping(path = "/integration/{integrationId}/flow/isstarted/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> isFlowStarted(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> isFlowStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             //integrationResource.init();
@@ -182,7 +182,7 @@ public class FlowManagerResource {
 
 
     @GetMapping(path = "/integration/{integrationId}/flow/status/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowStatus(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowStatus(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             //integrationResource.init();
@@ -199,7 +199,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/uptime/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowUptime(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowUptime(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             //integrationResource.init();
@@ -216,7 +216,7 @@ public class FlowManagerResource {
     }
 
   @GetMapping(path = "/integration/{integrationId}/hasflow/{id}", produces = {"text/plain","application/xml","application/json"})
-  public ResponseEntity<String> hasFlow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+  public ResponseEntity<String> hasFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
             integration = integrationResource.getIntegration();
@@ -231,7 +231,7 @@ public class FlowManagerResource {
 
 
     @GetMapping(path = "/integration/{integrationId}/flow/stats/{id}/{endpointid}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowStats(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id, @PathVariable Long endpointid) throws Exception {
+    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id, @PathVariable Long endpointid) throws Exception {
 
         plainResponse = true;
 
@@ -252,7 +252,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/lasterror/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowLastError(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
             //integrationResource.init();
@@ -268,7 +268,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/totalmessages/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowTotalMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowTotalMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
             //integrationResource.init();
@@ -284,7 +284,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/completedmessages/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowCompletedMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowCompletedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
             //integrationResource.init();
@@ -300,7 +300,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/failedmessages/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowFailedMessages(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowFailedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
             ////integrationResource.init();
@@ -316,7 +316,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/alerts/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowAlertsLog(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowAlertsLog(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
         	flowId = id.toString();
@@ -331,7 +331,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/numberofalerts/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowNumberOfAlerts(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
         	flowId = id.toString();
@@ -347,7 +347,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/numberofalerts", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getIntegrationNumberOfAlerts(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> getIntegrationNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		try {
             integration = integrationResource.getIntegration();
@@ -361,7 +361,7 @@ public class FlowManagerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/eventlog/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowEventLog(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowEventLog(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
         	flowId = id.toString();
@@ -376,7 +376,7 @@ public class FlowManagerResource {
     }
 
     @PostMapping(path = "/integration/{integrationId}/maintenance/{time}", consumes = {"application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setMaintenance(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long time, @RequestBody List<Long> ids) throws Exception {
+    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long time, @RequestBody List<Long> ids) throws Exception {
 
         try {
 

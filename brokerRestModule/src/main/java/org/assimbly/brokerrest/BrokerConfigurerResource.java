@@ -1,6 +1,5 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
 import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

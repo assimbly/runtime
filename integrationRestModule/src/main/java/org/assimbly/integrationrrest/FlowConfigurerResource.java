@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class FlowConfigurerResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/integration/{integrationId}/setflowconfiguration/{id}", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setFlowConfiguration(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable Long id,@RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> setFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable Long id,@RequestBody String configuration) throws Exception {
 
        	try {
             integration = integrationResource.getIntegration();
@@ -64,7 +64,7 @@ public class FlowConfigurerResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @GetMapping(path = "/integration/{integrationId}/getflowconfiguration/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getFlowConfiguration(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
     	plainResponse = true;
 
@@ -90,7 +90,7 @@ public class FlowConfigurerResource {
 	 * @throws URISyntaxException if the Location URI syntax is incorrect
 	 */
 	@PostMapping(path = "/integration/{integrationId}/setflowconfigurations", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-	public ResponseEntity<String> setFlowConfigurations(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String configuration) throws Exception {
+	public ResponseEntity<String> setFlowConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String configuration) throws Exception {
 		try {
 			integration.setFlowConfigurations(integrationId.toString(), mediaType, configuration);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/setconfiguration", "Integration configuration set");
@@ -109,7 +109,7 @@ public class FlowConfigurerResource {
 	 * @throws URISyntaxException if the Location URI syntax is incorrect
 	 */
 	@GetMapping(path = "/integration/{integrationId}/getFlowConfigurations", produces = {"text/plain","application/xml","application/json"})
-	public ResponseEntity<String> getFlowConfigurations(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+	public ResponseEntity<String> getFlowConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		plainResponse = true;
 
@@ -129,7 +129,7 @@ public class FlowConfigurerResource {
 
 
     @GetMapping(path = "/integration/{integrationId}/flow/documentation/version", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getDocumentationVersion(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		try {
             integration = integrationResource.getIntegration();
@@ -142,7 +142,7 @@ public class FlowConfigurerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/documentation/{componenttype}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getDocumentation(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
+    public ResponseEntity<String> getDocumentation(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
 
     	plainResponse = true;
 
@@ -160,7 +160,7 @@ public class FlowConfigurerResource {
     }
 
 	@GetMapping(path = "/integration/{integrationId}/flow/components", produces = {"text/plain","application/xml","application/json"})
-	public ResponseEntity<String> getComponents(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		plainResponse = true;
 
@@ -178,7 +178,7 @@ public class FlowConfigurerResource {
 	}
 
     @GetMapping(path = "/integration/{integrationId}/flow/schema/{componenttype}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getComponentSchema(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
+    public ResponseEntity<String> getComponentSchema(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
 
     	plainResponse = true;
 
@@ -196,7 +196,7 @@ public class FlowConfigurerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/options/{componenttype}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getComponentOptions(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
+    public ResponseEntity<String> getComponentOptions(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String componenttype) throws Exception {
 
     	plainResponse = true;
 
@@ -214,7 +214,7 @@ public class FlowConfigurerResource {
     }
 
 	@GetMapping(path = "/integration/{integrationId}/flow/validateUri", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> validateFlowUri(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> validateFlowUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
 		try {
             integration = integrationResource.getIntegration();
             String flowValidation = integration.validateFlow(uri);
@@ -225,7 +225,7 @@ public class FlowConfigurerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/route/{id}", produces = {"application/xml","application/json"})
-    public ResponseEntity<String> getCamelRoute(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> getCamelRoute(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
 		try {
         	flowId = id.toString();
@@ -239,7 +239,7 @@ public class FlowConfigurerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/flow/routes", produces = {"application/xml","application/json"})
-    public ResponseEntity<String> getAllCamelRoutes(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> getAllCamelRoutes(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		try {
             integration = integrationResource.getIntegration();
@@ -253,7 +253,7 @@ public class FlowConfigurerResource {
     }
 
     @GetMapping(path = "/integration/{integrationId}/removeflow/{id}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> removeFlow(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
+    public ResponseEntity<String> removeFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long id) throws Exception {
 
         try {
             integration = integrationResource.getIntegration();

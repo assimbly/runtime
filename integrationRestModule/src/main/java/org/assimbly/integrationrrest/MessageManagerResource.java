@@ -3,7 +3,7 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 
 import org.assimbly.util.rest.ResponseUtil;
@@ -41,7 +41,7 @@ public class MessageManagerResource {
      * @throws Exception Message send failure
      */
     @PostMapping(path = "/integration/{integrationId}/send/{numberOfTimes}", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> send(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType,
+    public ResponseEntity<String> send(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
                                        @RequestHeader(name = "endpointid", required = false) String endpointId,
                                        @RequestHeader(name = "serviceid", required = false) String serviceId,
@@ -92,7 +92,7 @@ public class MessageManagerResource {
      * @throws Exception Message send failure
      */
     @PostMapping(path = "/integration/{integrationId}/sendrequest", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> sendRequest(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType,
+    public ResponseEntity<String> sendRequest(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
                                        @RequestHeader(name = "endpointid", required = false) String endpointId,
                                        @RequestHeader(name = "serviceid", required = false) String serviceId,
