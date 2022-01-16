@@ -1,6 +1,7 @@
 package org.assimbly.util;
 
 import dev.jeka.core.api.depmanagement.*;
+import dev.jeka.core.api.depmanagement.resolution.*;
 
 import java.io.FileInputStream;
 import java.lang.reflect.Method;
@@ -16,7 +17,7 @@ import java.util.jar.JarInputStream;
 
 import org.apache.camel.CamelContext;
 
-import static dev.jeka.core.api.depmanagement.JkJavaDepScopes.*;
+//import static dev.jeka.core.api.depmanagement.JkJavaDepScopes.*;
 
 public class DependencyUtil {
 
@@ -25,11 +26,10 @@ public class DependencyUtil {
         String dependency = groupId + ":" + artifactId + ":" + version;
         
         JkDependencySet deps = JkDependencySet.of()
-                .and(dependency)
-                .withDefaultScopes(COMPILE_AND_RUNTIME);
+                .and(dependency);
 
-        JkDependencyResolver resolver = JkDependencyResolver.of(JkRepo.ofMavenCentral());
-        List<Path> paths = resolver.resolve(deps, RUNTIME).getFiles().getEntries();
+        JkDependencyResolver resolver = JkDependencyResolver.of().addRepos(JkRepo.ofMavenCentral());
+        List<Path> paths = resolver.resolve(deps).getFiles().getEntries();
 
         return paths;
 
@@ -97,7 +97,8 @@ public class DependencyUtil {
         AS2("as2"),
         AWS2S3("aws2-s3"),
         DIRECT("direct"),
-        FILE("file"),
+        ELASTICSEARCHREST("elasticsearch-rest"),
+		FILE("file"),
         FTP("ftp"),
         FTPS("ftps"),
         HTTP("http"),
@@ -114,7 +115,7 @@ public class DependencyUtil {
         REST("rest"),
         RESTSOPENAPI("rest-openapi"),
         RESTSWAGGER("rest-swagger"),
-        SCHEDULER("scheduler"),
+        //SCHEDULER("scheduler"),
         SFTP("sftp"),
         SEDA("seda"),
         SERVLET("servlet"),

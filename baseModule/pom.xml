@@ -19,6 +19,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
+    <maven-versions-rules>file:///${project.basedir}/../baseModule/src/main/resources/rules.xml</maven-versions-rules>
   </properties>
 
   <dependencies>
