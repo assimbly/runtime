@@ -53,6 +53,7 @@ public class FlowManagerResource {
             status = integration.startFlow(flowId);
             if (status.equals("started")) {
                 if (this.messagingTemplate != null) {
+					System.out.println("sending to topic start");	
                     this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", "event:started");
                 }
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{id}", "started flow " + flowId, "started flow " + flowId, flowId);
@@ -77,6 +78,7 @@ public class FlowManagerResource {
             status = integration.stopFlow(flowId);
             if(status.equals("stopped")) {
                 if(this.messagingTemplate!=null) {
+					System.out.println("sending to topic stop");	
                     this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:stopped");
                 }
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/stop/{id}","stopped flow " + flowId,"stopped flow " + flowId,flowId);
