@@ -33,11 +33,13 @@ public class ErrorHandler {
 	
 	public ErrorHandler(DefaultErrorHandlerBuilder errorHandler, final TreeMap<String, String> props){
 		this.errorHandler = errorHandler;
-		this.props = props;
+		this.props = props;		
 	}
 	
 	
 	public DefaultErrorHandlerBuilder configure() throws Exception {
+		
+		failureProcessor = new FailureProcessor(props);
 		
 		if (props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
@@ -92,7 +94,7 @@ public class ErrorHandler {
 			.log(logger);
 		
 		errorHandler.setAsyncDelayedRedelivery(true);
-		
+	
 		return errorHandler;
 		
 	}

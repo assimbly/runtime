@@ -49,7 +49,7 @@ public class FailureProcessor implements Processor {
 
 				String language = StringUtils.substringBetween(entry.getKey(), endpointId + ".", ".");
 				String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
-				String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
+				String value = entry.getValue();
 				String result = "";
 
 				if (language == null) {
@@ -72,12 +72,11 @@ public class FailureProcessor implements Processor {
 			in.removeHeader("AssimblyHeaderId");
 		}
 
-		//Write alert to disk
-		Date date = new Date();
+		  //Write alert to disk
+		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
 		  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 		  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
-
 
 			if(flowEvent.getFlowId().indexOf("-")!=-1){
 				flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");

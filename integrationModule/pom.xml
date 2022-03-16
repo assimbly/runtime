@@ -163,14 +163,6 @@
 		  <version>${activemq-artemis-version}</version>
 	  </dependency>
 
-	  <!-- activemq dependencies -->
-	  <dependency>
-		  <groupId>org.apache.activemq</groupId>
-		  <artifactId>activemq-camel</artifactId>
-		  <version>${activemq-classic-version}</version>
-	  </dependency>
-
-
 	  <!-- MQ -->
 	  <dependency>
 		  <groupId>com.ibm.mq</groupId>
