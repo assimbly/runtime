@@ -133,7 +133,7 @@ public abstract class BaseIntegration implements Integration {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
 
-			//IntegrationUtil.printTreemap(flowProperties);
+			IntegrationUtil.printTreemap(flowProperties);
 			
 			setFlowConfiguration(flowProperties);
 

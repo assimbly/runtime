@@ -70,8 +70,9 @@ public class Unmarshall {
 
 		//get endpoint properties
 		getEndpointsFromXMLFile();
-
+					
 		Set<String> fromUriSet = properties.keySet().stream().filter(s -> s.startsWith("from.") && s.endsWith(".uri")).collect(Collectors.toSet());
+		
 		if(flowType.isEmpty() && !fromUriSet.isEmpty()){
 			properties.put("flow.type","default");
 		}else if (flowType.isEmpty()){
@@ -89,25 +90,20 @@ public class Unmarshall {
 	private void getFlowsFromXMLFile() throws Exception{
 
 		XPath xPath = XPathFactory.newInstance().newXPath();
-		flowId = xPath.evaluate("//flows/flow[id='" + flowId + "']/id",doc);
-		flowName = xPath.evaluate("//flows/flow[id='" + flowId + "']/name",doc);
-		flowType = xPath.evaluate("//flows/flow[id='" + flowId + "']/type",doc);
+		
+		String flowSelector = setFlowSelector();
+		
+		flowName = xPath.evaluate("//flows/flow[" + flowSelector + "]/name",doc);
+		flowType = xPath.evaluate("//flows/flow[" + flowSelector + "]/type",doc);
 
-		flowOffloading = xPath.evaluate("//flows/flow[id='" + flowId + "']/offloading",doc);
-		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[id='" + flowId + "']/maximumRedeliveries",doc);
-		flowRedeliveryDelay = xPath.evaluate("//flows/flow[id='" + flowId + "']/redeliveryDelay",doc);
-		flowLogLevel = xPath.evaluate("//flows/flow[id='" + flowId + "']/logLevel",doc);
-		flowAssimblyHeaders = xPath.evaluate("//flows/flow[id='" + flowId + "']/assimblyHeaders",doc);
-		flowParallelProcessing = xPath.evaluate("//flows/flow[id='" + flowId + "']/parallelProcessing",doc);
+		flowOffloading = xPath.evaluate("//flows/flow[" + flowSelector + "]/offloading",doc);
+		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[" + flowSelector + "]/maximumRedeliveries",doc);
+		flowRedeliveryDelay = xPath.evaluate("//flows/flow[" + flowSelector + "]/redeliveryDelay",doc);
+		flowLogLevel = xPath.evaluate("//flows/flow[" + flowSelector + "]/logLevel",doc);
+		flowAssimblyHeaders = xPath.evaluate("//flows/flow[" + flowSelector + "]/assimblyHeaders",doc);
+		flowParallelProcessing = xPath.evaluate("//flows/flow[" + flowSelector + "]/parallelProcessing",doc);
 
-
-		if(flowId==null || flowId.isEmpty()) {
-			ConfigurationException configurationException = new ConfigurationException("The flow ID doesn't exists in XML Configuration");
-			configurationException.initCause(new Throwable("The flow ID doesn't exists in XML Configuration"));
-			throw configurationException;
-		}
-
-		integrationXPath = "integrations/integration/flows/flow[id='" + flowId + "']";
+		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
 
 		String[] integrationProporties = conf.getStringArray(integrationXPath);
 
@@ -117,7 +113,7 @@ public class Unmarshall {
 			}
 		}
 
-		String componentsXpath = "integration/flows/flow[id='" + flowId + "']/components/component";
+		String componentsXpath = "integration/flows/flow[" + flowSelector + "]/components/component";
 
 		String[] components = conf.getStringArray(componentsXpath);
 
@@ -129,39 +125,79 @@ public class Unmarshall {
 			}
 		}
 
-		//set up defaults settings if null -->
-		if(flowId == null){
+		setFlowDefaults();
+
+		setFlowProperties();
+
+	}
+
+	private String setFlowSelector() throws Exception{
+		
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		
+		String selector = "1";
+
+		Integer numberOfFlows = Integer.parseInt(xPath.evaluate("count(//flows/flow)",doc));
+		
+		if(numberOfFlows > 1){
+			
+			//originalFlowId is the flowId as parameter 
+			String originalFlowId = flowId;				
+			selector = "id='" + originalFlowId + "'";
+			
+			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
+						
+			if(!originalFlowId.equals(flowId)) {
+				ConfigurationException configurationException = new ConfigurationException("The flow ID " + originalFlowId + " doesn't exists in XML Configuration");
+				configurationException.initCause(new Throwable("The flow ID  " + originalFlowId + " doesn't exists in XML Configuration"));
+				throw configurationException;
+			}
+		}else{
+			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
+		}
+
+		return selector;	
+		
+	}
+
+	//set up defaults settings for a flow if values are null or empty
+	public void setFlowDefaults(){
+		
+		if(flowId == null || flowId.isEmpty()){
 			flowId = "flow" + System.currentTimeMillis();
 		}
 
-		if(flowType == null){
+		if(flowType == null || flowType.isEmpty()){
 			flowType = "default";
 		}
 
-		if(flowOffloading == null){
+		if(flowOffloading == null || flowOffloading.isEmpty()){
 			flowOffloading = "false";
 		}
 
-		if(flowMaximumRedeliveries == null){
+		if(flowMaximumRedeliveries == null || flowMaximumRedeliveries.isEmpty()){
 			flowMaximumRedeliveries = "false";
 		}
 
-		if(flowRedeliveryDelay == null){
+		if(flowRedeliveryDelay == null || flowRedeliveryDelay.isEmpty()){
 			flowRedeliveryDelay = "false";
 		}
 
-		if(flowLogLevel == null){
+		if(flowLogLevel == null || flowLogLevel.isEmpty()){
 			flowLogLevel = "OFF";
 		}
 
-		if(flowAssimblyHeaders == null){
+		if(flowAssimblyHeaders == null || flowAssimblyHeaders.isEmpty()){
 			flowAssimblyHeaders = "false";
 		}
 
-		if(flowParallelProcessing == null){
+		if(flowParallelProcessing == null || flowParallelProcessing.isEmpty()){
 			flowParallelProcessing = "false";
 		}
+		
+	}
 
+	public void setFlowProperties(){
 
 		properties.put("id",flowId);
 		properties.put("flow.name",flowName);
@@ -177,7 +213,8 @@ public class Unmarshall {
 		properties.put("flow.parallelProcessing",flowParallelProcessing);
 
 	}
-
+	
+	
 	private void getOffloadingfromXMLFile() throws Exception {
 
 		offloadingId = conf.getString("integration/offloading/id");
@@ -220,7 +257,7 @@ public class Unmarshall {
 
 	private void getEndpointsFromXMLFile() throws Exception {
 
-		String endpointsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/uri";
+		String endpointsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/id";
 
 		String[] endpoints = conf.getStringArray(endpointsXpath);
 
@@ -232,8 +269,9 @@ public class Unmarshall {
 		int maxFromTypes = 3;
 
 		for(String endpoint : endpoints){
-
+	
 			endpointXPath = "integration/flows/flow[id='" + flowId + "']/endpoints/endpoint[" + index + "]/";
+			
 			options = "";
 			String type = conf.getString(endpointXPath + "type");
 
@@ -242,17 +280,18 @@ public class Unmarshall {
 				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 			}
 
+			endpointId = conf.getString(endpointXPath + "id");
+		
 			if(options.isEmpty()){
-				uri = endpoint;
+				uri = conf.getString(endpointXPath + "uri");
 			}else{
 				options = options.substring(0,options.length() -1);
-				uri = endpoint + "?" + options;
-
+				uri = conf.getString(endpointXPath + "uri") + "?" + options;
 			}
 
-			endpointId = conf.getString(endpointXPath + "id");
-
-			properties.put(type + "." + endpointId + ".uri", uri);
+			if(uri != null){
+				properties.put(type + "." + endpointId + ".uri", uri);
+			}
 
 			serviceId = conf.getString(endpointXPath + "service_id");
 
@@ -367,7 +406,7 @@ public class Unmarshall {
 		String updatedRouteId = flowId + "-" + endpointId + "-" + routeId;
 		routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
 
-		if(!flowType.equalsIgnoreCase("xml")){
+		if(flowType.equalsIgnoreCase("default") || flowType.equalsIgnoreCase("connector")){
 			routeAsString = routeAsString.replaceAll("from uri=\"(.*)\"", "from uri=\"direct:flow=" + flowId + "route=" + updatedRouteId + "\"");
 		}
 

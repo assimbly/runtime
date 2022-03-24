@@ -87,7 +87,6 @@ public class BrokerManagerResource {
             try {
                 return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
             } catch (Exception ex) {
-                System.out.println("waarom?");
                 ex.printStackTrace();
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "error");
             }

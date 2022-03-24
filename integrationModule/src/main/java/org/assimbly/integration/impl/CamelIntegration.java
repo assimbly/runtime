@@ -21,14 +21,18 @@ import org.apache.camel.spi.Tracer;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.configuration.ssl.SSLConfiguration;
 import org.assimbly.integration.event.EventCollector;
 import org.assimbly.integration.routes.ConnectorRoute;
+import org.assimbly.integration.routes.ESBRoute;
 import org.assimbly.integration.routes.SimpleRoute;
 import org.assimbly.integration.service.Connection;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.integration.beans.CustomHttpBinding;
 import org.assimbly.util.*;
+import org.assimbly.util.file.DirectoryWatcher;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -38,6 +42,8 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -138,6 +144,11 @@ public class CamelIntegration extends BaseIntegration {
 		setMetrics(true);
 
 		setHistoryMetrics(true);
+		
+		//Start Dovetail specific beans
+		CustomHttpBinding customHttpBinding = new CustomHttpBinding();
+		registry.bind("customHttpBinding", customHttpBinding);
+		//End Dovetail specific beans
 
 	}
 	
@@ -182,8 +193,86 @@ public class CamelIntegration extends BaseIntegration {
 		context.setMessageHistoryFactory(factory);
 	}
 
-	//Manage integration
+	public void setDeployDirectory(boolean setDeployDirectory) throws Exception {
+		
+		if(setDeployDirectory){
+			
+			Path deployDir = Paths.get(baseDir + "/deploy");
+			
+			//Create deployDir if not exist
+			Files.createDirectories(deployDir);
 
+			//Start files found in de deploy directory
+			Files.walk(deployDir)
+			 .filter(path -> path.toString().endsWith(".xml"))
+			 .forEach(path -> {
+				 try{
+					fileInstall(path);
+		 		} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});		
+			
+			//Monitor deploy directory after start
+			watchDeployDirectory();
+		}
+		
+	}
+	
+	private void watchDeployDirectory() throws Exception {
+		
+		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
+				.addDirectories(baseDir + "/deploy")
+				.setPreExistingAsCreated(false)
+				.build(new DirectoryWatcher.Listener() {
+					public void onEvent(DirectoryWatcher.Event event, Path path) {
+						switch (event) {
+							case ENTRY_CREATE:
+								System.out.println(path + " created.");
+								try {
+									fileInstall(path);
+									} catch (Exception e) {
+									e.printStackTrace();
+								}
+								break;
+							case ENTRY_MODIFY:
+								System.out.println(path + " modified.");
+								try {
+									fileInstall(path);
+									} catch (Exception e) {
+									e.printStackTrace();
+								}
+								break;
+								
+							case ENTRY_DELETE:
+								System.out.println(path + " deleted.");
+								break;	
+
+						}
+					}
+				});
+				
+		watcher.start();			
+		
+	} 
+	
+	
+	public void fileInstall(Path path) throws Exception {
+		
+		String pathAsString = path.toString();
+		String flowId = FilenameUtils.getBaseName(pathAsString);
+		String mediaType = FilenameUtils.getExtension(pathAsString);
+		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
+
+		logger.info("File install flowid=" + flowId + " | path=" + pathAsString);	
+
+		configureAndStartFlow(flowId, mediaType, configuration);
+		
+	}
+	
+	
+	//Manage integration
+	
 	public void start() throws Exception {
 
 		// start Camel context
@@ -191,6 +280,8 @@ public class CamelIntegration extends BaseIntegration {
 		started = true;
 		logger.info("Integration started");
 
+		setDeployDirectory(true);
+		
 	}
 
 	public void stop() throws Exception {
@@ -221,17 +312,11 @@ public class CamelIntegration extends BaseIntegration {
 		for (String key : props.keySet()){
 
 			if (key.endsWith("service.id")){
-				System.out.println("setConnection=" + key);
 				props = setConnection(props, key);
-				/*
-				for (Map.Entry<K, V> entry : props.entrySet()) {
-				     System.out.println("Key: " + entry.getKey() + ". Value: " + entry.getValue());
-				}*/		
-
 			}
 
-			if (key.equals("flow.components")){
-
+			if (key.equals("flow.components") && props.get(key) != null){
+				
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
@@ -247,43 +332,45 @@ public class CamelIntegration extends BaseIntegration {
 						}
 					}
 				}
-
 			}
-
 		}
 
-		//set up route by type
-		String route  = props.get("flow.type");
-		if (route == null){
-			addDefaultFlow(props);
-			route = "unknown";
-			logger.info("Loaded flow configuration | type=" + route);
-		}else if(route.equalsIgnoreCase("default")){
-			addDefaultFlow(props);
-			logger.info("Loaded flow configuration | type=" + route);
-		}else if(route.equalsIgnoreCase("simple")){
-			addDefaultFlow(props);
-			logger.info("Loaded flow configuration | type=" + route);
-		}else if(route.equalsIgnoreCase("xml")){
-			addXmlFlow(props);
-			logger.info("Loaded flow configuration | type=" + route);
-		}else{
-			logger.info("Unknown flow type.");
-		}
+		//set up flow by type
+		String flowType  = props.get("flow.type");
 
+		if (flowType == null || flowType.isEmpty() || flowType.equals("default")){
+			//use connector flow as the default flow
+			addConnectorFlow(props);
+			flowType = "default";
+		}else if(flowType.equalsIgnoreCase("connector")){
+			addConnectorFlow(props);
+		}else if(flowType.equalsIgnoreCase("esb")){
+			addESBFlow(props);
+		}else if(flowType.equalsIgnoreCase("simple")){
+			addSimpleFlow(props);
+		}else if(flowType.equalsIgnoreCase("routes")){
+			addRoutesFlow(props);
+		}
+		
+		logger.info("Loaded flow configuration | type=" + flowType);
 
 	}
 
-	public void addDefaultFlow(final TreeMap<String, String> props) throws Exception {
+	public void addConnectorFlow(final TreeMap<String, String> props) throws Exception {
 		ConnectorRoute flow = new ConnectorRoute(props);
 		flow.updateRoutesToCamelContext(context);
 	}
 
+	public void addESBFlow(final TreeMap<String, String> props) throws Exception {
+		ESBRoute flow = new ESBRoute(props);
+		flow.updateRoutesToCamelContext(context);
+	}
+	
 	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
 		context.addRoutes(new SimpleRoute(props));
 	}
 
-	public void addXmlFlow(final TreeMap<String, String> props) throws Exception {
+	public void addRoutesFlow(final TreeMap<String, String> props) throws Exception {
 
 		for (String key : props.keySet()) {
 
@@ -404,6 +491,11 @@ public class CamelIntegration extends BaseIntegration {
 		
 		return "stopped";
 	}
+
+	public void configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
+		super.setFlowConfiguration(flowId, mediaType, configuration);		
+		startFlow(flowId);
+	}
 	
 	public String startFlow(String id) {
 
@@ -451,7 +543,7 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
-				logger.info("Started flow | id=" + id);
+				//logger.info("Started flow | id=" + id);
 				return status.toString().toLowerCase();
 				
 			}else {

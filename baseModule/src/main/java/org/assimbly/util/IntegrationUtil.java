@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Optional; 
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -20,13 +21,18 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
+import java.io.StringReader;
+
+import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
+
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.*;
-import java.net.URL;
-import org.xml.sax.SAXException;
-
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 
 
 public final class IntegrationUtil {
@@ -49,6 +55,15 @@ public final class IntegrationUtil {
 
 	}
 
+	public static boolean isXML(String xml) {
+		try {
+			SAXParserFactory.newInstance().newSAXParser().getXMLReader().parse(new InputSource(new StringReader(xml)));
+			return true;
+		} catch (ParserConfigurationException | SAXException | IOException ex) {
+			return false;
+		}
+	}
+	
 	public static String isValidXML(URL schemaFile, String xml) {
 
 		String result = null;
@@ -113,50 +128,55 @@ public final class IntegrationUtil {
 	}
 
 
+	
 
 	public static void printTreemap(TreeMap<String, String> treeMap) throws Exception {
-
+	
 		Map<String, String> id = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().equals("id"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
-
+				.collect(Collectors.toMap(map -> map.getKey(), map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> flow = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("flow"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(), map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> from = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("from"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> to = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("to"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> response = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("response"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> error = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("error"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> header = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("header"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
 		Map<String, String> service = treeMap.entrySet()
 				.stream()
 				.filter(map -> map.getKey().startsWith("service"))
-				.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
 
+		Map<String, String> route = treeMap.entrySet()
+				.stream()
+				.filter(map -> map.getKey().startsWith("route"))
+				.collect(Collectors.toMap(map -> map.getKey(),  map -> Optional.ofNullable(map.getValue()).orElse("")));
+				
 		System.out.println("");
 		System.out.println("FLOW CONFIGURATION");
 		System.out.println("-----------------------------------------------------------\n");
@@ -177,16 +197,20 @@ public final class IntegrationUtil {
 
 		}
 
-		System.out.println("\nENDPOINTS\n");
+		if(!from.isEmpty()) {
 
-		for(Map.Entry<String,String> entry : from.entrySet()) {
+			System.out.println("\nENDPOINTS\n");
 
-			String key = entry.getKey();
-			String value = entry.getValue();
-			System.out.printf("%-30s %s\n", key + ":", value);
+			for(Map.Entry<String,String> entry : from.entrySet()) {
 
-		}
+				String key = entry.getKey();
+				String value = entry.getValue();
+				System.out.printf("%-30s %s\n", key + ":", value);
 
+			}
+
+		} 
+		
 		for(Map.Entry<String,String> entry : to.entrySet()) {
 
 			String key = entry.getKey();
@@ -247,8 +271,23 @@ public final class IntegrationUtil {
 			}
 		}
 
+		if(!route.isEmpty()) {
+
+			System.out.println("\nROUTES\n");
+
+			for(Map.Entry<String,String> entry : route.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				if(key.endsWith("route"))
+					System.out.printf("%-30s \n\n%s\n", key + ":", value);
+				else {
+					System.out.printf("%-30s %s\n", key + ":", value);
+				}				
+			}
+		}
+		
 		System.out.println("-----------------------------------------------------------\n");
 
-	}
-
+	}	
+	
 }

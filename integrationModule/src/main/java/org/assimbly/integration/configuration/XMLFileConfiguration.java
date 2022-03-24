@@ -26,6 +26,7 @@ import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.integration.configuration.marshalling.Marshall;
 import org.assimbly.integration.configuration.marshalling.Unmarshall;
 import org.assimbly.util.IntegrationUtil;
+import org.assimbly.util.TransformUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -84,7 +85,20 @@ public class XMLFileConfiguration {
 	}
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
+		
+		if(!xml.endsWith("</integration>")){
 
+			//convert camel2 to camel3
+			xml = camel2ToCamel3(xml);
+		
+			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+			InputStream is = classloader.getResourceAsStream("transform-to-assimbly.xsl");
+
+			//transform to Assimbly format
+			xml = TransformUtil.transformXML(xml,is);
+		
+		}
+		
 		DocumentBuilder docBuilder = setDocumentBuilder("integration.xsd");
 
 		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
@@ -94,9 +108,10 @@ public class XMLFileConfiguration {
 				.setExpressionEngine(new XPathExpressionEngine())
 		).getConfiguration();
 
+		
 		FileHandler fh = new FileHandler(conf);
 		fh.load(DocConverter.convertStringToStream(xml));
-
+	
 		properties = new Unmarshall().getProperties(conf,flowId);
 
 		IntegrationUtil.printTreemap(properties);
@@ -256,4 +271,23 @@ public class XMLFileConfiguration {
 
 		return list;
 	}
+	
+	private static String camel2ToCamel3(String input){
+		
+		Map<String, String> map = new HashMap<>();
+
+		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
+		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
+		map.put("headerName","name");
+		
+		String output = TransformUtil.replaceMultipleStrings(input, map, true);
+		
+		//you may uncheck the method below, because it maybe faster on large maps
+		//TransformUtil.replaceMultipleString2(input, map);
+		
+		return output;
+		
+	}
+	
+	
 }

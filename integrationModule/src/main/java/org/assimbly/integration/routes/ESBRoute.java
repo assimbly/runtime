@@ -28,11 +28,6 @@ public class ESBRoute extends RouteBuilder {
 	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.ESBRoute");
 	
 	private String flowId;
-	private String flowName;
-
-	private List<String> errorUriKeys;
-
-	
 	
 	public ESBRoute(final TreeMap<String, String> props){
 		this.props = props;
@@ -47,17 +42,17 @@ public class ESBRoute extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
+		System.out.println("Configure ESB Route");
+	
 		flowId = props.get("id");
-		errorUriKeys = getUriKeys("error");	
-
-		//ErrorHandler errorHandler = new ErrorHandler(props, errorUriKeys);
-		//routeErrorHandler = errorHandler.setErrorHandler();
-
+		
 		setManagedContext();
 		
 		for(String prop : props.keySet()){
 			if(prop.endsWith("route")){
-				addXmlRoute(prop);				
+				System.out.println("prop=" + prop);
+				String xml = props.get(prop);
+				addXmlRoute(xml);				
 			}
 		}
 	}
@@ -72,17 +67,4 @@ public class ESBRoute extends RouteBuilder {
 		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
 
-	private List<String> getUriKeys(String endpointType) {
-
-		List<String> keys = new ArrayList<>();
-
-		for(String prop : props.keySet()){
-			if(prop.startsWith(endpointType) && prop.endsWith("uri")){
-				keys.add(prop);
-			}
-		}
-
-		return keys;
-
-	}
 }
