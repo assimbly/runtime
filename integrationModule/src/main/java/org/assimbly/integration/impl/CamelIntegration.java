@@ -193,61 +193,73 @@ public class CamelIntegration extends BaseIntegration {
 		context.setMessageHistoryFactory(factory);
 	}
 
-	public void setDeployDirectory(boolean setDeployDirectory) throws Exception {
-		
-		if(setDeployDirectory){
-			
-			Path deployDir = Paths.get(baseDir + "/deploy");
-			
-			//Create deployDir if not exist
-			Files.createDirectories(deployDir);
 
-			//Start files found in de deploy directory
-			Files.walk(deployDir)
-			 .filter(path -> path.toString().endsWith(".xml"))
-			 .forEach(path -> {
-				 try{
-					fileInstall(path);
-		 		} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});		
+	// (Un)install files
+	
+	public void setDeployDirectory(boolean deployOnStart, boolean deployOnEvent) throws Exception {
 			
-			//Monitor deploy directory after start
-			watchDeployDirectory();
+		Path path = Paths.get(baseDir + "/deploy");
+		
+		//Create the deploy directory if not exist
+		Files.createDirectories(path);
+
+		if(deployOnStart){
+			//Check & Start files found in the deploy directory
+			checkDeployDirectory(path);
 		}
 		
+		if(deployOnEvent){
+			//Monitor files in the deploy directory after start
+			watchDeployDirectory(path);
+		}	
+				
+	}
+
+	private void checkDeployDirectory(Path path) throws Exception {
+		Files.walk(path)
+		 .filter(fPath -> fPath.toString().endsWith(".xml"))
+		 .forEach(fPath -> {
+			 try{
+				fileInstall(fPath);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
-	private void watchDeployDirectory() throws Exception {
+	private void watchDeployDirectory(Path path) throws Exception {
 		
 		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
-				.addDirectories(baseDir + "/deploy")
+				.addDirectories(path)
 				.setPreExistingAsCreated(false)
 				.build(new DirectoryWatcher.Listener() {
 					public void onEvent(DirectoryWatcher.Event event, Path path) {
 						switch (event) {
 							case ENTRY_CREATE:
-								System.out.println(path + " created.");
+								logger.info("Deploy folder | File created: " + path);	
 								try {
 									fileInstall(path);
-									} catch (Exception e) {
+								} catch (Exception e) {
 									e.printStackTrace();
 								}
 								break;
 							case ENTRY_MODIFY:
-								System.out.println(path + " modified.");
+								logger.info("Deploy folder | File modified: " + path);	
 								try {
 									fileInstall(path);
-									} catch (Exception e) {
+								} catch (Exception e) {
 									e.printStackTrace();
 								}
 								break;
 								
 							case ENTRY_DELETE:
-								System.out.println(path + " deleted.");
-								break;	
-
+								logger.info("Deploy folder | File deleted: " + path);	
+								try {
+									fileUninstall(path);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								break;
 						}
 					}
 				});
@@ -269,6 +281,18 @@ public class CamelIntegration extends BaseIntegration {
 		configureAndStartFlow(flowId, mediaType, configuration);
 		
 	}
+
+	public void fileUninstall(Path path) throws Exception {
+		
+		String pathAsString = path.toString();
+		String flowId = FilenameUtils.getBaseName(pathAsString);
+		String mediaType = FilenameUtils.getExtension(pathAsString);
+
+		logger.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
+
+		stopFlow(flowId);
+		
+	}
 	
 	
 	//Manage integration
@@ -280,7 +304,7 @@ public class CamelIntegration extends BaseIntegration {
 		started = true;
 		logger.info("Integration started");
 
-		setDeployDirectory(true);
+		setDeployDirectory(true, true);
 		
 	}
 
@@ -492,10 +516,59 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public void configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);		
-		startFlow(flowId);
+		String status = startFlow(flowId);
+		return status;
 	}
+	
+	public String testFlow(String flowId, String mediaType, String configuration) throws Exception {
+		return configureAndStartFlow(flowId, mediaType, configuration);
+	}
+
+	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception {
+		
+		try {
+			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
+			FileUtils.writeStringToFile(flowFile, configuration, true);
+			return "saved";	
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "failed to save flow " + e.getMessage();			
+		}			
+	
+	}
+
+	public String fileUninstallFlow(String flowId, String mediaType) throws Exception {
+		
+		try {
+			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
+			FileUtils.deleteQuietly(flowFile);
+			return "deleted";	
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "failed to delete flow " + e.getMessage();			
+		}			
+	
+	}
+	
+	
+	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception {
+		
+		TreeMap<String, String> props = new TreeMap<>();
+		props.put("id",flowId);
+		props.put("flow.name",flowId);
+		props.put("flow.type","esb");
+		props.put("esb.1.route", configuration);
+		
+		addESBFlow(props);
+		
+		String status = startFlow(flowId);
+	
+		return status;	
+	
+	}
+
 	
 	public String startFlow(String id) {
 

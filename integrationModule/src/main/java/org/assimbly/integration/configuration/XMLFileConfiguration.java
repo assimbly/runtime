@@ -87,16 +87,7 @@ public class XMLFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 		
 		if(!xml.endsWith("</integration>")){
-
-			//convert camel2 to camel3
-			xml = camel2ToCamel3(xml);
-		
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-			InputStream is = classloader.getResourceAsStream("transform-to-assimbly.xsl");
-
-			//transform to Assimbly format
-			xml = TransformUtil.transformXML(xml,is);
-		
+			xml = TransformUtil.convertCamelToAssimblyFormat(xml);
 		}
 		
 		DocumentBuilder docBuilder = setDocumentBuilder("integration.xsd");
@@ -271,23 +262,5 @@ public class XMLFileConfiguration {
 
 		return list;
 	}
-	
-	private static String camel2ToCamel3(String input){
-		
-		Map<String, String> map = new HashMap<>();
-
-		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
-		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
-		map.put("headerName","name");
-		
-		String output = TransformUtil.replaceMultipleStrings(input, map, true);
-		
-		//you may uncheck the method below, because it maybe faster on large maps
-		//TransformUtil.replaceMultipleString2(input, map);
-		
-		return output;
-		
-	}
-	
 	
 }

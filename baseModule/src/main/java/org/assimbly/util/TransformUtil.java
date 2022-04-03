@@ -12,15 +12,51 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.w3c.dom.Node;
+
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.dom.DOMSource;
 
 import org.apache.commons.lang3.StringUtils;
 
 public final class TransformUtil {
 
     private static Logger logger = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+
+
+	public static String convertCamelToAssimblyFormat(String xml){
+		
+		//convert camel2 to camel3
+		xml = camel2ToCamel3(xml);
+	
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		InputStream is = classloader.getResourceAsStream("transform-to-assimbly.xsl");
+
+		//transform to Assimbly format
+		xml = transformXML(xml,is);
+	
+		return xml;
+	}
+			
+	private static String camel2ToCamel3(String input){
+		
+		Map<String, String> map = new HashMap<>();
+
+		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
+		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
+		map.put("headerName","name");
+		
+		String output = replaceMultipleStrings(input, map, true);
+		
+		//you may uncheck the method below, because it maybe faster on large maps
+		//replaceMultipleString2(input, map);
+		
+		return output;
+		
+	}
+
 
     public static String transformXML(String xml, InputStream xslFile) {
         String outputXML = null;
@@ -106,4 +142,20 @@ public final class TransformUtil {
         return StringUtils.replaceEach( text, keys, values );
     }
 	
+	public static String nodeToString(Node node) {
+
+		StringWriter sw = new StringWriter();
+
+		try {
+		  Transformer t = TransformerFactory.newInstance().newTransformer();
+		  t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+		  t.setOutputProperty(OutputKeys.INDENT, "yes");
+		  t.transform(new DOMSource(node), new StreamResult(sw));
+		} catch (TransformerException te) {
+		  System.out.println("nodeToString Transformer Exception");
+		}
+
+		return sw.toString();
+
+	}
 }

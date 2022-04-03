@@ -17,8 +17,8 @@
                   <id>1</id>
                   <name>default</name>
                   <type>FULL</type>
-                  <environmentName>PROD</environmentName>
-                  <stage>PROD</stage>
+                  <environmentName>PRODUCTION</environmentName>
+                  <stage>PRODUCTION</stage>
                   <flows>
                     <flow>
                       <id>
@@ -26,7 +26,7 @@
                             <xsl:when test="//*:camelContext/@id">
     					        <xsl:value-of select="//*:camelContext/@id"/>
                             </xsl:when>
-                            <xsl:when test="*:routes/@id">
+                            <xsl:when test="//*:routes/@id">
         				        <xsl:value-of select="//*:routes/@id"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -36,17 +36,17 @@
 					  </id>
                       <name>
                         <xsl:choose>
-                            <xsl:when test="*:camelContext/@id">
-        				        <xsl:value-of select="*:routes/@id"/>
+                            <xsl:when test="//*:camelContext/@id">
+    					        <xsl:value-of select="//*:camelContext/@id"/>
                             </xsl:when>
-                            <xsl:when test="*:routes/@id">
-            			        <xsl:value-of select="//*:routes/@id"/>
+                            <xsl:when test="//*:routes/@id">
+        				        <xsl:value-of select="//*:routes/@id"/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:value-of  select="current-dateTime()"/>
-                            </xsl:otherwise>                            
+                            </xsl:otherwise>
                         </xsl:choose>
-                      </name>
+					  </name>
                       <type>esb</type>
                       <components>
                          <xsl:for-each-group select="//*:from|//*:to|//*:toD" group-by="substring-before(@uri, ':' )" >

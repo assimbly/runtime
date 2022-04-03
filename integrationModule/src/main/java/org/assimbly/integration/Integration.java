@@ -486,6 +486,52 @@ public interface Integration {
 	public String pauseFlow(String flowId) throws Exception;
 
 	/**
+	* Configure and Starts a flow (for testing)
+	*
+	* @param  flowId the id of the flow
+	* @param  mediaType (XML,JSON,YAML)
+	* @param  configuration (the XML, JSON or YAML file)
+	* @return returns a confirmation message
+	* @throws Exception if flow doesn't start
+	*/	
+	public String testFlow(String flowId, String mediaType, String configuration) throws Exception;
+
+	/**
+	* Configure and Starts a flow from a routes xml
+	*
+	* @param  flowId the id of the flow
+	* @param  mediaType (XML,JSON,YAML)
+	* @param  configuration (the Camel routes XML)
+	* @return returns a confirmation message
+	* @throws Exception if flow doesn't start
+	*/	
+	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
+
+
+	/**
+	* Installs a flow by saving the configuration as a file in the deploy directory
+	*
+	* @param  flowId the id of the flow
+	* @param  mediaType (XML,JSON,YAML)
+	* @param  configuration (the Camel routes XML)
+	* @return returns a confirmation message ("saved")
+	* @throws Exception if flow doesn't start
+	*/	
+	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception;
+
+
+	/**
+	* Uninstalls a flow by deleting the configuration as a file in the deploy directory
+	*
+	* @param  flowId the id of the flow
+	* @param  mediaType (XML,JSON,YAML)
+	* @return returns a confirmation message ("deleted")
+	* @throws Exception if flow doesn't start
+	*/	
+	public String fileUninstallFlow(String flowId, String mediaType) throws Exception;
+
+	
+	/**
 	* Checks if a flow is started
 	*
 	* @param  flowId the id of the flow

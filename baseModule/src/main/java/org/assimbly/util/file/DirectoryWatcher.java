@@ -127,8 +127,13 @@ public class DirectoryWatcher implements Runnable, Service {
 
                 Path path = dir.resolve(pathEvent.context());
 				try {
-					if (mFilter.accept(path) && EVENT_MAP.containsKey(kind) && path.toString().toLowerCase().endsWith(".xml") && Files.size(path) > 0) {
-						mListener.onEvent(EVENT_MAP.get(kind), path);
+					System.out.println("EVENT: " + EVENT_MAP.get(kind) + " | kind=" + kind);
+					if (mFilter.accept(path) && EVENT_MAP.containsKey(kind)) {
+						if (event.kind().equals(ENTRY_DELETE)) {
+							mListener.onEvent(EVENT_MAP.get(kind), path);
+						}else if(Files.exists(path) && Files.size(path)> 0 && path.toString().toLowerCase().endsWith(".xml")){
+							mListener.onEvent(EVENT_MAP.get(kind), path);
+						}
 					}
 				} catch (IOException ie) {
 					LOGGER.error("Not watching '{}'.", dir, ie);
