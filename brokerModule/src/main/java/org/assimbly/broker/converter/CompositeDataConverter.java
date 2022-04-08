@@ -43,7 +43,6 @@ public class CompositeDataConverter {
             Set<String> keys = compositeData.getCompositeType().keySet();
 
             JSONObject message = new JSONObject();
-            JSONObject headers = new JSONObject();
             JSONObject jmsheaders = new JSONObject();
 
             for(String key : keys){

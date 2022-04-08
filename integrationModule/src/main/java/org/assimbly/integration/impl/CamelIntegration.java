@@ -16,8 +16,13 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
+import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RouteController;
+import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.Tracer;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FileUtils;
@@ -43,6 +48,7 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
@@ -80,7 +86,6 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 			initIntegration(true);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -89,7 +94,6 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 			initIntegration(useDefaultSettings);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -128,6 +132,7 @@ public class CamelIntegration extends BaseIntegration {
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
+		
 
 	}
 
@@ -286,7 +291,6 @@ public class CamelIntegration extends BaseIntegration {
 		
 		String pathAsString = path.toString();
 		String flowId = FilenameUtils.getBaseName(pathAsString);
-		String mediaType = FilenameUtils.getExtension(pathAsString);
 
 		logger.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
 
@@ -405,7 +409,20 @@ public class CamelIntegration extends BaseIntegration {
 		}
 	}
 
+	//later move to https://www.javadoc.io/doc/org.apache.camel/camel-api/3.14.2/org/apache/camel/spi/RoutesLoader.html
+	//ExtendedCamelContext extended = context.getExtension(ExtendedCamelContext.class);
+	//extended.getRoutesLoader().updateRoutes(resources);
+	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
+
 	public void addXmlRoute(String xml) throws Exception {
+
+		/* need to test		
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+		Resource resource = ResourceHelper.fromString("any.xml", xml);
+		loader.updateRoutes(resource);
+		*/
+
 		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
 		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
@@ -530,7 +547,7 @@ public class CamelIntegration extends BaseIntegration {
 		
 		try {
 			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
-			FileUtils.writeStringToFile(flowFile, configuration, true);
+			FileUtils.writeStringToFile(flowFile, configuration, Charset.defaultCharset());
 			return "saved";	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -786,9 +803,9 @@ public class CamelIntegration extends BaseIntegration {
 		
 		if(hasFlow(id)) {
 			ServiceStatus status = null;
-			List routeList = getRoutesByFlowId(id);
+			List<Route> routes = getRoutesByFlowId(id);
 
-			for(Route route : getRoutesByFlowId(id)){
+			for(Route route : routes){
 				status = routeController.getRouteStatus(route.getId());
 
 				if(!status.isStarted()){
@@ -812,7 +829,6 @@ public class CamelIntegration extends BaseIntegration {
 				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
 				flowStatus = status.toString().toLowerCase();
 			}catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				flowStatus = "error: " + e.getMessage();
 			}
@@ -1347,7 +1363,6 @@ public class CamelIntegration extends BaseIntegration {
     		Certificate[] certificates = util.downloadCertificates(url);
     		return certificates;
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
     	return null;
@@ -1367,7 +1382,6 @@ public class CamelIntegration extends BaseIntegration {
 			String keystorePath = baseDir + "/security/" + keystoreName;
 			util.importCertificates(keystorePath, keystorePassword, certificates);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
@@ -1400,8 +1414,6 @@ public class CamelIntegration extends BaseIntegration {
 		String keystorePath = baseDir + "/security/" + keystoreName;
 
 		File file = new File(keystorePath);
-
-		String result;
 
 		if(file.exists()) {
 			return util.importCertificates(keystorePath, keystorePassword, certificates);

@@ -282,6 +282,10 @@ public abstract class BaseIntegration implements Integration {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
 	}
 
+	public String getBaseDirectory() {
+		return BaseDirectory.getInstance().getBaseDirectory();
+	}
+
 	public String testConnection(String host, int port, int timeOut) {
 		return IntegrationUtil.testConnection(host, port, timeOut);
 	}
@@ -300,6 +304,8 @@ public abstract class BaseIntegration implements Integration {
 	public abstract void setTracing(boolean tracing, String type);
 
 	public abstract void setDebugging(boolean debugging);
+	
+	public abstract void setDeployDirectory(boolean deployOnstart, boolean deployOnChange) throws Exception;
 
 	public abstract void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
 

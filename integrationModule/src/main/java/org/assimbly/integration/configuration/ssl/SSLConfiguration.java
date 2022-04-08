@@ -76,7 +76,6 @@ public class SSLConfiguration {
 				Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 				is.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

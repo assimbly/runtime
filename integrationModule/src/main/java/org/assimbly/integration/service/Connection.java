@@ -1,9 +1,7 @@
 package org.assimbly.integration.service;
 
-import com.ibm.mq.constants.MQConstants;
 import com.ibm.mq.jms.MQConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
-import com.ibm.msg.client.wmq.common.CommonConstants;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
@@ -23,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import progress.message.jclient.ConnectionFactory;
 
-import javax.jms.JMSException;
 import java.util.*;
 
 public class Connection {
@@ -83,7 +80,7 @@ public class Connection {
 	//unused (future purposes)
 	public TreeMap<String, String> stop() throws Exception{
 		if(properties.get("from.service.id")!=null){
-			uri = properties.get("from.uri");//TODO: Get uri using get("from.<serviceId>.uri")
+			uri = properties.get("from.uri");
 			//stopConnection(uri,"from");
 		}
 		if(properties.get("to.service.id")!=null){
@@ -480,12 +477,13 @@ public class Connection {
                 if (url != null || username != null || password != null) {
 
                     ConnectionFactory connection = new ConnectionFactory(url, username, password);
-                    SjmsComponent jms = new SjmsComponent();
+                    try (SjmsComponent jms = new SjmsComponent()) {
+                        jms.setConnectionFactory(connection);
+                        jms.setCamelContext(context);
 
-                    jms.setConnectionFactory(connection);
-                    jms.setCamelContext(context);
+                        jms.stop();
+                    }
 
-                    jms.stop();
                     context.removeComponent(componentName);
 
                 } else {
@@ -507,9 +505,6 @@ public class Connection {
 
 
     private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
-
-        EncryptableProperties decryptedProperties = decryptProperties(properties);
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
 
         if (direction.equals("to") || direction.equals("from")) {
             direction = direction + "." + endpointId;

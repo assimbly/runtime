@@ -1,6 +1,5 @@
 package org.assimbly.brokerrest;
 
-import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +15,8 @@ public class BrokerConfigurerResource {
 
     private final Logger log = LoggerFactory.getLogger(BrokerConfigurerResource.class);
 
-    private static final String ENTITY_NAME = "broker";
-
     @Autowired
 	private ManagedBroker broker;
-
-    private String result;
-
-    private static final long id = 0L;
 
     /**
      * GET  /brokers/:id : get the broker configuration by "id".

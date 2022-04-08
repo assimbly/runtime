@@ -25,8 +25,6 @@ public class FlowConfigurerResource {
     @Autowired
     private IntegrationResource integrationResource;
 
-    private String flowId;
-
     private boolean plainResponse;
 
     private String flowConfiguration;

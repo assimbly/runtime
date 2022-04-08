@@ -102,8 +102,7 @@ public class EventCollector extends EventNotifierSupport {
 
 	@Override
 	public void notify(CamelEvent event) throws Exception {
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub		
 	}
 
 }

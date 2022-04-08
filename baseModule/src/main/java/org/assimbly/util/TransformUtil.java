@@ -19,12 +19,10 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.dom.DOMSource;
 
-import org.apache.commons.lang3.StringUtils;
 
 public final class TransformUtil {
 
     private static Logger logger = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
-
 
 	public static String convertCamelToAssimblyFormat(String xml){
 		
@@ -127,19 +125,6 @@ public final class TransformUtil {
         matcher.appendTail(res);
 
         return res.toString();
-    }
-
-    private static String replaceMultipleStrings2(final String text, final Map<String, String> map ) {
-
-		String[] keys = new String[map.size()];
-		String[] values = new String[map.size()];
-		int index = 0;
-		for (Map.Entry<String, String> mapEntry : map.entrySet()) {
-			keys[index] = mapEntry.getKey();
-			values[index] = mapEntry.getValue();
-			index++;
-		}
-        return StringUtils.replaceEach( text, keys, values );
     }
 	
 	public static String nodeToString(Node node) {

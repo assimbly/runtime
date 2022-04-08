@@ -31,7 +31,6 @@ public class Unmarshall {
 
 	private String integrationXPath;
 	private String endpointXPath;
-	private String serviceXPath;
 	private String headerXPath;
 
 	private String uri;

@@ -1,27 +1,54 @@
 package org.assimbly.util;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.*;
-import java.security.cert.*;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
-import java.math.BigInteger;
-import java.util.Date;
-import java.io.IOException;
 import javax.net.ssl.SSLSession;
 
-import java.security.KeyPair;
-import java.security.PublicKey;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.DateUtils;
+import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -42,20 +69,6 @@ import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.DateUtils;
-import org.apache.http.conn.ManagedHttpClientConnection;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,12 +105,10 @@ public final class CertificatesUtil {
 		try {
 
 			// make HTTP GET request to resource server
-            HttpGet httpget = new HttpGet(url);
+            new HttpGet(url);
 
 			// create http context where the certificate will be added
             HttpContext context = new BasicHttpContext();
-
-			CloseableHttpResponse x = httpClient.execute(httpget, context);
 
 			// obtain the server certificates from the context
             peercertificates = (Certificate[])context.getAttribute(PEER_CERTIFICATES);
@@ -254,7 +265,7 @@ public final class CertificatesUtil {
 
 		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
 
-		Enumeration aliases = p12Store.aliases();
+		Enumeration<String> aliases = p12Store.aliases();
 
 		Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
 

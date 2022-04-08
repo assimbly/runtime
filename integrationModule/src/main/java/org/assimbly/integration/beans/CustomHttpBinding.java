@@ -28,7 +28,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
-        Message target = exchange.hasOut() ? exchange.getOut() : exchange.getIn();
+        Message target = exchange.hasOut() ? exchange.getMessage() : exchange.getIn();
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {
                 addResponseTimeHeader(exchange, target);
@@ -41,7 +41,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
         } else {
             if (exchange.hasOut()) {
                 // just copy the protocol relates header if we do not have them
-                copyProtocolHeaders(exchange.getIn(), exchange.getOut());
+                copyProtocolHeaders(exchange.getIn(), exchange.getMessage());
             }
             addResponseTimeHeader(exchange, target);
             doWriteResponse(target, response, exchange);
@@ -136,7 +136,6 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private void addResponseTimeHeader(Exchange exchange, Message message) {
-		Long created = new Long(exchange.getCreated());
         Instant initInstant = Instant.ofEpochMilli(exchange.getCreated()); //created.toInstant();
         Instant nowInstant = Calendar.getInstance().toInstant();
         Duration duration = Duration.between(initInstant, nowInstant);

@@ -1,7 +1,6 @@
 package org.assimbly.brokerrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class TopicManagerResource {
 
     private final Logger log = LoggerFactory.getLogger(TopicManagerResource.class);
-
-    private static final String ENTITY_NAME = "broker";
 
     @Autowired
     public ManagedBroker broker;

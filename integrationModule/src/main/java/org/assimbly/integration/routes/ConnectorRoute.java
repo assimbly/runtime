@@ -2,7 +2,6 @@ package org.assimbly.integration.routes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.camel.*;
@@ -20,7 +19,6 @@ import org.assimbly.integration.processors.ConvertProcessor;
 import org.assimbly.integration.processors.FailureProcessor;
 import org.assimbly.integration.processors.HeadersProcessor;
 import org.assimbly.integration.routes.errorhandler.ErrorHandler;
-import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +37,6 @@ public class ConnectorRoute extends RouteBuilder {
 	private boolean assimblyHeaders;
 
 	private Processor headerProcessor;
-	private Processor failureProcessor;
 	private Processor convertProcessor;
 	
 	private List<String> onrampUriKeys;
@@ -50,16 +47,13 @@ public class ConnectorRoute extends RouteBuilder {
 
 	private String logLevelAsString;
 
-	private int maximumRedeliveries;
-	private int redeliveryDelay;
-	private int maximumRedeliveryDelay;
-	private int backOffMultiplier;
-	
 	private ManagedCamelContext managed;
-	
-	private EncryptableProperties decryptedProperties;
-	
+
 	private int index = 0;
+
+	private EncryptableProperties decryptedProperties;
+
+	private FailureProcessor failureProcessor;
 	
 	
 	public ConnectorRoute(final TreeMap<String, String> props){

@@ -136,12 +136,19 @@ public interface Integration {
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
 
 	/**
-	* sets the integration base directory. In this directory everything is stored (alert, events) 
+	* sets the integration base directory. In this directory event are stored (like logs, alerts, events) 
 	*
 	* @param  baseDirectory (path) 
 	* @throws Exception if base directory can't be set is not available
 	*/
 	public void setBaseDirectory(String baseDirectory) throws Exception;
+
+	/**
+	* gets the integration base directory. In this directory event are stored (like logs, alerts, events) 
+	*
+	* @throws Exception if base directory can't be retrieved
+	*/
+	public String getBaseDirectory() throws Exception;
 	
 	/**
 	* sets the integration base directory. In this directory everything is stored (alert, events) 
@@ -190,6 +197,13 @@ public interface Integration {
 	 * @param debugging to turn on debugging, false to turn it off
 	 */
 	public void setDebugging(boolean debugging);
+
+	/**
+	 * Turn on/off loading/starting flows (as file) from the deploy directory
+	 * @param deployOnStart if true then flows in the deploy directory are started on startup of Assimbly
+	 * @param deployOnChange if true then flows in the deploy directory are started on file change
+	 */
+	public void setDeployDirectory(boolean deployOnStart, boolean deployOnChange) throws Exception;
 
 	/**
 	 * Turn on/off suppressLoggingOnTimeout

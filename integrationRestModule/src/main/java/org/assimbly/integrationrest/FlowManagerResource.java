@@ -13,7 +13,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Optional;
 import java.util.TreeMap;
 
 /**
@@ -496,7 +495,6 @@ public class FlowManagerResource {
                         }
 
                     } catch (Exception e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }

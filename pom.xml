@@ -23,7 +23,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<activemq-classic-version>5.17.0</activemq-classic-version>
 		<activemq-artemis-version>2.21.0</activemq-artemis-version>
-		<spring-version>5.3.17</spring-version>
+		<spring-version>5.3.18</spring-version>
 		<jolokia-version>1.7.1</jolokia-version>
 		<maven-versions-rules>file:///${project.basedir}/baseModule/src/main/resources/rules.xml</maven-versions-rules>
 	</properties>

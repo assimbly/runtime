@@ -31,6 +31,12 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.*;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -53,6 +59,26 @@ public final class IntegrationUtil {
 			return false;
 		}
 
+	}
+
+	public static boolean isYaml(String yaml){
+		try {
+			final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			mapper.readTree(yaml);
+			return true;
+		 } catch (IOException e) {
+			return false;
+		 }
+	}
+
+	public static boolean isJson(String json){
+		try {
+			final ObjectMapper mapper = new ObjectMapper();
+			mapper.readTree(json);
+			return true;
+		 } catch (IOException e) {
+			return false;
+		 }
 	}
 
 	public static boolean isXML(String xml) {

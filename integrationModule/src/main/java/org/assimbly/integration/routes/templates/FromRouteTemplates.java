@@ -1,9 +1,6 @@
 package org.assimbly.integration.routes.templates;
 
-import org.apache.camel.*;
 import org.apache.camel.builder.RouteBuilder;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 public class FromRouteTemplates extends RouteBuilder {
 

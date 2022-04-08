@@ -33,8 +33,6 @@ public class IntegrationResource {
 
     private boolean plainResponse;
 
-    private String gatewayConfiguration;
-
     private boolean integrationIsStarting = false;
 
     private String type;
@@ -88,7 +86,6 @@ public class IntegrationResource {
     public ResponseEntity<String> stop(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
-            String config = integration.getFlowConfigurations(integrationId.toString(), mediaType);
             integration.stop();
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/stop","Integration stopped");
         } catch (Exception e) {
@@ -204,17 +201,32 @@ public class IntegrationResource {
    		}
     }
 
+    @GetMapping(path = "/integration/{integrationId}/basedirectory", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
-    // Generates a generic error response (exceptions outside try catch):
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
+        plainResponse = true;
 
-    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+        try {
+            String directory = integration.getBaseDirectory();
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",directory,plainResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
+        }
+    }
 
-    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+    @PostMapping(path = "/integration/{integrationId}/basedirectory", consumes = {"text/plain"}, produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> setBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String directory) throws Exception {
+
+        plainResponse = true;
+
+        try {
+			integration.setBaseDirectory(directory);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory","success",plainResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
+        }
     }
 
     @GetMapping(path = "/integration/{integrationId}/stats", produces = {"text/plain","application/xml","application/json"})
@@ -238,17 +250,25 @@ public class IntegrationResource {
         }
     }
 
+    // Generates a generic error response (exceptions outside try catch):
+    @ExceptionHandler({Exception.class})
+    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
+
+    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
+    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
+    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
+    	String message = error.getMessage();
+
+    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+    }
 
     public Integration getIntegration() {
         return integration;
     }
 
     public void setIntegration(Properties encryptionProperties) throws Exception {
-
         integration.setEncryptionProperties(encryptionProperties);
-
     }
-
 
     public void initIntegration(){
 

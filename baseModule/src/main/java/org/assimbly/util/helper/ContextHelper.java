@@ -1,7 +1,5 @@
 package org.assimbly.util.helper;
 
-import org.apache.camel.CamelContext;
-
 public final class ContextHelper {
 
     private static final String FLOW_ID_PREFIX = "ID_";

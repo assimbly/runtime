@@ -4,7 +4,6 @@ import dev.jeka.core.api.depmanagement.*;
 import dev.jeka.core.api.depmanagement.resolution.*;
 
 import java.io.FileInputStream;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-
-import org.apache.camel.CamelContext;
 
 //import static dev.jeka.core.api.depmanagement.JkJavaDepScopes.*;
 
@@ -28,7 +25,7 @@ public class DependencyUtil {
         JkDependencySet deps = JkDependencySet.of()
                 .and(dependency);
 
-        JkDependencyResolver resolver = JkDependencyResolver.of().addRepos(JkRepo.ofMavenCentral());
+        JkDependencyResolver<Void> resolver = JkDependencyResolver.of().addRepos(JkRepo.ofMavenCentral());
         List<Path> paths = resolver.resolve(deps).getFiles().getEntries();
 
         return paths;
