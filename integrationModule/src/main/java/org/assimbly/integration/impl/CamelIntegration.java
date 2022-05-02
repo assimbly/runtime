@@ -21,8 +21,7 @@ import org.apache.camel.spi.RouteController;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.Tracer;
 import org.apache.camel.ExtendedCamelContext;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.ResourceHelper;
+import org.apache.camel.support.RouteWatcherReloadStrategy;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FileUtils;
@@ -60,6 +59,8 @@ import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
 
+	protected Logger log = LoggerFactory.getLogger(getClass());
+
 	private CamelContext context;
 
 	private boolean started = false;
@@ -80,8 +81,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private Properties encryptionProperties;
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.impl.CamelIntegration");
-
+	
 	public CamelIntegration() {
 		try {
 			initIntegration(true);
@@ -200,7 +200,27 @@ public class CamelIntegration extends BaseIntegration {
 
 
 	// (Un)install files
+
+	/* not used yet
+	public void setRoutesDirectory(boolean deployOnEvent) throws Exception{
+
+		Path path = Paths.get(baseDir + "/routes");
+		
+		//Create the deploy directory if not exist
+		Files.createDirectories(path);
+
+		System.out.println("Routes directory: " + path.toString());
+		RouteWatcherReloadStrategy reload = new RouteWatcherReloadStrategy();
+		reload.setFolder(path.toString());
+		//reload.setPattern("*.xml");
+		//reload.setRecursive(true);
+
+		context.addService(reload);
+		reload.start();
+
+	}*/
 	
+
 	public void setDeployDirectory(boolean deployOnStart, boolean deployOnEvent) throws Exception {
 			
 		Path path = Paths.get(baseDir + "/deploy");
@@ -241,7 +261,7 @@ public class CamelIntegration extends BaseIntegration {
 					public void onEvent(DirectoryWatcher.Event event, Path path) {
 						switch (event) {
 							case ENTRY_CREATE:
-								logger.info("Deploy folder | File created: " + path);	
+								log.info("Deploy folder | File created: " + path);	
 								try {
 									fileInstall(path);
 								} catch (Exception e) {
@@ -249,7 +269,7 @@ public class CamelIntegration extends BaseIntegration {
 								}
 								break;
 							case ENTRY_MODIFY:
-								logger.info("Deploy folder | File modified: " + path);	
+								log.info("Deploy folder | File modified: " + path);	
 								try {
 									fileInstall(path);
 								} catch (Exception e) {
@@ -258,7 +278,7 @@ public class CamelIntegration extends BaseIntegration {
 								break;
 								
 							case ENTRY_DELETE:
-								logger.info("Deploy folder | File deleted: " + path);	
+								log.info("Deploy folder | File deleted: " + path);	
 								try {
 									fileUninstall(path);
 								} catch (Exception e) {
@@ -281,7 +301,7 @@ public class CamelIntegration extends BaseIntegration {
 		String mediaType = FilenameUtils.getExtension(pathAsString);
 		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
 
-		logger.info("File install flowid=" + flowId + " | path=" + pathAsString);	
+		log.info("File install flowid=" + flowId + " | path=" + pathAsString);	
 
 		configureAndStartFlow(flowId, mediaType, configuration);
 		
@@ -292,7 +312,7 @@ public class CamelIntegration extends BaseIntegration {
 		String pathAsString = path.toString();
 		String flowId = FilenameUtils.getBaseName(pathAsString);
 
-		logger.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
+		log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
 
 		stopFlow(flowId);
 		
@@ -306,10 +326,12 @@ public class CamelIntegration extends BaseIntegration {
 		// start Camel context
 		context.start();
 		started = true;
-		logger.info("Integration started");
+		log.info("Integration started");
 
 		setDeployDirectory(true, true);
-		
+
+		//setRoutesDirectory(true);
+	
 	}
 
 	public void stop() throws Exception {
@@ -322,7 +344,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 			context.stop();
 			started = false;
-			logger.info("Integration stopped");
+			log.info("Integration stopped");
 		}
 	}	
 
@@ -352,11 +374,11 @@ public class CamelIntegration extends BaseIntegration {
 					scheme = scheme.toLowerCase();
 
 					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
-						logger.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
+						log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
 						if(INetUtil.isHostAvailable("repo1.maven.org")){
-							logger.info(resolveDependency(scheme));
+							log.info(resolveDependency(scheme));
 						}else{
-							logger.error("Failed to resolve " + scheme + ". No available internet is found. Cannot reach http://repo1.maven.org/maven2/");
+							log.error("Failed to resolve " + scheme + ". No available internet is found. Cannot reach http://repo1.maven.org/maven2/");
 						}
 					}
 				}
@@ -380,7 +402,7 @@ public class CamelIntegration extends BaseIntegration {
 			addRoutesFlow(props);
 		}
 		
-		logger.info("Loaded flow configuration | type=" + flowType);
+		log.info("Loaded flow configuration | type=" + flowType);
 
 	}
 
@@ -390,7 +412,11 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void addESBFlow(final TreeMap<String, String> props) throws Exception {
+		//ESBRoute flow = new ESBRoute();
+		//flow.loadRoutes(context);
+
 		ESBRoute flow = new ESBRoute(props);
+		//flow.configure(context);
 		flow.updateRoutesToCamelContext(context);
 	}
 	
@@ -404,7 +430,7 @@ public class CamelIntegration extends BaseIntegration {
 
 			if (key.endsWith("route")){
 				String xml = props.get(key);
-				addXmlRoute(xml);
+				updateRoute(xml);
 			}
 		}
 	}
@@ -414,17 +440,11 @@ public class CamelIntegration extends BaseIntegration {
 	//extended.getRoutesLoader().updateRoutes(resources);
 	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
 
-	public void addXmlRoute(String xml) throws Exception {
-
-		/* need to test		
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+	public void updateRoute(String route) throws Exception {
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
 		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-		Resource resource = ResourceHelper.fromString("any.xml", xml);
+		Resource resource = IntegrationUtil.setResource(route);		
 		loader.updateRoutes(resource);
-		*/
-
-		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
-		managedContext.addOrUpdateRoutesFromXml(xml);
 	}
 	
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
@@ -454,7 +474,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String startAllFlows() throws Exception {
-		logger.info("Starting all flows");
+		log.info("Starting all flows");
 
 		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
@@ -470,7 +490,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String restartAllFlows() throws Exception {
-		logger.info("Restarting all flows");
+		log.info("Restarting all flows");
 		
 		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
@@ -486,7 +506,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String pauseAllFlows() throws Exception {
-		logger.info("Pause all flows");
+		log.info("Pause all flows");
 		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
@@ -502,7 +522,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String resumeAllFlows() throws Exception {
-		logger.info("Resume all flows");
+		log.info("Resume all flows");
 		
 		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
@@ -518,7 +538,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	public String stopAllFlows() throws Exception {
-		logger.info("Stopping all flows");
+		log.info("Stopping all flows");
 		
 		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
         Iterator<TreeMap<String, String>> it = allProps.iterator();
@@ -589,7 +609,7 @@ public class CamelIntegration extends BaseIntegration {
 	
 	public String startFlow(String id) {
 
-		logger.info("Start flow | id=" + id);
+		log.info("Start flow | id=" + id);
 
 		boolean flowAdded = false;
 		
@@ -601,7 +621,7 @@ public class CamelIntegration extends BaseIntegration {
 
 				if (props.get("id").equals(id)) {
 					
-					logger.info("Load flow configuration | id=" + id);
+					log.info("Load flow configuration | id=" + id);
 					addFlow(props);
 					flowAdded = true;
 				}
@@ -616,7 +636,7 @@ public class CamelIntegration extends BaseIntegration {
 					String routeId = route.getId();
 					status = routeController.getRouteStatus(routeId);
 					if(!status.isStarted()) {
-						logger.info("Starting route " + routeId);
+						log.info("Starting route " + routeId);
 						routeController.startRoute(routeId);
 
 						int count = 1;
@@ -629,11 +649,11 @@ public class CamelIntegration extends BaseIntegration {
 						} while (status.isStarting() || count < 3000);
 
 					} else {
-						logger.info("Started route | id=" + routeId);
+						log.info("Started route | id=" + routeId);
 					}
 				}
 
-				//logger.info("Started flow | id=" + id);
+				//log.info("Started flow | id=" + id);
 				return status.toString().toLowerCase();
 				
 			}else {
@@ -642,7 +662,7 @@ public class CamelIntegration extends BaseIntegration {
 			
 		}catch (Exception e) {
 			if(!context.isStarted()) {
-				logger.info("Unable to start flow. Integration isn't running");
+				log.info("Unable to start flow. Integration isn't running");
 			}	
 			e.printStackTrace();
 			stopFlow(id);			
@@ -652,7 +672,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String restartFlow(String id) {
 
-		logger.info("Restart flow | id=" + id);
+		log.info("Restart flow | id=" + id);
 
 		try {
 			if(hasFlow(id)) {
@@ -673,7 +693,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	public String stopFlow(String id) {
-		logger.info("Stop flow | id=" + id);
+		log.info("Stop flow | id=" + id);
 		try {
 			List<Route> routeList = getRoutesByFlowId(id);
 			for (Route route : routeList) {
@@ -691,7 +711,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String pauseFlow(String id) {
-		logger.info("Pause flow | id=" + id);
+		log.info("Pause flow | id=" + id);
 		
 		try {
 
@@ -716,10 +736,10 @@ public class CamelIntegration extends BaseIntegration {
 					do {
 						status = routeController.getRouteStatus(routeId);
 						if(status.isSuspended()) {
-							logger.info("Paused (suspend) flow | id=" + id + ", route " + routeId);
+							log.info("Paused (suspend) flow | id=" + id + ", route " + routeId);
 							break;
 						}else if(status.isStopped()){
-							logger.info("Paused (stopped) flow | id=" + id + ", route " + routeId);
+							log.info("Paused (stopped) flow | id=" + id + ", route " + routeId);
 
 							break;
 						}
@@ -729,7 +749,7 @@ public class CamelIntegration extends BaseIntegration {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				logger.info("Paused flow id=" + id);
+				log.info("Paused flow id=" + id);
 				return status.toString().toLowerCase();
 
 			}else {
@@ -746,7 +766,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String resumeFlow(String id) throws Exception {
-		logger.info("Resume flow id=" + id);
+		log.info("Resume flow id=" + id);
 		
 		try {
 		
@@ -770,18 +790,18 @@ public class CamelIntegration extends BaseIntegration {
 						} while (status.isStarting() || count < 3000);
 
 						resumed = true;
-						logger.info("Resumed flow id=" + id + ", route " + routeId);
+						log.info("Resumed flow id=" + id + ", route " + routeId);
 
 					}
 					else if (status.isStopped()){
 
-						logger.info("Starting route as route " + id + " is currently stopped (not suspended)");
+						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
 						startFlow(routeId);
 						resumed = true;
 					}
 				}
 				if(resumed){
-					logger.info("Resumed flow id=" + id);
+					log.info("Resumed flow id=" + id);
 					return status.toString().toLowerCase();
 				}else {
 					return "Flow isn't suspended (nothing to resume)";
@@ -1112,7 +1132,7 @@ public class CamelIntegration extends BaseIntegration {
 
 
 	//Other management tasks
-
+	
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
 		return new Connection(context, props, key).start();
 	}
@@ -1123,7 +1143,7 @@ public class CamelIntegration extends BaseIntegration {
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
  		
 		String doc = catalog.componentJSonSchema(componentType);
-
+	
 		if(doc==null || doc.isEmpty()) {
 			doc = "Unknown component";
 		}
@@ -1158,6 +1178,7 @@ public class CamelIntegration extends BaseIntegration {
  	
 		String schema = catalog.componentJSonSchema(componentType);
 		
+
 		if(schema==null || schema.isEmpty()) {
 			schema = "Unknown component";
 		}else if(mediaType.contains("xml")) {
@@ -1169,8 +1190,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	@Override
 	public String getComponentParameters(String componentType, String mediaType) throws Exception {
-				
-		String parameters = managed.getManagedCamelContext().componentParameterJsonSchema(componentType);
+
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+ 	
+		String parameters = catalog.componentJSonSchema(componentType);
 		
 		if(parameters==null || parameters.isEmpty()) {
 			parameters = "Unknown component";
@@ -1201,7 +1224,7 @@ public class CamelIntegration extends BaseIntegration {
 		String jsonString = catalog.componentJSonSchema(scheme);
 
 		if(jsonString == null || jsonString.isEmpty()){
-			logger.info("Unknown scheme: " + scheme);
+			log.info("Unknown scheme: " + scheme);
 			return null;
 		}
 		JSONObject componentSchema = new JSONObject(jsonString);
@@ -1279,10 +1302,10 @@ public class CamelIntegration extends BaseIntegration {
 		ProducerTemplate template = context.createProducerTemplate();
 
 		if(numberOfTimes.equals(1)){
-			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			log.info("Sending " + numberOfTimes + " message to " + uri);
 			template.sendBody(uri, messageBody);
 		}else{
-			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			log.info("Sending " + numberOfTimes + " messages to " + uri);
 			IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
 		}
 	}
@@ -1296,10 +1319,10 @@ public class CamelIntegration extends BaseIntegration {
 		exchange = setHeaders(exchange, messageHeaders);
 
 		if(numberOfTimes.equals(1)){
-			logger.info("Sending " + numberOfTimes + " message to " + uri);
+			log.info("Sending " + numberOfTimes + " message to " + uri);
 			template.send(uri,exchange);
 		}else{
-			logger.info("Sending " + numberOfTimes + " messages to " + uri);
+			log.info("Sending " + numberOfTimes + " messages to " + uri);
 			Exchange finalExchange = exchange;
 			IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
 		}
@@ -1310,7 +1333,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		ProducerTemplate template = context.createProducerTemplate();
 
-		logger.info("Sending request message to " + uri);
+		log.info("Sending request message to " + uri);
 
 		return template.requestBody(uri, messageBody,String.class);
 	}
@@ -1324,7 +1347,7 @@ public class CamelIntegration extends BaseIntegration {
 		exchange = setHeaders(exchange, messageHeaders);
 		exchange.setPattern(ExchangePattern.InOut);
 
-		logger.info("Sending request message to " + uri);
+		log.info("Sending request message to " + uri);
 		Exchange result = template.send(uri,exchange);
 
 		return result.getMessage().getBody(String.class);

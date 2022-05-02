@@ -27,8 +27,9 @@ import java.util.regex.Pattern;
 
 public final class XmlHelper {
 
+    protected static final Logger log = LoggerFactory.getLogger(XmlHelper.class);
+
     public static final String validXmlRegex = "[^A-z0-9_.\\-]|^(xml|[\\-0-9\\.])+";
-    private static final Logger LOG = LoggerFactory.getLogger(XmlHelper.class);
 
     public static Document newDocument(){
         DocumentBuilderFactory icFactory;
@@ -40,7 +41,7 @@ public final class XmlHelper {
 
             return icBuilder.newDocument();
         } catch (ParserConfigurationException e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
 
         return null;
@@ -62,7 +63,7 @@ public final class XmlHelper {
                     new InputSource(new StringReader(xml))
             );
         } catch (SAXException | IOException | ParserConfigurationException e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
 
         return null;
@@ -101,7 +102,7 @@ public final class XmlHelper {
 
             transformer.transform(new DOMSource(doc), result);
         } catch (TransformerException e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
 
         return result.getWriter().toString();
@@ -114,7 +115,7 @@ public final class XmlHelper {
             DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             doc = db.parse(new InputSource(new StringReader(xml)));
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
 
         return prettyPrint(doc);

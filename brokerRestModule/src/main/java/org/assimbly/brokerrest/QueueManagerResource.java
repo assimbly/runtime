@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class QueueManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(QueueManagerResource.class);
-
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
     @Autowired
     private ManagedBroker broker;
 

@@ -14,11 +14,14 @@ import org.apache.camel.builder.RouteBuilder;
 import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.spi.Resource;
+import org.apache.camel.spi.RoutesLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.processors.ConvertProcessor;
 import org.assimbly.integration.processors.FailureProcessor;
 import org.assimbly.integration.processors.HeadersProcessor;
 import org.assimbly.integration.routes.errorhandler.ErrorHandler;
+import org.assimbly.util.IntegrationUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,15 +29,20 @@ import org.slf4j.LoggerFactory;
 
 public class ConnectorRoute extends RouteBuilder {
 
+	protected Logger log = LoggerFactory.getLogger(getClass());
+
 	private TreeMap<String, String> props;
-	
+
+	private CamelContext context;
+	private ExtendedCamelContext extendedCamelContext;
+
 	private DefaultErrorHandlerBuilder routeErrorHandler;
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.ConnectorRoute");
-	
+
 	private String flowId;
 	private String flowName;
 	private boolean parallelProcessing;
 	private boolean assimblyHeaders;
+	private String logLevelAsString;
 
 	private Processor headerProcessor;
 	private Processor convertProcessor;
@@ -44,10 +52,6 @@ public class ConnectorRoute extends RouteBuilder {
 	private List<String> responseUriKeys;
 	private List<String> errorUriKeys;
 	private String[] offrampUriList;
-
-	private String logLevelAsString;
-
-	private ManagedCamelContext managed;
 
 	private int index = 0;
 
@@ -69,9 +73,7 @@ public class ConnectorRoute extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		CamelContext context = getContext();
-
-		managed = context.getExtension(ManagedCamelContext.class);
+		context = getContext();
 
 		decryptedProperties = decryptProperties(props);
 
@@ -191,7 +193,7 @@ public class ConnectorRoute extends RouteBuilder {
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
 				String xml = props.get("from." + endpointId + ".route");
-				addXmlRoute(xml, managed);
+				updateRoute(xml);
 			}
 			
 			from(uri)
@@ -257,7 +259,7 @@ public class ConnectorRoute extends RouteBuilder {
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
 				String xml = props.get("to." + endpointId + ".route");
-				addXmlRoute(xml, managed);
+				updateRoute(xml);
 			}
 
 			if(hasDynamicEndpoint) {
@@ -366,7 +368,7 @@ public class ConnectorRoute extends RouteBuilder {
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
 				String xml = props.get("response." + endpointId + ".route");
-				addXmlRoute(xml, managed);
+				updateRoute(xml);
 			}
 
 			from("direct:flow=" + flowId + "endpoint=" + responseId)
@@ -419,9 +421,11 @@ public class ConnectorRoute extends RouteBuilder {
 	}
 
 	//adds XML route
-	private void addXmlRoute(String xml, ManagedCamelContext managed) throws Exception {
-		ManagedCamelContextMBean managedContext = managed.getManagedCamelContext();
-		managedContext.addOrUpdateRoutesFromXml(xml);
+	private void updateRoute(String route) throws Exception {
+		extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
+		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+		Resource resource = IntegrationUtil.setResource(route);		
+		loader.updateRoutes(resource);
 	}
 
 	//

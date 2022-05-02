@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class ErrorHandler {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.errorhandler.ErrorHandler");
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	private DefaultErrorHandlerBuilder errorHandler;
 	
@@ -83,16 +83,16 @@ public class ErrorHandler {
 			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.onExceptionOccurred(failureProcessor)
+			.onExceptionOccurred(failureProcessor)			
 			.logRetryStackTrace(false)
 			.logStackTrace(true)
 			.logHandled(true)
 			.logExhausted(true)
 			.logExhaustedMessageHistory(true)
-			.log(logger);
+			.log(log);
 		
 		errorHandler.setAsyncDelayedRedelivery(true);
-	
+
 		return errorHandler;
 		
 	}

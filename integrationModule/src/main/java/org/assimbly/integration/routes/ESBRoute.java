@@ -4,12 +4,12 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.camel.*;
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
-import org.apache.camel.support.ResourceHelper;
+import org.apache.commons.lang3.StringUtils;
+import org.assimbly.integration.routes.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +17,17 @@ import org.slf4j.LoggerFactory;
 
 public class ESBRoute extends RouteBuilder {
 
+	protected Logger log = LoggerFactory.getLogger(getClass());
+
 	TreeMap<String, String> props;
-	private String logLevelAsString;
-	
-	private ManagedCamelContextMBean managedContext;
+
+	private CamelContext context;
+	private ExtendedCamelContext extendedCamelContext;
+
 	private RoutesLoader loader;
-	
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.ESBRoute");
+	private DefaultErrorHandlerBuilder routeErrorHandler;
+
+	String flowName;
 	
 	public ESBRoute(final TreeMap<String, String> props){
 		this.props = props;
@@ -38,71 +42,98 @@ public class ESBRoute extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		System.out.println("Configure ESB Route");
+		flowName = props.get("flow.name");
+		
+		log.info("Configuring ESBRoute flow=" + flowName);
 
-		String flowName = props.get("flow.name");
-		
-		setLogLevel();
-		
-		setManagedContext();
-		
+		setExtendedCamelContext();
+	
+		setRouteConfiguration();
+
+		setRoutes();
+
+	}
+
+	private void setExtendedCamelContext() {		
+		context = getContext();
+		extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
+	}
+
+	private void setRouteConfiguration() throws Exception{
+
 		for(String prop : props.keySet()){
-			if(prop.endsWith("route")){
-				System.out.println("prop=" + prop);
-				String xml = props.get(prop);
-				addRoute(xml);				
+			if(prop.endsWith("route")){				
+				String route = props.get(prop);
+
+				if(route.startsWith("<routeConfiguration")){
+					loadRoute(route);					
+				}else if(prop.startsWith("error")){
+					if(route.isEmpty()){
+						setErrorHandler("");
+					}else{
+						setErrorHandler(route);
+					}
+				}
 			}
 		}
 	}
 
-	private void setManagedContext() {
-		
-		CamelContext context = getContext();
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+	private void setRoutes() throws Exception{
+		for(String prop : props.keySet()){
+			if(prop.endsWith("route")){							
+				String route = props.get(prop);
+
+				System.out.println("QWERTY route=" + route);
+				if(!route.startsWith("<routeConfiguration")){
+					updateRoute(route);
+				}
+			}
+		}
+	}
+
+	private void updateRoute(String route) throws Exception {
 		loader = extendedCamelContext.getRoutesLoader();
-					
-		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
-		managedContext = managed.getManagedCamelContext();
-	}
-
-	private void setLogLevel(){
-		if (this.props.containsKey("flow.logLevel")){
-			logLevelAsString = props.get("flow.logLevel");
-		}else {
-			logLevelAsString = "OFF";
-		}
-
-
-
-		CamelContext context = getContext();
-		Route x = context.getRoute("any");
+		Resource resource = IntegrationUtil.setResource(route);
 		
-		//x.setTracing(true);
-		//x.setDebugging(debugging);
+		Set<String> updatedRoutes = loader.updateRoutes(resource);
 
-		context.getRouteController().setLoggingLevel(LoggingLevel.valueOf(logLevelAsString));	
-
-	}
-
-	private void addRoute(String route) throws Exception {
-		System.out.println("load route from xml");
-		Resource resource = setResource(route);		
-		Set<String> x = loader.updateRoutes(resource);
-		for(String y : x ){
-			System.out.println("route=" + y);
+		for(String updateRoute : updatedRoutes ){
+			log.info("Loaded route: \n\n" + route + "\n\n flow=" + flowName + " routeid=" + updateRoute);
 		}
-		//managedContext.addOrUpdateRoutesFromXml(xml);
+
 	}
 
-	private Resource setResource(String route){
-		if(IntegrationUtil.isXML(route)){
-			return ResourceHelper.fromString("route.xml", route); 
-		}else if(IntegrationUtil.isYaml(route)){
-			return ResourceHelper.fromString("route.yaml", route); 
-		}else{
-			log.warn("unknown route format");
-			return ResourceHelper.fromString("route.xml", route); 
-		}		
+	private void loadRoute(String route) throws Exception {
+		loader = extendedCamelContext.getRoutesLoader();
+		Resource resource = IntegrationUtil.setResource(route);
+
+		try{
+			loader.loadRoutes(resource);
+		}catch(java.lang.IllegalArgumentException e){
+			System.out.println("myexception=" + e.getMessage());
+			loader.updateRoutes(resource);
+		}
+		
+		log.info("Loaded route: \n\n" + route + "\n\n flow=" + flowName);
+	
+	}
+
+	private void setErrorHandler(String route) throws Exception {
+
+		if (route!=null && !route.isEmpty()) {
+			String errorUri = StringUtils.substringBetween(route, "<from uri=\"", "\"/>");
+			routeErrorHandler = deadLetterChannel(errorUri);
+		}
+		else{
+			routeErrorHandler = defaultErrorHandler();
+		}
+
+		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
+
+		routeErrorHandler = errorHandler.configure();
+
+		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);	
+				
 	}
 
 }

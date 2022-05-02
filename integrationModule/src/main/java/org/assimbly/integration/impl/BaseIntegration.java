@@ -20,8 +20,7 @@ import java.util.*;
 
 public abstract class BaseIntegration implements Integration {
 
-	@SuppressWarnings("unused")
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.impl.BaseIntegration");
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	//properties are (list of) key/value maps
 	private List<TreeMap<String, String>> properties = new ArrayList<>();

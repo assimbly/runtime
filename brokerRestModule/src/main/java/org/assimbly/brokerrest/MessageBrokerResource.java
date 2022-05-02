@@ -18,7 +18,7 @@ import java.util.HashMap;
 @RequestMapping("/api")
 public class MessageBrokerResource {
 
-    private final Logger log = LoggerFactory.getLogger(MessageBrokerResource.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private ManagedBroker broker;

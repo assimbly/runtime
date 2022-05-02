@@ -23,8 +23,8 @@ import java.util.TreeMap;
 @RequestMapping("/api")
 public class FlowManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(FlowManagerResource.class);
-
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
     @Autowired
     private IntegrationResource integrationResource;
 

@@ -19,7 +19,7 @@ import java.security.GeneralSecurityException;
 
 public class SSLConfiguration {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.configuration.ssl.SSLConfiguration");
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	public void setUseGlobalSslContextParameters(CamelContext context,String componentName) throws Exception {
 		((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);

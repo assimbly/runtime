@@ -25,6 +25,8 @@ import java.util.*;
 
 public class Connection {
 
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
 	private String uri;
 	private String connectionId;
 	private String flowId;
@@ -39,8 +41,6 @@ public class Connection {
 	private SjmsComponent sjmsComponent;
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.service.Connection");
 
 	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
@@ -153,7 +153,7 @@ public class Connection {
 						setupJDBCConnection(properties, type);
 						break;
 					default:
-						logger.error("Connection parameters for component " + component + " are not implemented");
+						log.error("Connection parameters for component " + component + " are not implemented");
 						throw new Exception("Connection parameters for component " + component + " are not implemented");
 				}
 			}
@@ -199,7 +199,7 @@ public class Connection {
 					//removeJDBCConnection(properties, type);
 					break;
 				default:
-					logger.error("Connection parameters for component " + component + " are not implemented");
+					log.error("Connection parameters for component " + component + " are not implemented");
 					throw new Exception("Connection parameters for component " + component + " are not implemented");
 			}
 		}
@@ -209,7 +209,7 @@ public class Connection {
 
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 
-        logger.info("Setting up jms client connection for ActiveMQ.");
+        log.info("Setting up jms client connection for ActiveMQ.");
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String url = decryptedProperties.getProperty("service." + serviceId + ".url");
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
@@ -220,10 +220,10 @@ public class Connection {
         String concurentConsumers = decryptedProperties.getProperty("service." + serviceId + "service.concurentConsumers");
 
         if (conType == null) {
-            logger.info("No connection type specified. Setting up basic connection for activemq.");
+            log.info("No connection type specified. Setting up basic connection for activemq.");
             conType = "basic";
         } else if (!conType.equals("basic") && !conType.equals("pooled")) {
-            logger.info("Invalid connection type specified. Setting up basic connection for activemq.");
+            log.info("Invalid connection type specified. Setting up basic connection for activemq.");
             conType = "basic";
         } else if (conType.equals("pooled")) {
 
@@ -250,7 +250,7 @@ public class Connection {
                     ActiveMQConnection connection = (ActiveMQConnection) activeMQConnectionFactory.createConnection();
                     connection.start();
                     context.addComponent(componentName, JmsComponent.jmsComponentAutoAcknowledge(activeMQConnectionFactory));
-                    logger.info("Started basic connection for ActiveMQ.");
+                    log.info("Started basic connection for ActiveMQ.");
                 } else {
                     try {
                         PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
@@ -264,8 +264,8 @@ public class Connection {
 
                         ActiveMQComponent component = new ActiveMQComponent(configuration);
                         context.addComponent(componentName, component);
-                        logger.info("Started pooled connection for ActiveMQ.");
-                        logger.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
+                        log.info("Started pooled connection for ActiveMQ.");
+                        log.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -285,7 +285,7 @@ public class Connection {
 
 
             } else {
-                logger.error("ActiveMQ connection parameters are invalid.");
+                log.error("ActiveMQ connection parameters are invalid.");
                 throw new Exception("ActiveMQ connection parameters are invalid.\n");
             }
         }
@@ -303,7 +303,7 @@ public class Connection {
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
         String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-        logger.info("Setting up sjms client connection.");
+        log.info("Setting up sjms client connection.");
 
         if (url != null) {
 
@@ -372,7 +372,7 @@ public class Connection {
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
         String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-        logger.info("Setting AMQP client connection.");
+        log.info("Setting AMQP client connection.");
         if (url != null) {
 
             AMQPComponent amqpComponent = null;
@@ -432,7 +432,7 @@ public class Connection {
                 connection.setFaultTolerantReconnectTimeout(3600);
                 connection.setInitialConnectTimeout(15);
 
-                logger.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");
+                log.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");
 
                 SjmsComponent jms = new SjmsComponent();
                 jms.setConnectionFactory(connection);
@@ -445,15 +445,15 @@ public class Connection {
 
 
         } else {
-            logger.error("SonicMQ connection parameters are invalid or missing");
+            log.error("SonicMQ connection parameters are invalid or missing");
             if (url == null) {
-                logger.error("SonicMQ connection required parameter 'url' isn't set");
+                log.error("SonicMQ connection required parameter 'url' isn't set");
             }
             if (username == null) {
-                logger.error("SonicMQ connection required parameter 'username' isn't set");
+                log.error("SonicMQ connection required parameter 'username' isn't set");
             }
             if (password == null) {
-                logger.error("SonicMQ connection required parameter 'password' isn't set");
+                log.error("SonicMQ connection required parameter 'password' isn't set");
             }
             throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
         }
@@ -487,15 +487,15 @@ public class Connection {
                     context.removeComponent(componentName);
 
                 } else {
-                    logger.error("SonicMQ connection parameters are invalid or missing");
+                    log.error("SonicMQ connection parameters are invalid or missing");
                     if (url == null) {
-                        logger.error("SonicMQ connection required parameter 'url' isn't set");
+                        log.error("SonicMQ connection required parameter 'url' isn't set");
                     }
                     if (username == null) {
-                        logger.error("SonicMQ connection required parameter 'username' isn't set");
+                        log.error("SonicMQ connection required parameter 'username' isn't set");
                     }
                     if (password == null) {
-                        logger.error("SonicMQ connection required parameter 'password' isn't set");
+                        log.error("SonicMQ connection required parameter 'password' isn't set");
                     }
                     throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
                 }
@@ -510,11 +510,11 @@ public class Connection {
             direction = direction + "." + endpointId;
         }
 
-        logger.info("Setting up IBM MQ connection factory.");
+        log.info("Setting up IBM MQ connection factory.");
 
         MQConnectionFactory cf = setupIBMMQConnectionFactory(properties);
 
-        logger.info("Setting up IBM MQ client connection.");
+        log.info("Setting up IBM MQ client connection.");
         if (context.hasComponent(componentName) == null) {
             JmsComponent jmsComponent = new JmsComponent();
             jmsComponent.setConnectionFactory(cf);
@@ -558,15 +558,15 @@ public class Connection {
 
         //Required parameters
         if (url == null) {
-            logger.error("IBMMQ connection required parameter 'url' isn't set");
+            log.error("IBMMQ connection required parameter 'url' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
         if (channel == null) {
-            logger.error("IBMMQ connection required parameter 'channel' isn't set");
+            log.error("IBMMQ connection required parameter 'channel' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
         if (queueManager == null) {
-            logger.error("IBMMQ connection required parameter 'queuemanager' isn't set");
+            log.error("IBMMQ connection required parameter 'queuemanager' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
 
@@ -648,7 +648,7 @@ public class Connection {
         String username = decryptedProperties.getProperty("service." + serviceId + ".username");
         String password = decryptedProperties.getProperty("service." + serviceId + ".password");
 
-        logger.info("Create datasource for url: " + url + "(driver=" + driver + ")");
+        log.info("Create datasource for url: " + url + "(driver=" + driver + ")");
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName(driver);
@@ -660,7 +660,7 @@ public class Connection {
         Registry registry = context.getRegistry();
         registry.bind(connectionId, ds);
 
-        logger.info("Datasource has been created");
+        log.info("Datasource has been created");
 
     }
 
@@ -670,7 +670,7 @@ public class Connection {
         String multipleUrls = "";
 
         if (url.indexOf(",") != -1) {
-            logger.info("SSLEnabled Failover Url: ");
+            log.info("SSLEnabled Failover Url: ");
 
             if (url.indexOf("(") != -1) {
                 multipleUrls = StringUtils.substringBetween(url,"(",")");
@@ -694,7 +694,7 @@ public class Connection {
             }
 
         }else{
-            logger.info("SSLEnabled Normal Url: ");
+            log.info("SSLEnabled Normal Url: ");
             modifiedUrl = addSSLParameterToUrl(url);
         }
 
@@ -702,7 +702,7 @@ public class Connection {
             url = modifiedUrl;
         }
 
-        logger.info("SSLEnabled Url: " + url);
+        log.info("SSLEnabled Url: " + url);
 
         return url;
 

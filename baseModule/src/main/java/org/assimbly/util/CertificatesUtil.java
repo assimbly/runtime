@@ -73,11 +73,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class CertificatesUtil {
+
+	protected static Logger log = LoggerFactory.getLogger("org.assimbly.connector.util.CertificatesUtil");
 	
     public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.util.ConnectorUtil");
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
+
+		System.out.println("Start downloading certificates (url=" + url + ")");
 
 		Certificate[] peercertificates = null;
 
@@ -105,11 +108,14 @@ public final class CertificatesUtil {
 		try {
 
 			// make HTTP GET request to resource server
-            new HttpGet(url);
+            HttpGet httpget = new HttpGet(url);
 
+            System.out.println("Executing request " + httpget.getRequestLine());
+ 
 			// create http context where the certificate will be added
             HttpContext context = new BasicHttpContext();
-
+            httpClient.execute(httpget, context);
+			
 			// obtain the server certificates from the context
             peercertificates = (Certificate[])context.getAttribute(PEER_CERTIFICATES);
 
@@ -127,7 +133,7 @@ public final class CertificatesUtil {
 				}
 
 			}else{
-				System.out.println("No certificates found (url=" + url + ")");
+				log.error("No certificates found url=" + url + ")");
 			}
 
         } finally {
@@ -220,7 +226,7 @@ public final class CertificatesUtil {
     	try {
     		//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
-	
+
 	        // Add the certificate to the store
             for (Certificate certificate : certificates){            	
                 X509Certificate real = (X509Certificate) certificate;

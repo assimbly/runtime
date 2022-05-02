@@ -22,7 +22,7 @@ import javax.xml.transform.dom.DOMSource;
 
 public final class TransformUtil {
 
-    private static Logger logger = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+    protected static Logger log = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
 
 	public static String convertCamelToAssimblyFormat(String xml){
 		

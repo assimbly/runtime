@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class TopicManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(TopicManagerResource.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public ManagedBroker broker;

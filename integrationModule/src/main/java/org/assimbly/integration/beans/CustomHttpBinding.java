@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 public class CustomHttpBinding extends DefaultHttpBinding {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CustomHttpBinding.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String DEFAULT_ERROR_MESSAGE = "Something went wrong calling the Dovetail service. Please refer to the Dovetail logs for more information.";
     private static final String EMPTY_BODY_MESSAGE = "Dovetail couldn't read your request, did you supply a correct body?";

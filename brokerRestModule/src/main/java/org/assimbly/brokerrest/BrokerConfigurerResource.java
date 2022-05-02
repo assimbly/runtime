@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/api")
 public class BrokerConfigurerResource {
 
-    private final Logger log = LoggerFactory.getLogger(BrokerConfigurerResource.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
 	private ManagedBroker broker;

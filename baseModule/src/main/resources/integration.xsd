@@ -23,6 +23,7 @@
 			<xs:element type="servicesType" name="services" />
 			<xs:element type="headersType" name="headers" />
 			<xs:element type="routesType" name="routes" />
+			<xs:element type="routeConfigurationsType" name="routeConfigurations" />
 			<xs:element type="environmentVariablesType" name="environmentVariables" />
 		</xs:choice>
 	</xs:complexType>
@@ -112,6 +113,19 @@
 	<xs:complexType name="routesType">
 		<xs:sequence minOccurs="0">
 			<xs:element name="route" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence minOccurs="0" maxOccurs="unbounded">
+						<xs:any namespace="##any" minOccurs="0" processContents="lax" />
+					</xs:sequence>
+					<xs:attribute name="id" type="xs:string" />
+					<xs:attribute name="routeConfigurationId" type="xs:string"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="routeConfigurationsType">
+		<xs:sequence minOccurs="0">
+			<xs:element name="routeConfiguration" minOccurs="0" maxOccurs="unbounded">
 				<xs:complexType>
 					<xs:sequence minOccurs="0" maxOccurs="unbounded">
 						<xs:any namespace="##any" minOccurs="0" processContents="lax" />

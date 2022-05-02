@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -400,21 +401,46 @@ public class Unmarshall {
 		XPathExpression expr = xpath.compile("/integrations/integration/routes/route[@id='" + routeId + "']");
 		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
 
-		String routeAsString = convertNodeToString(node);
+		XPathExpression expr2 = xpath.compile("/integrations/integration/flows/flow/endpoints/endpoint[type='error']/id");
+		String errorId = expr2.evaluate(doc);	
+		
+		expr2 = xpath.compile("/integrations/integration/flows/flow/endpoints/endpoint[type='error']/route_id");
+		String errorRouteId = expr2.evaluate(doc);
 
-		String updatedRouteId = flowId + "-" + endpointId + "-" + routeId;
-		routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
-
-		if(flowType.equalsIgnoreCase("default") || flowType.equalsIgnoreCase("connector")){
-			routeAsString = routeAsString.replaceAll("from uri=\"(.*)\"", "from uri=\"direct:flow=" + flowId + "route=" + updatedRouteId + "\"");
+		if(node!=null && errorId!=null){
+			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + errorRouteId + "']");
+			Node nodeRouteConfiguration = (Node)expr.evaluate(doc, XPathConstants.NODE);
+			if(nodeRouteConfiguration != null){
+				((Element)node).setAttribute("routeConfigurationId","errorHandler-" + errorId);
+			}
 		}
 
-		routeAsString = "<routes xmlns=\"http://camel.apache.org/schema/spring\">" + routeAsString + "</routes>";
+		String updatedRouteId = flowId + "-" + endpointId;
+
+		if(node==null){
+			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeId + "']");
+			node = (Node)expr.evaluate(doc, XPathConstants.NODE);		
+			updatedRouteId = "errorHandler" + "-" + endpointId;
+		}
+
+		String routeAsString = convertNodeToString(node);
+
+		if(flowType.equalsIgnoreCase("esb")){
+			routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
+		}else{
+			updatedRouteId = updatedRouteId + "-" + routeId;
+			routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
+
+			if(flowType.equalsIgnoreCase("default") || flowType.equalsIgnoreCase("connector")){
+				routeAsString = routeAsString.replaceAll("from uri=\"(.*)\"", "from uri=\"direct:flow=" + flowId + "route=" + updatedRouteId + "\"");
+			}	
+		}
 
 		properties.put(type + "." + endpointId + ".route", routeAsString);
 		properties.put(type + "." + endpointId + ".route.id", routeId);
 
 	}
+
 
 	public String convertNodeToString(Node node) throws TransformerException {
 		//Convert node to string
@@ -428,3 +454,4 @@ public class Unmarshall {
 	}
 
 }
+

@@ -8,9 +8,10 @@ import org.slf4j.LoggerFactory;
 
 
 public class SimpleRoute extends RouteBuilder{
+
+	protected Logger log = LoggerFactory.getLogger(getClass());
 	
 	Map<String, String> props;
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.integration.routes.SimpleRoute");
 	
 	public SimpleRoute(final Map<String, String> props){
 		this.props = props;
@@ -19,7 +20,7 @@ public class SimpleRoute extends RouteBuilder{
 	@Override
 	public void configure() throws Exception {
 			
-		logger.info("Configuring default route");
+		log.info("Configuring default route");
 		
 		if (this.props.containsKey("error.uri")){
 			errorHandler(deadLetterChannel(props.get("error.uri"))

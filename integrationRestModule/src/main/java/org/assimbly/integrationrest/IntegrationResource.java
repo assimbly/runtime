@@ -27,7 +27,7 @@ import java.util.Properties;
 @RequestMapping("/api")
 public class IntegrationResource {
 
-    private final Logger log = LoggerFactory.getLogger(IntegrationResource.class);
+   	protected Logger log = LoggerFactory.getLogger(getClass());
 
     private Integration integration = new CamelIntegration();
 

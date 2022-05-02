@@ -36,6 +36,7 @@ public class FailureProcessor implements Processor {
 
 		//first set error headers
 		Message in = exchange.getIn();
+
 		String endpointId = props.get("error.header.id");
 
 		if (endpointId != null) {

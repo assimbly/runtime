@@ -82,6 +82,10 @@
 		    <artifactId>camel-core-catalog</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-core-xml</artifactId>
+		</dependency>		
+		<dependency>
 			  <groupId>org.apache.camel</groupId>
 			  <artifactId>camel-csimple-joor</artifactId>
 		</dependency>
@@ -147,15 +151,19 @@
 		</dependency>
 	    <dependency>
 	      <groupId>org.apache.camel</groupId>
-	      <artifactId>camel-xml-jaxb</artifactId>
+	      <artifactId>camel-xml-io</artifactId>
 	    </dependency>
 	    <dependency>
 	      <groupId>org.apache.camel</groupId>
-	      <artifactId>camel-xml-jaxb-dsl</artifactId>
-	    </dependency>	    
+	      <artifactId>camel-xml-io-dsl</artifactId>
+	    </dependency>
 		<dependency>
 		    <groupId>org.apache.camel</groupId>
 		    <artifactId>camel-xslt-saxon</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-yaml-dsl</artifactId>
 		</dependency>
 	  <dependency>
 		    <groupId>org.apache.activemq</groupId>
@@ -174,12 +182,12 @@
 	  <dependency>
 		  <groupId>mysql</groupId>
 		  <artifactId>mysql-connector-java</artifactId>
-		  <version>8.0.28</version>
+		  <version>8.0.29</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.postgresql</groupId>
 		  <artifactId>postgresql</artifactId>
-		  <version>42.3.3</version>
+		  <version>42.3.4</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>com.microsoft.sqlserver</groupId>

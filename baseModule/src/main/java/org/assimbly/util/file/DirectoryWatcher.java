@@ -19,7 +19,7 @@ import static java.nio.file.StandardWatchEventKinds.*;
 
 public class DirectoryWatcher implements Runnable, Service {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryWatcher.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     public enum Event {
         ENTRY_CREATE,
@@ -93,13 +93,13 @@ public class DirectoryWatcher implements Runnable, Service {
                 WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
                 watchKeyToDirectory.put(key, dir);
             } catch (IOException ioe) {
-                LOGGER.error("Not watching '{}'.", dir, ioe);
+                log.error("Not watching '{}'.", dir, ioe);
             }
         }
 
         while (true) {
             if (Thread.interrupted()) {
-                LOGGER.info("Directory watcher thread interrupted.");
+                log.info("Directory watcher thread interrupted.");
                 break;
             }
 
@@ -113,7 +113,7 @@ public class DirectoryWatcher implements Runnable, Service {
 
             Path dir = watchKeyToDirectory.get(key);
             if (dir == null) {
-                LOGGER.warn("Watch key not recognized.");
+                log.warn("Watch key not recognized.");
                 continue;
             }
 
@@ -136,14 +136,14 @@ public class DirectoryWatcher implements Runnable, Service {
 						}
 					}
 				} catch (IOException ie) {
-					LOGGER.error("Not watching '{}'.", dir, ie);
+					log.error("Not watching '{}'.", dir, ie);
 				}
             }
 
             boolean valid = key.reset();
             if (!valid) {
                 watchKeyToDirectory.remove(key);
-                LOGGER.warn("'{}' is inaccessible. Stopping watch.", dir);
+                log.warn("'{}' is inaccessible. Stopping watch.", dir);
                 if (watchKeyToDirectory.isEmpty()) {
                     break;
                 }

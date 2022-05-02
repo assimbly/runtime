@@ -16,13 +16,14 @@ import java.util.TreeMap;
 import java.util.Optional; 
 import java.util.stream.Collectors;
 
+import org.apache.camel.spi.Resource;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.io.StringReader;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
@@ -32,8 +33,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.*;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -43,7 +42,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public final class IntegrationUtil {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
+	protected static Logger log = LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
 
 	public static boolean isValidUri(String name) throws Exception {
 		try {
@@ -108,6 +107,18 @@ public final class IntegrationUtil {
 		return result;
 
 	}
+
+	public static Resource setResource(String route){
+		if(IntegrationUtil.isXML(route)){
+			return ResourceHelper.fromString("route.xml", route); 
+		}else if(IntegrationUtil.isYaml(route)){
+			return ResourceHelper.fromString("route.yaml", route); 
+		}else{
+			log.warn("unknown route format");
+			return ResourceHelper.fromString("route.xml", route); 
+		}		
+	}
+
 
 	@SuppressWarnings("resource")
 	public static String testConnection(String host, int port, int timeOut) {

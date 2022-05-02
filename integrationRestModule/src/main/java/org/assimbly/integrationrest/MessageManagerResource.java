@@ -26,7 +26,7 @@ import java.util.*;
 @RequestMapping("/api")
 public class MessageManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(MessageManagerResource.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private IntegrationResource integrationResource;

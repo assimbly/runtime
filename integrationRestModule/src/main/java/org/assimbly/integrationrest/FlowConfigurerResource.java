@@ -20,8 +20,8 @@ import java.net.URISyntaxException;
 @RequestMapping("/api")
 public class FlowConfigurerResource {
 
-    private final Logger log = LoggerFactory.getLogger(FlowConfigurerResource.class);
-
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
     @Autowired
     private IntegrationResource integrationResource;
 

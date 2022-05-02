@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FailureListener extends EventNotifierSupport {
 
-   private final Logger log = LoggerFactory.getLogger(FailureListener.class);
+   protected Logger log = LoggerFactory.getLogger(getClass());
 
    @Autowired
    private SimpMessageSendingOperations messagingTemplate;
