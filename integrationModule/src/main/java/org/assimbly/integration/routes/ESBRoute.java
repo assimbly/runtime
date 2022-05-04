@@ -83,7 +83,6 @@ public class ESBRoute extends RouteBuilder {
 			if(prop.endsWith("route")){							
 				String route = props.get(prop);
 
-				System.out.println("QWERTY route=" + route);
 				if(!route.startsWith("<routeConfiguration")){
 					updateRoute(route);
 				}
@@ -110,7 +109,6 @@ public class ESBRoute extends RouteBuilder {
 		try{
 			loader.loadRoutes(resource);
 		}catch(java.lang.IllegalArgumentException e){
-			System.out.println("myexception=" + e.getMessage());
 			loader.updateRoutes(resource);
 		}
 		

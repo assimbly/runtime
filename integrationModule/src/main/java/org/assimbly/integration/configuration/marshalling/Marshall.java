@@ -3,9 +3,14 @@ package org.assimbly.integration.configuration.marshalling;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 //This class marshalls (converts) the Java treemap object to XML
 public class Marshall {
@@ -13,11 +18,15 @@ public class Marshall {
 	private Document doc;
 	private Element rootElement;
 	private Element flows;
+	
+	private Element routes;
+	private Element routeConfigurations;
 	private Element services;
 	private Element headers;
 	private Element flow;
 	private Element integration;
 
+	private List<String> routesList;
 	private List<String> servicesList;
 	private List<String> headersList;
 
@@ -65,14 +74,19 @@ public class Marshall {
 		integration.appendChild(id);
 
 		flows = doc.createElement("flows");
+		routes = doc.createElement("routes");
+		routeConfigurations = doc.createElement("routeConfigurations");
 		services = doc.createElement("services");
 		headers = doc.createElement("headers");
 
 		integration.appendChild(flows);
+		integration.appendChild(routes);
+		integration.appendChild(routeConfigurations);
 		integration.appendChild(services);
 		integration.appendChild(headers);
 
 		//List to ensure no double entries
+		routesList = new ArrayList<String>();
 		servicesList = new ArrayList<String>();
 		headersList = new ArrayList<String>();
 
@@ -84,47 +98,29 @@ public class Marshall {
 		flow = doc.createElement("flow");
 		flows.appendChild(flow);
 
-		//set id
-		String flowId = configuration.get("id");
-		Element id = doc.createElement("id");
-		id.appendChild(doc.createTextNode(flowId));
-		flow.appendChild(id);
+		addElement(configuration, flow, "id", "id");
 
-		//set type
-		String flowType = configuration.get("flow.type");
-		Element flowTypeNode = doc.createElement("type");
-		flowTypeNode.appendChild(doc.createTextNode(flowType));
-		flow.appendChild(flowTypeNode);
+		addElement(configuration, flow, "name", "flow.name");
 
-		//set name
-		String flowName = configuration.get("flow.name");
-		Element flowNameNode = doc.createElement("name");
-		flowNameNode.appendChild(doc.createTextNode(flowName));
-		flow.appendChild(flowNameNode);
+		addElement(configuration, flow, "type", "flow.type");
 
-		//set offloading
-		String flowOffloading = configuration.get("flow.offloading");
-		Element flowOffloadingNode = doc.createElement("offloading");
-		flowOffloadingNode.appendChild(doc.createTextNode(flowOffloading));
-		flow.appendChild(flowOffloadingNode);
+		//addElement(configuration, flow, "offloading", "flow.offloading");
 
-		//set offloading
-		String flowMaximumRedeliveries = configuration.get("flow.maximumRedeliveries");
-		Element flowMaximumRedeliveriesNode = doc.createElement("maximumRedeliveries");
-		flowMaximumRedeliveriesNode.appendChild(doc.createTextNode(flowMaximumRedeliveries));
-		flow.appendChild(flowMaximumRedeliveriesNode);
+		addElement(configuration, flow, "version", "flow.version");
 
-		//set offloading
-		String flowRedeliveryDelay = configuration.get("flow.redeliveryDelay");
-		Element flowRedeliveryDelayNode = doc.createElement("redeliveryDelay");
-		flowRedeliveryDelayNode.appendChild(doc.createTextNode(flowRedeliveryDelay));
-		flow.appendChild(flowRedeliveryDelayNode);
+		addElement(configuration, flow, "autostart", "flow.autostart");
 
-		//set offloading
-		String flowLogLevel = configuration.get("flow.logLevel");
-		Element flowLogLevelNode = doc.createElement("logLevel");
-		flowLogLevelNode.appendChild(doc.createTextNode(flowLogLevel));
-		flow.appendChild(flowLogLevelNode);
+		addElement(configuration, flow, "assimblyHeaders", "flow.assimblyHeaders");
+
+		addElement(configuration, flow, "parallelProcessing", "flow.v");
+
+		addElement(configuration, flow, "maximumRedeliveries", "flow.maximumRedeliveries");
+
+		addElement(configuration, flow, "redeliveryDelay", "flow.redeliveryDelay");
+
+		addElement(configuration, flow, "logLevel", "flow.logLevel");
+
+		addElement(configuration, flow, "notes", "flow.notes");
 
 		Element components = doc.createElement("components");
 		flow.appendChild(components);
@@ -223,8 +219,9 @@ public class Marshall {
 		}
 
 		if(confRouteId != null) {
-			responseId.setTextContent(confRouteId);
+			routeId.setTextContent(confRouteId);
 			endpoint.appendChild(routeId);
+			setRouteFromConfiguration(confRouteId, confType, configuration);
 		}
 
 		if(confServiceId!=null) {
@@ -241,6 +238,29 @@ public class Marshall {
 
 	}
 
+
+	private void setRouteFromConfiguration(String routeid, String type, TreeMap<String, String> configuration) throws Exception {
+
+		if(!routesList.contains(routeid)) {
+			routesList.add(routeid);
+
+			for(Map.Entry<String,String> entry : configuration.entrySet()) {
+				String key = entry.getKey();
+				String parameterValue = entry.getValue();
+
+				if(key.endsWith(routeid + ".route") && parameterValue!=null) {
+
+					Document document = getDocument(parameterValue);
+                    Node node = doc.importNode(document.getDocumentElement(), true);
+					if(parameterValue.startsWith("<route")) {
+                    	routes.appendChild(node);
+					}else if(parameterValue.startsWith("<routeConfiguration")) {
+						routeConfigurations.appendChild(node);
+					}
+				}
+			}
+		}
+	}
 
 	private void setServiceFromConfiguration(String serviceid, String type, TreeMap<String, String> configuration) throws Exception {
 
@@ -312,4 +332,21 @@ public class Marshall {
 			}
 		}
 	}
+
+	private void addElement(TreeMap<String, String> configuration, Element parent, String name, String key) {
+		String value = configuration.get(key);
+		Element child = doc.createElement(name);
+		child.appendChild(doc.createTextNode(value));
+		parent.appendChild(child);
+	}
+
+	private Document getDocument(String xml) throws Exception {
+
+        DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = dbFactory.newDocumentBuilder();
+        Document document = builder.parse(new ByteArrayInputStream(xml.getBytes()));
+
+        return document;
+
+    }
 }

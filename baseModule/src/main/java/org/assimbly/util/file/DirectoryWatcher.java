@@ -127,7 +127,6 @@ public class DirectoryWatcher implements Runnable, Service {
 
                 Path path = dir.resolve(pathEvent.context());
 				try {
-					System.out.println("EVENT: " + EVENT_MAP.get(kind) + " | kind=" + kind);
 					if (mFilter.accept(path) && EVENT_MAP.containsKey(kind)) {
 						if (event.kind().equals(ENTRY_DELETE)) {
 							mListener.onEvent(EVENT_MAP.get(kind), path);

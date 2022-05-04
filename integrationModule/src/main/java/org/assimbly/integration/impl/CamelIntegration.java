@@ -209,7 +209,6 @@ public class CamelIntegration extends BaseIntegration {
 		//Create the deploy directory if not exist
 		Files.createDirectories(path);
 
-		System.out.println("Routes directory: " + path.toString());
 		RouteWatcherReloadStrategy reload = new RouteWatcherReloadStrategy();
 		reload.setFolder(path.toString());
 		//reload.setPattern("*.xml");
