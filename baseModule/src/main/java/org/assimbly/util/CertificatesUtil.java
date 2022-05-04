@@ -1,31 +1,54 @@
 package org.assimbly.util;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.*;
-import java.security.cert.*;
-import java.security.cert.Certificate;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import java.math.BigInteger;
-import java.util.Date;
-import java.io.IOException;
-import javax.net.ssl.SSLSession;
-
-import java.math.BigInteger;
+import java.security.Key;
 import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 import java.security.PublicKey;
+import java.security.Security;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLSession;
+
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.DateUtils;
+import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -46,29 +69,18 @@ import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.DateUtils;
-import org.apache.http.conn.ManagedHttpClientConnection;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class CertificatesUtil {
+
+	protected static Logger log = LoggerFactory.getLogger("org.assimbly.connector.util.CertificatesUtil");
 	
     public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.connector.util.ConnectorUtil");
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
+
+		System.out.println("Start downloading certificates (url=" + url + ")");
 
 		Certificate[] peercertificates = null;
 
@@ -98,11 +110,12 @@ public final class CertificatesUtil {
 			// make HTTP GET request to resource server
             HttpGet httpget = new HttpGet(url);
 
+            System.out.println("Executing request " + httpget.getRequestLine());
+ 
 			// create http context where the certificate will be added
             HttpContext context = new BasicHttpContext();
-
-			CloseableHttpResponse x = httpClient.execute(httpget, context);
-
+            httpClient.execute(httpget, context);
+			
 			// obtain the server certificates from the context
             peercertificates = (Certificate[])context.getAttribute(PEER_CERTIFICATES);
 
@@ -120,7 +133,7 @@ public final class CertificatesUtil {
 				}
 
 			}else{
-				System.out.println("No certificates found (url=" + url + ")");
+				log.error("No certificates found url=" + url + ")");
 			}
 
         } finally {
@@ -165,17 +178,10 @@ public final class CertificatesUtil {
 
 	public String importCertificate(String keyStorePath, String keystorePassword, String certificateName, Certificate certificate) {
 
-		System.out.println("1.");
-
-
 		try {
-
-			System.out.println("2.");
 
 			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
-
-			System.out.println("3.");
 
 			// Add the certificate to the store
             X509Certificate real = (X509Certificate) certificate;
@@ -191,13 +197,8 @@ public final class CertificatesUtil {
             System.out.println("original alias:" + certificateName);
             System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
 
-			System.out.println("4.");
-
 			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
-
-			System.out.println("5.");
-
 
 		}catch (KeyStoreException e) {
 			e.printStackTrace();
@@ -225,7 +226,7 @@ public final class CertificatesUtil {
     	try {
     		//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
-	
+
 	        // Add the certificate to the store
             for (Certificate certificate : certificates){            	
                 X509Certificate real = (X509Certificate) certificate;
@@ -266,11 +267,11 @@ public final class CertificatesUtil {
 
 	public Map<String,Certificate> importP12Certificate(String keyStorePath, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
 
-		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
-
 		KeyStore jksStore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-		Enumeration aliases = p12Store.aliases();
+		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
+
+		Enumeration<String> aliases = p12Store.aliases();
 
 		Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
 

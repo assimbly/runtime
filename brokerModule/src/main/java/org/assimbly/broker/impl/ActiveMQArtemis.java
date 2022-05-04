@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.ConnectorUtil;
+import org.assimbly.util.IntegrationUtil;
 import org.assimbly.util.OSUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,8 +38,8 @@ import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
 
-	private static Logger logger = LoggerFactory.getLogger("org.assimbly.broker.impl.ActiveMQArtemis");
-
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
 	EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
@@ -61,18 +62,21 @@ public class ActiveMQArtemis implements Broker {
 
 			broker = new EmbeddedActiveMQ();
 
+
+			//
+
 			if (brokerFile.exists()) {
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-				logger.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
-				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				log.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
+				log.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
 				broker.setConfigResourcePath(fileConfig);
 			} else {
 				this.setFileConfiguration("");
-				logger.warn("No config file 'broker.xml' found.");
-				logger.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");
-				logger.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
-				logger.info("");
-				logger.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
+				log.warn("No config file 'broker.xml' found.");
+				log.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");
+				log.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				log.info("");
+				log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				broker.setConfigResourcePath(fileConfig);
@@ -95,7 +99,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String startEmbedded() throws Exception {
 
-			logger.warn("Start embedded broker in local mode on url: tcp://127.0.0.1:61616");
+			log.warn("Start embedded broker in local mode on url: tcp://127.0.0.1:61616");
 
 			Configuration config = new ConfigurationImpl();
 			config.addAcceptorConfiguration("in-vm", "vm://0");
@@ -115,9 +119,9 @@ public class ActiveMQArtemis implements Broker {
 		
 		if(activeBroker!=null) {
 			SimpleString nodeID= activeBroker.getNodeID();
-			logger.info("Broker with nodeId '" + nodeID + "' is stopping. Uptime=" + activeBroker.getUptime());
+			log.info("Broker with nodeId '" + nodeID + "' is stopping. Uptime=" + activeBroker.getUptime());
 			broker.stop();
-			logger.info("Broker with nodeId '" + nodeID + "' is stopped.");
+			log.info("Broker with nodeId '" + nodeID + "' is stopped.");
 		}
 		
 		return status();
@@ -151,7 +155,7 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		if(activeBroker!=null) {
-			logger.debug("State=" + activeBroker.getState().name());
+			log.debug("State=" + activeBroker.getState().name());
 			if(activeBroker.isActive()) {
 				status = "started";
 			}else if(activeBroker.getState().name().equals("STARTED")){
@@ -211,7 +215,7 @@ public class ActiveMQArtemis implements Broker {
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 
 			URL schemaFile = classloader.getResource("broker.xsd");
-			String xmlValidation = ConnectorUtil.isValidXML(schemaFile, brokerConfiguration);
+			String xmlValidation = IntegrationUtil.isValidXML(schemaFile, brokerConfiguration);
 			if(!xmlValidation.equals("xml is valid")) {
 				return xmlValidation;
 			} 
@@ -241,7 +245,7 @@ public class ActiveMQArtemis implements Broker {
 				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				is.close();
 
-				logger.info("AIO Directory is set to " + aioFile.getParent());
+				log.info("AIO Directory is set to " + aioFile.getParent());
 
 			}
 
@@ -308,11 +312,16 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointsInfo  = new JSONObject();
 		JSONObject endpointInfo = new JSONObject();
 
-		if(manageBroker!=null){
-			String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+		if(manageBroker!=null && status().equalsIgnoreCase("started")){
+			try {
+				String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+				endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
-			for(String endpoint: endpoints){
-				endpointInfo.append("queue", getEndpoint(endpoint));
+				for (String endpoint : endpoints) {
+					endpointInfo.append("queue", getEndpoint(endpoint));
+				}
+			}catch (Exception e){
+				log.error("Error getting queues: " + e.getMessage());
 			}
 
 			endpointsInfo.put("queues",endpointInfo);
@@ -405,6 +414,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointInfo = new JSONObject();
 
 		String[] endpoints = manageBroker.getQueueNames("MULTICAST");
+		endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
 		for(String endpoint: endpoints){
 			endpointInfo.append("topic", getEndpoint(endpoint));
@@ -682,10 +692,9 @@ public class ActiveMQArtemis implements Broker {
 
 	private void setManageBroker(){
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
 		ActiveMQServerControlImpl activeBrokerControl = activeBroker.getActiveMQServerControl();
 		manageBroker = activeBrokerControl;
-
-
 
 	}
 

@@ -1,7 +1,6 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.ManagedBroker;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class TopicManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(TopicManagerResource.class);
-
-    private static final String ENTITY_NAME = "broker";
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public ManagedBroker broker;
@@ -34,7 +31,7 @@ public class TopicManagerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/topic/{topicName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> createTopic(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> createTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
 
         log.debug("REST request to get create topic : {}", topicName);
 
@@ -57,7 +54,7 @@ public class TopicManagerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/topic/{topicName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> deleteTopic(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> deleteTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
 
         log.debug("REST request to get delete topic : {}", topicName);
             try {
@@ -79,7 +76,7 @@ public class TopicManagerResource {
      * @return topics with details with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/topic/{topicName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getTopic(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> getTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
 
         log.debug("REST request to get get topic : {}", topicName);
 
@@ -102,7 +99,7 @@ public class TopicManagerResource {
      * @return list of topics with details 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/topics", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getTopics(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get topics : {}");
 
@@ -125,7 +122,7 @@ public class TopicManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/topic/{topicName}/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearTopic(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName) throws Exception {
+    public ResponseEntity<String> clearTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName) throws Exception {
 
         log.debug("REST request to clear topic : {}", topicName);
 
@@ -147,7 +144,7 @@ public class TopicManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/topics/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearTopics(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> clearTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to clear topics : this removes all messages on the broker!");
 

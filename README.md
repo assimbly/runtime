@@ -1,13 +1,12 @@
-# Connector
+# Modules
 
-This API is meant to configure and manage Assimbly flows. For example by sending data from a database to
+These API's are meant to configure and manage Assimbly module. For example
 a message broker.
 
-   * Connector: A collection of flows
-   * Flow: connects endpoints
-   * Endpoint: A source or destination
+   * Connector: connect endpoints
+   * Broker: message broker
    
-Currently the API is build on top of [Apache Camel](https://github.com/apache/camel).
+Currently the API's are build on top of [Apache Camel](https://github.com/apache/camel) and [Apache ActiveMQ](https://github.com/apache/activemq).
 
 ## Configuration
 

@@ -1,7 +1,6 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.ManagedBroker;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/api")
 public class BrokerManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(BrokerManagerResource.class);
-
-    private static final String ENTITY_NAME = "broker";
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
 	private ManagedBroker broker;
@@ -87,7 +84,6 @@ public class BrokerManagerResource {
             try {
                 return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
             } catch (Exception ex) {
-                System.out.println("waarom?");
                 ex.printStackTrace();
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "error");
             }
@@ -145,7 +141,7 @@ public class BrokerManagerResource {
      * @return list of connections with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/connections", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getConnections(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get connections : {}");
 
@@ -166,7 +162,7 @@ public class BrokerManagerResource {
      * @return list of consumers with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path = "/brokers/{brokerType}/consumers", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getConsumers(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get consumers : {}");
 

@@ -1,7 +1,5 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.ManagedBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/api")
 public class BrokerConfigurerResource {
 
-    private final Logger log = LoggerFactory.getLogger(BrokerConfigurerResource.class);
-
-    private static final String ENTITY_NAME = "broker";
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
 	private ManagedBroker broker;
-
-    private String result;
-
-    private static final long id = 0L;
 
     /**
      * GET  /brokers/:id : get the broker configuration by "id".

@@ -14,7 +14,7 @@ import java.util.Map;
 @Component
 public class ManagedBroker {
 
-    private final Logger log = LoggerFactory.getLogger(ManagedBroker.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
     private Broker broker;
 

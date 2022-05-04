@@ -1,13 +1,11 @@
 package org.assimbly.brokerrest;
 
-import io.swagger.annotations.ApiParam;
-import org.assimbly.brokerrest.ManagedBroker;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * REST controller for managing Broker.
@@ -16,10 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/api")
 public class QueueManagerResource {
 
-    private final Logger log = LoggerFactory.getLogger(QueueManagerResource.class);
-
-    private static final String ENTITY_NAME = "broker";
-
+	protected Logger log = LoggerFactory.getLogger(getClass());
+	
     @Autowired
     private ManagedBroker broker;
 
@@ -35,7 +31,7 @@ public class QueueManagerResource {
      * @return the status (success or failed) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> createQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> createQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to create queue : {}", queueName);
 
@@ -57,7 +53,7 @@ public class QueueManagerResource {
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> deleteQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> deleteQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get delete queue : {}", queueName);
 
@@ -79,7 +75,7 @@ public class QueueManagerResource {
      * @return Queue destination details
      */
     @GetMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> getQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get get queue information : {}", queueName);
 
@@ -101,7 +97,7 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(path= "/brokers/{brokerType}/queues", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
+    public ResponseEntity<String> getQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
 
         log.debug("REST request to get get queues : {}");
 
@@ -123,7 +119,7 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearQueue(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> clearQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to clear queue : {}", queueName);
 
@@ -144,7 +140,7 @@ public class QueueManagerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(path = "/brokers/{brokerType}/queues/clear", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> clearQueues(@ApiParam(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> clearQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to clear queues : this removes all messages on the broker!");
 

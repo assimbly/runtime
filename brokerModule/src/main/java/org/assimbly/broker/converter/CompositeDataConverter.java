@@ -43,7 +43,6 @@ public class CompositeDataConverter {
             Set<String> keys = compositeData.getCompositeType().keySet();
 
             JSONObject message = new JSONObject();
-            JSONObject headers = new JSONObject();
             JSONObject jmsheaders = new JSONObject();
 
             for(String key : keys){
@@ -102,8 +101,8 @@ public class CompositeDataConverter {
                             String headerValue;
 
                             if(property.contains("=")) {
-                                headerKey = property.split("=")[0];
-                                headerValue = property.split("=")[1];
+                                headerKey = property.substring(0, property.indexOf('='));
+                                headerValue = property.substring(property.indexOf('=') + 1);
                                 if(headerKey.startsWith("JMS")){
                                     jmsheaders.put(headerKey,headerValue);
                                 }else{
