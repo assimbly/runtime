@@ -72,6 +72,11 @@ public class Connection {
 			uri = properties.get("error." + endpointId + ".uri");
 			startConnection(uri, "error");
 		}
+		if(key.startsWith("route")){
+			endpointId = StringUtils.substringBetween(key, "route.", ".service.id");
+			uri = properties.get("route." + endpointId + ".uri");
+			startConnection(uri, "route");
+		}
 
 		return properties;
 
