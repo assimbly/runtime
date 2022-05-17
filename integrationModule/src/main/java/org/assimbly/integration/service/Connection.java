@@ -52,31 +52,28 @@ public class Connection {
 
         serviceId = properties.get(key);
 
-		if(key.startsWith("from")){
-			endpointId = StringUtils.substringBetween(key, "from.", ".service.id");
-			uri = properties.get("from." + endpointId + ".uri");
-			startConnection(uri,"from");
-		}
-		if(key.startsWith("to")){
-			endpointId = StringUtils.substringBetween(key, "to.", ".service.id");
-			uri = properties.get("to." + endpointId + ".uri");
-			startConnection(uri,"to");
-		}
-		if(key.startsWith("response")){
-			endpointId = StringUtils.substringBetween(key, "response.", ".service.id");
-			uri = properties.get("response." + endpointId + ".uri");
-			startConnection(uri, "response");
-		}
-		if(key.startsWith("error")){
-			endpointId = StringUtils.substringBetween(key, "error.", ".service.id");
-			uri = properties.get("error." + endpointId + ".uri");
-			startConnection(uri, "error");
-		}
-		if(key.startsWith("route")){
-			endpointId = StringUtils.substringBetween(key, "route.", ".service.id");
-			uri = properties.get("route." + endpointId + ".uri");
+        System.out.println("key: " + key);
+        System.out.println("serviceId: " + serviceId);
+
+        endpointId = key.split("\\.")[1]; 
+        if(key.startsWith("route")){
+            System.out.println("endpointId: " + endpointId);
+			String route = properties.get("route." + endpointId + ".route");
+            String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
+            System.out.println("route: " + route);
+            int i;
+            for (i = 0; i < options.length; i++) {
+                if (route!= null && route.contains(options[i])) {
+                    uri = options[i];
+                }
+            }
+
 			startConnection(uri, "route");
-		}
+		}else{
+            uri = properties.get(key + "." + endpointId + ".uri");
+        }
+        
+        startConnection(uri,key);
 
 		return properties;
 
