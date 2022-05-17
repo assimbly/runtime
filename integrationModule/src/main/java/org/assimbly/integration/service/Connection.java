@@ -35,7 +35,8 @@ public class Connection {
 	private CamelContext context;
 	private String connectId;
 	private boolean faultTolerant;
-	private Object endpointId;
+	private String endpointType;
+    private Object endpointId;
 	private String serviceId;
 	private ActiveMQConnectionFactory activeMQConnectionFactory;
 	private SjmsComponent sjmsComponent;
@@ -51,29 +52,25 @@ public class Connection {
 	public TreeMap<String, String> start() throws Exception{
 
         serviceId = properties.get(key);
-
-        System.out.println("key: " + key);
-        System.out.println("serviceId: " + serviceId);
-
+        endpointType = key.split("\\.")[0]; 
         endpointId = key.split("\\.")[1]; 
+
         if(key.startsWith("route")){
-            System.out.println("endpointId: " + endpointId);
-			String route = properties.get("route." + endpointId + ".route");
+            
+            String route = properties.get("route." + endpointId + ".route");
             String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
-            System.out.println("route: " + route);
+
             int i;
             for (i = 0; i < options.length; i++) {
                 if (route!= null && route.contains(options[i])) {
                     uri = options[i];
                 }
             }
-
-			startConnection(uri, "route");
 		}else{
-            uri = properties.get(key + "." + endpointId + ".uri");
+            uri = properties.get(endpointType + "." + endpointId + ".uri");
         }
         
-        startConnection(uri,key);
+        startConnection(uri, endpointType);        
 
 		return properties;
 
