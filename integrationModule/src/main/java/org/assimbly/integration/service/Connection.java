@@ -43,6 +43,8 @@ public class Connection {
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
+    private String serviceType;
+
 	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
 		this.properties = properties;
@@ -52,159 +54,62 @@ public class Connection {
 	public TreeMap<String, String> start() throws Exception{
 
         serviceId = properties.get(key);
+        serviceType = properties.get("service." + serviceId + ".type" );
+
+        System.out.println("serviceId=" + serviceId);
+        System.out.println("serviceType=" + serviceType);
+
         endpointType = key.split("\\.")[0]; 
         endpointId = key.split("\\.")[1]; 
 
-        if(key.startsWith("route")){
-            
-            String route = properties.get("route." + endpointId + ".route");
-            String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
-
-            int i;
-            for (i = 0; i < options.length; i++) {
-                if (route!= null && route.contains(options[i])) {
-                    uri = options[i];
-                }
-            }
-		}else{
-            uri = properties.get(endpointType + "." + endpointId + ".uri");
-        }
-        
-        startConnection(uri, endpointType);        
-
-		return properties;
-
-	}
-
-	//unused (future purposes)
-	public TreeMap<String, String> stop() throws Exception{
-		if(properties.get("from.service.id")!=null){
-			uri = properties.get("from.uri");
-			//stopConnection(uri,"from");
-		}
-		if(properties.get("to.service.id")!=null){
-			String toUris = properties.get("to.uri");
-			for(@SuppressWarnings("unused") String toUri : toUris.split(",")) {
-				//stopConnection(toUri,"to");
-			}
-		}
-		if(properties.get("response.service.id")!=null){
-			uri = properties.get("response.uri");
-			//stopConnection(toUri,"to");
-		}
-		if(properties.get("error.service.id")!=null){
-			uri = properties.get("error.uri");
-			//stopConnection(uri, "error");
-		}
-
-		return properties;
-
-	}
-
-
-	private void startConnection(String uri, String type) throws Exception{
-
-        connectionId = properties.get(type + "." + endpointId + ".service.id");
-
+        connectionId = properties.get(endpointType + "." + endpointId + ".service.id");
         flowId = properties.get("id");
 
-		if(uri!=null){
+        if(connectionId!=null) {
+            startConnection();        
+        }
 
-			if(connectionId!=null) {
+		return properties;
 
-				String[] uriSplitted = uri.split(":", 2);
-				String component = uriSplitted[0];
-
-                String options[] = {"activemq", "amazonmq", "sonicmq", "sjms", "amqps", "amqp", "ibmmq", "sql"};
-				int i;
-				for (i = 0; i < options.length; i++) {
-					if (component != null && component.contains(options[i])) {
-						break;
-					}
-				}
-
-				switch (i) {
-					case 0:
-						setupActiveMQConnection(properties, "activemq");
-						break;
-					case 1:
-						setupActiveMQConnection(properties, "amazonmq");
-						break;
-					case 2:
-						connectId = type + connectionId + new Random().nextInt(1000000);
-						setupSonicMQConnection(properties, type, connectId);
-						uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-						properties.put(type + "." + endpointId + ".uri", uri);						
-						break;
-					case 3:
-						setupSJMSConnection(properties, "sjms", type);
-						break;
-					case 4:
-                        setupAMQPConnection(properties, "amqps", true);
-						break;
-					case 5:
-                        setupAMQPConnection(properties, "amqp", false);
-						break;
-					case 6:
-						setupIBMMQConnection(properties, "ibmmq", type);
-						break;
-					case 7:
-						setupJDBCConnection(properties, type);
-						break;
-					default:
-						log.error("Connection parameters for component " + component + " are not implemented");
-						throw new Exception("Connection parameters for component " + component + " are not implemented");
-				}
-			}
-		}
 	}
 
+	private void startConnection() throws Exception{        
+          
+        switch (serviceType) {
+            case "ActiveMQ":
+                setupActiveMQConnection(properties, "activemq");
+                break;
+            case "AmazonMQ":
+                setupActiveMQConnection(properties, "amazonmq");
+                break;
+            case "SonicMQ":
+                connectId = endpointType + connectionId + new Random().nextInt(1000000);
+                setupSonicMQConnection(properties, endpointType, connectId);
+                uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
+                properties.put(endpointType + "." + endpointId + ".uri", uri);						
+                break;
+            case "MQ":
+                setupSJMSConnection(properties, "sjms", endpointType);
+                break;
+            case "AMQPS":
+                setupAMQPConnection(properties, "amqps", true);
+                break;
+            case "AMQP":
+                setupAMQPConnection(properties, "amqp", false);
+                break;
+            case "IBMMQ":
+                setupIBMMQConnection(properties, "ibmmq", endpointType);
+                break;
+            case "JDBC":
+                setupJDBCConnection(properties, endpointType);
+                break;
+            default:
+                log.error("Connection parameters for connection " + serviceType + " are not implemented");
+                throw new Exception("Connection parameters for connection " + serviceType + " are not implemented");
+        }
+        
 
-	@SuppressWarnings("unused")
-	private void stopConnection(String uri, String type) throws Exception{
-
-		if(type.equals("error")) {
-			connectionId = properties.get(type + ".service.id");
-		}else {
-			connectionId = properties.get("to." + endpointId + ".service.id");
-		}
-
-		flowId = properties.get("id");
-
-		if(uri!=null && connectionId!=null){
-
-			String[] uriSplitted = uri.split(":",2);
-			String component = uriSplitted[0];
-			String endpoint = uriSplitted[1];
-
-			String options[] = {"activemq", "sonicmq", "sjms","jdbc"};
-			int i;
-			for (i = 0; i < options.length; i++) {
-				if (component != null && component.contains(options[i])) {
-					break;
-				}
-			}
-
-			switch (i) {
-				case 0:
-					//removeActiveMQConnection(properties, type);
-					break;
-				case 1:
-					//String connectId = type + connectionId + flowId;
-					//removeSonicMQConnection(properties, type, connectId);
-					//properties.remove(type + ".uri", "sonicmq." + connectionId + flowId + ":" + endpoint);
-					break;
-				case 2:
-					//removeJDBCConnection(properties, type);
-					break;
-				default:
-					log.error("Connection parameters for component " + component + " are not implemented");
-					throw new Exception("Connection parameters for component " + component + " are not implemented");
-			}
-		}
 	}
-
-
 
 	private void setupActiveMQConnection(TreeMap<String, String> properties, String componentName) throws Exception{
 

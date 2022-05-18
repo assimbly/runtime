@@ -344,21 +344,32 @@ public class Unmarshall {
 
 	private void getServiceFromXMLFile(String type, String endpointId, String serviceId) throws ConfigurationException {
 
-		String serviceXPath = "integration/services/service[id='" + serviceId + "']/keys";
-		List<String> serviceProporties = IntegrationUtil.getXMLParameters(conf, serviceXPath);
+		String serviceXPath = "integration/services/service[id='" + serviceId + "']/";
+		List<String> serviceProporties = IntegrationUtil.getXMLParameters(conf, serviceXPath + "keys");
 
 		if(!serviceProporties.isEmpty()){
 
 			for(String serviceProperty : serviceProporties){
-				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 1).toLowerCase(), conf.getString(serviceProperty));
+				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 5).toLowerCase(), conf.getString(serviceProperty));
 			}
 
 			properties.put(type + "." + endpointId + ".service.id", serviceId);
 
-			String serviceName = conf.getString("integration/services/service[id='" + serviceId + "']/name");
+			String serviceName = conf.getString(serviceXPath + "name");
+
 			if(!serviceName.isEmpty()) {
 				properties.put(type + "." + endpointId + ".service.name", serviceName);
+				properties.put("service." + serviceId + ".name", serviceName);
 			}
+
+			String serviceType = conf.getString(serviceXPath + "type");
+			
+			if(!serviceType.isEmpty()) {
+				properties.put("service." + serviceId + ".type", serviceType);
+			}else{
+				properties.put("service." + serviceId + ".type", "unknown");
+			}
+
 
 		}
 	}
