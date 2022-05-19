@@ -74,7 +74,7 @@ public class Connection {
 	}
 
 	private void startConnection() throws Exception{        
-          
+
         switch (serviceType) {
             case "ActiveMQ":
                 setupActiveMQConnection(properties, "activemq");
@@ -88,7 +88,7 @@ public class Connection {
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
                 properties.put(endpointType + "." + endpointId + ".uri", uri);						
                 break;
-            case "MQ":
+            case "MQ Connection":
                 setupSJMSConnection(properties, "sjms", endpointType);
                 break;
             case "AMQPS":
