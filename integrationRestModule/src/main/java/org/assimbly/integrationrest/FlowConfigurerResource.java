@@ -41,7 +41,7 @@ public class FlowConfigurerResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(path = "/integration/{integrationId}/setflowconfiguration/{flowId}", consumes =  {"application/xml","application/json","text/plain"}, produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> setFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String flowId,@RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> setFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Content-type") String mediaType, @PathVariable Long integrationId,@PathVariable String flowId,@RequestBody String configuration) throws Exception {
 
        	try {
             integration = integrationResource.getIntegration();
