@@ -267,6 +267,7 @@ public class Unmarshall {
 
 		//A maximum of 3 from components per route is allowed
 		int maxFromTypes = 3;
+		int numFromType = 0;
 
 		for(String endpoint : endpoints){
 	
@@ -317,9 +318,12 @@ public class Unmarshall {
 					properties.put(type + "." + endpointId + ".response.id", responseId);
 				}
 			} else if(type.equals("from")) {
-				if(index >= maxFromTypes){
-					break;
+				if(numFromType >= maxFromTypes){
+					// maximum from endpoints reached on a route
+					// jump to the next iteration
+					continue;
 				}
+				numFromType++;
 			} else if(type.equals("to")) {
 
 				if(endpointId != null){
