@@ -127,9 +127,12 @@ public class DependencyUtil {
         STUB("stub"),
         TIMER("timer"),
         UNDERTOW("undertow"),
+        VELOCITY("velocity"),
         VERTXHTTP("vertx-http"),
         VM("vm"),
         WEBSOCKET("websocket"),
+        XSLT("xslt"),
+        XSLTSAXON("xslt-saxon"),
         ;
 
         private static Map<String, CompiledDependency> BY_LABEL = new HashMap<>();

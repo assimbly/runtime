@@ -24,6 +24,8 @@
     </repositories>
 
     <dependencies>
+        
+        <!-- Sonic Client dependencies-->
         <dependency>
             <groupId>com.aurea.sonic.mq</groupId>
             <artifactId>sonic_Client</artifactId>
@@ -39,6 +41,14 @@
             <artifactId>sonic_XMessage</artifactId>
             <version>10.0.18</version>
         </dependency>
+
+        <!-- Dovetail dependencies-->
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltojson</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

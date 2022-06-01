@@ -452,7 +452,7 @@ public class Unmarshall {
 		}
 
 		properties.put(type + "." + endpointId + ".route", routeAsString);
-		properties.put(type + "." + endpointId + ".route.id", routeId);
+		properties.put(type + "." + endpointId + ".route.id", updatedRouteId);
 
 	}
 

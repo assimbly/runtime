@@ -21,7 +21,6 @@ import org.apache.camel.spi.RouteController;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.Tracer;
 import org.apache.camel.ExtendedCamelContext;
-import org.apache.camel.support.RouteWatcherReloadStrategy;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FileUtils;
@@ -35,12 +34,15 @@ import org.assimbly.integration.routes.SimpleRoute;
 import org.assimbly.integration.service.Connection;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.beans.CustomHttpBinding;
+import org.assimbly.integration.beans.UuidExtensionFunction;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
@@ -80,6 +82,8 @@ public class CamelIntegration extends BaseIntegration {
 	private ManagedCamelContext managed;
 
 	private Properties encryptionProperties;
+
+	private boolean watchDeployDirectoryInitialized = false;
 
 	
 	public CamelIntegration() {
@@ -153,6 +157,9 @@ public class CamelIntegration extends BaseIntegration {
 		//Start Dovetail specific beans
 		CustomHttpBinding customHttpBinding = new CustomHttpBinding();
 		registry.bind("customHttpBinding", customHttpBinding);
+		registry.bind("uuid-function", new UuidExtensionFunction());
+		context.addService(new CustomXmlJsonDataFormat());
+		//context.addComponent("my", new MyComponent(camelContext));
 		//End Dovetail specific beans
 
 	}
@@ -252,6 +259,13 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	private void watchDeployDirectory(Path path) throws Exception {
+		
+		if(watchDeployDirectoryInitialized){
+			return;
+		}
+		
+		log.info("Deploy folder | Init watching for changes: " + path);	
+		watchDeployDirectoryInitialized = true;
 		
 		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
 				.addDirectories(path)
@@ -553,7 +567,12 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
-		super.setFlowConfiguration(flowId, mediaType, configuration);		
+		super.setFlowConfiguration(flowId, mediaType, configuration);	
+		
+		//if()
+		//props.get("flow.type");
+
+
 		String status = startFlow(flowId);
 		return status;
 	}
@@ -595,7 +614,7 @@ public class CamelIntegration extends BaseIntegration {
 		props.put("id",flowId);
 		props.put("flow.name",flowId);
 		props.put("flow.type","esb");
-		props.put("esb.1.route", configuration);
+		props.put("route.1.route", configuration);
 		
 		addESBFlow(props);
 		
@@ -618,8 +637,14 @@ public class CamelIntegration extends BaseIntegration {
 			for(int i = 0; i < allProps.size(); i++){
 				TreeMap<String, String> props = allProps.get(i);
 
-				if (props.get("id").equals(id)) {
-					
+				String configureId = props.get("id");
+
+				if (configureId.equals(id)) {					
+					log.info("Load flow configuration | id=" + id);
+					addFlow(props);
+					flowAdded = true;
+				}else if(configureId!=null){
+					id = configureId;
 					log.info("Load flow configuration | id=" + id);
 					addFlow(props);
 					flowAdded = true;
@@ -1501,12 +1526,13 @@ public class CamelIntegration extends BaseIntegration {
 		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
 
 		registry.bind("default", sslContextParameters);
+		registry.bind("sslContext", sslContextParameters);
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
 		context.setSSLContextParameters(sslContextParameters);
 
-		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "netty", "netty-http", "smtps", "vertx-http"};
+		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
 
 		for (String sslComponent : sslComponents) {
 			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
