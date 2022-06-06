@@ -45,7 +45,6 @@ public final class TransformUtil {
 		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
 		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
 		map.put("headerName","name");
-        map.put("propertyName","name");
         map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
         map.put("xslt:","xslt-saxon:");
         map.put("&amp;saxon=true","");
