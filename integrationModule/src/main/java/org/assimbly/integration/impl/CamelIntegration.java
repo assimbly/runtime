@@ -155,6 +155,10 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("customHttpBinding", customHttpBinding);
 		//End Dovetail specific beans
 
+		// Start Dovetail specific components
+		context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
+		// End Dovetail specific components
+
 	}
 	
 	public void setTracing(boolean tracing, String traceType) {
@@ -371,6 +375,12 @@ public class CamelIntegration extends BaseIntegration {
 				for (String scheme : schemes) {
 
 					scheme = scheme.toLowerCase();
+
+					log.warn(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+					log.warn("scheme:"+scheme);
+					log.warn("DependencyUtil:"+DependencyUtil.CompiledDependency.hasCompiledDependency(scheme));
+					log.warn("context.hasComponent:"+context.hasComponent(scheme));
+					log.warn(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
 					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
 						log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");

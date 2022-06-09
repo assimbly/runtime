@@ -90,6 +90,7 @@ public class DependencyUtil {
     public enum CompiledDependency {
 
         ACTIVEMQ("activemq"),
+        ALERIS("aleris"),
         AMQP("amqp"),
         AS2("as2"),
         AWS2S3("aws2-s3"),

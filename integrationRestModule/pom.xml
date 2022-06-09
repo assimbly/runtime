@@ -4,13 +4,13 @@
   <parent>
     <artifactId>modules</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.6.0</version>
+    <version>3.7.0</version>
   </parent>
 
   <packaging>jar</packaging>
   <groupId>org.assimbly</groupId>
   <artifactId>integrationRestModule</artifactId>
-  <version>3.6.0</version>
+  <version>3.7.0</version>
 
   <name>connectorRestModule</name>
 
@@ -25,13 +25,13 @@
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>baseModule</artifactId>
-		  <version>3.6.0</version>
+		  <version>3.7.0</version>
 		  <scope>compile</scope>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>integrationModule</artifactId>
-		  <version>3.6.0</version>
+		  <version>3.7.0</version>
 		  <scope>compile</scope>
 	  </dependency>
 
