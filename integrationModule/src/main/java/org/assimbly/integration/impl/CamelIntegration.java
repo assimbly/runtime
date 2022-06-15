@@ -164,6 +164,10 @@ public class CamelIntegration extends BaseIntegration {
 		//context.addComponent("my", new MyComponent(camelContext));
 		//End Dovetail specific beans
 
+		// Start Dovetail components
+		context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
+		// End Dovetail components
+
 	}
 	
 	public void setTracing(boolean tracing, String traceType) {
