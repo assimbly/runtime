@@ -91,6 +91,7 @@ public class DependencyUtil {
 
         ACTIVEMQ("activemq"),
         ALERIS("aleris"),
+        AMAZON("amazon"),
         AMQP("amqp"),
         AS2("as2"),
         AWS2S3("aws2-s3"),

@@ -166,6 +166,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		// Start Dovetail components
 		context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
+		context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
 		// End Dovetail components
 
 	}
