@@ -90,12 +90,14 @@ public class DependencyUtil {
     public enum CompiledDependency {
 
         ACTIVEMQ("activemq"),
+        ALERIS("aleris"),
+        AMAZON("amazon"),
         AMQP("amqp"),
         AS2("as2"),
         AWS2S3("aws2-s3"),
         DIRECT("direct"),
         ELASTICSEARCHREST("elasticsearch-rest"),
-		FILE("file"),
+        FILE("file"),
         FTP("ftp"),
         FTPS("ftps"),
         HTTP("http"),
@@ -116,6 +118,7 @@ public class DependencyUtil {
         SFTP("sftp"),
         SEDA("seda"),
         SERVLET("servlet"),
+        SIMPLEREPLACE("simplereplace"),
         SJMS("sjms"),
         SJMS2("sjms2"),
         SMTP("smtp"),

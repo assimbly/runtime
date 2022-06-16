@@ -45,6 +45,26 @@
         <!-- Dovetail dependencies-->
         <dependency>
             <groupId>world.dovetail</groupId>
+            <artifactId>aggregate</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>aleris</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>amazon</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>simplereplace</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
             <artifactId>xmltojson</artifactId>
             <version>3.7.0</version>
         </dependency>
