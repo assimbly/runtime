@@ -1530,6 +1530,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
+		
 		context.setSSLContextParameters(sslContextParameters);
 
 		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
