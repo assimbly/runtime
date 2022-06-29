@@ -99,6 +99,7 @@ public class DependencyUtil {
         DIRECT("direct"),
         ELASTICSEARCHREST("elasticsearch-rest"),
         FILE("file"),
+        FLV("flv"),
         FTP("ftp"),
         FTPS("ftps"),
         HTTP("http"),
