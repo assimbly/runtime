@@ -5,6 +5,7 @@ import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -23,6 +24,7 @@ import org.apache.camel.spi.Tracer;
 import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +44,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import world.dovetail.aggregate.AggregateStrategy;
+import world.dovetail.enrich.EnrichStrategy;
+import world.dovetail.throttling.QueueMessageChecker;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
 import javax.xml.xpath.XPathFactory;
@@ -155,19 +160,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setHistoryMetrics(true);
 		
-		//Start Dovetail specific beans
-		CustomHttpBinding customHttpBinding = new CustomHttpBinding();
-		registry.bind("customHttpBinding", customHttpBinding);
-		registry.bind("uuid-function", new UuidExtensionFunction());
-		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
-		context.addService(new CustomXmlJsonDataFormat());
-		//context.addComponent("my", new MyComponent(camelContext));
-		//End Dovetail specific beans
-
-		// Start Dovetail components
-		context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
-		context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
-		// End Dovetail components
+		setDovetail(true);
 
 	}
 	
@@ -212,6 +205,34 @@ public class CamelIntegration extends BaseIntegration {
 		context.setMessageHistoryFactory(factory);
 	}
 
+	public void setDovetail(boolean enable) throws Exception {
+		
+		if(enable){
+			//Start Dovetail specific beans
+			registry.bind("customHttpBinding", new CustomHttpBinding());
+			registry.bind("uuid-function", new UuidExtensionFunction());
+			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+			registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+			registry.bind("QueueMessageChecker", new QueueMessageChecker());
+			//End Dovetail specific beans
+
+			//Start Dovetail thread pool profiles
+			ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+			builder.poolSize(0).maxPoolSize(5).maxQueueSize(2000).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
+			context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
+			//End Dovetail thread pool profiles
+
+			//Start Dovetail services
+			context.addService(new CustomXmlJsonDataFormat());
+			//End Dovetail services
+
+			// Start Dovetail components
+			context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
+			context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
+			// End Dovetail components
+		}
+
+	}
 
 	// (Un)install files
 

@@ -51,6 +51,11 @@ public final class TransformUtil {
         map.put("&amp;saxon=true","");
         map.put("?saxon=true\"","");
         map.put("?saxon=true&amp;","?");
+        map.put("xml2excel","xmltoexcel");
+        map.put("excel2xml","exceltoxml");
+        map.put("csv2xml","csvtoxml");
+        map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
+       
 		
 		String output = replaceMultipleStrings(input, map, true);
 		

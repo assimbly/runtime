@@ -60,7 +60,57 @@
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+            <artifactId>csvtoxml</artifactId>
+            <version>3.7.0</version>
+        </dependency>        
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>docconverter</artifactId>
+            <version>3.7.0</version>
+        </dependency>        
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edi</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edifact</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edifactstandards</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>enrich</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>exceltoxml</artifactId>
+            <version>3.7.0</version>
+        </dependency>                                        
+        <dependency>
+            <groupId>world.dovetail</groupId>
             <artifactId>simplereplace</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>throttling</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltocsv</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltoexcel</artifactId>
             <version>3.7.0</version>
         </dependency>
         <dependency>

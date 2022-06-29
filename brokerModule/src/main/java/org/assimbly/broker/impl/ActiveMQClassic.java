@@ -56,6 +56,7 @@ public class ActiveMQClassic implements Broker {
 
         try{
             broker = new BrokerService();
+        
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());

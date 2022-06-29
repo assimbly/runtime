@@ -83,7 +83,7 @@
                       </endpoints>
                     </flow>
                   </flows>
-                  <routes>
+                  <routes>                    
                         <xsl:for-each select="//*:route">
                             <route>
                                  <xsl:choose>
@@ -126,6 +126,7 @@
                                 </xsl:choose>
                             </xsl:attribute>
                             <xsl:apply-templates select="//*:onException" mode="copy-no-namespaces"/>
+                            <xsl:apply-templates select="//*:dataFormats" mode="copy-no-namespaces"/>
                         </routeConfiguration>                                                
                     </xsl:if>
                     </routeConfigurations>                    
