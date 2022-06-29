@@ -60,6 +60,7 @@
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+<<<<<<< HEAD
             <artifactId>csvtoxml</artifactId>
             <version>3.7.0</version>
         </dependency>        
@@ -71,20 +72,32 @@
         <dependency>
             <groupId>world.dovetail</groupId>
             <artifactId>edi</artifactId>
+=======
+            <artifactId>archive</artifactId>
+>>>>>>> 168ae5cf3dfb14d90ab2f380927605858ff18b37
             <version>3.7.0</version>
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+<<<<<<< HEAD
             <artifactId>edifact</artifactId>
+=======
+             <artifactId>encoder</artifactId>
+>>>>>>> 168ae5cf3dfb14d90ab2f380927605858ff18b37
             <version>3.7.0</version>
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+<<<<<<< HEAD
             <artifactId>edifactstandards</artifactId>
+=======
+            <artifactId>flv</artifactId>
+>>>>>>> 168ae5cf3dfb14d90ab2f380927605858ff18b37
             <version>3.7.0</version>
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+<<<<<<< HEAD
             <artifactId>enrich</artifactId>
             <version>3.7.0</version>
         </dependency>
@@ -95,6 +108,8 @@
         </dependency>                                        
         <dependency>
             <groupId>world.dovetail</groupId>
+=======
+>>>>>>> 168ae5cf3dfb14d90ab2f380927605858ff18b37
             <artifactId>simplereplace</artifactId>
             <version>3.7.0</version>
         </dependency>

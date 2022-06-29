@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import world.dovetail.aggregate.AggregateStrategy;
 import world.dovetail.enrich.EnrichStrategy;
 import world.dovetail.throttling.QueueMessageChecker;
+import world.dovetail.common.mail.ExtendedHeaderFilterStrategy;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
 import javax.xml.xpath.XPathFactory;
@@ -210,17 +211,13 @@ public class CamelIntegration extends BaseIntegration {
 		if(enable){
 			//Start Dovetail specific beans
 			registry.bind("customHttpBinding", new CustomHttpBinding());
-			registry.bind("uuid-function", new UuidExtensionFunction());
 			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 			registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-			registry.bind("QueueMessageChecker", new QueueMessageChecker());
-			//End Dovetail specific beans
 
-			//Start Dovetail thread pool profiles
-			ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
-			builder.poolSize(0).maxPoolSize(5).maxQueueSize(2000).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
-			context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
-			//End Dovetail thread pool profiles
+			registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
+			registry.bind("QueueMessageChecker", new QueueMessageChecker());
+			registry.bind("uuid-function", new UuidExtensionFunction());
+			//End Dovetail specific beans
 
 			//Start Dovetail services
 			context.addService(new CustomXmlJsonDataFormat());
@@ -230,6 +227,13 @@ public class CamelIntegration extends BaseIntegration {
 			context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
 			context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
 			// End Dovetail components
+
+			//Start Dovetail thread pool profiles
+			ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+			builder.poolSize(0).maxPoolSize(5).maxQueueSize(2000).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
+			context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
+			//End Dovetail thread pool profiles
+
 		}
 
 	}
