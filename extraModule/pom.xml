@@ -62,6 +62,12 @@
             <groupId>world.dovetail</groupId>
             <artifactId>archive</artifactId>
             <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+             <artifactId>encoder</artifactId>
+            <version>3.7.0</version>
+        </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
             <artifactId>flv</artifactId>

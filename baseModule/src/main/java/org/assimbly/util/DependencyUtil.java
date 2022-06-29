@@ -98,6 +98,7 @@ public class DependencyUtil {
         AWS2S3("aws2-s3"),
         DIRECT("direct"),
         ELASTICSEARCHREST("elasticsearch-rest"),
+        ENCODER("encoder"),
         FILE("file"),
         FLV("flv"),
         FTP("ftp"),
