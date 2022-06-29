@@ -93,6 +93,7 @@ public class DependencyUtil {
         ALERIS("aleris"),
         AMAZON("amazon"),
         AMQP("amqp"),
+        ARCHIVE("archive"),
         AS2("as2"),
         AWS2S3("aws2-s3"),
         DIRECT("direct"),

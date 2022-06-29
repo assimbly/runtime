@@ -60,6 +60,10 @@
         </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
+            <artifactId>archive</artifactId>
+            <version>3.7.0</version>
+        <dependency>
+            <groupId>world.dovetail</groupId>
             <artifactId>flv</artifactId>
             <version>3.7.0</version>
         </dependency>
