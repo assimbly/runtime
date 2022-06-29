@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import world.dovetail.aggregate.AggregateStrategy;
+import world.dovetail.common.mail.ExtendedHeaderFilterStrategy;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
 import javax.xml.xpath.XPathFactory;
@@ -160,6 +161,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("customHttpBinding", customHttpBinding);
 		registry.bind("uuid-function", new UuidExtensionFunction());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 		context.addService(new CustomXmlJsonDataFormat());
 		//context.addComponent("my", new MyComponent(camelContext));
 		//End Dovetail specific beans
