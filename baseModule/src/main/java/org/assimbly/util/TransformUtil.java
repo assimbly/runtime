@@ -54,6 +54,7 @@ public final class TransformUtil {
         map.put("xml2excel","xmltoexcel");
         map.put("excel2xml","exceltoxml");
         map.put("csv2xml","csvtoxml");
+        map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
        
 		

@@ -112,7 +112,12 @@
             <groupId>world.dovetail</groupId>
             <artifactId>flv</artifactId>
             <version>3.7.0</version>
-        </dependency>        
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>globalvariables</artifactId>
+            <version>3.7.0</version>
+        </dependency>                
         <dependency>
             <groupId>world.dovetail</groupId>
             <artifactId>simplereplace</artifactId>
