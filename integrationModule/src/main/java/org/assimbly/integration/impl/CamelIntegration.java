@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import world.dovetail.aggregate.AggregateStrategy;
 import world.dovetail.cookies.CookieStore;
 import world.dovetail.enrich.EnrichStrategy;
+import world.dovetail.multipart.processor.MultipartProcessor;
 import world.dovetail.throttling.QueueMessageChecker;
 import world.dovetail.common.mail.ExtendedHeaderFilterStrategy;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
@@ -210,12 +211,14 @@ public class CamelIntegration extends BaseIntegration {
 	public void setDovetail(boolean enable) throws Exception {
 		
 		if(enable){
+		
 			//Start Dovetail specific beans
 			registry.bind("customHttpBinding", new CustomHttpBinding());
 			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 			registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
 			registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 			registry.bind("flowCookieStore", new CookieStore());
+			registry.bind("multipartProcessor", new MultipartProcessor());
 			registry.bind("QueueMessageChecker", new QueueMessageChecker());
 			registry.bind("uuid-function", new UuidExtensionFunction());
 			//End Dovetail specific beans

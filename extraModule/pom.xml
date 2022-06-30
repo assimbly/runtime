@@ -120,6 +120,11 @@
         </dependency>                
         <dependency>
             <groupId>world.dovetail</groupId>
+            <artifactId>multipart</artifactId>
+            <version>3.7.0</version>
+        </dependency>        
+        <dependency>
+            <groupId>world.dovetail</groupId>
             <artifactId>replace</artifactId>
             <version>3.7.0</version>
         </dependency>        
