@@ -109,6 +109,7 @@ public class DependencyUtil {
         EXCELTOXML("exceltoxml"),
         FILE("file"),
         FLV("flv"),
+        FMUTA("fmuta"),
         FORMTOXML("form2xml"),
         FTP("ftp"),
         FTPS("ftps"),
