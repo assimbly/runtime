@@ -56,6 +56,7 @@ public final class TransformUtil {
         map.put("csv2xml","csvtoxml");
         map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
+        map.put("quartz2:","quartz:");
        
 		
 		String output = replaceMultipleStrings(input, map, true);
