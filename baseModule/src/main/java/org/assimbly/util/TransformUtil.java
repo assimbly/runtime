@@ -57,6 +57,8 @@ public final class TransformUtil {
         map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
         map.put("quartz2:","quartz:");
+        map.put("http4:","http:");
+        map.put("https4:","https:");
        
 		
 		String output = replaceMultipleStrings(input, map, true);
