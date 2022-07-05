@@ -1,47 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>modules</artifactId>
     <groupId>org.assimbly</groupId>
     <version>3.7.0</version>
   </parent>
 
+  <name>integrationRest</name>
   <packaging>jar</packaging>
-  <groupId>org.assimbly</groupId>
-  <artifactId>brokerRestModule</artifactId>
-  <version>3.7.0</version>
 
-  <name>brokerRestModule</name>
+  <groupId>org.assimbly</groupId>
+  <artifactId>integrationRest</artifactId>
+  <version>3.7.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.basedir}/../baseModule/src/main/resources/rules.xml</maven-versions-rules>    
+    <maven-versions-rules>file:///${project.basedir}/rules.xml</maven-versions-rules>   
   </properties>
 
   <dependencies>
-
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>baseModule</artifactId>
-		  <version>3.7.0</version>
-		  <scope>compile</scope>
+		  <artifactId>integration</artifactId>
+		  <version>${assimbly-base.version}</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>brokerModule</artifactId>
-		  <version>3.7.0</version>
-		  <scope>compile</scope>
-	  </dependency>
-
-
       <dependency>
 		   <groupId>org.springdoc</groupId>
 		   <artifactId>springdoc-openapi-ui</artifactId>
-		   <version>1.6.9</version>
+		   <version>${springdoc-openapi-ui.version}</version>
 	  </dependency>
-
   </dependencies>
 
 	<build>
