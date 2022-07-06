@@ -19,14 +19,14 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.basedir}/rules.xml</maven-versions-rules>   
+    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>   
   </properties>
 
   <dependencies>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>integration</artifactId>
-		  <version>${assimbly-base.version}</version>
+		  <version>${assimbly.version}</version>
 	  </dependency>
       <dependency>
 		   <groupId>org.springdoc</groupId>

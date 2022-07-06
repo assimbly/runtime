@@ -50,10 +50,9 @@ import world.dovetail.cookies.CookieStore;
 import world.dovetail.enrich.EnrichStrategy;
 import world.dovetail.multipart.processor.MultipartProcessor;
 import world.dovetail.throttling.QueueMessageChecker;
-import world.dovetail.common.mail.ExtendedHeaderFilterStrategy;
+import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
@@ -66,6 +65,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import javax.xml.xpath.XPathFactory;
 
 
 public class CamelIntegration extends BaseIntegration {

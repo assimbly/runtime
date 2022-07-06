@@ -19,14 +19,17 @@
 	</modules>
 
 	<properties>
-		<assimbly-base.version>3.7.0</assimbly-base.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <main.basedir>${project.basedir}</main.basedir>
+
+		<assimbly.version>3.7.0</assimbly.version>
 		<dropwizard-metrics.version>4.2.10</dropwizard-metrics.version>
 		<jolokia.version>1.7.1</jolokia.version>
-		<ibmmq-client.version>9.2.5.0</ibmmq-client.version>
+		<ibmmq-client.version>9.3.0.0</ibmmq-client.version>
 		<netty.version>4.1.78.Final</netty.version>
 		<springdoc-openapi-ui.version>1.6.9</springdoc-openapi-ui.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven-versions-rules>file:///${project.basedir}/rules.xml</maven-versions-rules>
 	</properties>
 
 	<reporting>
