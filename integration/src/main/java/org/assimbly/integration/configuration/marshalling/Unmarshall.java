@@ -423,6 +423,7 @@ public class Unmarshall {
 		String errorRouteId = expr2.evaluate(doc);
 
 		if(node!=null && errorId!=null){
+
 			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + errorRouteId + "']");
 			Node nodeRouteConfiguration = (Node)expr.evaluate(doc, XPathConstants.NODE);
 			if(nodeRouteConfiguration != null){
@@ -451,19 +452,13 @@ public class Unmarshall {
 			}	
 		}
 
-
 		if(routeAsString.contains("<customDataFormat ref")){
-			System.out.println("komt hier");
 			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration/dataFormats");
 			node = (Node)expr.evaluate(doc, XPathConstants.NODE);		
 			String dataFormatAsString = convertNodeToString(node);
 			dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>",  "</dataFormats");
-			//dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats",  "</dataFormats");
-			System.out.println("dataFormatAsString=" + dataFormatAsString);
 			routeAsString = routeAsString.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
-			System.out.println("routeAsString=" + routeAsString);
 		}
-
 
 		properties.put(type + "." + endpointId + ".route", routeAsString);
 		properties.put(type + "." + endpointId + ".route.id", updatedRouteId);
