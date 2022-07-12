@@ -14,7 +14,6 @@
   <artifactId>integration</artifactId>
   <version>3.7.0</version>
 
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
@@ -62,6 +61,144 @@
 			<artifactId>testBase</artifactId>
 			<version>${assimbly.version}</version>
 		</dependency>
+
+	    <!-- Custom Dovetail components -->
+    	<!-- list of Camel components in alphabetic order -->
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>aggregate</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>aleris</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>amazon</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>archive</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>cookies</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>csvtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>docconverter</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edi</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edifact</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>edifactstandards</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>encoder</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>enrich</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>exceltoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>flv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>fmuta</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>formtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>globalvariables</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>multipart</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>replace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>smb</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>sandbox</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>simplereplace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>sql</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>throttling</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltocsv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltoexcel</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>xmltojson</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
 
 	  <!-- MQ -->
 	  <dependency>
