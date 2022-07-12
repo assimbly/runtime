@@ -1566,7 +1566,6 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("sslContext", sslContextParameters);
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
-
 		
 		context.setSSLContextParameters(sslContextParameters);
 

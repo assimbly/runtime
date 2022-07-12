@@ -32,7 +32,12 @@ public class CustomHttpBinding extends DefaultHttpBinding {
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {
                 addResponseTimeHeader(exchange, target);
-                doWriteExceptionResponse(target, exchange.getException(), response);
+                try {
+                    doWriteExceptionResponse(target, exchange.getException(), response);    
+                } catch (Exception e) {
+                    log.error("Cannot write response: " + e.getMessage());
+                }
+                
             } else {
                 addResponseTimeHeader(exchange, target);
                 // it must be a fault, no need to check for the fault flag on the message
@@ -48,7 +53,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
         }
     }
 
-    private void doWriteExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws IOException {
+    private void doWriteExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
         String accept = target.getHeader("Accept", String.class);
 
         if (exception instanceof TimeoutException) {
@@ -89,7 +94,8 @@ public class CustomHttpBinding extends DefaultHttpBinding {
         }
     }
 
-    private String generateJsonResponse(int code, String info, String error){
+    private String generateJsonResponse(int code, String info, String error) throws Exception {
+        
         JSONObject response = new JSONObject();
 
         response.put("code", code);
@@ -100,6 +106,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private String generateXmlResponse(int code, String info, String error) {
+        
         Document doc = XmlHelper.newDocument();
 
         if(doc == null) {
