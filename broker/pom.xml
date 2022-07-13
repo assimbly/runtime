@@ -42,6 +42,7 @@
 	    	<groupId>org.assimbly</groupId>
 			<artifactId>testBase</artifactId>
 			<version>${assimbly.version}</version>
+			<scope>test</scope>
 	  </dependency>
   </dependencies>
 

@@ -60,6 +60,7 @@
 			<groupId>org.assimbly</groupId>
 			<artifactId>testBase</artifactId>
 			<version>${assimbly.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 	    <!-- Custom Dovetail components -->
@@ -167,6 +168,11 @@
         <dependency>
             <groupId>world.dovetail</groupId>
             <artifactId>sandbox</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>world.dovetail</groupId>
+            <artifactId>soap</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
         <dependency>
