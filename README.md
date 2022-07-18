@@ -1,11 +1,11 @@
-# Modules
+# Runtime
 
-Assimbly modules provide a way to configure and manage an integration fuction. For example:
+Assimbly runtime runs
 
-   * Integration flows
-   * Message broker
+   * Integrations (Connectors, Flows) Routes)
+   * Message broker 
    
-Each module contains an API. The integration and broker module contain a Java API and the integrationRest and brokerRest contain a REST API.
+Each module in the runtime contains an API. The integration and broker module contain a Java API and the integrationRest and brokerRest contain a REST API.
 
 The integration modules are build on top of [Apache Camel](https://github.com/apache/camel) and the broker modules are build on top of [Apache ActiveMQ](https://github.com/apache/activemq).
 
@@ -33,7 +33,7 @@ The API simplifies common management tasks. The following lifecycle management a
 
 # Developing
 
-The project is build with maven (mvn install).
+The project is build with maven (mvn clean install).
 
 # prerequisite
 
@@ -43,7 +43,7 @@ The project is build with maven (mvn install).
 
 # build
 
-The base can be build with Maven:
+The base can also be build with Maven:
 
 ```mvn clean install```
 

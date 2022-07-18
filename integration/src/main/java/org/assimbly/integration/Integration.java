@@ -23,7 +23,7 @@ import java.util.TreeMap;
  * consists of a list of flow configurations.
  *
  * For a valid flow configuration see
- * <a href="https://github.com/assimbly/modules">https://github.com/assimbly/modules</a>
+ * <a href="https://github.com/assimbly/runtime">https://github.com/assimbly/runtime</a>
  * </pre>
  */
 public interface Integration {

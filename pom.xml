@@ -3,12 +3,12 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<name>modules</name>
-	<url>https://github.com/assimbly/modules</url>
+	<name>runtime</name>
+	<url>https://github.com/assimbly/runtime</url>
 	<packaging>pom</packaging>
 
 	<groupId>org.assimbly</groupId>
-	<artifactId>modules</artifactId>
+	<artifactId>runtime</artifactId>
 	<version>3.7.0</version>
 
 	<modules>
