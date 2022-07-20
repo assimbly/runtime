@@ -28,7 +28,7 @@
 		<dropwizard-metrics.version>4.2.10</dropwizard-metrics.version>
 		<jolokia.version>1.7.1</jolokia.version>
 		<ibmmq-client.version>9.3.0.0</ibmmq-client.version>
-		<netty.version>4.1.78.Final</netty.version>
+		<netty.version>4.1.79.Final</netty.version>
 		<springdoc-openapi-ui.version>1.6.9</springdoc-openapi-ui.version>
 	</properties>
 
