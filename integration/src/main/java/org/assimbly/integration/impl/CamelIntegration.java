@@ -43,8 +43,9 @@ import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 
-
+import org.w3c.dom.Element;
 import world.dovetail.aggregate.AggregateStrategy;
 import world.dovetail.cookies.CookieStore;
 import world.dovetail.enrich.EnrichStrategy;
@@ -66,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
 
@@ -347,14 +349,49 @@ public class CamelIntegration extends BaseIntegration {
 	public void fileInstall(Path path) throws Exception {
 		
 		String pathAsString = path.toString();
-		String flowId = FilenameUtils.getBaseName(pathAsString);
+		String fileName = FilenameUtils.getBaseName(pathAsString);
 		String mediaType = FilenameUtils.getExtension(pathAsString);
 		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
 
-		log.info("File install flowid=" + flowId + " | path=" + pathAsString);	
+		String flowId = setFlowId(fileName, configuration);
 
-		configureAndStartFlow(flowId, mediaType, configuration);
+		if(flowId!=null){
+			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
+			configureAndStartFlow(flowId, mediaType, configuration);
+		}else{
+			log.error("File install for " + pathAsString + " failed. Invalid configuration file.");
+		}
 		
+	}
+
+	public String setFlowId(String filename, String configuration) throws Exception {
+
+		String flowId = null;
+
+		Document doc = DocConverter.convertStringToDoc(configuration);
+		XPath xPath = XPathFactory.newInstance().newXPath();
+
+		String root = doc.getDocumentElement().getTagName();
+
+		if(root.equals("integrations")){
+			flowId = xPath.evaluate("//flows/flow[id=" + filename + "]/id",doc);
+			if(flowId==null){
+				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
+			}
+		}else if(root.equals("camelContext")){
+			flowId = xPath.evaluate("/camelContext/@id",doc);
+			if(flowId.isEmpty() || flowId==null){
+				log.warn("Configuration: CamelContext element doesn't have an id attribute");
+			}
+		}else if(root.equals("routes")){
+			flowId = xPath.evaluate("/routes/@id",doc);
+			if(flowId.isEmpty() || flowId==null){
+				log.warn("Configuration: routes element doesn't have an id attribute");
+			}
+		}
+
+		return flowId;
+
 	}
 
 	public void fileUninstall(Path path) throws Exception {
@@ -605,11 +642,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);	
-		
-		//if()
-		//props.get("flow.type");
-
-
 		String status = startFlow(flowId);
 		return status;
 	}
@@ -664,7 +696,7 @@ public class CamelIntegration extends BaseIntegration {
 	
 	public String startFlow(String id) {
 
-		log.info("Start flow | id=" + id);
+		log.info("Starting flow | id=" + id);
 
 		boolean flowAdded = false;
 		
@@ -680,11 +712,6 @@ public class CamelIntegration extends BaseIntegration {
 					log.info("Load flow configuration | id=" + id);
 					addFlow(props);
 					flowAdded = true;
-				}else if(configureId!=null){
-					id = configureId;
-					log.info("Load flow configuration | id=" + id);
-					addFlow(props);
-					flowAdded = true;
 				}
 			
 			}
@@ -697,7 +724,7 @@ public class CamelIntegration extends BaseIntegration {
 					String routeId = route.getId();
 					status = routeController.getRouteStatus(routeId);
 					if(!status.isStarted()) {
-						log.info("Starting route " + routeId);
+						log.info("Starting route | routeid=" + routeId);
 						routeController.startRoute(routeId);
 
 						int count = 1;
@@ -710,11 +737,11 @@ public class CamelIntegration extends BaseIntegration {
 						} while (status.isStarting() || count < 3000);
 
 					} else {
-						log.info("Started route | id=" + routeId);
+						log.info("Started route | routeid=" + routeId);
 					}
 				}
 
-				//log.info("Started flow | id=" + id);
+				log.info("Started flow | id=" + id);
 				return status.toString().toLowerCase();
 				
 			}else {
@@ -754,17 +781,25 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	public String stopFlow(String id) {
-		log.info("Stop flow | id=" + id);
+		
+		log.info("Stopping flow | id=" + id);
+		
 		try {
+
 			List<Route> routeList = getRoutesByFlowId(id);
+			
 			for (Route route : routeList) {
-				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
-				context.removeRoute(route.getId());
+				String routeId = route.getId();
+				log.info("Stopping route | routeid=" + route.getId());
+				routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
+				context.removeRoute(routeId);
 			}
 
+			log.info("Stopped flow | id=" + id);
 	        return "stopped";
 
 		}catch (Exception e) {
+			log.error("Couldn't stop flow | id=" + id + "reason: " + e.getMessage());
 			e.printStackTrace();
 			return e.getMessage();
 		}
