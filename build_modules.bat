@@ -1,1 +1,0 @@
-D:\Share\assimbly-bin\apache-maven-3.8.5\bin\mvn clean install -gs "D:\Share\assimbly-bin\.m2\settings.xml" %*

@@ -1,19 +1,24 @@
-# Modules
+# Runtime
 
-These API's are meant to configure and manage Assimbly module. For example
-a message broker.
+Assimbly runtime runs
 
-   * Connector: connect endpoints
-   * Broker: message broker
+   * Integrations (Connectors, Flows) Routes)
+   * Message broker 
    
-Currently the API's are build on top of [Apache Camel](https://github.com/apache/camel) and [Apache ActiveMQ](https://github.com/apache/activemq).
+Each module in the runtime contains an API. The integration and broker module contain a Java API and the integrationRest and brokerRest contain a REST API.
+
+The integration modules are build on top of [Apache Camel](https://github.com/apache/camel) and the broker modules are build on top of [Apache ActiveMQ](https://github.com/apache/activemq).
+
+
 
 ## Configuration
 
-A flow is configured with key-values. The key-values are stored in a [Java Treemap](https://beginnersbook.com/2013/12/treemap-in-java-with-example/)
+An integration flow is configured with key-values. 
+
+The key-values are stored in a [Java Treemap](https://beginnersbook.com/2013/12/treemap-in-java-with-example/)
 Multiple flows in a connector can be configure with a list of Treemaps. 
 
-The easiest way to generate the Treemap is to convert it from an file (XML, JSON and YAML are supported). Another possibility is using the
+The easiest way to generate the Treemap is to convert it from a configuration file (XML, JSON and YAML are supported). Another possibility is using the
 GUI of [Assimbly Gateway](https://github.com/assimbly/gateway). 
 
 ## Management
@@ -26,26 +31,45 @@ The API simplifies common management tasks. The following lifecycle management a
 * pause
 * resume
 
+# Developing
 
-## Development
+The project is build with maven (mvn clean install).
 
-The project is build with maven (mvn install). After building you can call the API from your Java application like this: 
+# prerequisite
 
-```java
-Connector connector = new CamelConnector(flowID, configurationUri);
+- JDK11+
+- Maven
+- [Assimbly Base](https://github.com/assimbly/base)
 
-connector.start();
-connector.startFlow(flowID);
+# build
+
+The base can also be build with Maven:
+
+```mvn clean install```
+
+It's also possible to build only one module at the time.
+For this the same Maven command can be executed, but then
+from the directory that contains pom.xml of that module.
+
+For example:
+
+```
+cd ./integration
+mvn clean install
 ```
 
-or
+
+# Usage
+
+After building you can call the API from your Java application like this: 
 
 ```java
-Connector connector = new CamelConnector();
-connector.start();
+Integration integration = new CamelIntegration();
+integration.start();
 
-connector.setFlowConfiguration(flowId, mediatype, flowConfiguration);
-connector.startFlow(flowID);
+integration.setFlowConfiguration(flowId, mediatype, flowConfiguration);
+
+integration.startFlow(flowID);
 ```
 
 ## Example
@@ -54,10 +78,10 @@ The following XML configuration moves files from a one directory to another.
 
 ```java
 
-Connector connector = new CamelConnector("example", "file://C:/conf/conf.xml");
+Integration integration = new CamelIntegration("example", "file://C:/conf/conf.xml");
 
-connector.start();
-connector.startFlow("filetofile");
+integration.start();
+integration.startFlow("filetofile");
 
 ```
 
@@ -65,8 +89,8 @@ conf.xml
 ```xml
 
 <?xml version="1.0" encoding="UTF-8"?>
-<connectors>
-   <connector>
+<integrations>
+   <integration>
       <id>1</id>
       <name>default</name>
       <type>ADAPTER</type>
@@ -107,9 +131,11 @@ conf.xml
       <services/>
       <headers/>
       <environmentVariables/>
-   </connector>
-</connectors>
+   </integration>
+</integrations>
 
 ```
 
 For a longer [XML example](https://github.com/assimbly/connector/wiki/XML-Configuration-Example) see the wiki. 
+
+
