@@ -7,7 +7,7 @@ import java.util.TreeMap;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
-import org.apache.camel.builder.DefaultErrorHandlerBuilder;
+import org.apache.camel.builder.LegacyDefaultErrorHandlerBuilder;
 import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -36,7 +36,7 @@ public class ConnectorRoute extends RouteBuilder {
 	private CamelContext context;
 	private ExtendedCamelContext extendedCamelContext;
 
-	private DefaultErrorHandlerBuilder routeErrorHandler;
+	private LegacyDefaultErrorHandlerBuilder routeErrorHandler;
 
 	private String flowId;
 	private String flowName;
@@ -146,14 +146,6 @@ public class ConnectorRoute extends RouteBuilder {
 	}
 	
 	private void setErrorHandler() throws Exception {
-
-		if (this.props.containsKey(this.errorUriKeys.get(0))){
-			String errorUri = this.props.get(this.errorUriKeys.get(0));			
-			routeErrorHandler = deadLetterChannel(errorUri);
-		}
-		else{
-			routeErrorHandler = defaultErrorHandler();
-		}
 
 		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
 		routeErrorHandler = errorHandler.configure();	

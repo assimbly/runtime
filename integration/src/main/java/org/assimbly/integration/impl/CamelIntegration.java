@@ -1,6 +1,7 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import io.swagger.models.Xml;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -15,6 +16,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.main.Main;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.Resource;
@@ -33,6 +35,7 @@ import org.assimbly.integration.event.EventCollector;
 import org.assimbly.integration.routes.ConnectorRoute;
 import org.assimbly.integration.routes.ESBRoute;
 import org.assimbly.integration.routes.SimpleRoute;
+import org.assimbly.integration.routes.templates.XmlToJson;
 import org.assimbly.integration.service.Connection;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.beans.CustomHttpBinding;
@@ -168,6 +171,8 @@ public class CamelIntegration extends BaseIntegration {
 		
 		setDovetail(true);
 
+		setRouteTemplates();
+
 	}
 	
 	public void setTracing(boolean tracing, String traceType) {
@@ -242,6 +247,45 @@ public class CamelIntegration extends BaseIntegration {
 			//End Dovetail thread pool profiles
 
 		}
+
+	}
+
+	public void setRouteTemplates() throws Exception {
+
+		//context.addRoutes(XmlToJson.class);
+
+		XmlToJson xmlToJson = new XmlToJson();
+
+		//flow.configure(context);
+		//xmlToJson.updateRoutesToCamelContext(context);
+		xmlToJson.addRoutesToCamelContext(context);
+
+
+		//xmlToJson.configureRoutes(context);
+
+		//xmlToJson.getRouteTemplateCollection().setCamelContext(context);
+
+
+		//xmlToJson.configure();
+
+
+
+		//xmlToJson.routeTemplate("xmltojson-action").configure().;
+
+		//registry.bind("xmltojson-action", new XmlToJson());
+
+		//xmlToJson.addRoutesToCamelContext(context);
+
+		//context.addRoutes();
+
+		//context.addRoutes(new XmlToJson());
+
+		//context.addRoutesConfigurations();
+
+
+		//context.addRoutesConfigurations(XmlToJson.class);
+
+		//context.addRoutesBuilder(MyRouteTemplates.class);
 
 	}
 
@@ -425,7 +469,6 @@ public class CamelIntegration extends BaseIntegration {
 		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				
 				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
 				context.removeRoute(route.getId());
 			}

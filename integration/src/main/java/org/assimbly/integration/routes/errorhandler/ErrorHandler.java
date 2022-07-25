@@ -1,7 +1,7 @@
 package org.assimbly.integration.routes.errorhandler;
 
 import org.apache.camel.*;
-import org.apache.camel.builder.DefaultErrorHandlerBuilder;
+import org.apache.camel.builder.LegacyDefaultErrorHandlerBuilder;
 import org.assimbly.integration.processors.FailureProcessor;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public class ErrorHandler {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	private DefaultErrorHandlerBuilder errorHandler;
+	private LegacyDefaultErrorHandlerBuilder errorHandler;
 	
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
@@ -29,13 +29,13 @@ public class ErrorHandler {
 	TreeMap<String, String> props;
 	List<String> errorUriKeys;
 	
-	public ErrorHandler(DefaultErrorHandlerBuilder errorHandler, final TreeMap<String, String> props){
+	public ErrorHandler(LegacyDefaultErrorHandlerBuilder errorHandler, final TreeMap<String, String> props){
 		this.errorHandler = errorHandler;
 		this.props = props;		
 	}
 	
 	
-	public DefaultErrorHandlerBuilder configure() throws Exception {
+	public LegacyDefaultErrorHandlerBuilder configure() throws Exception {
 		
 		failureProcessor = new FailureProcessor(props);
 		
