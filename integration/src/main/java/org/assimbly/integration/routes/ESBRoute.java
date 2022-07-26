@@ -4,8 +4,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.camel.*;
-import org.apache.camel.builder.LegacyDefaultErrorHandlerBuilder;
-import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.*;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +24,7 @@ public class ESBRoute extends RouteBuilder {
 	private ExtendedCamelContext extendedCamelContext;
 
 	private RoutesLoader loader;
-	private LegacyDefaultErrorHandlerBuilder routeErrorHandler;
+	private DeadLetterChannelBuilder routeErrorHandler;
 
 	String flowName;
 	
@@ -117,6 +116,14 @@ public class ESBRoute extends RouteBuilder {
 	}
 
 	private void setErrorHandler(String route) throws Exception {
+
+		if (route!=null && !route.isEmpty()) {
+			String errorUri = StringUtils.substringBetween(route, "<from uri=\"", "\"/>");
+			routeErrorHandler = new DeadLetterChannelBuilder();
+			routeErrorHandler = deadLetterChannel(errorUri);
+		}else{
+			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
+		}
 
 		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
 

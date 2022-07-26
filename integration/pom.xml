@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.7.0</version>
+    <version>3.8.0</version>
   </parent>
 
   <name>integration</name>
@@ -12,7 +12,7 @@
 
   <groupId>org.assimbly</groupId>
   <artifactId>integration</artifactId>
-  <version>3.7.0</version>
+  <version>3.8.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -30,11 +30,6 @@
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camelComponents</artifactId>
   		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>camelCustomComponents</artifactId>
-   		  <version>${assimbly.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>

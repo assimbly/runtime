@@ -9,7 +9,7 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
-	<version>3.7.0</version>
+	<version>3.8.0</version>
 
 	<modules>
 		<module>broker</module>
@@ -24,7 +24,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
 
-		<assimbly.version>3.7.0</assimbly.version>
+		<assimbly.version>3.8.0</assimbly.version>
 		<dropwizard-metrics.version>4.2.10</dropwizard-metrics.version>
 		<jolokia.version>1.7.1</jolokia.version>
 		<ibmmq-client.version>9.3.0.0</ibmmq-client.version>
