@@ -34,7 +34,7 @@ public class MessageManagerResource {
     Integration integration;
 
     /**
-     * POST  /integration/{integrationId}/send : Send messages to an endpoint (fire and forget).
+     * POST  /integration/{integrationId}/send : Send messages to an step (fire and forget).
      *
      * @param integrationId (gatewayId)
      * @return if message has been send
@@ -43,7 +43,7 @@ public class MessageManagerResource {
     @PostMapping(path = "/integration/{integrationId}/send/{numberOfTimes}", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> send(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "endpointid", required = false) String endpointId,
+                                       @RequestHeader(name = "stepId", required = false) String stepId,
                                        @RequestHeader(name = "serviceid", required = false) String serviceId,
                                        @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
                                        @RequestHeader(name = "headerKeys", required = false) String headerKeys,
@@ -62,9 +62,9 @@ public class MessageManagerResource {
         try {
             if(serviceId != null && !serviceId.isBlank()) {
                 serviceMap = toStringTreeMap(getMap(serviceKeys));
-                serviceMap.put("to." + endpointId + ".uri",uri);
-                serviceMap.put("to." + endpointId + ".service.id",serviceId);
-                setService(serviceMap,endpointId);
+                serviceMap.put("to." + stepId + ".uri",uri);
+                serviceMap.put("to." + stepId + ".service.id",serviceId);
+                setService(serviceMap,stepId);
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
@@ -85,7 +85,7 @@ public class MessageManagerResource {
     }
 
     /**
-     * POST  /integration/{integrationId}/sendrequest : Send request messages to an endpoint.
+     * POST  /integration/{integrationId}/sendrequest : Send request messages to an step.
      *
      * @param integrationId (gatewayId)
      * @return the reply message
@@ -94,7 +94,7 @@ public class MessageManagerResource {
     @PostMapping(path = "/integration/{integrationId}/sendrequest", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> sendRequest(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "endpointid", required = false) String endpointId,
+                                       @RequestHeader(name = "stepId", required = false) String stepId,
                                        @RequestHeader(name = "serviceid", required = false) String serviceId,
                                        @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
                                        @RequestHeader(name = "headerKeys", required = false) String headerKeys,
@@ -113,9 +113,9 @@ public class MessageManagerResource {
         try {
             if(serviceId != null && !serviceId.isBlank()) {
                 serviceMap = toStringTreeMap(getMap(serviceKeys));
-                serviceMap.put("to." + endpointId + ".uri",uri);
-                serviceMap.put("to." + endpointId + ".service.id",serviceId);
-                setService(serviceMap,endpointId);
+                serviceMap.put("to." + stepId + ".uri",uri);
+                serviceMap.put("to." + stepId + ".service.id",serviceId);
+                setService(serviceMap,stepId);
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
@@ -168,9 +168,9 @@ public class MessageManagerResource {
     }
 
 
-    private void setService(TreeMap<String, String> serviceMap, String endpointId) throws Exception {
+    private void setService(TreeMap<String, String> serviceMap, String stepId) throws Exception {
         integration = integrationResource.getIntegration();
-        integration.setConnection(serviceMap,"to." + endpointId + ".service.id");
+        integration.setConnection(serviceMap,"to." + stepId + ".service.id");
     }
 
 }

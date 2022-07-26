@@ -387,7 +387,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, String stepid, String mediaType) throws Exception;
 
 	//certificates
 
@@ -412,7 +412,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
 
-	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	public abstract String resolveDependency(String schema)  throws Exception;
 

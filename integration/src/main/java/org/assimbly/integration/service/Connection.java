@@ -35,8 +35,8 @@ public class Connection {
 	private CamelContext context;
 	private String connectId;
 	private boolean faultTolerant;
-	private String endpointType;
-    private Object endpointId;
+	private String stepType;
+    private Object stepId;
 	private String serviceId;
 	private ActiveMQConnectionFactory activeMQConnectionFactory;
 	private SjmsComponent sjmsComponent;
@@ -59,10 +59,10 @@ public class Connection {
         System.out.println("serviceId=" + serviceId);
         System.out.println("serviceType=" + serviceType);
 
-        endpointType = key.split("\\.")[0]; 
-        endpointId = key.split("\\.")[1]; 
+        stepType = key.split("\\.")[0]; 
+        stepId = key.split("\\.")[1]; 
 
-        connectionId = properties.get(endpointType + "." + endpointId + ".service.id");
+        connectionId = properties.get(stepType + "." + stepId + ".service.id");
         flowId = properties.get("id");
 
         if(connectionId!=null) {
@@ -83,13 +83,13 @@ public class Connection {
                 setupActiveMQConnection(properties, "amazonmq");
                 break;
             case "SonicMQ":
-                connectId = endpointType + connectionId + new Random().nextInt(1000000);
-                setupSonicMQConnection(properties, endpointType, connectId);
+                connectId = stepType + connectionId + new Random().nextInt(1000000);
+                setupSonicMQConnection(properties, stepType, connectId);
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-                properties.put(endpointType + "." + endpointId + ".uri", uri);						
+                properties.put(stepType + "." + stepId + ".uri", uri);						
                 break;
             case "MQ":
-                setupSJMSConnection(properties, "sjms", endpointType);
+                setupSJMSConnection(properties, "sjms", stepType);
                 break;
             case "AMQPS":
                 setupAMQPConnection(properties, "amqps", true);
@@ -98,10 +98,10 @@ public class Connection {
                 setupAMQPConnection(properties, "amqp", false);
                 break;
             case "IBMMQ":
-                setupIBMMQConnection(properties, "ibmmq", endpointType);
+                setupIBMMQConnection(properties, "ibmmq", stepType);
                 break;
             case "JDBC":
-                setupJDBCConnection(properties, endpointType);
+                setupJDBCConnection(properties, stepType);
                 break;
             default:
                 log.error("Connection parameters for connection " + serviceType + " are not implemented");
@@ -199,7 +199,7 @@ public class Connection {
     private void setupSJMSConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
 
         if (direction.equals("to") || direction.equals("from")) {
-            direction = direction + "." + endpointId;
+            direction = direction + "." + stepId;
         }
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String url = decryptedProperties.getProperty("service." + serviceId + ".url");
@@ -411,7 +411,7 @@ public class Connection {
     private void setupIBMMQConnection(TreeMap<String, String> properties, String componentName, String direction) throws Exception {
 
         if (direction.equals("to") || direction.equals("from")) {
-            direction = direction + "." + endpointId;
+            direction = direction + "." + stepId;
         }
 
         log.info("Setting up IBM MQ connection factory.");
@@ -543,7 +543,7 @@ public class Connection {
 		if(direction.equals("error")) {
 			connectionId = decryptedProperties.getProperty(direction + ".service.id");
 		}else {
-			connectionId = decryptedProperties.getProperty(direction + "." + endpointId + ".service.id");
+			connectionId = decryptedProperties.getProperty(direction + "." + stepId + ".service.id");
 		}
 
         //Create datasource

@@ -31,7 +31,7 @@ public class Unmarshall {
 	Document doc;
 
 	private String integrationXPath;
-	private String endpointXPath;
+	private String stepXPath;
 	private String headerXPath;
 
 	private String uri;
@@ -51,7 +51,7 @@ public class Unmarshall {
 	private String flowParallelProcessing;
 	private Object offloadingId;
 	private String wireTapUri;
-	private String endpointId;
+	private String stepId;
 	private String responseId;
 	private String routeId;
 
@@ -68,8 +68,8 @@ public class Unmarshall {
 		//get general flow properties
 		getFlowsFromXMLFile();
 
-		//get endpoint properties
-		getEndpointsFromXMLFile();
+		//get step properties
+		getStepsFromXMLFile();
 					
 		Set<String> fromUriSet = properties.keySet().stream().filter(s -> s.startsWith("from.") && s.endsWith(".uri")).collect(Collectors.toSet());
 		
@@ -239,7 +239,7 @@ public class Unmarshall {
 
 			properties.put("wiretap.uri",uri);
 			properties.put("to.0.uri",uri);
-			properties.put("offramp.uri.list",properties.get("offramp.uri.list") + ",direct:offloadingendpoint=0");
+			properties.put("offramp.uri.list",properties.get("offramp.uri.list") + ",direct:offloadingstep=0");
 
 			serviceId = conf.getString("integration/offloading/service_id");
 
@@ -255,11 +255,11 @@ public class Unmarshall {
 		}
 	}
 
-	private void getEndpointsFromXMLFile() throws Exception {
+	private void getStepsFromXMLFile() throws Exception {
 
-		String endpointsXpath = "//flows/flow[id='" + flowId + "']/endpoints/endpoint/id";
+		String stepsXpath = "//flows/flow[id='" + flowId + "']/steps/step/id";
 
-		String[] endpoints = conf.getStringArray(endpointsXpath);
+		String[] steps = conf.getStringArray(stepsXpath);
 
 		String offrampUri = "";
 
@@ -269,75 +269,75 @@ public class Unmarshall {
 		int maxFromTypes = 3;
 		int numFromType = 0;
 
-		for(String endpoint : endpoints){
+		for(String step : steps){
 	
-			endpointXPath = "integration/flows/flow[id='" + flowId + "']/endpoints/endpoint[" + index + "]/";
+			stepXPath = "integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 			
 			options = "";
-			String type = conf.getString(endpointXPath + "type");
+			String type = conf.getString(stepXPath + "type");
 
-			List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, endpointXPath + "options");
+			List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 			for(String optionProperty : optionProperties){
 				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
 			}
 
-			endpointId = conf.getString(endpointXPath + "id");
+			stepId = conf.getString(stepXPath + "id");
 		
 			if(options.isEmpty()){
-				uri = conf.getString(endpointXPath + "uri");
+				uri = conf.getString(stepXPath + "uri");
 			}else{
 				options = options.substring(0,options.length() -1);
-				uri = conf.getString(endpointXPath + "uri") + "?" + options;
+				uri = conf.getString(stepXPath + "uri") + "?" + options;
 			}
 
 			if(uri != null){
-				properties.put(type + "." + endpointId + ".uri", uri);
+				properties.put(type + "." + stepId + ".uri", uri);
 			}
 
-			serviceId = conf.getString(endpointXPath + "service_id");
+			serviceId = conf.getString(stepXPath + "service_id");
 
 			if(serviceId != null){
-				getServiceFromXMLFile(type, endpointId, serviceId);
+				getServiceFromXMLFile(type, stepId, serviceId);
 			}
 
-			headerId = conf.getString(endpointXPath + "header_id");
+			headerId = conf.getString(stepXPath + "header_id");
 
 			if(headerId != null){
-				getHeaderFromXMLFile(type,endpointId, headerId);
+				getHeaderFromXMLFile(type,stepId, headerId);
 			}
 
-			routeId = conf.getString(endpointXPath + "route_id");
+			routeId = conf.getString(stepXPath + "route_id");
 
 			if(routeId != null){
-				getRouteFromXMLFile(type,endpointId, routeId);
+				getRouteFromXMLFile(type,stepId, routeId);
 			}
 
 			if (type.equals("response")) {
-				responseId = conf.getString(endpointXPath + "response_id");
+				responseId = conf.getString(stepXPath + "response_id");
 				if(responseId != null) {
-					properties.put(type + "." + endpointId + ".response.id", responseId);
+					properties.put(type + "." + stepId + ".response.id", responseId);
 				}
 			} else if(type.equals("from")) {
 				if(numFromType >= maxFromTypes){
-					// maximum from endpoints reached on a route
+					// maximum from steps reached on a route
 					// jump to the next iteration
 					continue;
 				}
 				numFromType++;
 			} else if(type.equals("to")) {
 
-				if(endpointId != null){
+				if(stepId != null){
 					if(offrampUri.isEmpty()) {
-						offrampUri = "direct:flow=" + flowId + "endpoint=" + endpointId;
+						offrampUri = "direct:flow=" + flowId + "step=" + stepId;
 					}else {
-						offrampUri = offrampUri + ",direct:flow=" + flowId + "endpoint=" + endpointId;
+						offrampUri = offrampUri + ",direct:flow=" + flowId + "step=" + stepId;
 					}
 				}
 
-				responseId = conf.getString(endpointXPath + "response_id");
+				responseId = conf.getString(stepXPath + "response_id");
 
 				if(responseId != null) {
-					properties.put(type + "." + endpointId + ".response.id", responseId);
+					properties.put(type + "." + stepId + ".response.id", responseId);
 				}
 				properties.put("offramp.uri.list", offrampUri);
 			}
@@ -346,7 +346,7 @@ public class Unmarshall {
 		}
 	}
 
-	private void getServiceFromXMLFile(String type, String endpointId, String serviceId) throws ConfigurationException {
+	private void getServiceFromXMLFile(String type, String stepId, String serviceId) throws ConfigurationException {
 
 		String serviceXPath = "integration/services/service[id='" + serviceId + "']/";
 		List<String> serviceProporties = IntegrationUtil.getXMLParameters(conf, serviceXPath + "keys");
@@ -357,12 +357,12 @@ public class Unmarshall {
 				properties.put("service." + serviceId + "." + serviceProperty.substring(serviceXPath.length() + 5).toLowerCase(), conf.getString(serviceProperty));
 			}
 
-			properties.put(type + "." + endpointId + ".service.id", serviceId);
+			properties.put(type + "." + stepId + ".service.id", serviceId);
 
 			String serviceName = conf.getString(serviceXPath + "name");
 
 			if(!serviceName.isEmpty()) {
-				properties.put(type + "." + endpointId + ".service.name", serviceName);
+				properties.put(type + "." + stepId + ".service.name", serviceName);
 				properties.put("service." + serviceId + ".name", serviceName);
 			}
 
@@ -378,7 +378,7 @@ public class Unmarshall {
 		}
 	}
 
-	private void getHeaderFromXMLFile(String type, String endpointId, String headerId) throws ConfigurationException {
+	private void getHeaderFromXMLFile(String type, String stepId, String headerId) throws ConfigurationException {
 
 		headerXPath = "integration/headers/header[id='" + headerId + "']/keys";
 		List<String> headerProporties = IntegrationUtil.getXMLParameters(conf, headerXPath);
@@ -398,7 +398,7 @@ public class Unmarshall {
 				}
 			}
 
-			properties.put(type + "." + endpointId + ".header.id", headerId);
+			properties.put(type + "." + stepId + ".header.id", headerId);
 
 
 			String headerName = conf.getString("integration/headers/header[id='" + headerId + "']/name");
@@ -408,7 +408,7 @@ public class Unmarshall {
 		}
 	}
 
-	private void getRouteFromXMLFile(String type, String endpointId, String routeId) throws Exception {
+	private void getRouteFromXMLFile(String type, String stepId, String routeId) throws Exception {
 
 		Document doc = conf.getDocument();
 
@@ -416,10 +416,10 @@ public class Unmarshall {
 		XPathExpression expr = xpath.compile("/integrations/integration/routes/route[@id='" + routeId + "']");
 		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
 
-		XPathExpression expr2 = xpath.compile("/integrations/integration/flows/flow/endpoints/endpoint[type='error']/id");
+		XPathExpression expr2 = xpath.compile("/integrations/integration/flows/flow/steps/step[type='error']/id");
 		String errorId = expr2.evaluate(doc);	
 		
-		expr2 = xpath.compile("/integrations/integration/flows/flow/endpoints/endpoint[type='error']/route_id");
+		expr2 = xpath.compile("/integrations/integration/flows/flow/steps/step[type='error']/route_id");
 		String errorRouteId = expr2.evaluate(doc);
 
 		if(node!=null && errorId!=null){
@@ -431,12 +431,12 @@ public class Unmarshall {
 			}
 		}
 
-		String updatedRouteId = flowId + "-" + endpointId;
+		String updatedRouteId = flowId + "-" + stepId;
 
 		if(node==null){
 			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeId + "']");
 			node = (Node)expr.evaluate(doc, XPathConstants.NODE);		
-			updatedRouteId = "errorHandler" + "-" + endpointId;
+			updatedRouteId = "errorHandler" + "-" + stepId;
 		}
 
 		String routeAsString = convertNodeToString(node);
@@ -460,8 +460,8 @@ public class Unmarshall {
 			routeAsString = routeAsString.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
 		}
 
-		properties.put(type + "." + endpointId + ".route", routeAsString);
-		properties.put(type + "." + endpointId + ".route.id", updatedRouteId);
+		properties.put(type + "." + stepId + ".route", routeAsString);
+		properties.put(type + "." + stepId + ".route.id", updatedRouteId);
 
 	}
 

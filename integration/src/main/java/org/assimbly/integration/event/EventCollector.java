@@ -75,9 +75,9 @@ public class EventCollector extends EventNotifierSupport {
 	        Throwable cause = exchangeFailedEvent.getExchange().getException();
 	        
 	        if(cause!=null) {
-    	         error = "Message " + exchangeId + " is sent to error endpoint: " + deadLetterUri + " error=" + cause.getMessage();
+    	         error = "Message " + exchangeId + " is sent to error step: " + deadLetterUri + " error=" + cause.getMessage();
 	        }else {
-	        	error = "Message " + exchangeId + " is sent to error endpoint: " + deadLetterUri + " (check gateway log for error details)";
+	        	error = "Message " + exchangeId + " is sent to error step: " + deadLetterUri + " (check gateway log for error details)";
 	        }
 
 	    	File file = new File(baseDir + "/events/" + flowId + "/" + today + "_events.log");

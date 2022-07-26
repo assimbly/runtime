@@ -1218,9 +1218,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	
-	public String getFlowStats(String id, String endpointid, String mediaType) throws Exception {
+	public String getFlowStats(String id, String stepid, String mediaType) throws Exception {
 
-		String routeid = id + "-" + endpointid;
+		String routeid = id + "-" + stepid;
 
 		ManagedRouteMBean route = managed.getManagedRoute(routeid);
 

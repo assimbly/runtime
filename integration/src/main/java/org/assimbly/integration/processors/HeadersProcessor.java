@@ -13,7 +13,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.Language;
 import org.apache.commons.lang3.StringUtils;
 
-//set headers for each endpoint
+//set headers for each step
 public class HeadersProcessor implements Processor {
 	
 	Map<String, String> props;
@@ -25,20 +25,20 @@ public class HeadersProcessor implements Processor {
 	  public void process(Exchange exchange) throws Exception {
 
 		  Message in = exchange.getIn();
-		  Object endpointIdObject = in.getHeader("AssimblyHeaderId");
+		  Object stepIdObject = in.getHeader("AssimblyHeaderId");
 
-		  if (endpointIdObject != null) {
+		  if (stepIdObject != null) {
 
-			  String endpointId = endpointIdObject.toString();
+			  String stepId = stepIdObject.toString();
 
 			  Map<String, String> headers = props.entrySet()
 					  .stream()
-					  .filter(map -> map.getKey().startsWith("header." + endpointId))
+					  .filter(map -> map.getKey().startsWith("header." + stepId))
 					  .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
 			  for (Map.Entry<String, String> entry : headers.entrySet()) {
 
-				  String language = StringUtils.substringBetween(entry.getKey(), endpointId + ".", ".");
+				  String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
 				  String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
 				  String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
 				  String result = "";

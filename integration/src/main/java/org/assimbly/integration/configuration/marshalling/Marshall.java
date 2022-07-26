@@ -30,7 +30,7 @@ public class Marshall {
 	private List<String> servicesList;
 	private List<String> headersList;
 
-	private Element endpoints;
+	private Element steps;
 
 	public Document setProperties(Document document, String integrationId, List<TreeMap<String, String>> configurations) throws Exception {
 
@@ -132,15 +132,15 @@ public class Marshall {
 			components.appendChild(flowComponentNode);
 		}
 
-		endpoints = doc.createElement("endpoints");
-		flow.appendChild(endpoints);
+		steps = doc.createElement("steps");
+		flow.appendChild(steps);
 
-		//set endpoints
-		setFlowEndpoints(configuration);
+		//set steps
+		setFlowSteps(configuration);
 
 	}
 
-	private void setFlowEndpoints(TreeMap<String, String> configuration) throws Exception {
+	private void setFlowSteps(TreeMap<String, String> configuration) throws Exception {
 
 		List<String> confUriKeyList = configuration.keySet().stream().filter(k -> k.endsWith("uri")).collect(Collectors.toList());
 
@@ -148,29 +148,29 @@ public class Marshall {
 				String confUri = configuration.get(confUriKey);
 				String[] confUriKeySplitted = StringUtils.split(confUriKey,".");
 				String confType = confUriKeySplitted[0];
-				String confEndpointId = confUriKeySplitted[1];
+				String confStepId = confUriKeySplitted[1];
 
-				String confServiceId = configuration.get(confType + "." + confEndpointId + ".service.id");
-				String confHeaderId = configuration.get(confType + "." + confEndpointId + ".header.id");
-				String confRouteId = configuration.get(confType + "." + confEndpointId + ".route.id");
+				String confServiceId = configuration.get(confType + "." + confStepId + ".service.id");
+				String confHeaderId = configuration.get(confType + "." + confStepId + ".header.id");
+				String confRouteId = configuration.get(confType + "." + confStepId + ".route.id");
 
-				setEndpointFromConfiguration(confType, confUri, confEndpointId, confServiceId, confHeaderId, confRouteId, confRouteId, configuration);
+				setStepFromConfiguration(confType, confUri, confStepId, confServiceId, confHeaderId, confRouteId, confRouteId, configuration);
 			}
 	}
 
-	private void setEndpointFromConfiguration(String confType, String confUri, String confEndpointId, String confServiceId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
+	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confServiceId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
 
-		Element endpoint = doc.createElement("endpoint");
+		Element step = doc.createElement("step");
 		Element uri = doc.createElement("uri");
 		Element type = doc.createElement("type");
-		Element endpointId = doc.createElement("id");
+		Element stepId = doc.createElement("id");
 		Element options = doc.createElement("options");
 		Element serviceid = doc.createElement("service_id");
 		Element headerid = doc.createElement("header_id");
 		Element responseId = doc.createElement("response_id");
 		Element routeId = doc.createElement("route_id");
 
-		endpoints.appendChild(endpoint);
+		steps.appendChild(step);
 
 		String[] confUriSplitted = confUri.split("\\?");
 
@@ -179,26 +179,26 @@ public class Marshall {
 				confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
 			}
 
-			endpointId.setTextContent(confEndpointId);
+			stepId.setTextContent(confstepId);
 			type.setTextContent(confType);
 			uri.setTextContent(confUri);
 
-			endpoint.appendChild(endpointId);
-			endpoint.appendChild(type);
-			endpoint.appendChild(uri);
+			step.appendChild(stepId);
+			step.appendChild(type);
+			step.appendChild(uri);
 
 		}else {
 			if(confUriSplitted[0].startsWith("sonicmq")) {
 				confUriSplitted[0] = confUriSplitted[0].replaceFirst("sonicmq.*:", "sonicmq:");
 			}
-			endpoint.setTextContent(confEndpointId);
+			step.setTextContent(confstepId);
 			uri.setTextContent(confUri);
 			type.setTextContent(confType);
 
-			endpoint.appendChild(endpointId);
-			endpoint.appendChild(type);
-			endpoint.appendChild(uri);
-			endpoint.appendChild(options);
+			step.appendChild(stepId);
+			step.appendChild(type);
+			step.appendChild(uri);
+			step.appendChild(options);
 
 			String[] confOptions = confUriSplitted[1].split("&");
 
@@ -215,23 +215,23 @@ public class Marshall {
 
 		if(confResponseId != null) {
 			responseId.setTextContent(confResponseId);
-			endpoint.appendChild(responseId);
+			step.appendChild(responseId);
 		}
 
 		if(confRouteId != null) {
 			routeId.setTextContent(confRouteId);
-			endpoint.appendChild(routeId);
+			step.appendChild(routeId);
 			setRouteFromConfiguration(confRouteId, confType, configuration);
 		}
 
 		if(confServiceId!=null) {
 			serviceid.setTextContent(confServiceId);
-			endpoint.appendChild(serviceid);
+			step.appendChild(serviceid);
 			setServiceFromConfiguration(confServiceId, confType, configuration);
 		}
 
 		if(confHeaderId!=null) {
-			endpoint.appendChild(headerid);
+			step.appendChild(headerid);
 			headerid.setTextContent(confHeaderId);
 			setHeaderFromConfiguration(confHeaderId, confType, configuration);
 		}

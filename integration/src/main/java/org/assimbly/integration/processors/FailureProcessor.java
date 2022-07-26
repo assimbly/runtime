@@ -37,18 +37,18 @@ public class FailureProcessor implements Processor {
 		//first set error headers
 		Message in = exchange.getIn();
 
-		String endpointId = props.get("error.header.id");
+		String stepId = props.get("error.header.id");
 
-		if (endpointId != null) {
+		if (stepId != null) {
 
 			Map<String, String> headers = props.entrySet()
 					.stream()
-					.filter(map -> map.getKey().startsWith("header." + endpointId))
+					.filter(map -> map.getKey().startsWith("header." + stepId))
 					.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
 			for (Map.Entry<String, String> entry : headers.entrySet()) {
 
-				String language = StringUtils.substringBetween(entry.getKey(), endpointId + ".", ".");
+				String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
 				String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
 				String value = entry.getValue();
 				String result = "";

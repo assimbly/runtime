@@ -80,21 +80,21 @@ public class ConnectorRoute extends RouteBuilder {
 
 		setFlowSettings();
 
-		setEndpointKeys();
+		setStepKeys();
 		
 		setProcessors();
 		
 		setErrorHandler();
 	
-		setFromEndpoints();
+		setFromSteps();
 		
-		setToEndpoints();
+		setToSteps();
 		
-		setResponseEndpoints();
+		setResponseSteps();
 
 	}
 
-	private void setEndpointKeys() {
+	private void setStepKeys() {
 		errorUriKeys = getUriKeys("error");
 		onrampUriKeys = getUriKeys("from");
 		offrampUriKeys = getUriKeys("to");
@@ -161,16 +161,16 @@ public class ConnectorRoute extends RouteBuilder {
 				
 	}
 
-	private void setFromEndpoints() throws Exception {
+	private void setFromSteps() throws Exception {
 
 		for(String onrampUriKey : onrampUriKeys){
 
-			String endpointId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
-			String headerId = props.get("from." + endpointId + ".header.id");
-			String routeId = props.get("from." + endpointId + ".route.id");
+			String stepId = StringUtils.substringBetween(onrampUriKey, "from.", ".uri");
+			String headerId = props.get("from." + stepId + ".header.id");
+			String routeId = props.get("from." + stepId + ".route.id");
 
 			String uri = DecryptValue(props.get(onrampUriKey));
-			String fromUri = props.get("from." + endpointId + ".uri");			
+			String fromUri = props.get("from." + stepId + ".uri");			
 			
 			Predicate hasParallelProcessing = PredicateBuilder.constant(parallelProcessing);
 			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
@@ -193,7 +193,7 @@ public class ConnectorRoute extends RouteBuilder {
 			Predicate hasRoute = PredicateBuilder.constant(false);
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("from." + endpointId + ".route");
+				String xml = props.get("from." + stepId + ".route");
 				updateRoute(xml);
 			}
 			
@@ -209,12 +209,12 @@ public class ConnectorRoute extends RouteBuilder {
 				.end()
 				.to("log:Flow=" + flowName + "|ID=" +  flowId + "|RECEIVED?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 				.process(headerProcessor)
-				.id("headerProcessor" + flowId + "-" + endpointId)
+				.id("headerProcessor" + flowId + "-" + stepId)
 				.process(convertProcessor)
-				.id("convertProcessor" + flowId + "-" + endpointId)
+				.id("convertProcessor" + flowId + "-" + stepId)
 				.choice()
 					.when(hasRoute)
-						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+						.to("direct:flow=" + flowId + "route=" + flowId + "-" + stepId + "-" + routeId)
 				.end()
 				.choice()
 					.when(hasOneDestination)
@@ -229,13 +229,13 @@ public class ConnectorRoute extends RouteBuilder {
 						.parallelProcessing()
 						.to(offrampUriList)
 				.end()
-				.routeId(flowId + "-" + endpointId).description("from");
+				.routeId(flowId + "-" + stepId).description("from");
 					
 		}
 
 	}
 	
-	private void setToEndpoints()  throws Exception {
+	private void setToSteps()  throws Exception {
 
 		//The Connector To Camel route (offramp)
 		for (String offrampUriKey : offrampUriKeys)
@@ -243,27 +243,27 @@ public class ConnectorRoute extends RouteBuilder {
 
 			String uri = DecryptValue(props.get(offrampUriKey));
 			String offrampUri = offrampUriList[index++];
-			String endpointId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
-			String headerId = props.get("to." + endpointId + ".header.id");
-			String responseId = props.get("to." + endpointId + ".response.id");
-			String routeId = props.get("to." + endpointId + ".route.id");
+			String stepId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
+			String headerId = props.get("to." + stepId + ".header.id");
+			String responseId = props.get("to." + stepId + ".response.id");
+			String routeId = props.get("to." + stepId + ".route.id");
 
 			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
-			Predicate hasResponseEndpoint = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());			
+			Predicate hasResponseStep = PredicateBuilder.constant(responseId != null && !responseId.isEmpty());			
 			Predicate hasRoute = PredicateBuilder.constant(false);
 
-			boolean hasDynamicEndpoint = false;
+			boolean hasDynamicStep = false;
 			if(uri.contains("${")) {
-				hasDynamicEndpoint = true;
+				hasDynamicStep = true;
 			}
 			
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("to." + endpointId + ".route");
+				String xml = props.get("to." + stepId + ".route");
 				updateRoute(xml);
 			}
 
-			if(hasDynamicEndpoint) {
+			if(hasDynamicStep) {
 
 				from(offrampUri)
 				.errorHandler(routeErrorHandler)
@@ -275,16 +275,16 @@ public class ConnectorRoute extends RouteBuilder {
 						.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
 				.end()
 				.process(headerProcessor)
-				.id("headerProcessor" + flowId + "-" + endpointId)
+				.id("headerProcessor" + flowId + "-" + stepId)
 				.process(convertProcessor)
-				.id("convertProcessor" + flowId + "-" + endpointId)
+				.id("convertProcessor" + flowId + "-" + stepId)
 				.choice()
 				.when(hasRoute)
-				.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+				.to("direct:flow=" + flowId + "route=" + flowId + "-" + stepId + "-" + routeId)
 				.end()
-				.log(hasResponseEndpoint.toString())
+				.log(hasResponseStep.toString())
 				.choice()
-					.when(hasResponseEndpoint)
+					.when(hasResponseStep)
 						.choice()
 							.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
 								.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -293,7 +293,7 @@ public class ConnectorRoute extends RouteBuilder {
 						.otherwise()
 							.toD(uri)
 							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.to("direct:flow=" + flowId + "endpoint=" + responseId)
+							.to("direct:flow=" + flowId + "step=" + responseId)
 						.endChoice()
 					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -303,7 +303,7 @@ public class ConnectorRoute extends RouteBuilder {
 						.toD(uri)
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
-				.routeId(flowId + "-" + endpointId).description("to");
+				.routeId(flowId + "-" + stepId).description("to");
 				
 			}else {			
 
@@ -317,16 +317,16 @@ public class ConnectorRoute extends RouteBuilder {
 						.setHeader("AssimblyToTimestamp", groovy("new Date().getTime()"))
 				.end()
 				.process(headerProcessor)
-				.id("headerProcessor" + flowId + "-" + endpointId)
+				.id("headerProcessor" + flowId + "-" + stepId)
 				.process(convertProcessor)
-				.id("convertProcessor" + flowId + "-" + endpointId)
+				.id("convertProcessor" + flowId + "-" + stepId)
 				.choice()
 				.when(hasRoute)
-				.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+				.to("direct:flow=" + flowId + "route=" + flowId + "-" + stepId + "-" + routeId)
 				.end()
-				.log(hasResponseEndpoint.toString())
+				.log(hasResponseStep.toString())
 				.choice()
-					.when(hasResponseEndpoint)
+					.when(hasResponseStep)
 						.choice()
 							.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
 								.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -335,7 +335,7 @@ public class ConnectorRoute extends RouteBuilder {
 						.otherwise()
 							.to(uri)
 							.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
-							.to("direct:flow=" + flowId + "endpoint=" + responseId)
+							.to("direct:flow=" + flowId + "step=" + responseId)
 						.endChoice()
 					.when(header("Enrich").convertToString().isEqualToIgnoreCase("to"))
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|ENRICH?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
@@ -345,7 +345,7 @@ public class ConnectorRoute extends RouteBuilder {
 						.to(uri)
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SEND?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
-				.routeId(flowId + "-" + endpointId).description("to");
+				.routeId(flowId + "-" + stepId).description("to");
 				
 			}
 				
@@ -353,42 +353,42 @@ public class ConnectorRoute extends RouteBuilder {
 
 	}
 	
-	private void setResponseEndpoints() throws Exception {
+	private void setResponseSteps() throws Exception {
 		//The Connector Response Camel route (response)
 		for(String responseUriKey : responseUriKeys){
 
 			String uri = props.get(responseUriKey);
-			String endpointId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
-			String headerId = props.get("response." + endpointId + ".header.id");
-			String responseId = props.get("response." + endpointId + ".response.id");
-			String routeId = props.get("response." + endpointId + ".route.id");
+			String stepId = StringUtils.substringBetween(responseUriKey, "response.", ".uri");
+			String headerId = props.get("response." + stepId + ".header.id");
+			String responseId = props.get("response." + stepId + ".response.id");
+			String routeId = props.get("response." + stepId + ".route.id");
 
 			Predicate hasAssimblyHeaders = PredicateBuilder.constant(assimblyHeaders);
 			Predicate hasRoute = PredicateBuilder.constant(false);
 
 			if(routeId!=null && !routeId.isEmpty()){
 				hasRoute = PredicateBuilder.constant(true);
-				String xml = props.get("response." + endpointId + ".route");
+				String xml = props.get("response." + stepId + ".route");
 				updateRoute(xml);
 			}
 
-			from("direct:flow=" + flowId + "endpoint=" + responseId)
+			from("direct:flow=" + flowId + "step=" + responseId)
 					.errorHandler(routeErrorHandler)
 					.setHeader("AssimblyHeaderId", constant(headerId))
 					.choice()
 						.when(hasAssimblyHeaders)
 							.setHeader("AssimblyFlowID", constant(flowId))
-							.setHeader("AssimblyResponse", constant(props.get("response." + endpointId + ".uri")))
+							.setHeader("AssimblyResponse", constant(props.get("response." + stepId + ".uri")))
 							.setHeader("AssimblyCorrelationId", simple("${date:now:yyyyMMdd}${exchangeId}"))
 							.setHeader("AssimblyResponseTimestamp", groovy("new Date().getTime()"))
 					.end()
 					.process(headerProcessor)
-					.id("headerProcessor" + flowId + "-" + endpointId)
+					.id("headerProcessor" + flowId + "-" + stepId)
 					.process(convertProcessor)
-					.id("convertProcessor" + flowId + "-" + endpointId)
+					.id("convertProcessor" + flowId + "-" + stepId)
 					.choice()
 						.when(hasRoute)
-						.to("direct:flow=" + flowId + "route=" + flowId + "-" + endpointId + "-" + routeId)
+						.to("direct:flow=" + flowId + "route=" + flowId + "-" + stepId + "-" + routeId)
 					.end()
 					.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDINGRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.choice()
@@ -401,18 +401,18 @@ public class ConnectorRoute extends RouteBuilder {
 							.toD(uri)
 						.to("log:Flow=" + flowName + "|ID=" +  flowId + "|SENDRESPONSE?level=" + logLevelAsString + "&showAll=true&multiline=true&style=Fixed")
 					.end()
-					.routeId(flowId + "-" + endpointId).description("response");
+					.routeId(flowId + "-" + stepId).description("response");
 		}
 
 	}	
 	
-	//create a string array for all of a specific endpointType
-	private List<String> getUriKeys(String endpointType) {
+	//create a string array for all of a specific stepType
+	private List<String> getUriKeys(String stepType) {
 
 		List<String> keys = new ArrayList<>();
 
 		for(String prop : props.keySet()){
-			if(prop.startsWith(endpointType) && prop.endsWith("uri")){
+			if(prop.startsWith(stepType) && prop.endsWith("uri")){
 				keys.add(prop);
 			}
 		}
