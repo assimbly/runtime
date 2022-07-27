@@ -54,6 +54,7 @@ public class Unmarshall {
 	private String stepId;
 	private String responseId;
 	private String routeId;
+	private String path;
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -282,12 +283,13 @@ public class Unmarshall {
 			}
 
 			stepId = conf.getString(stepXPath + "id");
-		
-			if(options.isEmpty()){
-				uri = conf.getString(stepXPath + "uri");
-			}else{
+
+			path = conf.getString(stepXPath + "uri");
+			uri = conf.getString(stepXPath + "uri");
+
+			if(!options.isEmpty()){
 				options = options.substring(0,options.length() -1);
-				uri = conf.getString(stepXPath + "uri") + "?" + options;
+				uri = uri + "?" + options;
 			}
 
 			if(uri != null){
@@ -312,7 +314,9 @@ public class Unmarshall {
 				getRouteFromXMLFile(type,stepId, routeId);
 			}
 
-			if (type.equals("response")) {
+			if (type.equals("source") || type.equals("action") || type.equals("router") || type.equals("sink")) {
+				getRouteTemplateFromXMLFile(type,flowId, stepId, path, optionProperties);
+			} else if (type.equals("response")) {
 				responseId = conf.getString(stepXPath + "response_id");
 				if(responseId != null) {
 					properties.put(type + "." + stepId + ".response.id", responseId);
@@ -462,6 +466,50 @@ public class Unmarshall {
 
 		properties.put(type + "." + stepId + ".route", routeAsString);
 		properties.put(type + "." + stepId + ".route.id", updatedRouteId);
+
+	}
+
+
+	private void getRouteTemplateFromXMLFile(String type, String flowId, String stepId, String path, List<String> optionProperties) throws Exception {
+
+		Document doc = conf.getDocument();
+
+		String templateId = "generic-" + type;
+
+		String routeTemplate = "<templatedRoutes xmlns=\"http://camel.apache.org/schema/spring\"><templatedRoute routeTemplateRef=\"" + templateId + "\" routeId=\"" + flowId + "-" + stepId  + "\">";
+
+		options = "";
+
+		for(String optionProperty : optionProperties) {
+			String name = optionProperty.split("options.")[1];
+			String value = conf.getProperty(optionProperty).toString();
+
+			if (name.equals("in") || name.equals("out")  || name.equals("routeid")){
+				routeTemplate += "<parameter name=\"" + name + "\" value=\"" + value + "\"/>";
+			}else{
+				options += name + "=" + value + "&";
+			}
+
+		}
+
+		if(!options.isEmpty()){
+			options = options.substring(0,options.length() -1);
+			uri = path + "?" + options;
+		}else{
+			uri = path;
+		}
+
+
+		routeTemplate += "<parameter name=\"uri\" value=\"" + uri + "\"/>";
+
+		routeTemplate += "</templatedRoute></templatedRoutes>";
+
+		System.out.println("------------------");
+		System.out.println("routeTemplate=" + routeTemplate);
+		System.out.println("------------------");
+
+		properties.put(type + "." + stepId + ".route", routeTemplate);
+		properties.put(type + "." + stepId + ".route.id",  flowId + "-" + stepId);
 
 	}
 

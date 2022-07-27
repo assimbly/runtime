@@ -6,6 +6,7 @@ import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
@@ -35,6 +36,7 @@ import org.assimbly.integration.event.EventCollector;
 import org.assimbly.integration.routes.ConnectorRoute;
 import org.assimbly.integration.routes.ESBRoute;
 import org.assimbly.integration.routes.SimpleRoute;
+import org.assimbly.integration.routes.templates.Generic;
 import org.assimbly.integration.routes.templates.XmlToJson;
 import org.assimbly.integration.service.Connection;
 import org.assimbly.docconverter.DocConverter;
@@ -250,42 +252,19 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
 
-		//context.addRoutes(XmlToJson.class);
+		ClassesInPackage instance = new ClassesInPackage();
 
-		XmlToJson xmlToJson = new XmlToJson();
+		Set<Class> clazzes = instance.findAllClasses("org.assimbly.integration.routes.templates");
 
-		//flow.configure(context);
-		//xmlToJson.updateRoutesToCamelContext(context);
-		xmlToJson.addRoutesToCamelContext(context);
-
-
-		//xmlToJson.configureRoutes(context);
-
-		//xmlToJson.getRouteTemplateCollection().setCamelContext(context);
-
-
-		//xmlToJson.configure();
-
-
-
-		//xmlToJson.routeTemplate("xmltojson-action").configure().;
-
-		//registry.bind("xmltojson-action", new XmlToJson());
-
-		//xmlToJson.addRoutesToCamelContext(context);
-
-		//context.addRoutes();
-
-		//context.addRoutes(new XmlToJson());
-
-		//context.addRoutesConfigurations();
-
-
-		//context.addRoutesConfigurations(XmlToJson.class);
-
-		//context.addRoutesBuilder(MyRouteTemplates.class);
+		for (Class clazz : clazzes) {
+			Object template = clazz.getDeclaredConstructor().newInstance();
+			if(template instanceof RouteBuilder){
+				context.addRoutes((RouteBuilder) template);
+			}
+		}
 
 	}
 
@@ -763,8 +742,13 @@ public class CamelIntegration extends BaseIntegration {
 
 				List<Route> routeList = getRoutesByFlowId(id);
 
+				log.info("--------------> routelistsize" + routeList.size());
+
 				for(Route route : routeList){
+					log.info("--------------> getting routeid");
 					String routeId = route.getId();
+					log.info("--------------> my routeid=" + routeId);
+
 					status = routeController.getRouteStatus(routeId);
 					if(!status.isStarted()) {
 						log.info("Starting route | routeid=" + routeId);
@@ -785,7 +769,11 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				log.info("Started flow | id=" + id);
-				return status.toString().toLowerCase();
+				if(status!=null){
+					return status.toString().toLowerCase();
+				}else{
+					return "error: can't get status";
+				}
 				
 			}else {
 				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";

@@ -80,10 +80,16 @@ public class ESBRoute extends RouteBuilder {
 	private void setRoutes() throws Exception{
 		for(String prop : props.keySet()){
 			if(prop.endsWith("route")){							
+
 				String route = props.get(prop);
 
 				if(!route.startsWith("<routeConfiguration")){
-					updateRoute(route);
+					if(prop.startsWith("route")){
+						updateRoute(route);
+					}else{
+						loadRoute(route);
+					}
+
 				}
 			}
 		}
@@ -92,18 +98,23 @@ public class ESBRoute extends RouteBuilder {
 	private void updateRoute(String route) throws Exception {
 		loader = extendedCamelContext.getRoutesLoader();
 		Resource resource = IntegrationUtil.setResource(route);
-		
+
+		log.info("Updating route: \n\n" + route + "\n\n flow=" + flowName);
+
 		Set<String> updatedRoutes = loader.updateRoutes(resource);
 
 		for(String updateRoute : updatedRoutes ){
-			log.info("Loaded route: \n\n" + route + "\n\n flow=" + flowName + " routeid=" + updateRoute);
+			log.info("Updated route: \n\n" + route + "\n\n flow=" + flowName + " routeid=" + updateRoute);
 		}
 
 	}
 
+
 	private void loadRoute(String route) throws Exception {
 		loader = extendedCamelContext.getRoutesLoader();
 		Resource resource = IntegrationUtil.setResource(route);
+
+		log.info("Loading route: \n\n" + route + "\n\n flow=" + flowName);
 
 		try{
 			loader.loadRoutes(resource);
