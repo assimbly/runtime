@@ -55,7 +55,7 @@ public class ESBRoute extends RouteBuilder {
 
 	private void setExtendedCamelContext() {		
 		context = getContext();
-		extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
+		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 	}
 
 	private void setRouteConfiguration() throws Exception{

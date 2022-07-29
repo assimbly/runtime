@@ -1,7 +1,6 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
-import io.swagger.models.Xml;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -10,14 +9,15 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.directvm.DirectVmComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.main.Main;
 import org.apache.camel.spi.EventNotifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.Resource;
@@ -36,8 +36,6 @@ import org.assimbly.integration.event.EventCollector;
 import org.assimbly.integration.routes.ConnectorRoute;
 import org.assimbly.integration.routes.ESBRoute;
 import org.assimbly.integration.routes.SimpleRoute;
-import org.assimbly.integration.routes.templates.Generic;
-import org.assimbly.integration.routes.templates.XmlToJson;
 import org.assimbly.integration.service.Connection;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.beans.CustomHttpBinding;
@@ -50,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
-import org.w3c.dom.Element;
 import world.dovetail.aggregate.AggregateStrategy;
 import world.dovetail.cookies.CookieStore;
 import world.dovetail.enrich.EnrichStrategy;
@@ -221,7 +218,10 @@ public class CamelIntegration extends BaseIntegration {
 	public void setDovetail(boolean enable) throws Exception {
 		
 		if(enable){
-		
+
+			context.addComponent("sync", new DirectVmComponent());
+			context.addComponent("async", new VmComponent());
+
 			//Start Dovetail specific beans
 			registry.bind("customHttpBinding", new CustomHttpBinding());
 			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
@@ -265,6 +265,9 @@ public class CamelIntegration extends BaseIntegration {
 				context.addRoutes((RouteBuilder) template);
 			}
 		}
+
+		context = getContext();
+
 
 	}
 

@@ -3,10 +3,15 @@ package org.assimbly.integration.configuration.marshalling;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -55,6 +60,7 @@ public class Unmarshall {
 	private String responseId;
 	private String routeId;
 	private String path;
+	private String baseUri;
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -238,6 +244,7 @@ public class Unmarshall {
 				uri = wireTapUri + "?" + options;
 			}
 
+
 			properties.put("wiretap.uri",uri);
 			properties.put("to.0.uri",uri);
 			properties.put("offramp.uri.list",properties.get("offramp.uri.list") + ",direct:offloadingstep=0");
@@ -262,92 +269,98 @@ public class Unmarshall {
 
 		String[] steps = conf.getStringArray(stepsXpath);
 
-		String offrampUri = "";
-
 		int index = 1;
 
+		for(String step : steps){
+
+			getStepFromXMLFile(index);
+
+			index++;
+		}
+	}
+
+	private void getStepFromXMLFile(int index) throws Exception {
+
+		String offrampUri = "";
 		//A maximum of 3 from components per route is allowed
 		int maxFromTypes = 3;
 		int numFromType = 0;
 
-		for(String step : steps){
-	
-			stepXPath = "integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
-			
-			options = "";
-			String type = conf.getString(stepXPath + "type");
+		stepXPath = "integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 
-			List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
-			for(String optionProperty : optionProperties){
-				options += optionProperty.split("options.")[1] + "=" + conf.getProperty(optionProperty) + "&";
-			}
+		stepId = conf.getString(stepXPath + "id");
 
-			stepId = conf.getString(stepXPath + "id");
+		String type = conf.getString(stepXPath + "type");
 
-			path = conf.getString(stepXPath + "uri");
-			uri = conf.getString(stepXPath + "uri");
+		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
+		options = createOptions(optionProperties);
 
-			if(!options.isEmpty()){
-				options = options.substring(0,options.length() -1);
-				uri = uri + "?" + options;
-			}
+		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
+		System.out.println("links array=" + links.length);
 
-			if(uri != null){
-				properties.put(type + "." + stepId + ".uri", uri);
-			}
+		XPath xpath = XPathFactory.newInstance().newXPath();
+		XPathExpression expr = xpath.compile("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		baseUri = expr.evaluate(doc);
 
-			serviceId = conf.getString(stepXPath + "service_id");
+		uri = createUri(baseUri);
 
-			if(serviceId != null){
-				getServiceFromXMLFile(type, stepId, serviceId);
-			}
+		System.out.println("1. path=" + path);
+		System.out.println("1. uri=" + uri);
 
-			headerId = conf.getString(stepXPath + "header_id");
-
-			if(headerId != null){
-				getHeaderFromXMLFile(type,stepId, headerId);
-			}
-
-			routeId = conf.getString(stepXPath + "route_id");
-
-			if(routeId != null){
-				getRouteFromXMLFile(type,stepId, routeId);
-			}
-
-			if (type.equals("source") || type.equals("action") || type.equals("router") || type.equals("sink")) {
-				getRouteTemplateFromXMLFile(type,flowId, stepId, path, optionProperties);
-			} else if (type.equals("response")) {
-				responseId = conf.getString(stepXPath + "response_id");
-				if(responseId != null) {
-					properties.put(type + "." + stepId + ".response.id", responseId);
-				}
-			} else if(type.equals("from")) {
-				if(numFromType >= maxFromTypes){
-					// maximum from steps reached on a route
-					// jump to the next iteration
-					continue;
-				}
-				numFromType++;
-			} else if(type.equals("to")) {
-
-				if(stepId != null){
-					if(offrampUri.isEmpty()) {
-						offrampUri = "direct:flow=" + flowId + "step=" + stepId;
-					}else {
-						offrampUri = offrampUri + ",direct:flow=" + flowId + "step=" + stepId;
-					}
-				}
-
-				responseId = conf.getString(stepXPath + "response_id");
-
-				if(responseId != null) {
-					properties.put(type + "." + stepId + ".response.id", responseId);
-				}
-				properties.put("offramp.uri.list", offrampUri);
-			}
-
-			index++;
+		if(uri != null){
+			properties.put(type + "." + stepId + ".uri", uri);
 		}
+
+		serviceId = conf.getString(stepXPath + "service_id");
+
+		if(serviceId != null){
+			getServiceFromXMLFile(type, stepId, serviceId);
+		}
+
+		headerId = conf.getString(stepXPath + "header_id");
+
+		if(headerId != null){
+			getHeaderFromXMLFile(type,stepId, headerId);
+		}
+
+		routeId = conf.getString(stepXPath + "route_id");
+
+		if(routeId != null){
+			getRouteFromXMLFile(type,stepId, routeId);
+		}
+
+		if (type.equals("source") || type.equals("action") || type.equals("router") || type.equals("sink")) {
+			getRouteTemplateFromXMLFile(type,flowId, stepId, optionProperties, links);
+		} else if (type.equals("response")) {
+			responseId = conf.getString(stepXPath + "response_id");
+			if(responseId != null) {
+				properties.put(type + "." + stepId + ".response.id", responseId);
+			}
+		} else if(type.equals("from")) {
+			if(numFromType >= maxFromTypes){
+				// maximum from steps reached on a route
+				// jump to the next iteration
+			}
+			numFromType++;
+		} else if(type.equals("to")) {
+
+			if(stepId != null){
+				if(offrampUri.isEmpty()) {
+					offrampUri = "direct:flow=" + flowId + "step=" + stepId;
+				}else {
+					offrampUri = offrampUri + ",direct:flow=" + flowId + "step=" + stepId;
+				}
+			}
+
+			responseId = conf.getString(stepXPath + "response_id");
+
+			if(responseId != null) {
+				properties.put(type + "." + stepId + ".response.id", responseId);
+			}
+			properties.put("offramp.uri.list", offrampUri);
+		}
+
+
 	}
 
 	private void getServiceFromXMLFile(String type, String stepId, String serviceId) throws ConfigurationException {
@@ -470,49 +483,215 @@ public class Unmarshall {
 	}
 
 
-	private void getRouteTemplateFromXMLFile(String type, String flowId, String stepId, String path, List<String> optionProperties) throws Exception {
+	private void getRouteTemplateFromXMLFile(String type, String flowId, String stepId, List<String> optionProperties, String[] links) throws Exception {
 
-		Document doc = conf.getDocument();
+		String templateId = createTemplateId(baseUri, type);
+		String routeId = flowId + "-" + stepId;
 
-		String templateId = "generic-" + type;
+		Document templateDoc = createNewDocument();
 
-		String routeTemplate = "<templatedRoutes xmlns=\"http://camel.apache.org/schema/spring\"><templatedRoute routeTemplateRef=\"" + templateId + "\" routeId=\"" + flowId + "-" + stepId  + "\">";
+		Element templatedRoutes = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoutes");
+		templateDoc.appendChild(templatedRoutes);
 
-		options = "";
+		Element templatedRoute = templateDoc.createElement("templatedRoute");
+		templatedRoute.setAttribute("routeTemplateRef", templateId);
+		templatedRoute.setAttribute("routeId", routeId);
+		templatedRoutes.appendChild(templatedRoute);
 
-		for(String optionProperty : optionProperties) {
+		if(baseUri.startsWith("template:")){
+			baseUri = StringUtils.substringAfter(baseUri,"template:");
+			uri = StringUtils.substringAfter(uri,"template:");
+		}
+
+		Element parameter = createParameter(templateDoc,"uri",uri);
+		templatedRoute.appendChild(parameter);
+
+		String scheme = baseUri;
+		if(baseUri.contains(":")){
+			scheme = baseUri.split(":",2)[0];
+		}
+
+		parameter = createParameter(templateDoc,"scheme",scheme);
+		templatedRoute.appendChild(parameter);
+
+		String path = "";
+		if(baseUri.contains(":")){
+			path = baseUri.split(":",2)[1];
+		}
+
+		parameter = createParameter(templateDoc,"path",path);
+		templatedRoute.appendChild(parameter);
+
+		parameter = createParameter(templateDoc,"options",options);
+		templatedRoute.appendChild(parameter);
+
+		for (String optionProperty : optionProperties) {
 			String name = optionProperty.split("options.")[1];
 			String value = conf.getProperty(optionProperty).toString();
 
-			if (name.equals("in") || name.equals("out")  || name.equals("routeid")){
-				routeTemplate += "<parameter name=\"" + name + "\" value=\"" + value + "\"/>";
-			}else{
-				options += name + "=" + value + "&";
+			parameter = createParameter(templateDoc,name,value);
+			templatedRoute.appendChild(parameter);
+
+		}
+
+		String transport = Objects.toString(conf.getProperty("integration/flows/flow[id='" + flowId + "']/transport"), null);
+
+		System.out.println("1. transport=" + transport);
+
+		if(transport==null){
+			transport = "sync";
+		}
+
+
+		if(links.length > 0){
+
+			int index = 1;
+
+			for(String link : links) {
+
+				String linkXPath = stepXPath + "links/link[" + index + "]/";
+				System.out.println("linkXpath=" + linkXPath);
+
+				String value = "";
+
+				String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+				String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
+				String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+				options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
+
+				if(linktransport!=null){
+					transport = linktransport;
+				}
+
+				if (options == null || options.isEmpty()) {
+					value = transport + ":" + id;
+				} else {
+					value = transport + ":" + id + "?" + options;
+				}
+
+				parameter = createParameter(templateDoc,bound, value);
+				templatedRoute.appendChild(parameter);
+
+				index++;
+
+			}
+
+		}else{
+
+			String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
+			String value = "";
+
+			if(StringUtils.isNumeric(stepIndex)){
+
+				if(type.equals("source") || type.equals("action")){
+
+					Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
+
+					String nextStepXpath  = StringUtils.replace(stepXPath,"/step[" + stepIndex + "]","/step[" + nextStepIndex + "]");
+
+					System.out.println("nextStepIndex" + nextStepIndex);
+					System.out.println("nextStepXpath" + nextStepXpath);
+
+					String nextStepId = Objects.toString(conf.getProperty(nextStepXpath + "/id"), null);
+
+					System.out.println("transport=" + transport);
+
+					value = transport + ":" + flowId + "-" + nextStepId;
+
+					parameter = createParameter(templateDoc,"out", value);
+					templatedRoute.appendChild(parameter);
+
+				}
+
+				if(type.equals("sink") || type.equals("action")){
+
+					String currentStepId = Objects.toString(conf.getProperty(stepXPath + "/id"), null);
+
+					value = transport + ":" + flowId + "-" + currentStepId;
+
+					parameter = createParameter(templateDoc,"in", value);
+					templatedRoute.appendChild(parameter);
+
+				}
+
 			}
 
 		}
 
-		if(!options.isEmpty()){
-			options = options.substring(0,options.length() -1);
-			uri = path + "?" + options;
-		}else{
-			uri = path;
-		}
+		String routeTemplate = DocConverter.convertDocToString(templateDoc);
 
-
-		routeTemplate += "<parameter name=\"uri\" value=\"" + uri + "\"/>";
-
-		routeTemplate += "</templatedRoute></templatedRoutes>";
-
-		System.out.println("------------------");
 		System.out.println("routeTemplate=" + routeTemplate);
-		System.out.println("------------------");
 
 		properties.put(type + "." + stepId + ".route", routeTemplate);
-		properties.put(type + "." + stepId + ".route.id",  flowId + "-" + stepId);
+		properties.put(type + "." + stepId + ".route.id",  routeId);
 
 	}
 
+	private Document createNewDocument() throws ParserConfigurationException {
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+		// root elements
+		Document doc = docBuilder.newDocument();
+
+		return doc;
+	}
+
+	private String createTemplateId(String uri,String type){
+
+		String templateId = "generic-" + type;
+
+		System.out.println("uri ---> " + uri);
+		System.out.println("type ---> " + type);
+
+		if(uri.startsWith("template")){
+			System.out.println("uri komt hier---> " + uri);
+			String componentName = uri.split(":")[1];
+			System.out.println("componentName komt hier---> " + componentName);
+			templateId = componentName + "-" + type;
+		}
+
+		return templateId;
+	}
+
+	private Element createParameter(Document doc, String name, String value){
+
+		Element parameter = doc.createElement("parameter");
+		parameter.setAttribute("name", name);
+		parameter.setAttribute("value", value);
+
+		return parameter;
+
+	}
+
+	private String createUri(String path) {
+
+		if (!options.isEmpty()) {
+			uri = path + "?" + options;
+		} else {
+			uri = path;
+		}
+
+		return uri;
+	}
+
+	private String createOptions(List<String> optionProperties){
+
+		options = "";
+
+		for (String optionProperty : optionProperties) {
+			String name = optionProperty.split("options.")[1];
+			String value = conf.getProperty(optionProperty).toString();
+
+			options += name + "=" + value + "&";
+		}
+
+		if(!options.isEmpty()){
+			options = options.substring(0,options.length() -1);
+		}
+
+		return options;
+	}
 
 	public String convertNodeToString(Node node) throws TransformerException {
 		//Convert node to string
