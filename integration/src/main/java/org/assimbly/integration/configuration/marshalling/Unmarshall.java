@@ -437,12 +437,12 @@ public class Unmarshall {
 		XPathExpression expr = xpath.compile("/integrations/integration/routes/route[@id='" + routeId + "']");
 		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
 
-		String routeAsString = convertNodeToString(node);
+		String routeAsString = DocConverter.convertNodeToString(node);
 
 		if(routeAsString.contains("<customDataFormat ref")){
 			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration/dataFormats");
 			node = (Node)expr.evaluate(doc, XPathConstants.NODE);		
-			String dataFormatAsString = convertNodeToString(node);
+			String dataFormatAsString = DocConverter.convertNodeToString(node);
 			dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>",  "</dataFormats");
 			routeAsString = routeAsString.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
 		}
@@ -461,7 +461,7 @@ public class Unmarshall {
 		XPathExpression expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
 		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
 
-		String routeAsString = convertNodeToString(node);
+		String routeAsString = DocConverter.convertNodeToString(node);
 
 		properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
 		properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
@@ -667,17 +667,6 @@ public class Unmarshall {
 		}
 
 		return options;
-	}
-
-	public String convertNodeToString(Node node) throws TransformerException {
-		//Convert node to string
-		StreamResult xmlOutput = new StreamResult(new StringWriter());
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		transformer.transform(new DOMSource(node), xmlOutput);
-		String nodeAsAString = xmlOutput.getWriter().toString();
-
-		return nodeAsAString;
 	}
 
 }

@@ -337,20 +337,35 @@ public class CamelIntegration extends BaseIntegration {
 				.addDirectories(path)
 				.setPreExistingAsCreated(false)
 				.build(new DirectoryWatcher.Listener() {
+					private long diff;
+					private long timeCreated;
+					private Path pathCreated;
+
 					public void onEvent(DirectoryWatcher.Event event, Path path) {
 						switch (event) {
 							case ENTRY_CREATE:
 								log.info("Deploy folder | File created: " + path);	
 								try {
+									pathCreated = path;
+									timeCreated = System.currentTimeMillis();
 									fileInstall(path);
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
 								break;
 							case ENTRY_MODIFY:
-								log.info("Deploy folder | File modified: " + path);	
+								log.info("Deploy folder | File modified: " + path);
+								Long timeModified = System.currentTimeMillis();
 								try {
-									fileInstall(path);
+									if (path.equals(pathCreated)){
+									diff = timeModified - timeCreated;
+									if(diff > 3000){
+										System.out.println("diff=" + diff);
+										fileInstall(path);
+									}
+									}else{
+										fileInstall(path);
+									}
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
@@ -400,19 +415,24 @@ public class CamelIntegration extends BaseIntegration {
 
 		String root = doc.getDocumentElement().getTagName();
 
-		if(root.equals("integrations")){
-			flowId = xPath.evaluate("//flows/flow[id=" + filename + "]/id",doc);
-			if(flowId==null){
+		if(root.equals("integrations") || root.equals("flows")){
+			flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id",doc);
+			if(flowId==null || flowId.isEmpty()){
 				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
+			}
+		}else if(root.equals("flow")){
+			flowId = xPath.evaluate("//flow[id='" + filename + "']/id",doc);
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flow/id",doc);
 			}
 		}else if(root.equals("camelContext")){
 			flowId = xPath.evaluate("/camelContext/@id",doc);
-			if(flowId.isEmpty() || flowId==null){
+			if(flowId==null || flowId.isEmpty()){
 				log.warn("Configuration: CamelContext element doesn't have an id attribute");
 			}
 		}else if(root.equals("routes")){
 			flowId = xPath.evaluate("/routes/@id",doc);
-			if(flowId.isEmpty() || flowId==null){
+			if(flowId==null || flowId.isEmpty()){
 				log.warn("Configuration: routes element doesn't have an id attribute");
 			}
 		}
