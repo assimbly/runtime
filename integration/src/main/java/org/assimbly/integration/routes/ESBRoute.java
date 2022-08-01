@@ -7,7 +7,6 @@ import org.apache.camel.*;
 import org.apache.camel.builder.*;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.routes.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
@@ -47,7 +46,9 @@ public class ESBRoute extends RouteBuilder {
 
 		setExtendedCamelContext();
 	
-		setRouteConfiguration();
+		setRouteConfigurations();
+
+		setErrorHandlers();
 
 		setRoutes();
 
@@ -58,23 +59,25 @@ public class ESBRoute extends RouteBuilder {
 		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 	}
 
-	private void setRouteConfiguration() throws Exception{
+	private void setRouteConfigurations() throws Exception{
 
 		for(String prop : props.keySet()){
-			if(prop.endsWith("route")){				
-				String route = props.get(prop);
-
-				if(route.startsWith("<routeConfiguration")){
-					loadRoute(route);					
-				}else if(prop.startsWith("error")){
-					if(route.isEmpty()){
-						setErrorHandler("");
-					}else{
-						setErrorHandler(route);
-					}
-				}
+			if(prop.endsWith("routeconfiguration")){
+				String routeConfiguration = props.get(prop);
+				loadRoute(routeConfiguration, "routeconfiguration");
 			}
 		}
+	}
+
+	private void setErrorHandlers() throws Exception{
+
+		for(String prop : props.keySet()){
+			if(prop.startsWith("error") && prop.endsWith("uri")){
+				String errorUri = props.get(prop);
+				setErrorHandler(errorUri);
+			}
+		}
+
 	}
 
 	private void setRoutes() throws Exception{
@@ -83,38 +86,36 @@ public class ESBRoute extends RouteBuilder {
 
 				String route = props.get(prop);
 
-				if(!route.startsWith("<routeConfiguration")){
-					if(prop.startsWith("route")){
-						updateRoute(route);
-					}else{
-						loadRoute(route);
-					}
-
+				if(prop.startsWith("route")){
+					updateRoute(route, "route");
+				}else{
+					loadRoute(route, "route");
 				}
+
 			}
 		}
 	}
 
-	private void updateRoute(String route) throws Exception {
+	private void updateRoute(String route, String type) throws Exception {
 		loader = extendedCamelContext.getRoutesLoader();
 		Resource resource = IntegrationUtil.setResource(route);
 
-		log.info("Updating route: \n\n" + route + "\n\n flow=" + flowName);
+		log.info("Updating " + type +": \n\n" + route + "\n\n flow=" + flowName);
 
 		Set<String> updatedRoutes = loader.updateRoutes(resource);
 
 		for(String updateRoute : updatedRoutes ){
-			log.info("Updated route: \n\n" + route + "\n\n flow=" + flowName + " routeid=" + updateRoute);
+			log.info("Updated " + type + " | flow=" + flowName + " routeid=" + updateRoute);
 		}
 
 	}
 
 
-	private void loadRoute(String route) throws Exception {
+	private void loadRoute(String route, String type) throws Exception {
 		loader = extendedCamelContext.getRoutesLoader();
 		Resource resource = IntegrationUtil.setResource(route);
 
-		log.info("Loading route: \n\n" + route + "\n\n flow=" + flowName);
+		log.info("Loading " + type +  ": \n\n" + route + "\n\n flow=" + flowName);
 
 		try{
 			loader.loadRoutes(resource);
@@ -122,14 +123,13 @@ public class ESBRoute extends RouteBuilder {
 			loader.updateRoutes(resource);
 		}
 		
-		log.info("Loaded route: \n\n" + route + "\n\n flow=" + flowName);
+		log.info("Loaded " + type + " | flow=" + flowName);
 	
 	}
 
-	private void setErrorHandler(String route) throws Exception {
+	private void setErrorHandler(String errorUri) throws Exception {
 
-		if (route!=null && !route.isEmpty()) {
-			String errorUri = StringUtils.substringBetween(route, "<from uri=\"", "\"/>");
+		if (errorUri!=null && !errorUri.isEmpty()) {
 			routeErrorHandler = new DeadLetterChannelBuilder();
 			routeErrorHandler = deadLetterChannel(errorUri);
 		}else{

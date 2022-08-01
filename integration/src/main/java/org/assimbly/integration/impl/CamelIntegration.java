@@ -98,8 +98,9 @@ public class CamelIntegration extends BaseIntegration {
 	private Properties encryptionProperties;
 
 	private boolean watchDeployDirectoryInitialized = false;
+	private TreeMap<String, String> props;
 
-	
+
 	public CamelIntegration() {
 		try {
 			initIntegration(true);
@@ -723,34 +724,39 @@ public class CamelIntegration extends BaseIntegration {
 
 		log.info("Starting flow | id=" + id);
 
-		boolean flowAdded = false;
+		boolean addFlow = false;
+		boolean addedFlow = false;
 		
 		try {
 
 			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 			for(int i = 0; i < allProps.size(); i++){
-				TreeMap<String, String> props = allProps.get(i);
+				props = allProps.get(i);
 
 				String configureId = props.get("id");
 
-				if (configureId.equals(id)) {					
-					log.info("Load flow configuration | id=" + id);
-					addFlow(props);
-					flowAdded = true;
+				if (configureId.equals(id)) {
+					addFlow = true;
 				}
-			
+
 			}
-			
-			if(flowAdded){
+
+			if(addFlow)	{
+				log.info("Load flow configuration | id=" + id);
+				addFlow(props);
+				addedFlow = true;
+			}else{
+				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
+				log.error(errorMessage);
+				return errorMessage;
+			}
+
+			if(addedFlow){
 
 				List<Route> routeList = getRoutesByFlowId(id);
 
-				log.info("--------------> routelistsize" + routeList.size());
-
 				for(Route route : routeList){
-					log.info("--------------> getting routeid");
 					String routeId = route.getId();
-					log.info("--------------> my routeid=" + routeId);
 
 					status = routeController.getRouteStatus(routeId);
 					if(!status.isStarted()) {

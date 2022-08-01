@@ -8,18 +8,22 @@ public class XmlToJson extends RouteBuilder {
      public void configure() throws Exception {
 
          routeTemplate("xmltojson-action")
+                 .templateParameter("routeconfiguration_id","0")
                  .templateOptionalParameter("options")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
-                 .to("dataformat:custom-xmljson:marshal?{{options}}")
-                 .to("{{out}}");
+                     .routeConfigurationId("{{routeconfiguration_id}}")
+                     .to("dataformat:custom-xmljson:marshal?{{options}}")
+                     .to("{{out}}");
 
          routeTemplate("xmltojson-sink")
+                 .templateParameter("routeconfiguration_id","0")
                  .templateOptionalParameter("options")
                  .templateParameter("in")
                  .from("{{in}}")
-                 .to("dataformat:custom-xmljson:marshal?{{options}}");
+                     .routeConfigurationId("{{routeconfiguration_id}}")
+                     .to("dataformat:custom-xmljson:marshal?{{options}}");
 
     }
 

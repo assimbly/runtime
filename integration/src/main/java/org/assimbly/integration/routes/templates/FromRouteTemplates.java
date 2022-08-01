@@ -7,8 +7,6 @@ public class FromRouteTemplates extends RouteBuilder {
     @Override
     public void configure() throws Exception {
     	
-    	
-    	
         // create a route template with the given name
         /*
     	routeTemplate("fromRoute")

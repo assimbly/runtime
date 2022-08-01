@@ -59,8 +59,9 @@ public class Unmarshall {
 	private String stepId;
 	private String responseId;
 	private String routeId;
-	private String path;
+	private String routeConfigurationId;
 	private String baseUri;
+
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -296,16 +297,12 @@ public class Unmarshall {
 		options = createOptions(optionProperties);
 
 		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
-		System.out.println("links array=" + links.length);
 
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		XPathExpression expr = xpath.compile("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
 		baseUri = expr.evaluate(doc);
 
 		uri = createUri(baseUri);
-
-		System.out.println("1. path=" + path);
-		System.out.println("1. uri=" + uri);
 
 		if(uri != null){
 			properties.put(type + "." + stepId + ".uri", uri);
@@ -328,6 +325,13 @@ public class Unmarshall {
 		if(routeId != null){
 			getRouteFromXMLFile(type,stepId, routeId);
 		}
+
+		routeConfigurationId = conf.getString(stepXPath + "routeconfiguration_id");
+
+		if(routeConfigurationId != null){
+			getRouteConfigurationFromXMLFile(type,stepId, routeConfigurationId);
+		}
+
 
 		if (type.equals("source") || type.equals("action") || type.equals("router") || type.equals("sink")) {
 			getRouteTemplateFromXMLFile(type,flowId, stepId, optionProperties, links);
@@ -433,41 +437,7 @@ public class Unmarshall {
 		XPathExpression expr = xpath.compile("/integrations/integration/routes/route[@id='" + routeId + "']");
 		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
 
-		XPathExpression expr2 = xpath.compile("/integrations/integration/flows/flow/steps/step[type='error']/id");
-		String errorId = expr2.evaluate(doc);	
-		
-		expr2 = xpath.compile("/integrations/integration/flows/flow/steps/step[type='error']/route_id");
-		String errorRouteId = expr2.evaluate(doc);
-
-		if(node!=null && errorId!=null){
-
-			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + errorRouteId + "']");
-			Node nodeRouteConfiguration = (Node)expr.evaluate(doc, XPathConstants.NODE);
-			if(nodeRouteConfiguration != null){
-				((Element)node).setAttribute("routeConfigurationId","errorHandler-" + errorId);
-			}
-		}
-
-		String updatedRouteId = flowId + "-" + stepId;
-
-		if(node==null){
-			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeId + "']");
-			node = (Node)expr.evaluate(doc, XPathConstants.NODE);		
-			updatedRouteId = "errorHandler" + "-" + stepId;
-		}
-
 		String routeAsString = convertNodeToString(node);
-
-		if(flowType.equalsIgnoreCase("esb")){
-			routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
-		}else{
-			updatedRouteId = updatedRouteId + "-" + routeId;
-			routeAsString = StringUtils.replace(routeAsString, "id=\"" + routeId + "\"", "id=\"" + updatedRouteId + "\"");
-
-			if(flowType.equalsIgnoreCase("default") || flowType.equalsIgnoreCase("connector")){
-				routeAsString = routeAsString.replaceAll("from uri=\"(.*)\"", "from uri=\"direct:flow=" + flowId + "route=" + updatedRouteId + "\"");
-			}	
-		}
 
 		if(routeAsString.contains("<customDataFormat ref")){
 			expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration/dataFormats");
@@ -478,10 +448,25 @@ public class Unmarshall {
 		}
 
 		properties.put(type + "." + stepId + ".route", routeAsString);
-		properties.put(type + "." + stepId + ".route.id", updatedRouteId);
+		properties.put(type + "." + stepId + ".route.id", routeId);
 
 	}
 
+
+	private void getRouteConfigurationFromXMLFile(String type, String stepId, String routeConfigurationId) throws Exception {
+
+		Document doc = conf.getDocument();
+
+		XPath xpath = XPathFactory.newInstance().newXPath();
+		XPathExpression expr = xpath.compile("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
+		Node node = (Node)expr.evaluate(doc, XPathConstants.NODE);
+
+		String routeAsString = convertNodeToString(node);
+
+		properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
+		properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
+
+	}
 
 	private void getRouteTemplateFromXMLFile(String type, String flowId, String stepId, List<String> optionProperties, String[] links) throws Exception {
 
@@ -536,12 +521,9 @@ public class Unmarshall {
 
 		String transport = Objects.toString(conf.getProperty("integration/flows/flow[id='" + flowId + "']/transport"), null);
 
-		System.out.println("1. transport=" + transport);
-
 		if(transport==null){
 			transport = "sync";
 		}
-
 
 		if(links.length > 0){
 
@@ -550,7 +532,6 @@ public class Unmarshall {
 			for(String link : links) {
 
 				String linkXPath = stepXPath + "links/link[" + index + "]/";
-				System.out.println("linkXpath=" + linkXPath);
 
 				String value = "";
 
@@ -589,12 +570,7 @@ public class Unmarshall {
 
 					String nextStepXpath  = StringUtils.replace(stepXPath,"/step[" + stepIndex + "]","/step[" + nextStepIndex + "]");
 
-					System.out.println("nextStepIndex" + nextStepIndex);
-					System.out.println("nextStepXpath" + nextStepXpath);
-
 					String nextStepId = Objects.toString(conf.getProperty(nextStepXpath + "/id"), null);
-
-					System.out.println("transport=" + transport);
 
 					value = transport + ":" + flowId + "-" + nextStepId;
 
@@ -618,9 +594,14 @@ public class Unmarshall {
 
 		}
 
-		String routeTemplate = DocConverter.convertDocToString(templateDoc);
+		String routeConfiguratinID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
 
-		System.out.println("routeTemplate=" + routeTemplate);
+		if(routeConfiguratinID!=null){
+			parameter = createParameter(templateDoc,"routeconfigurationid", routeConfiguratinID);
+			templatedRoute.appendChild(parameter);
+		}
+
+		String routeTemplate = DocConverter.convertDocToString(templateDoc);
 
 		properties.put(type + "." + stepId + ".route", routeTemplate);
 		properties.put(type + "." + stepId + ".route.id",  routeId);
@@ -641,13 +622,8 @@ public class Unmarshall {
 
 		String templateId = "generic-" + type;
 
-		System.out.println("uri ---> " + uri);
-		System.out.println("type ---> " + type);
-
 		if(uri.startsWith("template")){
-			System.out.println("uri komt hier---> " + uri);
 			String componentName = uri.split(":")[1];
-			System.out.println("componentName komt hier---> " + componentName);
 			templateId = componentName + "-" + type;
 		}
 
