@@ -45,10 +45,12 @@ public class ESBRoute extends RouteBuilder {
 		log.info("Configuring ESBRoute flow=" + flowName);
 
 		setExtendedCamelContext();
-	
-		setRouteConfigurations();
 
 		setErrorHandlers();
+
+		setRouteConfigurations();
+
+		setRouteTemplates();
 
 		setRoutes();
 
@@ -57,16 +59,6 @@ public class ESBRoute extends RouteBuilder {
 	private void setExtendedCamelContext() {		
 		context = getContext();
 		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-	}
-
-	private void setRouteConfigurations() throws Exception{
-
-		for(String prop : props.keySet()){
-			if(prop.endsWith("routeconfiguration")){
-				String routeConfiguration = props.get(prop);
-				loadRoute(routeConfiguration, "routeconfiguration");
-			}
-		}
 	}
 
 	private void setErrorHandlers() throws Exception{
@@ -78,6 +70,27 @@ public class ESBRoute extends RouteBuilder {
 			}
 		}
 
+	}
+
+	private void setRouteConfigurations() throws Exception{
+
+		for(String prop : props.keySet()){
+			if(prop.endsWith("routeconfiguration")){
+				String routeConfiguration = props.get(prop);
+				loadRoute(routeConfiguration, "routeconfiguration");
+			}
+		}
+	}
+	private void setRouteTemplates() throws Exception{
+		for(String prop : props.keySet()){
+			if(prop.endsWith("routetemplate")){
+
+				String routeTemplate = props.get(prop);
+
+				loadRoute(routeTemplate, "routeTemplate");
+
+			}
+		}
 	}
 
 	private void setRoutes() throws Exception{
@@ -143,6 +156,5 @@ public class ESBRoute extends RouteBuilder {
 		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);
 
 	}
-
 
 }
