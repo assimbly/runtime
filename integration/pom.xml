@@ -145,6 +145,11 @@
             <artifactId>globalvariables</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
+      <dependency>
+          <groupId>world.dovetail</groupId>
+          <artifactId>hl7</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
         <dependency>
             <groupId>world.dovetail</groupId>
             <artifactId>multipart</artifactId>
