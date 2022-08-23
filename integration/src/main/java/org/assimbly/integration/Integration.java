@@ -128,9 +128,9 @@ public interface Integration {
 	/**
 	 * gets the integration configuration currently set (in use).
 	 *
-	 * @param  props Properties of service
+	 * @param  props Properties of connection
 	 * @param  stepType (from,to, response or error)
-	 * @return properties of service
+	 * @return properties of connection
 	 * @throws Exception if connection can't be set
 	 */
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;

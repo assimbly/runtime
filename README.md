@@ -129,7 +129,7 @@ conf.xml
         </flows>
         <routes/>
         <routeConfigurations/>
-        <services/>
+        <connections/>
         <headers/>
     </integration>
 </integrations>

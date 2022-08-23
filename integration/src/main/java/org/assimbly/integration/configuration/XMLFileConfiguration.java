@@ -86,14 +86,14 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 		
-		if(!xml.endsWith("</integration>")){
+		if(!xml.endsWith("</dil>")){
 			xml = TransformUtil.convertCamelToAssimblyFormat(xml);
 		}
 		
-		DocumentBuilder docBuilder = setDocumentBuilder("integration.xsd");
+		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
-				.setFileName("integration.xml")
+				.setFileName("dil.xml")
 				.setDocumentBuilder(docBuilder)
 				.setSchemaValidation(true)
 				.setExpressionEngine(new XPathExpressionEngine())
@@ -101,6 +101,13 @@ public class XMLFileConfiguration {
 
 		
 		FileHandler fh = new FileHandler(conf);
+
+		System.out.println("");
+
+		System.out.println("XML: " + xml);
+
+		System.out.println("");
+
 		fh.load(DocConverter.convertStringToStream(xml));
 	
 		properties = new Unmarshall().getProperties(conf,flowId);
@@ -117,7 +124,7 @@ public class XMLFileConfiguration {
 		//load uri to configuration
 		Parameters params = new Parameters();
 
-		DocumentBuilder docBuilder = setDocumentBuilder("integration.xsd");
+		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		if(scheme.startsWith("sonicfs")) {
 
@@ -136,7 +143,7 @@ public class XMLFileConfiguration {
 			FileBasedConfigurationBuilder<XMLConfiguration> builder =
 					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 							.configure(params.xml()
-									.setFileName("integration.xml")
+									.setFileName("dil.xml")
 									.setFile(xml)
 									.setDocumentBuilder(docBuilder)
 									.setSchemaValidation(true)
@@ -155,7 +162,7 @@ public class XMLFileConfiguration {
 					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 							.configure(params.xml()
 									.setURL(Url)
-									.setFileName("integration.xml")
+									.setFileName("dil.xml")
 									.setDocumentBuilder(docBuilder)
 									.setSchemaValidation(true)
 									.setExpressionEngine(new XPathExpressionEngine())
@@ -251,7 +258,7 @@ public class XMLFileConfiguration {
 		// Create XPath object
 		XPathFactory xpathFactory = XPathFactory.newInstance();
 		XPath xpath = xpathFactory.newXPath();
-		XPathExpression expr = xpath.compile("/integrations/integration[id=" + integrationId +"]/flows/flow/id/text()");
+		XPathExpression expr = xpath.compile("/dil/integrations/integration[id=" + integrationId +"]/flows/flow/id/text()");
 
 		// Create list of Ids
 		List<String> list = new ArrayList<>();

@@ -155,7 +155,7 @@ public class Unmarshall {
 			}
 		}
 
-		String componentsXpath = "integration/flows/flow[" + flowSelector + "]/components/component";
+		String componentsXpath = "integrations/integration/flows/flow[" + flowSelector + "]/components/component";
 
 		String[] components = conf.getStringArray(componentsXpath);
 
@@ -201,7 +201,7 @@ public class Unmarshall {
 
 		for(String step : steps){
 
-			stepXPath = "integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
+			stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 
 			setStepProperties(index);
 
@@ -215,6 +215,9 @@ public class Unmarshall {
 
 		stepId = conf.getString(stepXPath + "id");
 		type = conf.getString(stepXPath + "type");
+
+		System.out.println("XPATH:" + stepXPath + "type");
+		System.out.println("TYPE:" + type);
 
 		optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 		options = createOptions(optionProperties);
@@ -234,7 +237,7 @@ public class Unmarshall {
 
 		setHeader();
 
-		setService();
+		setConnection();
 
 		setRoute();
 
@@ -270,11 +273,11 @@ public class Unmarshall {
 			properties =  new Header(properties, conf).setHeader(type, stepId, headerId);
 	}
 
-	private void setService() throws ConfigurationException {
-		String serviceId = conf.getString(stepXPath + "service_id");
+	private void setConnection() throws ConfigurationException {
+		String connectionId = conf.getString(stepXPath + "connection_id");
 
-		if(serviceId != null)
-			properties =  new Service(properties, conf).setService(type, stepId, serviceId);
+		if(connectionId != null)
+			properties =  new Connection(properties, conf).setConnection(type, stepId, connectionId);
 
 	}
 

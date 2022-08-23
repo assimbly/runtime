@@ -177,17 +177,17 @@ public abstract class BaseIntegration implements Integration {
 	
 	
 	@SuppressWarnings("unused")
-	private List<TreeMap<String,String>> getServices() throws Exception {
+	private List<TreeMap<String,String>> getConnections() throws Exception {
 		return this.connections;
 	}
     	
 	@SuppressWarnings("unused")
-	private void addService(TreeMap<String,String> properties) throws Exception {
+	private void addConnection(TreeMap<String,String> properties) throws Exception {
 		this.connections.add(properties);
 	}
 	
 	@SuppressWarnings("unused")
-	private boolean removeService(String id) throws Exception {
+	private boolean removeConnection(String id) throws Exception {
 		TreeMap<String, String> con = null;
 		for (TreeMap<String, String> connection : connections){
 			if (connection.get("connection_id").equals(id)){

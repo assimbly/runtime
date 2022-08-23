@@ -1,4 +1,4 @@
-package org.assimbly.integration.service;
+package org.assimbly.integration.connections;
 
 import com.ibm.mq.jms.MQConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
@@ -29,6 +29,7 @@ public class Connection {
 	
 	private String uri;
 	private String connectionId;
+	private String connectionIdValue;
 	private String flowId;
 	private TreeMap<String, String> properties;
 	private String key;
@@ -37,13 +38,12 @@ public class Connection {
 	private boolean faultTolerant;
 	private String stepType;
     private Object stepId;
-	private String serviceId;
 	private ActiveMQConnectionFactory activeMQConnectionFactory;
 	private SjmsComponent sjmsComponent;
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    private String serviceType;
+    private String connectionType;
 
 	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
@@ -53,19 +53,19 @@ public class Connection {
 
 	public TreeMap<String, String> start() throws Exception{
 
-        serviceId = properties.get(key);
-        serviceType = properties.get("service." + serviceId + ".type" );
+        connectionId = properties.get(key);
+        connectionType = properties.get("connection." + connectionId + ".type" );
 
-        System.out.println("serviceId=" + serviceId);
-        System.out.println("serviceType=" + serviceType);
+        System.out.println("connectionId=" + connectionId);
+        System.out.println("connectionType=" + connectionType);
 
         stepType = key.split("\\.")[0]; 
         stepId = key.split("\\.")[1]; 
 
-        connectionId = properties.get(stepType + "." + stepId + ".service.id");
+        connectionIdValue = properties.get(stepType + "." + stepId + ".connection.id");
         flowId = properties.get("id");
 
-        if(connectionId!=null) {
+        if(connectionIdValue!=null) {
             startConnection();        
         }
 
@@ -75,7 +75,7 @@ public class Connection {
 
 	private void startConnection() throws Exception{        
           
-        switch (serviceType) {
+        switch (connectionType) {
             case "ActiveMQ":
                 setupActiveMQConnection(properties, "activemq");
                 break;
@@ -83,7 +83,7 @@ public class Connection {
                 setupActiveMQConnection(properties, "amazonmq");
                 break;
             case "SonicMQ":
-                connectId = stepType + connectionId + new Random().nextInt(1000000);
+                connectId = stepType + connectionIdValue + new Random().nextInt(1000000);
                 setupSonicMQConnection(properties, stepType, connectId);
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
                 properties.put(stepType + "." + stepId + ".uri", uri);						
@@ -104,8 +104,8 @@ public class Connection {
                 setupJDBCConnection(properties, stepType);
                 break;
             default:
-                log.error("Connection parameters for connection " + serviceType + " are not implemented");
-                throw new Exception("Connection parameters for connection " + serviceType + " are not implemented");
+                log.error("Connection parameters for connection " + connectionType + " are not implemented");
+                throw new Exception("Connection parameters for connection " + connectionType + " are not implemented");
         }
         
 
@@ -115,13 +115,13 @@ public class Connection {
 
         log.info("Setting up jms client connection for ActiveMQ.");
         EncryptableProperties decryptedProperties = decryptProperties(properties);
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");//properties.get("service." + serviceId + ".password");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");//properties.get("connection." + connectionId + ".password");
 
-        String conType = decryptedProperties.getProperty("service." + serviceId + ".conType");
-        String maxConnections = decryptedProperties.getProperty("service." + serviceId + "service.maxConnections");
-        String concurentConsumers = decryptedProperties.getProperty("service." + serviceId + "service.concurentConsumers");
+        String conType = decryptedProperties.getProperty("connection." + connectionId + ".conType");
+        String maxConnections = decryptedProperties.getProperty("connection." + connectionId + "connection.maxConnections");
+        String concurentConsumers = decryptedProperties.getProperty("connection." + connectionId + "connection.concurentConsumers");
 
         if (conType == null) {
             log.info("No connection type specified. Setting up basic connection for activemq.");
@@ -202,10 +202,10 @@ public class Connection {
             direction = direction + "." + stepId;
         }
         EncryptableProperties decryptedProperties = decryptProperties(properties);
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String jmsProvider = decryptedProperties.getProperty("service." + serviceId + ".jmsprovider");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String jmsProvider = decryptedProperties.getProperty("connection." + connectionId + ".jmsprovider");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
 
         log.info("Setting up sjms client connection.");
 
@@ -272,9 +272,9 @@ public class Connection {
     private void setupAMQPConnection(TreeMap<String, String> properties, String componentName, boolean sslEnabled) throws Exception {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
 
         log.info("Setting AMQP client connection.");
         if (url != null) {
@@ -309,15 +309,15 @@ public class Connection {
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String flowId = decryptedProperties.getProperty("id");
         String componentName = "sonicmq." + flowId + connectId;
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
 
         if (url != null || username != null || password != null) {
 
-            if (decryptedProperties.getProperty("service." + serviceId + ".faultTolerant") != null) {
+            if (decryptedProperties.getProperty("connection." + connectionId + ".faultTolerant") != null) {
                 try {
-                    Boolean.parseBoolean(decryptedProperties.getProperty("service." + serviceId + ".faultTolerant"));
+                    Boolean.parseBoolean(decryptedProperties.getProperty("connection." + connectionId + ".faultTolerant"));
                 } catch (Exception e) {
                     faultTolerant = true;
                 }
@@ -329,7 +329,7 @@ public class Connection {
             if (context.hasComponent(componentName) == null) {
 
                 ConnectionFactory connection = new ConnectionFactory(url, username, password);
-                connection.setConnectID("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
+                connection.setConnectID("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
                 connection.setPrefetchCount(10);
                 connection.setReconnectInterval(60);
                 connection.setFaultTolerant(faultTolerant);
@@ -340,7 +340,7 @@ public class Connection {
 
                 SjmsComponent jms = new SjmsComponent();
                 jms.setConnectionFactory(connection);
-                //jms.setConnectionClientId("Assimbly/Gateway/" + connectionId + "/Flow/" + flowId + "/" + connectId);
+                //jms.setConnectionClientId("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
                 jms.setCamelContext(context);
                 jms.start();
 
@@ -369,9 +369,9 @@ public class Connection {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         String componentNamePrefix = "sonicmq." + connectId;
-        String url = decryptedProperties.getProperty("service. " + serviceId + " .url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String url = decryptedProperties.getProperty("connection. " + connectionId + " .url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
 
         Set<String> componentNames = context.getComponentNames();
 
@@ -436,27 +436,27 @@ public class Connection {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
         //required properties
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
-        String queueManager = decryptedProperties.getProperty("service." + serviceId + ".queuemanager");
-        String channel = decryptedProperties.getProperty("service." + serviceId + ".channel");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
+        String queueManager = decryptedProperties.getProperty("connection." + connectionId + ".queuemanager");
+        String channel = decryptedProperties.getProperty("connection." + connectionId + ".channel");
 
         //optional properties
-        String channelReceiveExit = decryptedProperties.getProperty("service." + serviceId + ".channelreceiveexit");
-        String channelReceiveExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelreceiveexituserdata");
-        String channelSendExit = decryptedProperties.getProperty("service." + serviceId + ".channelsendexit");
-        String channelSendExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelsendexituserdata");
-        String channelSecurityExit = decryptedProperties.getProperty("service." + serviceId + ".channelsecurityexit");
-        String channelSecurityExitUserData = decryptedProperties.getProperty("service." + serviceId + ".channelsecurityexituserdata");
-        String clientId = decryptedProperties.getProperty("service." + serviceId + ".appname");
-        String appName = decryptedProperties.getProperty("service." + serviceId + ".clientid");
-        String clientReconnectTimeOutAsString = decryptedProperties.getProperty("service." + serviceId + ".reconnecttimeout");
-        String clientReconnectOptionsAsString = decryptedProperties.getProperty("service." + serviceId + ".reconnectoptions");
-        String transportTypeAsString = decryptedProperties.getProperty("service." + serviceId + ".transporttype");
-        String pollingIntervalAsString = decryptedProperties.getProperty("service." + serviceId + ".pollinginterval");
-        String maxBufferSizeAsString = decryptedProperties.getProperty("service." + serviceId + ".maxbuffersize");
-        String clientUserAuthenticationMQCSP = decryptedProperties.getProperty("service." + serviceId + ".userauthenticationmqcp");
+        String channelReceiveExit = decryptedProperties.getProperty("connection." + connectionId + ".channelreceiveexit");
+        String channelReceiveExitUserData = decryptedProperties.getProperty("connection." + connectionId + ".channelreceiveexituserdata");
+        String channelSendExit = decryptedProperties.getProperty("connection." + connectionId + ".channelsendexit");
+        String channelSendExitUserData = decryptedProperties.getProperty("connection." + connectionId + ".channelsendexituserdata");
+        String channelSecurityExit = decryptedProperties.getProperty("connection." + connectionId + ".channelsecurityexit");
+        String channelSecurityExitUserData = decryptedProperties.getProperty("connection." + connectionId + ".channelsecurityexituserdata");
+        String clientId = decryptedProperties.getProperty("connection." + connectionId + ".appname");
+        String appName = decryptedProperties.getProperty("connection." + connectionId + ".clientid");
+        String clientReconnectTimeOutAsString = decryptedProperties.getProperty("connection." + connectionId + ".reconnecttimeout");
+        String clientReconnectOptionsAsString = decryptedProperties.getProperty("connection." + connectionId + ".reconnectoptions");
+        String transportTypeAsString = decryptedProperties.getProperty("connection." + connectionId + ".transporttype");
+        String pollingIntervalAsString = decryptedProperties.getProperty("connection." + connectionId + ".pollinginterval");
+        String maxBufferSizeAsString = decryptedProperties.getProperty("connection." + connectionId + ".maxbuffersize");
+        String clientUserAuthenticationMQCSP = decryptedProperties.getProperty("connection." + connectionId + ".userauthenticationmqcp");
 
         MQConnectionFactory cf = new MQConnectionFactory();
 
@@ -541,16 +541,16 @@ public class Connection {
         EncryptableProperties decryptedProperties = decryptProperties(properties);
 
 		if(direction.equals("error")) {
-			connectionId = decryptedProperties.getProperty(direction + ".service.id");
+			connectionIdValue = decryptedProperties.getProperty(direction + ".connection.id");
 		}else {
-			connectionId = decryptedProperties.getProperty(direction + "." + stepId + ".service.id");
+			connectionIdValue = decryptedProperties.getProperty(direction + "." + stepId + ".connection.id");
 		}
 
         //Create datasource
-        String driver = decryptedProperties.getProperty("service." + serviceId + ".driver");
-        String url = decryptedProperties.getProperty("service." + serviceId + ".url");
-        String username = decryptedProperties.getProperty("service." + serviceId + ".username");
-        String password = decryptedProperties.getProperty("service." + serviceId + ".password");
+        String driver = decryptedProperties.getProperty("connection." + connectionId + ".driver");
+        String url = decryptedProperties.getProperty("connection." + connectionId + ".url");
+        String username = decryptedProperties.getProperty("connection." + connectionId + ".username");
+        String password = decryptedProperties.getProperty("connection." + connectionId + ".password");
 
         log.info("Create datasource for url: " + url + "(driver=" + driver + ")");
 
@@ -562,7 +562,7 @@ public class Connection {
 
         //Add datasource to registry
         Registry registry = context.getRegistry();
-        registry.bind(connectionId, ds);
+        registry.bind(connectionIdValue, ds);
 
         log.info("Datasource has been created");
 

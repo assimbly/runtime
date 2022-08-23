@@ -21,13 +21,13 @@ public class Marshall {
 	
 	private Element routes;
 	private Element routeConfigurations;
-	private Element services;
+	private Element connections;
 	private Element headers;
 	private Element flow;
 	private Element integration;
 
 	private List<String> routesList;
-	private List<String> servicesList;
+	private List<String> connectionsList;
 	private List<String> headersList;
 
 	private Element steps;
@@ -76,18 +76,18 @@ public class Marshall {
 		flows = doc.createElement("flows");
 		routes = doc.createElement("routes");
 		routeConfigurations = doc.createElement("routeConfigurations");
-		services = doc.createElement("services");
+		connections = doc.createElement("connections");
 		headers = doc.createElement("headers");
 
 		integration.appendChild(flows);
 		integration.appendChild(routes);
 		integration.appendChild(routeConfigurations);
-		integration.appendChild(services);
+		integration.appendChild(connections);
 		integration.appendChild(headers);
 
 		//List to ensure no double entries
 		routesList = new ArrayList<String>();
-		servicesList = new ArrayList<String>();
+		connectionsList = new ArrayList<String>();
 		headersList = new ArrayList<String>();
 
 	}
@@ -150,22 +150,22 @@ public class Marshall {
 				String confType = confUriKeySplitted[0];
 				String confStepId = confUriKeySplitted[1];
 
-				String confServiceId = configuration.get(confType + "." + confStepId + ".service.id");
+				String confConnectionId = configuration.get(confType + "." + confStepId + ".connection.id");
 				String confHeaderId = configuration.get(confType + "." + confStepId + ".header.id");
 				String confRouteId = configuration.get(confType + "." + confStepId + ".route.id");
 
-				setStepFromConfiguration(confType, confUri, confStepId, confServiceId, confHeaderId, confRouteId, confRouteId, configuration);
+				setStepFromConfiguration(confType, confUri, confStepId, confConnectionId, confHeaderId, confRouteId, confRouteId, configuration);
 			}
 	}
 
-	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confServiceId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
+	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confConnectionId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
 
 		Element step = doc.createElement("step");
 		Element uri = doc.createElement("uri");
 		Element type = doc.createElement("type");
 		Element stepId = doc.createElement("id");
 		Element options = doc.createElement("options");
-		Element serviceid = doc.createElement("service_id");
+		Element connectionid = doc.createElement("connection_id");
 		Element headerid = doc.createElement("header_id");
 		Element responseId = doc.createElement("response_id");
 		Element routeId = doc.createElement("route_id");
@@ -224,10 +224,10 @@ public class Marshall {
 			setRouteFromConfiguration(confRouteId, confType, configuration);
 		}
 
-		if(confServiceId!=null) {
-			serviceid.setTextContent(confServiceId);
-			step.appendChild(serviceid);
-			setServiceFromConfiguration(confServiceId, confType, configuration);
+		if(confConnectionId!=null) {
+			connectionid.setTextContent(confConnectionId);
+			step.appendChild(connectionid);
+			setConnectionFromConfiguration(confConnectionId, confType, configuration);
 		}
 
 		if(confHeaderId!=null) {
@@ -262,27 +262,27 @@ public class Marshall {
 		}
 	}
 
-	private void setServiceFromConfiguration(String serviceid, String type, TreeMap<String, String> configuration) throws Exception {
+	private void setConnectionFromConfiguration(String connectionid, String type, TreeMap<String, String> configuration) throws Exception {
 
-		if(!servicesList.contains(serviceid)) {
-			servicesList.add(serviceid);
+		if(!connectionsList.contains(connectionid)) {
+			connectionsList.add(connectionid);
 
-			Element service = doc.createElement("service");
-			services.appendChild(service);
+			Element connection = doc.createElement("connection");
+			connections.appendChild(connection);
 
-			Element serviceIdParameter = doc.createElement("id");
-			serviceIdParameter.setTextContent(serviceid);
-			service.appendChild(serviceIdParameter);
+			Element connectionIdParameter = doc.createElement("id");
+			connectionIdParameter.setTextContent(connectionid);
+			connection.appendChild(connectionIdParameter);
 
 			for(Map.Entry<String,String> entry : configuration.entrySet()) {
 				String key = entry.getKey();
 				String parameterValue = entry.getValue();
 
-				if(key.startsWith("service." + serviceid) && parameterValue!=null) {
-					String parameterName = StringUtils.substringAfterLast(key, "service." + serviceid + ".");
-					Element serviceParameter = doc.createElement(parameterName);
-					serviceParameter.setTextContent(parameterValue);
-					service.appendChild(serviceParameter);
+				if(key.startsWith("connection." + connectionid) && parameterValue!=null) {
+					String parameterName = StringUtils.substringAfterLast(key, "connection." + connectionid + ".");
+					Element connectionParameter = doc.createElement(parameterName);
+					connectionParameter.setTextContent(parameterValue);
+					connection.appendChild(connectionParameter);
 				}
 			}
 		}

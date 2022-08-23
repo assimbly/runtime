@@ -237,11 +237,6 @@
 		    <artifactId>jolokia-client-java</artifactId>
 		    <version>${jolokia.version}</version>
 		</dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-core-model</artifactId>
-          <version>3.18.0</version>
-      </dependency>
 
   </dependencies>
 

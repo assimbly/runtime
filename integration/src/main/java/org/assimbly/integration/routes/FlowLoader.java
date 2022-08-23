@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ESBRoute extends RouteBuilder {
+public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -27,11 +27,11 @@ public class ESBRoute extends RouteBuilder {
 
 	String flowName;
 	
-	public ESBRoute(final TreeMap<String, String> props){
+	public FlowLoader(final TreeMap<String, String> props){
 		this.props = props;
 	}
 
-	public ESBRoute() {}
+	public FlowLoader() {}
 
 	public interface FailureProcessorListener {
 		public void onFailure();

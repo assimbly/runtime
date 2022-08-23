@@ -34,9 +34,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.configuration.ssl.SSLConfiguration;
 import org.assimbly.integration.event.EventCollector;
 import org.assimbly.integration.routes.ConnectorRoute;
-import org.assimbly.integration.routes.ESBRoute;
-import org.assimbly.integration.routes.SimpleRoute;
-import org.assimbly.integration.service.Connection;
+import org.assimbly.integration.routes.FlowLoader;
+import org.assimbly.integration.connections.Connection;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.beans.CustomHttpBinding;
 import org.assimbly.integration.beans.UuidExtensionFunction;
@@ -80,14 +79,11 @@ public class CamelIntegration extends BaseIntegration {
 	private CamelContext context;
 
 	private boolean started = false;
-	private int stopTimeout = 30;
+	private final int stopTimeout = 30;
 	private ServiceStatus status;
 	private String flowStatus;
-	private String flowUptime;
 
-	private String flowStats;
-	private String integrationStats;
-	private MetricRegistry metricRegistry = new MetricRegistry();
+	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 
@@ -494,7 +490,7 @@ public class CamelIntegration extends BaseIntegration {
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 
-			if (key.endsWith("service.id")){
+			if (key.endsWith("connection.id")){
 				props = setConnection(props, key);
 			}
 
@@ -528,9 +524,7 @@ public class CamelIntegration extends BaseIntegration {
 		}else if(flowType.equalsIgnoreCase("connector")){
 			addConnectorFlow(props);
 		}else if(flowType.equalsIgnoreCase("esb")){
-			addESBFlow(props);
-		}else if(flowType.equalsIgnoreCase("simple")){
-			addSimpleFlow(props);
+			loadFlow(props);
 		}else if(flowType.equalsIgnoreCase("routes")){
 			addRoutesFlow(props);
 		}
@@ -544,17 +538,9 @@ public class CamelIntegration extends BaseIntegration {
 		flow.updateRoutesToCamelContext(context);
 	}
 
-	public void addESBFlow(final TreeMap<String, String> props) throws Exception {
-		//ESBRoute flow = new ESBRoute();
-		//flow.loadRoutes(context);
-
-		ESBRoute flow = new ESBRoute(props);
-		//flow.configure(context);
+	public void loadFlow(final TreeMap<String, String> props) throws Exception {
+		FlowLoader flow = new FlowLoader(props);
 		flow.updateRoutesToCamelContext(context);
-	}
-	
-	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
-		context.addRoutes(new SimpleRoute(props));
 	}
 
 	public void addRoutesFlow(final TreeMap<String, String> props) throws Exception {
@@ -731,7 +717,7 @@ public class CamelIntegration extends BaseIntegration {
 		props.put("flow.type","esb");
 		props.put("route.1.route", configuration);
 		
-		addESBFlow(props);
+		loadFlow(props);
 		
 		String status = startFlow(flowId);
 	
@@ -1018,7 +1004,8 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String getFlowUptime(String id) {
-	
+
+		String flowUptime;
 		if(hasFlow(id)) {
 			Route route = getRoutesByFlowId(id).get(0);
 			flowUptime = route.getUptime();
@@ -1242,7 +1229,8 @@ public class CamelIntegration extends BaseIntegration {
 		ManagedRouteMBean route = managed.getManagedRoute(routeid);
 
 		flowStatus = getFlowStatus(routeid);
-		
+
+		String flowStats;
 		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);
 			if(mediaType.contains("json")) {
@@ -1256,7 +1244,8 @@ public class CamelIntegration extends BaseIntegration {
 	}	
 
 	public String getStats(String statsType, String mediaType) throws Exception {
-		
+
+		String integrationStats;
 		if(statsType.equals("history")) {
 
 			MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
