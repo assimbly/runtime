@@ -22,7 +22,7 @@ public class RouteConfiguration {
 
     public TreeMap<String, String> setRouteConfiguration(String type, String stepId, String routeConfigurationId) throws Exception {
 
-        Node node = getNode("/integrations/integration/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
+        Node node = getNode("/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
 
         String routeAsString = DocConverter.convertNodeToString(node);
 

@@ -23,7 +23,7 @@ public class Header {
 
         this.headerId = headerId;
 
-        headerXPath = "integration/headers/header[id='" + headerId + "']/keys";
+        headerXPath = "core/headers/header[id='" + headerId + "']/keys";
 
         List<String> headerProporties = IntegrationUtil.getXMLParameters(conf, headerXPath);
 
@@ -44,7 +44,7 @@ public class Header {
     }
 
     private void setName(){
-        String headerName = conf.getString("integration/headers/header[id='" + headerId + "']/name");
+        String headerName = conf.getString("core/headers/header[id='" + headerId + "']/name");
         if(!headerName.isEmpty()) {
             properties.put("header." + headerId + ".name", headerName);
         }

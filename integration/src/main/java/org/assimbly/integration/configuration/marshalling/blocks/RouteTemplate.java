@@ -112,7 +112,6 @@ public class RouteTemplate {
 
         createConfigurationId();
 
-
     }
 
     private void createTemplateParameters(){

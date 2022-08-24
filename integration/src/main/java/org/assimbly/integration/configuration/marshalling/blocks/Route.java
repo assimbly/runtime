@@ -34,7 +34,7 @@ public class Route {
 
     private String createRoute(String routeId) throws Exception {
 
-        Node node = getNode("/integrations/integration/routes/route[@id='" + routeId + "']");
+        Node node = getNode("/dil/core/routes/route[@id='" + routeId + "']");
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
@@ -45,7 +45,7 @@ public class Route {
     private String createDataFormat(String route) throws Exception {
 
         if (route.contains("<customDataFormat ref")){
-            Node node = getNode("/integrations/integration/routeConfigurations/routeConfiguration/dataFormats");
+            Node node = getNode("/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");

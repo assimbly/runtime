@@ -23,7 +23,7 @@ public class Connection {
 
         this.connectionId = connectionId;
 
-        connectionXPath = "integration/connections/connection[id='" + connectionId + "']/";
+        connectionXPath = "core/connections/connection[id='" + connectionId + "']/";
 
         List<String> connectionProporties = IntegrationUtil.getXMLParameters(conf, connectionXPath + "keys");
 

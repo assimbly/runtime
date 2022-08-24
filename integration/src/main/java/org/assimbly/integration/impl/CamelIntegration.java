@@ -494,7 +494,7 @@ public class CamelIntegration extends BaseIntegration {
 				props = setConnection(props, key);
 			}
 
-			if (key.equals("flow.components") && props.get(key) != null){
+			if (key.equals("flow.dependencies") && props.get(key) != null){
 				
 				String[] schemes = StringUtils.split(props.get(key), ",");
 

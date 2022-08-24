@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 //This class unmarshalls from a XML file to a Java treemap object
-//Functionally a DIL (Data Integration Language) file is converted to an Assimbly configuration
+//Functionally a DIL (Data Integration Language) file is converted to an Assimbly runtime configuration
 public class Unmarshall {
 
 	private TreeMap<String, String> properties;
@@ -21,6 +21,7 @@ public class Unmarshall {
 
 	private String integrationXPath;
 	private String stepXPath;
+	private String blocksXPath;
 
 	private String baseUri;
 	private String uri;
@@ -32,13 +33,14 @@ public class Unmarshall {
 	private String flowId;
 	private String flowName;
 	private String flowType;
-	private String flowComponents;
+	private String flowDependencies;
 	private String flowMaximumRedeliveries;
 	private String flowRedeliveryDelay;
 	private String flowLogLevel;
 	private String flowAssimblyHeaders;
 	private String flowParallelProcessing;
 	private String stepId;
+	
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -139,11 +141,11 @@ public class Unmarshall {
 		flowName = xPath.evaluate("//flows/flow[" + flowSelector + "]/name",doc);
 		flowType = xPath.evaluate("//flows/flow[" + flowSelector + "]/type",doc);
 
-		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[" + flowSelector + "]/maximumRedeliveries",doc);
-		flowRedeliveryDelay = xPath.evaluate("//flows/flow[" + flowSelector + "]/redeliveryDelay",doc);
-		flowLogLevel = xPath.evaluate("//flows/flow[" + flowSelector + "]/logLevel",doc);
-		flowAssimblyHeaders = xPath.evaluate("//flows/flow[" + flowSelector + "]/assimblyHeaders",doc);
-		flowParallelProcessing = xPath.evaluate("//flows/flow[" + flowSelector + "]/parallelProcessing",doc);
+		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/maximumRedeliveries",doc);
+		flowRedeliveryDelay = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/redeliveryDelay",doc);
+		flowLogLevel = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/logLevel",doc);
+		flowAssimblyHeaders = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/assimblyHeaders",doc);
+		flowParallelProcessing = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/parallelProcessing",doc);
 
 		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
 
@@ -155,15 +157,15 @@ public class Unmarshall {
 			}
 		}
 
-		String componentsXpath = "integrations/integration/flows/flow[" + flowSelector + "]/components/component";
+		String dependenciesXpath = "integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency";
 
-		String[] components = conf.getStringArray(componentsXpath);
+		String[] dependencies = conf.getStringArray(dependenciesXpath);
 
-		for(String component : components){
-			if(flowComponents==null){
-				flowComponents = component;
+		for(String dependency : dependencies){
+			if(flowDependencies==null){
+				flowDependencies = dependency;
 			}else{
-				flowComponents = flowComponents + "," + component;
+				flowDependencies = flowDependencies + "," + dependency;
 			}
 		}
 
@@ -171,7 +173,7 @@ public class Unmarshall {
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
 
-		properties.put("flow.components",flowComponents);
+		properties.put("flow.dependencies",flowDependencies);
 
 		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
 		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
@@ -216,9 +218,6 @@ public class Unmarshall {
 		stepId = conf.getString(stepXPath + "id");
 		type = conf.getString(stepXPath + "type");
 
-		System.out.println("XPATH:" + stepXPath + "type");
-		System.out.println("TYPE:" + type);
-
 		optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 		options = createOptions(optionProperties);
 
@@ -235,6 +234,8 @@ public class Unmarshall {
 
 	private void setStepBlocks() throws Exception {
 
+		blocksXPath = stepXPath + "blocks/block/";
+		
 		setHeader();
 
 		setConnection();
@@ -267,14 +268,14 @@ public class Unmarshall {
 	}
 
 	private void setHeader() throws ConfigurationException {
-		String headerId = conf.getString(stepXPath + "header_id");
+		String headerId = conf.getString(blocksXPath + "options/header_id");
 
 		if(headerId != null)
 			properties =  new Header(properties, conf).setHeader(type, stepId, headerId);
 	}
 
 	private void setConnection() throws ConfigurationException {
-		String connectionId = conf.getString(stepXPath + "connection_id");
+		String connectionId = conf.getString(blocksXPath + "options/connection_id");
 
 		if(connectionId != null)
 			properties =  new Connection(properties, conf).setConnection(type, stepId, connectionId);
@@ -282,14 +283,14 @@ public class Unmarshall {
 	}
 
 	private void setRoute() throws Exception {
-		String routeId = conf.getString(stepXPath + "route_id");
+		String routeId = conf.getString(blocksXPath + "options/route_id");
 
 		if(routeId != null)
 			properties =  new Route(properties, conf).setRoute(type, stepId, routeId);
 	}
 
 	private void setRouteConfiguration() throws Exception {
-		String routeConfigurationId = conf.getString(stepXPath + "routeconfiguration_id");
+		String routeConfigurationId = conf.getString(blocksXPath + "options/routeconfiguration_id");
 
 		if(routeConfigurationId != null)
 			properties =  new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeConfigurationId);
@@ -300,7 +301,7 @@ public class Unmarshall {
 	}
 
 	private void setResponse(){
-		String responseId = conf.getString(stepXPath + "response_id");
+		String responseId = conf.getString(blocksXPath + "options/response_id");
 		if(responseId != null) {
 			properties.put(type + "." + stepId + ".response.id", responseId);
 		}
@@ -317,7 +318,7 @@ public class Unmarshall {
 			}
 		}
 
-		String responseId = conf.getString(stepXPath + "response_id");
+		String responseId = conf.getString(blocksXPath + "options/response_id");
 
 		if(responseId != null) {
 			properties.put(type + "." + stepId + ".response.id", responseId);
