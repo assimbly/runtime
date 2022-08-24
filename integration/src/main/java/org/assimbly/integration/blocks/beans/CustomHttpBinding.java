@@ -1,4 +1,4 @@
-package org.assimbly.integration.beans;
+package org.assimbly.integration.blocks.beans;
 
 import org.json.JSONObject;
 import org.apache.camel.Exchange;

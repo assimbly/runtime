@@ -1,4 +1,4 @@
-package org.assimbly.integration.routes;
+package org.assimbly.integration.blocks;
 
 import java.util.Set;
 import java.util.TreeMap;
@@ -7,7 +7,7 @@ import org.apache.camel.*;
 import org.apache.camel.builder.*;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
-import org.assimbly.integration.routes.errorhandler.ErrorHandler;
+import org.assimbly.integration.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,29 +1,31 @@
-package org.assimbly.integration.routes.templates;
+package org.assimbly.integration.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
 
-public class XmlToJson extends RouteBuilder {
+public class Velocity extends RouteBuilder {
 
      @Override
      public void configure() throws Exception {
 
-         routeTemplate("xmltojson-action")
+         routeTemplate("velocity-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("options")
+                 .templateParameter("path")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("dataformat:custom-xmljson:marshal?{{options}}")
+                     .setHeader("CamelVelocityTemplate").simple("{{path}}")
+                     .to("velocity:generate")
                      .to("{{out}}");
 
-         routeTemplate("xmltojson-sink")
+         routeTemplate("velocity-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("options")
+                 .templateParameter("path")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("dataformat:custom-xmljson:marshal?{{options}}");
+                     .setHeader("CamelVelocityTemplate").simple("{{path}}")
+                     .to("velocity:generate?allowTemplateFromHeader=true");
 
     }
 

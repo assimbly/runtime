@@ -1,4 +1,4 @@
-package org.assimbly.integration.routes;
+package org.assimbly.integration.blocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.TreeMap;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
-import org.apache.camel.builder.DefaultErrorHandlerBuilder;
 import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -19,7 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.integration.processors.ConvertProcessor;
 import org.assimbly.integration.processors.FailureProcessor;
 import org.assimbly.integration.processors.HeadersProcessor;
-import org.assimbly.integration.routes.errorhandler.ErrorHandler;
+import org.assimbly.integration.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;

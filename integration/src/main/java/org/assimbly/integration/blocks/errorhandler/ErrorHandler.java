@@ -1,9 +1,7 @@
-package org.assimbly.integration.routes.errorhandler;
+package org.assimbly.integration.blocks.errorhandler;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
-import org.apache.camel.builder.DefaultErrorHandlerBuilder;
-import org.apache.camel.builder.LegacyDefaultErrorHandlerBuilder;
 import org.assimbly.integration.processors.FailureProcessor;
 
 import java.util.List;

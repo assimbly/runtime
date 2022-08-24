@@ -18,58 +18,50 @@ import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.spi.Language;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.RouteController;
-import org.apache.camel.spi.RoutesLoader;
-import org.apache.camel.spi.Tracer;
-import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.docconverter.DocConverter;
+import org.assimbly.integration.blocks.ConnectorRoute;
+import org.assimbly.integration.blocks.FlowLoader;
+import org.assimbly.integration.blocks.beans.CustomHttpBinding;
+import org.assimbly.integration.blocks.beans.UuidExtensionFunction;
+import org.assimbly.integration.blocks.connections.Connection;
 import org.assimbly.integration.configuration.ssl.SSLConfiguration;
 import org.assimbly.integration.event.EventCollector;
-import org.assimbly.integration.routes.ConnectorRoute;
-import org.assimbly.integration.routes.FlowLoader;
-import org.assimbly.integration.connections.Connection;
-import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.beans.CustomHttpBinding;
-import org.assimbly.integration.beans.UuidExtensionFunction;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
+import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-
 import world.dovetail.aggregate.AggregateStrategy;
 import world.dovetail.cookies.CookieStore;
 import world.dovetail.enrich.EnrichStrategy;
 import world.dovetail.multipart.processor.MultipartProcessor;
 import world.dovetail.throttling.QueueMessageChecker;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 
 
 public class CamelIntegration extends BaseIntegration {
@@ -254,7 +246,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		ClassesInPackage instance = new ClassesInPackage();
 
-		Set<Class> clazzes = instance.findAllClasses("org.assimbly.integration.routes.templates");
+		Set<Class> clazzes = instance.findAllClasses("org.assimbly.integration.blocks.templates");
 
 		for (Class clazz : clazzes) {
 			Object template = clazz.getDeclaredConstructor().newInstance();

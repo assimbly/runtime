@@ -1,4 +1,4 @@
-package org.assimbly.integration.routes.templates;
+package org.assimbly.integration.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
 

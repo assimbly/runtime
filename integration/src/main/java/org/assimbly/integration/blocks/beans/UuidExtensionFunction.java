@@ -1,4 +1,4 @@
-package org.assimbly.integration.beans;
+package org.assimbly.integration.blocks.beans;
 
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
