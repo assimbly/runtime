@@ -26,13 +26,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.blocks.ConnectorRoute;
-import org.assimbly.integration.blocks.FlowLoader;
-import org.assimbly.integration.blocks.beans.CustomHttpBinding;
-import org.assimbly.integration.blocks.beans.UuidExtensionFunction;
-import org.assimbly.integration.blocks.connections.Connection;
-import org.assimbly.integration.configuration.ssl.SSLConfiguration;
-import org.assimbly.integration.event.EventCollector;
+import org.assimbly.integration.loader.ConnectorRoute;
+import org.assimbly.dil.loader.FlowLoader;
+import org.assimbly.dil.blocks.beans.CustomHttpBinding;
+import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
+import org.assimbly.dil.blocks.connections.Connection;
+import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
+import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
@@ -246,7 +246,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		ClassesInPackage instance = new ClassesInPackage();
 
-		Set<Class> clazzes = instance.findAllClasses("org.assimbly.integration.blocks.templates");
+		Set<Class> clazzes = instance.findAllClasses("org.assimbly.dil.blocks.templates");
 
 		for (Class clazz : clazzes) {
 			Object template = clazz.getDeclaredConstructor().newInstance();
@@ -509,16 +509,13 @@ public class CamelIntegration extends BaseIntegration {
 		//set up flow by type
 		String flowType  = props.get("flow.type");
 
-		if (flowType == null || flowType.isEmpty() || flowType.equals("default")){
-			//use connector flow as the default flow
+		if(flowType.equalsIgnoreCase("connector")){
 			addConnectorFlow(props);
-			flowType = "default";
-		}else if(flowType.equalsIgnoreCase("connector")){
-			addConnectorFlow(props);
-		}else if(flowType.equalsIgnoreCase("esb")){
-			loadFlow(props);
 		}else if(flowType.equalsIgnoreCase("routes")){
 			addRoutesFlow(props);
+		}else{			
+			loadFlow(props);
+			flowType = "default";
 		}
 		
 		log.info("Loaded flow configuration | type=" + flowType);
@@ -753,12 +750,22 @@ public class CamelIntegration extends BaseIntegration {
 
 				List<Route> routeList = getRoutesByFlowId(id);
 
+				log.info("Starting " + routeList.size() + " routes");
+
+				List<Route> temp = context.getRoutes();
+				System.out.println("total routeList size=" + temp.size());
+
 				for(Route route : routeList){
 					String routeId = route.getId();
 
 					status = routeController.getRouteStatus(routeId);
+
+					System.out.println("routeId=" + routeId);
+					System.out.println("status=" + status);
+
+					log.info("Starting route | routeid=" + routeId);
+
 					if(!status.isStarted()) {
-						log.info("Starting route | routeid=" + routeId);
 						routeController.startRoute(routeId);
 
 						int count = 1;
@@ -770,15 +777,18 @@ public class CamelIntegration extends BaseIntegration {
 
 						} while (status.isStarting() || count < 3000);
 
+						log.info("Started route | routeid=" + routeId);
+
 					} else {
 						log.info("Started route | routeid=" + routeId);
 					}
 				}
 
-				log.info("Started flow | id=" + id);
 				if(status!=null){
+					log.info("Started flow | id=" + id);
 					return status.toString().toLowerCase();
 				}else{
+					log.info("Failed starting flow | id=" + id);
 					return "error: can't get status";
 				}
 				

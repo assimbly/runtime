@@ -21,11 +21,18 @@
   </properties>
 
   <dependencies>
-	  <dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>camelBase</artifactId>
-			<version>${assimbly.version}</version>
-	  </dependency>
+
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>dil</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>commonBase</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camelComponents</artifactId>
@@ -35,28 +42,12 @@
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>databaseDrivers</artifactId>
   		  <version>${assimbly.version}</version>
-	  </dependency>	  
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>extra</artifactId>
- 		  <version>${assimbly.version}</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>springBase</artifactId>
-  		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>utils</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>	  
-    	<dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>testBase</artifactId>
-			<version>${assimbly.version}</version>
-			<scope>test</scope>
-		</dependency>
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>testBase</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 
 	    <!-- Custom Dovetail components -->
     	<!-- list of Camel components in alphabetic order -->
@@ -200,20 +191,6 @@
             <artifactId>xmltojson</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
-
-	  <!-- MQ -->
-	  <dependency>
-		  <groupId>com.ibm.mq</groupId>
-		  <artifactId>com.ibm.mq.allclient</artifactId>
-		  <version>${ibmmq-client.version}</version>
-	  </dependency>
-
-  		<!-- Netty depedencies-->
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>${netty.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>io.dropwizard.metrics</groupId>
