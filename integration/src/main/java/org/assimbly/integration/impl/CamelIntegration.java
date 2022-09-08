@@ -25,6 +25,8 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.processors.SetBodyProcessor;
+import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -220,6 +222,8 @@ public class CamelIntegration extends BaseIntegration {
 			registry.bind("multipartProcessor", new MultipartProcessor());
 			registry.bind("QueueMessageChecker", new QueueMessageChecker());
 			registry.bind("uuid-function", new UuidExtensionFunction());
+			registry.bind("SetBodyProcessor", new SetBodyProcessor());
+			registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 			//End Dovetail specific beans
 
 			//Start Dovetail services
@@ -288,12 +292,13 @@ public class CamelIntegration extends BaseIntegration {
 		//Create the deploy directory if not exist
 		Files.createDirectories(path);
 
-		if(deployOnStart){
+		if(deployOnStart && deployOnEvent){
+			checkDeployDirectory(path);
+			watchDeployDirectory(path);
+		}else if (deployOnStart){
 			//Check & Start files found in the deploy directory
 			checkDeployDirectory(path);
-		}
-		
-		if(deployOnEvent){
+		}else if(deployOnEvent){
 			//Monitor files in the deploy directory after start
 			watchDeployDirectory(path);
 		}	
@@ -403,7 +408,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String root = doc.getDocumentElement().getTagName();
 
-		if(root.equals("integrations") || root.equals("flows")){
+		if(root.equals("dil") || root.equals("integrations") || root.equals("flows")){
 			flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id",doc);
 			if(flowId==null || flowId.isEmpty()){
 				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
@@ -446,14 +451,15 @@ public class CamelIntegration extends BaseIntegration {
 	public void start() throws Exception {
 
 		// start Camel context
-		context.start();
-		started = true;
-		log.info("Integration started");
+		if(!started){
 
-		setDeployDirectory(true, true);
+			context.start();
+			started = true;
 
-		//setRoutesDirectory(true);
-	
+			log.info("Integration started");
+
+		}
+
 	}
 
 	public void stop() throws Exception {

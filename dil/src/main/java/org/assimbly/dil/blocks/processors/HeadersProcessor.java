@@ -40,7 +40,7 @@ public class HeadersProcessor implements Processor {
 
 				  String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
 				  String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
-				  String value = entry.getValue(); //StringUtils.substringAfterLast(entry.getValue(), "=");
+				  String value = entry.getValue();
 				  String result = "";
 
 				  if (language == null) {

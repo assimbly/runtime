@@ -7,15 +7,14 @@ import org.assimbly.util.DependencyUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
-import java.util.List;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 public class RouteTemplate {
 
@@ -77,9 +76,9 @@ public class RouteTemplate {
 
     private void createTemplateId(String uri,String type, String stepXPath){
 
-        templateId = "generic-" + type;
-
-        if(uri.startsWith("block")){
+        if(uri==null || uri.isEmpty()){
+            templateId = "link-" + type;
+        }else if(uri.startsWith("block")){
             String componentName = uri.split(":")[1];
 
             predefinedBlock = DependencyUtil.PredefinedBlocks.hasBlock(componentName);
@@ -92,6 +91,8 @@ public class RouteTemplate {
 
             templateId = componentName + "-" + type;
 
+        }else{
+            templateId = "generic-" + type;
         }
 
     }
@@ -102,12 +103,19 @@ public class RouteTemplate {
     }
 
     private void createTemplatedRoute(String baseUri, List<String> optionProperties, String[] links, String stepXPath, String type, String flowId){
+
         templatedRoute = templateDoc.createElement("templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
-        createUriValues(baseUri, stepXPath);
+        try {
+            createUriValues(baseUri, stepXPath);
+        } catch (XPathExpressionException e) {
+            throw new RuntimeException(e);
+        } catch (TransformerException e) {
+            throw new RuntimeException(e);
+        }
 
         createTemplateParameters();
 
@@ -155,24 +163,27 @@ public class RouteTemplate {
 
     }
 
-    private void createUriValues(String baseUri, String stepXPath){
+    private void createUriValues(String baseUri, String stepXPath) throws XPathExpressionException, TransformerException {
 
         if(baseUri.startsWith("block:")){
+
             if(!predefinedBlock){
+
                 String id = StringUtils.substringAfter(baseUri,"block:");
                 String blockXPath = stepXPath + "blocks/block[id=" + id + "]/";
                 String blockUri = Objects.toString(conf.getProperty(blockXPath + "uri"), null);
                 baseUri = blockUri;
                 uri = blockUri;
             }else{
+
                 baseUri = StringUtils.substringAfter(baseUri,"block:");
-                uri = StringUtils.substringAfter(baseUri,"block:");
+                uri = baseUri;
 
             }
 
         }else if(baseUri.startsWith("component:")){
             baseUri = StringUtils.substringAfter(baseUri,"component:");
-            uri = StringUtils.substringAfter(baseUri,"component:");
+            uri = baseUri;
         }
         else{
             uri = baseUri;
@@ -190,6 +201,12 @@ public class RouteTemplate {
             path = "";
         }
 
+        if(options!=null && !options.isEmpty()){
+            uri = uri + "?" + options;
+        }
+
+        createCoreComponents(scheme, path);
+
     }
 
     private void createTransport(String flowId){
@@ -202,85 +219,99 @@ public class RouteTemplate {
 
     private void createLinks(String[] links, String stepXPath, String type, String flowId){
 
+        createDefaultLinks(stepXPath, type, flowId);
+
         if(links.length > 0){
+            createCustomLinks(links, stepXPath);
+        }
 
-            int index = 1;
+    }
 
-            for(String link : links) {
+    private void createDefaultLinks(String stepXPath, String type, String flowId){
 
-                String linkXPath = stepXPath + "links/link[" + index + "]/";
+        String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
+        String value = "";
 
-                String value = "";
+        if(StringUtils.isNumeric(stepIndex)) {
 
-                String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-                String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
-                String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-                options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
+            if (type.equals("source") || type.equals("action")) {
 
-                if(linktransport!=null){
-                    transport = linktransport;
-                }
+                Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
 
-                if (options == null || options.isEmpty()) {
-                    value = transport + ":" + id;
-                } else {
-                    value = transport + ":" + id + "?" + options;
-                }
+                String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
 
-                parameter = createParameter(templateDoc,bound, value);
+                String nextStepId = Objects.toString(conf.getProperty("(" + nextStepXPath + "id)[1]"), "0");
+
+                value = transport + ":" + flowId + "-" + nextStepId;
+
+                parameter = createParameter(templateDoc, "out", value);
                 templatedRoute.appendChild(parameter);
 
-                index++;
-
             }
 
-        }else{
+            if (type.equals("sink") || type.equals("action")) {
 
-            String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
+                String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
+
+                value = transport + ":" + flowId + "-" + currentStepId;
+
+                parameter = createParameter(templateDoc, "in", value);
+                templatedRoute.appendChild(parameter);
+
+            }
+        }
+    }
+
+    private void createCustomLinks(String[] links, String stepXPath){
+
+        int index = 1;
+
+        for(String link : links) {
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
             String value = "";
 
-            if(StringUtils.isNumeric(stepIndex)){
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
 
-                if(type.equals("source") || type.equals("action")){
+            if(linktransport!=null){
+                transport = linktransport;
+            }
 
-                    Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
+            if (options == null || options.isEmpty()) {
+                value = transport + ":" + id;
+            } else {
+                value = transport + ":" + id + "?" + options;
+            }
 
-                    String nextStepXpath  = StringUtils.replace(stepXPath,"/step[" + stepIndex + "]","/step[" + nextStepIndex + "]");
+            NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
-                    String nextStepId = Objects.toString(conf.getProperty(nextStepXpath + "/id"), null);
+            for(Node oldParameter: iterable(oldParameters)){
 
-                    value = transport + ":" + flowId + "-" + nextStepId;
+                Node name = oldParameter.getAttributes().getNamedItem("name");
+                if(name.getNodeValue().equals(bound)){
+                    parameter = createParameter(templateDoc,bound, value);
 
-                    parameter = createParameter(templateDoc,"out", value);
-                    templatedRoute.appendChild(parameter);
-
-                }
-
-                if(type.equals("sink") || type.equals("action")){
-
-                    String currentStepId = Objects.toString(conf.getProperty(stepXPath + "/id"), null);
-
-                    value = transport + ":" + flowId + "-" + currentStepId;
-
-                    parameter = createParameter(templateDoc,"in", value);
-                    templatedRoute.appendChild(parameter);
+                    templatedRoute.replaceChild(parameter,oldParameter);
 
                 }
 
             }
 
+            index++;
+
         }
+
     }
 
     private void defineRouteTemplate(String templateId, String type, String stepId) throws Exception {
 
-        System.out.println("1. templateid=" + templateId);
-
         Node node = getNode("/dil/core/routeTemplates/routeTemplate[@id='" + templateId + "']");
 
         String routeTemplateAsString = DocConverter.convertNodeToString(node);
-
-        System.out.println("2. template route=" + routeTemplateAsString);
 
         properties.put(type + "." + stepId + ".routetemplatedefinition.id", templateId);
         properties.put(type + "." + stepId + ".routetemplatedefinition", routeTemplateAsString);
@@ -296,6 +327,17 @@ public class RouteTemplate {
         }
     }
 
+    private void createCoreComponents(String scheme, String path) throws XPathExpressionException, TransformerException {
+
+        if(scheme.equalsIgnoreCase("setheaders")){
+            Node node = getNode("/dil/core/headers/header[name='" + path + "']/keys");
+            String headerKeysAsString = DocConverter.convertNodeToString(node);
+            parameter = createParameter(templateDoc, "headers", headerKeysAsString);
+            templatedRoute.appendChild(parameter);
+        }
+
+    }
+
     private Node getNode(String xpath) throws XPathExpressionException {
 
         Document doc = conf.getDocument();
@@ -306,5 +348,24 @@ public class RouteTemplate {
 
         return node;
 
+    }
+
+    public static Iterable<Node> iterable(final NodeList nodeList) {
+        return () -> new Iterator<Node>() {
+
+            private int index = 0;
+
+            @Override
+            public boolean hasNext() {
+                return index < nodeList.getLength();
+            }
+
+            @Override
+            public Node next() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
+                return nodeList.item(index++);
+            }
+        };
     }
 }
