@@ -1,4 +1,4 @@
-package org.assimbly.dil.transpiler.marshalling.blocks;
+package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

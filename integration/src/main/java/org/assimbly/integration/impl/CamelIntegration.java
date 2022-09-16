@@ -413,10 +413,16 @@ public class CamelIntegration extends BaseIntegration {
 			if(flowId==null || flowId.isEmpty()){
 				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
 			}
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flows/flow[1]/name",doc);
+			}
 		}else if(root.equals("flow")){
 			flowId = xPath.evaluate("//flow[id='" + filename + "']/id",doc);
 			if(flowId==null || flowId.isEmpty()){
 				flowId = xPath.evaluate("//flow/id",doc);
+			}
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flow/name",doc);
 			}
 		}else if(root.equals("camelContext")){
 			flowId = xPath.evaluate("/camelContext/@id",doc);

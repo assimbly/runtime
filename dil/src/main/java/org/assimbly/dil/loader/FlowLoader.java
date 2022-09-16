@@ -1,13 +1,17 @@
 package org.assimbly.dil.loader;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
+import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
+import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +29,13 @@ public class FlowLoader extends RouteBuilder {
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 
+
+
+	String flowId;
 	String flowName;
-	
+
+	boolean isLoaded;
+
 	public FlowLoader(final TreeMap<String, String> props){
 		this.props = props;
 	}
@@ -41,7 +50,8 @@ public class FlowLoader extends RouteBuilder {
 	public void configure() throws Exception {
 
 		flowName = props.get("flow.name");
-		
+		flowId = props.get("id");
+
 		log.info("Configuring ESBRoute flow=" + flowName);
 
 		setExtendedCamelContext();
@@ -80,8 +90,10 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.endsWith("routeconfiguration")){
 
 				String routeConfiguration = props.get(prop);
+				String id = props.get(prop + ".id");
+
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
-					loadRoute(routeConfiguration, "routeconfiguration");
+					loadRoute(routeConfiguration, "routeconfiguration", id);
 				}
 
 			}
@@ -94,8 +106,9 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.endsWith("routetemplatedefinition")){
 
 				String routeTemplate = props.get(prop);
+				String id = props.get(prop + ".id");
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadRoute(routeTemplate, "routeTemplate definition");
+					loadRoute(routeTemplate, "routeTemplate definition", id);
 				}
 
 			}
@@ -108,8 +121,9 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.endsWith("routetemplate")){
 
 				String routeTemplate = props.get(prop);
+				String id = props.get(prop + ".id");
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadRoute(routeTemplate, "routeTemplate");
+					loadRoute(routeTemplate, "routeTemplate", id);
 				}
 
 			}
@@ -121,11 +135,12 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.endsWith("route")){							
 
 				String route = props.get(prop);
+				String id = props.get(prop + ".id");
 
 				if(prop.startsWith("route")){
 					updateRoute(route, "route");
 				}else{
-					loadRoute(route, "route");
+					loadRoute(route, "route", id);
 				}
 
 			}
@@ -147,20 +162,22 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 
-	private void loadRoute(String route, String type) throws Exception {
+	private void loadRoute(String route, String type, String id) throws Exception {
+
 		loader = extendedCamelContext.getRoutesLoader();
+
 		Resource resource = IntegrationUtil.setResource(route);
 
-		log.info("Loading " + type +  ": \n\n" + route + "\n\n flow=" + flowName);
-
-		try{
-			loader.loadRoutes(resource);
-		}catch(java.lang.IllegalArgumentException e){
+		if(isLoaded(id)) {
+			log.info("Updating flow=" + flowName + " | " + type +  " :\n\n" + route);
 			loader.updateRoutes(resource);
+			log.info("Updated flow=" + flowName + " | type=" + type);
+		}else{
+			log.info("Loading flow=" + flowName + " | " + type +  " :\n\n" + route);
+			loader.loadRoutes(resource);
+			log.info("Loaded flow=" + flowName + " | type=" + type);
 		}
-		
-		log.info("Loaded " + type + " | flow=" + flowName);
-	
+
 	}
 
 	private void setErrorHandler(String errorUri) throws Exception {
@@ -178,6 +195,15 @@ public class FlowLoader extends RouteBuilder {
 
 		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);
 
+	}
+
+	private boolean isLoaded(String id){
+		List<Route> routes = context.getRoutes().stream().filter(r -> r.getId().equals(id)).collect(Collectors.toList());
+		if(routes.size()>0){
+			return true;
+		}
+
+		return false;
 	}
 
 }

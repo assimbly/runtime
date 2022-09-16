@@ -7,6 +7,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.Language;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -23,15 +24,17 @@ import java.util.Map;
 //set headers for each step
 public class SetHeadersProcessor implements Processor {
 
+	private String headers;
+
 	public void process(Exchange exchange) throws Exception {
 
 	  Message in = exchange.getIn();
 
 	  String headers  = exchange.getProperty("assimbly.headers",String.class);
 
-	  if(headers.startsWith("<keys")){
+	  if(headers.startsWith("<headers")){
 
-		  NodeList nodeList = getNodeList(headers).item(0).getChildNodes();
+		  NodeList nodeList = IntegrationUtil.getNodeList(headers, "headers").item(0).getChildNodes();
 
 		  for (int i = 0; i < nodeList.getLength(); i++) {
 
@@ -39,6 +42,7 @@ public class SetHeadersProcessor implements Processor {
 
 			  String language = "constant";
 			  String type = "header";
+
 			  if (node.getNodeType() == Node.ELEMENT_NODE) {
 				  String headerKey = node.getNodeName();
 				  String headerValue = node.getTextContent();
@@ -75,19 +79,6 @@ public class SetHeadersProcessor implements Processor {
 
 	  }
 
-
-	}
-
-	private NodeList getNodeList(String xml) throws IOException, SAXException, ParserConfigurationException {
-
-		InputStream isr = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document doc = db.parse(isr);
-
-		NodeList nodeList = doc.getElementsByTagName("keys");
-
-		return nodeList;
 	}
 
 }

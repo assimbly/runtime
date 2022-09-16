@@ -1,8 +1,9 @@
-package org.assimbly.dil.transpiler.marshalling.blocks;
+package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -33,7 +34,7 @@ public class Route {
 
     private String createRoute(String routeId) throws Exception {
 
-        Node node = getNode("/dil/core/routes/route[@id='" + routeId + "']");
+        Node node = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
@@ -44,7 +45,7 @@ public class Route {
     private String createDataFormat(String route) throws Exception {
 
         if (route.contains("<customDataFormat ref")){
-            Node node = getNode("/dil/core/routeConfigurations/routeConfiguration/dataFormats");
+            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");
@@ -55,15 +56,5 @@ public class Route {
 
     }
 
-    private Node getNode(String xpath) throws XPathExpressionException {
-
-        Document doc = conf.getDocument();
-
-        XPath xpathFactory = XPathFactory.newInstance().newXPath();
-        XPathExpression expr = xpathFactory.compile(xpath);
-        Node node = (Node) expr.evaluate(doc, XPathConstants.NODE);
-
-        return node;
-    }
 
 }

@@ -22,9 +22,6 @@ public class SetBodyProcessor implements Processor {
 	  String body = exchange.getProperty("assimbly.body",String.class);
 	  String language = exchange.getProperty("assimbly.language",String.class);
 
-	  System.out.println("language=" + language);
-  	  System.out.println("body=" + body);
-
 	  if(language == null || language.isEmpty() || language.equalsIgnoreCase("constant")){
 		  in.setBody(body);
 	  }else{
@@ -38,6 +35,8 @@ public class SetBodyProcessor implements Processor {
 		  }
 		  in.setBody(body);
 	  }
+
+	  System.out.println("The body =" + body);
 
 		exchange.removeProperty("assimbly.body");
 		exchange.removeProperty("assimbly.language");

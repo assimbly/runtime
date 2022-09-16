@@ -3,7 +3,7 @@ package org.assimbly.dil.transpiler.marshalling;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.dil.transpiler.marshalling.blocks.*;
+import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
@@ -309,7 +309,6 @@ public class Unmarshall {
 			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}
 	}
-
 	private void setResponse(){
 		String responseId = conf.getString(blocksXPath + "options/response_id");
 		if(responseId != null) {
