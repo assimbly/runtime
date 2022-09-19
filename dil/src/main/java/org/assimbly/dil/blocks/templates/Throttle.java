@@ -15,7 +15,6 @@ public class Throttle extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .throttle(1).timePeriodMillis(1000)
                      .throttle(constant("{{maximumrequestcount}}")).timePeriodMillis("{{timeperiod}}")
                      .to("{{out}}");
 

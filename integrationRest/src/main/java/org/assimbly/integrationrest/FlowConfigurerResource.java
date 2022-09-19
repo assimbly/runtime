@@ -166,7 +166,7 @@ public class FlowConfigurerResource {
 			integration = integrationResource.getIntegration();
 			String components = integration.getComponents(mediaType);
 			if(components.startsWith("Unknown")) {
-				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components);
+				return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components,plainResponse);
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components,plainResponse);
 		} catch (Exception e) {
