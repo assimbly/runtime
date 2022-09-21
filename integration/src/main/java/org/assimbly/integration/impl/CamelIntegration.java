@@ -6,10 +6,12 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.directvm.DirectVmComponent;
+import org.apache.camel.component.jetty.JettyHttpComponent;
+import org.apache.camel.component.jetty.JettyHttpEndpoint;
+import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -21,39 +23,35 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.beans.CustomHttpBinding;
+import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.SetBodyProcessor;
 import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
-import org.assimbly.dil.blocks.beans.CustomHttpBinding;
-import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
+import org.eclipse.jetty.server.AbstractConnector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import world.dovetail.aggregate.AggregateStrategy;
-import world.dovetail.cookies.CookieStore;
-import world.dovetail.enrich.EnrichStrategy;
-import world.dovetail.multipart.processor.MultipartProcessor;
-import world.dovetail.throttling.QueueMessageChecker;
-import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -89,6 +87,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	private boolean watchDeployDirectoryInitialized = false;
 	private TreeMap<String, String> props;
+
+	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 
 
 	public CamelIntegration() {
@@ -159,7 +159,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setHistoryMetrics(true);
 		
-		setDovetail(true);
+		setDefaultBlocks();
 
 		setRouteTemplates();
 
@@ -206,42 +206,18 @@ public class CamelIntegration extends BaseIntegration {
 		context.setMessageHistoryFactory(factory);
 	}
 
-	public void setDovetail(boolean enable) throws Exception {
-		
-		if(enable){
+	public void setDefaultBlocks() throws Exception {
 
-			context.addComponent("sync", new DirectVmComponent());
-			context.addComponent("async", new VmComponent());
+		registry.bind("customHttpBinding", new CustomHttpBinding());
+		registry.bind("uuid-function", new UuidExtensionFunction());
 
-			//Start Dovetail specific beans
-			registry.bind("customHttpBinding", new CustomHttpBinding());
-			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
-			registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-			registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
-			registry.bind("flowCookieStore", new CookieStore());
-			registry.bind("multipartProcessor", new MultipartProcessor());
-			registry.bind("QueueMessageChecker", new QueueMessageChecker());
-			registry.bind("uuid-function", new UuidExtensionFunction());
-			registry.bind("SetBodyProcessor", new SetBodyProcessor());
-			registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
-			//End Dovetail specific beans
+		context.addComponent("sync", new DirectVmComponent());
+		context.addComponent("async", new VmComponent());
 
-			//Start Dovetail services
-			context.addService(new CustomXmlJsonDataFormat());
-			//End Dovetail services
+		context.addComponent("jetty-nossl", new JettyHttpComponent9());
 
-			// Start Dovetail components
-			context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
-			context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
-			// End Dovetail components
-
-			//Start Dovetail thread pool profiles
-			ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
-			builder.poolSize(0).maxPoolSize(5).maxQueueSize(2000).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
-			context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
-			//End Dovetail thread pool profiles
-
-		}
+		registry.bind("SetBodyProcessor", new SetBodyProcessor());
+		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 
 	}
 
@@ -260,7 +236,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		context = getContext();
-
 
 	}
 
@@ -388,6 +363,9 @@ public class CamelIntegration extends BaseIntegration {
 		String mediaType = FilenameUtils.getExtension(pathAsString);
 		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
 
+		confFiles.put(fileName,configuration);
+
+
 		String flowId = setFlowId(fileName, configuration);
 
 		if(flowId!=null){
@@ -441,14 +419,28 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void fileUninstall(Path path) throws Exception {
-		
+
+		String pathAsString = path.toString();
+		String fileName = FilenameUtils.getBaseName(pathAsString);
+		String configuration = confFiles.get(fileName);
+
+		String flowId = setFlowId(fileName, configuration);
+
+		if(flowId!=null){
+			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
+			stopFlow(flowId);
+		}else{
+			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
+		}
+
+		/*
 		String pathAsString = path.toString();
 		String flowId = FilenameUtils.getBaseName(pathAsString);
 
 		log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
 
 		stopFlow(flowId);
-		
+		*/
 	}
 	
 	

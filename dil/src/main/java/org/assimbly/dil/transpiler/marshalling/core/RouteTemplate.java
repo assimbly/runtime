@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,6 +23,7 @@ import static org.assimbly.util.IntegrationUtil.*;
 
 public class RouteTemplate {
 
+    protected Logger log = LoggerFactory.getLogger(getClass());
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
     private String uri;
@@ -79,8 +82,6 @@ public class RouteTemplate {
     
     private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, String flowId, String stepId) throws Exception {
 
-        System.out.println("xpath: /dil/" + stepXPath + "blocks");
-
         Node node = IntegrationUtil.getNode(conf,"/dil/" + stepXPath + "blocks");
 
         if(node != null && node.hasChildNodes()){
@@ -99,9 +100,6 @@ public class RouteTemplate {
                         Node nodeBlockType = blockElement.getElementsByTagName("type").item(0);
                         if(nodeBlockType!=null){
                             blockType = nodeBlockType.getTextContent();
-                            System.out.println("blockType" + blockType);
-                            System.out.println("blockType name" +nodeBlockType.getNodeName());
-
                         }else{
                             blockType = "routeTemplate";
                         }
@@ -121,9 +119,6 @@ public class RouteTemplate {
                         }
 
                     }
-
-                    System.out.println("Block Type=" + blockType);
-                    System.out.println("Block Uri=" + blockUri);
 
                     if(blockType.equalsIgnoreCase("routeTemplate")){
                         defineRouteTemplate(templateId, type, stepId);
@@ -156,7 +151,7 @@ public class RouteTemplate {
             }
         }else{
             //create default log block
-            System.out.println("Creating default log block");
+            log.info("Creating default log block");
         }
 
 
@@ -408,18 +403,25 @@ public class RouteTemplate {
 
     private void createCoreComponents() throws XPathExpressionException, TransformerException {
 
-        System.out.println("scheme=" + scheme);
-        System.out.println("path=" + path);
-
         if(path.startsWith("message:")) {
             String name = StringUtils.substringAfter(path, "message:");
 
             if (scheme.equalsIgnoreCase("setBody") || scheme.equalsIgnoreCase("setMessage")) {
-                Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/body/*");
-                if (node == null) {
-                    node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/body/*");
+
+                String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body"), null);
+                if(resourceAsString == null) {
+                    resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body"), null);
                 }
-                String resourceAsString = DocConverter.convertNodeToString(node);
+
+                if(resourceAsString == null){
+
+                    Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/body/*");
+                    if (node == null) {
+                        node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/body/*");
+                    }
+                    resourceAsString = DocConverter.convertNodeToString(node);
+
+                }
 
                 parameter = createParameter(templateDoc, "path", resourceAsString);
                 templatedRoute.appendChild(parameter);

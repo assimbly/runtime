@@ -7,14 +7,14 @@ public class Xslt extends RouteBuilder {
      @Override
      public void configure() throws Exception {
 
-         routeTemplate("'xslt-action")
+         routeTemplate("xslt-action")
                  .templateParameter("routeconfiguration_id","0")
                  .templateOptionalParameter("path")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("xslt:{{path}}?saxon=true&saxonExtensionFunctions=#uuid-function")
+                     .to("xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function")
                      .to("{{out}}");
 
          routeTemplate("xslt-sink")
@@ -23,7 +23,7 @@ public class Xslt extends RouteBuilder {
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("xslt:{{path}}?saxon=true&saxonExtensionFunctions=#uuid-function");
+                     .to("xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function");
     }
 
 }

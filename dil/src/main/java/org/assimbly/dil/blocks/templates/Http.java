@@ -11,7 +11,7 @@ public class Http extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("path")
                  .templateParameter("out")
-                 .from("jetty:http:{{path}}?httpBinding=#customHttpBinding&amp;matchOnUriPrefix=false&amp;sslContextParameters=sslContext")
+                 .from("jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .removeHeaders("CamelHttp*")
                      .to("{{out}}");
@@ -20,7 +20,7 @@ public class Http extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("path")
                  .templateParameter("out")
-                 .from("jetty:https:{{path}}?httpBinding=#customHttpBinding&amp;matchOnUriPrefix=false&amp;sslContextParameters=sslContext")
+                 .from("jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .removeHeaders("CamelHttp*")
                      .to("{{out}}");

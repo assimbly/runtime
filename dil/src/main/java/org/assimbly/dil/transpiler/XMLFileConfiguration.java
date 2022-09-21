@@ -224,9 +224,10 @@ public class XMLFileConfiguration {
 	private DocumentBuilder setDocumentBuilder(String schemaFilename) throws SAXException, ParserConfigurationException {
 
 		URL schemaUrl = this.getClass().getResource("/" + schemaFilename);
-		Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(schemaUrl);
+		Schema schema = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1").newSchema(schemaUrl);
 
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+
 		docBuilderFactory.setSchema(schema);
 
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
