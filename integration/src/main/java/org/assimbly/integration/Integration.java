@@ -508,7 +508,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String testFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception;
 
 	/**
 	* Configure and Starts a flow from a routes xml

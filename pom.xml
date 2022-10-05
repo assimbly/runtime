@@ -17,7 +17,6 @@
 		<module>dil</module>
 		<module>integration</module>
 		<module>integrationRest</module>
-		<module>integrationRestDT</module>
 	</modules>
 
 	<properties>

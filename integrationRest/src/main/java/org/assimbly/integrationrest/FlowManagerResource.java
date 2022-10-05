@@ -157,23 +157,23 @@ public class FlowManagerResource {
 
 	
 	@PostMapping(path = "/integration/{integrationId}/flow/test/{flowId}", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> testflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> testflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         try {
             integration = integrationResource.getIntegration();
 
-            status = integration.testFlow(flowId, mediaType, configuration);
-            if (status.equals("started")) {
+            status = integration.testFlow(flowId, mediaType, configuration, stopTest);
+            if (status.equals("started") || status.equals("stopped")) {
                 if (this.messagingTemplate != null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", "event:started");
+                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", "event:" + status);
                 }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", "started flow " + flowId, "started flow " + flowId, flowId);
+                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", status + " flow " + flowId, status + " flow " + flowId, flowId);
             } else {
                 throw new Exception(status);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", e.getMessage(), "unable to test flow " + flowId, flowId);
         }
 
     }

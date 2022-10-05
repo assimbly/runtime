@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.net.UrlEscapers;
 import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.jmx.*;
 
@@ -21,6 +22,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONObject;
@@ -56,11 +58,12 @@ public class ActiveMQClassic implements Broker {
 
         try{
             broker = new BrokerService();
-        
+
+            String brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
-                URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
+                URI urlConfig = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(urlConfig);
             }else {
                 this.setFileConfiguration("");
@@ -70,8 +73,11 @@ public class ActiveMQClassic implements Broker {
                 log.info("");
                 log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
-                URI urlConfig = new URI("xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8"));
+                brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
+
+                URI urlConfig = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(urlConfig);
+
             }
 
             if(!broker.isStarted()) {

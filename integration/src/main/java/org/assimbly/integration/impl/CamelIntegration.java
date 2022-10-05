@@ -6,11 +6,10 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.directvm.DirectVmComponent;
-import org.apache.camel.component.jetty.JettyHttpComponent;
-import org.apache.camel.component.jetty.JettyHttpEndpoint;
 import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -23,6 +22,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,20 +38,21 @@ import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
-import org.eclipse.jetty.server.AbstractConnector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
+import org.joor.Reflect;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,6 +61,7 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -125,8 +127,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void initIntegration(boolean useDefaultSettings) throws Exception {
 
-		//set basic settings
-		context = new DefaultCamelContext(registry);
+		context = setContext();
 
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
@@ -145,7 +146,17 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public CamelContext setContext(){
+		return new DefaultCamelContext(registry);
+	}
+
 	public void setDefaultSettings() throws Exception {
+
+		setRouteTemplates();
+
+		setDefaultBlocks();
+
+		setThreadProfile(0,5,5000);
 
 		setDebugging(false);
 
@@ -158,10 +169,6 @@ public class CamelIntegration extends BaseIntegration {
 		setMetrics(true);
 
 		setHistoryMetrics(true);
-		
-		setDefaultBlocks();
-
-		setRouteTemplates();
 
 	}
 	
@@ -210,6 +217,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("uuid-function", new UuidExtensionFunction());
+		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 		context.addComponent("sync", new DirectVmComponent());
 		context.addComponent("async", new VmComponent());
@@ -219,23 +227,46 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 
+		//following beans are registered by name, because they are not always available (and are ignored if not available).
+		bindByName("CurrentAggregateStrategy","world.dovetail.aggregate.AggregateStrategy");
+		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
+		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");
+		bindByName("flowCookieStore","world.dovetail.cookies.CookieStore");
+		bindByName("multipartProcessor","world.dovetail.multipart.processor.MultipartProcessor");
+		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
+
+		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
+
 	}
+
+	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+
+		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
+		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
+
+	}
+
 
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
 
-		ClassesInPackage instance = new ClassesInPackage();
+		// create scanner and disable default filters (that is the 'false' argument)
+		final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+		provider.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")));
 
-		Set<Class> clazzes = instance.findAllClasses("org.assimbly.dil.blocks.templates");
+		// get matching classes defined in the package
+		final Set<org.springframework.beans.factory.config.BeanDefinition> classes = provider.findCandidateComponents("org.assimbly.dil.blocks.templates");
 
-		for (Class clazz : clazzes) {
+		// this is how you can load the class type from BeanDefinition instance
+		for (BeanDefinition bean: classes) {
+			Class<?> clazz = Class.forName(bean.getBeanClassName());
 			Object template = clazz.getDeclaredConstructor().newInstance();
 			if(template instanceof RouteBuilder){
 				context.addRoutes((RouteBuilder) template);
 			}
-		}
 
-		context = getContext();
+		}
 
 	}
 
@@ -328,7 +359,6 @@ public class CamelIntegration extends BaseIntegration {
 									if (path.equals(pathCreated)){
 									diff = timeModified - timeCreated;
 									if(diff > 3000){
-										System.out.println("diff=" + diff);
 										fileInstall(path);
 									}
 									}else{
@@ -381,6 +411,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = null;
 
+		configuration= new String(configuration.getBytes("UTF-8"));
+
 		Document doc = DocConverter.convertStringToDoc(configuration);
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
@@ -423,6 +455,7 @@ public class CamelIntegration extends BaseIntegration {
 		String pathAsString = path.toString();
 		String fileName = FilenameUtils.getBaseName(pathAsString);
 		String configuration = confFiles.get(fileName);
+		confFiles.remove(fileName);
 
 		String flowId = setFlowId(fileName, configuration);
 
@@ -553,9 +586,9 @@ public class CamelIntegration extends BaseIntegration {
 	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
 
 	public void updateRoute(String route) throws Exception {
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-		Resource resource = IntegrationUtil.setResource(route);		
+		Resource resource = IntegrationUtil.setResource(route);
 		loader.updateRoutes(resource);
 	}
 	
@@ -671,7 +704,10 @@ public class CamelIntegration extends BaseIntegration {
 		return status;
 	}
 	
-	public String testFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception {
+		if(stopTest){
+			return stopFlow(flowId);
+		}
 		return configureAndStartFlow(flowId, mediaType, configuration);
 	}
 
@@ -757,15 +793,11 @@ public class CamelIntegration extends BaseIntegration {
 				log.info("Starting " + routeList.size() + " routes");
 
 				List<Route> temp = context.getRoutes();
-				System.out.println("total routeList size=" + temp.size());
 
 				for(Route route : routeList){
 					String routeId = route.getId();
 
 					status = routeController.getRouteStatus(routeId);
-
-					System.out.println("routeId=" + routeId);
-					System.out.println("status=" + status);
 
 					log.info("Starting route | routeid=" + routeId);
 
@@ -1674,5 +1706,32 @@ public class CamelIntegration extends BaseIntegration {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
-    
+
+
+	public void bindByName(String beanId, String className){
+
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(className);
+			Object bean =  clazz.getDeclaredConstructor().newInstance();
+			registry.bind(beanId, bean);
+		} catch (Exception e) {
+			//Ignore if class not found
+		}
+
+	}
+
+	public void addServiceByName(String className){
+
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(className);
+			Object bean =  clazz.getDeclaredConstructor().newInstance();
+			context.addService(bean);
+		} catch (Exception e) {
+			//Ignore if class not found
+		}
+
+	}
+
 }

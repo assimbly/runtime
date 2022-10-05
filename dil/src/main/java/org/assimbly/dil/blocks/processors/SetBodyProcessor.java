@@ -17,29 +17,27 @@ public class SetBodyProcessor implements Processor {
 
 	public void process(Exchange exchange) throws Exception {
 
-	  Message in = exchange.getIn();
+		  Message in = exchange.getIn();
 
-	  String body = exchange.getProperty("assimbly.body",String.class);
-	  String language = exchange.getProperty("assimbly.language",String.class);
+		  String body = exchange.getProperty("assimbly.body",String.class);
+		  String language = exchange.getProperty("assimbly.language",String.class);
 
-	  if(language == null || language.isEmpty() || language.equalsIgnoreCase("constant")){
-		  in.setBody(body);
-	  }else{
-		  if (language.equalsIgnoreCase("xpath")) {
-			  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-			  body = XPathBuilder.xpath(body).factory(fac).evaluate(exchange, String.class);
-		  } else {
-			  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
-			  Expression expression = resolvedLanguage.createExpression(body);
-			  body = expression.evaluate(exchange, String.class);
+		  if(language == null || language.isEmpty() || language.equalsIgnoreCase("constant")){
+			  in.setBody(body);
+		  }else{
+			  if (language.equalsIgnoreCase("xpath")) {
+				  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+				  body = XPathBuilder.xpath(body).factory(fac).evaluate(exchange, String.class);
+			  } else {
+				  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+				  Expression expression = resolvedLanguage.createExpression(body);
+				  body = expression.evaluate(exchange, String.class);
+			  }
+			  in.setBody(body);
 		  }
-		  in.setBody(body);
-	  }
 
-	  System.out.println("The body =" + body);
-
-		exchange.removeProperty("assimbly.body");
-		exchange.removeProperty("assimbly.language");
+		  exchange.removeProperty("assimbly.body");
+		  exchange.removeProperty("assimbly.language");
 	}
 
 }

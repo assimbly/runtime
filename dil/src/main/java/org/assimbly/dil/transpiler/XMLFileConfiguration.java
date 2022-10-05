@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,7 +16,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
-import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -31,8 +29,8 @@ import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
+import org.assimbly.dil.transpiler.transform.Transform;
 import org.assimbly.util.IntegrationUtil;
-import org.assimbly.util.TransformUtil;
 import org.assimbly.docconverter.DocConverter;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -93,7 +91,7 @@ public class XMLFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 		
 		if(!xml.endsWith("</dil>")){
-			xml = TransformUtil.transformToDil(xml);
+			xml = Transform.transformToDil(xml);
 		}
 		
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
