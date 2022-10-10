@@ -78,14 +78,14 @@ public class BrokerManagerResource {
 
         try {
    			String status = broker.start(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", status);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/start", status);
         } catch (Exception e) {
         	log.error("Can't start broker", e);
             try {
-                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
+                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
             } catch (Exception ex) {
                 ex.printStackTrace();
-                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", "error");
+                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/start", "error");
             }
         }
 

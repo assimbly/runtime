@@ -64,7 +64,6 @@ public class ActiveMQArtemis implements Broker {
 
 
 			//
-
 			if (brokerFile.exists()) {
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				log.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
@@ -243,9 +242,13 @@ public class ActiveMQArtemis implements Broker {
 				ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 				InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
 				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				is.close();
 
-				log.info("AIO Directory is set to " + aioFile.getParent());
+				if(is==null) {
+					is.close();
+					log.info("AIO Directory is set to " + aioFile.getParent());
+				}else{
+					log.warn("Can't enable AIO");
+				}
 
 			}
 
