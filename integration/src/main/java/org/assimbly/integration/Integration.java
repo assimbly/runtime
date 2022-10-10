@@ -17,7 +17,7 @@ import java.util.TreeMap;
  * This interface is meant to configure and manage a integration.
  *
  * A <b>Integration</b> is a collection of flows.
- * A <b>Flow</b> connects one or more endpoints for example a database and a directory.
+ * A <b>Flow</b> connects one or more steps for example a database and a directory.
  *
  * Each flow configuration consists of a Treemap&lt;key,value&gt;. The integration configuration
  * consists of a list of flow configurations.
@@ -128,12 +128,12 @@ public interface Integration {
 	/**
 	 * gets the integration configuration currently set (in use).
 	 *
-	 * @param  props Properties of service
-	 * @param  endpointType (from,to, response or error)
-	 * @return properties of service
+	 * @param  props Properties of connection
+	 * @param  stepType (from,to, response or error)
+	 * @return properties of connection
 	 * @throws Exception if connection can't be set
 	 */
-	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	/**
 	* sets the integration base directory. In this directory event are stored (like logs, alerts, events) 
@@ -508,7 +508,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String testFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception;
 
 	/**
 	* Configure and Starts a flow from a routes xml
@@ -653,7 +653,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, String endpointid, String mediaType) throws Exception;
+	public String getFlowStats(String flowId, String stepid, String mediaType) throws Exception;
 	
 	/**
 	* Gets a running route as XML/JSON by id
@@ -739,7 +739,7 @@ public interface Integration {
 	/**
 	 * Send a message with headers to an uri
 	 *
-	 * @param uri Endpoint uri
+	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 * @param numberOfTimes Number of times the message is sent
 	 */
@@ -748,7 +748,7 @@ public interface Integration {
 	/**
 	 * Send a message with headers to an uri
 	 *
-	 * @param uri Endpoint uri
+	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 * @param messageHeaders Treemap<String, Object> with one or more headers
 	 * @param numberOfTimes Number of times the message is sent
@@ -758,7 +758,7 @@ public interface Integration {
 	/**
 	 * Send a message with headers to an uri
 	 *
-	 * @param uri Endpoint uri
+	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 */
 	public String sendRequest(String uri,Object messageBody);
@@ -766,7 +766,7 @@ public interface Integration {
 	/**
 	 * Send a message with headers to an uri
 	 *
-	 * @param uri Endpoint uri
+	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 * @param messageHeaders Treemap<String, Object> with one or more headers
 	 */

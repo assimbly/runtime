@@ -52,7 +52,7 @@ git push
 
 ---
 
-## versions
+## checkversions
 
 Checks the Maven dependencies for the latest versions.
 
@@ -63,6 +63,20 @@ in the root directory of the project.
 
 To print a report:
 
-```versions```
+```checkversions```
 
+---
 
+## updateversion
+
+Update the version number of the Maven project and its submodules.
+
+### Usage:
+
+To print a report:
+
+```updateversion <versionnumber>```
+
+example
+
+```updateversion 1.1.0```

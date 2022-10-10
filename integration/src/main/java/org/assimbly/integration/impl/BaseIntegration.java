@@ -5,9 +5,9 @@ import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.integration.Integration;
-import org.assimbly.integration.configuration.JSONFileConfiguration;
-import org.assimbly.integration.configuration.XMLFileConfiguration;
-import org.assimbly.integration.configuration.YAMLFileConfiguration;
+import org.assimbly.dil.transpiler.JSONFileConfiguration;
+import org.assimbly.dil.transpiler.XMLFileConfiguration;
+import org.assimbly.dil.transpiler.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
@@ -177,17 +177,17 @@ public abstract class BaseIntegration implements Integration {
 	
 	
 	@SuppressWarnings("unused")
-	private List<TreeMap<String,String>> getServices() throws Exception {
+	private List<TreeMap<String,String>> getConnections() throws Exception {
 		return this.connections;
 	}
     	
 	@SuppressWarnings("unused")
-	private void addService(TreeMap<String,String> properties) throws Exception {
+	private void addConnection(TreeMap<String,String> properties) throws Exception {
 		this.connections.add(properties);
 	}
 	
 	@SuppressWarnings("unused")
-	private boolean removeService(String id) throws Exception {
+	private boolean removeConnection(String id) throws Exception {
 		TreeMap<String, String> con = null;
 		for (TreeMap<String, String> connection : connections){
 			if (connection.get("connection_id").equals(id)){
@@ -357,7 +357,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String resumeFlow(String id) throws Exception;
 
-	public abstract String testFlow(String id, String mediaType, String configuration) throws Exception;
+	public abstract String testFlow(String id, String mediaType, String configuration, boolean stopTest) throws Exception;
 
 	public abstract String routesFlow(String id, String mediaType, String configuration) throws Exception;
 
@@ -387,7 +387,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, String endpointid, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, String stepid, String mediaType) throws Exception;
 
 	//certificates
 
@@ -412,7 +412,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
 
-	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String endpointType) throws Exception;
+	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	public abstract String resolveDependency(String schema)  throws Exception;
 

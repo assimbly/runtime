@@ -5,70 +5,65 @@ import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.directvm.DirectVmComponent;
+import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.spi.Language;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.RouteController;
-import org.apache.camel.spi.RoutesLoader;
-import org.apache.camel.spi.Tracer;
-import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.integration.configuration.ssl.SSLConfiguration;
-import org.assimbly.integration.event.EventCollector;
-import org.assimbly.integration.routes.ConnectorRoute;
-import org.assimbly.integration.routes.ESBRoute;
-import org.assimbly.integration.routes.SimpleRoute;
-import org.assimbly.integration.service.Connection;
+import org.assimbly.dil.blocks.beans.CustomHttpBinding;
+import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
+import org.assimbly.dil.blocks.processors.SetBodyProcessor;
+import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.beans.CustomHttpBinding;
-import org.assimbly.integration.beans.UuidExtensionFunction;
+import org.assimbly.integration.loader.ConnectorRoute;
+import org.assimbly.dil.loader.FlowLoader;
+import org.assimbly.dil.blocks.connections.Connection;
+import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
+import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
+import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
+import org.joor.Reflect;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
 
-import org.w3c.dom.Element;
-import world.dovetail.aggregate.AggregateStrategy;
-import world.dovetail.cookies.CookieStore;
-import world.dovetail.enrich.EnrichStrategy;
-import world.dovetail.multipart.processor.MultipartProcessor;
-import world.dovetail.throttling.QueueMessageChecker;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
-import world.dovetail.xmltojson.CustomXmlJsonDataFormat;
-
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 
 
 public class CamelIntegration extends BaseIntegration {
@@ -78,14 +73,11 @@ public class CamelIntegration extends BaseIntegration {
 	private CamelContext context;
 
 	private boolean started = false;
-	private int stopTimeout = 30;
+	private final int stopTimeout = 30;
 	private ServiceStatus status;
 	private String flowStatus;
-	private String flowUptime;
 
-	private String flowStats;
-	private String integrationStats;
-	private MetricRegistry metricRegistry = new MetricRegistry();
+	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 
@@ -96,8 +88,11 @@ public class CamelIntegration extends BaseIntegration {
 	private Properties encryptionProperties;
 
 	private boolean watchDeployDirectoryInitialized = false;
+	private TreeMap<String, String> props;
 
-	
+	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
+
+
 	public CamelIntegration() {
 		try {
 			initIntegration(true);
@@ -132,8 +127,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void initIntegration(boolean useDefaultSettings) throws Exception {
 
-		//set basic settings
-		context = new DefaultCamelContext(registry);
+		context = setContext();
 
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
@@ -152,7 +146,17 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public CamelContext setContext(){
+		return new DefaultCamelContext(registry);
+	}
+
 	public void setDefaultSettings() throws Exception {
+
+		setRouteTemplates();
+
+		setDefaultBlocks();
+
+		setThreadProfile(0,5,5000);
 
 		setDebugging(false);
 
@@ -165,8 +169,6 @@ public class CamelIntegration extends BaseIntegration {
 		setMetrics(true);
 
 		setHistoryMetrics(true);
-		
-		setDovetail(true);
 
 	}
 	
@@ -211,35 +213,61 @@ public class CamelIntegration extends BaseIntegration {
 		context.setMessageHistoryFactory(factory);
 	}
 
-	public void setDovetail(boolean enable) throws Exception {
-		
-		if(enable){
-		
-			//Start Dovetail specific beans
-			registry.bind("customHttpBinding", new CustomHttpBinding());
-			registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
-			registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-			registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
-			registry.bind("flowCookieStore", new CookieStore());
-			registry.bind("multipartProcessor", new MultipartProcessor());
-			registry.bind("QueueMessageChecker", new QueueMessageChecker());
-			registry.bind("uuid-function", new UuidExtensionFunction());
-			//End Dovetail specific beans
+	public void setDefaultBlocks() throws Exception {
 
-			//Start Dovetail services
-			context.addService(new CustomXmlJsonDataFormat());
-			//End Dovetail services
+		registry.bind("customHttpBinding", new CustomHttpBinding());
+		registry.bind("uuid-function", new UuidExtensionFunction());
+		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
-			// Start Dovetail components
-			context.addComponent("aleris", new world.dovetail.aleris.AlerisComponent());
-			context.addComponent("amazon", new world.dovetail.amazon.AmazonComponent());
-			// End Dovetail components
+		context.addComponent("sync", new DirectVmComponent());
+		context.addComponent("async", new VmComponent());
 
-			//Start Dovetail thread pool profiles
-			ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
-			builder.poolSize(0).maxPoolSize(5).maxQueueSize(2000).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
-			context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
-			//End Dovetail thread pool profiles
+		context.addComponent("jetty-nossl", new JettyHttpComponent9());
+
+		registry.bind("SetBodyProcessor", new SetBodyProcessor());
+		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
+
+		//following beans are registered by name, because they are not always available (and are ignored if not available).
+		bindByName("CurrentAggregateStrategy","world.dovetail.aggregate.AggregateStrategy");
+		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
+		bindByName("Er7ToHl7Converter","world.dovetail.hl7.Er7Encoder");
+		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");
+		bindByName("flowCookieStore","world.dovetail.cookies.CookieStore");
+		bindByName("Hl7ToXmlConverter","world.dovetail.hl7.XmlMarshaller");
+		bindByName("multipartProcessor","world.dovetail.multipart.processor.MultipartProcessor");
+		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
+		bindByName("XmlToHl7Converter","world.dovetail.hl7.XmlEncoder");
+
+		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
+
+	}
+
+	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+
+		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
+		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
+
+	}
+
+
+	//loads templates in the template package
+	public void setRouteTemplates() throws Exception {
+
+		// create scanner and disable default filters (that is the 'false' argument)
+		final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+		provider.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")));
+
+		// get matching classes defined in the package
+		final Set<org.springframework.beans.factory.config.BeanDefinition> classes = provider.findCandidateComponents("org.assimbly.dil.blocks.templates");
+
+		// this is how you can load the class type from BeanDefinition instance
+		for (BeanDefinition bean: classes) {
+			Class<?> clazz = Class.forName(bean.getBeanClassName());
+			Object template = clazz.getDeclaredConstructor().newInstance();
+			if(template instanceof RouteBuilder){
+				context.addRoutes((RouteBuilder) template);
+			}
 
 		}
 
@@ -273,12 +301,13 @@ public class CamelIntegration extends BaseIntegration {
 		//Create the deploy directory if not exist
 		Files.createDirectories(path);
 
-		if(deployOnStart){
+		if(deployOnStart && deployOnEvent){
+			checkDeployDirectory(path);
+			watchDeployDirectory(path);
+		}else if (deployOnStart){
 			//Check & Start files found in the deploy directory
 			checkDeployDirectory(path);
-		}
-		
-		if(deployOnEvent){
+		}else if(deployOnEvent){
 			//Monitor files in the deploy directory after start
 			watchDeployDirectory(path);
 		}	
@@ -310,20 +339,34 @@ public class CamelIntegration extends BaseIntegration {
 				.addDirectories(path)
 				.setPreExistingAsCreated(false)
 				.build(new DirectoryWatcher.Listener() {
+					private long diff;
+					private long timeCreated;
+					private Path pathCreated;
+
 					public void onEvent(DirectoryWatcher.Event event, Path path) {
 						switch (event) {
 							case ENTRY_CREATE:
 								log.info("Deploy folder | File created: " + path);	
 								try {
+									pathCreated = path;
+									timeCreated = System.currentTimeMillis();
 									fileInstall(path);
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
 								break;
 							case ENTRY_MODIFY:
-								log.info("Deploy folder | File modified: " + path);	
+								log.info("Deploy folder | File modified: " + path);
+								Long timeModified = System.currentTimeMillis();
 								try {
-									fileInstall(path);
+									if (path.equals(pathCreated)){
+									diff = timeModified - timeCreated;
+									if(diff > 3000){
+										fileInstall(path);
+									}
+									}else{
+										fileInstall(path);
+									}
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
@@ -353,6 +396,9 @@ public class CamelIntegration extends BaseIntegration {
 		String mediaType = FilenameUtils.getExtension(pathAsString);
 		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
 
+		confFiles.put(fileName,configuration);
+
+
 		String flowId = setFlowId(fileName, configuration);
 
 		if(flowId!=null){
@@ -368,24 +414,37 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = null;
 
+		configuration= new String(configuration.getBytes("UTF-8"));
+
 		Document doc = DocConverter.convertStringToDoc(configuration);
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
 		String root = doc.getDocumentElement().getTagName();
 
-		if(root.equals("integrations")){
-			flowId = xPath.evaluate("//flows/flow[id=" + filename + "]/id",doc);
-			if(flowId==null){
+		if(root.equals("dil") || root.equals("integrations") || root.equals("flows")){
+			flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id",doc);
+			if(flowId==null || flowId.isEmpty()){
 				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
+			}
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flows/flow[1]/name",doc);
+			}
+		}else if(root.equals("flow")){
+			flowId = xPath.evaluate("//flow[id='" + filename + "']/id",doc);
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flow/id",doc);
+			}
+			if(flowId==null || flowId.isEmpty()){
+				flowId = xPath.evaluate("//flow/name",doc);
 			}
 		}else if(root.equals("camelContext")){
 			flowId = xPath.evaluate("/camelContext/@id",doc);
-			if(flowId.isEmpty() || flowId==null){
+			if(flowId==null || flowId.isEmpty()){
 				log.warn("Configuration: CamelContext element doesn't have an id attribute");
 			}
 		}else if(root.equals("routes")){
 			flowId = xPath.evaluate("/routes/@id",doc);
-			if(flowId.isEmpty() || flowId==null){
+			if(flowId==null || flowId.isEmpty()){
 				log.warn("Configuration: routes element doesn't have an id attribute");
 			}
 		}
@@ -395,14 +454,29 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void fileUninstall(Path path) throws Exception {
-		
+
+		String pathAsString = path.toString();
+		String fileName = FilenameUtils.getBaseName(pathAsString);
+		String configuration = confFiles.get(fileName);
+		confFiles.remove(fileName);
+
+		String flowId = setFlowId(fileName, configuration);
+
+		if(flowId!=null){
+			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
+			stopFlow(flowId);
+		}else{
+			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
+		}
+
+		/*
 		String pathAsString = path.toString();
 		String flowId = FilenameUtils.getBaseName(pathAsString);
 
 		log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);	
 
 		stopFlow(flowId);
-		
+		*/
 	}
 	
 	
@@ -411,21 +485,21 @@ public class CamelIntegration extends BaseIntegration {
 	public void start() throws Exception {
 
 		// start Camel context
-		context.start();
-		started = true;
-		log.info("Integration started");
+		if(!started){
 
-		setDeployDirectory(true, true);
+			context.start();
+			started = true;
 
-		//setRoutesDirectory(true);
-	
+			log.info("Integration started");
+
+		}
+
 	}
 
 	public void stop() throws Exception {
 		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				
 				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
 				context.removeRoute(route.getId());
 			}
@@ -448,11 +522,11 @@ public class CamelIntegration extends BaseIntegration {
 		//create connections & install dependencies if needed
 		for (String key : props.keySet()){
 
-			if (key.endsWith("service.id")){
+			if (key.endsWith("connection.id")){
 				props = setConnection(props, key);
 			}
 
-			if (key.equals("flow.components") && props.get(key) != null){
+			if (key.equals("flow.dependencies") && props.get(key) != null){
 				
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
@@ -475,18 +549,13 @@ public class CamelIntegration extends BaseIntegration {
 		//set up flow by type
 		String flowType  = props.get("flow.type");
 
-		if (flowType == null || flowType.isEmpty() || flowType.equals("default")){
-			//use connector flow as the default flow
+		if(flowType.equalsIgnoreCase("connector")){
 			addConnectorFlow(props);
-			flowType = "default";
-		}else if(flowType.equalsIgnoreCase("connector")){
-			addConnectorFlow(props);
-		}else if(flowType.equalsIgnoreCase("esb")){
-			addESBFlow(props);
-		}else if(flowType.equalsIgnoreCase("simple")){
-			addSimpleFlow(props);
 		}else if(flowType.equalsIgnoreCase("routes")){
 			addRoutesFlow(props);
+		}else{			
+			loadFlow(props);
+			flowType = "default";
 		}
 		
 		log.info("Loaded flow configuration | type=" + flowType);
@@ -498,17 +567,9 @@ public class CamelIntegration extends BaseIntegration {
 		flow.updateRoutesToCamelContext(context);
 	}
 
-	public void addESBFlow(final TreeMap<String, String> props) throws Exception {
-		//ESBRoute flow = new ESBRoute();
-		//flow.loadRoutes(context);
-
-		ESBRoute flow = new ESBRoute(props);
-		//flow.configure(context);
+	public void loadFlow(final TreeMap<String, String> props) throws Exception {
+		FlowLoader flow = new FlowLoader(props);
 		flow.updateRoutesToCamelContext(context);
-	}
-	
-	public void addSimpleFlow(final TreeMap<String, String> props) throws Exception {
-		context.addRoutes(new SimpleRoute(props));
 	}
 
 	public void addRoutesFlow(final TreeMap<String, String> props) throws Exception {
@@ -528,9 +589,9 @@ public class CamelIntegration extends BaseIntegration {
 	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
 
 	public void updateRoute(String route) throws Exception {
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);				
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-		Resource resource = IntegrationUtil.setResource(route);		
+		Resource resource = IntegrationUtil.setResource(route);
 		loader.updateRoutes(resource);
 	}
 	
@@ -646,7 +707,10 @@ public class CamelIntegration extends BaseIntegration {
 		return status;
 	}
 	
-	public String testFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception {
+		if(stopTest){
+			return stopFlow(flowId);
+		}
 		return configureAndStartFlow(flowId, mediaType, configuration);
 	}
 
@@ -685,7 +749,7 @@ public class CamelIntegration extends BaseIntegration {
 		props.put("flow.type","esb");
 		props.put("route.1.route", configuration);
 		
-		addESBFlow(props);
+		loadFlow(props);
 		
 		String status = startFlow(flowId);
 	
@@ -698,33 +762,49 @@ public class CamelIntegration extends BaseIntegration {
 
 		log.info("Starting flow | id=" + id);
 
-		boolean flowAdded = false;
+		boolean addFlow = false;
+		boolean addedFlow = false;
 		
 		try {
 
 			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 			for(int i = 0; i < allProps.size(); i++){
-				TreeMap<String, String> props = allProps.get(i);
+				props = allProps.get(i);
 
 				String configureId = props.get("id");
 
-				if (configureId.equals(id)) {					
-					log.info("Load flow configuration | id=" + id);
-					addFlow(props);
-					flowAdded = true;
+				if (configureId.equals(id)) {
+					addFlow = true;
 				}
-			
+
 			}
-			
-			if(flowAdded){
+
+			if(addFlow)	{
+				log.info("Load flow configuration | id=" + id);
+				addFlow(props);
+				addedFlow = true;
+			}else{
+				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
+				log.error(errorMessage);
+				return errorMessage;
+			}
+
+			if(addedFlow){
 
 				List<Route> routeList = getRoutesByFlowId(id);
 
+				log.info("Starting " + routeList.size() + " routes");
+
+				List<Route> temp = context.getRoutes();
+
 				for(Route route : routeList){
 					String routeId = route.getId();
+
 					status = routeController.getRouteStatus(routeId);
+
+					log.info("Starting route | routeid=" + routeId);
+
 					if(!status.isStarted()) {
-						log.info("Starting route | routeid=" + routeId);
 						routeController.startRoute(routeId);
 
 						int count = 1;
@@ -736,13 +816,20 @@ public class CamelIntegration extends BaseIntegration {
 
 						} while (status.isStarting() || count < 3000);
 
+						log.info("Started route | routeid=" + routeId);
+
 					} else {
 						log.info("Started route | routeid=" + routeId);
 					}
 				}
 
-				log.info("Started flow | id=" + id);
-				return status.toString().toLowerCase();
+				if(status!=null){
+					log.info("Started flow | id=" + id);
+					return status.toString().toLowerCase();
+				}else{
+					log.info("Failed starting flow | id=" + id);
+					return "error: can't get status";
+				}
 				
 			}else {
 				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
@@ -958,7 +1045,8 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String getFlowUptime(String id) {
-	
+
+		String flowUptime;
 		if(hasFlow(id)) {
 			Route route = getRoutesByFlowId(id).get(0);
 			flowUptime = route.getUptime();
@@ -1175,14 +1263,15 @@ public class CamelIntegration extends BaseIntegration {
 	}
 	
 	
-	public String getFlowStats(String id, String endpointid, String mediaType) throws Exception {
+	public String getFlowStats(String id, String stepid, String mediaType) throws Exception {
 
-		String routeid = id + "-" + endpointid;
+		String routeid = id + "-" + stepid;
 
 		ManagedRouteMBean route = managed.getManagedRoute(routeid);
 
 		flowStatus = getFlowStatus(routeid);
-		
+
+		String flowStats;
 		if(route!=null && flowStatus.equals("started")) {
 			flowStats = route.dumpStatsAsXml(true);
 			if(mediaType.contains("json")) {
@@ -1196,7 +1285,8 @@ public class CamelIntegration extends BaseIntegration {
 	}	
 
 	public String getStats(String statsType, String mediaType) throws Exception {
-		
+
+		String integrationStats;
 		if(statsType.equals("history")) {
 
 			MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
@@ -1619,5 +1709,32 @@ public class CamelIntegration extends BaseIntegration {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
-    
+
+
+	public void bindByName(String beanId, String className){
+
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(className);
+			Object bean =  clazz.getDeclaredConstructor().newInstance();
+			registry.bind(beanId, bean);
+		} catch (Exception e) {
+			//Ignore if class not found
+		}
+
+	}
+
+	public void addServiceByName(String className){
+
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(className);
+			Object bean =  clazz.getDeclaredConstructor().newInstance();
+			context.addService(bean);
+		} catch (Exception e) {
+			//Ignore if class not found
+		}
+
+	}
+
 }

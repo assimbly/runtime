@@ -184,7 +184,9 @@ public class FlowConfigurerResource {
             integration = integrationResource.getIntegration();
             String documentation = integration.getComponentSchema(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
-				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",documentation);
+				//return empty default if unknown
+				documentation = "{\"component\": {\"kind\": \"block\"},\"properties\": {    \"\": { \"kind\": \"\", \"displayName\": \"\", \"group\": \"\", \"label\": \"\", \"required\": false, \"type\": \"string\", \"javaType\": \"\", \"deprecated\": false, \"deprecationNote\": \"\", \"autowired\": false, \"secret\": false, \"description\": \"\" }}}";
+				return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",documentation,plainResponse);
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",documentation,plainResponse);
 		} catch (Exception e) {
