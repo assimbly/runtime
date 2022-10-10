@@ -230,10 +230,13 @@ public class CamelIntegration extends BaseIntegration {
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		bindByName("CurrentAggregateStrategy","world.dovetail.aggregate.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
+		bindByName("Er7ToHl7Converter","world.dovetail.hl7.Er7Encoder");
 		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");
 		bindByName("flowCookieStore","world.dovetail.cookies.CookieStore");
+		bindByName("Hl7ToXmlConverter","world.dovetail.hl7.XmlMarshaller");
 		bindByName("multipartProcessor","world.dovetail.multipart.processor.MultipartProcessor");
 		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
+		bindByName("XmlToHl7Converter","world.dovetail.hl7.XmlEncoder");
 
 		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
 
