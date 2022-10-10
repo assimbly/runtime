@@ -59,17 +59,27 @@ public class ActiveMQClassic implements Broker {
         try{
             broker = new BrokerService();
 
-            String brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
+            String brokerPath = brokerFile.getCanonicalPath();
+
+            String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
+            System.out.println("1 brokerUrl:"  + brokerUrl);
+            //brokerUrl = "xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8");
+            //System.out.println("2 brokerUrl:"  + brokerUrl);
+
+
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
-                URI urlConfig = new URI(brokerUrl);
-                broker = BrokerFactory.createBroker(urlConfig);
+                System.out.println("3 brokerUrl:"  + brokerUrl);
+                URI configurationUri = new URI(brokerUrl);
+                System.out.println("4 brokerUrl:"  + brokerUrl);
+                broker = BrokerFactory.createBroker(configurationUri);
+                System.out.println("5. brokerUrl:"  + brokerUrl);
             }else {
                 this.setFileConfiguration("");
                 log.warn("No config file 'activemq.xml' found.");
                 log.info("Created default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());
-                log.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+                log.info("broker.xml documentation reference: https://activemq.apache.org/xml-configuration");
                 log.info("");
                 log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
@@ -80,13 +90,20 @@ public class ActiveMQClassic implements Broker {
 
             }
 
+            System.out.println("5 start");
             if(!broker.isStarted()) {
+                System.out.println("6 start");
                 broker.start();
+                System.out.println("7 start");
             }
+            System.out.println("8 start");
 
             if(broker.isStarted()) {
+                System.out.println("9 start");
                 setBrokerViewMBean();
             }
+
+            System.out.println("10 start");
 
             return status();
         }catch (Exception e) {
@@ -101,7 +118,7 @@ public class ActiveMQClassic implements Broker {
 
         broker = new BrokerService();
 
-        log.warn("Start broker in local mode on url: tcp://127.0.0.1:61616");
+        log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
 
         TransportConnector connector = new TransportConnector();
         connector.setUri(new URI("tcp://127.0.0.1:61616"));
