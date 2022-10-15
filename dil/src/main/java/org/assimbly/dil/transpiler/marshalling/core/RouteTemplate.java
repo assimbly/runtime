@@ -175,9 +175,9 @@ public class RouteTemplate {
             templateId = "link-" + type;
         }else if(uri.startsWith("block")){
             String componentName = uri.split(":")[1];
+            componentName = componentName.toLowerCase();
             predefinedStep = DependencyUtil.PredefinedBlocks.hasBlock(componentName);
             templateId = componentName + "-" + type;
-
         }else{
             templateId = "generic-" + type;
         }
@@ -265,8 +265,9 @@ public class RouteTemplate {
 
         if(baseUri.contains(":")){
             scheme = baseUri.split(":",2)[0];
+            scheme = scheme.toLowerCase();
         }else{
-            scheme = baseUri;
+            scheme = baseUri.toLowerCase();
         }
 
         if(baseUri.contains(":")){
@@ -296,7 +297,11 @@ public class RouteTemplate {
         createDefaultLinks(stepXPath, type, flowId);
 
         if(links.length > 0){
-            createCustomLinks(links, stepXPath);
+            createCustomLinks(links, stepXPath, type);
+        }
+
+        if(type.equals("router")){
+            createLinkList(links, stepXPath, type);
         }
 
     }
@@ -336,7 +341,7 @@ public class RouteTemplate {
         }
     }
 
-    private void createCustomLinks(String[] links, String stepXPath){
+    private void createCustomLinks(String[] links, String stepXPath, String type){
 
         int index = 1;
 
@@ -349,6 +354,8 @@ public class RouteTemplate {
             String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
             String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
             options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
 
             if(linktransport!=null){
@@ -361,15 +368,32 @@ public class RouteTemplate {
                 value = transport + ":" + id + "?" + options;
             }
 
-            NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
+            if(expression!=null){
+                Element parameter = createParameter(templateDoc,"expression",expression);
+                templatedRoute.appendChild(parameter);
+            }
 
-            for(Node oldParameter: iterable(oldParameters)){
+            if(type.equals("router")){
 
-                Node name = oldParameter.getAttributes().getNamedItem("name");
-                if(name.getNodeValue().equals(bound)){
+                if(rule != null){
+                    parameter = createParameter(templateDoc,bound + "_rule", value);
+                    templatedRoute.appendChild(parameter);
+                }else{
                     parameter = createParameter(templateDoc,bound, value);
+                    templatedRoute.appendChild(parameter);
+                }
+            }else{
+                NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
-                    templatedRoute.replaceChild(parameter,oldParameter);
+                for(Node oldParameter: iterable(oldParameters)){
+
+                    Node name = oldParameter.getAttributes().getNamedItem("name");
+                    if(name.getNodeValue().equals(bound)){
+                        parameter = createParameter(templateDoc,bound, value);
+
+                        templatedRoute.replaceChild(parameter,oldParameter);
+
+                    }
 
                 }
 
@@ -380,6 +404,83 @@ public class RouteTemplate {
         }
 
     }
+
+    private void createLinkList(String[] links, String stepXPath, String type){
+
+        int index = 1;
+
+        String outList = null;
+        String outRulesList = null;
+
+        for(String link : links) {
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            String value = "";
+
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+            options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
+
+            if(linktransport!=null){
+                transport = linktransport;
+            }else{
+                transport = "sync";
+            }
+
+            if (options == null || options.isEmpty()) {
+                value = transport + ":" + id;
+            } else {
+                value = transport + ":" + id + "?" + options;
+            }
+
+            if(rule!=null && expression != null){
+                String newRule = rule + ";" + expression + ";" + value;
+                if(outRulesList==null){
+                    outRulesList = newRule;
+                }else{
+                    outRulesList = outRulesList + "," + newRule;
+                }
+
+                //adjust the templateid to call the correct template
+                if(templateId.startsWith("split")){
+                    templateId = "split-" + rule + "-router";
+                    templatedRoute.removeAttribute("routeTemplateRef");
+                    templatedRoute.setAttribute("routeTemplateRef", templateId);
+                }else if(templateId.startsWith("filter")){
+                    templateId = "filter-" + rule + "-router";
+                    templatedRoute.removeAttribute("routeTemplateRef");
+                    templatedRoute.setAttribute("routeTemplateRef", templateId);
+                }
+
+            }else{
+                if(outRulesList==null){
+                    outList = value;
+                }else{
+                    outList = outList + "," + value;
+                }
+            }
+
+            index++;
+
+        }
+
+        if(outList!=null){
+            Element parameter = createParameter(templateDoc,"out_list",outList);
+            templatedRoute.appendChild(parameter);
+        }
+
+        if(outRulesList!=null){
+            Element parameter = createParameter(templateDoc,"out_rules_list",outRulesList);
+            templatedRoute.appendChild(parameter);
+        }
+
+    }
+
+
 
     private void defineRouteTemplate(String templateId, String type, String stepId) throws Exception {
 

@@ -85,9 +85,22 @@
 		</xs:choice>
 	</xs:complexType>
 	<xs:complexType name="linkType">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element type="xs:string" name="id" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="name" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="bound" minOccurs="1" maxOccurs="1"/>
+			<xs:element type="xs:string" name="transport" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="rule" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="expression" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="point" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="format" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="xs:string" name="pattern" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
+		</xs:choice>
+		<!--
 		<xs:sequence maxOccurs="unbounded">
 			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
-		</xs:sequence>
+		</xs:sequence>-->
 	</xs:complexType>
 	<xs:complexType name="coordinatesType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">

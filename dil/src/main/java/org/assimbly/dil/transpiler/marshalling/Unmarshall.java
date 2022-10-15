@@ -288,7 +288,7 @@ public class Unmarshall {
 		String routeId = conf.getString(blocksXPath + "options/route_id");
 
 		if(routeId != null)
-			properties =  new Route(properties, conf).setRoute(type, stepId, routeId);
+			properties =  new Route(properties, conf).setRoute(type, flowId, stepId, routeId);
 	}
 
 	private void setRouteConfiguration() throws Exception {

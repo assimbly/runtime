@@ -26,6 +26,7 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.SetBodyProcessor;
@@ -142,7 +143,6 @@ public class CamelIntegration extends BaseIntegration {
 		//set management tasks
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
-		
 
 	}
 
@@ -227,8 +227,10 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 
+		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		bindByName("CurrentAggregateStrategy","world.dovetail.aggregate.AggregateStrategy");
+		//bindByName("","world.dovetail.aggregate.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
 		bindByName("Er7ToHl7Converter","world.dovetail.hl7.Er7Encoder");
 		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");

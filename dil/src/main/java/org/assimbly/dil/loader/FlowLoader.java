@@ -6,6 +6,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.camel.*;
+import org.apache.camel.api.management.ManagedCamelContext;
+import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.builder.*;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.Resource;
@@ -28,9 +30,6 @@ public class FlowLoader extends RouteBuilder {
 
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
-
-
-
 	String flowId;
 	String flowName;
 
@@ -93,9 +92,8 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
-					loadRoute(routeConfiguration, "routeconfiguration", id);
+					loadRouteConfiguration(routeConfiguration, "routeconfiguration", id);
 				}
-
 			}
 		}
 	}
@@ -173,12 +171,51 @@ public class FlowLoader extends RouteBuilder {
 			loader.updateRoutes(resource);
 			log.info("Updated flow=" + flowName + " | type=" + type);
 		}else{
-			log.info("Loading flow=" + flowName + " | " + type +  " :\n\n" + route);
-			loader.loadRoutes(resource);
+			try {
+				log.info("Loading flow=" + flowName + " | " + type +  " :\n\n" + route);
+				loader.loadRoutes(resource);
+				log.info("Loaded flow=" + flowName + " | type=" + type);
+			}catch (Exception e){
+				loader.updateRoutes(resource);
+				log.info("Loaded flow=" + flowName + " | type=" + type);
+			}
 			log.info("Loaded flow=" + flowName + " | type=" + type);
 		}
 
 	}
+
+
+
+	private void loadRouteConfiguration(String route, String type, String id) throws Exception {
+
+		loader = extendedCamelContext.getRoutesLoader();
+
+		Resource resource = IntegrationUtil.setResource(route);
+
+		try {
+			log.info("Loading flow=" + flowName + " | " + type +  " :\n\n" + route);
+			loader.loadRoutes(resource);
+			log.info("Loaded flow=" + flowName + " | type=" + type);
+		}catch (Exception e){
+			loader.updateRoutes(resource);
+			log.info("Loaded flow=" + flowName + " | type=" + type);
+		}
+
+	}
+
+
+	private void removeRoute(String id) throws Exception {
+
+		ManagedCamelContext managed = context.getExtension(ManagedCamelContext.class);
+
+		ManagedRouteMBean route = managed.getManagedRoute(id);
+
+		if(route!=null){
+			route.remove();
+		}
+
+	}
+
 
 	private void setErrorHandler(String errorUri) throws Exception {
 
@@ -198,8 +235,12 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 	private boolean isLoaded(String id){
-		List<Route> routes = context.getRoutes().stream().filter(r -> r.getId().equals(id)).collect(Collectors.toList());
-		if(routes.size()>0){
+
+		List<Route> routes = context.getRoutes(); 
+		
+		Route route = context.getRoute(id);
+
+		if(route != null && route.getUptimeMillis()>0){
 			return true;
 		}
 

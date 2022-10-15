@@ -31,6 +31,14 @@ public class Link extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}");
 
+         routeTemplate("link-router")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("in")
+                 .templateParameter("out_list")
+                 .from("{{in}}")
+                 .routeConfigurationId("{{routeconfiguration_id}}")
+                 .to("{{out_list}}");
+
      }
 
 }
