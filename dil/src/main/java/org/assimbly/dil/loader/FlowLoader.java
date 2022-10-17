@@ -151,11 +151,16 @@ public class FlowLoader extends RouteBuilder {
 
 		log.info("Updating " + type +": \n\n" + route + "\n\n flow=" + flowName);
 
-		Set<String> updatedRoutes = loader.updateRoutes(resource);
+		try {
+			Set<String> updatedRoutes = loader.updateRoutes(resource);
 
-		for(String updateRoute : updatedRoutes ){
-			log.info("Updated " + type + " | flow=" + flowName + " routeid=" + updateRoute);
+			for(String updateRoute : updatedRoutes ){
+				log.info("Updated " + type + " | flow=" + flowName + " routeid=" + updateRoute);
+			}
+		}catch (Exception e2){
+			log.info("Failed updating flow=" + flowName + " | type=" + type + "\n\n" + e2);
 		}
+
 
 	}
 
@@ -176,8 +181,14 @@ public class FlowLoader extends RouteBuilder {
 				loader.loadRoutes(resource);
 				log.info("Loaded flow=" + flowName + " | type=" + type);
 			}catch (Exception e){
-				loader.updateRoutes(resource);
-				log.info("Loaded flow=" + flowName + " | type=" + type);
+				try {
+					log.error("Loading failed: " + e);
+					log.info("Updating flow=" + flowName + " | type=" + type);
+					loader.updateRoutes(resource);
+					log.info("Loaded flow=" + flowName + " | type=" + type);
+				}catch (Exception e2){
+					log.info("Failed updating flow=" + flowName + " | type=" + type + "\n\n" + e);
+				}
 			}
 			log.info("Loaded flow=" + flowName + " | type=" + type);
 		}
