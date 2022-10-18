@@ -1,32 +1,29 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 
-public class Velocity extends RouteBuilder {
+public class JsonToXml extends RouteBuilder {
 
      @Override
      public void configure() throws Exception {
 
-         routeTemplate("velocity-action")
+         routeTemplate("jsontoxml-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("path")
+                 .templateOptionalParameter("options")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .setHeader("CamelVelocityTemplate").simple("{{path}}")
-                     .to("velocity:generate")
+                     .to("dataformat:custom-xmljson:unmarshal?{{options}}")
                      .to("{{out}}");
 
-         routeTemplate("velocity-sink")
+         routeTemplate("jsontoxml-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("path")
+                 .templateOptionalParameter("options")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .setHeader("CamelVelocityTemplate").simple("{{path}}")
-                     .to("velocity:generate?allowTemplateFromHeader=true");
+                     .to("dataformat:custom-xmljson:unmarshal?{{options}}");
 
     }
 

@@ -57,6 +57,7 @@ public final class Transform {
         map.put("csv2xml","csvtoxml");
         map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
+        map.put("<enrich strategyRef","<enrich aggregationStrategy");
         map.put("quartz2:","quartz:");
         map.put("http4:","http:");
         map.put("https4:","https:");		

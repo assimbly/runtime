@@ -247,7 +247,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private boolean isLoaded(String id){
 
-		List<Route> routes = context.getRoutes(); 
+		//List<Route> routes = context.getRoutes();
 		
 		Route route = context.getRoute(id);
 

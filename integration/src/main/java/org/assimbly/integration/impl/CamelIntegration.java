@@ -31,6 +31,7 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.SetBodyProcessor;
 import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
+import org.assimbly.dil.blocks.processors.SetPatternProcessor;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -226,6 +227,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
+		registry.bind("SetPatternProcessor", new SetPatternProcessor());
 
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 
@@ -360,12 +362,18 @@ public class CamelIntegration extends BaseIntegration {
 							case ENTRY_MODIFY:
 								log.info("Deploy folder | File modified: " + path);
 								Long timeModified = System.currentTimeMillis();
-								try {
-									if (path.equals(pathCreated)){
-									diff = timeModified - timeCreated;
-									if(diff > 3000){
-										fileInstall(path);
-									}
+								String pathAsString = path.toString();
+								String fileName = FilenameUtils.getBaseName(pathAsString);
+
+
+									try {
+									if (path.equals(pathCreated) && confFiles.get(fileName)!= null){
+										diff = timeModified - timeCreated;
+										if(diff > 3000){
+											fileReinstall(path);
+										}
+									}else if (confFiles.get(fileName)!= null){
+											fileReinstall(path);
 									}else{
 										fileInstall(path);
 									}
@@ -411,6 +419,28 @@ public class CamelIntegration extends BaseIntegration {
 		}
 		
 	}
+
+	public void fileReinstall(Path path) throws Exception {
+
+		String pathAsString = path.toString();
+		String fileName = FilenameUtils.getBaseName(pathAsString);
+		String mediaType = FilenameUtils.getExtension(pathAsString);
+		String configuration = FileUtils.readFileToString(new File(pathAsString), "UTF-8");
+
+		confFiles.put(fileName,configuration);
+
+
+		String flowId = setFlowId(fileName, configuration);
+
+		if(flowId!=null){
+			log.info("File reinstall flowid=" + flowId + " | path=" + pathAsString);
+			configureAndRestartFlow(flowId, mediaType, configuration);
+		}else{
+			log.error("File reinstall for " + pathAsString + " failed. Invalid configuration file.");
+		}
+
+	}
+
 
 	public String setFlowId(String filename, String configuration) throws Exception {
 
@@ -708,7 +738,13 @@ public class CamelIntegration extends BaseIntegration {
 		String status = startFlow(flowId);
 		return status;
 	}
-	
+
+	public String configureAndRestartFlow(String flowId, String mediaType, String configuration) throws Exception {
+		super.setFlowConfiguration(flowId, mediaType, configuration);
+		String status = restartFlow(flowId);
+		return status;
+	}
+
 	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception {
 		if(stopTest){
 			return stopFlow(flowId);

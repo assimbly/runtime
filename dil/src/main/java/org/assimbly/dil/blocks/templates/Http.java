@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 
 public class Http extends RouteBuilder {
@@ -24,7 +25,6 @@ public class Http extends RouteBuilder {
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .removeHeaders("CamelHttp*")
                      .to("{{out}}");
-
      }
 
 }

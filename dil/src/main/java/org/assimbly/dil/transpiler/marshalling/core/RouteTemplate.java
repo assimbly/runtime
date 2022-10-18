@@ -356,11 +356,37 @@ public class RouteTemplate {
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
             String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
 
             if(linktransport!=null){
                 transport = linktransport;
             }
+
+            if(bound!= null && linktransport!=null && pattern!=null) {
+                //if (bound.equalsIgnoreCase("in")){
+                    if (pattern.equalsIgnoreCase("inout") || pattern.equalsIgnoreCase("requestreply")) {
+                        if (options == null) {
+                            options = "exchangePattern=InOut";
+                        } else {
+                            options = options + "&exchangePattern=InOut";
+                        }
+                    } else if (pattern.equalsIgnoreCase("inoptionalout")) {
+                        if (options == null) {
+                            options = "exchangePattern=InOptionalOut";
+                        } else {
+                            options = options + "&exchangePattern=InOptionalOut";
+                        }
+                    } else if (pattern.equalsIgnoreCase("inonly") || pattern.equalsIgnoreCase("oneway") || pattern.equalsIgnoreCase("event") || pattern.equalsIgnoreCase("fireandforget")) {
+                        if (options == null) {
+                            options = "exchangePattern=InOnly";
+                        } else {
+                            options = options + "&exchangePattern=InOnly";
+                        }
+                    }
+                //}
+            }
+
 
             if (options == null || options.isEmpty()) {
                 value = transport + ":" + id;
@@ -372,6 +398,7 @@ public class RouteTemplate {
                 Element parameter = createParameter(templateDoc,"expression",expression);
                 templatedRoute.appendChild(parameter);
             }
+
 
             if(type.equals("router")){
 

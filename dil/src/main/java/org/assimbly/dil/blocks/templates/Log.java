@@ -17,12 +17,14 @@ public class Log extends RouteBuilder {
                  .templateParameter("showHeaders","true")
                  .templateParameter("showBody","true")
                  .templateParameter("showBodyType","true")
+                 .templateParameter("showProperties","false")
                  .templateParameter("showFiles","true")
                  .templateParameter("showException","true")
                  .templateParameter("showStackTrace","true")
+                 .templateParameter("style","Tab")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("log:{{loggerName}}?skipBodyLineSeparator={{skipBodyLineSeparator}}&multiline={{multiline}}&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBodyType}}&showFiles={{showFiles}}&showException={{showException}}&showStackTrace={{showStackTrace}}")
+                     .to("log:{{loggerName}}?skipBodyLineSeparator={{skipBodyLineSeparator}}&multiline={{multiline}}&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBodyType}}&showProperties={{showProperties}}&showFiles={{showFiles}}&showException={{showException}}&showStackTrace={{showStackTrace}}&style={{style}}")
                      .to("{{out}}");
 
          routeTemplate("log-sink")
@@ -35,12 +37,14 @@ public class Log extends RouteBuilder {
                  .templateParameter("showHeaders","true")
                  .templateParameter("showBody","true")
                  .templateParameter("showBodyType","true")
+                 .templateParameter("showProperties","false")
                  .templateParameter("showFiles","true")
                  .templateParameter("showException","true")
                  .templateParameter("showStackTrace","true")
+                 .templateParameter("style","Tab")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("log:{{loggerName}}?skipBodyLineSeparator={{skipBodyLineSeparator}}&multiline={{multiline}}&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBodyType}}&showFiles={{showFiles}}&showException={{showException}}&showStackTrace={{showStackTrace}}");
+                     .to("log:{{loggerName}}?skipBodyLineSeparator={{skipBodyLineSeparator}}&multiline={{multiline}}&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBodyType}}&showProperties={{showProperties}}&showFiles={{showFiles}}&showException={{showException}}&showStackTrace={{showStackTrace}}&style={{style}}");
 
     }
 

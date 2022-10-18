@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 
 public class Link extends RouteBuilder {
@@ -11,15 +12,17 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("out")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{out}}");
+                        .to("{{out}}");
 
          routeTemplate("link-action")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("in")
                  .templateParameter("out")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
                     .to("{{out}}");
@@ -28,6 +31,7 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("in")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}");
 
@@ -35,6 +39,7 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
                  .templateParameter("out_list")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                  .routeConfigurationId("{{routeconfiguration_id}}")
                  .to("{{out_list}}");
