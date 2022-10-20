@@ -30,7 +30,6 @@ public class Log extends RouteBuilder {
          routeTemplate("log-sink")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
-                 .templateParameter("out")
                  .templateParameter("loggerName","org.assimbly.runtime")
                  .templateParameter("skipBodyLineSeparator","false")
                  .templateParameter("multiline","true")
