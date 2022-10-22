@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
+import org.assimbly.dil.blocks.processors.RoutingRulesProcessor;
 import org.assimbly.dil.blocks.processors.SetBodyProcessor;
 import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.dil.blocks.processors.SetPatternProcessor;
@@ -228,6 +229,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
+		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
 
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 

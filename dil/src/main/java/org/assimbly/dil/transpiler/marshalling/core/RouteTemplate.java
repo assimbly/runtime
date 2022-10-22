@@ -465,11 +465,11 @@ public class RouteTemplate {
             }
 
             if(rule!=null && expression != null){
-                String newRule = rule + ";" + expression + ";" + value;
+                String newRule = rule + "#;#" + expression + "#;#" + value;
                 if(outRulesList==null){
                     outRulesList = newRule;
                 }else{
-                    outRulesList = outRulesList + "," + newRule;
+                    outRulesList = outRulesList + "#|#" + newRule;
                 }
 
                 //adjust the templateid to call the correct template

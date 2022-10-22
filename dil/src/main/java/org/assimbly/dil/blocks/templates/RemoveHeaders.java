@@ -21,7 +21,7 @@ public class RemoveHeaders extends RouteBuilder {
          routeTemplate("removeheaders-sink")
                  .templateParameter("routeconfiguration_id", "0")
                  .templateParameter("path")
-                 .templateParameter("excludePatterns")
+                 .templateParameter("excludePatterns","")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")

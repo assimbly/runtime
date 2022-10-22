@@ -276,6 +276,7 @@ public class ActiveMQClassic implements Broker {
     }
 
     public String clearQueues() throws Exception {
+
         ObjectName[] queues = brokerViewMBean.getQueues();
 
         for(Object queue: queues){
