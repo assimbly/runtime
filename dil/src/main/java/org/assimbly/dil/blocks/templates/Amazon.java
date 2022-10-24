@@ -9,34 +9,33 @@ public class Amazon extends RouteBuilder {
 
          routeTemplate("amazon-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("accessKey")
-                 .templateOptionalParameter("secretKey")
-                 .templateOptionalParameter("authToken")
-                 .templateOptionalParameter("sellerId")
-                 .templateOptionalParameter("marketplace")
-                 .templateOptionalParameter("parameters")
-                 .templateOptionalParameter("settings")
+                 .templateParameter("accessKey")
+                 .templateParameter("secretKey")
+                 .templateParameter("authToken")
+                 .templateParameter("sellerId")
+                 .templateParameter("marketplace")
+                 .templateParameter("parameters")
+                 .templateParameter("settings")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
-                 .routeConfigurationId("{{routeconfiguration_id}}")
-                 .to("amazon://SUBMIT_FEED?{{options}}")
-                 .to("{{out}}");
+                    .routeConfigurationId("{{routeconfiguration_id}}")
+                    .to("amazon://SUBMIT_FEED?accessKey=RAW({{accessKey}})&amp;secretKey=RAW({{secretKey}})&amp;authToken=RAW({{authToken}})&amp;sellerId=RAW({{sellerId}})&amp;marketplace=RAW({{marketplace}})&amp;parameters=RAW({{parameters}})&amp;settings=RAW({{settings}})")
+                    .to("{{out}}");
 
          routeTemplate("amazon-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("accessKey")
-                 .templateOptionalParameter("secretKey")
-                 .templateOptionalParameter("authToken")
-                 .templateOptionalParameter("sellerId")
-                 .templateOptionalParameter("marketplace")
-                 .templateOptionalParameter("parameters")
-                 .templateOptionalParameter("settings")
+                 .templateParameter("accessKey")
+                 .templateParameter("secretKey")
+                 .templateParameter("authToken")
+                 .templateParameter("sellerId")
+                 .templateParameter("marketplace")
+                 .templateParameter("parameters")
+                 .templateParameter("settings")
                  .templateParameter("in")
                  .from("{{in}}")
-                 .routeConfigurationId("{{routeconfiguration_id}}")
-                 .to("amazon://SUBMIT_FEED?{{options}}");
-
+                    .routeConfigurationId("{{routeconfiguration_id}}")
+                    .to("amazon://SUBMIT_FEED?accessKey=RAW({{accessKey}})&amp;secretKey=RAW({{secretKey}})&amp;authToken=RAW({{authToken}})&amp;sellerId=RAW({{sellerId}})&amp;marketplace=RAW({{marketplace}})&amp;parameters=RAW({{parameters}})&amp;settings=RAW({{settings}})");
     }
 
 }
