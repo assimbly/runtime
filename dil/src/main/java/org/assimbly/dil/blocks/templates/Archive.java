@@ -9,7 +9,7 @@ public class Archive extends RouteBuilder {
 
          routeTemplate("archive-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("usingIterator", "true")
+                 .templateParameter("usingIterator", "true")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
@@ -19,7 +19,7 @@ public class Archive extends RouteBuilder {
 
          routeTemplate("archive-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("usingIterator", "true")
+                 .templateParameter("usingIterator", "true")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
