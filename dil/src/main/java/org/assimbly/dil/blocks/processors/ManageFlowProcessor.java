@@ -2,45 +2,69 @@ package org.assimbly.dil.blocks.processors;
 
 import org.apache.camel.*;
 import org.apache.camel.spi.RouteController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-//set headers for each step
 public class ManageFlowProcessor implements Processor {
 
-	public void process(Exchange exchange) throws Exception {
+	protected Logger log = LoggerFactory.getLogger(getClass());
 
-		CamelContext context = exchange.getContext();
+	public void process(Exchange exchange) throws Exception {
 
 		String flowId = exchange.getProperty("flowId",String.class);
 		String action = exchange.getProperty("action",String.class);
 
-		  if(flowId != null && action != null){
+		if(flowId != null && action != null){
 
-			  RouteController routeController = context.getRouteController();
-			  List<Route> routes = getRoutesByFlowId(flowId,context);
+			log.info("ManageFlow start: Action=" + action +  " Flow=" + flowId);
 
-			  for(Route route: routes){
+			CamelContext context = exchange.getContext();
+			RouteController routeController = context.getRouteController();
+			List<Route> routes = getRoutesByFlowId(flowId,context);
 
-				  String routeId = route.getId();
+			for(Route route: routes){
+			  manageFlow(routeController, route, action);
+			}
 
-				  if(action.equalsIgnoreCase("startflow")){
-					  routeController.startRoute(routeId);
-				  }else if(action.equalsIgnoreCase("stopflow")){
-					  routeController.stopRoute(routeId,30, TimeUnit.SECONDS);
-				  }else if(action.equalsIgnoreCase("suspendflow") || action.equalsIgnoreCase("pauseflow")){
-					  routeController.suspendRoute(routeId,30, TimeUnit.SECONDS);
-				  }else if(action.equalsIgnoreCase("resumeflow") || action.equalsIgnoreCase("resumeflow")){
-					  routeController.resumeRoute(routeId);
-				  }
+			exchange.removeProperty("flowId");
+			exchange.removeProperty("action");
 
-			  }
+			log.info("ManageFlow finished: Action=" + action +  " Flow=" + flowId);
 
-		  }
+		}else{
+			if(flowId==null){
+				log.warn("ManageFlow: Can't perform action. FlowId is not provided.");
+			}
 
-		  exchange.removeProperty("pattern");
+			if(action==null){
+				log.warn("ManageFlow: Can't perform action. Action is not provided");
+			}
+
+		}
+
+	}
+
+	private void manageFlow(RouteController routeController, Route route, String action) throws Exception {
+
+		String routeId = route.getId();
+
+		if(action.equalsIgnoreCase("startflow")){
+			log.info("start route: " + route);
+			routeController.startRoute(routeId);
+		}else if(action.equalsIgnoreCase("stopflow")){
+			log.info("stop route: " + route);
+			routeController.stopRoute(routeId,10, TimeUnit.SECONDS);
+		}else if(action.equalsIgnoreCase("suspendflow") || action.equalsIgnoreCase("pauseflow")){
+			log.info("suspend route: " + route);
+			routeController.suspendRoute(routeId,10, TimeUnit.SECONDS);
+		}else if(action.equalsIgnoreCase("resumeflow") || action.equalsIgnoreCase("continueflow")){
+			log.info("resume route: " + route);
+			routeController.resumeRoute(routeId);
+		}
 
 	}
 

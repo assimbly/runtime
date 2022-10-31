@@ -257,6 +257,9 @@ public class Unmarshall {
 			case "action":
 			case "router":
 			case "sink":
+			case "message":
+			case "api":
+			case "script":
 				setRouteTemplate();
 				break;
 			case "response":

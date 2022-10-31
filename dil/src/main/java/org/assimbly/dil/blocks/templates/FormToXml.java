@@ -15,7 +15,9 @@ public class FormToXml extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .to("formtoxml://?{{options}}")
-                     .to("{{out}}");
+                     .to("formtoxml://?option1={{option1}}")
+
+                 .to("{{out}}");
 
          routeTemplate("formtoxml-sink")
                  .templateParameter("routeconfiguration_id","0")

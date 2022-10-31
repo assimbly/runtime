@@ -14,7 +14,8 @@ public class Print extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
-                    .log("{{path}}");
+                    .log("{{path}}")
+                    .to("{{out}}");
 
          routeTemplate("print-sink")
                  .templateParameter("routeconfiguration_id","0")

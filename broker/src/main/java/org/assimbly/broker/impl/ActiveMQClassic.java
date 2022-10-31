@@ -84,6 +84,7 @@ public class ActiveMQClassic implements Broker {
                 URI urlConfig = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(urlConfig);
 
+
             }
 
             if(!broker.isStarted()) {
