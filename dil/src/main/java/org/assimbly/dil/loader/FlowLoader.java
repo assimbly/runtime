@@ -205,11 +205,9 @@ public class FlowLoader extends RouteBuilder {
 				String errorMessage = e.getMessage();
 
 				if(errorMessage.contains("duplicate id detected")) {
-					log.info(logMessage("Updating step", flowName, flowId, id, type, route));
-					loader.updateRoutes(resource);
+					updateStep(resource, route, type, id, uri);
 				}else if(errorMessage.contains("Route configuration already exists with id")){
-					log.info(logMessage("Updating step", flowName, flowId, id, type, route));
-					loader.updateRoutes(resource);
+					updateStep(resource, route, type, id, uri);
 				}else{
 					log.error("Failed loading step | stepid=" + id);
 					isFlowLoaded = false;

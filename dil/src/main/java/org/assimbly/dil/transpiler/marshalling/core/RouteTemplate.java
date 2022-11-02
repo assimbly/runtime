@@ -371,14 +371,39 @@ public class RouteTemplate {
 
         createTemplateParameters();
 
-        for (String optionProperty : optionProperties) {
-            String name = optionProperty.split("options.")[1];
-            String value = conf.getProperty(optionProperty).toString();
+        if(optionProperties.size() > 0){
+            for (String optionProperty : optionProperties) {
+                String name = optionProperty.split("options.")[1];
+                String value = conf.getProperty(optionProperty).toString();
 
-            Element parameter = createParameter(templateDoc,name,value);
-            templatedRoute.appendChild(parameter);
+                Element parameter = createParameter(templateDoc,name,value);
+                templatedRoute.appendChild(parameter);
 
+            }
+
+        }else if(options!= null && !options.isEmpty()){
+            if(options.contains("&")){
+                String[] optionsList = options.split("&");
+                for(String option: optionsList){
+                    if(option.contains("=")){
+                        String name = option.split("=",2)[0];
+                        String value = option.split("=",2)[1];
+
+                        Element parameter = createParameter(templateDoc,name,value);
+                        templatedRoute.appendChild(parameter);
+                    }
+                }
+            }else {
+                if(options.contains("=")){
+                    String name = options.split("=",2)[0];
+                    String value = options.split("=",2)[1];
+
+                    Element parameter = createParameter(templateDoc,name,value);
+                    templatedRoute.appendChild(parameter);
+                }
+            }
         }
+
 
         createTransport(flowId);
 
@@ -436,13 +461,21 @@ public class RouteTemplate {
         }
 
         if(baseUri.contains(":")){
-            path = baseUri.split(":",2)[1];
+            if(baseUri.contains("?")){
+                String pathAndOptions = baseUri.split(":",2)[1];
+                path = pathAndOptions.split("\\?",2)[0];
+                options = pathAndOptions.split("\\?",2)[1];
+            }else{
+                path = baseUri.split(":",2)[1];
+            }
         }else{
             path = "";
         }
 
         if(options!=null && !options.isEmpty()){
-            uri = uri + "?" + options;
+            if(!baseUri.contains("?")) {
+                uri = uri + "?" + options;
+            }
         }
 
         createCoreComponents();

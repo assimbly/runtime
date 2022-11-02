@@ -421,13 +421,9 @@ public class CamelIntegration extends BaseIntegration {
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
 			String status = configureAndStartFlow(flowId, mediaType, configuration);
-
-			log.info("status" + status);
-
 			if(!status.equalsIgnoreCase("started")||status.equalsIgnoreCase("restarted")){
 				log.error(status);
 			}
-
 		}else{
 			log.error("File install for " + pathAsString + " failed. Invalid configuration file.");
 		}

@@ -30,7 +30,7 @@ public final class Transform {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
 
-		//transform to DIL format
+        //transform to DIL format
 		xml = TransformUtil.transformXML(xml,is);
 
         System.out.println("The DIL format:\n\n" + xml);
