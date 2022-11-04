@@ -545,9 +545,11 @@ public class CamelIntegration extends BaseIntegration {
 				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
 				context.removeRoute(route.getId());
 			}
+
 			context.stop();
 			started = false;
 			log.info("Integration stopped");
+
 		}
 	}	
 

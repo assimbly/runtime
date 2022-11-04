@@ -58,6 +58,7 @@ public final class Transform {
         map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
         map.put("strategyRef","aggregationStrategy");
+        map.put("executorServiceRef","executorService");
         map.put("quartz2:","quartz:");
         map.put("http4:","http:");
         map.put("https4:","https:");		
