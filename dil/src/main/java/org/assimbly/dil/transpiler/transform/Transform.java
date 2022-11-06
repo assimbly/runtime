@@ -64,8 +64,10 @@ public final class Transform {
         map.put("sql-component:","sql-custom:");
         map.put("pdf2txt:","pdftotext:");
         map.put("form2xml:","formtoxml:");
+        map.put("univocity-csv","univocityCsv");
+        map.put("univocity-header","univocityHeader");
 
-		String output = TransformUtil.replaceMultipleStrings(input, map, true);
+        String output = TransformUtil.replaceMultipleStrings(input, map, true);
 		
 		//you may uncheck the method below, because it maybe faster on large maps
 		//replaceMultipleString2(input, map);
