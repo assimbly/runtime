@@ -250,6 +250,18 @@ public class IntegrationResource {
         }
     }
 
+    @GetMapping(path = "/integration/{integrationId}/runningflows", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getRunningFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+
+        try {
+            String runningFlows = integration.getRunningFlows(mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/runningflows",runningFlows,true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/runningflows",e.getMessage());
+        }
+    }
+
     // Generates a generic error response (exceptions outside try catch):
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {

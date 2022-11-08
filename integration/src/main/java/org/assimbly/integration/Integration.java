@@ -267,7 +267,16 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getStats(String statsType, String mediaType) throws Exception;	
+	public String getStats(String statsType, String mediaType) throws Exception;
+
+	/**
+	 * Gets the ids of running flows
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id
+	 */
+	public String getRunningFlows(String mediaType) throws Exception;
 
 	/**
 	* Gets the version of documentation/integration framework 

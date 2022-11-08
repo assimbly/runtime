@@ -40,6 +40,7 @@ import org.assimbly.util.*;
 import org.assimbly.util.file.DirectoryWatcher;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1395,7 +1396,44 @@ public class CamelIntegration extends BaseIntegration {
 		
 		return integrationStats;
 
-	}	
+	}
+
+
+	public String getRunningFlows(String mediaType) throws Exception {
+
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		JSONArray flowsArray = new JSONArray();
+
+		for(String flowId: flowIds){
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("id",flowId);
+			flowsArray.put(flowObject);
+		}
+
+		String result = flowsArray.toString();
+
+		if(mediaType.contains("xml")) {
+			JSONObject flowsObject = new JSONObject();
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("flow",flowsArray);
+			flowsObject.put("flows",flowObject);
+			result = DocConverter.convertJsonToXml(flowsObject.toString());
+		}
+
+		return result;
+
+	}
 
 
 	//Other management tasks
@@ -1790,7 +1828,6 @@ public class CamelIntegration extends BaseIntegration {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
-
 
 	public void bindByName(String beanId, String className){
 

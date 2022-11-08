@@ -389,6 +389,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowStats(String id, String stepid, String mediaType) throws Exception;
 
+	public abstract String getRunningFlows(String mediaType) throws Exception;
 	//certificates
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;
