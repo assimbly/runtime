@@ -701,8 +701,6 @@ public interface Integration {
 	*/
 	//public String resolveDependency(String groupId, String artifactId, String version);
 	
-	
-	
 	/**
 	* Get the context of integration (can be used to access extended methods by the implementation (Camel)
 	* Note: Calling this you're on your own :)
