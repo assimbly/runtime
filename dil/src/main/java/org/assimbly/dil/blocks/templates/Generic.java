@@ -14,7 +14,7 @@ public class Generic extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{uri}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{out}}");
+                     .toD("{{out}}");
 
          routeTemplate("generic-action")
                  .templateParameter("routeconfiguration_id","0")
@@ -23,7 +23,7 @@ public class Generic extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
-                    .to("{{uri}}")
+                    .toD("{{uri}}")
                     .to("{{out}}");
 
          routeTemplate("generic-sink")
@@ -32,7 +32,7 @@ public class Generic extends RouteBuilder {
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{uri}}");
+                     .toD("{{uri}}");
 
      }
 
