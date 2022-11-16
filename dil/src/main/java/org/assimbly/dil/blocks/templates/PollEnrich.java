@@ -9,10 +9,10 @@ public class PollEnrich extends RouteBuilder {
 
          routeTemplate("pollenrich-action")
                  .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("path")
                  .templateParameter("options")
                  .templateParameter("in")
                  .templateParameter("out")
-                 .templateParameter("path")
                  .templateParameter("timeout","60000")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
@@ -21,9 +21,9 @@ public class PollEnrich extends RouteBuilder {
 
          routeTemplate("pollenrich-sink")
                  .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("path")
                  .templateOptionalParameter("options")
                  .templateParameter("in")
-                 .templateParameter("path")
                  .templateParameter("timeout","60000")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")

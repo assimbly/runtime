@@ -53,6 +53,24 @@ public class SetBody extends RouteBuilder {
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .setBody(header("{{path}}"));
 
+         routeTemplate("setbodyasstring-action")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("in")
+                 .templateParameter("out")
+                 .from("{{in}}")
+                 .routeConfigurationId("{{routeconfiguration_id}}")
+                 .convertBodyTo(String.class)
+                 .to("{{out}}");
+
+         routeTemplate("setbodyasbytes-action")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("in")
+                 .templateParameter("out")
+                 .from("{{in}}")
+                 .routeConfigurationId("{{routeconfiguration_id}}")
+                 .convertBodyTo(byte[].class)
+                 .to("{{out}}");
+
 
          routeTemplate("prependtobody-action")
                  .templateParameter("routeconfiguration_id","0")
@@ -89,6 +107,10 @@ public class SetBody extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .transform(body().append("{{path}}"));
+
+
+
      }
+
 
 }

@@ -1,38 +1,31 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 
-public class Generic extends RouteBuilder {
+public class Pdf extends RouteBuilder {
 
      @Override
      public void configure() throws Exception {
 
-         routeTemplate("generic-source")
+         routeTemplate("pdf-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("uri")
-                 .templateParameter("out")
-                 .from("{{uri}}")
-                     .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{out}}");
-
-         routeTemplate("generic-action")
-                 .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("uri")
+                 .templateParameter("path")
+                 .templateParameter("options")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
-                    .toD("{{uri}}")
+                    .to("pdf-transform://{{path}}?{{options}}")
                     .to("{{out}}");
 
-         routeTemplate("generic-sink")
+         routeTemplate("pdf-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("uri")
+                 .templateParameter("path")
+                 .templateParameter("options")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .toD("{{uri}}");
+                     .to("pdf-transform://{{path}}?{{options}}");
 
      }
 
