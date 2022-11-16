@@ -743,6 +743,14 @@ public class RouteTemplate {
 
                 }
 
+                String language = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body/@language"), null);
+                if(language == null) {
+                    language = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body/@language"), "constant");
+                }
+
+                parameter = createParameter(templateDoc, "language", language);
+                templatedRoute.appendChild(parameter);
+
                 parameter = createParameter(templateDoc, "path", resourceAsString);
                 templatedRoute.appendChild(parameter);
                 path = resourceAsString;
