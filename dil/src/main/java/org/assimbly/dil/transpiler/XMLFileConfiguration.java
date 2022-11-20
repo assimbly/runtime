@@ -126,9 +126,9 @@ public class XMLFileConfiguration {
 
 		if(scheme.startsWith("sonicfs")) {
 
-			URL Url = uri.toURL();
+			URL url = uri.toURL();
 
-			InputStream is = Url.openStream();
+			InputStream is = url.openStream();
 
 			conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(params.xml()).getConfiguration();
 			FileHandler fh = new FileHandler(conf);
@@ -154,12 +154,12 @@ public class XMLFileConfiguration {
 
 		}else if (scheme.startsWith("http")) {
 
-			URL Url = uri.toURL();
+			URL url = uri.toURL();
 
 			FileBasedConfigurationBuilder<XMLConfiguration> builder =
 					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 							.configure(params.xml()
-									.setURL(Url)
+									.setURL(url)
 									.setFileName("dil.xml")
 									.setDocumentBuilder(docBuilder)
 									.setSchemaValidation(true)

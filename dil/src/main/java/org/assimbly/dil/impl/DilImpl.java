@@ -36,7 +36,7 @@ public abstract class DilImpl implements Dil {
 
 		} catch (Exception e) {
 
-			e.printStackTrace();
+			log.error("Failed to transpile code. Reason:", e);
 
 			try {
 				String errorCause = e.getCause().getMessage();

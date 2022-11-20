@@ -29,7 +29,7 @@ public class IntegrationResource {
 
    	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private Integration integration = new CamelIntegration();
+    private Integration integration = new CamelIntegration(true);
 
     private boolean plainResponse;
 
@@ -42,6 +42,9 @@ public class IntegrationResource {
 
     @Autowired
     FailureListener failureListener;
+
+    public IntegrationResource() throws Exception {
+    }
 
     //configure integration
 

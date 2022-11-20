@@ -97,7 +97,7 @@ public class ActiveMQClassic implements Broker {
 
             return status();
         }catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to start broker. Reason: ", e);
             return "Failed to start broker. Reason: " + e.getMessage();
         }
 
@@ -174,7 +174,7 @@ public class ActiveMQClassic implements Broker {
                 is.close();
 
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Failed to get file configuration (activemq.xml). Reason:", e);
             }
         }
 
@@ -351,7 +351,7 @@ public class ActiveMQClassic implements Broker {
         return endpointsInfo.toString();
     }
 
-    private String checkIfEndpointExist(String endpointName) throws Exception {
+    private String getEndpointType(String endpointName) throws Exception {
 
         ObjectName[] queues = brokerViewMBean.getQueues();
 
@@ -375,15 +375,44 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+    private void checkIfEndpointExist(String endpointName) throws EndpointNotFoundException {
+
+        if (!endpointExist(endpointName)) {
+            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
+        }
+    }
+
+
+    private boolean endpointExist(String endpointName) {
+
+        ObjectName[] queues = brokerViewMBean.getQueues();
+
+        for (Object queue : queues) {
+            String endpointAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
+            if(endpointName.equals(endpointAsString)){
+                return true;
+            }
+        }
+
+        ObjectName[] topics = brokerViewMBean.getTopics();
+
+        for (Object topic : topics) {
+            String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+            if(endpointName.equals(endpointAsString)){
+                return false;
+            }
+        }
+
+        return false;
+
+    }
+
+
     //Manage Messages
 
     public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
 
-        endpointType = checkIfEndpointExist(sourceQueueName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + sourceQueueName + " not found");
-        }
+        checkIfEndpointExist(sourceQueueName);
 
         queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
 
@@ -394,11 +423,7 @@ public class ActiveMQClassic implements Broker {
 
     public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
 
-        endpointType = checkIfEndpointExist(sourceQueueName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + sourceQueueName + " not found");
-        }
+        checkIfEndpointExist(sourceQueueName);
 
         queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
 
@@ -409,9 +434,9 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessage(String endpointName, String messageId) throws Exception {
 
-        endpointExist = checkIfEndpointExist(endpointName);
+        endpointType = getEndpointType(endpointName);
 
-        if (!endpointExist.equalsIgnoreCase("queue")) {
+        if (!endpointType.equalsIgnoreCase("queue")) {
             throw new Exception("Endpoint " + endpointName + " not found");
         }
 
@@ -423,11 +448,7 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessages(String endpointName) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         queueViewMbean = getQueueViewMBean(endpointType, endpointName);
         Long queueSize = queueViewMbean.getQueueSize();
@@ -439,11 +460,7 @@ public class ActiveMQClassic implements Broker {
 
     public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         messageId = "JMSMessageID='" + messageId + "'";
 
@@ -459,11 +476,7 @@ public class ActiveMQClassic implements Broker {
 
     public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
@@ -480,11 +493,7 @@ public class ActiveMQClassic implements Broker {
 
     public String listMessages(String endpointName, String filter) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         CompositeData[] messages = getDestinationViewMBean(endpointType,endpointName).browse(filter);
 
@@ -496,11 +505,7 @@ public class ActiveMQClassic implements Broker {
 
     public String countMessages(String endpointName) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
 
@@ -510,11 +515,7 @@ public class ActiveMQClassic implements Broker {
 
     public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 

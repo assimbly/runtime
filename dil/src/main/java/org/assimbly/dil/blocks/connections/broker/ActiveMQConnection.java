@@ -131,7 +131,7 @@ public class ActiveMQConnection {
             log.info("Started pooled connection for ActiveMQ.");
             log.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to start pooled connection. Reason:", e);
         }
 
     }

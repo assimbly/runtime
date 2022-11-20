@@ -51,9 +51,9 @@ public class ErrorHandler {
 		}
 
 		if (props.containsKey("flowredeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
+			String redeliveryDelayAsString = props.get("flow.redeliveryDelay");
+			if(StringUtils.isNumeric(redeliveryDelayAsString)) {
+				redeliveryDelay = Integer.parseInt(redeliveryDelayAsString);
 				maximumRedeliveryDelay = redeliveryDelay * 10;
 			}else {
 				redeliveryDelay = 3000;

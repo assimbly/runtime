@@ -89,12 +89,12 @@ public class CompositeDataConverter {
             if (!(value instanceof TabularData)) {
 
                 if(key.equals("PropertiesText")){
-                    Object PropertiesText = compositeData.get("PropertiesText");
-                    if(PropertiesText instanceof String){
+                    Object propertiesText = compositeData.get("PropertiesText");
+                    if(propertiesText instanceof String){
 
-                        PropertiesText = ((String) PropertiesText).substring( 1, ((String)PropertiesText).length() - 1);
+                        propertiesText = ((String) propertiesText).substring( 1, ((String)propertiesText).length() - 1);
 
-                        String[] properties = ((String) PropertiesText).split(", ");
+                        String[] properties = ((String) propertiesText).split(", ");
                         for(String property: properties){
 
                             String headerKey;
@@ -118,16 +118,13 @@ public class CompositeDataConverter {
                     message.put("headers",headers);
                 }else if(key.startsWith("JMS")){
 
-                        switch (key) {
-                            case "JMSMessageID":
-                                message.put("messageid",value);
-                                break;
-                            case "JMSTimestamp":
-                                message.put("timestamp",value);
-                                break;
-                        }
+                    if(key.equalsIgnoreCase("JMSMessageID")) {
+                        message.put("messageid", value);
+                    } else if(key.equalsIgnoreCase("JMSTimestamp")) {
+                        message.put("timestamp",value);
+                    }
 
-                        jmsheaders.put(key,value);
+                    jmsheaders.put(key,value);
 
                 }else if(key.equalsIgnoreCase("messageID")) {
                         message.put("messageid", value);

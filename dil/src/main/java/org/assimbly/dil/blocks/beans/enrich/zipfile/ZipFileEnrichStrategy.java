@@ -82,8 +82,7 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
     private void copyZipEntries(ZipOutputStream zos, byte[] source) throws IOException {
         ZipEntry existingEntry;
 
-        try(ZipInputStream zis =
-                    new ZipInputStream(new ByteArrayInputStream(source))) {
+        try(ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(source))) {
 
             while ((existingEntry = zis.getNextEntry()) != null) {
                 String entryName = existingEntry.getName();

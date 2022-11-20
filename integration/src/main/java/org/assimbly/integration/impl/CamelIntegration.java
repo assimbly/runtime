@@ -93,41 +93,16 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 
 
-	public CamelIntegration() {
-		try {
-			initIntegration(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public CamelIntegration() throws Exception {
+		context = new DefaultCamelContext(registry);
 	}
 
-	public CamelIntegration(boolean useDefaultSettings) {
-		try {
-			initIntegration(useDefaultSettings);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public CamelIntegration(boolean useDefaultSettings) throws Exception {
+		context = new DefaultCamelContext(registry);
+		init(useDefaultSettings);
 	}
 
-
-	public CamelIntegration(String integrationId, String configuration, boolean useDefaultSettings) throws Exception {
-		initIntegration(useDefaultSettings);
-		setFlowConfiguration(convertXMLToFlowConfiguration(integrationId, configuration));
-	}
-
-	public CamelIntegration(String integrationId, String configuration) throws Exception {
-		initIntegration(true);
-		setFlowConfiguration(convertXMLToFlowConfiguration(integrationId, configuration));
-	}
-
-	public CamelIntegration(String integrationId, URI configuration) throws Exception {
-		initIntegration(true);
-		setFlowConfiguration(convertXMLToFlowConfiguration(integrationId, configuration));
-	}
-
-	public void initIntegration(boolean useDefaultSettings) throws Exception {
-
-		context = setContext();
+	public final void init(boolean useDefaultSettings) throws Exception {
 
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
@@ -143,10 +118,6 @@ public class CamelIntegration extends BaseIntegration {
 		routeController = context.getRouteController();
 		managed = context.getExtension(ManagedCamelContext.class);
 
-	}
-
-	public CamelContext setContext(){
-		return new DefaultCamelContext(registry);
 	}
 
 	public void setDefaultSettings() throws Exception {
@@ -1686,14 +1657,16 @@ public class CamelIntegration extends BaseIntegration {
 
 
 	public Certificate[] getCertificates(String url) {
-    	try {
+
+		Certificate[] certificates = new Certificate[0];
+				
+		try {
     		CertificatesUtil util = new CertificatesUtil();
-    		Certificate[] certificates = util.downloadCertificates(url);
-    		return certificates;
+    		certificates = util.downloadCertificates(url);    		
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-    	return null;
+		return certificates;
 	}	
 
 	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {

@@ -314,8 +314,6 @@ public class FlowManagerResource {
             //integrationResource.init();
             integration = integrationResource.getIntegration();
 
-            stepId = stepid.toString();
-
             String flowStats = integration.getFlowStats(flowId, stepId, mediaType);
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",flowStats,plainResponse);
@@ -482,10 +480,8 @@ public class FlowManagerResource {
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("suspended")) {
                                 status = integration.startFlow(flowId);
-                                if(status.equals("started")) {
-                                    if(this.messagingTemplate!=null) {
-                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
-                                    }
+                                if(status.equals("started") && this.messagingTemplate!=null) {
+                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
                                 }
                             }
                         }

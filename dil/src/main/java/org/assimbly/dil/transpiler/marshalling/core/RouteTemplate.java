@@ -174,18 +174,18 @@ public class RouteTemplate {
             options = createLinkOptions(linkXPath, bound, transport, pattern);
             String endpoint = createLinkEndpoint(linkXPath, transport, id);
 
-            if(bound!=null & bound.equalsIgnoreCase("out") ) {
-                if (rule != null & expression != null) {
-                    Element elementRule = contentRouteDoc.createElement(rule);
-                    elementRule.setTextContent(expression);
-                    when.appendChild(elementRule);
+            if(bound!=null && bound.equalsIgnoreCase("out") && rule != null && expression != null) {
 
-                    Element toEndpoint = contentRouteDoc.createElement("to");
-                    toEndpoint.setAttribute("uri",endpoint);
-                    when.appendChild(toEndpoint);
+                Element elementRule = contentRouteDoc.createElement(rule);
+                elementRule.setTextContent(expression);
+                when.appendChild(elementRule);
 
-                    choice.appendChild(when);
-                }
+                Element toEndpoint = contentRouteDoc.createElement("to");
+                toEndpoint.setAttribute("uri",endpoint);
+                when.appendChild(toEndpoint);
+
+                choice.appendChild(when);
+
             }
 
             index++;
@@ -216,15 +216,14 @@ public class RouteTemplate {
             options = createLinkOptions(linkXPath, bound, transport, pattern);
             String endpoint = createLinkEndpoint(linkXPath, transport, id);
 
-            if(bound!=null & bound.equalsIgnoreCase("out") ) {
-                if (rule == null & expression == null) {
+            if(bound!=null && bound.equalsIgnoreCase("out") && rule == null && expression == null) {
 
-                    Element toEndpoint = contentRouteDoc.createElement("to");
-                    toEndpoint.setAttribute("uri",endpoint);
-                    otherwise.appendChild(toEndpoint);
+                Element toEndpoint = contentRouteDoc.createElement("to");
+                toEndpoint.setAttribute("uri",endpoint);
+                otherwise.appendChild(toEndpoint);
 
-                    choice.appendChild(otherwise);
-                }
+                choice.appendChild(otherwise);
+
             }
 
             index++;
@@ -371,7 +370,7 @@ public class RouteTemplate {
 
         createTemplateParameters();
 
-        if(optionProperties.size() > 0){
+        if(optionProperties.isEmpty()){
             for (String optionProperty : optionProperties) {
                 String name = optionProperty.split("options.")[1];
                 String value = conf.getProperty(optionProperty).toString();
@@ -472,10 +471,8 @@ public class RouteTemplate {
             path = "";
         }
 
-        if(options!=null && !options.isEmpty()){
-            if(!baseUri.contains("?")) {
-                uri = uri + "?" + options;
-            }
+        if(options!=null && !options.isEmpty() && !baseUri.contains("?")) {
+            uri = uri + "?" + options;
         }
 
         createCoreComponents();

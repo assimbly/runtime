@@ -170,7 +170,7 @@ public class ConnectorRoute extends RouteBuilder {
 			String headerId = props.get("from." + stepId + ".header.id");
 			String routeId = props.get("from." + stepId + ".route.id");
 
-			String uri = DecryptValue(props.get(onrampUriKey));
+			String uri = decryptValue(props.get(onrampUriKey));
 			String fromUri = props.get("from." + stepId + ".uri");			
 			
 			Predicate hasParallelProcessing = PredicateBuilder.constant(parallelProcessing);
@@ -242,7 +242,7 @@ public class ConnectorRoute extends RouteBuilder {
 		for (String offrampUriKey : offrampUriKeys)
 		{
 
-			String uri = DecryptValue(props.get(offrampUriKey));
+			String uri = decryptValue(props.get(offrampUriKey));
 			String offrampUri = offrampUriList[index++];
 			String stepId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + stepId + ".header.id");
@@ -437,7 +437,7 @@ public class ConnectorRoute extends RouteBuilder {
 		return decryptedProperties;
 	}
 
-	private String DecryptValue(String value){
+	private String decryptValue(String value){
 
 		EncryptableProperties encryptionProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
 		String[] encryptedList = StringUtils.substringsBetween(value, "ENC(", ")");
