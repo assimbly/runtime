@@ -48,8 +48,8 @@ public class FlowConfigurerResource {
             integration.setFlowConfiguration(flowId, mediaType, configuration);
        		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/setflowconfiguration/{flowId}","Flow configuration set");
    		} catch (Exception e) {
-   			e.printStackTrace();
-   			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setflowconfiguration/{flowId}",e.getMessage());
+			log.error("Set flow configuration failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setflowconfiguration/{flowId}",e.getMessage());
    		}
     }
 
@@ -74,8 +74,8 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/getflowconfiguration/{flowId}",flowConfiguration,plainResponse);
    		} catch (Exception e) {
-   			e.printStackTrace();
-   			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/getflowconfiguration/{flowId}",e.getMessage());
+			log.error("Get flow configuration failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/getflowconfiguration/{flowId}",e.getMessage());
    		}
     }
 
@@ -93,7 +93,7 @@ public class FlowConfigurerResource {
 			integration.setFlowConfigurations(integrationId.toString(), mediaType, configuration);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/setconfiguration", "Integration configuration set");
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Set flow configuration failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/setconfiguration", e.getMessage());
 		}
 
@@ -118,7 +118,7 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/getconfiguration", gatewayConfiguration, plainResponse);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Get flow configurations failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/getconfiguration", e.getMessage());
 		}
 
@@ -134,7 +134,7 @@ public class FlowConfigurerResource {
             String documentation = integration.getDocumentationVersion();
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/version",documentation,plainResponse);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get documentation version failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/version",e.getMessage());
 		}
     }
@@ -152,7 +152,7 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/{componenttype}",documentation,plainResponse);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get documentation failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/{componenttype}",e.getMessage());
 		}
     }
@@ -170,7 +170,7 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components,plainResponse);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Get components failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",e.getMessage());
 		}
 	}
@@ -190,7 +190,7 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",documentation,plainResponse);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get component schema failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",e.getMessage());
 		}
     }
@@ -208,7 +208,7 @@ public class FlowConfigurerResource {
 			}
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/options/{componenttype}",documentation,plainResponse);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get components options failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/options/{componenttype}",e.getMessage());
 		}
     }
@@ -232,7 +232,7 @@ public class FlowConfigurerResource {
             String camelRoute = integration.getCamelRouteConfiguration(flowId, mediaType);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/route/{flowId}",camelRoute,true);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get Camel route failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/route/{flowId}",e.getMessage());
 		}
     }
@@ -245,7 +245,7 @@ public class FlowConfigurerResource {
             String camelRoutes = integration.getAllCamelRoutesConfiguration(mediaType);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/routes",camelRoutes,true);
 		} catch (Exception e) {
-   			e.printStackTrace();
+			log.error("Get all Camel routes failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/routes",e.getMessage());
 		}
 
@@ -259,8 +259,8 @@ public class FlowConfigurerResource {
             Boolean removedFlow = integration.removeFlow(flowId);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/removeflow/{flowId}",removedFlow.toString());
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/removeflow/{flowId}",e.getMessage());
+			log.error("Remove flow " + flowId +" failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/removeflow/{flowId}",e.getMessage());
         }
 
     }

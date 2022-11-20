@@ -79,7 +79,7 @@ public class MessageManagerResource {
 
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send","Sent succesfully");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Send message to " + uri + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
@@ -130,7 +130,7 @@ public class MessageManagerResource {
 
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send",result);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Send reuqest message to " + uri + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send",e.getMessage());
         }
     }

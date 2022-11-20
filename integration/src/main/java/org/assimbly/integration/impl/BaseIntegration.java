@@ -133,7 +133,7 @@ public abstract class BaseIntegration implements Integration {
 
 		} catch (Exception e) {
 
-			e.printStackTrace();
+			log.error("Set flow configuration failed",e);
 
 			try {
 				String errorCause = e.getCause().getMessage();

@@ -297,8 +297,9 @@ public class CamelIntegration extends BaseIntegration {
 			 try{
 				fileInstall(fPath);
 			} catch (Exception e) {
-				e.printStackTrace();
-			}
+				 log.error("Check deploy directory "+ path.toString() + " + failed",e);
+
+			 }
 		});
 	}
 	
@@ -328,7 +329,8 @@ public class CamelIntegration extends BaseIntegration {
 									timeCreated = System.currentTimeMillis();
 									fileInstall(path);
 								} catch (Exception e) {
-									e.printStackTrace();
+									log.error("FileInstall for created " + path.toString() + " failed",e);
+
 								}
 								break;
 							case ENTRY_MODIFY:
@@ -350,7 +352,7 @@ public class CamelIntegration extends BaseIntegration {
 										fileInstall(path);
 									}
 								} catch (Exception e) {
-									e.printStackTrace();
+									log.error("FileInstall for modified " + path.toString() + " failed",e);
 								}
 								break;
 								
@@ -359,7 +361,7 @@ public class CamelIntegration extends BaseIntegration {
 								try {
 									fileUninstall(path);
 								} catch (Exception e) {
-									e.printStackTrace();
+									log.error("FileUnInstall for deleted " + path.toString() + " failed",e);
 								}
 								break;
 						}
@@ -762,8 +764,8 @@ public class CamelIntegration extends BaseIntegration {
 			FileUtils.writeStringToFile(flowFile, configuration, Charset.defaultCharset());
 			return "saved";	
 		} catch (Exception e) {
-			e.printStackTrace();
-			return "failed to save flow " + e.getMessage();			
+			log.error("FileInstall flow " + flowId + " failed",e);
+			return "Fail to save flow " + flowId + " Error: " + e.getMessage();
 		}			
 	
 	}
@@ -775,7 +777,7 @@ public class CamelIntegration extends BaseIntegration {
 			FileUtils.deleteQuietly(flowFile);
 			return "deleted";	
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("FileUninstall flow " + flowId + " failed",e);
 			return "failed to delete flow " + e.getMessage();			
 		}			
 	
@@ -852,11 +854,13 @@ public class CamelIntegration extends BaseIntegration {
 			
 		}catch (Exception e) {
 			if(!context.isStarted()) {
-				log.info("Unable to start flow. Integration isn't running");
-			}	
-			e.printStackTrace();
-			stopFlow(id);			
-			return e.getMessage();
+				log.error("Unable to start flow " + id + ". Integration isn't running");
+				return "Unable to start flow " + id + ". Integration isn't running";
+			}else{
+				stopFlow(id);
+				log.error("Start flow " + id + " failed.",e);
+				return e.getMessage();
+			}
 		}
 	}
 
@@ -916,7 +920,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 	        
 		}catch (Exception e) {
-			e.printStackTrace();
+			log.error("Restart flow " + id + " failed.",e);
 			return e.getMessage();
 		}
 	}
@@ -940,8 +944,7 @@ public class CamelIntegration extends BaseIntegration {
 	        return "stopped";
 
 		}catch (Exception e) {
-			log.error("Couldn't stop flow | id=" + id + "reason: " + e.getMessage());
-			e.printStackTrace();
+			log.error("Stop flow " + id + " failed.",e);
 			return e.getMessage();
 		}
 
@@ -994,8 +997,8 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		
 		}catch (Exception e) {
-			e.printStackTrace();
-			stopFlow(id); //Stop flow if one of the routes cannot be pauzed. Maybe find a more elegant solution?
+			log.error("Pause flow " + id + " failed.",e);
+			stopFlow(id); //Stop flow if one of the routes cannot be paused.
 			return e.getMessage();
 		}
 
@@ -1048,8 +1051,8 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		
 		}catch (Exception e) {
-			e.printStackTrace();
-			stopFlow(id); //Stop flow if one of the routes cannot be resumed. Maybe find an more elegant solution?
+			log.error("Resume flow " + id + " failed.",e);
+			stopFlow(id); //Stop flow if one of the routes cannot be resumed.
 			return e.getMessage();
 		}
 
@@ -1089,7 +1092,8 @@ public class CamelIntegration extends BaseIntegration {
 				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(updatedId).get(0).getId());
 				flowStatus = status.toString().toLowerCase();
 			}catch (Exception e) {
-					e.printStackTrace();
+				log.error("Get status flow " + id + " failed.",e);
+
 				flowStatus = "error: " + e.getMessage();
 			}
 
@@ -1667,8 +1671,8 @@ public class CamelIntegration extends BaseIntegration {
 		try {
     		CertificatesUtil util = new CertificatesUtil();
     		certificates = util.downloadCertificates(url);    		
-		} catch (Exception e1) {
-			e1.printStackTrace();
+		} catch (Exception e) {
+			log.error("Start certificates for url " + url + " failed.",e);
 		}
 		return certificates;
 	}	
@@ -1686,8 +1690,8 @@ public class CamelIntegration extends BaseIntegration {
 			Certificate[] certificates = util.downloadCertificates(url);
 			String keystorePath = baseDir + "/security/" + keystoreName;
 			util.importCertificates(keystorePath, keystorePassword, certificates);
-		} catch (Exception e1) {
-			e1.printStackTrace();
+		} catch (Exception e) {
+			log.error("Set certificates for url " + url + " failed.",e);
 		}
 	}
 
