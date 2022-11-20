@@ -31,7 +31,7 @@ public class MessageManagerResource {
     @Autowired
     private IntegrationResource integrationResource;
 
-    Integration integration;
+    private Integration integration;
 
     /**
      * POST  /integration/{integrationId}/send : Send messages to an step (fire and forget).

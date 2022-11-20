@@ -9,7 +9,7 @@ public class CsvToXml extends RouteBuilder {
      public void configure() throws Exception {
 
          CsvDataFormat csv = new CsvDataFormat();
-         csv.setDelimiter(new Character(','));
+         csv.setDelimiter(Character.valueOf(','));
          csv.setUseMaps(true);
 
          routeTemplate("csvtoxml-action")

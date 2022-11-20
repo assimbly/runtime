@@ -28,7 +28,7 @@ public class FlowManagerResource {
     @Autowired
     private IntegrationResource integrationResource;
 
-    Integration integration;
+    private Integration integration;
 
     private String flowId;
     private String stepId;
@@ -452,7 +452,7 @@ public class FlowManagerResource {
             Thread thread = new Thread(new Runnable()
             {
 
-                SimpMessageSendingOperations messagingTemplate = messagingTemplate2;
+                private SimpMessageSendingOperations messagingTemplate = messagingTemplate2;
 
                 public void run()
                 {

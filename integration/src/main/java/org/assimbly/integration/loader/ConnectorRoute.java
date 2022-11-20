@@ -61,10 +61,13 @@ public class ConnectorRoute extends RouteBuilder {
 	
 	
 	public ConnectorRoute(final TreeMap<String, String> props){
+		super();
 		this.props = props;
 	}
 
-	public ConnectorRoute() {}
+	public ConnectorRoute() {
+		super();
+	}
 
 	public interface FailureProcessorListener {
 		public void onFailure();

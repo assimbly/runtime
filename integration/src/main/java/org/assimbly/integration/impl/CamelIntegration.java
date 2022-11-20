@@ -94,10 +94,12 @@ public class CamelIntegration extends BaseIntegration {
 
 
 	public CamelIntegration() throws Exception {
+		super();
 		context = new DefaultCamelContext(registry);
 	}
 
 	public CamelIntegration(boolean useDefaultSettings) throws Exception {
+		super();
 		context = new DefaultCamelContext(registry);
 		init(useDefaultSettings);
 	}

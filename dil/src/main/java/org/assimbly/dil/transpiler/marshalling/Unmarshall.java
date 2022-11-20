@@ -19,7 +19,7 @@ public class Unmarshall {
 
 	private XMLConfiguration conf;
 
-	Document doc;
+	private Document doc;
 
 	private String integrationXPath;
 	private String stepXPath;

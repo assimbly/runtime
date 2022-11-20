@@ -37,11 +37,8 @@ public class IntegrationResource {
 
     private String type;
 
-    //@Autowired
-    //EncryptionProperties encryptionProperties;
-
     @Autowired
-    FailureListener failureListener;
+    private FailureListener failureListener;
 
     public IntegrationResource() throws Exception {
     }

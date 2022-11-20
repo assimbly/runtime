@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 //set headers for each step
 public class HeadersProcessor implements Processor {
 	
-	Map<String, String> props;
+	private Map<String, String> props;
 	
 	public HeadersProcessor(final Map<String, String> props){
 		this.props = props;

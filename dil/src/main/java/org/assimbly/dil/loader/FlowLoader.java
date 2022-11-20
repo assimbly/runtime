@@ -18,25 +18,28 @@ public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	TreeMap<String, String> props;
+	private TreeMap<String, String> props;
 
 	private CamelContext context;
 	private ExtendedCamelContext extendedCamelContext;
 
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
-	String flowId;
-	String flowName;
+	private String flowId;
+	private String flowName;
 
 	private boolean isFlowLoaded = true;
 
 	private FlowLoaderReport flowLoaderReport;
 
 	public FlowLoader(final TreeMap<String, String> props){
+		super();
 		this.props = props;
 	}
 
-	public FlowLoader() {}
+	public FlowLoader() {
+		super();
+	}
 
 	public interface FailureProcessorListener {
 		public void onFailure();

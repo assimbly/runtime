@@ -20,9 +20,9 @@ import java.util.regex.Pattern;
 
 public final class Transform {
 
-    protected static Logger log = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
-	public static String transformToDil(String xml){
+    public static String transformToDil(String xml){
 
 		//convert camel2 to camel3
         String camel3Xml = camel2ToCamel3(xml);

@@ -40,11 +40,11 @@ public class ActiveMQArtemis implements Broker {
 
 	protected static Logger log = LoggerFactory.getLogger(getClass());
 	
-	EmbeddedActiveMQ broker;
+	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-	File brokerFile = new File(baseDir + "/broker/broker.xml");
-	File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
+	private File brokerFile = new File(baseDir + "/broker/broker.xml");
+	private File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
 	private ActiveMQServerControlImpl manageBroker;
 	private boolean endpointExist;
 

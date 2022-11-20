@@ -26,7 +26,7 @@ public class FailureProcessor implements Processor {
     private FlowEvent flowEvent;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private String flowId;
-	Map<String, String> props;
+	private Map<String, String> props;
 
 	public FailureProcessor(final Map<String, String> props){
 		this.props = props;

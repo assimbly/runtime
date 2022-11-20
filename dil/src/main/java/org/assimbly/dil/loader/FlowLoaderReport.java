@@ -11,7 +11,7 @@ public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	String report;
+	private String report;
 	private boolean isFlowLoaded = true;
 	private JSONObject json;
 	private JSONArray steps;

@@ -26,8 +26,8 @@ public class ErrorHandler {
 
 	private Processor failureProcessor;
 
-	TreeMap<String, String> props;
-	List<String> errorUriKeys;
+	private TreeMap<String, String> props;
+	private List<String> errorUriKeys;
 	
 	public ErrorHandler(DeadLetterChannelBuilder errorHandler, final TreeMap<String, String> props){
 		this.errorHandler = errorHandler;

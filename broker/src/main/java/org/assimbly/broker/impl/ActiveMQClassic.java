@@ -39,15 +39,13 @@ public class ActiveMQClassic implements Broker {
 	
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    File brokerFile = new File(baseDir + "/broker/activemq.xml");
+    private File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
-    BrokerService broker;
+    private BrokerService broker;
 
-    BrokerViewMBean brokerViewMBean;
-    QueueViewMBean queueViewMbean;
-    TopicViewMBean topicViewMbean;
-
-    private String endpointExist;
+    private BrokerViewMBean brokerViewMBean;
+    private QueueViewMBean queueViewMbean;
+    private TopicViewMBean topicViewMbean;
     private String endpointType;
 
     public void setBaseDirectory(String baseDirectory) {
