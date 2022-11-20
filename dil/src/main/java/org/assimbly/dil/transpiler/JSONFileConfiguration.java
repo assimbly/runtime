@@ -7,8 +7,6 @@ import org.assimbly.docconverter.DocConverter;
 
 public class JSONFileConfiguration {
 
-    public static int PRETTY_PRINT_INDENT_FACTOR = 4;
-
 	private List<TreeMap<String, String>> properties;
 	private TreeMap<String, String> flowproperties;
 

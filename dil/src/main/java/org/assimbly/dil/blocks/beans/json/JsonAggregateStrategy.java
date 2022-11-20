@@ -2,13 +2,14 @@ package org.assimbly.dil.blocks.beans.json;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JsonAggregateStrategy implements AggregationStrategy {
 
-    final static Logger logger = Logger.getLogger(JsonAggregateStrategy.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

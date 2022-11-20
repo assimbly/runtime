@@ -2,14 +2,15 @@ package org.assimbly.dil.blocks.beans.enrich.override;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.log4j.Logger;
 import org.assimbly.util.exception.EnrichException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class OverrideEnrichStrategy implements AggregationStrategy {
 
-    final static Logger logger = Logger.getLogger(OverrideEnrichStrategy.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
@@ -21,8 +22,9 @@ public class OverrideEnrichStrategy implements AggregationStrategy {
             boolean errorRoute = original.getProperty("Error-Route", boolean.class);
             boolean ignoreNullResource = original.getProperty("DovetailAggregateNoExceptionOnNull", boolean.class);
 
-            if (errorRoute && !ignoreNullResource)
+            if (errorRoute && !ignoreNullResource) {
                 throw new EnrichException("Can't override body - nothing in the bottom route");
+            }
 
             original.getIn().setBody(null);
             result = original;

@@ -2,14 +2,15 @@ package org.assimbly.dil.blocks.beans.enrich.xml;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.log4j.Logger;
 import org.assimbly.util.helper.XmlHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 
 public class XmlEnrichStrategy implements AggregationStrategy {
 
-    private final static Logger logger = Logger.getLogger(XmlEnrichStrategy.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
@@ -24,8 +25,9 @@ public class XmlEnrichStrategy implements AggregationStrategy {
             Document originalXml = getXml(original, "left"),
                      resourceXml = getXml(resource, "bottom");
 
-            if(originalXml == null && resourceXml == null)
+            if(originalXml == null && resourceXml == null) {
                 throw new Exception("Something went wrong parsing the XML inputs.");
+            }
 
             if (originalXml == null) {
                 enriched = XmlHelper.mergeIn(enriched, resourceXml);
@@ -59,7 +61,7 @@ public class XmlEnrichStrategy implements AggregationStrategy {
 
             original.getIn().setBody(XmlHelper.prettyPrint(enriched));
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
 
         return original;
@@ -70,13 +72,14 @@ public class XmlEnrichStrategy implements AggregationStrategy {
         try {
             Document document = XmlHelper.newDocument(exchange.getIn().getBody(String.class));
 
-            if (document == null)
-                logger.warn("No valid XML returned by the " + route + " route to the Enrich component.");
+            if (document == null) {
+                log.warn("No valid XML returned by the " + route + " route to the Enrich component.");
+            }
 
             return document;
 
         } catch (Exception e) {
-            logger.warn("Unable to get data from the " + route + " route to the Enrich component.");
+            log.warn("Unable to get data from the " + route + " route to the Enrich component.");
         }
 
         return null;

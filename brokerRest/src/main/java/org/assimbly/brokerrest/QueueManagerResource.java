@@ -21,7 +21,7 @@ public class QueueManagerResource {
 
 	private String result;
 
-    private static final long id = 0L;
+    private static final long ID = 0L;
 
     /**
      * POST  /brokers/{brokerType}/queue/{queueName} : creates a queue on the broker.
@@ -37,10 +37,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.createQueue(brokerType,queueName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't create queue", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
     }
@@ -59,10 +59,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.deleteQueue(brokerType,queueName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't delete queue", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
     }
@@ -81,10 +81,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.getQueue(brokerType,queueName, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queue/{queueName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't get queue information", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
     }
@@ -103,10 +103,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.getQueues(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/queues", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queues", result);
         } catch (Exception e) {
             log.error("Can't get queues information", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queues", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queues", e.getMessage());
         }
 
     }
@@ -125,10 +125,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.clearQueue(brokerType,queueName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
         } catch (Exception e) {
             log.error("Can't clear queue", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", e.getMessage());
         }
 
     }
@@ -146,10 +146,10 @@ public class QueueManagerResource {
 
         try {
             result = broker.clearQueues(brokerType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queues/clear", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queues/clear", result);
         } catch (Exception e) {
             log.error("Can't clear queues", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queues/clear", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queues/clear", e.getMessage());
         }
 
     }

@@ -7,7 +7,6 @@ import org.assimbly.docconverter.DocConverter;
 
 public class YAMLFileConfiguration {
 
-    public static int PRETTY_PRINT_INDENT_FACTOR = 4;
 	private String xmlConfiguration;
 	private String yamlConfiguration;
 

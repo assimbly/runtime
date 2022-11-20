@@ -16,8 +16,8 @@ public class FlowLoaderReport {
 	private JSONObject json;
 	private JSONArray steps;
 	private int loaded = 0;
-	private int loaded_success = 0;
-	private int loaded_error = 0;
+	private int loadedSuccess = 0;
+	private int loadedError = 0;
 	private JSONObject flow;
 	private JSONObject stepsLoaded;
 
@@ -39,8 +39,8 @@ public class FlowLoaderReport {
 		flow.put("name",flowName);
 
 		stepsLoaded.put("total", loaded);
-		stepsLoaded.put("successfully", loaded_success);
-		stepsLoaded.put("failed", loaded_error);
+		stepsLoaded.put("successfully", loadedSuccess);
+		stepsLoaded.put("failed", loadedError);
 
 		flow.put("stepsLoaded",stepsLoaded);
 		flow.put("steps", steps);
@@ -49,18 +49,18 @@ public class FlowLoaderReport {
 
 		report = json.toString(4);
 
-		if(loaded == loaded_success) {
-			if(loaded_success == 1){
-				log.info(loaded_success + " step loaded succesfully");
+		if(loaded == loadedSuccess) {
+			if(loadedSuccess == 1){
+				log.info(loadedSuccess + " step loaded succesfully");
 			}else{
-				log.info(loaded_success + " steps loaded succesfully");
+				log.info(loadedSuccess + " steps loaded succesfully");
 			}
 			log.info("Start flow | name=" + flowName + " | id=" + flowId);
 		}else{
-			if(loaded_error == 1){
-				log.error(loaded_error + " step failed to load");
+			if(loadedError == 1){
+				log.error(loadedError + " step failed to load");
 			}else{
-				log.error(loaded_error + " steps failed to load");
+				log.error(loadedError + " steps failed to load");
 			}
 			log.error("Start flow failed | name=" + flowName + " | id=" + flowId);
 		}
@@ -87,11 +87,11 @@ public class FlowLoaderReport {
 		if(stepStatus.equalsIgnoreCase("error")){
 			step.put("status", "error");
 			step.put("errorMessage", message);
-			loaded_error = loaded_error + 1;
+			loadedError = loadedError + 1;
 			isFlowLoaded = false;
 		}else{
 			step.put("status", stepStatus);
-			loaded_success = loaded_success + 1;
+			loadedSuccess = loadedSuccess + 1;
 		}
 		steps.put(step);
 

@@ -2,14 +2,15 @@ package org.assimbly.dil.blocks.beans.xml;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.log4j.Logger;
 import org.assimbly.util.helper.XmlHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 
 public class XmlAggregateStrategy implements AggregationStrategy {
 
-    private final static Logger logger = Logger.getLogger(XmlAggregateStrategy.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
@@ -24,8 +25,9 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             Document originalXml = getXml(original),
                      resourceXml = getXml(resource);
 
-            if(originalXml == null && resourceXml == null)
+            if(originalXml == null && resourceXml == null) {
                 throw new Exception("Something went wrong parsing the XML inputs.");
+            }
 
             if (originalXml == null) {
                 aggregated = XmlHelper.mergeIn(aggregated, resourceXml);
@@ -58,7 +60,7 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             }
             original.getIn().setBody(XmlHelper.prettyPrint(aggregated));
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
         return original;
     }
@@ -68,15 +70,16 @@ public class XmlAggregateStrategy implements AggregationStrategy {
         try {
             Document document = XmlHelper.newDocument(exchange.getIn().getBody(String.class));
 
-            if (document == null)
-                logger.warn("No valid XML returned by the route to the Aggregate component.");
+            if (document == null) {
+                log.warn("No valid XML returned by the route to the Aggregate component.");
+            }
 
             return document;
 
         } catch (Exception e) {
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Unable to get data from the route to the Aggregate component.");
+            if (log.isDebugEnabled()) {
+                log.debug("Unable to get data from the route to the Aggregate component.");
             }
         }
 

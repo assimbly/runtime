@@ -573,10 +573,7 @@ public class CamelIntegration extends BaseIntegration {
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
-
-					scheme = scheme.toLowerCase();
-
-					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme) && context.hasComponent(scheme) == null) {
+					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase()) && context.hasComponent(scheme.toLowerCase()) == null) {
 						log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
 						if(INetUtil.isHostAvailable("repo1.maven.org")){
 							log.info(resolveDependency(scheme));

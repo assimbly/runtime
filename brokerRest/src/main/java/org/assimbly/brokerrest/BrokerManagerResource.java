@@ -21,7 +21,7 @@ public class BrokerManagerResource {
 
     private String result;
 
-    private static final long id = 0L;
+    private static final long ID = 0L;
 
     /**
      * GET  /brokers/:id : get the broker status by "id".
@@ -147,10 +147,10 @@ public class BrokerManagerResource {
 
         try {
             result = broker.getConnections(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topics", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
             log.error("Can't get connections", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
         }
 
     }
@@ -168,10 +168,10 @@ public class BrokerManagerResource {
 
         try {
             result = broker.getConsumers(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/consumers", result);
         } catch (Exception e) {
             log.error("Can't get topics information", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
         }
 
     }

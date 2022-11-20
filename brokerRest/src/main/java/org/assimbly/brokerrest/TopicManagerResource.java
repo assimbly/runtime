@@ -21,7 +21,7 @@ public class TopicManagerResource {
 
     private String result;
 
-    private static final long id = 0L;
+    private static final long ID = 0L;
 
     /**
      * POST  /brokers/{brokerType}/topic/{topicName} : creates a new topic.
@@ -38,10 +38,10 @@ public class TopicManagerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.createTopic(brokerType,topicName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("Can't create topic", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
     }
@@ -60,10 +60,10 @@ public class TopicManagerResource {
             try {
                 //brokermanager = brokerManagerResource.getBrokerManager();
                 result = broker.deleteTopic(brokerType,topicName);
-                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}", result);
+                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
                 log.error("Can't delete topic", e);
-                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
+                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
             }
 
     }
@@ -83,10 +83,10 @@ public class TopicManagerResource {
             try {
                 //brokermanager = brokerManagerResource.getBrokerManager();
                 result = broker.getTopic(brokerType,topicName, mediaType);
-                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topic/{topicName}", result);
+                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
                 log.error("Can't get topic information", e);
-                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}", e.getMessage());
+                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}", e.getMessage());
             }
 
     }
@@ -106,10 +106,10 @@ public class TopicManagerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.getTopics(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topics", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
             log.error("Can't get topics information", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
         }
 
     }
@@ -129,10 +129,10 @@ public class TopicManagerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearTopic(brokerType,topicName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", result);
         } catch (Exception e) {
             log.error("Can't clear topic", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", e.getMessage());
         }
 
     }
@@ -151,10 +151,10 @@ public class TopicManagerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearTopics(brokerType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/topics/clear", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topics/clear", result);
         } catch (Exception e) {
             log.error("Can't clear topics", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topics/clear", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics/clear", e.getMessage());
         }
 
     }

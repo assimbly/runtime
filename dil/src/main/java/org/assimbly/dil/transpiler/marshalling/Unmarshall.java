@@ -282,23 +282,27 @@ public class Unmarshall {
 	private void setConnection() throws ConfigurationException {
 		String connectionId = conf.getString(blocksXPath + "options/connection_id");
 
-		if(connectionId != null)
-			properties =  new Connection(properties, conf).setConnection(type, stepId, connectionId);
+		if(connectionId != null) {
+			properties = new Connection(properties, conf).setConnection(type, stepId, connectionId);
+		}
 
 	}
 
 	private void setRoute() throws Exception {
 		String routeId = conf.getString(blocksXPath + "options/route_id");
 
-		if(routeId != null)
-			properties =  new Route(properties, conf).setRoute(type, flowId, stepId, routeId);
+		if(routeId != null) {
+			properties = new Route(properties, conf).setRoute(type, flowId, stepId, routeId);
+		}
 	}
 
 	private void setRouteConfiguration() throws Exception {
 		String routeConfigurationId = conf.getString(blocksXPath + "options/routeconfiguration_id");
 
-		if(routeConfigurationId != null)
-			properties =  new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeConfigurationId);
+		if(routeConfigurationId != null) {
+			properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeConfigurationId);
+		}
+
 	}
 
 	private void setRouteTemplate() throws Exception {

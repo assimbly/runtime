@@ -2,35 +2,37 @@ package org.assimbly.dil.blocks.beans;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
-import org.apache.log4j.Logger;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AggregateStrategy implements AggregationStrategy {
 
-    final static Logger logger = Logger.getLogger(AggregateStrategy.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private AggregationStrategy AggregateStrategy;
+    private AggregationStrategy aggregateStrategy;
 
     @Override
     public Exchange aggregate(Exchange firstExchange, Exchange newExchange) {
 
         String aggregateType = newExchange.getProperty("Aggregate-Type", String.class);
 
-        if (firstExchange != null)
+        if (firstExchange != null) {
             aggregateType = firstExchange.getProperty("Aggregate-Type", String.class);
+        }
 
         switch(aggregateType) {
             case "xml":
             case "text/xml":
-                AggregateStrategy = new XmlAggregateStrategy();
+                aggregateStrategy = new XmlAggregateStrategy();
                 break;
             case "json":
             case "application/json":
-                AggregateStrategy = new JsonAggregateStrategy();
+                aggregateStrategy = new JsonAggregateStrategy();
         }
 
-        return AggregateStrategy.aggregate(firstExchange, newExchange);
+        return aggregateStrategy.aggregate(firstExchange, newExchange);
     }
 
 }
