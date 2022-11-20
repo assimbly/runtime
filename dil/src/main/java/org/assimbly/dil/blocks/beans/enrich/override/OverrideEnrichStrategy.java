@@ -14,7 +14,8 @@ public class OverrideEnrichStrategy implements AggregationStrategy {
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
-        Exchange result = null;
+
+        Exchange result;
 
         if (original == null) {
             result = resource;

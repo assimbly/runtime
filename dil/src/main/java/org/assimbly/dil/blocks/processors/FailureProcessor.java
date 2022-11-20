@@ -51,7 +51,7 @@ public class FailureProcessor implements Processor {
 				String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
 				String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
 				String value = entry.getValue();
-				String result = "";
+				String result;
 
 				if (language == null) {
 					continue;
@@ -79,10 +79,10 @@ public class FailureProcessor implements Processor {
 		  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 		  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
 
-			if(flowEvent.getFlowId().indexOf("-")!=-1){
-				flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");
-			}else{
+			if(flowEvent.getFlowId().indexOf("-") == -1){
 				flowId = flowEvent.getFlowId();
+			}else{
+				flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");
 			}
 
 		  File file = new File(baseDir + "/alerts/" + flowId  + "/" + today + "_alerts.log");

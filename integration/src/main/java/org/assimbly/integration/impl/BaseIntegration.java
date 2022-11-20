@@ -50,7 +50,7 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfigurations(String integrationId, String mediaType, String configuration) throws Exception {
 
 		try {
-			List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
+			List<TreeMap<String,String>> propertiesFromFile;
 			
 			if(mediaType.toLowerCase().contains("xml")) {
 				propertiesFromFile = convertXMLToConfiguration(integrationId, configuration);
@@ -62,13 +62,7 @@ public abstract class BaseIntegration implements Integration {
 	        
 	        setFlowConfigurations(propertiesFromFile);
 		}catch (Exception e) {
-			
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {	
-				throw new Exception(ex);	
-			}
+			log.error("Set flow configurations failed", e);
 		}		
 	}	
 	
@@ -132,15 +126,7 @@ public abstract class BaseIntegration implements Integration {
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
-
 			log.error("Set flow configuration failed",e);
-
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {	
-				throw new Exception(ex);	
-			}			
 		}
 	}
 	

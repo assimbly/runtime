@@ -253,21 +253,14 @@ public class Unmarshall {
 	public void setPropertiesByType(String type) throws Exception {
 
 		switch (type) {
-			case "source":
-			case "action":
-			case "router":
-			case "sink":
-			case "message":
-			case "api":
-			case "script":
-				setRouteTemplate();
-				break;
 			case "response":
 				setResponse();
 				break;
 			case "to":
 				setTo();
 				break;
+			default:
+				setRouteTemplate();
 		}
 
 	}

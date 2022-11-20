@@ -330,7 +330,6 @@ public class CamelIntegration extends BaseIntegration {
 									fileInstall(path);
 								} catch (Exception e) {
 									log.error("FileInstall for created " + path.toString() + " failed",e);
-
 								}
 								break;
 							case ENTRY_MODIFY:
@@ -633,10 +632,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	public boolean removeFlow(String id) throws Exception {
 		
-		if(!hasFlow(id)) {
-			return false;
+		if(hasFlow(id)) {
+			return context.removeRoute(id);
 		}else {
-			return context.removeRoute(id);	
+			return false;
 		}		
 		
 	}
@@ -850,13 +849,13 @@ public class CamelIntegration extends BaseIntegration {
 			}
 			
 		}catch (Exception e) {
-			if(!context.isStarted()) {
-				log.error("Unable to start flow " + id + ". Integration isn't running");
-				return "Unable to start flow " + id + ". Integration isn't running";
-			}else{
+			if(context.isStarted()) {
 				stopFlow(id);
 				log.error("Start flow " + id + " failed.",e);
 				return e.getMessage();
+			}else{
+				log.error("Unable to start flow " + id + ". Integration isn't running");
+				return "Unable to start flow " + id + ". Integration isn't running";
 			}
 		}
 	}
@@ -867,7 +866,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		status = routeController.getRouteStatus(routeId);
 
-		if(!status.isStarted()) {
+		if(status.isStarted()) {
+			log.info("Started step | id=" + routeId);
+		} else {
 			try {
 
 				log.info("Starting step | id=" + routeId);
@@ -890,8 +891,6 @@ public class CamelIntegration extends BaseIntegration {
 
 			log.info("Started step | id=" + routeId);
 
-		} else {
-			log.info("Started step | id=" + routeId);
 		}
 
 		return status;
@@ -1080,11 +1079,12 @@ public class CamelIntegration extends BaseIntegration {
 		
 		if(hasFlow(id)) {
 			String updatedId;
-			if(!id.contains("-")){
-				updatedId = id + "-";
-			}else{
+			if(id.contains("-")){
 				updatedId = id;
+			}else{
+				updatedId = id + "-";
 			}
+
 			try {
 				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(updatedId).get(0).getId());
 				flowStatus = status.toString().toLowerCase();
@@ -1134,10 +1134,10 @@ public class CamelIntegration extends BaseIntegration {
 				}
 			}
 		}
-		if(!sb.toString().isEmpty()){
-			flowInfo = sb.toString();
-		} else{
+		if(sb.toString().isEmpty()){
 			flowInfo = "0";
+		} else{
+			flowInfo = sb.toString();
 		}
 
 		return flowInfo;
@@ -1516,7 +1516,7 @@ public class CamelIntegration extends BaseIntegration {
 		String version = catalog.getCatalogVersion();  //versionManager.getLoadedVersion(); //component.getString("version");
 
 		String dependency = groupId + ":" + artifactId + ":" + version;
-		String result = "";
+		String result;
 
 		try {
 			List<Class> classes = resolveMavenDependency(groupId, artifactId, version);
@@ -1640,7 +1640,7 @@ public class CamelIntegration extends BaseIntegration {
 			String key = messageHeader.getKey();
 			String value = StringUtils.substringBetween(messageHeader.getValue().toString(),"(",")");
 			String language = StringUtils.substringBefore(messageHeader.getValue().toString(),"(");
-			String result = "";
+			String result;
 
 			if(value.startsWith("constant")) {
 				exchange.getIn().setHeader(key,value);
@@ -1809,7 +1809,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void bindByName(String beanId, String className){
 
-		Class<?> clazz = null;
+		Class<?> clazz;
 		try {
 			clazz = Class.forName(className);
 			Object bean =  clazz.getDeclaredConstructor().newInstance();
@@ -1822,7 +1822,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void addServiceByName(String className){
 
-		Class<?> clazz = null;
+		Class<?> clazz;
 		try {
 			clazz = Class.forName(className);
 			Object bean =  clazz.getDeclaredConstructor().newInstance();

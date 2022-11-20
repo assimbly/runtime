@@ -74,7 +74,7 @@ public class MQConnection {
 
     private void startActiveMQArtemisConnection(){
 
-        org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf = null;
+        org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf;
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
@@ -107,7 +107,7 @@ public class MQConnection {
 
     private void startActiveMQClassicConnection(){
 
-        ActiveMQConnectionFactory cf = null;
+        ActiveMQConnectionFactory cf;
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             cf = new ActiveMQConnectionFactory(url);

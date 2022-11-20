@@ -41,7 +41,7 @@ public class SetHeadersProcessor implements Processor {
 			  Node node = nodeList.item(i);
 
 			  String language = "constant";
-			  String type = "header";
+			  String type;
 
 			  if (node.getNodeType() == Node.ELEMENT_NODE) {
 				  String headerKey = node.getNodeName();
@@ -51,9 +51,9 @@ public class SetHeadersProcessor implements Processor {
 				  language = elem.getAttribute("language");
 				  type = elem.getAttribute("type");
 
-				  String result = "";
+				  String result;
 
-				  if (language == null || language.equalsIgnoreCase("constant")) {
+				  if (language.equalsIgnoreCase("constant")) {
 					  result = headerValue;
 				  } else if (language.equalsIgnoreCase("xpath")) {
 					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();

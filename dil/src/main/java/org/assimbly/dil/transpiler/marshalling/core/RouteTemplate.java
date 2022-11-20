@@ -500,7 +500,7 @@ public class RouteTemplate {
     private void createDefaultLinks(String stepXPath, String type, String flowId){
 
         String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
-        String value = "";
+        String value;
 
         if(StringUtils.isNumeric(stepIndex)) {
 
@@ -620,7 +620,7 @@ public class RouteTemplate {
 
     public String createLinkEndpoint(String xpath, String transport, String id){
 
-        String endpoint = "";
+        String endpoint;
 
         Objects.toString(conf.getProperty(xpath + "options"), null);
 

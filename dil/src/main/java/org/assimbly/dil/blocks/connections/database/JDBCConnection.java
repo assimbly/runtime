@@ -10,11 +10,12 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class JDBCConnection {
 
+    private final String componentName;
+
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private CamelContext context;
     private EncryptableProperties properties;
-    private String componentName;
     private String connectionId;
 
     private String url;

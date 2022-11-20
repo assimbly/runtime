@@ -21,7 +21,7 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
         if (original == null) {
-            throw new NullPointerException("Original exchange is null, cannot add resource as attachment.");
+            throw new RuntimeException("Original exchange is null, cannot add resource as attachment.");
         }
 
         Message resourceMessage;
@@ -53,7 +53,8 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
             mimeType = resourceMessage.getHeader(Exchange.CONTENT_TYPE, String.class);
         }
 
-        DataHandler dataHandler = null;
+        DataHandler dataHandler;
+
         byte[] data = new byte[0];
 
         try {

@@ -519,8 +519,9 @@ public class ActiveMQClassic implements Broker {
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-        if(!MapUtils.isEmpty(messageHeaders)){
-
+        if(MapUtils.isEmpty(messageHeaders)){
+            destinationViewMBean.sendTextMessage(messageBody);
+        }else{
             if(messageHeaders.containsKey("JMSDeliveryMode")) {
                 if (messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("PERSISTENT") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("0")) {
                     messageHeaders.put("JMSDeliveryMode", 0);
@@ -534,9 +535,9 @@ public class ActiveMQClassic implements Broker {
             }
 
             destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
-        }else{
-            destinationViewMBean.sendTextMessage(messageBody);
+
         }
+
         return "success";
     }
 

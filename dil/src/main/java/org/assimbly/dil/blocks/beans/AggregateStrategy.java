@@ -30,6 +30,8 @@ public class AggregateStrategy implements AggregationStrategy {
             case "json":
             case "application/json":
                 aggregateStrategy = new JsonAggregateStrategy();
+            default:
+                throw new UnsupportedOperationException("Unknown aggregateType");
         }
 
         return aggregateStrategy.aggregate(firstExchange, newExchange);

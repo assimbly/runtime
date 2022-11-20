@@ -38,7 +38,7 @@ import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
 
-	protected Logger log = LoggerFactory.getLogger(getClass());
+	protected static Logger log = LoggerFactory.getLogger(getClass());
 	
 	EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -276,9 +276,9 @@ public class ActiveMQArtemis implements Broker {
 			field.set(null,tmp);
 			System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
 		} catch (IllegalAccessException e) {
-			throw new IOException("Failed to get permissions to set library path");
+			log.error("Failed to get permissions to set library path",e);
 		} catch (NoSuchFieldException e) {
-			throw new IOException("Failed to get field handle to set library path");
+			log.error("Failed to get field handle to set library path",e);
 		}
 	}
 

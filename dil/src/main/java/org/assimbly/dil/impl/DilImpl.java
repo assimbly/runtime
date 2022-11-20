@@ -33,15 +33,7 @@ public abstract class DilImpl implements Dil {
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
-
 			log.error("Failed to transpile code. Reason:", e);
-
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {
-				throw new Exception(ex);
-			}
 		}
 	}
 
