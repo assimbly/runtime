@@ -3,24 +3,14 @@ package org.assimbly.dil.transpiler.transform;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
-
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public final class Transform {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
+    final static Logger log = LoggerFactory.getLogger(Transform.class);
 
     public static String transformToDil(String xml){
 

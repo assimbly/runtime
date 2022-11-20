@@ -1,10 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.assimbly.dil.blocks.processors.SetBodyProcessor;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 public class SetBody extends RouteBuilder {
 

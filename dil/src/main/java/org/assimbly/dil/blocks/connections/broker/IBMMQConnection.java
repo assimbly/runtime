@@ -56,7 +56,7 @@ public class IBMMQConnection {
 
         if (context.hasComponent(componentName) == null) {
             if (url != null) {
-                setConnection(stepType, stepId);
+                setConnection();
             }
         } else {
             log.error("ActiveMQ connection parameters are invalid.");
@@ -93,8 +93,7 @@ public class IBMMQConnection {
     }
 
 
-
-    private void setConnection(String direction, Object stepId) throws Exception {
+    private void setConnection() throws Exception {
 
         log.info("Setting up IBM MQ connection factory.");
 

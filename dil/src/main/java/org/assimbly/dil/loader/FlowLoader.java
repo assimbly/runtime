@@ -8,8 +8,6 @@ import org.apache.camel.spi.RoutesLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,7 +185,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private void updateStep(Resource resource, String route, String type, String id, String uri){
 		try {
-			log.info(logMessage("Updating step", flowName, flowId, id, type, route));
+			log.info(logMessage("Updating step", id, type, route));
 			loader.updateRoutes(resource);
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 		}catch (Exception e) {
@@ -200,7 +198,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private void loadStep(Resource resource, String route, String type, String id, String uri){
 		try {
-			log.info(logMessage("Loading step", flowName, flowId, id, type, route));
+			log.info(logMessage("Loading step", id, type, route));
 			loader.loadRoutes(resource);
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 		}catch (Exception e){
@@ -256,7 +254,7 @@ public class FlowLoader extends RouteBuilder {
 		return isFlowLoaded;
 	}
 
-	private String logMessage(String message, String flowName, String flowId, String stepId, String stepType, String route){
+	private String logMessage(String message, String stepId, String stepType, String route){
 
 		String logMessage = message + "\n\n";
 		logMessage = logMessage + "Step id: " + stepId + "\n";

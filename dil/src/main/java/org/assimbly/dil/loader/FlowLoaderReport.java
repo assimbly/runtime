@@ -12,7 +12,6 @@ public class FlowLoaderReport {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	private String report;
-	private boolean isFlowLoaded = true;
 	private JSONObject json;
 	private JSONArray steps;
 	private int loaded = 0;
@@ -88,7 +87,6 @@ public class FlowLoaderReport {
 			step.put("status", "error");
 			step.put("errorMessage", message);
 			loadedError = loadedError + 1;
-			isFlowLoaded = false;
 		}else{
 			step.put("status", stepStatus);
 			loadedSuccess = loadedSuccess + 1;

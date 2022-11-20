@@ -1,11 +1,7 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.activemq.ActiveMQComponent;
-import org.apache.camel.component.activemq.ActiveMQConfiguration;
-import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
@@ -39,7 +35,7 @@ public class MQConnection {
 
     public void start(String direction, Object stepId) throws Exception {
 
-        setFields(direction, stepId);
+        setFields();
 
         log.info("Setting up sjms client connection for " + jmsProvider);
 
@@ -50,7 +46,7 @@ public class MQConnection {
         }
     }
 
-    private void setFields(String direction, Object stepId){
+    private void setFields(){
 
         url = properties.getProperty("connection." + connectionId + ".url");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");

@@ -34,8 +34,6 @@ public class RouteTemplate {
     private Element templatedRoutes;
     private Element templatedRoute;
 
-    private Element contentRoute;
-
     private String routeId;
     private String templateId;
     private String path;
@@ -69,11 +67,11 @@ public class RouteTemplate {
 
         createTemplatedRoutes();
 
-        createTemplateId(baseUri, type, stepXPath);
+        createTemplateId(baseUri, type);
 
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
             contentRouteDoc = createNewDocument();
-            createContentRouter(optionProperties, links, stepXPath, type, flowId, stepId);
+            createContentRouter(links, stepXPath, type, flowId, stepId);
         }else if(!predefinedStep && baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
         }else{
@@ -84,9 +82,9 @@ public class RouteTemplate {
     }
 
 
-    private void createContentRouter(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId, String stepId){
+    private void createContentRouter(String[] links, String stepXPath, String type, String flowId, String stepId){
 
-        createContentRoute(optionProperties, links, stepXPath, type, flowId);
+        createContentRoute(links, stepXPath);
 
         String route = DocConverter.convertDocToString(contentRouteDoc);
 
@@ -95,7 +93,7 @@ public class RouteTemplate {
 
     }
 
-    private void createContentRoute(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId){
+    private void createContentRoute(String[] links, String stepXPath){
 
         Element contentRoutes = contentRouteDoc.createElement("routes");
         contentRouteDoc.appendChild(contentRoutes);
@@ -333,7 +331,7 @@ public class RouteTemplate {
         return doc;
     }
 
-    private void createTemplateId(String uri,String type, String stepXPath){
+    private void createTemplateId(String uri,String type){
 
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
@@ -489,7 +487,7 @@ public class RouteTemplate {
 
     private void createLinks(String[] links, String stepXPath, String type, String flowId){
 
-        createDefaultLinks(stepXPath, type, flowId);
+        createDefaultLinks(stepXPath, flowId);
 
         if(links.length > 0){
             createCustomLinks(links, stepXPath, type);
@@ -497,7 +495,7 @@ public class RouteTemplate {
 
     }
 
-    private void createDefaultLinks(String stepXPath, String type, String flowId){
+    private void createDefaultLinks(String stepXPath, String flowId){
 
         String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
         String value;

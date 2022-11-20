@@ -4,7 +4,6 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

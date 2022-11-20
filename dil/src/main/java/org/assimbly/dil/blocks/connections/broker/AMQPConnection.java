@@ -85,7 +85,7 @@ public class AMQPConnection {
     private String createSSLEnabledUrl(String url) {
 
         String modifiedUrl = "";
-        String multipleUrls = "";
+        String multipleUrls;
 
         if (url.indexOf(",") == -1) {
             log.info("SSLEnabled Normal Url: ");

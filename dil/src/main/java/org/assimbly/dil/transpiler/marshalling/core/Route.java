@@ -4,10 +4,8 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.*;
 import java.util.TreeMap;
 
 public class Route {

@@ -2,8 +2,6 @@ package org.assimbly.dil.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
 
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-
 public class SetHeader extends RouteBuilder {
 
      @Override

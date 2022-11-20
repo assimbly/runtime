@@ -4,7 +4,6 @@ import org.apache.camel.*;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.assimbly.dil.blocks.processors.FailureProcessor;
 
-import java.util.List;
 import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,8 +26,7 @@ public class ErrorHandler {
 	private Processor failureProcessor;
 
 	private TreeMap<String, String> props;
-	private List<String> errorUriKeys;
-	
+
 	public ErrorHandler(DeadLetterChannelBuilder errorHandler, final TreeMap<String, String> props){
 		this.errorHandler = errorHandler;
 		this.props = props;		

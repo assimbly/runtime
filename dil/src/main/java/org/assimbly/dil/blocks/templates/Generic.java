@@ -1,6 +1,5 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 
 public class Generic extends RouteBuilder {

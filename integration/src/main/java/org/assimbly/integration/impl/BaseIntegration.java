@@ -156,35 +156,7 @@ public abstract class BaseIntegration implements Integration {
         return flowConfiguration;
 		
 	}
-	
-	
-	@SuppressWarnings("unused")
-	private List<TreeMap<String,String>> getConnections() throws Exception {
-		return this.connections;
-	}
-    	
-	@SuppressWarnings("unused")
-	private void addConnection(TreeMap<String,String> properties) throws Exception {
-		this.connections.add(properties);
-	}
-	
-	@SuppressWarnings("unused")
-	private boolean removeConnection(String id) throws Exception {
-		TreeMap<String, String> con = null;
-		for (TreeMap<String, String> connection : connections){
-			if (connection.get("connection_id").equals(id)){
-				con = connection;
-			}
-		}
-		if (con != null){
-			this.connections.remove(con);
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	
+
 	public String getLastError() {
 		
 		String error = "0";

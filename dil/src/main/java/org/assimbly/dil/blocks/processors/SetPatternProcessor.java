@@ -1,10 +1,6 @@
 package org.assimbly.dil.blocks.processors;
 
 import org.apache.camel.*;
-import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.Language;
-
-import javax.xml.xpath.XPathFactory;
 
 //set headers for each step
 public class SetPatternProcessor implements Processor {

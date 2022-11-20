@@ -10,7 +10,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class JDBCConnection {
 
-    private final String componentName;
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -18,6 +17,7 @@ public class JDBCConnection {
     private EncryptableProperties properties;
     private String connectionId;
 
+    private final String componentName;
     private String url;
     private String username;
     private String password;

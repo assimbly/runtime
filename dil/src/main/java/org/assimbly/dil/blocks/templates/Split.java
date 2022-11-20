@@ -1,7 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.language.xpath.XPathBuilder;
 
 public class Split extends RouteBuilder {
 
