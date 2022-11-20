@@ -428,9 +428,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = null;
 
-		configuration= new String(configuration.getBytes("UTF-8"));
+		String configurationUTF8 = new String(configuration.getBytes("UTF-8"));
 
-		Document doc = DocConverter.convertStringToDoc(configuration);
+		Document doc = DocConverter.convertStringToDoc(configurationUTF8);
 		XPath xPath = XPathFactory.newInstance().newXPath();
 
 		String root = doc.getDocumentElement().getTagName();
@@ -559,10 +559,11 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
+
 		for (String key : props.keySet()){
 
 			if (key.endsWith("connection.id")){
-				props = setConnection(props, key);
+				setConnection(props, key);
 			}
 
 			if (key.equals("flow.dependencies") && props.get(key) != null){
@@ -1078,11 +1079,14 @@ public class CamelIntegration extends BaseIntegration {
 	public String getFlowStatus(String id) {
 		
 		if(hasFlow(id)) {
+			String updatedId;
 			if(!id.contains("-")){
-				id = id + "-";
+				updatedId = id + "-";
+			}else{
+				updatedId = id;
 			}
 			try {
-				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(id).get(0).getId());
+				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(updatedId).get(0).getId());
 				flowStatus = status.toString().toLowerCase();
 			}catch (Exception e) {
 					e.printStackTrace();

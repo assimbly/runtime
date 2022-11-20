@@ -462,11 +462,11 @@ public class ActiveMQClassic implements Broker {
 
         checkIfEndpointExist(endpointName);
 
-        messageId = "JMSMessageID='" + messageId + "'";
+        String messageIdKey = "JMSMessageID='" + messageId + "'";
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-        CompositeData[] messages = destinationViewMBean.browse(messageId);
+        CompositeData[] messages = destinationViewMBean.browse(messageIdKey);
 
         String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
@@ -601,9 +601,7 @@ public class ActiveMQClassic implements Broker {
             list = list.subList(startIndex, endIndex);
         }
 
-        messages = list.toArray(new CompositeData[list.size()]);
-
-        return messages;
+        return list.toArray(new CompositeData[list.size()]);
 
     }
 

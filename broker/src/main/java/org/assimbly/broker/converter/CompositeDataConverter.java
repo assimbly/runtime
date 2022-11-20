@@ -13,17 +13,20 @@ public class CompositeDataConverter {
                 return null;
             }
 
-            if(numberOfMessages==null){
-                numberOfMessages = messages.length;
-            }else if (messages.length < numberOfMessages){
-                numberOfMessages = messages.length;
-            }
+            int totalMessages;
 
+            if(numberOfMessages==null){
+                totalMessages = messages.length;
+            }else if (messages.length < numberOfMessages){
+                totalMessages = messages.length;
+            }else{
+                totalMessages = numberOfMessages;
+            }
 
             JSONObject messagesAsJSON = new JSONObject();
             JSONObject messageAsJSON = new JSONObject();
 
-            for(int i=0;i<numberOfMessages;i++){
+            for(int i=0;i<totalMessages;i++){
                 CompositeData message = messages[i];
                 if(list) {
                     messageAsJSON.append("message", messageToJSONList(message));

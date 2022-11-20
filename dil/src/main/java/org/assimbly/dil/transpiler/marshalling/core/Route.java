@@ -51,7 +51,7 @@ public class Route {
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");
-            route = route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
+            return route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
         }
 
         return route;

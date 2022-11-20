@@ -117,12 +117,12 @@ public class AMQPConnection {
         }
 
         if(!modifiedUrl.isEmpty()){
-            url = modifiedUrl;
+            log.info("SSLEnabled Url: " + modifiedUrl);
+            return modifiedUrl;
+        }else{
+            log.info("SSLEnabled Url: " + url);
+            return url;
         }
-
-        log.info("SSLEnabled Url: " + url);
-
-        return url;
 
     }
 
@@ -130,28 +130,29 @@ public class AMQPConnection {
 
         String baseDirURI = baseDir.replace("\\", "/");
 
+        String sslUrl = url;
         if (url.indexOf("?") != -1) {
 
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)) {
-                url = url + "&transport.verifyHost=false";
+                sslUrl = url + "&transport.verifyHost=false";
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
-                url = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
+                sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
-                url = url + "&transport.trustStorePassword=supersecret";
+                sslUrl = url + "&transport.trustStorePassword=supersecret";
             }
 
         } else {
-            url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
+            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
         }
 
-        return url;
+        return sslUrl;
 
     }
 

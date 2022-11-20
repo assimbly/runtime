@@ -442,15 +442,16 @@ public class ConnectorRoute extends RouteBuilder {
 		EncryptableProperties encryptionProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
 		String[] encryptedList = StringUtils.substringsBetween(value, "ENC(", ")");
 
+		String decryptedValue = value;
 		if(encryptedList !=null && encryptedList.length>0){
 			for (String encrypted: encryptedList) {
 				encryptionProperties.setProperty("temp","ENC(" + encrypted + ")");
 				String decrypted = encryptionProperties.getProperty("temp");
-				value = StringUtils.replace(value, "ENC(" + encrypted + ")",decrypted);
+				decryptedValue = StringUtils.replace(value, "ENC(" + encrypted + ")", decrypted);
 			}
 		}
 
-		return value;
+		return decryptedValue;
 
 	}
 

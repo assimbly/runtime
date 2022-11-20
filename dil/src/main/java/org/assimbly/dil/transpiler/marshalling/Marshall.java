@@ -176,12 +176,15 @@ public class Marshall {
 
 		if(confUriSplitted.length<=1) {
 			if(confUri.startsWith("sonicmq")) {
-				confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+				String updatedConfUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+				uri.setTextContent(updatedConfUri);
+			}else{
+				uri.setTextContent(confUri);
 			}
 
 			stepId.setTextContent(confstepId);
 			type.setTextContent(confType);
-			uri.setTextContent(confUri);
+			
 
 			step.appendChild(stepId);
 			step.appendChild(type);

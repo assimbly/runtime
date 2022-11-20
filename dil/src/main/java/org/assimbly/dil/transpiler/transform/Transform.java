@@ -25,17 +25,17 @@ public final class Transform {
 	public static String transformToDil(String xml){
 
 		//convert camel2 to camel3
-		xml = camel2ToCamel3(xml);
+        String camel3Xml = camel2ToCamel3(xml);
 
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
 
         //transform to DIL format
-		xml = TransformUtil.transformXML(xml,is);
+		String dilXml = TransformUtil.transformXML(camel3Xml,is);
 
-        log.debug("The DIL format:\n\n" + xml);
+        log.debug("The DIL format:\n\n" + dilXml);
 
-        return xml;
+        return dilXml;
 
 	}
 			

@@ -255,14 +255,14 @@ public class FlowLoader extends RouteBuilder {
 
 	private String logMessage(String message, String flowName, String flowId, String stepId, String stepType, String route){
 
-		message = message + "\n\n";
-		message = message + "Step id: " + stepId + "\n";
-		message = message + "Step type: " + stepType + "\n";
+		String logMessage = message + "\n\n";
+		logMessage = logMessage + "Step id: " + stepId + "\n";
+		logMessage = logMessage + "Step type: " + stepType + "\n";
 		if(route!=null) {
-			message = message + "Step configuration:\n\n" + route + "\n";
+			logMessage = logMessage + "Step configuration:\n\n" + route + "\n";
 		}
 
-		return message;
+		return logMessage;
 	}
 
 	public String getReport(){

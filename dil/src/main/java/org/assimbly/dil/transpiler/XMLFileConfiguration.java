@@ -89,9 +89,10 @@ public class XMLFileConfiguration {
 	}
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
-		
+
+		String dilXml = null;
 		if(!xml.endsWith("</dil>")){
-			xml = Transform.transformToDil(xml);
+			dilXml = Transform.transformToDil(xml);
 		}
 		
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -106,7 +107,7 @@ public class XMLFileConfiguration {
 		
 		FileHandler fh = new FileHandler(conf);
 
-		fh.load(DocConverter.convertStringToStream(xml));
+		fh.load(DocConverter.convertStringToStream(dilXml));
 	
 		properties = new Unmarshall().getProperties(conf,flowId);
 

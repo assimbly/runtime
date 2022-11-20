@@ -70,13 +70,15 @@ public class FlowLoaderReport {
 
 		loaded = loaded + 1;
 
+		String id;
 		if(stepId.contains("-")){
-			stepId = StringUtils.substringAfterLast(stepId, "-");
+			id = StringUtils.substringAfterLast(stepId, "-");
+		}else{
+			id = stepId;
 		}
 
-
 		JSONObject step = new JSONObject();
-		step.put("id", stepId);
+		step.put("id", id);
 		if(stepUri!=null){
 			step.put("uri", stepUri);
 		}

@@ -52,10 +52,6 @@ public class MQConnection {
 
     private void setFields(String direction, Object stepId){
 
-        if (direction.equals("to") || direction.equals("from")) {
-            direction = direction + "." + stepId;
-        }
-
         url = properties.getProperty("connection." + connectionId + ".url");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");
         username = properties.getProperty("connection." + connectionId + ".username");

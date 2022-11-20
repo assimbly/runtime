@@ -50,7 +50,6 @@ public class SonicMQConnection {
 
     private void setFields(String flowId, String connectId) throws Exception {
 
-        flowId = properties.getProperty("id");
         componentName = "sonicmq." + flowId + connectId;
         url = properties.getProperty("connection." + connectionId + ".url");
         username = properties.getProperty("connection." + connectionId + ".username");

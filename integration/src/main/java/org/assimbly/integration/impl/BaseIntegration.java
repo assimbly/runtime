@@ -50,12 +50,11 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfigurations(String integrationId, String mediaType, String configuration) throws Exception {
 
 		try {
-			mediaType = mediaType.toLowerCase();
 			List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
 			
-			if(mediaType.contains("xml")) {
+			if(mediaType.toLowerCase().contains("xml")) {
 				propertiesFromFile = convertXMLToConfiguration(integrationId, configuration);
-			}else if(mediaType.contains("json")) {
+			}else if(mediaType.toLowerCase().contains("json")) {
 				propertiesFromFile = convertJSONToConfiguration(integrationId, configuration);
 			}else {
 				propertiesFromFile = convertYAMLToConfiguration(integrationId, configuration);
@@ -80,11 +79,10 @@ public abstract class BaseIntegration implements Integration {
 	public String getFlowConfigurations(String integrationId, String mediaType) throws Exception {
 
 		this.properties = getFlowConfigurations();
-		mediaType = mediaType.toLowerCase();
 
-		if(mediaType.contains("xml")) {
+		if(mediaType.toLowerCase().contains("xml")) {
         	configuration = convertConfigurationToXML(integrationId,this.properties);
-		}else if(mediaType.contains("json")) {
+		}else if(mediaType.toLowerCase().contains("json")) {
         	configuration = convertConfigurationToJSON(integrationId,this.properties);
 		}else {
         	configuration = convertConfigurationToYAML(integrationId,this.properties);
@@ -121,11 +119,10 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 		
 		try {
-			mediaType = mediaType.toLowerCase();
-	
-			if(mediaType.contains("xml")) {
+
+			if(mediaType.toLowerCase().contains("xml")) {
 	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-			}else if(mediaType.contains("json")) { 
+			}else if(mediaType.toLowerCase().contains("json")) {
 	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
 
 			}else {
@@ -161,11 +158,10 @@ public abstract class BaseIntegration implements Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception {
 		
 		this.flowProperties = getFlowConfiguration(flowId);
-		mediaType = mediaType.toLowerCase();
 
-		if(mediaType.contains("xml")) {
+		if(mediaType.toLowerCase().contains("xml")) {
         	flowConfiguration = convertFlowConfigurationToXML(this.flowProperties);
-		}else if(mediaType.contains("json")) {
+		}else if(mediaType.toLowerCase().contains("json")) {
         	flowConfiguration = convertFlowConfigurationToJSON(this.flowProperties);
 		}else {
         	flowConfiguration = convertFlowConfigurationToYAML(this.flowProperties);

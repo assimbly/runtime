@@ -96,10 +96,6 @@ public class IBMMQConnection {
 
     private void setConnection(String direction, Object stepId) throws Exception {
 
-        if (direction.equals("to") || direction.equals("from")) {
-            direction = direction + "." + stepId;
-        }
-
         log.info("Setting up IBM MQ connection factory.");
 
         MQConnectionFactory cf = setupIBMMQConnectionFactory();

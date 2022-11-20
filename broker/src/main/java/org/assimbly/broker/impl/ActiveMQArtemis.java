@@ -530,10 +530,6 @@ public class ActiveMQArtemis implements Broker {
 
 		checkIfEndpointExist(endpointName);
 
-		if(filter==null){
-			filter = "";
-		}
-
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
@@ -541,7 +537,12 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject messagesInfo = new JSONObject();
 		JSONObject messageInfo = new JSONObject();
 
-		String messages = queueControl.listMessagesAsJSON(filter);
+		String messages;
+		if(filter==null){
+			messages = queueControl.listMessagesAsJSON("");
+		}else{
+			messages = queueControl.listMessagesAsJSON(filter);
+		}
 
 		JSONArray messagesArray = new JSONArray(messages);
 
