@@ -101,7 +101,7 @@ public class TopicManagerResource {
     @GetMapping(path = "/brokers/{brokerType}/topics", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
-        log.debug("REST request to get get topics : {}");
+        log.debug("REST request to get get topics");
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();

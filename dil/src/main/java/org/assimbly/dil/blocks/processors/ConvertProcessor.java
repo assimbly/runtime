@@ -68,7 +68,6 @@ public class ConvertProcessor implements Processor {
 	                break;
 				default:
 					convertedBody = body;
-	                
 	        }
 
             in.setBody(convertedBody);

@@ -143,7 +143,7 @@ public class BrokerManagerResource {
     @GetMapping(path = "/brokers/{brokerType}/connections", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
-        log.debug("REST request to get get connections : {}");
+        log.debug("REST request to get get connections");
 
         try {
             result = broker.getConnections(brokerType, mediaType);
@@ -164,7 +164,7 @@ public class BrokerManagerResource {
     @GetMapping(path = "/brokers/{brokerType}/consumers", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
-        log.debug("REST request to get get consumers : {}");
+        log.debug("REST request to get get consumers");
 
         try {
             result = broker.getConsumers(brokerType, mediaType);

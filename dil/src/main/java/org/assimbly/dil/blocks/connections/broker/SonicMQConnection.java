@@ -65,14 +65,7 @@ public class SonicMQConnection {
             faultTolerant = true;
         }
 
-        if (url != null || username != null || password != null) {
-
-            if (context.hasComponent(componentName) == null) {
-
-            }
-
-
-        } else {
+        if (url == null || username == null || password == null) {
             log.error("SonicMQ connection parameters are invalid or missing");
             if (url == null) {
                 log.error("SonicMQ connection required parameter 'url' isn't set");
@@ -85,7 +78,6 @@ public class SonicMQConnection {
             }
             throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
         }
-
 
     }
 

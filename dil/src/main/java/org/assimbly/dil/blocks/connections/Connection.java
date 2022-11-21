@@ -85,7 +85,7 @@ public class Connection {
                 break;
             default:
                 log.error("Connection parameters for connection " + connectionType + " are not implemented");
-                throw new Exception("Connection parameters for connection " + connectionType + " are not implemented");
+                throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
         }
 
 	}

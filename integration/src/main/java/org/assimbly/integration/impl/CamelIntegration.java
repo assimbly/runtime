@@ -56,6 +56,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -71,7 +72,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private CamelContext context;
 
-	private boolean started = false;
+	private static boolean started = false;
 	private final int stopTimeout = 10;
 	private ServiceStatus status;
 	private String flowStatus;
@@ -1725,7 +1726,7 @@ public class CamelIntegration extends BaseIntegration {
 		if(file.exists()) {
 			return util.importCertificates(keystorePath, keystorePassword, certificates);
 		}else{
-			throw new Exception("Keystore doesn't exist");
+			throw new KeyStoreException("Keystore " + keystoreName + "doesn't exist");
 		}
 
 	}

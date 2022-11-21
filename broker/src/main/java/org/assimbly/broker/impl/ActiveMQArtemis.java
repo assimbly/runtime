@@ -576,7 +576,7 @@ public class ActiveMQArtemis implements Broker {
 	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
 		if (!endpointExist) {
-			throw new Exception("Endpoint " + endpointName + " not found");
+			throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
 		}
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();

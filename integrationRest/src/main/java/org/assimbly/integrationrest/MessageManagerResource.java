@@ -68,7 +68,7 @@ public class MessageManagerResource {
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
-                headerMap = getMap(headerKeys);;
+                headerMap = getMap(headerKeys);
             }
 
             if(headerMap.isEmpty()){
@@ -119,7 +119,7 @@ public class MessageManagerResource {
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
-                headerMap = getMap(headerKeys);;
+                headerMap = getMap(headerKeys);
             }
 
             if(headerMap.isEmpty()){

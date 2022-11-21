@@ -433,7 +433,7 @@ public class ActiveMQClassic implements Broker {
         endpointType = getEndpointType(endpointName);
 
         if (!endpointType.equalsIgnoreCase("queue")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
+            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
         }
 
         queueViewMbean = getQueueViewMBean("Queue", endpointName);
@@ -598,7 +598,7 @@ public class ActiveMQClassic implements Broker {
             list = list.subList(startIndex, endIndex);
         }
 
-        return list.toArray(new CompositeData[list.size()]);
+        return list.toArray(new CompositeData[0]);
 
     }
 

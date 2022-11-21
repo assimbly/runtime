@@ -16,7 +16,7 @@ public class ErrorHandler {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	private DeadLetterChannelBuilder errorHandler;
+	private DeadLetterChannelBuilder deadLetterChannelBuilder;
 	
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
@@ -27,8 +27,8 @@ public class ErrorHandler {
 
 	private TreeMap<String, String> props;
 
-	public ErrorHandler(DeadLetterChannelBuilder errorHandler, final TreeMap<String, String> props){
-		this.errorHandler = errorHandler;
+	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props){
+		this.deadLetterChannelBuilder = deadLetterChannelBuilder;
 		this.props = props;		
 	}
 	
@@ -73,7 +73,7 @@ public class ErrorHandler {
 			backOffMultiplier = 0;
 		}
 
-		errorHandler.allowRedeliveryWhileStopping(false)
+		deadLetterChannelBuilder.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()
 			.maximumRedeliveries(maximumRedeliveries)
 			.redeliveryDelay(redeliveryDelay)
@@ -89,9 +89,9 @@ public class ErrorHandler {
 			.logExhaustedMessageHistory(true)
 			.log(log);
 
-		errorHandler.asyncDelayedRedelivery();
+		deadLetterChannelBuilder.asyncDelayedRedelivery();
 
-		return errorHandler;
+		return deadLetterChannelBuilder;
 		
 	}
 	

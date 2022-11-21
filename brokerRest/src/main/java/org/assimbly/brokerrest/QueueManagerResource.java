@@ -99,7 +99,7 @@ public class QueueManagerResource {
     @GetMapping(path= "/brokers/{brokerType}/queues", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
 
-        log.debug("REST request to get get queues : {}");
+        log.debug("REST request to get get queues");
 
         try {
             result = broker.getQueues(brokerType, mediaType);

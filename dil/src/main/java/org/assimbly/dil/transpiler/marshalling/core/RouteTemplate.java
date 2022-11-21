@@ -98,7 +98,7 @@ public class RouteTemplate {
         Element contentRoutes = contentRouteDoc.createElement("routes");
         contentRouteDoc.appendChild(contentRoutes);
 
-        Element contentRoute = createRoute(links, stepXPath);;
+        Element contentRoute = createRoute(links, stepXPath);
         contentRoutes.appendChild(contentRoute);
 
     }

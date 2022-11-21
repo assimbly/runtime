@@ -14,9 +14,9 @@ public class FlowLoaderReport {
 	private String report;
 	private JSONObject json;
 	private JSONArray steps;
-	private int loaded = 0;
-	private int loadedSuccess = 0;
-	private int loadedError = 0;
+	private int loaded;
+	private int loadedSuccess;
+	private int loadedError;
 	private JSONObject flow;
 	private JSONObject stepsLoaded;
 
@@ -67,7 +67,7 @@ public class FlowLoaderReport {
 
 	public void setStep(String stepId, String stepUri, String stepType, String stepStatus, String message){
 
-		loaded = loaded + 1;
+		loaded += 1;
 
 		String id;
 		if(stepId.contains("-")){

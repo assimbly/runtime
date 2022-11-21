@@ -33,7 +33,7 @@ public class IntegrationResource {
 
     private boolean plainResponse;
 
-    private boolean integrationIsStarting = false;
+    private boolean integrationIsStarting;
 
     private String type;
 

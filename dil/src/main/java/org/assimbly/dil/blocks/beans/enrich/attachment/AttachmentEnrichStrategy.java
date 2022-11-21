@@ -26,15 +26,10 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         Message resourceMessage;
 
-
-        // When the resource message is null, return the original exchange without adding any attachments.
-        // In this case the main flow can keep going, but the error is logged to the log tab in Dovetail.
-        try {
+        if(resource == null){
             resourceMessage = resource.getIn();
-        } catch (NullPointerException e){
-            NullPointerException exception = new NullPointerException("Dovetail could not get a response from your requested resource.");
-            log.error(exception.getMessage());
-
+        }else{
+            log.error("Could not get a response from your requested resource.");
             return original;
         }
 
