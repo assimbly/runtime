@@ -38,7 +38,7 @@ import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
 
-	protected static Logger log = LoggerFactory.getLogger(getClass());
+	final static Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
 	
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
