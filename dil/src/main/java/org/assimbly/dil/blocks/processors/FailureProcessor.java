@@ -23,7 +23,6 @@ import javax.xml.xpath.XPathFactory;
 
 public class FailureProcessor implements Processor {
 	
-    private FlowEvent flowEvent;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private String flowId;
 	private Map<String, String> props;
@@ -77,7 +76,7 @@ public class FailureProcessor implements Processor {
 		  Date date = new Date();
 		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
 		  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
-		  flowEvent = new FlowEvent(exchange.getFromRouteId(),date,exchange.getException().getMessage());
+		  FlowEvent flowEvent = new FlowEvent(exchange.getFromRouteId(), date, exchange.getException().getMessage());
 
 			if(flowEvent.getFlowId().indexOf("-") == -1){
 				flowId = flowEvent.getFlowId();

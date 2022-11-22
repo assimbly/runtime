@@ -31,7 +31,6 @@ public class FlowManagerResource {
     private Integration integration;
 
     private String flowId;
-    private String stepId;
 
     private boolean plainResponse;
 
@@ -306,7 +305,7 @@ public class FlowManagerResource {
 
 
     @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepid}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepid) throws Exception {
+    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         plainResponse = true;
 
@@ -318,7 +317,7 @@ public class FlowManagerResource {
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",flowStats,plainResponse);
         } catch (Exception e) {
-            log.error("Get flowstats " + flowId + " with stepId=" + stepid + " failed",e);
+            log.error("Get flowstats " + flowId + " with stepId=" + stepId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",e.getMessage());
         }
     }

@@ -23,8 +23,6 @@ public class ErrorHandler {
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
 
-	private Processor failureProcessor;
-
 	private TreeMap<String, String> props;
 
 	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props){
@@ -34,8 +32,8 @@ public class ErrorHandler {
 	
 	
 	public DeadLetterChannelBuilder configure() throws Exception {
-		
-		failureProcessor = new FailureProcessor(props);
+
+		Processor failureProcessor = new FailureProcessor(props);
 		
 		if (props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");

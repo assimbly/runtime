@@ -89,7 +89,7 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
-		String dilXml = null;
+		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
 			dilXml = Transform.transformToDil(xml);
 		}
@@ -103,7 +103,6 @@ public class XMLFileConfiguration {
 				.setExpressionEngine(new XPathExpressionEngine())
 		).getConfiguration();
 
-		
 		FileHandler fh = new FileHandler(conf);
 
 		fh.load(DocConverter.convertStringToStream(dilXml));
@@ -119,7 +118,7 @@ public class XMLFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 
 		String scheme = uri.getScheme();
-		//load uri to configuration
+
 		Parameters params = new Parameters();
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
