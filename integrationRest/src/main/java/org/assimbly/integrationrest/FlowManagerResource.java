@@ -54,7 +54,8 @@ public class FlowManagerResource {
                 }
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", "started flow " + flowId, "started flow " + flowId, flowId);
             } else {
-                throw new Exception(status);
+                log.error("Start flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", status, "unable to start flow " + flowId, flowId);
             }
         } catch (Exception e) {
             log.error("Start flow " + flowId + " failed",e);

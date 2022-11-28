@@ -241,7 +241,7 @@ public class RouteTemplate {
         properties.put(type + "." + stepId + ".routetemplate.id",  routeId);
 
     }
-    
+
     private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, String flowId, String stepId) throws Exception {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/" + stepXPath + "blocks");
@@ -318,9 +318,9 @@ public class RouteTemplate {
 
 
     }
-    
-    
-    
+
+
+
     private Document createNewDocument() throws ParserConfigurationException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -440,8 +440,8 @@ public class RouteTemplate {
     private void createUriValues() throws XPathExpressionException, TransformerException {
 
         if(baseUri.startsWith("block:")){
-             baseUri = StringUtils.substringAfter(baseUri,"block:");
-             uri = baseUri;
+            baseUri = StringUtils.substringAfter(baseUri,"block:");
+            uri = baseUri;
         }else if(baseUri.startsWith("component:")){
             baseUri = StringUtils.substringAfter(baseUri,"component:");
             uri = baseUri;
@@ -695,7 +695,6 @@ public class RouteTemplate {
 
     }
 
-
     private void defineRouteTemplate(String templateId, String type, String stepId) throws Exception {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/core/routeTemplates/routeTemplate[@id='" + templateId + "']");
@@ -762,6 +761,4 @@ public class RouteTemplate {
             }
         }
     }
-
-
 }
