@@ -304,8 +304,7 @@ public class FlowManagerResource {
 
    }
 
-
-    @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepid}", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         plainResponse = true;
