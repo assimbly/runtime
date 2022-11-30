@@ -18,6 +18,14 @@
     <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>
   </properties>
 
+  <distributionManagement> 
+        <repository>
+            <id>github</id> 
+            <name>Temporary Staging Repository</name> 
+            <url>https://maven.pkg.github.com/assimbly/runtime</url> 
+        </repository> 
+    </distributionManagement>
+
   <dependencies>
 
       <dependency>
