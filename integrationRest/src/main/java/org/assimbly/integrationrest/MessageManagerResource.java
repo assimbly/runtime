@@ -31,7 +31,7 @@ public class MessageManagerResource {
     @Autowired
     private IntegrationResource integrationResource;
 
-    Integration integration;
+    private Integration integration;
 
     /**
      * POST  /integration/{integrationId}/send : Send messages to an step (fire and forget).
@@ -53,7 +53,7 @@ public class MessageManagerResource {
 
         String body = requestBody.orElse(" ");
 
-        TreeMap<String, String> serviceMap = new TreeMap<>();
+        TreeMap<String, String> serviceMap;
 
         TreeMap<String, Object> headerMap = new TreeMap<>();
 
@@ -68,18 +68,18 @@ public class MessageManagerResource {
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
-                headerMap = getMap(headerKeys);;
+                headerMap = getMap(headerKeys);
             }
 
-            if(!headerMap.isEmpty()){
-                integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
-            }else {
+            if(headerMap.isEmpty()){
                 integration.send(uri,body,numberOfTimes);
+            }else {
+                integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
             }
 
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send","Sent succesfully");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Send message to " + uri + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
@@ -102,11 +102,11 @@ public class MessageManagerResource {
                                        @RequestBody Optional<String> requestBody) throws Exception {
 
         String body = requestBody.orElse(" ");
-        String result = "No reply";
+        String result;
 
         integration = integrationResource.getIntegration();
 
-        TreeMap<String, String> serviceMap = new TreeMap<>();
+        TreeMap<String, String> serviceMap;
 
         TreeMap<String, Object> headerMap = new TreeMap<>();
 
@@ -119,18 +119,18 @@ public class MessageManagerResource {
             }
 
             if(headerKeys != null && !headerKeys.isBlank()) {
-                headerMap = getMap(headerKeys);;
+                headerMap = getMap(headerKeys);
             }
 
-            if(!headerMap.isEmpty()){
-                result = integration.sendRequestWithHeaders(uri, body, headerMap);
-            }else {
+            if(headerMap.isEmpty()){
                 result = integration.sendRequest(uri,body);
+            }else {
+                result = integration.sendRequestWithHeaders(uri, body, headerMap);
             }
 
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send",result);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Send reuqest message to " + uri + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send",e.getMessage());
         }
     }

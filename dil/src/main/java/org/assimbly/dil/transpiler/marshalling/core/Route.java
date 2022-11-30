@@ -4,10 +4,8 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.*;
 import java.util.TreeMap;
 
 public class Route {
@@ -20,23 +18,25 @@ public class Route {
         this.conf = conf;
     }
 
-    public TreeMap<String, String> setRoute(String type, String stepId, String routeId) throws Exception {
+    public TreeMap<String, String> setRoute(String type, String flowId, String stepId, String routeId) throws Exception {
 
-        String route = createRoute(routeId);
+        String route = createRoute(flowId, routeId);
 
         route = createDataFormat(route);
 
-        properties.put(type + "." + stepId + ".route.id", routeId);
+        properties.put(type + "." + stepId + ".route.id", flowId + "-" + routeId);
         properties.put(type + "." + stepId + ".route", route);
 
         return properties;
     }
 
-    private String createRoute(String routeId) throws Exception {
+    private String createRoute(String flowId, String routeId) throws Exception {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
 
         String routeAsString = DocConverter.convertNodeToString(node);
+
+        routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
 
         return routeAsString;
 
@@ -49,7 +49,7 @@ public class Route {
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");
-            route = route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
+            return route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
         }
 
         return route;

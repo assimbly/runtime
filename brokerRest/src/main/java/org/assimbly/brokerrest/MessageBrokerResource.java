@@ -25,7 +25,7 @@ public class MessageBrokerResource {
 
     private String result;
 
-    private static final long id = 0L;
+    private static final long ID = 0L;
 
     /**
      * GET  /brokers/{brokerType}/messages/{stepName}/{filter} : get list of messages on step.
@@ -43,10 +43,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.listMessages(brokerType, stepName, filter, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/messages/{stepName}/{filter}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{stepName}/{filter}", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}/{filter}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/{filter}", e.getMessage());
         }
 
     }
@@ -66,10 +66,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.countMessages(brokerType, stepName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", e.getMessage());
         }
 
     }
@@ -90,10 +90,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.browseMessage(brokerType,stepName, messageId, mediaType, excludeBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", e.getMessage());
         }
 
     }
@@ -112,10 +112,10 @@ public class MessageBrokerResource {
 
         try {
             result = broker.browseMessages(brokerType,stepName, page, numberOfMessages, mediaType, excludeBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/messages/{stepName}/browse", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{stepName}/browse", result);
         } catch (Exception e) {
             log.error("Can't browse messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}/browse", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/browse", e.getMessage());
         }
 
     }
@@ -141,10 +141,10 @@ public class MessageBrokerResource {
 
         try {
             result = broker.sendMessage(brokerType,stepName,messageHeadersMap,messageBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", result);
         } catch (Exception e) {
             log.error("Can't send message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", e.getMessage());
         }
 
     }
@@ -164,10 +164,10 @@ public class MessageBrokerResource {
 
         try {
             result = broker.removeMessage(brokerType,stepName, messageId);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't remove message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", e.getMessage());
         }
 
     }
@@ -186,10 +186,10 @@ public class MessageBrokerResource {
 
         try {
             result = broker.removeMessages(brokerType,stepName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}", result);
         } catch (Exception e) {
             log.error("Can't remove messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{stepName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}", e.getMessage());
         }
 
     }
@@ -210,10 +210,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't move messsage", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", e.getMessage());
         }
 
     }
@@ -234,10 +234,10 @@ public class MessageBrokerResource {
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
         } catch (Exception e) {
             log.error("Can't move messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", e.getMessage());
         }
 
     }

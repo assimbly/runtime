@@ -1,10 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
-import org.springframework.stereotype.Component;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 public class SetMessage extends RouteBuilder {
 

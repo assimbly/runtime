@@ -291,7 +291,7 @@ public class ManagedBroker {
         }else if (brokerType.equalsIgnoreCase("artemis")) {
             return artemis;
         }else{
-            throw new Exception("Unknown brokerType: valid values are classic or artemis");
+            throw new IllegalArgumentException("Unknown brokerType: valid values are classic or artemis");
         }
     }
 }

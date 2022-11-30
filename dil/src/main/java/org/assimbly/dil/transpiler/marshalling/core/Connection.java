@@ -61,10 +61,10 @@ public class Connection {
 
         String connectionType = conf.getString(connectionXPath + "type");
 
-        if(!connectionType.isEmpty()) {
-            properties.put("connection." + connectionId + ".type", connectionType);
-        }else{
+        if(connectionType.isEmpty()) {
             properties.put("connection." + connectionId + ".type", "unknown");
+        }else{
+            properties.put("connection." + connectionId + ".type", connectionType);
         }
 
     }

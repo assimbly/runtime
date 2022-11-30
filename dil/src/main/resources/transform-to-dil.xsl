@@ -223,7 +223,7 @@
                                         </xsl:choose>
                                     </xsl:attribute>
                                     <xsl:apply-templates select="//*:camelContext/*:onException" mode="copy-no-namespaces"/>
-                                    <xsl:apply-templates select="//*:camelContext/*:dataFormats" mode="copy-no-namespaces"/>
+                                    <!--<xsl:apply-templates select="//*:camelContext/*:dataFormats" mode="copy-no-namespaces"/>-->
                                 </routeConfiguration>
                             </xsl:if>
                         </routeConfigurations>

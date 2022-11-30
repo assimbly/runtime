@@ -9,12 +9,10 @@
     <version>3.8.0</version>
   </parent>
 
-  <name>integrationRest</name>
+  <name>integration-rest</name>
   <packaging>jar</packaging>
 
-  <groupId>org.assimbly</groupId>
-  <artifactId>integrationRest</artifactId>
-  <version>3.8.0</version>
+  <artifactId>integration-rest</artifactId>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

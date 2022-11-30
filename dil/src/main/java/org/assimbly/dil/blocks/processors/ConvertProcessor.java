@@ -65,8 +65,9 @@ public class ConvertProcessor implements Processor {
 	                break; 
 	            case "CSV2YAML": 
 	    			convertedBody = DocConverter.convertCsvToYaml(body);
-	                break;	                
-	                
+	                break;
+				default:
+					convertedBody = body;
 	        }
 
             in.setBody(convertedBody);

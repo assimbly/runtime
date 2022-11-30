@@ -176,12 +176,15 @@ public class Marshall {
 
 		if(confUriSplitted.length<=1) {
 			if(confUri.startsWith("sonicmq")) {
-				confUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+				String updatedConfUri = confUri.replaceFirst("sonicmq.*:", "sonicmq:");
+				uri.setTextContent(updatedConfUri);
+			}else{
+				uri.setTextContent(confUri);
 			}
 
 			stepId.setTextContent(confstepId);
 			type.setTextContent(confType);
-			uri.setTextContent(confUri);
+			
 
 			step.appendChild(stepId);
 			step.appendChild(type);
@@ -221,25 +224,25 @@ public class Marshall {
 		if(confRouteId != null) {
 			routeId.setTextContent(confRouteId);
 			step.appendChild(routeId);
-			setRouteFromConfiguration(confRouteId, confType, configuration);
+			setRouteFromConfiguration(confRouteId, configuration);
 		}
 
 		if(confConnectionId!=null) {
 			connectionid.setTextContent(confConnectionId);
 			step.appendChild(connectionid);
-			setConnectionFromConfiguration(confConnectionId, confType, configuration);
+			setConnectionFromConfiguration(confConnectionId, configuration);
 		}
 
 		if(confHeaderId!=null) {
 			step.appendChild(headerid);
 			headerid.setTextContent(confHeaderId);
-			setHeaderFromConfiguration(confHeaderId, confType, configuration);
+			setHeaderFromConfiguration(confHeaderId, configuration);
 		}
 
 	}
 
 
-	private void setRouteFromConfiguration(String routeid, String type, TreeMap<String, String> configuration) throws Exception {
+	private void setRouteFromConfiguration(String routeid, TreeMap<String, String> configuration) throws Exception {
 
 		if(!routesList.contains(routeid)) {
 			routesList.add(routeid);
@@ -262,7 +265,7 @@ public class Marshall {
 		}
 	}
 
-	private void setConnectionFromConfiguration(String connectionid, String type, TreeMap<String, String> configuration) throws Exception {
+	private void setConnectionFromConfiguration(String connectionid, TreeMap<String, String> configuration) throws Exception {
 
 		if(!connectionsList.contains(connectionid)) {
 			connectionsList.add(connectionid);
@@ -288,7 +291,7 @@ public class Marshall {
 		}
 	}
 
-	private void setHeaderFromConfiguration(String headerid, String type, TreeMap<String, String> configuration) throws Exception {
+	private void setHeaderFromConfiguration(String headerid, TreeMap<String, String> configuration) throws Exception {
 
 		if(!headersList.contains(headerid)) {
 

@@ -4,7 +4,6 @@ import org.apache.camel.*;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.assimbly.dil.blocks.processors.FailureProcessor;
 
-import java.util.List;
 import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,27 +16,24 @@ public class ErrorHandler {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	private DeadLetterChannelBuilder errorHandler;
+	private DeadLetterChannelBuilder deadLetterChannelBuilder;
 	
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
 
-	private Processor failureProcessor;
+	private TreeMap<String, String> props;
 
-	TreeMap<String, String> props;
-	List<String> errorUriKeys;
-	
-	public ErrorHandler(DeadLetterChannelBuilder errorHandler, final TreeMap<String, String> props){
-		this.errorHandler = errorHandler;
+	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props){
+		this.deadLetterChannelBuilder = deadLetterChannelBuilder;
 		this.props = props;		
 	}
 	
 	
 	public DeadLetterChannelBuilder configure() throws Exception {
-		
-		failureProcessor = new FailureProcessor(props);
+
+		Processor failureProcessor = new FailureProcessor(props);
 		
 		if (props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
@@ -51,9 +47,9 @@ public class ErrorHandler {
 		}
 
 		if (props.containsKey("flowredeliveryDelay")){
-			String RedeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(RedeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(RedeliveryDelayAsString);
+			String redeliveryDelayAsString = props.get("flow.redeliveryDelay");
+			if(StringUtils.isNumeric(redeliveryDelayAsString)) {
+				redeliveryDelay = Integer.parseInt(redeliveryDelayAsString);
 				maximumRedeliveryDelay = redeliveryDelay * 10;
 			}else {
 				redeliveryDelay = 3000;
@@ -75,7 +71,7 @@ public class ErrorHandler {
 			backOffMultiplier = 0;
 		}
 
-		errorHandler.allowRedeliveryWhileStopping(false)
+		deadLetterChannelBuilder.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()
 			.maximumRedeliveries(maximumRedeliveries)
 			.redeliveryDelay(redeliveryDelay)
@@ -91,9 +87,9 @@ public class ErrorHandler {
 			.logExhaustedMessageHistory(true)
 			.log(log);
 
-		errorHandler.asyncDelayedRedelivery();
+		deadLetterChannelBuilder.asyncDelayedRedelivery();
 
-		return errorHandler;
+		return deadLetterChannelBuilder;
 		
 	}
 	

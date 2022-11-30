@@ -29,19 +29,19 @@ public class IntegrationResource {
 
    	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private Integration integration = new CamelIntegration();
+    private Integration integration = new CamelIntegration(true);
 
     private boolean plainResponse;
 
-    private boolean integrationIsStarting = false;
+    private boolean integrationIsStarting;
 
     private String type;
 
-    //@Autowired
-    //EncryptionProperties encryptionProperties;
-
     @Autowired
-    FailureListener failureListener;
+    private FailureListener failureListener;
+
+    public IntegrationResource() throws Exception {
+    }
 
     //configure integration
 
@@ -70,7 +70,7 @@ public class IntegrationResource {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Start integration with id=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/start", e.getMessage());
         }
     }
@@ -89,7 +89,7 @@ public class IntegrationResource {
             integration.stop();
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/stop","Integration stopped");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Stop integration with id=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/stop",e.getMessage());
         }
     }
@@ -109,7 +109,7 @@ public class IntegrationResource {
             Boolean started = integration.isStarted();
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/isStarted",started.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Check if integration with id=" + integrationId + " is started failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/isStarted",e.getMessage());
         }
 
@@ -122,7 +122,7 @@ public class IntegrationResource {
     		String testConnectionResult = integration.testConnection(host, port, timeout);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",testConnectionResult);
 		} catch (Exception e) {
-   			e.printStackTrace();
+            log.error("Test connection failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",e.getMessage());
 		}
 
@@ -135,7 +135,7 @@ public class IntegrationResource {
             String error = integration.getLastError();
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/lasterror",error,plainResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get last error for integration with id=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/lasterror",e.getMessage());
         }
 
@@ -155,8 +155,8 @@ public class IntegrationResource {
        		String result = integration.resolveDependency(scheme);
        		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
    		} catch (Exception e) {
-   			e.printStackTrace();
-   			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
+            log.error("Resolve dependency for scheme=" + scheme + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
    		}
     }
 
@@ -196,8 +196,9 @@ public class IntegrationResource {
        		integration.setCertificatesInKeystore(keystoreName, keystorePassword, url);
        		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}","Certificates set");
    		} catch (Exception e) {
-   			e.printStackTrace();
-   			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}",e.getMessage());
+            log.error("Set certificates for keystore=" + keystoreName + " for url=" + url + " failed",e);
+
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}",e.getMessage());
    		}
     }
 
@@ -210,7 +211,7 @@ public class IntegrationResource {
             String directory = integration.getBaseDirectory();
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",directory,plainResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get base directory for Assimbly failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
         }
     }
@@ -224,7 +225,7 @@ public class IntegrationResource {
 			integration.setBaseDirectory(directory);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory","success",plainResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Set base directory for Assimbly failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
         }
     }
@@ -245,8 +246,20 @@ public class IntegrationResource {
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/stats",stats,plainResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get stats failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/stats",e.getMessage());
+        }
+    }
+
+    @GetMapping(path = "/integration/{integrationId}/runningflows", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getRunningFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+
+        try {
+            String runningFlows = integration.getRunningFlows(mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/runningflows",runningFlows,true);
+        } catch (Exception e) {
+            log.error("Get running flows for integration=" + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/runningflows",e.getMessage());
         }
     }
 
@@ -290,7 +303,7 @@ public class IntegrationResource {
                 integrationIsStarting = false;
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Init integration failed",e);
             }
         }
 

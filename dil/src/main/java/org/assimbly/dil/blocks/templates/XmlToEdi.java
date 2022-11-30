@@ -9,7 +9,6 @@ public class XmlToEdi extends RouteBuilder {
 
          routeTemplate("xmltoedi-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("options")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
@@ -19,7 +18,6 @@ public class XmlToEdi extends RouteBuilder {
 
          routeTemplate("xmltoedi-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("path")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")

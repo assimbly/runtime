@@ -50,7 +50,6 @@ public class SonicMQConnection {
 
     private void setFields(String flowId, String connectId) throws Exception {
 
-        flowId = properties.getProperty("id");
         componentName = "sonicmq." + flowId + connectId;
         url = properties.getProperty("connection." + connectionId + ".url");
         username = properties.getProperty("connection." + connectionId + ".username");
@@ -66,14 +65,7 @@ public class SonicMQConnection {
             faultTolerant = true;
         }
 
-        if (url != null || username != null || password != null) {
-
-            if (context.hasComponent(componentName) == null) {
-
-            }
-
-
-        } else {
+        if (url == null || username == null || password == null) {
             log.error("SonicMQ connection parameters are invalid or missing");
             if (url == null) {
                 log.error("SonicMQ connection required parameter 'url' isn't set");
@@ -86,7 +78,6 @@ public class SonicMQConnection {
             }
             throw new Exception("SonicMQ connection parameters are invalid or missing.\n");
         }
-
 
     }
 

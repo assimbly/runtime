@@ -42,7 +42,7 @@ public class Unmarshall {
 	private String flowAssimblyHeaders;
 	private String flowParallelProcessing;
 	private String stepId;
-	
+
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -57,7 +57,7 @@ public class Unmarshall {
 		setFlows();
 
 		setSteps();
-					
+
 		setFlowType();
 
 		return properties;
@@ -75,21 +75,21 @@ public class Unmarshall {
 	}
 
 	private String setFlowSelector() throws Exception{
-		
+
 		XPath xPath = XPathFactory.newInstance().newXPath();
-		
+
 		String selector = "1";
 
 		Integer numberOfFlows = Integer.parseInt(xPath.evaluate("count(//flows/flow)",doc));
-		
+
 		if(numberOfFlows > 1){
-			
-			//originalFlowId is the flowId as parameter 
-			String originalFlowId = flowId;				
+
+			//originalFlowId is the flowId as parameter
+			String originalFlowId = flowId;
 			selector = "id='" + originalFlowId + "'";
-			
+
 			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
-						
+
 			if(!originalFlowId.equals(flowId)) {
 				ConfigurationException configurationException = new ConfigurationException("The flow ID " + originalFlowId + " doesn't exists in XML Configuration");
 				configurationException.initCause(new Throwable("The flow ID  " + originalFlowId + " doesn't exists in XML Configuration"));
@@ -99,13 +99,13 @@ public class Unmarshall {
 			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
 		}
 
-		return selector;	
-		
+		return selector;
+
 	}
 
 	//set up defaults settings for a flow if values are null or empty
 	public void setFlowDefaults(){
-		
+
 		if(flowId == null || flowId.isEmpty()){
 			flowId = "flow" + System.currentTimeMillis();
 		}
@@ -133,7 +133,7 @@ public class Unmarshall {
 		if(flowParallelProcessing == null || flowParallelProcessing.isEmpty()){
 			flowParallelProcessing = "false";
 		}
-		
+
 	}
 
 	public void setFlowProperties(String flowSelector) throws XPathExpressionException {
@@ -237,7 +237,7 @@ public class Unmarshall {
 	private void setStepBlocks() throws Exception {
 
 		blocksXPath = stepXPath + "blocks/block/";
-		
+
 		setHeader();
 
 		setConnection();
@@ -257,6 +257,9 @@ public class Unmarshall {
 			case "action":
 			case "router":
 			case "sink":
+			case "message":
+			case "api":
+			case "script":
 				setRouteTemplate();
 				break;
 			case "response":
@@ -288,7 +291,7 @@ public class Unmarshall {
 		String routeId = conf.getString(blocksXPath + "options/route_id");
 
 		if(routeId != null)
-			properties =  new Route(properties, conf).setRoute(type, stepId, routeId);
+			properties =  new Route(properties, conf).setRoute(type, flowId, stepId, routeId);
 	}
 
 	private void setRouteConfiguration() throws Exception {

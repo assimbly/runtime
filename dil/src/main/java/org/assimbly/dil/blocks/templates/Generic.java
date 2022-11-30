@@ -1,6 +1,5 @@
 package org.assimbly.dil.blocks.templates;
 
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 
 public class Generic extends RouteBuilder {
@@ -23,7 +22,7 @@ public class Generic extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
-                    .to("{{uri}}")
+                    .toD("{{uri}}")
                     .to("{{out}}");
 
          routeTemplate("generic-sink")
@@ -32,7 +31,7 @@ public class Generic extends RouteBuilder {
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{uri}}");
+                     .toD("{{uri}}");
 
      }
 

@@ -21,7 +21,7 @@ public class BrokerManagerResource {
 
     private String result;
 
-    private static final long id = 0L;
+    private static final long ID = 0L;
 
     /**
      * GET  /brokers/:id : get the broker status by "id".
@@ -84,7 +84,7 @@ public class BrokerManagerResource {
             try {
                 return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error("Can't start broker | Return error", ex);
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/start", "error");
             }
         }
@@ -143,14 +143,14 @@ public class BrokerManagerResource {
     @GetMapping(path = "/brokers/{brokerType}/connections", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
-        log.debug("REST request to get get connections : {}");
+        log.debug("REST request to get get connections");
 
         try {
             result = broker.getConnections(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/topics", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
             log.error("Can't get connections", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
         }
 
     }
@@ -164,14 +164,14 @@ public class BrokerManagerResource {
     @GetMapping(path = "/brokers/{brokerType}/consumers", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
-        log.debug("REST request to get get consumers : {}");
+        log.debug("REST request to get get consumers");
 
         try {
             result = broker.getConsumers(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/consumers", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/consumers", result);
         } catch (Exception e) {
             log.error("Can't get topics information", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
         }
 
     }

@@ -50,12 +50,11 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfigurations(String integrationId, String mediaType, String configuration) throws Exception {
 
 		try {
-			mediaType = mediaType.toLowerCase();
-			List<TreeMap<String,String>> propertiesFromFile = new ArrayList<>();
+			List<TreeMap<String,String>> propertiesFromFile;
 			
-			if(mediaType.contains("xml")) {
+			if(mediaType.toLowerCase().contains("xml")) {
 				propertiesFromFile = convertXMLToConfiguration(integrationId, configuration);
-			}else if(mediaType.contains("json")) {
+			}else if(mediaType.toLowerCase().contains("json")) {
 				propertiesFromFile = convertJSONToConfiguration(integrationId, configuration);
 			}else {
 				propertiesFromFile = convertYAMLToConfiguration(integrationId, configuration);
@@ -63,13 +62,7 @@ public abstract class BaseIntegration implements Integration {
 	        
 	        setFlowConfigurations(propertiesFromFile);
 		}catch (Exception e) {
-			
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {	
-				throw new Exception(ex);	
-			}
+			log.error("Set flow configurations failed", e);
 		}		
 	}	
 	
@@ -80,11 +73,10 @@ public abstract class BaseIntegration implements Integration {
 	public String getFlowConfigurations(String integrationId, String mediaType) throws Exception {
 
 		this.properties = getFlowConfigurations();
-		mediaType = mediaType.toLowerCase();
 
-		if(mediaType.contains("xml")) {
+		if(mediaType.toLowerCase().contains("xml")) {
         	configuration = convertConfigurationToXML(integrationId,this.properties);
-		}else if(mediaType.contains("json")) {
+		}else if(mediaType.toLowerCase().contains("json")) {
         	configuration = convertConfigurationToJSON(integrationId,this.properties);
 		}else {
         	configuration = convertConfigurationToYAML(integrationId,this.properties);
@@ -121,11 +113,10 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 		
 		try {
-			mediaType = mediaType.toLowerCase();
-	
-			if(mediaType.contains("xml")) {
+
+			if(mediaType.toLowerCase().contains("xml")) {
 	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-			}else if(mediaType.contains("json")) { 
+			}else if(mediaType.toLowerCase().contains("json")) {
 	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
 
 			}else {
@@ -135,15 +126,7 @@ public abstract class BaseIntegration implements Integration {
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
-
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {	
-				throw new Exception(ex);	
-			}			
+			log.error("Set flow configuration failed",e);
 		}
 	}
 	
@@ -161,11 +144,10 @@ public abstract class BaseIntegration implements Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception {
 		
 		this.flowProperties = getFlowConfiguration(flowId);
-		mediaType = mediaType.toLowerCase();
 
-		if(mediaType.contains("xml")) {
+		if(mediaType.toLowerCase().contains("xml")) {
         	flowConfiguration = convertFlowConfigurationToXML(this.flowProperties);
-		}else if(mediaType.contains("json")) {
+		}else if(mediaType.toLowerCase().contains("json")) {
         	flowConfiguration = convertFlowConfigurationToJSON(this.flowProperties);
 		}else {
         	flowConfiguration = convertFlowConfigurationToYAML(this.flowProperties);
@@ -174,35 +156,7 @@ public abstract class BaseIntegration implements Integration {
         return flowConfiguration;
 		
 	}
-	
-	
-	@SuppressWarnings("unused")
-	private List<TreeMap<String,String>> getConnections() throws Exception {
-		return this.connections;
-	}
-    	
-	@SuppressWarnings("unused")
-	private void addConnection(TreeMap<String,String> properties) throws Exception {
-		this.connections.add(properties);
-	}
-	
-	@SuppressWarnings("unused")
-	private boolean removeConnection(String id) throws Exception {
-		TreeMap<String, String> con = null;
-		for (TreeMap<String, String> connection : connections){
-			if (connection.get("connection_id").equals(id)){
-				con = connection;
-			}
-		}
-		if (con != null){
-			this.connections.remove(con);
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	
+
 	public String getLastError() {
 		
 		String error = "0";
@@ -389,6 +343,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowStats(String id, String stepid, String mediaType) throws Exception;
 
+	public abstract String getRunningFlows(String mediaType) throws Exception;
 	//certificates
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;

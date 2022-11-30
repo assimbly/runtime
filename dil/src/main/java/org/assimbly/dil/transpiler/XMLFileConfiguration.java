@@ -30,8 +30,8 @@ import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
-import org.assimbly.util.IntegrationUtil;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
@@ -89,9 +89,12 @@ public class XMLFileConfiguration {
 	}
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
-		
+
+		System.out.println(xml);
+
+		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
-			xml = Transform.transformToDil(xml);
+			dilXml = Transform.transformToDil(xml);
 		}
 		
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -103,10 +106,9 @@ public class XMLFileConfiguration {
 				.setExpressionEngine(new XPathExpressionEngine())
 		).getConfiguration();
 
-		
 		FileHandler fh = new FileHandler(conf);
 
-		fh.load(DocConverter.convertStringToStream(xml));
+		fh.load(DocConverter.convertStringToStream(dilXml));
 	
 		properties = new Unmarshall().getProperties(conf,flowId);
 
@@ -119,16 +121,16 @@ public class XMLFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 
 		String scheme = uri.getScheme();
-		//load uri to configuration
+
 		Parameters params = new Parameters();
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		if(scheme.startsWith("sonicfs")) {
 
-			URL Url = uri.toURL();
+			URL url = uri.toURL();
 
-			InputStream is = Url.openStream();
+			InputStream is = url.openStream();
 
 			conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(params.xml()).getConfiguration();
 			FileHandler fh = new FileHandler(conf);
@@ -154,12 +156,12 @@ public class XMLFileConfiguration {
 
 		}else if (scheme.startsWith("http")) {
 
-			URL Url = uri.toURL();
+			URL url = uri.toURL();
 
 			FileBasedConfigurationBuilder<XMLConfiguration> builder =
 					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
 							.configure(params.xml()
-									.setURL(Url)
+									.setURL(url)
 									.setFileName("dil.xml")
 									.setDocumentBuilder(docBuilder)
 									.setSchemaValidation(true)

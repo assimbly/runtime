@@ -11,9 +11,10 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("out")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("{{out}}");
+                        .to("{{out}}");
 
          routeTemplate("link-action")
                  .templateParameter("routeconfiguration_id","0")
@@ -28,8 +29,17 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("in")
+                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}");
+
+         routeTemplate("link-router")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("in")
+                 .templateParameter("out_list")
+                 .from("{{in}}")
+                     .routeConfigurationId("{{routeconfiguration_id}}")
+                     .recipientList().constant("{{out_list}}");
 
      }
 

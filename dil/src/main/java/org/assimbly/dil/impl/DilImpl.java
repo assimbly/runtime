@@ -22,11 +22,9 @@ public abstract class DilImpl implements Dil {
 	public void transpile(String flowId, String mediaType, String configuration) throws Exception {
 
 		try {
-			mediaType = mediaType.toLowerCase();
-
-			if(mediaType.contains("xml")) {
+			if(mediaType.toLowerCase().contains("xml")) {
 				flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-			}else if(mediaType.contains("json")) {
+			}else if(mediaType.toLowerCase().contains("json")) {
 				flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
 			}else {
 				flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
@@ -35,15 +33,7 @@ public abstract class DilImpl implements Dil {
 			setFlowConfiguration(flowProperties);
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
-
-			try {
-				String errorCause = e.getCause().getMessage();
-				throw new Exception(errorCause);
-			}catch (Exception ex) {
-				throw new Exception(ex);
-			}
+			log.error("Failed to transpile code. Reason:", e);
 		}
 	}
 

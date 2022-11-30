@@ -1,17 +1,12 @@
 package org.assimbly.dil.loader;
 
-import java.util.List;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
-
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
-import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
-import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,26 +16,28 @@ public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	TreeMap<String, String> props;
+	private TreeMap<String, String> props;
 
 	private CamelContext context;
 	private ExtendedCamelContext extendedCamelContext;
 
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
+	private String flowId;
+	private String flowName;
 
+	private boolean isFlowLoaded = true;
 
-
-	String flowId;
-	String flowName;
-
-	boolean isLoaded;
+	private FlowLoaderReport flowLoaderReport;
 
 	public FlowLoader(final TreeMap<String, String> props){
+		super();
 		this.props = props;
 	}
 
-	public FlowLoader() {}
+	public FlowLoader() {
+		super();
+	}
 
 	public interface FailureProcessorListener {
 		public void onFailure();
@@ -49,12 +46,38 @@ public class FlowLoader extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		flowName = props.get("flow.name");
-		flowId = props.get("id");
+		init();
 
-		log.info("Configuring ESBRoute flow=" + flowName);
+		loadFlowSteps();
+
+		finish();
+	}
+
+	private void init(){
+
+		flowId = props.get("id");
+		flowName = props.get("flow.name");
+
+		flowLoaderReport = new FlowLoaderReport();
+
+		flowLoaderReport.initReport(flowId, flowName);
 
 		setExtendedCamelContext();
+
+	}
+
+	private void finish(){
+		flowLoaderReport.finishReport(flowId, flowName);
+	}
+
+	private void setExtendedCamelContext() {		
+		context = getContext();
+		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+	}
+
+
+
+	private void loadFlowSteps() throws Exception {
 
 		setErrorHandlers();
 
@@ -66,11 +89,6 @@ public class FlowLoader extends RouteBuilder {
 
 		setRoutes();
 
-	}
-
-	private void setExtendedCamelContext() {		
-		context = getContext();
-		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 	}
 
 	private void setErrorHandlers() throws Exception{
@@ -93,9 +111,8 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
-					loadRoute(routeConfiguration, "routeconfiguration", id);
+					loadOrUpdateStep(routeConfiguration, "routeconfiguration", id, null);
 				}
-
 			}
 		}
 	}
@@ -107,8 +124,9 @@ public class FlowLoader extends RouteBuilder {
 
 				String routeTemplate = props.get(prop);
 				String id = props.get(prop + ".id");
+
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadRoute(routeTemplate, "routeTemplate definition", id);
+					loadOrUpdateStep(routeTemplate, "routeTemplate definition", id, null);
 				}
 
 			}
@@ -121,9 +139,12 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.endsWith("routetemplate")){
 
 				String routeTemplate = props.get(prop);
-				String id = props.get(prop + ".id");
+				String basePath = StringUtils.substringBefore(prop,"routetemplate");
+				String id = props.get(basePath + "routetemplate.id");
+				String uri = props.get(basePath + "uri");
+
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadRoute(routeTemplate, "routeTemplate", id);
+					loadOrUpdateStep(routeTemplate, "routeTemplate", id, uri);
 				}
 
 			}
@@ -138,46 +159,67 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(prop.startsWith("route")){
-					updateRoute(route, "route");
+					loadOrUpdateStep(route, "route",id, null);
 				}else{
-					loadRoute(route, "route", id);
+					loadOrUpdateStep(route, "route", id, null);
 				}
-
 			}
 		}
 	}
 
-	private void updateRoute(String route, String type) throws Exception {
+
+
+	private void loadOrUpdateStep(String route, String type, String id, String uri) throws Exception {
+
 		loader = extendedCamelContext.getRoutesLoader();
+
 		Resource resource = IntegrationUtil.setResource(route);
 
-		log.info("Updating " + type +": \n\n" + route + "\n\n flow=" + flowName);
-
-		Set<String> updatedRoutes = loader.updateRoutes(resource);
-
-		for(String updateRoute : updatedRoutes ){
-			log.info("Updated " + type + " | flow=" + flowName + " routeid=" + updateRoute);
+		if(isStepLoaded(id)) {
+			updateStep(resource,route, type, id, uri);
+		}else{
+			loadStep(resource,route, type, id, uri);
 		}
 
 	}
 
-
-	private void loadRoute(String route, String type, String id) throws Exception {
-
-		loader = extendedCamelContext.getRoutesLoader();
-
-		Resource resource = IntegrationUtil.setResource(route);
-
-		if(isLoaded(id)) {
-			log.info("Updating flow=" + flowName + " | " + type +  " :\n\n" + route);
+	private void updateStep(Resource resource, String route, String type, String id, String uri){
+		try {
+			log.info(logMessage("Updating step", id, type, route));
 			loader.updateRoutes(resource);
-			log.info("Updated flow=" + flowName + " | type=" + type);
-		}else{
-			log.info("Loading flow=" + flowName + " | " + type +  " :\n\n" + route);
-			loader.loadRoutes(resource);
-			log.info("Loaded flow=" + flowName + " | type=" + type);
+			flowLoaderReport.setStep(id, uri, type, "success", null);
+		}catch (Exception e) {
+			String errorMessage = e.getMessage();
+			log.error("Failed updating step | stepid=" + id);
+			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
+			isFlowLoaded = false;
 		}
+	}
 
+	private void loadStep(Resource resource, String route, String type, String id, String uri){
+		try {
+			log.info(logMessage("Loading step", id, type, route));
+			loader.loadRoutes(resource);
+			flowLoaderReport.setStep(id, uri, type, "success", null);
+		}catch (Exception e){
+			try {
+				String errorMessage = e.getMessage();
+
+				if(errorMessage.contains("duplicate id detected")) {
+					updateStep(resource, route, type, id, uri);
+				}else if(errorMessage.contains("Route configuration already exists with id")){
+					updateStep(resource, route, type, id, uri);
+				}else{
+					log.error("Failed loading step | stepid=" + id);
+					isFlowLoaded = false;
+					flowLoaderReport.setStep(id, uri, type,"error",errorMessage);
+				}
+			}catch (Exception e2){
+				log.error("Failed updating step | stepid=" + id);
+				isFlowLoaded = false;
+				flowLoaderReport.setStep(id,uri, type,"error",e2.getMessage());
+			}
+		}
 	}
 
 	private void setErrorHandler(String errorUri) throws Exception {
@@ -197,13 +239,35 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private boolean isLoaded(String id){
-		List<Route> routes = context.getRoutes().stream().filter(r -> r.getId().equals(id)).collect(Collectors.toList());
-		if(routes.size()>0){
+	public boolean isStepLoaded(String id){
+
+		Route route = context.getRoute(id);
+
+		if(route != null && route.getUptimeMillis()>0){
 			return true;
 		}
 
 		return false;
+	}
+
+	public boolean isFlowLoaded(){
+		return isFlowLoaded;
+	}
+
+	private String logMessage(String message, String stepId, String stepType, String route){
+
+		String logMessage = message + "\n\n";
+		logMessage = logMessage + "Step id: " + stepId + "\n";
+		logMessage = logMessage + "Step type: " + stepType + "\n";
+		if(route!=null) {
+			logMessage = logMessage + "Step configuration:\n\n" + route + "\n";
+		}
+
+		return logMessage;
+	}
+
+	public String getReport(){
+		return flowLoaderReport.getReport();
 	}
 
 }

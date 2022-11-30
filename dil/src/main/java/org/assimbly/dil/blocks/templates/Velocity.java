@@ -15,7 +15,7 @@ public class Velocity extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .setHeader("CamelVelocityTemplate").simple("{{path}}")
-                     .to("velocity:generate")
+                     .to("velocity:generate?allowTemplateFromHeader=true")
                      .to("{{out}}");
 
          routeTemplate("velocity-sink")

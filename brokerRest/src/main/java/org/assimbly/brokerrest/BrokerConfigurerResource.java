@@ -26,14 +26,14 @@ public class BrokerConfigurerResource {
      */
     @GetMapping("/brokers/{id}/getconfiguration")
     public String getConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType) {
-        log.debug("REST request to get configuration of Broker : {}");
+        log.debug("REST request to get configuration of Broker : {}", id);
 
         String configuration = "unknown";
 
         try {
             configuration = broker.getConfiguration(brokerType);
-        } catch (Exception e1) {
-            log.error("Can't get status", e1);
+        } catch (Exception e) {
+            log.error("Can't get status", e);
         }
 
         return configuration;

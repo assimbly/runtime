@@ -25,6 +25,47 @@ public class Http extends RouteBuilder {
                      .removeHeaders("CamelHttp*")
                      .to("{{out}}");
 
+         routeTemplate("http-action")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("path")
+                 .templateParameter("options")
+                 .templateParameter("in")
+                 .templateParameter("out")
+                 .from("{{in}}")
+                 .to("http:{{path}}?{{options}}")
+                 .to("{{out}}");
+
+         routeTemplate("https-action")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("path")
+                 .templateParameter("options")
+                 .templateParameter("in")
+                 .templateParameter("out")
+                 .from("{{in}}")
+                     .setHeader("CamelHttpMethod").constant("{{httpMethod}}")
+                     .setHeader("user-agent").constant("{{userAgent}}")
+                     .to("https:{{path}}?{{options}}")
+                     .to("{{out}}");
+
+         routeTemplate("http-sink")
+                 .templateParameter("routeconfiguration_id","0")
+                 .templateParameter("path")
+                 .templateParameter("options")
+                 .templateParameter("in")
+                 .from("{{in}}")
+                 .to("http:{{path}}?{{options}}");
+
+         routeTemplate("https-sink")
+                 .templateParameter("path")
+                 .templateParameter("options")
+                 .templateParameter("in")
+                 .from("{{in}}")
+                     .to("https:{{path}}?{{options}}");
+
+
+
+
+
      }
 
 }

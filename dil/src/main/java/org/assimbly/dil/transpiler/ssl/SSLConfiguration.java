@@ -76,7 +76,7 @@ public class SSLConfiguration {
 				Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 				is.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				log.error("Create keystore for certificates failed (ssl/tls)",e);
 			}
 		}
 

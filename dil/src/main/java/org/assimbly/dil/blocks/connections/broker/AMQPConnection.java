@@ -60,7 +60,7 @@ public class AMQPConnection {
 
     private void setConnection(boolean sslEnabled) throws JMSException {
 
-        AMQPComponent amqpComponent = null;
+        AMQPComponent amqpComponent;
 
         if (sslEnabled) {
             url = createSSLEnabledUrl(url);
@@ -85,9 +85,12 @@ public class AMQPConnection {
     private String createSSLEnabledUrl(String url) {
 
         String modifiedUrl = "";
-        String multipleUrls = "";
+        String multipleUrls;
 
-        if (url.indexOf(",") != -1) {
+        if (url.indexOf(",") == -1) {
+            log.info("SSLEnabled Normal Url: ");
+            modifiedUrl = addSSLParameterToUrl(url);
+        }else{
             log.info("SSLEnabled Failover Url: ");
 
             if (url.indexOf("(") != -1) {
@@ -111,18 +114,15 @@ public class AMQPConnection {
                 modifiedUrl = "failover:(" + modifiedUrl + ")";
             }
 
+        }
+
+        if(modifiedUrl.isEmpty()){
+            log.info("SSLEnabled Url: " + url);
+            return url;
         }else{
-            log.info("SSLEnabled Normal Url: ");
-            modifiedUrl = addSSLParameterToUrl(url);
+            log.info("SSLEnabled Url: " + modifiedUrl);
+            return modifiedUrl;
         }
-
-        if(!modifiedUrl.isEmpty()){
-            url = modifiedUrl;
-        }
-
-        log.info("SSLEnabled Url: " + url);
-
-        return url;
 
     }
 
@@ -130,28 +130,28 @@ public class AMQPConnection {
 
         String baseDirURI = baseDir.replace("\\", "/");
 
-        if (url.indexOf("?") != -1) {
-
+        String sslUrl = url;
+        if (url.indexOf("?") == -1) {
+            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
+        } else {
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)) {
-                url = url + "&transport.verifyHost=false";
+                sslUrl = url + "&transport.verifyHost=false";
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
-                url = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
+                sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
-                url = url + "&transport.trustStorePassword=supersecret";
+                sslUrl = url + "&transport.trustStorePassword=supersecret";
             }
 
-        } else {
-            url = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
         }
 
-        return url;
+        return sslUrl;
 
     }
 

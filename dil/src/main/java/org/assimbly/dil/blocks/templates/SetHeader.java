@@ -2,8 +2,6 @@ package org.assimbly.dil.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
 
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
-
 public class SetHeader extends RouteBuilder {
 
      @Override
@@ -44,20 +42,20 @@ public class SetHeader extends RouteBuilder {
                  .templateParameter("in")
                      .from("{{in}}")
                  .choice()
-                 .when(simple("'{{language}}' == 'simple'"))
-                 .setHeader("{{path}}").simple("{{value}}")
-                 .endChoice()
-                 .when(simple("'{{language}}' == 'xpath'"))
-                 .setHeader("{{path}}").xpath("{{value}}")
-                 .endChoice()
-                 .when(simple("'{{language}}' == 'jsonpath'"))
-                 .setHeader("{{path}}").jsonpath("{{value}}")
-                 .endChoice()
-                 .when(simple("'{{language}}' == 'groovy'"))
-                 .setHeader("{{path}}").groovy("{{value}}")
-                 .endChoice()
-                 .otherwise()
-                 .setHeader("{{path}}",constant("{{value}}"))
+                     .when(simple("'{{language}}' == 'simple'"))
+                        .setHeader("{{path}}").simple("{{value}}")
+                     .endChoice()
+                     .when(simple("'{{language}}' == 'xpath'"))
+                        .setHeader("{{path}}").xpath("{{value}}")
+                     .endChoice()
+                     .when(simple("'{{language}}' == 'jsonpath'"))
+                        .setHeader("{{path}}").jsonpath("{{value}}")
+                     .endChoice()
+                     .when(simple("'{{language}}' == 'groovy'"))
+                        .setHeader("{{path}}").groovy("{{value}}")
+                     .endChoice()
+                     .otherwise()
+                        .setHeader("{{path}}",constant("{{value}}"))
                  .end();
      }
 }

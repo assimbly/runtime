@@ -3,39 +3,29 @@ package org.assimbly.dil.transpiler.transform;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
-
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public final class Transform {
 
-    protected static Logger log = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+    final static Logger log = LoggerFactory.getLogger(Transform.class);
 
-	public static String transformToDil(String xml){
+    public static String transformToDil(String xml){
 
 		//convert camel2 to camel3
-		xml = camel2ToCamel3(xml);
+        String camel3Xml = camel2ToCamel3(xml);
 
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
 
-		//transform to DIL format
-		xml = TransformUtil.transformXML(xml,is);
+        //transform to DIL format
+		String dilXml = TransformUtil.transformXML(camel3Xml,is);
 
-        System.out.println("The DIL format:\n\n" + xml);
+        log.debug("The DIL format:\n\n" + dilXml);
 
-        return xml;
+        return dilXml;
 
 	}
 			
@@ -49,6 +39,7 @@ public final class Transform {
         map.put("propertyName","name");
         map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
         map.put("xslt:","xslt-saxon:");
+        map.put("jetty:http:","jetty-nossl:http:");
         map.put("&amp;saxon=true","");
         map.put("?saxon=true\"","");
         map.put("?saxon=true&amp;","?");
@@ -57,6 +48,8 @@ public final class Transform {
         map.put("csv2xml","csvtoxml");
         map.put("global-variables","globalvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
+        map.put("strategyRef","aggregationStrategy");
+        map.put("executorServiceRef","executorService");
         map.put("quartz2:","quartz:");
         map.put("http4:","http:");
         map.put("https4:","https:");		

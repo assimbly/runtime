@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 //set headers for each step
 public class HeadersProcessor implements Processor {
 	
-	Map<String, String> props;
+	private Map<String, String> props;
 	
 	public HeadersProcessor(final Map<String, String> props){
 		this.props = props;
@@ -41,7 +41,7 @@ public class HeadersProcessor implements Processor {
 				  String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
 				  String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
 				  String value = entry.getValue();
-				  String result = "";
+				  String result;
 
 				  if (language == null) {
 					  continue;

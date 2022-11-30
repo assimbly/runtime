@@ -61,10 +61,13 @@ public class ConnectorRoute extends RouteBuilder {
 	
 	
 	public ConnectorRoute(final TreeMap<String, String> props){
+		super();
 		this.props = props;
 	}
 
-	public ConnectorRoute() {}
+	public ConnectorRoute() {
+		super();
+	}
 
 	public interface FailureProcessorListener {
 		public void onFailure();
@@ -170,7 +173,7 @@ public class ConnectorRoute extends RouteBuilder {
 			String headerId = props.get("from." + stepId + ".header.id");
 			String routeId = props.get("from." + stepId + ".route.id");
 
-			String uri = DecryptValue(props.get(onrampUriKey));
+			String uri = decryptValue(props.get(onrampUriKey));
 			String fromUri = props.get("from." + stepId + ".uri");			
 			
 			Predicate hasParallelProcessing = PredicateBuilder.constant(parallelProcessing);
@@ -242,7 +245,7 @@ public class ConnectorRoute extends RouteBuilder {
 		for (String offrampUriKey : offrampUriKeys)
 		{
 
-			String uri = DecryptValue(props.get(offrampUriKey));
+			String uri = decryptValue(props.get(offrampUriKey));
 			String offrampUri = offrampUriList[index++];
 			String stepId = StringUtils.substringBetween(offrampUriKey, "to.", ".uri");
 			String headerId = props.get("to." + stepId + ".header.id");
@@ -437,20 +440,21 @@ public class ConnectorRoute extends RouteBuilder {
 		return decryptedProperties;
 	}
 
-	private String DecryptValue(String value){
+	private String decryptValue(String value){
 
 		EncryptableProperties encryptionProperties = (EncryptableProperties) ((PropertiesComponent) getContext().getPropertiesComponent()).getInitialProperties();
 		String[] encryptedList = StringUtils.substringsBetween(value, "ENC(", ")");
 
+		String decryptedValue = value;
 		if(encryptedList !=null && encryptedList.length>0){
 			for (String encrypted: encryptedList) {
 				encryptionProperties.setProperty("temp","ENC(" + encrypted + ")");
 				String decrypted = encryptionProperties.getProperty("temp");
-				value = StringUtils.replace(value, "ENC(" + encrypted + ")",decrypted);
+				decryptedValue = StringUtils.replace(value, "ENC(" + encrypted + ")", decrypted);
 			}
 		}
 
-		return value;
+		return decryptedValue;
 
 	}
 

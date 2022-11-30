@@ -10,9 +10,7 @@
   <name>integration</name>
   <packaging>jar</packaging>
 
-  <groupId>org.assimbly</groupId>
   <artifactId>integration</artifactId>
-  <version>3.8.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -30,22 +28,22 @@
 
       <dependency>
           <groupId>org.assimbly</groupId>
-          <artifactId>commonBase</artifactId>
+          <artifactId>common-base</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>camelComponents</artifactId>
+		  <artifactId>camel-components</artifactId>
   		  <version>${assimbly.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>databaseDrivers</artifactId>
+		  <artifactId>database-drivers</artifactId>
   		  <version>${assimbly.version}</version>
 	  </dependency>
       <dependency>
           <groupId>org.assimbly</groupId>
-          <artifactId>testBase</artifactId>
+          <artifactId>test-base</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
 

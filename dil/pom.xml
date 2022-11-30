@@ -10,9 +10,7 @@
   <name>dil</name>
   <packaging>jar</packaging>
 
-  <groupId>org.assimbly</groupId>
   <artifactId>dil</artifactId>
-  <version>3.8.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,7 +21,7 @@
   <dependencies>
 	  <dependency>
 			<groupId>org.assimbly</groupId>
-			<artifactId>camelBase</artifactId>
+			<artifactId>camel-base</artifactId>
 			<version>${assimbly.version}</version>
 	  </dependency>
 	  <dependency>
@@ -33,7 +31,7 @@
 	  </dependency>
     	<dependency>
 			<groupId>org.assimbly</groupId>
-			<artifactId>testBase</artifactId>
+			<artifactId>test-base</artifactId>
 			<version>${assimbly.version}</version>
 			<scope>test</scope>
 		</dependency>

@@ -28,10 +28,9 @@ public class FlowManagerResource {
     @Autowired
     private IntegrationResource integrationResource;
 
-    Integration integration;
+    private Integration integration;
 
     private String flowId;
-    private String stepId;
 
     private boolean plainResponse;
 
@@ -55,10 +54,11 @@ public class FlowManagerResource {
                 }
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", "started flow " + flowId, "started flow " + flowId, flowId);
             } else {
-                throw new Exception(status);
+                log.error("Start flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", status, "unable to start flow " + flowId, flowId);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Start flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
         }
 
@@ -81,7 +81,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Stop flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/stop/{flowId}",e.getMessage(),"unable to stop flow " + flowId,flowId);
         }
 
@@ -104,7 +104,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Retart flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/restart/{flowId}",e.getMessage(),"unable to restart flow " + flowId,flowId);
         }
 
@@ -127,7 +127,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Pause flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/pause/{flowId}",e.getMessage(),"unable to pause flow " + flowId,flowId);
         }
 
@@ -150,7 +150,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Resume flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/resume/{flowId}",e.getMessage(),"unable to resume flow " + flowId,flowId);
         }
     }
@@ -172,7 +172,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Test flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", e.getMessage(), "unable to test flow " + flowId, flowId);
         }
 
@@ -195,7 +195,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get routes status for flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/routes/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
         }
 
@@ -214,7 +214,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("FileInstall flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/fileinstall/{flowId}", e.getMessage(), "unable to save flow " + flowId, flowId);
         }
 
@@ -233,7 +233,7 @@ public class FlowManagerResource {
                 throw new Exception(status);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("FileUnstall flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/fileinstall/{flowId}", e.getMessage(), "unable to save flow " + flowId, flowId);
         }
 
@@ -251,7 +251,7 @@ public class FlowManagerResource {
             String isStarted = Boolean.toString(started);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/status/{flowId}",isStarted,isStarted,flowId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get if flow " + flowId + " is started failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/status/{flowId}",e.getMessage(),"unable to get status for flow " + flowId,flowId);
         }
 
@@ -268,7 +268,7 @@ public class FlowManagerResource {
             status = integration.getFlowStatus(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/status/{flowId}",status,status,flowId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get status of flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/status/{flowId}",e.getMessage(),"unable to get status for flow " + flowId,flowId);
         }
 
@@ -284,7 +284,7 @@ public class FlowManagerResource {
             String uptime = integration.getFlowUptime(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/uptime/{flowId}",uptime,uptime,flowId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get uptime of " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/uptime/{flowId}",e.getMessage(),"unable to get uptime flow " + flowId,flowId);
         }
 
@@ -298,15 +298,14 @@ public class FlowManagerResource {
             Boolean hasFlow = integration.hasFlow(flowId);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/hasflow/{flowId}",hasFlow.toString());
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/hasflow/{flowId}",e.getMessage());
+            log.error("Check if integration " + integrationId + " has flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/hasflow/{flowId}",e.getMessage());
 		}
 
    }
 
-
-    @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepid}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable Long stepid) throws Exception {
+    @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepId}", produces = {"application/xml","application/json","text/plain"})
+    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         plainResponse = true;
 
@@ -314,13 +313,11 @@ public class FlowManagerResource {
             //integrationResource.init();
             integration = integrationResource.getIntegration();
 
-            stepId = stepid.toString();
-
             String flowStats = integration.getFlowStats(flowId, stepId, mediaType);
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",flowStats,plainResponse);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Get flowstats " + flowId + " with stepId=" + stepId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",e.getMessage());
         }
     }
@@ -335,8 +332,8 @@ public class FlowManagerResource {
     		String lastError = integration.getFlowLastError(flowId);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/lasterror/{flowId}",lastError,lastError,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/lasterror/{flowId}",e.getMessage(),"unable to get last error for flow " + flowId,flowId);
+            log.error("Get last error of flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/lasterror/{flowId}",e.getMessage(),"unable to get last error for flow " + flowId,flowId);
 		}
     }
 
@@ -350,8 +347,8 @@ public class FlowManagerResource {
 			String numberOfMessages = integration.getFlowTotalMessages(flowId);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/totalmessages/{flowId}",numberOfMessages,numberOfMessages,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/totalmessages/{flowId}",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
+            log.error("Get total messages for flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/totalmessages/{flowId}",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
 		}
     }
 
@@ -365,8 +362,8 @@ public class FlowManagerResource {
     		String completedMessages = integration.getFlowCompletedMessages(flowId);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/completedmessages/{flowId}",completedMessages,completedMessages,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/completedmessages/{flowId}",e.getMessage(),"unable to get completed messages of flow " + flowId,flowId);
+            log.error("Get completed messages for flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/completedmessages/{flowId}",e.getMessage(),"unable to get completed messages of flow " + flowId,flowId);
 		}
     }
 
@@ -380,8 +377,8 @@ public class FlowManagerResource {
     		String failedMessages = integration.getFlowFailedMessages(flowId);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",failedMessages,failedMessages,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
+            log.error("Get failed messages for flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
 		}
     }
 
@@ -394,8 +391,8 @@ public class FlowManagerResource {
             String log = integration.getFlowAlertsLog(flowId,100);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedlog/{flowId}",log,log,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",e.getMessage(),"unable to get failed log of flow" + flowId,flowId);
+            log.error("Get alerts log for flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",e.getMessage(),"unable to get failed log of flow" + flowId,flowId);
 		}
     }
 
@@ -408,8 +405,8 @@ public class FlowManagerResource {
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedlogentries/{flowId}",numberOfEntries,numberOfEntries,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedlogentries/{flowId}",e.getMessage(),"unable to get failed entries of flow log" + flowId,flowId);
+            log.error("Get number of alerts for flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedlogentries/{flowId}",e.getMessage(),"unable to get failed entries of flow log" + flowId,flowId);
 		}
     }
 
@@ -422,8 +419,8 @@ public class FlowManagerResource {
 
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/failedlog}",numberOfEntriesList.toString());
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages",e.getMessage());
+            log.error("Get number of alerts for integration " + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages",e.getMessage());
 		}
     }
 
@@ -435,8 +432,9 @@ public class FlowManagerResource {
             String log = integration.getFlowEventsLog(flowId,100);
 			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/eventlog/{flowId}",log,log,flowId);
 		} catch (Exception e) {
-   			e.printStackTrace();
-			return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/eventlog/{flowId}",e.getMessage(),"unable to get event log of flow " + flowId,flowId);
+            log.error("Get events log for flow " + flowId + " failed",e);
+
+            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/eventlog/{flowId}",e.getMessage(),"unable to get event log of flow " + flowId,flowId);
 		}
     }
 
@@ -453,7 +451,7 @@ public class FlowManagerResource {
             Thread thread = new Thread(new Runnable()
             {
 
-                SimpMessageSendingOperations messagingTemplate = messagingTemplate2;
+                private SimpMessageSendingOperations messagingTemplate = messagingTemplate2;
 
                 public void run()
                 {
@@ -482,16 +480,14 @@ public class FlowManagerResource {
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("suspended")) {
                                 status = integration.startFlow(flowId);
-                                if(status.equals("started")) {
-                                    if(this.messagingTemplate!=null) {
-                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
-                                    }
+                                if(status.equals("started") && this.messagingTemplate!=null) {
+                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
                                 }
                             }
                         }
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Set maintenance failed",e);
                     }
                 }
             });
@@ -501,7 +497,7 @@ public class FlowManagerResource {
 
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/maintenance/{time}","Set flows into maintenance mode for " + time + " miliseconds");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Set maintenance failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/maintenance/{time}",e.getMessage());
         }
     }

@@ -1,10 +1,6 @@
 package org.assimbly.dil.blocks.templates;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.spi.Registry;
-import org.assimbly.dil.blocks.processors.SetHeadersProcessor;
-
-import static org.apache.camel.language.groovy.GroovyLanguage.groovy;
 
 public class SetHeaders extends RouteBuilder {
 

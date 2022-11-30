@@ -27,9 +27,13 @@ public class RouteTemplate {
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
     private String uri;
+
+    private Document contentRouteDoc;
+
     private Document templateDoc;
     private Element templatedRoutes;
     private Element templatedRoute;
+
     private String routeId;
     private String templateId;
     private String path;
@@ -41,6 +45,11 @@ public class RouteTemplate {
     private boolean predefinedStep;
     private String blockUri;
     private String baseUri;
+
+    private String outList;
+
+    private String outRulesList;
+
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -58,15 +67,168 @@ public class RouteTemplate {
 
         createTemplatedRoutes();
 
-        createTemplateId(baseUri, type, stepXPath);
+        createTemplateId(baseUri, type);
 
-        if(!predefinedStep && baseUri.startsWith("block")){
+        if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
+            contentRouteDoc = createNewDocument();
+            createContentRouter(links, stepXPath, type, flowId, stepId);
+        }else if(!predefinedStep && baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
         }else{
             createStep(optionProperties, links, stepXPath, type, flowId, stepId);
         }
 
         return properties;
+    }
+
+
+    private void createContentRouter(String[] links, String stepXPath, String type, String flowId, String stepId){
+
+        createContentRoute(links, stepXPath);
+
+        String route = DocConverter.convertDocToString(contentRouteDoc);
+
+        properties.put(type + "." + stepId + ".route", route);
+        properties.put(type + "." + stepId + ".route.id",  routeId);
+
+    }
+
+    private void createContentRoute(String[] links, String stepXPath){
+
+        Element contentRoutes = contentRouteDoc.createElement("routes");
+        contentRouteDoc.appendChild(contentRoutes);
+
+        Element contentRoute = createRoute(links, stepXPath);
+        contentRoutes.appendChild(contentRoute);
+
+    }
+
+
+    private Element createRoute(String[] links, String stepXPath){
+
+        Element route = contentRouteDoc.createElement("route");
+        route.setAttribute("id", routeId);
+
+        Element fromEndpoint = createFrom(links, stepXPath);
+        route.appendChild(fromEndpoint);
+
+        Element choice = contentRouteDoc.createElement("choice");
+        choice = createWhens(links, stepXPath, choice);
+        choice = createOtherwise(links, stepXPath, choice);
+        route.appendChild(choice);
+
+        return route;
+
+    }
+
+
+    public Element createFrom(String[] links, String stepXPath) {
+
+        Element fromEndpoint = contentRouteDoc.createElement("from");
+
+        int index = 1;
+
+        for(String link : links) {
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            //get values from configuration
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String transport = createLinkTransport(linkXPath);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            options = createLinkOptions(linkXPath, bound, transport, pattern);
+            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+
+            if(bound!=null & bound.equalsIgnoreCase("in") ){
+                fromEndpoint.setAttribute("uri", endpoint);
+            }
+
+            index++;
+
+        }
+
+        return fromEndpoint;
+    }
+
+
+    public Element createWhens(String[] links, String stepXPath, Element choice) {
+
+        int index = 1;
+
+        for(String link : links) {
+
+            Element when = contentRouteDoc.createElement("when");
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            //get values from configuration
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String transport = createLinkTransport(linkXPath);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+            options = createLinkOptions(linkXPath, bound, transport, pattern);
+            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+
+            if(bound!=null && bound.equalsIgnoreCase("out") && rule != null && expression != null) {
+
+                Element elementRule = contentRouteDoc.createElement(rule);
+                elementRule.setTextContent(expression);
+                when.appendChild(elementRule);
+
+                Element toEndpoint = contentRouteDoc.createElement("to");
+                toEndpoint.setAttribute("uri",endpoint);
+                when.appendChild(toEndpoint);
+
+                choice.appendChild(when);
+
+            }
+
+            index++;
+
+        }
+
+        return choice;
+    }
+
+
+    public Element createOtherwise(String[] links, String stepXPath, Element choice) {
+
+        int index = 1;
+
+        for(String link : links) {
+
+            Element otherwise = contentRouteDoc.createElement("otherwise");
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            //get values from configuration
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String transport = createLinkTransport(linkXPath);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+            options = createLinkOptions(linkXPath, bound, transport, pattern);
+            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+
+            if(bound!=null && bound.equalsIgnoreCase("out") && rule == null && expression == null) {
+
+                Element toEndpoint = contentRouteDoc.createElement("to");
+                toEndpoint.setAttribute("uri",endpoint);
+                otherwise.appendChild(toEndpoint);
+
+                choice.appendChild(otherwise);
+
+            }
+
+            index++;
+
+        }
+
+        return choice;
     }
 
     private void createStep(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId, String stepId){
@@ -79,7 +241,7 @@ public class RouteTemplate {
         properties.put(type + "." + stepId + ".routetemplate.id",  routeId);
 
     }
-    
+
     private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, String flowId, String stepId) throws Exception {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/" + stepXPath + "blocks");
@@ -156,9 +318,9 @@ public class RouteTemplate {
 
 
     }
-    
-    
-    
+
+
+
     private Document createNewDocument() throws ParserConfigurationException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -169,15 +331,15 @@ public class RouteTemplate {
         return doc;
     }
 
-    private void createTemplateId(String uri,String type, String stepXPath){
+    private void createTemplateId(String uri,String type){
 
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
         }else if(uri.startsWith("block")){
             String componentName = uri.split(":")[1];
+            componentName = componentName.toLowerCase();
             predefinedStep = DependencyUtil.PredefinedBlocks.hasBlock(componentName);
             templateId = componentName + "-" + type;
-
         }else{
             templateId = "generic-" + type;
         }
@@ -206,14 +368,39 @@ public class RouteTemplate {
 
         createTemplateParameters();
 
-        for (String optionProperty : optionProperties) {
-            String name = optionProperty.split("options.")[1];
-            String value = conf.getProperty(optionProperty).toString();
+        if(optionProperties.isEmpty()){
+            for (String optionProperty : optionProperties) {
+                String name = optionProperty.split("options.")[1];
+                String value = conf.getProperty(optionProperty).toString();
 
-            Element parameter = createParameter(templateDoc,name,value);
-            templatedRoute.appendChild(parameter);
+                Element parameter = createParameter(templateDoc,name,value);
+                templatedRoute.appendChild(parameter);
 
+            }
+
+        }else if(options!= null && !options.isEmpty()){
+            if(options.contains("&")){
+                String[] optionsList = options.split("&");
+                for(String option: optionsList){
+                    if(option.contains("=")){
+                        String name = option.split("=",2)[0];
+                        String value = option.split("=",2)[1];
+
+                        Element parameter = createParameter(templateDoc,name,value);
+                        templatedRoute.appendChild(parameter);
+                    }
+                }
+            }else {
+                if(options.contains("=")){
+                    String name = options.split("=",2)[0];
+                    String value = options.split("=",2)[1];
+
+                    Element parameter = createParameter(templateDoc,name,value);
+                    templatedRoute.appendChild(parameter);
+                }
+            }
         }
+
 
         createTransport(flowId);
 
@@ -253,8 +440,8 @@ public class RouteTemplate {
     private void createUriValues() throws XPathExpressionException, TransformerException {
 
         if(baseUri.startsWith("block:")){
-             baseUri = StringUtils.substringAfter(baseUri,"block:");
-             uri = baseUri;
+            baseUri = StringUtils.substringAfter(baseUri,"block:");
+            uri = baseUri;
         }else if(baseUri.startsWith("component:")){
             baseUri = StringUtils.substringAfter(baseUri,"component:");
             uri = baseUri;
@@ -265,17 +452,24 @@ public class RouteTemplate {
 
         if(baseUri.contains(":")){
             scheme = baseUri.split(":",2)[0];
+            scheme = scheme.toLowerCase();
         }else{
-            scheme = baseUri;
+            scheme = baseUri.toLowerCase();
         }
 
         if(baseUri.contains(":")){
-            path = baseUri.split(":",2)[1];
+            if(baseUri.contains("?")){
+                String pathAndOptions = baseUri.split(":",2)[1];
+                path = pathAndOptions.split("\\?",2)[0];
+                options = pathAndOptions.split("\\?",2)[1];
+            }else{
+                path = baseUri.split(":",2)[1];
+            }
         }else{
             path = "";
         }
 
-        if(options!=null && !options.isEmpty()){
+        if(options!=null && !options.isEmpty() && !baseUri.contains("?")) {
             uri = uri + "?" + options;
         }
 
@@ -293,40 +487,41 @@ public class RouteTemplate {
 
     private void createLinks(String[] links, String stepXPath, String type, String flowId){
 
-        createDefaultLinks(stepXPath, type, flowId);
+        createDefaultLinks(stepXPath, flowId);
 
         if(links.length > 0){
-            createCustomLinks(links, stepXPath);
+            createCustomLinks(links, stepXPath, type);
         }
 
     }
 
-    private void createDefaultLinks(String stepXPath, String type, String flowId){
+    private void createDefaultLinks(String stepXPath, String flowId){
 
         String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
-        String value = "";
+        String value;
 
         if(StringUtils.isNumeric(stepIndex)) {
 
-            if (type.equals("source") || type.equals("action")) {
+            Integer previousStepIndex = Integer.parseInt(stepIndex) - 1;
+            Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
 
-                Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
+            String previousStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + previousStepIndex + "]");
 
-                String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
+            String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
 
-                String nextStepId = Objects.toString(conf.getProperty("(" + nextStepXPath + "id)[1]"), "0");
 
+            String previousStepId = Objects.toString(conf.getProperty("(" + previousStepXPath + "id)[1]"), "0");
+            String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
+            String nextStepId = Objects.toString(conf.getProperty("(" + nextStepXPath + "id)[1]"), "0");
+
+            if (!nextStepId.equals("0")){
                 value = transport + ":" + flowId + "-" + nextStepId;
 
                 parameter = createParameter(templateDoc, "out", value);
                 templatedRoute.appendChild(parameter);
-
             }
 
-            if (type.equals("sink") || type.equals("action")) {
-
-                String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
-
+            if (!previousStepId.equals("0")) {
                 value = transport + ":" + flowId + "-" + currentStepId;
 
                 parameter = createParameter(templateDoc, "in", value);
@@ -336,47 +531,166 @@ public class RouteTemplate {
         }
     }
 
-    private void createCustomLinks(String[] links, String stepXPath){
+    private void createCustomLinks(String[] links, String stepXPath, String type){
 
         int index = 1;
+
 
         for(String link : links) {
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
-            String value = "";
+            createCustomLink(linkXPath, type);
 
-            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-            String linktransport = Objects.toString(conf.getProperty(linkXPath + "transport"), null);
-            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-            options = Objects.toString(conf.getProperty(linkXPath + "options"), null);
+            index++;
 
-            if(linktransport!=null){
-                transport = linktransport;
-            }
+        }
 
-            if (options == null || options.isEmpty()) {
-                value = transport + ":" + id;
+        if(outList!=null){
+            Element parameter = createParameter(templateDoc,"out_list",outList);
+            templatedRoute.appendChild(parameter);
+        }
+
+        if(outRulesList!=null){
+            Element parameter = createParameter(templateDoc,"out_rules_list",outRulesList);
+            templatedRoute.appendChild(parameter);
+        }
+
+    }
+
+    public void createCustomLink(String linkXPath, String type) {
+
+        //get values from configuration
+        String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+        String transport = createLinkTransport(linkXPath);
+        String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+        String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+        String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+        String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+        options = createLinkOptions(linkXPath, bound, transport, pattern);
+        String endpoint = createLinkEndpoint(linkXPath, transport, id);
+
+        //set values
+        if (expression != null) {
+            Element parameter = createParameter(templateDoc, "expression", expression);
+            templatedRoute.appendChild(parameter);
+        }
+
+        if (type.equals("router")) {
+
+            if (rule != null) {
+                parameter = createParameter(templateDoc, bound + "_rule", endpoint);
+                templatedRoute.appendChild(parameter);
             } else {
-                value = transport + ":" + id + "?" + options;
+                parameter = createParameter(templateDoc, bound, endpoint);
+                templatedRoute.appendChild(parameter);
             }
 
+            if (bound != null && bound.equalsIgnoreCase("out")) {
+                createLinkLists(rule, expression, endpoint);
+            }
+
+        } else {
             NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
-            for(Node oldParameter: iterable(oldParameters)){
+            for (Node oldParameter : iterable(oldParameters)) {
 
                 Node name = oldParameter.getAttributes().getNamedItem("name");
-                if(name.getNodeValue().equals(bound)){
-                    parameter = createParameter(templateDoc,bound, value);
+                if (name.getNodeValue().equals(bound)) {
+                    parameter = createParameter(templateDoc, bound, endpoint);
 
-                    templatedRoute.replaceChild(parameter,oldParameter);
+                    templatedRoute.replaceChild(parameter, oldParameter);
 
                 }
 
             }
 
-            index++;
+        }
+    }
 
+    public String createLinkTransport(String xpath){
+
+        String transport = Objects.toString(conf.getProperty(xpath + "transport"), "sync");
+
+        return transport;
+
+    }
+
+    public String createLinkEndpoint(String xpath, String transport, String id){
+
+        String endpoint;
+
+        Objects.toString(conf.getProperty(xpath + "options"), null);
+
+        if (options == null || options.isEmpty()) {
+            endpoint = transport + ":" + id;
+        } else {
+            endpoint = transport + ":" + id + "?" + options;
+        }
+
+        return endpoint;
+
+    }
+
+    public String createLinkOptions(String xpath, String bound, String transport, String pattern){
+
+        options = Objects.toString(conf.getProperty(xpath + "options"), null);
+
+        if(bound!= null && transport!=null && pattern!=null) {
+            //if (bound.equalsIgnoreCase("in")){
+            if (pattern.equalsIgnoreCase("inout") || pattern.equalsIgnoreCase("requestreply")) {
+                if (options == null) {
+                    options = "exchangePattern=InOut";
+                } else {
+                    options = options + "&exchangePattern=InOut";
+                }
+            } else if (pattern.equalsIgnoreCase("inoptionalout")) {
+                if (options == null) {
+                    options = "exchangePattern=InOptionalOut";
+                } else {
+                    options = options + "&exchangePattern=InOptionalOut";
+                }
+            } else if (pattern.equalsIgnoreCase("inonly") || pattern.equalsIgnoreCase("oneway") || pattern.equalsIgnoreCase("event") || pattern.equalsIgnoreCase("fireandforget")) {
+                if (options == null) {
+                    options = "exchangePattern=InOnly";
+                } else {
+                    options = options + "&exchangePattern=InOnly";
+                }
+            }
+
+        }
+
+        return options;
+
+    }
+
+    private void createLinkLists(String rule, String expression, String endpoint){
+
+        if (rule != null && expression != null) {
+            String newRule = rule + "#;#" + expression + "#;#" + endpoint;
+            if (outRulesList == null) {
+                outRulesList = newRule;
+            } else {
+                outRulesList = outRulesList + "#|#" + newRule;
+            }
+
+            //adjust the templateid to call the correct template
+            if (templateId.startsWith("split")) {
+                templateId = "split-" + rule + "-router";
+                templatedRoute.removeAttribute("routeTemplateRef");
+                templatedRoute.setAttribute("routeTemplateRef", templateId);
+            } else if (templateId.startsWith("filter")) {
+                templateId = "filter-" + rule + "-router";
+                templatedRoute.removeAttribute("routeTemplateRef");
+                templatedRoute.setAttribute("routeTemplateRef", templateId);
+            }
+
+        } else {
+            if (outList == null) {
+                outList = endpoint;
+            } else {
+                outList = outList + "," + endpoint;
+            }
         }
 
     }
@@ -423,6 +737,14 @@ public class RouteTemplate {
 
                 }
 
+                String language = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body/@language"), null);
+                if(language == null) {
+                    language = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body/@language"), "constant");
+                }
+
+                parameter = createParameter(templateDoc, "language", language);
+                templatedRoute.appendChild(parameter);
+
                 parameter = createParameter(templateDoc, "path", resourceAsString);
                 templatedRoute.appendChild(parameter);
                 path = resourceAsString;
@@ -439,6 +761,4 @@ public class RouteTemplate {
             }
         }
     }
-
-
 }

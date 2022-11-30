@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -22,7 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
-import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONObject;
@@ -39,15 +37,13 @@ public class ActiveMQClassic implements Broker {
 	
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    File brokerFile = new File(baseDir + "/broker/activemq.xml");
+    private File brokerFile = new File(baseDir + "/broker/activemq.xml");
 
-    BrokerService broker;
+    private BrokerService broker;
 
-    BrokerViewMBean brokerViewMBean;
-    QueueViewMBean queueViewMbean;
-    TopicViewMBean topicViewMbean;
-
-    private String endpointExist;
+    private BrokerViewMBean brokerViewMBean;
+    private QueueViewMBean queueViewMbean;
+    private TopicViewMBean topicViewMbean;
     private String endpointType;
 
     public void setBaseDirectory(String baseDirectory) {
@@ -62,7 +58,6 @@ public class ActiveMQClassic implements Broker {
             String brokerPath = brokerFile.getCanonicalPath();
 
             String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
-            System.out.println("1 brokerUrl:"  + brokerUrl);
             //brokerUrl = "xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8");
             //System.out.println("2 brokerUrl:"  + brokerUrl);
 
@@ -70,11 +65,8 @@ public class ActiveMQClassic implements Broker {
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
-                System.out.println("3 brokerUrl:"  + brokerUrl);
                 URI configurationUri = new URI(brokerUrl);
-                System.out.println("4 brokerUrl:"  + brokerUrl);
                 broker = BrokerFactory.createBroker(configurationUri);
-                System.out.println("5. brokerUrl:"  + brokerUrl);
             }else {
                 this.setFileConfiguration("");
                 log.warn("No config file 'activemq.xml' found.");
@@ -88,26 +80,20 @@ public class ActiveMQClassic implements Broker {
                 URI urlConfig = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(urlConfig);
 
+
             }
 
-            System.out.println("5 start");
             if(!broker.isStarted()) {
-                System.out.println("6 start");
                 broker.start();
-                System.out.println("7 start");
             }
-            System.out.println("8 start");
 
             if(broker.isStarted()) {
-                System.out.println("9 start");
                 setBrokerViewMBean();
             }
 
-            System.out.println("10 start");
-
             return status();
         }catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to start broker. Reason: ", e);
             return "Failed to start broker. Reason: " + e.getMessage();
         }
 
@@ -184,7 +170,7 @@ public class ActiveMQClassic implements Broker {
                 is.close();
 
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Failed to get file configuration (activemq.xml). Reason:", e);
             }
         }
 
@@ -287,6 +273,7 @@ public class ActiveMQClassic implements Broker {
     }
 
     public String clearQueues() throws Exception {
+
         ObjectName[] queues = brokerViewMBean.getQueues();
 
         for(Object queue: queues){
@@ -360,7 +347,7 @@ public class ActiveMQClassic implements Broker {
         return endpointsInfo.toString();
     }
 
-    private String checkIfEndpointExist(String endpointName) throws Exception {
+    private String getEndpointType(String endpointName) throws Exception {
 
         ObjectName[] queues = brokerViewMBean.getQueues();
 
@@ -384,15 +371,44 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+    private void checkIfEndpointExist(String endpointName) throws EndpointNotFoundException {
+
+        if (!endpointExist(endpointName)) {
+            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
+        }
+    }
+
+
+    private boolean endpointExist(String endpointName) {
+
+        ObjectName[] queues = brokerViewMBean.getQueues();
+
+        for (Object queue : queues) {
+            String endpointAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
+            if(endpointName.equals(endpointAsString)){
+                return true;
+            }
+        }
+
+        ObjectName[] topics = brokerViewMBean.getTopics();
+
+        for (Object topic : topics) {
+            String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
+            if(endpointName.equals(endpointAsString)){
+                return false;
+            }
+        }
+
+        return false;
+
+    }
+
+
     //Manage Messages
 
     public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
 
-        endpointType = checkIfEndpointExist(sourceQueueName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + sourceQueueName + " not found");
-        }
+        checkIfEndpointExist(sourceQueueName);
 
         queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
 
@@ -403,11 +419,7 @@ public class ActiveMQClassic implements Broker {
 
     public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
 
-        endpointType = checkIfEndpointExist(sourceQueueName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + sourceQueueName + " not found");
-        }
+        checkIfEndpointExist(sourceQueueName);
 
         queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
 
@@ -418,10 +430,10 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessage(String endpointName, String messageId) throws Exception {
 
-        endpointExist = checkIfEndpointExist(endpointName);
+        endpointType = getEndpointType(endpointName);
 
-        if (!endpointExist.equalsIgnoreCase("queue")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
+        if (!endpointType.equalsIgnoreCase("queue")) {
+            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
         }
 
         queueViewMbean = getQueueViewMBean("Queue", endpointName);
@@ -432,11 +444,7 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessages(String endpointName) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         queueViewMbean = getQueueViewMBean(endpointType, endpointName);
         Long queueSize = queueViewMbean.getQueueSize();
@@ -448,17 +456,13 @@ public class ActiveMQClassic implements Broker {
 
     public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
+        checkIfEndpointExist(endpointName);
 
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
-
-        messageId = "JMSMessageID='" + messageId + "'";
+        String messageIdKey = "JMSMessageID='" + messageId + "'";
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-        CompositeData[] messages = destinationViewMBean.browse(messageId);
+        CompositeData[] messages = destinationViewMBean.browse(messageIdKey);
 
         String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
@@ -468,11 +472,7 @@ public class ActiveMQClassic implements Broker {
 
     public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
@@ -489,11 +489,7 @@ public class ActiveMQClassic implements Broker {
 
     public String listMessages(String endpointName, String filter) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         CompositeData[] messages = getDestinationViewMBean(endpointType,endpointName).browse(filter);
 
@@ -505,11 +501,7 @@ public class ActiveMQClassic implements Broker {
 
     public String countMessages(String endpointName) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
 
@@ -519,16 +511,13 @@ public class ActiveMQClassic implements Broker {
 
     public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
-        endpointType = checkIfEndpointExist(endpointName);
-
-        if (endpointType.equalsIgnoreCase("unknown")) {
-            throw new Exception("Endpoint " + endpointName + " not found");
-        }
+        checkIfEndpointExist(endpointName);
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
-        if(!MapUtils.isEmpty(messageHeaders)){
-
+        if(MapUtils.isEmpty(messageHeaders)){
+            destinationViewMBean.sendTextMessage(messageBody);
+        }else{
             if(messageHeaders.containsKey("JMSDeliveryMode")) {
                 if (messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("PERSISTENT") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("0")) {
                     messageHeaders.put("JMSDeliveryMode", 0);
@@ -542,9 +531,9 @@ public class ActiveMQClassic implements Broker {
             }
 
             destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
-        }else{
-            destinationViewMBean.sendTextMessage(messageBody);
+
         }
+
         return "success";
     }
 
@@ -609,9 +598,7 @@ public class ActiveMQClassic implements Broker {
             list = list.subList(startIndex, endIndex);
         }
 
-        messages = list.toArray(new CompositeData[list.size()]);
-
-        return messages;
+        return list.toArray(new CompositeData[0]);
 
     }
 
