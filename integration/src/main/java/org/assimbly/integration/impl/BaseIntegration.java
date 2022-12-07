@@ -391,4 +391,18 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
+	public abstract String validateCron(String cron);
+
+	public abstract String validateCertificate(String certificate);
+
+	public abstract String validateUrl(String url);
+
+	public abstract String validateExpression(String expression);
+
+	public abstract String validateFtp(String ftp);
+
+	public abstract String validateRegex(String regex);
+
+	public abstract String validateScript(String script);
+
 }

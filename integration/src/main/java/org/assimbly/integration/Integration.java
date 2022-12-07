@@ -779,4 +779,59 @@ public interface Integration {
 	 */
 	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
+	/**
+	 * Validates a cron expression
+	 *
+	 * @param  cron the cron expression
+	 * @return result of validation
+	 */
+	public String validateCron(String cron);
+
+	/**
+	 * Validates a certificate
+	 *
+	 * @param  certificate
+	 * @return result of validation	 */
+	public String validateCertificate(String certificate);
+
+	/**
+	 * Validates a url expression
+	 *
+	 * @param  url
+	 * @return result of validation
+	 */
+	public String validateUrl(String url);
+
+	/**
+	 * Validates an expression
+	 *
+	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
+	 * @return result of validation
+	 */
+	public String validateExpression(String expression);
+
+	/**
+	 * Validates a ftp expression
+	 *
+	 * @param  ftp
+	 * @return result of validation
+	 */
+	public String validateFtp(String ftp);
+
+	/**
+	 * Validates a regex expression
+	 *
+	 * @param  regex the regex expression
+	 * @return result of validation
+	 */
+	public String validateRegex(String regex);
+
+	/**
+	 * Validates a script
+	 *
+	 * @param  script the script (for example Groovy)
+	 * @return result of validation
+	 */
+	public String validateScript(String script);
+
 }

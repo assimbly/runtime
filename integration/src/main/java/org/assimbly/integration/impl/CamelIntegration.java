@@ -1749,7 +1749,40 @@ public class CamelIntegration extends BaseIntegration {
     	util.deleteCertificate(keystorePath, keystorePassword, certificateName);
 	}
 
+	@Override
+	public String validateCron(String cron) {
+		return null;
+	}
 
+	@Override
+	public String validateCertificate(String certificate) {
+		return null;
+	}
+
+	@Override
+	public String validateUrl(String url) {
+		return null;
+	}
+
+	@Override
+	public String validateExpression(String expression) {
+		return null;
+	}
+
+	@Override
+	public String validateFtp(String ftp) {
+		return null;
+	}
+
+	@Override
+	public String validateRegex(String regex) {
+		return null;
+	}
+
+	@Override
+	public String validateScript(String script) {
+		return null;
+	}
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
