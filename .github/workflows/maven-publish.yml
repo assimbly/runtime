@@ -1,10 +1,8 @@
 name: Publish package to GitHub Packages
 on:
   release:
-    types: [created, updated]
-  push:
-    branches:
-      - master
+    types: [ released ]
+
 jobs:
   publish:
     runs-on: ubuntu-latest 
@@ -18,7 +16,6 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
       - name: Publish package
-        run: |
-          sh ./bin/mac/deploy.sh
+        run: sh ./bin/mac/deploymodules.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
