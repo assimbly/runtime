@@ -25,6 +25,9 @@ public class FlowLoader extends RouteBuilder {
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
 	private String flowName;
+	private String flowEvent;
+	private String flowVersion;
+	private String flowEnvironment;
 
 	private boolean isFlowLoaded = true;
 
@@ -57,6 +60,8 @@ public class FlowLoader extends RouteBuilder {
 
 		flowId = props.get("id");
 		flowName = props.get("flow.name");
+		flowVersion = props.get("flow.version");
+		flowEnvironment = props.get("environment");
 
 		flowLoaderReport = new FlowLoaderReport();
 
@@ -66,8 +71,12 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void finish(){
-		flowLoaderReport.finishReport(flowId, flowName);
+	private void finish() {
+		if (isFlowLoaded){
+			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Started flow successfully");
+		}else{
+			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Failed to load flow");
+		}
 	}
 
 	private void setExtendedCamelContext() {		
@@ -188,18 +197,25 @@ public class FlowLoader extends RouteBuilder {
 			log.info(logMessage("Updating step", id, type, route));
 			loader.updateRoutes(resource);
 			flowLoaderReport.setStep(id, uri, type, "success", null);
+			flowEvent = "start";
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
 			log.error("Failed updating step | stepid=" + id);
 			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
+			flowEvent = "error";
 			isFlowLoaded = false;
 		}
 	}
 
 	private void loadStep(Resource resource, String route, String type, String id, String uri){
+
+		System.out.println("1. id=" + id);
+		System.out.println("1. StepUri=" + uri);
+
 		try {
 			log.info(logMessage("Loading step", id, type, route));
 			loader.loadRoutes(resource);
+			flowEvent = "start";
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 		}catch (Exception e){
 			try {
@@ -212,11 +228,13 @@ public class FlowLoader extends RouteBuilder {
 				}else{
 					log.error("Failed loading step | stepid=" + id);
 					isFlowLoaded = false;
+					flowEvent = "error";
 					flowLoaderReport.setStep(id, uri, type,"error",errorMessage);
 				}
 			}catch (Exception e2){
 				log.error("Failed updating step | stepid=" + id);
 				isFlowLoaded = false;
+				flowEvent = "error";
 				flowLoaderReport.setStep(id,uri, type,"error",e2.getMessage());
 			}
 		}

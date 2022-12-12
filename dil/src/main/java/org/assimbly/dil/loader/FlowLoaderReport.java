@@ -32,37 +32,30 @@ public class FlowLoaderReport {
 
 	}
 
-	public void finishReport(String flowId, String flowName){
+	public void finishReport(String flowId, String flowName, String event, String version, String environment, String message){
 
 		flow.put("id",flowId);
 		flow.put("name",flowName);
+		flow.put("event",event);
+		flow.put("version",version);
+		flow.put("environment",environment);
+		flow.put("message",message);
 
-		stepsLoaded.put("total", loaded);
-		stepsLoaded.put("successfully", loadedSuccess);
-		stepsLoaded.put("failed", loadedError);
+		if(stepsLoaded!=null && loaded > 0){
+			stepsLoaded.put("total", loaded);
+			stepsLoaded.put("successfully", loadedSuccess);
+			stepsLoaded.put("failed", loadedError);
 
-		flow.put("stepsLoaded",stepsLoaded);
-		flow.put("steps", steps);
+			flow.put("stepsLoaded",stepsLoaded);
+			flow.put("steps", steps);
+		}
 
 		json.put("flow", flow);
 
 		report = json.toString(4);
 
-		if(loaded == loadedSuccess) {
-			if(loadedSuccess == 1){
-				log.info(loadedSuccess + " step loaded succesfully");
-			}else{
-				log.info(loadedSuccess + " steps loaded succesfully");
-			}
-			log.info("Start flow | name=" + flowName + " | id=" + flowId);
-		}else{
-			if(loadedError == 1){
-				log.error(loadedError + " step failed to load");
-			}else{
-				log.error(loadedError + " steps failed to load");
-			}
-			log.error("Start flow failed | name=" + flowName + " | id=" + flowId);
-		}
+		logResult(flowId, flowName, event);
+
 	}
 
 	public void setStep(String stepId, String stepUri, String stepType, String stepStatus, String message){
@@ -99,5 +92,24 @@ public class FlowLoaderReport {
 		return report;
 	}
 
+	private void logResult(String flowId, String flowName, String event){
+		//logging
+		if(loaded == loadedSuccess) {
+			if(loadedSuccess == 1){
+				log.info(loadedSuccess + " step loaded succesfully");
+			}else{
+				log.info(loadedSuccess + " steps loaded succesfully");
+			}
+			log.info("Start flow | name=" + flowName + " | id=" + flowId);
+		}else{
+			if(loadedError == 1){
+				log.error(loadedError + " step failed to load");
+			}else{
+				log.error(loadedError + " steps failed to load");
+			}
+			log.error("Event=" + event + " | name=" + flowName + " | id=" + flowId);
+		}
+
+	}
 
 }

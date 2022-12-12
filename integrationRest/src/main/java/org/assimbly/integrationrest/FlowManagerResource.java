@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -43,19 +44,28 @@ public class FlowManagerResource {
     @GetMapping(path = "/integration/{integrationId}/flow/start/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> startflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
+        plainResponse = true;
+
         try {
-            ////integrationResource.init();
+
             integration = integrationResource.getIntegration();
 
             status = integration.startFlow(flowId);
-            if (status.equals("started")) {
-                if (this.messagingTemplate != null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", "event:started");
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", "started flow " + flowId, "started flow " + flowId, flowId);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if (status.contains("Started flow successfully")) {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/start/{flowId}",status,plainResponse);
             } else {
                 log.error("Start flow " + flowId + " failed. Status: " + status);
-                return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", status, "unable to start flow " + flowId, flowId);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
             log.error("Start flow " + flowId + " failed",e);
@@ -67,18 +77,28 @@ public class FlowManagerResource {
     @GetMapping(path = "/integration/{integrationId}/flow/stop/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String>  stopflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
+        plainResponse = true;
+
         try {
-            ////integrationResource.init();
+
             integration = integrationResource.getIntegration();
 
             status = integration.stopFlow(flowId);
-            if(status.equals("stopped")) {
-                if(this.messagingTemplate!=null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:stopped");
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/stop/{flowId}","stopped flow " + flowId,"stopped flow " + flowId,flowId);
-            }else {
-                throw new Exception(status);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if (status.contains("Stopped flow successfully")) {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stop/{flowId}",status,plainResponse);
+            } else {
+                log.error("Stop flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/stop/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
             log.error("Stop flow " + flowId + " failed",e);
@@ -90,21 +110,30 @@ public class FlowManagerResource {
     @GetMapping(path = "/integration/{integrationId}/flow/restart/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String>  restartflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
+        plainResponse = true;
+
         try {
-            ////integrationResource.init();
             integration = integrationResource.getIntegration();
 
             status = integration.restartFlow(flowId);
-            if(status.equals("started")) {
-                if(this.messagingTemplate!=null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:restarted");
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/restart/{flowId}","restarted","restarted flow " + flowId,flowId);
-            }else {
-                throw new Exception(status);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if (status.contains("Started flow successfully")) {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/restart/{flowId}",status,plainResponse);
+            } else {
+                log.error("Restart flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/restart/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Retart flow " + flowId + " failed",e);
+            log.error("Restart flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/restart/{flowId}",e.getMessage(),"unable to restart flow " + flowId,flowId);
         }
 
@@ -113,21 +142,30 @@ public class FlowManagerResource {
     @GetMapping(path = "/integration/{integrationId}/flow/pause/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String>  pauseflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
+        plainResponse = true;
+
         try {
-            ////integrationResource.init();
             integration = integrationResource.getIntegration();
 
             status = integration.pauseFlow(flowId);
-            if(status.equals("suspended") || status.equals("stopped")) {
-                if(this.messagingTemplate!=null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:suspended");
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/pause/{flowId}","paused","paused flow " + flowId,flowId);
-            }else {
-                throw new Exception(status);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if (status.contains("Paused flow successfully")) {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/pause/{flowId}",status,plainResponse);
+            } else {
+                log.error("Pause flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/pause/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Pause flow " + flowId + " failed",e);
+            log.error("Paused flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/pause/{flowId}",e.getMessage(),"unable to pause flow " + flowId,flowId);
         }
 
@@ -136,18 +174,27 @@ public class FlowManagerResource {
     @GetMapping(path = "/integration/{integrationId}/flow/resume/{flowId}" , produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> resumeflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
+        plainResponse = true;
+
         try {
-            ////integrationResource.init();
             integration = integrationResource.getIntegration();
 
             status = integration.resumeFlow(flowId);
-            if(status.equals("started")) {
-                if(this.messagingTemplate!=null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/resume/{flowId}","resumed","resumed flow " + flowId,flowId);
-            }else {
-                throw new Exception(status);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if (status.contains("Resumed flow successfully")) {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/resume/{flowId}",status,plainResponse);
+            } else {
+                log.error("Resume flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/resume/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
             log.error("Resume flow " + flowId + " failed",e);
@@ -159,17 +206,27 @@ public class FlowManagerResource {
 	@PostMapping(path = "/integration/{integrationId}/flow/test/{flowId}", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> testflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
+        plainResponse = true;
+
         try {
             integration = integrationResource.getIntegration();
 
             status = integration.testFlow(flowId, mediaType, configuration, stopTest);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            //Send message to websocket
+            if (this.messagingTemplate != null) {
+                this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
             if (status.equals("started") || status.equals("stopped")) {
-                if (this.messagingTemplate != null) {
-                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", "event:" + status);
-                }
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", status + " flow " + flowId, status + " flow " + flowId, flowId);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/test/{flowId}",status,plainResponse);
             } else {
-                throw new Exception(status);
+                log.error("Test flow " + flowId + " failed. Status: " + status);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/test/{flowId}", status, plainResponse);
             }
         } catch (Exception e) {
             log.error("Test flow " + flowId + " failed",e);

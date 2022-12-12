@@ -30,6 +30,7 @@ import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
+import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -91,6 +92,8 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> props;
 
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
+	private String loadReport;
+	private FlowLoaderReport flowLoaderReport;
 
 
 	public CamelIntegration() throws Exception {
@@ -598,8 +601,10 @@ public class CamelIntegration extends BaseIntegration {
 		FlowLoader flow = new FlowLoader(props);
 		flow.updateRoutesToCamelContext(context);
 
+		loadReport = flow.getReport();
+
 		if(!flow.isFlowLoaded()){
-			return flow.getReport();
+			return "error";
 		}
 
 		return "started";
@@ -802,8 +807,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id) {
 
+		initFlowActionReport(id, "Start");
+
 		boolean addFlow = false;
-		String loadReport;
+		String result = "unloaded";
 
 		try {
 
@@ -821,16 +828,21 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			if(addFlow){
-				loadReport = addFlow(props);
+				result = addFlow(props);
 			}else{
-				loadReport = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
-				log.error(loadReport);
+				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 
-			if (!loadReport.equals("loaded") && !loadReport.equals("started")){
-				stopFlow(id);
-				return loadReport;
-			}else if(loadReport.equals("loaded")) {
+			if (!result.equals("loaded") && !result.equals("started")){
+				if(result.equalsIgnoreCase("error")){
+					String startReport = loadReport;
+					stopFlow(id);
+					loadReport = startReport;
+				}else{
+					finishFlowActionReport(id, "error",result,"error");
+				}
+			}else if(result.equals("loaded")) {
 
 				List<Route> steps = getRoutesByFlowId(id);
 
@@ -840,27 +852,26 @@ public class CamelIntegration extends BaseIntegration {
 					status = startStep(step);
 				}
 
-				if (status != null) {
-					log.info("Started flow | id=" + id);
-					return status.toString().toLowerCase();
-				} else {
-					log.info("Failed starting flow | id=" + id);
-					return "error: can't get status";
+				if (status.isStarted()) {
+					finishFlowActionReport(id, "start","Started flow successfully","info");
+				}else{
+					finishFlowActionReport(id, "error","Failed starting flow | id=" + id,"error");
 				}
-			}else{
-				return "started";
 			}
 
 		}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id);
+				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=" + e.getMessage(),"error");
 				log.error("Start flow " + id + " failed.",e);
-				return e.getMessage();
 			}else{
-				log.error("Unable to start flow " + id + ". Integration isn't running");
-				return "Unable to start flow " + id + ". Integration isn't running";
+				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=Integration isn't running","error");
+				log.error("Start flow " + id + " failed.",e);
 			}
 		}
+
+		return loadReport;
+
 	}
 
 	private ServiceStatus startStep(Route route){
@@ -902,31 +913,29 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String restartFlow(String id) {
 
-		log.info("Restart flow | id=" + id);
-
 		try {
 
 			if(hasFlow(id)) {
-
 				stopFlow(id);
-
-				return startFlow(id);
-
+				startFlow(id);
 			}else {
-				log.warn("FlowId: " + id + " couldn't be found. Start flow, instead of restart.");
-
-				return startFlow(id);
+				startFlow(id);
 			}
 
 		}catch (Exception e) {
 			log.error("Restart flow " + id + " failed.",e);
-			return e.getMessage();
+			finishFlowActionReport(id, "error", e.getMessage(),"error");
 		}
+
+		return loadReport;
+
 	}
+
+
 
 	public String stopFlow(String id) {
 
-		log.info("Stopping flow | id=" + id);
+		initFlowActionReport(id, "stop");
 
 		try {
 
@@ -939,18 +948,20 @@ public class CamelIntegration extends BaseIntegration {
 				context.removeRoute(routeId);
 			}
 
-			log.info("Stopped flow | id=" + id);
-	        return "stopped";
+			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
 
 		}catch (Exception e) {
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
 			log.error("Stop flow " + id + " failed.",e);
-			return e.getMessage();
 		}
+
+		return loadReport;
 
 	}
 
 	public String pauseFlow(String id) {
-		log.info("Pause flow | id=" + id);
+
+		initFlowActionReport(id, "pause");
 
 		try {
 
@@ -961,7 +972,8 @@ public class CamelIntegration extends BaseIntegration {
 
 				for(Route route : routeList){
 					if(!routeController.getRouteStatus(route.getId()).isSuspendable()){
-						return "Flow isn't suspendable (Step " + route.getId() + ")";
+						finishFlowActionReport(id, "error","Flow isn't suspendable (Step " + route.getId() + ")","error");
+						return loadReport;
 					}
 				}
 
@@ -988,24 +1000,24 @@ public class CamelIntegration extends BaseIntegration {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				log.info("Paused flow id=" + id);
-				return status.toString().toLowerCase();
-
+				finishFlowActionReport(id, "pause","Paused flow successfully","info");
 			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
-
 		}catch (Exception e) {
 			log.error("Pause flow " + id + " failed.",e);
 			stopFlow(id); //Stop flow if one of the routes cannot be paused.
-			return e.getMessage();
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
 
+		return loadReport;
 
 	}
 
 	public String resumeFlow(String id) throws Exception {
-		log.info("Resume flow id=" + id);
+
+		initFlowActionReport(id, "resume");
 
 		try {
 
@@ -1040,22 +1052,40 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 				if(resumed){
-					log.info("Resumed flow id=" + id);
-					return status.toString().toLowerCase();
+					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 				}else {
-					return "Flow isn't suspended (nothing to resume)";
+					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
 				}
 			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 
 		}catch (Exception e) {
 			log.error("Resume flow " + id + " failed.",e);
-			stopFlow(id); //Stop flow if one of the routes cannot be resumed.
-			return e.getMessage();
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
 
+		return loadReport;
 
+	}
+
+	private void initFlowActionReport(String id, String event) {
+		log.info(event + " flow | id=" + id);
+		flowLoaderReport = new FlowLoaderReport();
+		flowLoaderReport.initReport(id, id);
+	}
+
+	private void finishFlowActionReport(String id, String event, String message, String messageType){
+		if(messageType.equalsIgnoreCase("error")){
+			log.error(event + " flow " + id + " failed.",message);
+		}else if(messageType.equalsIgnoreCase("warning"))
+			log.warn(event + " flow " + id + " failed.",message);
+		else{
+			log.info(message);
+		}
+		flowLoaderReport.finishReport(id,id,event,"","",message);
+		loadReport = flowLoaderReport.getReport();
 	}
 
 	public boolean isFlowStarted(String id) {
