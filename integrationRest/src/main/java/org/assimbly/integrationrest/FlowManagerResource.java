@@ -361,24 +361,6 @@ public class FlowManagerResource {
 
    }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/stats/{flowId}/{stepId}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
-
-        plainResponse = true;
-
-        try {
-            //integrationResource.init();
-            integration = integrationResource.getIntegration();
-
-            String flowStats = integration.getFlowStats(flowId, stepId, mediaType);
-            if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",flowStats,plainResponse);
-        } catch (Exception e) {
-            log.error("Get flowstats " + flowId + " with stepId=" + stepId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/stats/{flowId}",e.getMessage());
-        }
-    }
-
     @GetMapping(path = "/integration/{integrationId}/flow/lasterror/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getFlowLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
@@ -391,51 +373,6 @@ public class FlowManagerResource {
 		} catch (Exception e) {
             log.error("Get last error of flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/lasterror/{flowId}",e.getMessage(),"unable to get last error for flow " + flowId,flowId);
-		}
-    }
-
-    @GetMapping(path = "/integration/{integrationId}/flow/totalmessages/{flowId}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowTotalMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
-
-		try {
-            //integrationResource.init();
-            integration = integrationResource.getIntegration();
-
-			String numberOfMessages = integration.getFlowTotalMessages(flowId);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/totalmessages/{flowId}",numberOfMessages,numberOfMessages,flowId);
-		} catch (Exception e) {
-            log.error("Get total messages for flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/totalmessages/{flowId}",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
-		}
-    }
-
-    @GetMapping(path = "/integration/{integrationId}/flow/completedmessages/{flowId}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowCompletedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
-
-		try {
-            //integrationResource.init();
-            integration = integrationResource.getIntegration();
-
-    		String completedMessages = integration.getFlowCompletedMessages(flowId);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/completedmessages/{flowId}",completedMessages,completedMessages,flowId);
-		} catch (Exception e) {
-            log.error("Get completed messages for flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/completedmessages/{flowId}",e.getMessage(),"unable to get completed messages of flow " + flowId,flowId);
-		}
-    }
-
-    @GetMapping(path = "/integration/{integrationId}/flow/failedmessages/{flowId}", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> getFlowFailedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
-
-		try {
-            ////integrationResource.init();
-            integration = integrationResource.getIntegration();
-
-    		String failedMessages = integration.getFlowFailedMessages(flowId);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",failedMessages,failedMessages,flowId);
-		} catch (Exception e) {
-            log.error("Get failed messages for flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/failedmessages/{flowId}",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
 		}
     }
 

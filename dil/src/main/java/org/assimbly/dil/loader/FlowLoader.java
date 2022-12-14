@@ -1,5 +1,6 @@
 package org.assimbly.dil.loader;
 
+import java.util.Set;
 import java.util.TreeMap;
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
@@ -196,6 +197,8 @@ public class FlowLoader extends RouteBuilder {
 		try {
 			log.info(logMessage("Updating step", id, type, route));
 			loader.updateRoutes(resource);
+
+			//context
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 			flowEvent = "start";
 		}catch (Exception e) {

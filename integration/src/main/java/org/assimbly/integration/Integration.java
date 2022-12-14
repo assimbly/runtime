@@ -164,7 +164,7 @@ public interface Integration {
 	//manage integration
 
 	/**
-	 * Starts a integration. The integration acts like a container for flows.
+	 * Starts an integration. The integration acts like a container for flows.
 	 * After starting it can be configured
 	 *
 	 * @throws Exception if integration doesn't start
@@ -172,14 +172,21 @@ public interface Integration {
 	public void start() throws Exception;
 
 	/**
-	 * Stops a integration
+	 * Stops an integration
 	 *
 	 * @throws Exception if integration doesn't start
 	 */
 	public void stop() throws Exception;
 
 	/**
-	 * Checks if a integration is started
+	 * Info on an integration (state, uptime, numberofroutes etc)
+	 *
+	 * @throws Exception if integration doesn't start
+	 */
+	public String info(String mediaType) throws Exception;
+
+	/**
+	 * Checks if an integration is started
 	 *
 	 * @return returns true if integration is started
 	 */
@@ -260,14 +267,41 @@ public interface Integration {
 	public String validateFlow(String flowId);
 	
 	/**
-	* Gets the stats of a integration
+	* Gets the stats of an integration
 	*
-	* @param  statsType type of stats ("default" or "history")
 	* @param  mediaType (xml or json)
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getStats(String statsType, String mediaType) throws Exception;
+	public String getStats(String mediaType) throws Exception;
+
+	/**
+	 * Gets the stats of an integration
+	 *
+	 * @param  flowIds comma separated list of flow ids
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
+
+	/**
+	 * Gets the metrics of an integration
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns metrics
+	 */
+	public String getMetrics(String mediaType) throws Exception;
+
+	/**
+	 * Gets the historical metrics of an integration
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns historical metrics
+	 */
+	public String getHistoryMetrics(String mediaType) throws Exception;
 
 	/**
 	 * Gets the ids of running flows
@@ -662,8 +696,19 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, String stepid, String mediaType) throws Exception;
-	
+	public String getFlowStats(String flowId, boolean fullStats, String mediaType) throws Exception;
+
+	/**
+	 * Gets the details stats of a flow step
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception;
+
 	/**
 	* Gets a running route as XML/JSON by id
 	*

@@ -37,9 +37,10 @@ public class FlowLoaderReport {
 		flow.put("id",flowId);
 		flow.put("name",flowName);
 		flow.put("event",event);
+		flow.put("message",message);
 		flow.put("version",version);
 		flow.put("environment",environment);
-		flow.put("message",message);
+
 
 		if(stepsLoaded!=null && loaded > 0){
 			stepsLoaded.put("total", loaded);
