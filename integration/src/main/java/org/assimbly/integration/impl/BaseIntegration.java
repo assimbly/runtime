@@ -250,6 +250,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract void stop() throws Exception;
 
+	public abstract String info(String mediaType) throws Exception;
+
 	public abstract boolean isStarted();
 
 	public abstract void setTracing(boolean tracing, String type);
@@ -270,7 +272,13 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 
-	public abstract String getStats(String statsType, String mediaType) throws Exception;	
+	public abstract String getStats(String mediaType) throws Exception;
+
+	public abstract String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
+
+	public abstract String getMetrics(String mediaType) throws Exception;
+
+	public abstract String getHistoryMetrics(String mediaType) throws Exception;
 
 	public abstract String getDocumentationVersion() throws Exception;
 
@@ -341,7 +349,9 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, String stepid, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, boolean fullStats, String mediaType) throws Exception;
+
+	public abstract String getFlowStepStats(String id, String stepid, boolean fullStats, String mediaType) throws Exception;
 
 	public abstract String getRunningFlows(String mediaType) throws Exception;
 	//certificates
@@ -390,5 +400,19 @@ public abstract class BaseIntegration implements Integration {
 	public abstract String sendRequest(String uri,Object messageBody);
 
 	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
+
+	public abstract String validateCron(String cron);
+
+	public abstract String validateCertificate(String certificate);
+
+	public abstract String validateUrl(String url);
+
+	public abstract String validateExpression(String expression);
+
+	public abstract String validateFtp(String ftp);
+
+	public abstract String validateRegex(String regex);
+
+	public abstract String validateScript(String script);
 
 }

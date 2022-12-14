@@ -30,6 +30,7 @@ import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
+import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -91,6 +92,8 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> props;
 
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
+	private String loadReport;
+	private FlowLoaderReport flowLoaderReport;
 
 
 	public CamelIntegration() throws Exception {
@@ -598,8 +601,10 @@ public class CamelIntegration extends BaseIntegration {
 		FlowLoader flow = new FlowLoader(props);
 		flow.updateRoutesToCamelContext(context);
 
+		loadReport = flow.getReport();
+
 		if(!flow.isFlowLoaded()){
-			return flow.getReport();
+			return "error";
 		}
 
 		return "started";
@@ -802,8 +807,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id) {
 
+		initFlowActionReport(id, "Start");
+
 		boolean addFlow = false;
-		String loadReport;
+		String result = "unloaded";
 
 		try {
 
@@ -821,16 +828,21 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			if(addFlow){
-				loadReport = addFlow(props);
+				result = addFlow(props);
 			}else{
-				loadReport = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
-				log.error(loadReport);
+				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 
-			if (!loadReport.equals("loaded") && !loadReport.equals("started")){
-				stopFlow(id);
-				return loadReport;
-			}else if(loadReport.equals("loaded")) {
+			if (!result.equals("loaded") && !result.equals("started")){
+				if(result.equalsIgnoreCase("error")){
+					String startReport = loadReport;
+					stopFlow(id);
+					loadReport = startReport;
+				}else{
+					finishFlowActionReport(id, "error",result,"error");
+				}
+			}else if(result.equals("loaded")) {
 
 				List<Route> steps = getRoutesByFlowId(id);
 
@@ -840,27 +852,26 @@ public class CamelIntegration extends BaseIntegration {
 					status = startStep(step);
 				}
 
-				if (status != null) {
-					log.info("Started flow | id=" + id);
-					return status.toString().toLowerCase();
-				} else {
-					log.info("Failed starting flow | id=" + id);
-					return "error: can't get status";
+				if (status.isStarted()) {
+					finishFlowActionReport(id, "start","Started flow successfully","info");
+				}else{
+					finishFlowActionReport(id, "error","Failed starting flow | id=" + id,"error");
 				}
-			}else{
-				return "started";
 			}
 
 		}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id);
+				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=" + e.getMessage(),"error");
 				log.error("Start flow " + id + " failed.",e);
-				return e.getMessage();
 			}else{
-				log.error("Unable to start flow " + id + ". Integration isn't running");
-				return "Unable to start flow " + id + ". Integration isn't running";
+				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=Integration isn't running","error");
+				log.error("Start flow " + id + " failed.",e);
 			}
 		}
+
+		return loadReport;
+
 	}
 
 	private ServiceStatus startStep(Route route){
@@ -902,31 +913,29 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String restartFlow(String id) {
 
-		log.info("Restart flow | id=" + id);
-
 		try {
 
 			if(hasFlow(id)) {
-
 				stopFlow(id);
-
-				return startFlow(id);
-
+				startFlow(id);
 			}else {
-				log.warn("FlowId: " + id + " couldn't be found. Start flow, instead of restart.");
-
-				return startFlow(id);
+				startFlow(id);
 			}
 
 		}catch (Exception e) {
 			log.error("Restart flow " + id + " failed.",e);
-			return e.getMessage();
+			finishFlowActionReport(id, "error", e.getMessage(),"error");
 		}
+
+		return loadReport;
+
 	}
+
+
 
 	public String stopFlow(String id) {
 
-		log.info("Stopping flow | id=" + id);
+		initFlowActionReport(id, "stop");
 
 		try {
 
@@ -939,18 +948,20 @@ public class CamelIntegration extends BaseIntegration {
 				context.removeRoute(routeId);
 			}
 
-			log.info("Stopped flow | id=" + id);
-	        return "stopped";
+			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
 
 		}catch (Exception e) {
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
 			log.error("Stop flow " + id + " failed.",e);
-			return e.getMessage();
 		}
+
+		return loadReport;
 
 	}
 
 	public String pauseFlow(String id) {
-		log.info("Pause flow | id=" + id);
+
+		initFlowActionReport(id, "pause");
 
 		try {
 
@@ -961,7 +972,8 @@ public class CamelIntegration extends BaseIntegration {
 
 				for(Route route : routeList){
 					if(!routeController.getRouteStatus(route.getId()).isSuspendable()){
-						return "Flow isn't suspendable (Step " + route.getId() + ")";
+						finishFlowActionReport(id, "error","Flow isn't suspendable (Step " + route.getId() + ")","error");
+						return loadReport;
 					}
 				}
 
@@ -988,24 +1000,24 @@ public class CamelIntegration extends BaseIntegration {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				log.info("Paused flow id=" + id);
-				return status.toString().toLowerCase();
-
+				finishFlowActionReport(id, "pause","Paused flow successfully","info");
 			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
-
 		}catch (Exception e) {
 			log.error("Pause flow " + id + " failed.",e);
 			stopFlow(id); //Stop flow if one of the routes cannot be paused.
-			return e.getMessage();
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
 
+		return loadReport;
 
 	}
 
 	public String resumeFlow(String id) throws Exception {
-		log.info("Resume flow id=" + id);
+
+		initFlowActionReport(id, "resume");
 
 		try {
 
@@ -1040,22 +1052,62 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 				if(resumed){
-					log.info("Resumed flow id=" + id);
-					return status.toString().toLowerCase();
+					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 				}else {
-					return "Flow isn't suspended (nothing to resume)";
+					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
 				}
 			}else {
-				return "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
+				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 
 		}catch (Exception e) {
 			log.error("Resume flow " + id + " failed.",e);
-			stopFlow(id); //Stop flow if one of the routes cannot be resumed.
-			return e.getMessage();
+			finishFlowActionReport(id, "error",e.getMessage(),"error");
+		}
+
+		return loadReport;
+
+	}
+
+	private void initFlowActionReport(String id, String event) {
+		log.info(event + " flow | id=" + id);
+		flowLoaderReport = new FlowLoaderReport();
+		flowLoaderReport.initReport(id, id);
+	}
+
+	private void finishFlowActionReport(String id, String event, String message, String messageType) {
+
+		//logs event to
+		if(messageType.equalsIgnoreCase("error")){
+			log.error(event + " flow " + id + " failed.",message);
+		}else if(messageType.equalsIgnoreCase("warning"))
+			log.warn(event + " flow " + id + " failed.",message);
+		else{
+			log.info(message);
 		}
 
 
+		TreeMap<String, String> flowProps = null;
+		try {
+			flowProps = getFlowConfiguration(id);
+			String version = flowProps.get("flow.version");
+			String environment = flowProps.get("environment");
+
+			if(version==null){
+				version = "0";
+			}
+
+			if(environment==null){
+				environment =  "";
+			}
+
+			flowLoaderReport.finishReport(id,id,event,version,environment,message);
+
+		} catch (Exception e) {
+			flowLoaderReport.finishReport(id,id,event,"","",message);
+		}
+		loadReport = flowLoaderReport.getReport();
 	}
 
 	public boolean isFlowStarted(String id) {
@@ -1323,59 +1375,208 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public String getFlowStats(String id, boolean fullStats, String mediaType) throws Exception {
 
-	public String getFlowStats(String id, String stepid, String mediaType) throws Exception {
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+		JSONArray steps = new JSONArray();
 
-		String routeid = id + "-" + stepid;
+		List<Route> routes = getRoutesByFlowId(id);
 
-		ManagedRouteMBean route = managed.getManagedRoute(routeid);
+		for(Route route: routes){
+			JSONObject step = getStepStats(route.getId(), fullStats);
+			steps.put(step);
+		}
 
-		flowStatus = getFlowStatus(routeid);
+		flow.put("id",id);
+		flow.put("steps",steps);
+		json.put("flow",flow);
 
-		String flowStats;
-		if(route!=null && flowStatus.equals("started")) {
-			flowStats = route.dumpStatsAsXml(true);
-			if(mediaType.contains("json")) {
-				flowStats = DocConverter.convertXmlToJson(flowStats);
-			}
-		}else {
-			flowStats = "0";
+		String flowStats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
 		}
 
 		return flowStats;
+
 	}
 
-	public String getStats(String statsType, String mediaType) throws Exception {
+	public String getFlowStepStats(String flowId, String stepid, boolean fullStats, String mediaType) throws Exception {
 
-		String integrationStats;
-		if(statsType.equals("history")) {
+		String routeid = flowId + "-" + stepid;
 
-			MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
+		JSONObject json = getStepStats(routeid, fullStats);
+		String stepStats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			stepStats = DocConverter.convertJsonToXml(stepStats);
+		}
 
-			if(historyService!=null) {
-				integrationStats = historyService.dumpStatisticsAsJson();
-				if(mediaType.contains("xml")) {
-					integrationStats = DocConverter.convertJsonToXml(integrationStats);
-				}
-			}else {
-				integrationStats = "0";
+		return stepStats;
+	}
+
+	private JSONObject getStepStats(String routeid, boolean fullStats){
+
+		JSONObject json = new JSONObject();
+		JSONObject step = new JSONObject();
+
+		ManagedRouteMBean route = managed.getManagedRoute(routeid);
+
+		String stepStatus = getFlowStatus(routeid);
+
+		step.put("id", routeid);
+		step.put("status", stepStatus);
+
+		if(route!=null && flowStatus.equals("started")) {
+
+			if(fullStats){
+				String stepUptime = getFlowUptime(routeid);
+				String stepUptimeMilliseconds = Long.toString(route.getUptimeMillis());
+
+				step.put("uptime", stepUptime);
+				step.put("uptimeMilliseconds", stepUptimeMilliseconds);
+
+				JSONObject load = new JSONObject();
+
+				String throughput = route.getThroughput();
+				String stepLoad01 = route.getLoad01();
+				String stepLoad05 = route.getLoad05();
+				String stepLoad15 = route.getLoad15();
+
+				load.put("throughput", throughput);
+				load.put("load01", stepLoad01);
+				load.put("load05", stepLoad05);
+				load.put("load15", stepLoad15);
+
+				step.put("load", load);
 			}
-		}else {
-			MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
 
-			if(metricsService!=null) {
-				integrationStats = metricsService.dumpStatisticsAsJson();
-				if(mediaType.contains("xml")) {
-					integrationStats = DocConverter.convertJsonToXml(integrationStats);
-				}
-			}else {
-				integrationStats = "0";
+			String statsAsXml = route.dumpStatsAsXml(fullStats);
+			String statsAsJson = DocConverter.convertXmlToJson(statsAsXml);
+			JSONObject stepStatsObject = new JSONObject(statsAsJson);
+			step.put("stats",stepStatsObject.get("stats"));
+		}
+
+		json.put("step", step);
+
+		return json;
+	}
+
+	public String getStats(String mediaType) throws Exception {
+
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		String result = getStatsFromList(flowIds, false);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
+
+	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception {
+
+		String[] values = flowIds.split(",");
+		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
+
+		String result = getStatsFromList(flowSet, false);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
+
+	private String getStatsFromList(Set<String> flowIds, boolean fullStats) throws Exception {
+
+		JSONArray flows = new JSONArray();
+
+		for(String flowId: flowIds){
+			String flowstats = getFlowStats(flowId, fullStats,"application/json");
+			JSONObject flow = new JSONObject(flowstats);
+			flows.put(flow);
+		}
+
+		String result = flows.toString();
+
+
+		return result;
+
+	}
+
+
+
+	public String getMetrics(String mediaType) throws Exception {
+
+		String integrationStats = "0";
+		MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
+
+		if(metricsService!=null) {
+			integrationStats = metricsService.dumpStatisticsAsJson();
+			if (mediaType.contains("xml")) {
+				integrationStats = DocConverter.convertJsonToXml(integrationStats);
 			}
 		}
 
 		return integrationStats;
 
 	}
+
+
+	public String getHistoryMetrics(String mediaType) throws Exception {
+
+		String integrationStats = "0";
+
+		MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
+
+		if(historyService!=null) {
+			integrationStats = historyService.dumpStatisticsAsJson();
+			if(mediaType.contains("xml")) {
+				integrationStats = DocConverter.convertJsonToXml(integrationStats);
+			}
+		}
+
+		return integrationStats;
+
+	}
+
+	public String info(String mediaType) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject info = new JSONObject();
+
+		info.put("name",context.getName());
+		info.put("version",context.getVersion());
+		info.put("startDate",context.getStartDate());
+		info.put("startupType",context.getStartupSummaryLevel());
+		info.put("uptime",context.getUptime());
+		info.put("uptimeMiliseconds",context.getUptimeMillis());
+		info.put("numberOfRunningSteps",context.getRoutesSize());
+
+		json.put("info",info);
+
+		String integrationInfo = json.toString(4);
+		if(mediaType.contains("xml")) {
+			integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
+		}
+
+		return integrationInfo;
+
+	}
+
 
 
 	public String getRunningFlows(String mediaType) throws Exception {
@@ -1749,7 +1950,40 @@ public class CamelIntegration extends BaseIntegration {
     	util.deleteCertificate(keystorePath, keystorePassword, certificateName);
 	}
 
+	@Override
+	public String validateCron(String cron) {
+		return null;
+	}
 
+	@Override
+	public String validateCertificate(String certificate) {
+		return null;
+	}
+
+	@Override
+	public String validateUrl(String url) {
+		return null;
+	}
+
+	@Override
+	public String validateExpression(String expression) {
+		return null;
+	}
+
+	@Override
+	public String validateFtp(String ftp) {
+		return null;
+	}
+
+	@Override
+	public String validateRegex(String regex) {
+		return null;
+	}
+
+	@Override
+	public String validateScript(String script) {
+		return null;
+	}
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;

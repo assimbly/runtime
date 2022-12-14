@@ -15,7 +15,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URISyntaxException;
-import java.util.Optional;
 import java.util.Properties;
 
 
@@ -34,8 +33,6 @@ public class IntegrationResource {
     private boolean plainResponse;
 
     private boolean integrationIsStarting;
-
-    private String type;
 
     @Autowired
     private FailureListener failureListener;
@@ -58,6 +55,7 @@ public class IntegrationResource {
      */
     @GetMapping(path = "/integration/{integrationId}/start", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> start(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+
         try {
 
             if (integration.isStarted()) {
@@ -73,6 +71,7 @@ public class IntegrationResource {
             log.error("Start integration with id=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/start", e.getMessage());
         }
+
     }
 
     /**
@@ -92,8 +91,28 @@ public class IntegrationResource {
             log.error("Stop integration with id=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/stop",e.getMessage());
         }
+
     }
 
+    /**
+     * GET  /info : info of an integration.
+     *
+     * @param integrationId (by gatewayId)
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @GetMapping(path = "/integration/{integrationId}/info", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> info(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
+
+        try {
+            String info = integration.info(mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/info",info,true);
+        } catch (Exception e) {
+            log.error("Retrieving info on integration with id=" + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/info",e.getMessage());
+        }
+
+    }
 
     /**
      * GET  /istarted : checks if integration is started.
@@ -158,6 +177,7 @@ public class IntegrationResource {
             log.error("Resolve dependency for scheme=" + scheme + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
    		}
+
     }
 
 
@@ -200,6 +220,7 @@ public class IntegrationResource {
 
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}",e.getMessage());
    		}
+
     }
 
     @GetMapping(path = "/integration/{integrationId}/basedirectory", produces = {"text/plain","application/xml","application/json"})
@@ -214,6 +235,7 @@ public class IntegrationResource {
             log.error("Get base directory for Assimbly failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
         }
+
     }
 
     @PostMapping(path = "/integration/{integrationId}/basedirectory", consumes = {"text/plain"}, produces = {"text/plain","application/xml","application/json"})
@@ -228,27 +250,7 @@ public class IntegrationResource {
             log.error("Set base directory for Assimbly failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory",e.getMessage());
         }
-    }
 
-    @GetMapping(path = "/integration/{integrationId}/stats", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Optional<String> statsType) throws Exception {
-
-        plainResponse = true;
-
-        try {
-
-            if(statsType.isPresent()){
-                type=statsType.get();
-            }else {
-                type="default";
-            }
-            String stats = integration.getStats(type, mediaType);
-            if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/stats",stats,plainResponse);
-        } catch (Exception e) {
-            log.error("Get stats failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/stats",e.getMessage());
-        }
     }
 
     @GetMapping(path = "/integration/{integrationId}/runningflows", produces = {"text/plain","application/xml","application/json"})
@@ -261,6 +263,7 @@ public class IntegrationResource {
             log.error("Get running flows for integration=" + integrationId + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/runningflows",e.getMessage());
         }
+
     }
 
     // Generates a generic error response (exceptions outside try catch):

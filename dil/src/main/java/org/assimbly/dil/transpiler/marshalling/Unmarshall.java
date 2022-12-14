@@ -35,6 +35,7 @@ public class Unmarshall {
 	private String flowId;
 	private String flowName;
 	private String flowType;
+	private String flowVersion;
 	private String flowDependencies;
 	private String flowMaximumRedeliveries;
 	private String flowRedeliveryDelay;
@@ -42,7 +43,6 @@ public class Unmarshall {
 	private String flowAssimblyHeaders;
 	private String flowParallelProcessing;
 	private String stepId;
-
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -143,6 +143,8 @@ public class Unmarshall {
 		flowName = xPath.evaluate("//flows/flow[" + flowSelector + "]/name",doc);
 		flowType = xPath.evaluate("//flows/flow[" + flowSelector + "]/type",doc);
 
+		flowVersion = xPath.evaluate("//flows/flow[" + flowSelector + "]/version", doc);
+
 		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/maximumRedeliveries",doc);
 		flowRedeliveryDelay = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/redeliveryDelay",doc);
 		flowLogLevel = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/logLevel",doc);
@@ -159,6 +161,8 @@ public class Unmarshall {
 			}
 		}
 
+		String environment = xPath.evaluate("//integrations/integration[1]/options/environment",doc);
+
 		String dependenciesXpath = "integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency";
 
 		String[] dependencies = conf.getStringArray(dependenciesXpath);
@@ -172,8 +176,10 @@ public class Unmarshall {
 		}
 
 		properties.put("id",flowId);
+		properties.put("environment",environment);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
+		properties.put("flow.version",flowVersion);
 
 		properties.put("flow.dependencies",flowDependencies);
 
