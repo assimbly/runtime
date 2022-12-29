@@ -219,6 +219,8 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","world.dovetail.hl7.XmlEncoder");
 
+		addServiceByName("world.dovetail.mail.component.mail.MailComponent");
+		addServiceByName("world.dovetail.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
 		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
 
 	}
