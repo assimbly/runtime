@@ -26,9 +26,9 @@
         <main.basedir>${project.basedir}</main.basedir>
 
 		<assimbly.version>3.8.1</assimbly.version>
-		<dropwizard-metrics.version>4.2.13</dropwizard-metrics.version>
-		<jolokia.version>1.7.1</jolokia.version>
-		<springdoc-openapi-ui.version>1.6.13</springdoc-openapi-ui.version>
+		<dropwizard-metrics.version>4.2.15</dropwizard-metrics.version>
+		<jolokia.version>1.7.2</jolokia.version>
+		<springdoc-openapi-ui.version>1.6.14</springdoc-openapi-ui.version>
 	</properties>
 
 	<distributionManagement> 
