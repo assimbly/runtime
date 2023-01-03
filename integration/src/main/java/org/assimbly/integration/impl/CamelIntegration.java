@@ -31,6 +31,7 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.validation.ExpressionsValidator;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -38,8 +39,8 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
+import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -192,7 +193,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("uuid-function", new UuidExtensionFunction());
-		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 		context.addComponent("sync", new DirectVmComponent());
 		context.addComponent("async", new VmComponent());
@@ -1968,8 +1968,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateExpression(String expression) {
-		return null;
+	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions) {
+		ExpressionsValidator expressionValidator = new ExpressionsValidator();
+		return expressionValidator.validate(expressions);
 	}
 
 	@Override

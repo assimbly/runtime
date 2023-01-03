@@ -4,7 +4,9 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.EncryptionUtil;
+import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.security.cert.Certificate;
 import java.util.List;
@@ -853,7 +855,7 @@ public interface Integration {
 	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public String validateExpression(String expression);
+	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 
 	/**
 	 * Validates a ftp expression

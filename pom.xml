@@ -27,6 +27,7 @@
 
 		<assimbly.version>3.8.1</assimbly.version>
 		<dropwizard-metrics.version>4.2.13</dropwizard-metrics.version>
+		<groovy-script.version>2.5.4</groovy-script.version>
 		<jolokia.version>1.7.1</jolokia.version>
 		<springdoc-openapi-ui.version>1.6.13</springdoc-openapi-ui.version>
 	</properties>

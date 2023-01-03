@@ -4,12 +4,14 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.integration.Integration;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
+import org.assimbly.util.error.ValidationErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -401,13 +403,15 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
+	// validate
+
 	public abstract String validateCron(String cron);
 
 	public abstract String validateCertificate(String certificate);
 
 	public abstract String validateUrl(String url);
 
-	public abstract String validateExpression(String expression);
+	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 
 	public abstract String validateFtp(String ftp);
 
