@@ -5,6 +5,7 @@ import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 
@@ -863,7 +864,7 @@ public interface Integration {
 	 * @param  ftp
 	 * @return result of validation
 	 */
-	public String validateFtp(String ftp);
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
 	/**
 	 * Validates a regex expression

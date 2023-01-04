@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -110,13 +112,31 @@ public class ValidationResource {
     }
 
     @PostMapping(path = "/validation/{integrationId}/ftp", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateFtp(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @RequestBody String body) throws Exception {
+    public ResponseEntity<String> validateFtp(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @RequestHeader(value = "StopTest",defaultValue = "false") boolean stopTest,
+            @PathVariable Long integrationId, @RequestBody String body
+    ) throws Exception {
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", "", "", "");
+            FtpSettings ftpSettings = null;
+            if(body!=null){
+                ftpSettings = new ObjectMapper().readValue(body, FtpSettings.class);
+            }
+
+            ValidationErrorMessage ftpResp = integration.validateFtp(ftpSettings);
+
+            if(ftpResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(out, ftpResp);
+                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(), "", "");
+            } else {
+                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+            }
+
         } catch (Exception e) {
             log.error("Error",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", e.getMessage(), "", "");

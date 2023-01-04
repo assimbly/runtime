@@ -32,6 +32,8 @@ import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.ExpressionsValidator;
+import org.assimbly.dil.validation.FtpValidator;
+import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -1974,8 +1976,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateFtp(String ftp) {
-		return null;
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings) {
+		FtpValidator ftpValidator = new FtpValidator();
+		return ftpValidator.validate(ftpSettings);
 	}
 
 	@Override
