@@ -33,7 +33,9 @@ import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.ExpressionsValidator;
 import org.assimbly.dil.validation.FtpValidator;
+import org.assimbly.dil.validation.RegexValidator;
 import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -1982,8 +1984,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateRegex(String regex) {
-		return null;
+	public AbstractMap.SimpleEntry validateRegex(Regex regex) {
+		RegexValidator regexValidator = new RegexValidator();
+		return regexValidator.validate(regex);
 	}
 
 	@Override

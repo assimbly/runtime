@@ -6,14 +6,12 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.security.cert.Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * <pre>
@@ -872,7 +870,7 @@ public interface Integration {
 	 * @param  regex the regex expression
 	 * @return result of validation
 	 */
-	public String validateRegex(String regex);
+	public AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	/**
 	 * Validates a script

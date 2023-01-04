@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 
@@ -145,13 +147,38 @@ public class ValidationResource {
     }
 
     @PostMapping(path = "/validation/{integrationId}/regex", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateRegex(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @RequestBody String body) throws Exception {
+    public ResponseEntity<String> validateRegex(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
+            @PathVariable Long integrationId, @RequestBody String body
+    ) throws Exception {
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", "", "", "");
+            Regex regex = null;
+            if(body!=null){
+                regex = new ObjectMapper().readValue(body, Regex.class);
+            }
+
+            AbstractMap.SimpleEntry regexResp = integration.validateRegex(regex);
+
+            if(regexResp!=null) {
+                if (regexResp.getKey().equals("-1")) {
+                    ValidationErrorMessage validationErrorMessage = new ValidationErrorMessage();
+                    validationErrorMessage.setError((String)regexResp.getValue());
+                    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    final ObjectMapper mapper = new ObjectMapper();
+                    mapper.writeValue(out, regexResp);
+                    return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", out.toString(), "", "");
+                } else {
+                    // success - return group count
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue());
+                }
+            } else {
+                return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", "", "", "");
+            }
+
         } catch (Exception e) {
             log.error("Error",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", e.getMessage(), "", "");

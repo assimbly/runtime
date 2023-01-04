@@ -6,6 +6,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.integration.Integration;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
@@ -416,7 +417,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
-	public abstract String validateRegex(String regex);
+	public abstract AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	public abstract String validateScript(String script);
 
