@@ -831,7 +831,7 @@ public interface Integration {
 	 * @param  cron the cron expression
 	 * @return result of validation
 	 */
-	public String validateCron(String cron);
+	public ValidationErrorMessage validateCron(String cronExpression);
 
 	/**
 	 * Validates a certificate

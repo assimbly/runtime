@@ -31,6 +31,7 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.validation.CronValidator;
 import org.assimbly.dil.validation.ExpressionsValidator;
 import org.assimbly.dil.validation.FtpValidator;
 import org.assimbly.dil.validation.RegexValidator;
@@ -1957,8 +1958,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateCron(String cron) {
-		return null;
+	public ValidationErrorMessage validateCron(String cronExpression) {
+		CronValidator cronValidator = new CronValidator();
+		return cronValidator.validate(cronExpression);
 	}
 
 	@Override

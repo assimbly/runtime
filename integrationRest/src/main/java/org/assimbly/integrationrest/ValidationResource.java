@@ -38,13 +38,26 @@ public class ValidationResource {
     //validations
 
     @GetMapping(path = "/validation/{integrationId}/cron", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateCron(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> validateCron(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @Parameter String expression,
+            @PathVariable Long integrationId
+    ) throws Exception {
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/cron", "", "", "");
+            ValidationErrorMessage cronResp = integration.validateCron(expression);
+
+            if(cronResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(out, cronResp);
+                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(), "", "");
+            } else {
+                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+            }
+
         } catch (Exception e) {
             log.error("ErrorMessage",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/cron", e.getMessage(), "","");

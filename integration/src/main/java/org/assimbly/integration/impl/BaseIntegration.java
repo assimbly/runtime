@@ -407,7 +407,7 @@ public abstract class BaseIntegration implements Integration {
 
 	// validate
 
-	public abstract String validateCron(String cron);
+	public abstract ValidationErrorMessage validateCron(String cronExpression);
 
 	public abstract String validateCertificate(String certificate);
 
