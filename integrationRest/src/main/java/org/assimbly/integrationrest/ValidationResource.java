@@ -79,13 +79,25 @@ public class ValidationResource {
     }
 
     @GetMapping(path = "/validation/{integrationId}/url", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateUrl(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> validateUrl(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @Parameter String httpUrl,
+            @PathVariable Long integrationId
+    ) throws Exception {
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", "", "", "");
+            ValidationErrorMessage urlResp = integration.validateUrl(httpUrl);
+
+            if(urlResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(out, urlResp);
+                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(), "", "");
+            } else {
+                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+            }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", e.getMessage(), "","");

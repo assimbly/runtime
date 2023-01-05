@@ -846,7 +846,7 @@ public interface Integration {
 	 * @param  url
 	 * @return result of validation
 	 */
-	public String validateUrl(String url);
+	public ValidationErrorMessage validateUrl(String url);
 
 	/**
 	 * Validates an expression

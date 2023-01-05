@@ -411,7 +411,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String validateCertificate(String certificate);
 
-	public abstract String validateUrl(String url);
+	public abstract ValidationErrorMessage validateUrl(String url);
 
 	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 

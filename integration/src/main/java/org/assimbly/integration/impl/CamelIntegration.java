@@ -31,10 +31,7 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
-import org.assimbly.dil.validation.CronValidator;
-import org.assimbly.dil.validation.ExpressionsValidator;
-import org.assimbly.dil.validation.FtpValidator;
-import org.assimbly.dil.validation.RegexValidator;
+import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.docconverter.DocConverter;
@@ -1969,8 +1966,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateUrl(String url) {
-		return null;
+	public ValidationErrorMessage validateUrl(String url) {
+		UrlValidator urlValidator = new UrlValidator();
+		return urlValidator.validate(url);
 	}
 
 	@Override
