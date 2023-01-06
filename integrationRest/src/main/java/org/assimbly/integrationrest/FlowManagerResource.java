@@ -314,12 +314,26 @@ public class FlowManagerResource {
 
     }
 
+    @GetMapping(path = "/integration/{integrationId}/flow/info/{flowId}", produces = {"application/xml","application/json","text/plain"})
+    public ResponseEntity<String> getFlowInfo(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+
+        plainResponse = true;
+
+        try {
+            integration = integrationResource.getIntegration();
+            String info = integration.getFlowInfo(flowId, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/info/{flowId}",info,true);
+        } catch (Exception e) {
+            log.error("Get status of flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/info/{flowId}",e.getMessage(),false);
+        }
+
+    }
 
     @GetMapping(path = "/integration/{integrationId}/flow/status/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getFlowStatus(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            //integrationResource.init();
             integration = integrationResource.getIntegration();
 
             status = integration.getFlowStatus(flowId);
