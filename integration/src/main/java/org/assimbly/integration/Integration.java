@@ -315,40 +315,42 @@ public interface Integration {
 	/**
 	 * Gets the ids of running flows
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getRunningFlows(String mediaType) throws Exception;
+	public String getListOfFlows(String filter, String mediaType) throws Exception;
 
 	/**
-	 * Gets the details of running flows
+	 * Gets the details of flows
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id, name, status etc
 	 */
-	public String getRunningFlowsDetails(String mediaType) throws Exception;
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the number of running flows
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getRunningFlowsCount(String mediaType) throws Exception;
+	public String countFlows(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the number of running steps
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getRunningStepsCount(String mediaType) throws Exception;
-
-
+	public String countSteps(String filter, String mediaType) throws Exception;
 
 	/**
 	* Gets the version of documentation/integration framework 

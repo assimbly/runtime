@@ -1848,21 +1848,36 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	private Set<String> getListOfFlowIds(String filter){
 
-
-	public String getRunningFlows(String mediaType) throws Exception {
+		//get all routes
+		List<Route> routes = context.getRoutes();
 
 		Set<String> flowIds = new HashSet<String>();
 
-		List<Route> routes = context.getRoutes();
-
+		//filter flows from routes
 		for(Route route: routes){
 			String routeId = route.getId();
 			String flowId = StringUtils.substringBefore(routeId,"-");
 			if(flowId!=null && !flowId.isEmpty()) {
-				flowIds.add(flowId);
+				if (filter != null && !filter.isEmpty()) {
+					String status = getFlowStatus(flowId);
+					if (status.equalsIgnoreCase(filter)) {
+						flowIds.add(flowId);
+					}
+				}else{
+					flowIds.add(flowId);
+				}
 			}
 		}
+
+		return flowIds;
+
+	}
+
+	public String getListOfFlows(String filter, String mediaType) throws Exception {
+
+		Set<String> flowIds = getListOfFlowIds(filter);
 
 		JSONArray flowsArray = new JSONArray();
 
@@ -1886,24 +1901,14 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getRunningFlowsDetails(String mediaType) throws Exception {
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
 
-		Set<String> flowIds = new HashSet<String>();
-
-		List<Route> routes = context.getRoutes();
-
-		for(Route route: routes){
-			String routeId = route.getId();
-			String flowId = StringUtils.substringBefore(routeId,"-");
-			if(flowId!=null && !flowId.isEmpty()) {
-				flowIds.add(flowId);
-			}
-		}
+		Set<String> flowIds = getListOfFlowIds(filter);
 
 		JSONArray flowsArray = new JSONArray();
 
-		for(String flowId: flowIds){
-			JSONObject flowObject = new JSONObject(getFlowInfo(flowId,"application/json"));
+		for(String flowId: flowIds) {
+			JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json"));
 			flowsArray.put(flowObject);
 		}
 
@@ -1921,26 +1926,38 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getRunningFlowsCount(String mediaType) throws Exception {
+	public String countFlows(String filter, String mediaType) throws Exception {
 
-		Set<String> flowIds = new HashSet<String>();
-
-		List<Route> routes = context.getRoutes();
-
-		for(Route route: routes){
-			String routeId = route.getId();
-			String flowId = StringUtils.substringBefore(routeId,"-");
-			if(flowId!=null && !flowId.isEmpty()) {
-				flowIds.add(flowId);
-			}
-		}
+		Set<String> flowIds = getListOfFlowIds(filter);
 
 		return Integer.toString(flowIds.size());
 
 	}
 
-	public String getRunningStepsCount(String mediaType) throws Exception {
-		return Integer.toString(context.getRoutesSize());
+	public String countSteps(String filter, String mediaType) throws Exception {
+
+		List<Route> routes = context.getRoutes();
+
+		Set<String> stepIds = new HashSet<String>();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
+
+			if (filter != null && !filter.isEmpty()) {
+					String status = managedRoute.getState();
+					if (status.equalsIgnoreCase(filter)) {
+						stepIds.add(routeId);
+					}
+			}else{
+				stepIds.add(routeId);
+			}
+		}
+
+		String numberOfSteps = Integer.toString(stepIds.size());
+
+		return numberOfSteps;
+
 	}
 
 	//Other management tasks

@@ -253,54 +253,54 @@ public class IntegrationResource {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/list/runningflows", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getRunningFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    @GetMapping(path = "/integration/{integrationId}/list/flows", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getListOfFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
-            String runningFlows = integration.getRunningFlows(mediaType);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/list/runningflows",runningFlows,true);
+            String flows = integration.getListOfFlows(filter, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/list/flows",flows,true);
         } catch (Exception e) {
-            log.error("Get list of running flows for integration=" + integrationId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/list/runningflows",e.getMessage());
+            log.error("Get list of flows for integration=" + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/list/flows",e.getMessage());
         }
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/list/details/runningflows", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getRunningFlowsDetails(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    @GetMapping(path = "/integration/{integrationId}/list/flows/details", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getRunningFlowsDetails(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
-            String runningFlowsDetails = integration.getRunningFlowsDetails(mediaType);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/list/details/runningflows",runningFlowsDetails,true);
+            String flowsDetails = integration.getListOfFlowsDetails(filter, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/list/flows",flowsDetails,true);
         } catch (Exception e) {
-            log.error("Get list of running flows for integration=" + integrationId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/list/details/runningflows",e.getMessage());
+            log.error("Get list of flows with details for integration=" + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/list/flows/details",e.getMessage());
         }
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/count/runningflows", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getRunningFlowsCount(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    @GetMapping(path = "/integration/{integrationId}/count/flows", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> countFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
-            String runningFlowsCount = integration.getRunningFlowsCount(mediaType);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/count/runningflows",runningFlowsCount,false);
+            String flowsCount = integration.countFlows(filter, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/count/flows",flowsCount,false);
         } catch (Exception e) {
             log.error("Count running flows for integration=" + integrationId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/count/runningflows",e.getMessage());
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/count/flows",e.getMessage());
         }
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/count/runningsteps", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> getRunningStepsCount(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    @GetMapping(path = "/integration/{integrationId}/count/steps", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> countSteps(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
-            String runningStepsCount = integration.getRunningStepsCount(mediaType);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/count/runningsteps",runningStepsCount,false);
+            String stepsCount = integration.countSteps(filter, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/count/steps",stepsCount,false);
         } catch (Exception e) {
             log.error("Count running steps for integration=" + integrationId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/count/runningsteps",e.getMessage());
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/count/steps",e.getMessage());
         }
 
     }
