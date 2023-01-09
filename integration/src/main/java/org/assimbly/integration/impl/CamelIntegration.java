@@ -34,6 +34,7 @@ import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.https.FileBasedTrustStore;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -1961,8 +1962,16 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateCertificate(String certificate) {
-		return null;
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
+		HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
+		try {
+			List<String> urlList = new ArrayList<>();
+			urlList.add(httpsUrl);
+			httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
+		} catch (Exception e) {
+			System.out.println("Error to add certificate: " + e.getMessage());
+		}
+		return httpsCertificateValidator.validate(httpsUrl);
 	}
 
 	@Override
@@ -2042,6 +2051,8 @@ public class CamelIntegration extends BaseIntegration {
 		for (String sslComponent : sslComponents) {
 			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
 		}
+
+		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
 	}
 
 	/**

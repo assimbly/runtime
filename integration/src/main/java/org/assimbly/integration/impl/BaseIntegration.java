@@ -4,6 +4,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -409,7 +410,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract ValidationErrorMessage validateCron(String cronExpression);
 
-	public abstract String validateCertificate(String certificate);
+	public abstract HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
 	public abstract ValidationErrorMessage validateUrl(String url);
 

@@ -3,12 +3,14 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
+import org.eclipse.jetty.util.security.CertificateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,8 @@ public class ValidationResource {
 
     @Autowired
     private IntegrationResource integrationResource;
+
+    private boolean plainResponse;
 
     private Integration integration;
 
@@ -65,13 +69,33 @@ public class ValidationResource {
     }
 
     @GetMapping(path = "/validation/{integrationId}/certificate", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> validateCertificate(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @Parameter String httpsUrl,
+            @PathVariable Long integrationId
+    ) throws Exception {
+
+        plainResponse = true;
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/certificate", "", "", "");
+            HttpsCertificateValidator.ValidationResult certificateResp = integration.validateCertificate(httpsUrl);
+
+            if(certificateResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(out, certificateResp);
+                if(certificateResp.getValidationResultStatus().equals(HttpsCertificateValidator.ValidationResultStatus.VALID)) {
+                    // return code 304
+                    return ResponseUtil.createNotModifiedResponse(integrationId, "/validation/{integrationId}/certificate");
+                } else {
+                    // return code 200
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
+                }
+            } else {
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", "", plainResponse);
+            }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/certificate", e.getMessage(), "","");

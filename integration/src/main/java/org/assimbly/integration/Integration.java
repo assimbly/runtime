@@ -4,6 +4,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -838,7 +839,7 @@ public interface Integration {
 	 *
 	 * @param  certificate
 	 * @return result of validation	 */
-	public String validateCertificate(String certificate);
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
 	/**
 	 * Validates a url expression
