@@ -313,7 +313,7 @@ public interface Integration {
 	public String getHistoryMetrics(String mediaType) throws Exception;
 
 	/**
-	 * Gets the ids of running flows
+	 * Gets the ids of (loaded) flows
 	 *
 	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
@@ -323,7 +323,7 @@ public interface Integration {
 	public String getListOfFlows(String filter, String mediaType) throws Exception;
 
 	/**
-	 * Gets the details of flows
+	 * Gets the details of (loaded) flows
 	 *
 	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
@@ -333,7 +333,16 @@ public interface Integration {
 	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
 	/**
-	 * Gets the number of running flows
+	 * Gets the soap actions for a SOAP service (WSDL)
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of SOAP actions
+	 */
+	public String getListOfSoapActions(String url, String mediaType) throws Exception;
+
+	/**
+	 * Count the number of (loaded) flows
 	 *
 	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
@@ -343,7 +352,7 @@ public interface Integration {
 	public String countFlows(String filter, String mediaType) throws Exception;
 
 	/**
-	 * Gets the number of running steps
+	 * Counts the number of (loaded) steps
 	 *
 	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)

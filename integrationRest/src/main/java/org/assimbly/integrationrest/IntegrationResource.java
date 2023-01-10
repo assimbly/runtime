@@ -279,6 +279,20 @@ public class IntegrationResource {
 
     }
 
+
+    @PostMapping(path = "/integration/{integrationId}/list/soap/action", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> getListOfSoapActions(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String url) throws Exception {
+
+        try {
+            String flows = integration.getListOfSoapActions(url, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/list/soap/actions",flows,true);
+        } catch (Exception e) {
+            log.error("Get list of soap actions for integration=" + integrationId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/list/soap/actions",e.getMessage());
+        }
+
+    }
+
     @GetMapping(path = "/integration/{integrationId}/count/flows", produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> countFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 

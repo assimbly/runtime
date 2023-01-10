@@ -367,6 +367,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
+	public abstract String getListOfSoapActions(String url, String mediaType) throws Exception;
+
 	public abstract String countFlows(String filter, String mediaType) throws Exception;
 
 	public abstract String countSteps(String filter, String mediaType) throws Exception;

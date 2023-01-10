@@ -53,6 +53,7 @@ import org.w3c.dom.Document;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1920,6 +1921,25 @@ public class CamelIntegration extends BaseIntegration {
 			flowObject.put("flow",flowsArray);
 			flowsObject.put("flows",flowObject);
 			result = DocConverter.convertJsonToXml(flowsObject.toString());
+		}
+
+		return result;
+
+	}
+
+	public String getListOfSoapActions(String url, String mediaType) throws Exception {
+
+		String result;
+
+		Class<?> clazz;
+		try {
+			clazz = Class.forName("world.dovetail.soap.SoapActionsService");
+			Object soapActions =  clazz.getDeclaredConstructor().newInstance();
+			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
+			result = (String) method.invoke(soapActions, url);
+		} catch (Exception e) {
+			log.error("SOAP Actions couldn't be retrieved.");
+			result = "[]";
 		}
 
 		return result;
