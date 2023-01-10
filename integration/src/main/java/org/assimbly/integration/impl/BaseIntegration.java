@@ -274,6 +274,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getStats(String mediaType) throws Exception;
 
+	public abstract String getMessages(String mediaType) throws Exception;
+
 	public abstract String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
 
 	public abstract String getMetrics(String mediaType) throws Exception;
@@ -328,18 +330,26 @@ public abstract class BaseIntegration implements Integration {
 	public abstract String fileUninstallFlow(String id, String mediaType) throws Exception;
 	
 	public abstract boolean isFlowStarted(String id) throws Exception;
-	
+
+	public abstract String getFlowInfo(String id, String mediaType) throws Exception;
+
 	public abstract String getFlowStatus(String id) throws Exception;
 
 	public abstract String getFlowUptime(String id) throws Exception;
 
-	public abstract String getFlowLastError(String id);	
-	
-	public abstract String getFlowTotalMessages(String id) throws Exception;	
+	public abstract String getFlowLastError(String id);
+
+	public abstract String getFlowMessages(String id, boolean includeSteps, String mediaType) throws Exception;
+
+	public abstract String getFlowTotalMessages(String id) throws Exception;
 	
 	public abstract String getFlowCompletedMessages(String id) throws Exception;
 	
-	public abstract String getFlowFailedMessages(String id) throws Exception;	
+	public abstract String getFlowFailedMessages(String id) throws Exception;
+
+	public abstract String getFlowPendingMessages(String id) throws Exception;
+
+	public abstract String getStepMessages(String id, String stepId, String mediaType) throws Exception;
 
 	public abstract String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception;	
 
@@ -349,11 +359,20 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, boolean fullStats, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, boolean fullStats, boolean includeSteps, String mediaType) throws Exception;
 
 	public abstract String getFlowStepStats(String id, String stepid, boolean fullStats, String mediaType) throws Exception;
 
-	public abstract String getRunningFlows(String mediaType) throws Exception;
+	public abstract String getListOfFlows(String filter, String mediaType) throws Exception;
+
+	public abstract String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
+
+	public abstract String getListOfSoapActions(String url, String mediaType) throws Exception;
+
+	public abstract String countFlows(String filter, String mediaType) throws Exception;
+
+	public abstract String countSteps(String filter, String mediaType) throws Exception;
+
 	//certificates
 
 	public abstract Certificate[] getCertificates(String url) throws Exception;

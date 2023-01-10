@@ -278,6 +278,15 @@ public interface Integration {
 	/**
 	 * Gets the stats of an integration
 	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getMessages(String mediaType) throws Exception;
+
+	/**
+	 * Gets the stats of an integration
+	 *
 	 * @param  flowIds comma separated list of flow ids
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
@@ -304,13 +313,53 @@ public interface Integration {
 	public String getHistoryMetrics(String mediaType) throws Exception;
 
 	/**
-	 * Gets the ids of running flows
+	 * Gets the ids of (loaded) flows
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getRunningFlows(String mediaType) throws Exception;
+	public String getListOfFlows(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Gets the details of (loaded) flows
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id, name, status etc
+	 */
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Gets the soap actions for a SOAP service (WSDL)
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of SOAP actions
+	 */
+	public String getListOfSoapActions(String url, String mediaType) throws Exception;
+
+	/**
+	 * Count the number of (loaded) flows
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id
+	 */
+	public String countFlows(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Counts the number of (loaded) steps
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id
+	 */
+	public String countSteps(String filter, String mediaType) throws Exception;
 
 	/**
 	* Gets the version of documentation/integration framework 
@@ -596,7 +645,17 @@ public interface Integration {
 	* @return returns true if flow is started.
 	*/
 	public boolean isFlowStarted(String flowId) throws Exception;
-		
+
+	/**
+	 * Gets info of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @throws Exception if flow doesn't start
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	public String getFlowInfo(String flowId, String mediaType) throws Exception;
+
 	/**
 	* Gets the status of a flow 
 	*
@@ -622,10 +681,21 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowLastError(String flowId) throws Exception;	
+	public String getFlowLastError(String flowId) throws Exception;
 
 	/**
-	* Gets the last error of a flow
+	 * Gets the processed messages of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  includeSteps Whether or not to include steps
+	 * @param mediaType (XML,JSON or TEXT)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages (total, completed, failed, pending)
+	 */
+	public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception;
+
+	/**
+	* Gets the total number of messages a flow has processed
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
@@ -634,7 +704,7 @@ public interface Integration {
 	public String getFlowTotalMessages(String flowId) throws Exception;	
 
 	/**
-	* Gets the total number of messages a flow has processed
+	* Gets the total number of completed messages a flow has processed
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
@@ -649,7 +719,26 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowFailedMessages(String flowId) throws Exception;	
+	public String getFlowFailedMessages(String flowId) throws Exception;
+
+	/**
+	 * Gets the total number of pending messages a flow has processed
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getFlowPendingMessages(String flowId) throws Exception;
+
+	/**
+	 * Gets the processed messaged of a step in a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages (total, completed, failed, pending)
+	 */
+	public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception;
 
 	/**
 	* Gets the failure log for the specified flow
@@ -696,7 +785,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, boolean fullStats, String mediaType) throws Exception;
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
