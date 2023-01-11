@@ -13,20 +13,17 @@ public class ExchangeMarshaller {
         Exchange exchange = new DefaultExchange(new DefaultCamelContext());
 
         if (exchangeDto.getBody() != null) {
-            System.out.println("body: "+exchangeDto.getBody());
             exchange.getIn().setBody(exchangeDto.getBody());
         }
 
         if (exchangeDto.getHeaders() != null) {
             for (Map.Entry<String, String> entry : exchangeDto.getHeaders().entrySet()) {
-                System.out.println("header: "+entry.getKey()+", "+entry.getValue());
                 exchange.getIn().setHeader(entry.getKey(), entry.getValue());
             }
         }
 
         if (exchangeDto.getProperties() != null) {
             for (Map.Entry<String, String> entry : exchangeDto.getProperties().entrySet()) {
-                System.out.println("property: "+entry.getKey()+", "+entry.getValue());
                 exchange.setProperty(entry.getKey(), entry.getValue());
             }
         }
