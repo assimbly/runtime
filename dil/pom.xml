@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.8.1</version>
+    <version>3.8.2</version>
   </parent>
 
   <name>dil</name>
@@ -28,9 +28,14 @@
 
   <dependencies>
 	  <dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>camel-base</artifactId>
-			<version>${assimbly.version}</version>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-base</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-components</artifactId>
+		  <version>${assimbly.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
@@ -47,50 +52,6 @@
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
-
-	  <dependency>
-		  <groupId>org.codehaus.groovy</groupId>
-		  <artifactId>groovy</artifactId>
-		  <version>${groovy-script.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.codehaus.groovy</groupId>
-		  <artifactId>groovy-jsr223</artifactId>
-		  <version>${groovy-script.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.codehaus.groovy</groupId>
-		  <artifactId>groovy-dateutil</artifactId>
-		  <version>${groovy-script.version}</version>
-	  </dependency>
-
-	  <dependency>
-		  <groupId>org.apache.servicemix.bundles</groupId>
-		  <artifactId>org.apache.servicemix.bundles.jsch</artifactId>
-		  <version>${jsch.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>commons-net</groupId>
-		  <artifactId>commons-net</artifactId>
-		  <version>${commons-net.version}</version>
-	  </dependency>
-
-	  <dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-groovy</artifactId>
-		  <version>3.20.1</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-javascript</artifactId>
-		  <version>3.20.1</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-support</artifactId>
-		  <version>3.20.1</version>
-	  </dependency>
-
   </dependencies>
 
 	<build>

@@ -9,7 +9,7 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
-	<version>3.8.1</version>
+	<version>3.8.2</version>
 
 	<modules>
 		<module>broker</module>
@@ -25,14 +25,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
 
-		<assimbly.version>3.8.1</assimbly.version>
+		<assimbly.version>3.8.2</assimbly.version>
 		<dropwizard-metrics.version>4.2.13</dropwizard-metrics.version>
-		<groovy-script.version>2.5.4</groovy-script.version>
 		<jolokia.version>1.7.1</jolokia.version>
 		<springdoc-openapi-ui.version>1.6.13</springdoc-openapi-ui.version>
-
-		<commons-net.version>3.6</commons-net.version>
-		<jsch.version>0.1.48_1</jsch.version>
 	</properties>
 
 	<distributionManagement> 
