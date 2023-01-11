@@ -41,7 +41,6 @@
 			<groupId>org.assimbly</groupId>
 			<artifactId>test-base</artifactId>
 			<version>${assimbly.version}</version>
-			<scope>test</scope>
 		</dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
@@ -53,19 +52,16 @@
 		  <groupId>org.codehaus.groovy</groupId>
 		  <artifactId>groovy</artifactId>
 		  <version>${groovy-script.version}</version>
-		  <scope>provided</scope>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.codehaus.groovy</groupId>
 		  <artifactId>groovy-jsr223</artifactId>
 		  <version>${groovy-script.version}</version>
-		  <scope>provided</scope>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.codehaus.groovy</groupId>
 		  <artifactId>groovy-dateutil</artifactId>
 		  <version>${groovy-script.version}</version>
-		  <scope>provided</scope>
 	  </dependency>
 
 	  <dependency>
