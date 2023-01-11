@@ -34,6 +34,8 @@ import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.dil.validation.https.FileBasedTrustStore;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
@@ -52,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.scripting.ScriptEvaluator;
 import org.w3c.dom.Document;
 
 import javax.xml.xpath.XPath;
@@ -1999,8 +2002,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateScript(String script) {
-		return null;
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest) {
+		ScriptValidator scriptValidator = new ScriptValidator();
+		return scriptValidator.validate(scriptRequest);
 	}
 
 	public void setEncryptionProperties(Properties encryptionProperties) {

@@ -8,6 +8,8 @@ import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 
@@ -879,6 +881,6 @@ public interface Integration {
 	 * @param  script the script (for example Groovy)
 	 * @return result of validation
 	 */
-	public String validateScript(String script);
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 }

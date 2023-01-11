@@ -7,6 +7,9 @@ import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.BadRequestResponse;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
@@ -236,16 +239,42 @@ public class ValidationResource {
     }
 
     @PostMapping(path = "/validation/{integrationId}/script", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateScript(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @RequestBody String body) throws Exception {
+    public ResponseEntity<String> validateScript(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
+            @PathVariable Long integrationId,
+            @RequestBody String body
+    ) throws Exception {
+
+        plainResponse = true;
 
         try {
-
             integration = integrationResource.getIntegration();
 
-            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/script", "", "", "");
+            EvaluationRequest scriptRequest = null;
+            if(body!=null){
+                scriptRequest = new ObjectMapper().readValue(body, EvaluationRequest.class);
+            }
+
+            EvaluationResponse scriptResp = integration.validateScript(scriptRequest);
+
+            if(scriptResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                if(scriptResp.getCode() == 1) {
+                    mapper.writeValue(out, scriptResp);
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(), plainResponse);
+                } else {
+                    mapper.writeValue(out, new BadRequestResponse(scriptResp.getResult()));
+                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(), plainResponse);
+                }
+            } else {
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", "", plainResponse);
+            }
+
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/script", e.getMessage(), "", "");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", e.getMessage(), plainResponse);
         }
 
     }

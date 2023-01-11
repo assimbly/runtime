@@ -8,6 +8,8 @@ import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.integration.Integration;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
@@ -420,6 +422,6 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract AbstractMap.SimpleEntry validateRegex(Regex regex);
 
-	public abstract String validateScript(String script);
+	public abstract EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 }

@@ -78,6 +78,23 @@
 		  <artifactId>commons-net</artifactId>
 		  <version>${commons-net.version}</version>
 	  </dependency>
+
+	  <dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-groovy</artifactId>
+		  <version>3.20.1</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-javascript</artifactId>
+		  <version>3.20.1</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-support</artifactId>
+		  <version>3.20.1</version>
+	  </dependency>
+
   </dependencies>
 
 	<build>
