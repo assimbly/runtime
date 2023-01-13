@@ -4,12 +4,19 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
+import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.integration.Integration;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
+import org.assimbly.util.error.ValidationErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -420,18 +427,20 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
-	public abstract String validateCron(String cron);
+	// validate
 
-	public abstract String validateCertificate(String certificate);
+	public abstract ValidationErrorMessage validateCron(String cronExpression);
 
-	public abstract String validateUrl(String url);
+	public abstract HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
-	public abstract String validateExpression(String expression);
+	public abstract ValidationErrorMessage validateUrl(String url);
 
-	public abstract String validateFtp(String ftp);
+	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 
-	public abstract String validateRegex(String regex);
+	public abstract ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
-	public abstract String validateScript(String script);
+	public abstract AbstractMap.SimpleEntry validateRegex(Regex regex);
+
+	public abstract EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 }
