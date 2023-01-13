@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
-public class ValidationResource {
+public class ValidationRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private IntegrationResource integrationResource;
+    private IntegrationRuntime integrationRuntime;
 
     private Integration integration;
 
@@ -31,7 +31,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/cron", "", "", "");
         } catch (Exception e) {
@@ -45,7 +45,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/certificate", "", "", "");
         } catch (Exception e) {
@@ -59,7 +59,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", "", "", "");
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/expression", "", "", "");
         } catch (Exception e) {
@@ -89,7 +89,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", "", "", "");
         } catch (Exception e) {
@@ -104,7 +104,7 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", "", "", "");
         } catch (Exception e) {
@@ -119,12 +119,36 @@ public class ValidationResource {
 
         try {
 
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/script", "", "", "");
         } catch (Exception e) {
             log.error("Error",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/script", e.getMessage(), "", "");
+        }
+
+    }
+
+    @GetMapping(path = "/validation/{integrationId}/uri", produces = {"application/xml","application/json","text/plain"})
+    public ResponseEntity<String> validateUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
+        try {
+            integration = integrationRuntime.getIntegration();
+            String flowValidation = integration.validateFlow(uri);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/validation/{integrationId}/uri",flowValidation);
+        } catch (Exception e) {
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/validation/{integrationId}/urizx",e.getMessage());
+        }
+    }
+
+    @GetMapping(path = "/validation/{integrationId}/connection/{host}/{port}/{timeout}", produces = {"text/plain","application/xml","application/json"})
+    public ResponseEntity<String> testConnection(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String host,@PathVariable int port, @PathVariable int timeout) throws Exception {
+
+        try {
+            String testConnectionResult = integration.testConnection(host, port, timeout);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",testConnectionResult);
+        } catch (Exception e) {
+            log.error("Test connection failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",e.getMessage());
         }
 
     }

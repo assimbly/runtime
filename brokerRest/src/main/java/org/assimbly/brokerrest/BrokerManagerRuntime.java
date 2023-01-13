@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @RestController
 @RequestMapping("/api")
-public class BrokerManagerResource {
+public class BrokerManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-	private ManagedBroker broker;
+	private ManagedBrokerRuntime broker;
 
     private String result;
 

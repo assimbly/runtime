@@ -16,19 +16,19 @@ import org.springframework.web.bind.annotation.*;
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
-public class StatisticsResource {
+public class StatisticsRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private IntegrationResource integrationResource;
+    private IntegrationRuntime integrationRuntime;
 
     private Integration integration;
 
     private boolean plainResponse;
 
 
-    public StatisticsResource() throws Exception {
+    public StatisticsRuntime() throws Exception {
     }
 
     //statistics of integrations, flows and steps
@@ -37,7 +37,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             String stats = integration.getStats(mediaType);
@@ -53,7 +53,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             String stats = integration.getMessages(mediaType);
@@ -69,7 +69,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getStatsByFlowIds(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String flowIds, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             String stats = integration.getStatsByFlowIds(flowIds, mediaType);
@@ -87,7 +87,7 @@ public class StatisticsResource {
         plainResponse = true;
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String flowStats = integration.getFlowStats(flowId, fullStats, includeSteps, mediaType);
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
@@ -104,7 +104,7 @@ public class StatisticsResource {
         plainResponse = true;
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String flowStats = integration.getFlowStepStats(flowId, stepId, fullStats, mediaType);
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
@@ -119,7 +119,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getFlowMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=true,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String numberOfMessages = integration.getFlowMessages(flowId, includeSteps, mediaType);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/messages",numberOfMessages,true);
@@ -133,7 +133,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getFlowTotalMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String numberOfMessages = integration.getFlowTotalMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/messages/total",numberOfMessages,numberOfMessages,flowId);
@@ -147,7 +147,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getFlowCompletedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String completedMessages = integration.getFlowCompletedMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/messages/completed",completedMessages,completedMessages,flowId);
@@ -161,7 +161,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getFlowFailedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String failedMessages = integration.getFlowFailedMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/messages/failed",failedMessages,failedMessages,flowId);
@@ -175,7 +175,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getFlowPendingMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String failedMessages = integration.getFlowPendingMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/messages/pending",failedMessages,failedMessages,flowId);
@@ -189,7 +189,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getStepMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
 
             String numberOfMessages = integration.getStepMessages(flowId, stepId, mediaType);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/step/{stepId}/messages",numberOfMessages,true);
@@ -204,7 +204,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             String metrics = integration.getMetrics(mediaType);
@@ -220,7 +220,7 @@ public class StatisticsResource {
     public ResponseEntity<String> getHistoryMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             String metrics = integration.getHistoryMetrics(mediaType);

@@ -45,47 +45,7 @@ public interface Integration {
 	 */
 	public EncryptionUtil getEncryptionUtil();
 
-	//configure integration
-
-	/**
-	 * Sets the integration configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;).
-	 * The configuration cleared after a integration is reinitialized.
-	 *
-	 * @param configuration: list of flow configurations (Treemaps)
-	 * @throws Exception if configuration can't be set
-	 */
-	public void setFlowConfigurations(List<TreeMap<String, String>> configuration) throws Exception;
-
-	/**
-	 * Sets the integration configuration from a string of a specific format (XML,JSON,YAML).
-	 * The configuration cleared after a integration is reinitialized.
-	 *
-	 * @param integrationId   ID of the integration
-	 * @param mediaType     (XML,JSON,YAML)
-	 * @param configuration (the XML, JSON or YAML file)
-	 * @throws Exception if configuration can't be set
-	 */
-	public void setFlowConfigurations(String integrationId, String mediaType, String configuration) throws Exception;
-	
-	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @return list of flow configurations (Treemap&lt;key,value&gt;)
-	* @throws Exception if configuration can't be retrieved or isn't available
-	*/
-	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception;
-
-	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @param  integrationId ID of the integration
-	* @param  mediaType (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediaType)
-	* @throws Exception if configuration can't be retrieved or isn't available
-	*/
-	public String getFlowConfigurations(String integrationId, String mediaType) throws Exception;
-	
-	//configure flow
+	//configure flows
 	/**
 	* Sets the flow configuration from a Tree (keyvalues). This list
 	* is cleared after a integration is reinitialized.
@@ -93,7 +53,7 @@ public interface Integration {
 	* @param  configuration of a flow configuration
 	* @throws Exception if configuration can't be set
 	*/
-	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception;	
+	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception;
 
 	/**
 	* Sets the flow configuration from a string for a specific format (XML,JSON,YAML). This list
