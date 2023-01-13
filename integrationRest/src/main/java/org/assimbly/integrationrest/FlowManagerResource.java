@@ -52,13 +52,13 @@ public class FlowManagerResource {
 
             status = integration.startFlow(flowId);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Started flow successfully")) {
@@ -117,13 +117,13 @@ public class FlowManagerResource {
 
             status = integration.restartFlow(flowId);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Started flow successfully")) {
@@ -149,13 +149,13 @@ public class FlowManagerResource {
 
             status = integration.pauseFlow(flowId);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Paused flow successfully")) {
@@ -181,13 +181,13 @@ public class FlowManagerResource {
 
             status = integration.resumeFlow(flowId);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Resumed flow successfully")) {
@@ -202,7 +202,6 @@ public class FlowManagerResource {
         }
     }
 
-	
 	@PostMapping(path = "/integration/{integrationId}/flow/test/{flowId}", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> testflow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
@@ -213,13 +212,13 @@ public class FlowManagerResource {
 
             status = integration.testFlow(flowId, mediaType, configuration, stopTest);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.equals("started") || status.equals("stopped")) {
@@ -314,12 +313,26 @@ public class FlowManagerResource {
 
     }
 
+    @GetMapping(path = "/integration/{integrationId}/flow/info/{flowId}", produces = {"application/xml","application/json","text/plain"})
+    public ResponseEntity<String> getFlowInfo(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+
+        plainResponse = true;
+
+        try {
+            integration = integrationResource.getIntegration();
+            String info = integration.getFlowInfo(flowId, mediaType);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/info/{flowId}",info,true);
+        } catch (Exception e) {
+            log.error("Get status of flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/info/{flowId}",e.getMessage(),false);
+        }
+
+    }
 
     @GetMapping(path = "/integration/{integrationId}/flow/status/{flowId}", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getFlowStatus(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            //integrationResource.init();
             integration = integrationResource.getIntegration();
 
             status = integration.getFlowStatus(flowId);
