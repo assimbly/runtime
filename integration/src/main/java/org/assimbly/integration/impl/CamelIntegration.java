@@ -31,6 +31,12 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.validation.*;
+import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
+import org.assimbly.dil.validation.https.FileBasedTrustStore;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -38,8 +44,8 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
+import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.scripting.ScriptEvaluator;
 import org.w3c.dom.Document;
 
 import javax.xml.xpath.XPath;
@@ -192,7 +199,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("uuid-function", new UuidExtensionFunction());
-		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 		context.addComponent("sync", new DirectVmComponent());
 		context.addComponent("async", new VmComponent());
@@ -2315,38 +2321,52 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateCron(String cron) {
-		return null;
+	public ValidationErrorMessage validateCron(String cronExpression) {
+		CronValidator cronValidator = new CronValidator();
+		return cronValidator.validate(cronExpression);
 	}
 
 	@Override
-	public String validateCertificate(String certificate) {
-		return null;
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
+		HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
+		try {
+			List<String> urlList = new ArrayList<>();
+			urlList.add(httpsUrl);
+			httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
+		} catch (Exception e) {
+			System.out.println("Error to add certificate: " + e.getMessage());
+		}
+		return httpsCertificateValidator.validate(httpsUrl);
 	}
 
 	@Override
-	public String validateUrl(String url) {
-		return null;
+	public ValidationErrorMessage validateUrl(String url) {
+		UrlValidator urlValidator = new UrlValidator();
+		return urlValidator.validate(url);
 	}
 
 	@Override
-	public String validateExpression(String expression) {
-		return null;
+	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions) {
+		ExpressionsValidator expressionValidator = new ExpressionsValidator();
+		return expressionValidator.validate(expressions);
 	}
 
 	@Override
-	public String validateFtp(String ftp) {
-		return null;
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings) {
+		FtpValidator ftpValidator = new FtpValidator();
+		return ftpValidator.validate(ftpSettings);
 	}
 
 	@Override
-	public String validateRegex(String regex) {
-		return null;
+	public AbstractMap.SimpleEntry validateRegex(Regex regex) {
+		RegexValidator regexValidator = new RegexValidator();
+		return regexValidator.validate(regex);
 	}
 
 	@Override
-	public String validateScript(String script) {
-		return null;
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest) {
+		ScriptValidator scriptValidator = new ScriptValidator();
+		return scriptValidator.validate(scriptRequest);
 	}
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
@@ -2397,6 +2417,8 @@ public class CamelIntegration extends BaseIntegration {
 		for (String sslComponent : sslComponents) {
 			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
 		}
+
+		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
 	}
 
 	/**

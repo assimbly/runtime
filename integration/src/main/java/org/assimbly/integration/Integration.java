@@ -4,13 +4,17 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
+import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.util.EncryptionUtil;
+import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.security.cert.Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * <pre>
@@ -879,14 +883,14 @@ public interface Integration {
 	 * @param  cron the cron expression
 	 * @return result of validation
 	 */
-	public String validateCron(String cron);
+	public ValidationErrorMessage validateCron(String cronExpression);
 
 	/**
 	 * Validates a certificate
 	 *
 	 * @param  certificate
 	 * @return result of validation	 */
-	public String validateCertificate(String certificate);
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
 	/**
 	 * Validates a url expression
@@ -894,7 +898,7 @@ public interface Integration {
 	 * @param  url
 	 * @return result of validation
 	 */
-	public String validateUrl(String url);
+	public ValidationErrorMessage validateUrl(String url);
 
 	/**
 	 * Validates an expression
@@ -902,7 +906,7 @@ public interface Integration {
 	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public String validateExpression(String expression);
+	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 
 	/**
 	 * Validates a ftp expression
@@ -910,7 +914,7 @@ public interface Integration {
 	 * @param  ftp
 	 * @return result of validation
 	 */
-	public String validateFtp(String ftp);
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
 	/**
 	 * Validates a regex expression
@@ -918,7 +922,7 @@ public interface Integration {
 	 * @param  regex the regex expression
 	 * @return result of validation
 	 */
-	public String validateRegex(String regex);
+	public AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	/**
 	 * Validates a script
@@ -926,6 +930,6 @@ public interface Integration {
 	 * @param  script the script (for example Groovy)
 	 * @return result of validation
 	 */
-	public String validateScript(String script);
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 }
