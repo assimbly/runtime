@@ -18,12 +18,12 @@ import java.net.URISyntaxException;
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
-public class FlowConfigurerResource {
+public class FlowConfigurerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
     @Autowired
-    private IntegrationResource integrationResource;
+    private IntegrationRuntime integrationRuntime;
 
     private boolean plainResponse;
 
@@ -32,105 +32,72 @@ public class FlowConfigurerResource {
     private Integration integration;
 
     /**
-     * POST  /integration/{integrationId}/setflowconfiguration/{flowId} : Set configuration from XML.
+     * POST  /integration/{integrationId}/flow/{flowId}/configure : Set configuration from XML.
      *
      * @param integrationId (integrationId)
-     * @param id (FlowId)
+     * @param flowId (FlowId)
      * @param configuration as XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(path = "/integration/{integrationId}/setflowconfiguration/{flowId}", consumes =  {"application/xml","application/json","text/plain"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(path = "/integration/{integrationId}/flow/{flowId}/configure", consumes =  {"application/xml","application/json","text/plain"}, produces = {"text/plain","application/xml","application/json"})
     public ResponseEntity<String> setFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String flowId,@RequestBody String configuration) throws Exception {
 
        	try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             integration.setFlowConfiguration(flowId, mediaType, configuration);
-       		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/setflowconfiguration/{flowId}","Flow configuration set");
+       		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/configure","Flow configuration set");
    		} catch (Exception e) {
 			log.error("Set flow configuration failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setflowconfiguration/{flowId}",e.getMessage());
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/configure",e.getMessage());
    		}
     }
 
     /**
-     * Get  /integration/{integrationId}/getflowconfiguration/{flowId} : get XML configuration for integration.
+     * Get  /integration/{integrationId}/flow/{flowId}/configure : get XML configuration for integration.
      *
      * @param integrationId (integrationId)
-     * @param id (flowId)
+     * @param flowId (flowId)
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @GetMapping(path = "/integration/{integrationId}/getflowconfiguration/{flowId}", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/configure", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
     	plainResponse = true;
 
     	try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             flowConfiguration = integration.getFlowConfiguration(flowId, mediaType);
 			if(flowConfiguration.startsWith("Error")||flowConfiguration.startsWith("Warning")) {
-				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/getconfiguration",flowConfiguration);
+				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/configure",flowConfiguration);
 			}
-			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/getflowconfiguration/{flowId}",flowConfiguration,plainResponse);
+			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/configure",flowConfiguration,plainResponse);
    		} catch (Exception e) {
 			log.error("Get flow configuration failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/getflowconfiguration/{flowId}",e.getMessage());
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/configure",e.getMessage());
    		}
     }
 
-	/**
-	 * POST  /integration/{integrationId}/setconfiguration : Set configuration from XML.
-	 *
-	 * @param integrationId (gatewayId)
-	 * @param configuration as xml
-	 * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-	 * @throws URISyntaxException if the Location URI syntax is incorrect
-	 */
-	@PostMapping(path = "/integration/{integrationId}/setflowconfigurations", consumes =  {"application/xml","application/json","text/plain"}, produces = {"text/plain","application/xml","application/json"})
-	public ResponseEntity<String> setFlowConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String configuration) throws Exception {
+	@GetMapping(path = "/integration/{integrationId}/flow/{flowId}/isconfigured", produces = {"application/xml","application/json","text/plain"})
+	public ResponseEntity<String> hasFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+
 		try {
-			integration.setFlowConfigurations(integrationId.toString(), mediaType, configuration);
-			return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/setconfiguration", "Integration configuration set");
+			integration = integrationRuntime.getIntegration();
+			Boolean hasFlow = integration.hasFlow(flowId);
+			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/hasflow",hasFlow.toString());
 		} catch (Exception e) {
-			log.error("Set flow configuration failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/setconfiguration", e.getMessage());
+			log.error("Check if integration " + integrationId + " has flow " + flowId + " failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/hasflow",e.getMessage());
 		}
 
 	}
-
-	/**
-	 * Get  /integration/{integrationId}/getconfiguration : get XML configuration for gateway.
-	 *
-	 * @param integrationId (gatewayId)
-	 * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-	 * @throws URISyntaxException if the Location URI syntax is incorrect
-	 */
-	@GetMapping(path = "/integration/{integrationId}/getFlowConfigurations", produces = {"application/xml","application/json","text/plain"})
-	public ResponseEntity<String> getFlowConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
-
-		plainResponse = true;
-
-		try {
-			String gatewayConfiguration = integration.getFlowConfigurations(integrationId.toString(), mediaType);
-			if (gatewayConfiguration.startsWith("Error") || gatewayConfiguration.startsWith("Warning")) {
-				return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/getconfiguration", gatewayConfiguration);
-			}
-			return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/getconfiguration", gatewayConfiguration, plainResponse);
-		} catch (Exception e) {
-			log.error("Get flow configurations failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/getconfiguration", e.getMessage());
-		}
-
-	}
-
-
 
     @GetMapping(path = "/integration/{integrationId}/flow/documentation/version", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String documentation = integration.getDocumentationVersion();
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/version",documentation,plainResponse);
 		} catch (Exception e) {
@@ -145,7 +112,7 @@ public class FlowConfigurerResource {
     	plainResponse = true;
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String documentation = integration.getDocumentation(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/{componenttype}",documentation);
@@ -163,7 +130,7 @@ public class FlowConfigurerResource {
 		plainResponse = true;
 
 		try {
-			integration = integrationResource.getIntegration();
+			integration = integrationRuntime.getIntegration();
 			String components = integration.getComponents(mediaType);
 			if(components.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components);
@@ -181,7 +148,7 @@ public class FlowConfigurerResource {
     	plainResponse = true;
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String documentation = integration.getComponentSchema(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				//return empty default if unknown
@@ -201,7 +168,7 @@ public class FlowConfigurerResource {
     	plainResponse = true;
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String documentation = integration.getComponentParameters(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/options/{componenttype}",documentation);
@@ -213,27 +180,16 @@ public class FlowConfigurerResource {
 		}
     }
 
-	@GetMapping(path = "/integration/{integrationId}/flow/validateUri", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> validateFlowUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
-		try {
-            integration = integrationResource.getIntegration();
-            String flowValidation = integration.validateFlow(uri);
-			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/validateUri",flowValidation);
-		} catch (Exception e) {
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/validateUri",e.getMessage());
-		}
-    }
-
-    @GetMapping(path = "/integration/{integrationId}/flow/route/{flowId}", produces = {"application/xml","application/json"})
+    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/route", produces = {"application/xml","application/json"})
     public ResponseEntity<String> getCamelRoute(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String camelRoute = integration.getCamelRouteConfiguration(flowId, mediaType);
-			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/route/{flowId}",camelRoute,true);
+			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/route",camelRoute,true);
 		} catch (Exception e) {
 			log.error("Get Camel route failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/route/{flowId}",e.getMessage());
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/route",e.getMessage());
 		}
     }
 
@@ -241,7 +197,7 @@ public class FlowConfigurerResource {
     public ResponseEntity<String> getAllCamelRoutes(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
 		try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             String camelRoutes = integration.getAllCamelRoutesConfiguration(mediaType);
 			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/routes",camelRoutes,true);
 		} catch (Exception e) {
@@ -251,16 +207,16 @@ public class FlowConfigurerResource {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/removeflow/{flowId}", produces = {"application/xml","application/json","text/plain"})
+    @DeleteMapping(path = "/integration/{integrationId}/flow/{flowId}/remove", produces = {"application/xml","application/json","text/plain"})
     public ResponseEntity<String> removeFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
-            integration = integrationResource.getIntegration();
+            integration = integrationRuntime.getIntegration();
             Boolean removedFlow = integration.removeFlow(flowId);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/removeflow/{flowId}",removedFlow.toString());
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/remove",removedFlow.toString());
         } catch (Exception e) {
 			log.error("Remove flow " + flowId +" failed",e);
-			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/removeflow/{flowId}",e.getMessage());
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/remove",e.getMessage());
         }
 
     }

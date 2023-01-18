@@ -16,12 +16,12 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/api")
-public class MessageBrokerResource {
+public class MessageBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private ManagedBroker broker;
+    private ManagedBrokerRuntime broker;
 
     private String result;
 

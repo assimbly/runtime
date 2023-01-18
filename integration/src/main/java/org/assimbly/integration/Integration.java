@@ -4,13 +4,17 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
+import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.util.EncryptionUtil;
+import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.security.cert.Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * <pre>
@@ -45,47 +49,7 @@ public interface Integration {
 	 */
 	public EncryptionUtil getEncryptionUtil();
 
-	//configure integration
-
-	/**
-	 * Sets the integration configuration from a list of flow configurations (TreeMap&lt; Key,Value&gt;).
-	 * The configuration cleared after a integration is reinitialized.
-	 *
-	 * @param configuration: list of flow configurations (Treemaps)
-	 * @throws Exception if configuration can't be set
-	 */
-	public void setFlowConfigurations(List<TreeMap<String, String>> configuration) throws Exception;
-
-	/**
-	 * Sets the integration configuration from a string of a specific format (XML,JSON,YAML).
-	 * The configuration cleared after a integration is reinitialized.
-	 *
-	 * @param integrationId   ID of the integration
-	 * @param mediaType     (XML,JSON,YAML)
-	 * @param configuration (the XML, JSON or YAML file)
-	 * @throws Exception if configuration can't be set
-	 */
-	public void setFlowConfigurations(String integrationId, String mediaType, String configuration) throws Exception;
-	
-	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @return list of flow configurations (Treemap&lt;key,value&gt;)
-	* @throws Exception if configuration can't be retrieved or isn't available
-	*/
-	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception;
-
-	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @param  integrationId ID of the integration
-	* @param  mediaType (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediaType)
-	* @throws Exception if configuration can't be retrieved or isn't available
-	*/
-	public String getFlowConfigurations(String integrationId, String mediaType) throws Exception;
-	
-	//configure flow
+	//configure flows
 	/**
 	* Sets the flow configuration from a Tree (keyvalues). This list
 	* is cleared after a integration is reinitialized.
@@ -93,7 +57,7 @@ public interface Integration {
 	* @param  configuration of a flow configuration
 	* @throws Exception if configuration can't be set
 	*/
-	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception;	
+	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception;
 
 	/**
 	* Sets the flow configuration from a string for a specific format (XML,JSON,YAML). This list
@@ -278,6 +242,15 @@ public interface Integration {
 	/**
 	 * Gets the stats of an integration
 	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getMessages(String mediaType) throws Exception;
+
+	/**
+	 * Gets the stats of an integration
+	 *
 	 * @param  flowIds comma separated list of flow ids
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
@@ -304,13 +277,53 @@ public interface Integration {
 	public String getHistoryMetrics(String mediaType) throws Exception;
 
 	/**
-	 * Gets the ids of running flows
+	 * Gets the ids of (loaded) flows
 	 *
+	 * @param  filter by status (started, stopped, suspended)
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getRunningFlows(String mediaType) throws Exception;
+	public String getListOfFlows(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Gets the details of (loaded) flows
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id, name, status etc
+	 */
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Gets the soap actions for a SOAP service (WSDL)
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of SOAP actions
+	 */
+	public String getListOfSoapActions(String url, String mediaType) throws Exception;
+
+	/**
+	 * Count the number of (loaded) flows
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id
+	 */
+	public String countFlows(String filter, String mediaType) throws Exception;
+
+	/**
+	 * Counts the number of (loaded) steps
+	 *
+	 * @param  filter by status (started, stopped, suspended)
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns an array of flows with id
+	 */
+	public String countSteps(String filter, String mediaType) throws Exception;
 
 	/**
 	* Gets the version of documentation/integration framework 
@@ -596,7 +609,17 @@ public interface Integration {
 	* @return returns true if flow is started.
 	*/
 	public boolean isFlowStarted(String flowId) throws Exception;
-		
+
+	/**
+	 * Gets info of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @throws Exception if flow doesn't start
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	public String getFlowInfo(String flowId, String mediaType) throws Exception;
+
 	/**
 	* Gets the status of a flow 
 	*
@@ -622,10 +645,21 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowLastError(String flowId) throws Exception;	
+	public String getFlowLastError(String flowId) throws Exception;
 
 	/**
-	* Gets the last error of a flow
+	 * Gets the processed messages of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  includeSteps Whether or not to include steps
+	 * @param mediaType (XML,JSON or TEXT)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages (total, completed, failed, pending)
+	 */
+	public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception;
+
+	/**
+	* Gets the total number of messages a flow has processed
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
@@ -634,7 +668,7 @@ public interface Integration {
 	public String getFlowTotalMessages(String flowId) throws Exception;	
 
 	/**
-	* Gets the total number of messages a flow has processed
+	* Gets the total number of completed messages a flow has processed
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
@@ -649,7 +683,26 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowFailedMessages(String flowId) throws Exception;	
+	public String getFlowFailedMessages(String flowId) throws Exception;
+
+	/**
+	 * Gets the total number of pending messages a flow has processed
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getFlowPendingMessages(String flowId) throws Exception;
+
+	/**
+	 * Gets the processed messaged of a step in a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages (total, completed, failed, pending)
+	 */
+	public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception;
 
 	/**
 	* Gets the failure log for the specified flow
@@ -696,7 +749,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowStats(String flowId, boolean fullStats, String mediaType) throws Exception;
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
@@ -830,14 +883,14 @@ public interface Integration {
 	 * @param  cron the cron expression
 	 * @return result of validation
 	 */
-	public String validateCron(String cron);
+	public ValidationErrorMessage validateCron(String cronExpression);
 
 	/**
 	 * Validates a certificate
 	 *
 	 * @param  certificate
 	 * @return result of validation	 */
-	public String validateCertificate(String certificate);
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
 	/**
 	 * Validates a url expression
@@ -845,7 +898,7 @@ public interface Integration {
 	 * @param  url
 	 * @return result of validation
 	 */
-	public String validateUrl(String url);
+	public ValidationErrorMessage validateUrl(String url);
 
 	/**
 	 * Validates an expression
@@ -853,7 +906,7 @@ public interface Integration {
 	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public String validateExpression(String expression);
+	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
 
 	/**
 	 * Validates a ftp expression
@@ -861,7 +914,7 @@ public interface Integration {
 	 * @param  ftp
 	 * @return result of validation
 	 */
-	public String validateFtp(String ftp);
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
 	/**
 	 * Validates a regex expression
@@ -869,7 +922,7 @@ public interface Integration {
 	 * @param  regex the regex expression
 	 * @return result of validation
 	 */
-	public String validateRegex(String regex);
+	public AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	/**
 	 * Validates a script
@@ -877,6 +930,6 @@ public interface Integration {
 	 * @param  script the script (for example Groovy)
 	 * @return result of validation
 	 */
-	public String validateScript(String script);
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 }

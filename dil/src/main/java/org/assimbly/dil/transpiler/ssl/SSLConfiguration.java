@@ -5,6 +5,8 @@ import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
+import org.assimbly.dil.validation.HttpsCertificateValidator;
+import org.assimbly.dil.validation.https.FileBasedTrustStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class SSLConfiguration {
@@ -89,6 +93,31 @@ public class SSLConfiguration {
 		keystoreParameters.setPassword(keystorePassword);
 
 		return keystoreParameters;
+	}
+
+	public void initTrustStoresForHttpsCertificateValidator(
+			String keyStorePath, String keyStorePassword,
+			String trustStorePath, String trustStorePassword){
+
+		try {
+			// init HttpsCertificateValidator
+			FileBasedTrustStore customKeyStore = new FileBasedTrustStore();
+			customKeyStore.setPath(trustStorePath);
+			customKeyStore.setType("jks");
+			customKeyStore.setPassword(trustStorePassword);
+
+			FileBasedTrustStore jreKeyStore = new FileBasedTrustStore();
+			jreKeyStore.setPath(keyStorePath);
+			jreKeyStore.setType("jks");
+			jreKeyStore.setPassword(keyStorePassword);
+
+			HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
+			httpsCertificateValidator.setCustomTrustStore(customKeyStore);
+			httpsCertificateValidator.setTrustStores(new ArrayList<FileBasedTrustStore>(Arrays.asList(customKeyStore, jreKeyStore)));
+		} catch (Exception e) {
+			log.error("Failed to init trust stores for HttpsCertificateValidator",e);
+		}
+
 	}
 
 }
