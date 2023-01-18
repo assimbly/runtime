@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
- 
+
   <modelVersion>4.0.0</modelVersion>
- 
+
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.8.2</version>
+    <version>3.8.1</version>
   </parent>
 
-  <name>broker-rest</name>
+  <name>integration-rest</name>
   <packaging>jar</packaging>
 
-  <artifactId>broker-rest</artifactId>
+  <artifactId>integration-rest</artifactId>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>    
+    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>   
   </properties>
 
   <distributionManagement> 
@@ -31,7 +31,7 @@
   <dependencies>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>broker</artifactId>
+		  <artifactId>integration</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
   </dependencies>
