@@ -30,12 +30,6 @@
 
       <dependency>
           <groupId>org.assimbly</groupId>
-          <artifactId>dil</artifactId>
-          <version>${assimbly.version}</version>
-      </dependency>
-
-      <dependency>
-          <groupId>org.assimbly</groupId>
           <artifactId>common-base</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
@@ -44,6 +38,11 @@
 		  <artifactId>camel-components</artifactId>
   		  <version>${assimbly.version}</version>
 	  </dependency>
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>dil</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>database-drivers</artifactId>
@@ -54,29 +53,6 @@
           <artifactId>test-base</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
-
-		<dependency>
-			<groupId>io.dropwizard.metrics</groupId>
-			<artifactId>metrics-core</artifactId>
-			<version>${dropwizard-metrics.version}</version>
-		</dependency>
-
-		<!-- jolokia dependencies -->
-		<dependency>
-		    <groupId>org.jolokia</groupId>
-		    <artifactId>jolokia-core</artifactId>
-		    <version>${jolokia.version}</version>
-		</dependency>		
-		<dependency>
-		    <groupId>org.jolokia</groupId>
-		    <artifactId>jolokia-jvm</artifactId>
-		    <version>${jolokia.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.jolokia</groupId>
-		    <artifactId>jolokia-client-java</artifactId>
-		    <version>${jolokia.version}</version>
-		</dependency>
 
   </dependencies>
 

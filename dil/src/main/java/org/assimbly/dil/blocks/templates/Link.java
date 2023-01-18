@@ -11,7 +11,6 @@ public class Link extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("out")
-                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                         .to("{{out}}");
@@ -23,13 +22,12 @@ public class Link extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                     .routeConfigurationId("{{routeconfiguration_id}}")
-                    .to("{{out}}");
+                     .to("{{out}}");
 
          routeTemplate("link-sink")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("uri")
                  .templateParameter("in")
-                 .templateParameter("exchangePattern","InOnly")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}");
 

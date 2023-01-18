@@ -12,11 +12,11 @@ public class SetPattern extends RouteBuilder {
                  .templateParameter("path")
                  .templateParameter("in")
                  .templateParameter("out")
+                 .templateParameter("pattern","InOnly")
                  .from("{{in}}")
                  .routeConfigurationId("{{routeconfiguration_id}}")
-                 .setProperty("pattern").constant("{{path}}")
-                 .process("SetPatternProcessor")
-                 .to("{{out}}");
+                     .setExchangePattern("{{pattern}}")
+                     .to("{{out}}");
 
      }
 }

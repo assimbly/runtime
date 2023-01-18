@@ -126,10 +126,12 @@ public class Marshall {
 		flow.appendChild(components);
 
 		String[] confComponentsSplitted = StringUtils.split(configuration.get("flow.components"),",");
-		for(String confComponentSplitted : confComponentsSplitted){
-			Element flowComponentNode = doc.createElement("component");
-			flowComponentNode.appendChild(doc.createTextNode(confComponentSplitted));
-			components.appendChild(flowComponentNode);
+		if(confComponentsSplitted!=null){
+			for(String confComponentSplitted : confComponentsSplitted){
+				Element flowComponentNode = doc.createElement("component");
+				flowComponentNode.appendChild(doc.createTextNode(confComponentSplitted));
+				components.appendChild(flowComponentNode);
+			}
 		}
 
 		steps = doc.createElement("steps");

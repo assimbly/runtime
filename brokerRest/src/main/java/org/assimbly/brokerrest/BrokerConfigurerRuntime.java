@@ -11,12 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @RestController
 @RequestMapping("/api")
-public class BrokerConfigurerResource {
+public class BrokerConfigurerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-	private ManagedBroker broker;
+	private ManagedBrokerRuntime broker;
 
     /**
      * GET  /brokers/:id : get the broker configuration by "id".
@@ -24,7 +24,7 @@ public class BrokerConfigurerResource {
      * @param id the id of the brokerDTO to retrieve
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping("/brokers/{id}/getconfiguration")
+    @GetMapping("/brokers/{id}/configure")
     public String getConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType) {
         log.debug("REST request to get configuration of Broker : {}", id);
 
@@ -47,7 +47,7 @@ public class BrokerConfigurerResource {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      * @throws Exception
      */
-    @PostMapping(path = "/brokers/{id}/setconfiguration")
+    @PostMapping(path = "/brokers/{id}/configure")
     public ResponseEntity<String> setConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType, @RequestParam String brokerConfigurationType, @RequestBody(required = false) String brokerConfiguration) throws Exception {
         log.debug("REST request to set configuration of Broker : {}", id);
 

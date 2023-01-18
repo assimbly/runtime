@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class ManagedBroker {
+public class ManagedBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 

@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api")
-public class TopicManagerResource {
+public class TopicManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public ManagedBroker broker;
+    public ManagedBrokerRuntime broker;
 
     private String result;
 

@@ -34,11 +34,6 @@
 		  <artifactId>broker</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
-      <dependency>
-		   <groupId>org.springdoc</groupId>
-		   <artifactId>springdoc-openapi-ui</artifactId>
-		   <version>${springdoc-openapi-ui.version}</version>
-	  </dependency>
   </dependencies>
 
 	<build>
