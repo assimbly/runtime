@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.8.1</version>
+    <version>3.8.2</version>
   </parent>
 
   <name>dil</name>
@@ -28,9 +28,14 @@
 
   <dependencies>
 	  <dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>camel-base</artifactId>
-			<version>${assimbly.version}</version>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-base</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-components</artifactId>
+		  <version>${assimbly.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
@@ -41,7 +46,6 @@
 			<groupId>org.assimbly</groupId>
 			<artifactId>test-base</artifactId>
 			<version>${assimbly.version}</version>
-			<scope>test</scope>
 		</dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>

@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api")
-public class QueueManagerResource {
+public class QueueManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
     @Autowired
-    private ManagedBroker broker;
+    private ManagedBrokerRuntime broker;
 
 	private String result;
 

@@ -24,12 +24,12 @@ import java.util.*;
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
-public class MessageManagerResource {
+public class MessageManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private IntegrationResource integrationResource;
+    private IntegrationRuntime integrationRuntime;
 
     private Integration integration;
 
@@ -57,7 +57,7 @@ public class MessageManagerResource {
 
         TreeMap<String, Object> headerMap = new TreeMap<>();
 
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         try {
             if(serviceId != null && !serviceId.isBlank()) {
@@ -104,7 +104,7 @@ public class MessageManagerResource {
         String body = requestBody.orElse(" ");
         String result;
 
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
 
         TreeMap<String, String> serviceMap;
 
@@ -169,7 +169,7 @@ public class MessageManagerResource {
 
 
     private void setService(TreeMap<String, String> serviceMap, String stepId) throws Exception {
-        integration = integrationResource.getIntegration();
+        integration = integrationRuntime.getIntegration();
         integration.setConnection(serviceMap,"to." + stepId + ".service.id");
     }
 

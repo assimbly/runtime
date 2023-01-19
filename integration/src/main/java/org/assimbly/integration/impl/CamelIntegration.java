@@ -31,6 +31,12 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.validation.*;
+import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.script.EvaluationRequest;
+import org.assimbly.dil.validation.beans.script.EvaluationResponse;
+import org.assimbly.dil.validation.https.FileBasedTrustStore;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
@@ -38,8 +44,8 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
+import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,11 +54,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.scripting.ScriptEvaluator;
 import org.w3c.dom.Document;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -81,7 +89,6 @@ public class CamelIntegration extends BaseIntegration {
 	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
-
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
@@ -192,7 +199,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("uuid-function", new UuidExtensionFunction());
-		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 		context.addComponent("sync", new DirectVmComponent());
 		context.addComponent("async", new VmComponent());
@@ -1132,6 +1138,38 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public String getFlowInfo(String id, String mediaType) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+
+		TreeMap<String, String> props = super.getFlowConfiguration(id);
+
+		if(props != null){
+			flow.put("id",props.get("id"));
+			flow.put("name",props.get("flow.name"));
+			flow.put("version",props.get("flow.version"));
+			flow.put("environment",props.get("environment"));
+			flow.put("isRunning",isFlowStarted(id));
+			flow.put("status",getFlowStatus(id));
+			flow.put("uptime",getFlowUptime(id));
+		}else{
+			flow.put("id",props.get("id"));
+			flow.put("status",getFlowStatus(id));
+		}
+
+		json.put("flow",flow);
+
+		String integrationInfo = json.toString(4);
+		if(mediaType.contains("xml")) {
+			integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
+		}
+
+		return integrationInfo;
+
+	}
+
+
 	public String getFlowStatus(String id) {
 
 		if(hasFlow(id)) {
@@ -1200,19 +1238,71 @@ public class CamelIntegration extends BaseIntegration {
 		return flowInfo;
 	}
 
+	public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception  {
 
-	public String getFlowTotalMessages(String id) throws Exception {
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+		JSONArray steps = new JSONArray();
 
-		List<Route> routeList = getRoutesByFlowId(id);
+		long totalMessages = 0;
+		long completedMessages = 0;
+		long failedMessages = 0;
+		long pendingMessages = 0;
+
+		List<Route> routes = getRoutesByFlowId(flowId);
+
+		for(Route r : routes){
+			String routeId = r.getId();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null){
+				totalMessages += route.getExchangesTotal();
+				completedMessages += route.getExchangesCompleted();
+				failedMessages += route.getExchangesFailed();
+				pendingMessages += route.getExchangesInflight();
+				if(includeSteps){
+					JSONObject step = new JSONObject();
+					String stepId = StringUtils.substringAfter(routeId,flowId + "-");
+					step.put("id", stepId);
+					step.put("total",route.getExchangesTotal());
+					step.put("completed",route.getExchangesCompleted());
+					step.put("failed",route.getExchangesFailed());
+					step.put("pending",route.getExchangesInflight());
+					steps.put(step);
+				}
+			}
+		}
+
+		flow.put("id",flowId);
+		flow.put("total",totalMessages);
+		flow.put("completed",completedMessages);
+		flow.put("failed",failedMessages);
+		flow.put("pending",pendingMessages);
+		if(includeSteps){
+			flow.put("steps",steps);
+		}
+		json.put("flow",flow);
+
+		String flowStats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
+		}
+
+		return flowStats;
+
+	}
+
+	public String getFlowTotalMessages(String flowId) throws Exception {
+
+		List<Route> routeList = getRoutesByFlowId(flowId);
 
 		long totalMessages = 0;
 
 		for(Route r : routeList){
 			String routeId = r.getId();
-			String description = r.getDescription();
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
 
-			if(route != null && "from".equals(description)){
+			if(route != null){
 				totalMessages += route.getExchangesTotal();
 			}
 		}
@@ -1223,17 +1313,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getFlowCompletedMessages(String id) throws Exception {
+	public String getFlowCompletedMessages(String flowId) throws Exception {
 
-		List<Route> routeList = getRoutesByFlowId(id);
+		List<Route> routeList = getRoutesByFlowId(flowId);
 		long completedMessages = 0;
 
 		for(Route r : routeList){
 			String routeId = r.getId();
-			String description = r.getDescription();
 
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
-			if(route != null && "from".equals(description)){
+			if(route != null){
 				completedMessages += route.getExchangesCompleted();
 			}
 		}
@@ -1244,17 +1333,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getFlowFailedMessages(String id) throws Exception  {
+	public String getFlowFailedMessages(String flowId) throws Exception  {
 
-		List<Route> routeList = getRoutesByFlowId(id);
+		List<Route> routeList = getRoutesByFlowId(flowId);
 		long failedMessages = 0;
 
 		for(Route r : routeList){
 			String routeId = r.getId();
-			String description = r.getDescription();
 
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
-			if(route != null && "from".equals(description)){
+			if(route != null){
 				failedMessages += route.getExchangesFailed();
 			}
 		}
@@ -1262,6 +1350,64 @@ public class CamelIntegration extends BaseIntegration {
 		flowInfo = Long.toString(failedMessages);
 
 		return flowInfo;
+
+	}
+
+	public String getFlowPendingMessages(String flowId) throws Exception  {
+
+		List<Route> routeList = getRoutesByFlowId(flowId);
+		long pendingMessages = 0;
+
+		for(Route r : routeList){
+			String routeId = r.getId();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null){
+				pendingMessages += route.getExchangesInflight();
+			}
+		}
+
+		flowInfo = Long.toString(pendingMessages);
+
+		return flowInfo;
+
+	}
+
+	public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception  {
+
+		long totalMessages = 0;
+		long completedMessages = 0;
+		long failedMessages = 0;
+		long pendingMessages = 0;
+
+		String routeId = flowId + "-" + stepId;
+
+		ManagedRouteMBean route = managed.getManagedRoute(routeId);
+		if(route != null){
+			totalMessages += route.getExchangesTotal();
+			completedMessages += route.getExchangesCompleted();
+			failedMessages += route.getExchangesFailed();
+			pendingMessages += route.getExchangesInflight();
+		}
+
+		JSONObject json = new JSONObject();
+		JSONObject step = new JSONObject();
+
+		List<Route> routes = getRoutesByFlowId(flowId);
+
+		step.put("id",flowId);
+		step.put("total",totalMessages);
+		step.put("completed",completedMessages);
+		step.put("failed",failedMessages);
+		step.put("pending",pendingMessages);
+		json.put("step",step);
+
+		String flowStats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
+		}
+
+		return flowStats;
 
 	}
 
@@ -1377,6 +1523,109 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception  {
+
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+		JSONArray steps = new JSONArray();
+
+		long totalMessages = 0;
+		long completedMessages = 0;
+		long failedMessages = 0;
+		long pendingMessages = 0;
+		String uptime = null;
+		long uptimeMillis = 0;
+		Date lastFailed = null;
+		Date lastCompleted = null;
+		String status = "Stopped";
+		Boolean tracing = false;
+
+		List<Route> routes = getRoutesByFlowId(flowId);
+
+		for(Route r : routes){
+			String routeId = r.getId();
+
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+			if(route != null){
+				totalMessages += route.getExchangesTotal();
+				completedMessages += route.getExchangesCompleted();
+				failedMessages += route.getExchangesFailed();
+				pendingMessages += route.getExchangesInflight();
+				if(fullStats){
+					if(uptime==null){
+						uptime = route.getUptime();
+					}
+					if(uptimeMillis==0){
+						uptimeMillis = route.getUptimeMillis();
+					}
+					if(lastFailed==null){
+						lastFailed = route.getLastExchangeFailureTimestamp();
+					}else{
+						Date failure = route.getLastExchangeFailureTimestamp();
+						if(failure!=null && failure.after(lastFailed)){
+							lastFailed = failure;
+						}
+					}
+					if(lastCompleted==null){
+						lastCompleted = route.getLastExchangeCompletedTimestamp();
+					}else{
+						Date completed = route.getLastExchangeFailureTimestamp();
+						if(completed!=null && completed.after(lastCompleted)){
+							lastCompleted = completed;
+						}
+					}
+					status = route.getState();
+					tracing = route.getTracing();
+				}
+
+				if(includeSteps){
+					JSONObject step = new JSONObject();;
+					if(fullStats){
+						step = getStepStats(routeId, fullStats);
+					}else{
+						String stepId = StringUtils.substringAfter(routeId,flowId + "-");
+						step.put("id", stepId);
+						step.put("total",route.getExchangesTotal());
+						step.put("completed",route.getExchangesCompleted());
+						step.put("failed",route.getExchangesFailed());
+						step.put("pending",route.getExchangesInflight());
+					}
+					steps.put(step);
+				}
+			}
+		}
+
+		flow.put("id",flowId);
+		flow.put("total",totalMessages);
+		flow.put("completed",completedMessages);
+		flow.put("failed",failedMessages);
+		flow.put("pending",pendingMessages);
+		if(fullStats){
+			flow.put("uptime",uptime);
+			flow.put("uptimeMillis",uptimeMillis);
+			flow.put("status",status);
+			flow.put("tracing",tracing);
+			flow.put("lastFailed",lastFailed);
+			flow.put("lastCompleted",lastCompleted);
+			flow.put("failed",failedMessages);
+			flow.put("pending",pendingMessages);
+		}
+		if(includeSteps){
+			flow.put("steps",steps);
+		}
+		json.put("flow",flow);
+
+		String flowStats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
+		}
+
+		return flowStats;
+
+	}
+
+	/*
 	public String getFlowStats(String id, boolean fullStats, String mediaType) throws Exception {
 
 		JSONObject json = new JSONObject();
@@ -1402,6 +1651,9 @@ public class CamelIntegration extends BaseIntegration {
 		return flowStats;
 
 	}
+	*/
+
+
 
 	public String getFlowStepStats(String flowId, String stepid, boolean fullStats, String mediaType) throws Exception {
 
@@ -1477,7 +1729,31 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
-		String result = getStatsFromList(flowIds, false);
+		String result = getStatsFromList(flowIds, true, false);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
+
+	public String getMessages(String mediaType) throws Exception {
+
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		String result = getStatsFromList(flowIds, false, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -1492,7 +1768,7 @@ public class CamelIntegration extends BaseIntegration {
 		String[] values = flowIds.split(",");
 		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, false);
+		String result = getStatsFromList(flowSet, true, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -1502,12 +1778,12 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private String getStatsFromList(Set<String> flowIds, boolean fullStats) throws Exception {
+	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeSteps) throws Exception {
 
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowstats = getFlowStats(flowId, fullStats,"application/json");
+			String flowstats = getFlowStats(flowId, fullStats,includeSteps,"application/json");
 			JSONObject flow = new JSONObject(flowstats);
 			flows.put(flow);
 		}
@@ -1579,21 +1855,36 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	private Set<String> getListOfFlowIds(String filter){
 
-
-	public String getRunningFlows(String mediaType) throws Exception {
+		//get all routes
+		List<Route> routes = context.getRoutes();
 
 		Set<String> flowIds = new HashSet<String>();
 
-		List<Route> routes = context.getRoutes();
-
+		//filter flows from routes
 		for(Route route: routes){
 			String routeId = route.getId();
 			String flowId = StringUtils.substringBefore(routeId,"-");
 			if(flowId!=null && !flowId.isEmpty()) {
-				flowIds.add(flowId);
+				if (filter != null && !filter.isEmpty()) {
+					String status = getFlowStatus(flowId);
+					if (status.equalsIgnoreCase(filter)) {
+						flowIds.add(flowId);
+					}
+				}else{
+					flowIds.add(flowId);
+				}
 			}
 		}
+
+		return flowIds;
+
+	}
+
+	public String getListOfFlows(String filter, String mediaType) throws Exception {
+
+		Set<String> flowIds = getListOfFlowIds(filter);
 
 		JSONArray flowsArray = new JSONArray();
 
@@ -1617,6 +1908,83 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
+
+		Set<String> flowIds = getListOfFlowIds(filter);
+
+		JSONArray flowsArray = new JSONArray();
+
+		for(String flowId: flowIds) {
+			JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json"));
+			flowsArray.put(flowObject);
+		}
+
+		String result = flowsArray.toString();
+
+		if(mediaType.contains("xml")) {
+			JSONObject flowsObject = new JSONObject();
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("flow",flowsArray);
+			flowsObject.put("flows",flowObject);
+			result = DocConverter.convertJsonToXml(flowsObject.toString());
+		}
+
+		return result;
+
+	}
+
+	public String getListOfSoapActions(String url, String mediaType) throws Exception {
+
+		String result;
+
+		Class<?> clazz;
+		try {
+			clazz = Class.forName("world.dovetail.soap.SoapActionsService");
+			Object soapActions =  clazz.getDeclaredConstructor().newInstance();
+			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
+			result = (String) method.invoke(soapActions, url);
+		} catch (Exception e) {
+			log.error("SOAP Actions couldn't be retrieved.");
+			result = "[]";
+		}
+
+		return result;
+
+	}
+
+	public String countFlows(String filter, String mediaType) throws Exception {
+
+		Set<String> flowIds = getListOfFlowIds(filter);
+
+		return Integer.toString(flowIds.size());
+
+	}
+
+	public String countSteps(String filter, String mediaType) throws Exception {
+
+		List<Route> routes = context.getRoutes();
+
+		Set<String> stepIds = new HashSet<String>();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
+
+			if (filter != null && !filter.isEmpty()) {
+					String status = managedRoute.getState();
+					if (status.equalsIgnoreCase(filter)) {
+						stepIds.add(routeId);
+					}
+			}else{
+				stepIds.add(routeId);
+			}
+		}
+
+		String numberOfSteps = Integer.toString(stepIds.size());
+
+		return numberOfSteps;
+
+	}
 
 	//Other management tasks
 
@@ -1953,38 +2321,52 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public String validateCron(String cron) {
-		return null;
+	public ValidationErrorMessage validateCron(String cronExpression) {
+		CronValidator cronValidator = new CronValidator();
+		return cronValidator.validate(cronExpression);
 	}
 
 	@Override
-	public String validateCertificate(String certificate) {
-		return null;
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
+		HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
+		try {
+			List<String> urlList = new ArrayList<>();
+			urlList.add(httpsUrl);
+			httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
+		} catch (Exception e) {
+			System.out.println("Error to add certificate: " + e.getMessage());
+		}
+		return httpsCertificateValidator.validate(httpsUrl);
 	}
 
 	@Override
-	public String validateUrl(String url) {
-		return null;
+	public ValidationErrorMessage validateUrl(String url) {
+		UrlValidator urlValidator = new UrlValidator();
+		return urlValidator.validate(url);
 	}
 
 	@Override
-	public String validateExpression(String expression) {
-		return null;
+	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions) {
+		ExpressionsValidator expressionValidator = new ExpressionsValidator();
+		return expressionValidator.validate(expressions);
 	}
 
 	@Override
-	public String validateFtp(String ftp) {
-		return null;
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings) {
+		FtpValidator ftpValidator = new FtpValidator();
+		return ftpValidator.validate(ftpSettings);
 	}
 
 	@Override
-	public String validateRegex(String regex) {
-		return null;
+	public AbstractMap.SimpleEntry validateRegex(Regex regex) {
+		RegexValidator regexValidator = new RegexValidator();
+		return regexValidator.validate(regex);
 	}
 
 	@Override
-	public String validateScript(String script) {
-		return null;
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest) {
+		ScriptValidator scriptValidator = new ScriptValidator();
+		return scriptValidator.validate(scriptRequest);
 	}
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
@@ -2035,6 +2417,8 @@ public class CamelIntegration extends BaseIntegration {
 		for (String sslComponent : sslComponents) {
 			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
 		}
+
+		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
 	}
 
 	/**
