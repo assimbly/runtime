@@ -91,13 +91,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, certificateResp);
-                if(certificateResp.getValidationResultStatus().equals(HttpsCertificateValidator.ValidationResultStatus.VALID)) {
-                    // return code 304
-                    return ResponseUtil.createNotModifiedResponse(integrationId, "/validation/{integrationId}/certificate");
-                } else {
-                    // return code 200
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
-                }
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", "", plainResponse);
             }
