@@ -51,6 +51,8 @@ public class ValidationRuntime {
             @PathVariable Long integrationId
     ) throws Exception {
 
+        plainResponse = true;
+
         try {
             integration = integrationRuntime.getIntegration();
 
@@ -60,14 +62,14 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, cronResp);
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(), "", "");
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/cron", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
 
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/cron", e.getMessage(), "","");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/cron", e.getMessage(), plainResponse);
         }
     }
 
@@ -89,19 +91,13 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, certificateResp);
-                if(certificateResp.getValidationResultStatus().equals(HttpsCertificateValidator.ValidationResultStatus.VALID)) {
-                    // return code 304
-                    return ResponseUtil.createNotModifiedResponse(integrationId, "/validation/{integrationId}/certificate");
-                } else {
-                    // return code 200
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
-                }
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", "", plainResponse);
             }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/certificate", e.getMessage(), "","");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", e.getMessage(), plainResponse);
         }
     }
 
@@ -112,6 +108,8 @@ public class ValidationRuntime {
             @PathVariable Long integrationId
     ) throws Exception {
 
+        plainResponse = true;
+
         try {
             integration = integrationRuntime.getIntegration();
 
@@ -121,13 +119,13 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, urlResp);
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(), "", "");
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/url", e.getMessage(), "","");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/url", e.getMessage(), plainResponse);
         }
     }
 
@@ -138,6 +136,8 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
             @PathVariable Long integrationId, @RequestBody String body
     ) throws Exception {
+
+        plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -153,14 +153,14 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, expressionResp);
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(), "", "");
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/expression", e.getMessage(), "", "");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/expression", e.getMessage(), plainResponse);
         }
 
     }
@@ -171,6 +171,8 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest",defaultValue = "false") boolean stopTest,
             @PathVariable Long integrationId, @RequestBody String body
     ) throws Exception {
+
+        plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -186,14 +188,14 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, ftpResp);
-                return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(), "", "");
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/ftp", e.getMessage(), "", "");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", e.getMessage(), plainResponse);
         }
 
     }
@@ -204,6 +206,8 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
             @PathVariable Long integrationId, @RequestBody String body
     ) throws Exception {
+
+        plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -222,18 +226,18 @@ public class ValidationRuntime {
                     final ByteArrayOutputStream out = new ByteArrayOutputStream();
                     final ObjectMapper mapper = new ObjectMapper();
                     mapper.writeValue(out, regexResp);
-                    return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", out.toString(), "", "");
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", out.toString(), plainResponse);
                 } else {
                     // success - return group count
                     return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue());
                 }
             } else {
-                return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", "", "", "");
+                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", "", plainResponse);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/validation/{integrationId}/regex", e.getMessage(), "", "");
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", e.getMessage(), plainResponse);
         }
 
     }
