@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
+import java.sql.Timestamp;
 import java.util.*;
 
 import static org.assimbly.util.IntegrationUtil.*;
@@ -49,6 +50,8 @@ public class RouteTemplate {
     private String outList;
 
     private String outRulesList;
+
+    private String updatedRouteConfigurationId;
 
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
@@ -301,11 +304,16 @@ public class RouteTemplate {
                     }else if(blockType.equalsIgnoreCase("routeConfiguration")){
 
                         String routeConfigurationId = baseUri;
+                        String timestamp = getTimestamp();
                         Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
                         String routeConfiguration = DocConverter.convertNodeToString(routeNode);
 
-                        properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
-                        properties.put(type + "." + stepId + ".routeconfiguration", routeConfiguration);
+
+                        updatedRouteConfigurationId = baseUri + "_" + timestamp;
+                        String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
+
+                        properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
+                        properties.put(type + "." + stepId + ".routeconfiguration", updatedRouteConfiguration);
                     }
 
                 }
@@ -353,8 +361,9 @@ public class RouteTemplate {
 
     private void createTemplatedRoute(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId){
 
-        templatedRoute = templateDoc.createElement("templatedRoute");
+        templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
+
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
@@ -429,7 +438,7 @@ public class RouteTemplate {
 
     private Element createParameter(Document doc, String name, String value){
 
-        Element parameter = doc.createElement("parameter");
+        Element parameter = doc.createElementNS("http://camel.apache.org/schema/spring","parameter");
         parameter.setAttribute("name", name);
         parameter.setAttribute("value", value);
 
@@ -710,7 +719,7 @@ public class RouteTemplate {
         String routeConfiguratinID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
 
         if(routeConfiguratinID!=null){
-            Element parameter = createParameter(templateDoc, "routeconfigurationid", routeConfiguratinID);
+            Element parameter = createParameter(templateDoc, "routeconfigurationid", updatedRouteConfigurationId);
             templatedRoute.appendChild(parameter);
         }
     }
@@ -761,4 +770,11 @@ public class RouteTemplate {
             }
         }
     }
+
+    private String getTimestamp(){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        long unix_timestamp = timestamp.getTime();
+        return Long.toString(unix_timestamp);
+    }
+
 }

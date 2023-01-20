@@ -2,7 +2,7 @@ package org.assimbly.dil.validation;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.language.groovy.GroovyExpression;
-import org.apache.camel.language.js.JavaScriptExpression;
+//import org.apache.camel.language.js.JavaScriptExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.dil.validation.beans.script.ExchangeDto;
@@ -53,6 +53,10 @@ public class ScriptValidator {
     }
 
     private EvaluationResponse validateJavaScript(ExchangeDto exchangeDto, String script) {
+
+        return createBadRequestResponse(exchangeDto, "JavaScript not supported");
+
+        /*
         try {
             JavaScriptExpression javaScriptEvaluator = new JavaScriptExpression(script, String.class);
             Exchange exchangeRequest = ExchangeMarshaller.unmarshall(exchangeDto);
@@ -62,6 +66,8 @@ public class ScriptValidator {
         } catch (Exception e) {
             return createBadRequestResponse(exchangeDto, "Invalid javascript: '" + e.getMessage() + "'");
         }
+
+         */
     }
 
     private EvaluationResponse createOKRequestResponse(ExchangeDto exchange, String message) {

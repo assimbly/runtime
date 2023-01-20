@@ -164,6 +164,7 @@
                                                             <routeconfiguration_id>
                                                                 <xsl:choose>
                                                                     <xsl:when test="//*:camelContext/@id">
+                                                                        <xsl:value-of select="concat(//*:camelContext/@id,'_',$timestamp)"/>
                                                                         <xsl:value-of select="//*:camelContext/@id"/>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
@@ -197,7 +198,7 @@
                                         <xsl:attribute name="routeConfigurationId">
                                             <xsl:choose>
                                                 <xsl:when test="@id">
-                                                    <xsl:attribute name="id" select="//*:camelContext/@id"/>
+                                                    <xsl:attribute name="id" select="concat(//*:camelContext/@id,'_',$timestamp)"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
                                                     <xsl:attribute name="id" select="generate-id(.)"/>
@@ -215,7 +216,7 @@
                                     <xsl:attribute name="id">
                                         <xsl:choose>
                                             <xsl:when test="//*:camelContext/@id">
-                                                <xsl:attribute name="id" select="//*:camelContext/@id"/>
+                                                <xsl:attribute name="id" select="concat(//*:camelContext/@id,'_',$timestamp)"/>
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <xsl:attribute name="id" select="generate-id(.)"/>

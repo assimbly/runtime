@@ -68,7 +68,6 @@ public abstract class BaseIntegration implements Integration {
 
 		String newId = configuration.get("id");
 
-
 		Iterator<TreeMap<String, String>> i = this.properties.iterator();
 		
 		while (i.hasNext()) {
@@ -130,10 +129,8 @@ public abstract class BaseIntegration implements Integration {
 		}
 
 		if (configuredFlows.containsKey(flowId)){
-			System.out.println("replace");
 			configuredFlows.replace(flowId,flowConfiguration);
 		}else{
-			System.out.println("put");
 			configuredFlows.put(flowId,flowConfiguration);
 		}
 
