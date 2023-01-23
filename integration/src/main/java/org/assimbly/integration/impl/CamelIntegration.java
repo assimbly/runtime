@@ -551,6 +551,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String addFlow(TreeMap<String, String> props)  {
 
+		String result = "error";
+
 		try{
 			//create connections & install dependencies if needed
 			createConnections(props);
@@ -560,18 +562,20 @@ public class CamelIntegration extends BaseIntegration {
 
 			if(flowType.equalsIgnoreCase("connector")){
 				addConnectorFlow(props);
+				result = "loaded";
 			}else if(flowType.equalsIgnoreCase("routes")){
 				addRoutesFlow(props);
+				result = "loaded";
 			}else{
-				return loadFlow(props);
+				result = loadFlow(props);
 			}
 
 		}catch (Exception e){
 			log.error("add flow failed: ", e);
-			return e.getMessage();
+			result = "error reason: " + e.getMessage();
 		}
 
-		return "started";
+		return result;
 
 	}
 
@@ -827,7 +831,7 @@ public class CamelIntegration extends BaseIntegration {
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			//
+			stopFlow(id);
 		}
 
 		boolean addFlow = false;

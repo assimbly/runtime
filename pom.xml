@@ -24,7 +24,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
-   		  <assimbly.version>3.8.1</assimbly.version>
+        <assimbly.version>3.8.2</assimbly.version>
 	</properties>
 
 	<distributionManagement> 

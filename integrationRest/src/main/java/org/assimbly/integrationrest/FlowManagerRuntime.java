@@ -52,6 +52,9 @@ public class FlowManagerRuntime {
 
             status = integration.startFlow(flowId);
 
+            System.out.println("Status=" + status);
+
+
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
