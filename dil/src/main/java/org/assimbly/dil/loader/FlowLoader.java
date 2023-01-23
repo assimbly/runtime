@@ -66,13 +66,16 @@ public class FlowLoader extends RouteBuilder {
 
 		flowLoaderReport = new FlowLoaderReport();
 
-		flowLoaderReport.initReport(flowId, flowName);
+		flowLoaderReport.initReport(flowId, flowName, "start");
 
 		setExtendedCamelContext();
 
 	}
 
 	private void finish() {
+
+		flowLoaderReport.logResult(flowId,flowName,flowEvent);
+
 		if (isFlowLoaded){
 			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Started flow successfully");
 		}else{

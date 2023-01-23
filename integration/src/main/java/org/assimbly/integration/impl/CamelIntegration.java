@@ -312,7 +312,6 @@ public class CamelIntegration extends BaseIntegration {
 						fileInstall(fPath);
 					} catch (Exception e) {
 						log.error("Check deploy directory "+ path.toString() + " + failed",e);
-
 					}
 				});
 	}
@@ -408,9 +407,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			String status = configureAndStartFlow(flowId, mediaType, configuration);
-			if(!status.equalsIgnoreCase("started")||status.equalsIgnoreCase("restarted")){
-				log.error(status);
+			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
+			if(loadReport.contains("error")||loadReport.contains("failed")){
+				log.error(loadReport);
 			}
 		}else{
 			log.error("File install for " + pathAsString + " failed. Invalid configuration file.");
@@ -568,6 +567,9 @@ public class CamelIntegration extends BaseIntegration {
 				result = "loaded";
 			}else{
 				result = loadFlow(props);
+				if(result.equalsIgnoreCase("loaded")){
+					result = "started";
+				}
 			}
 
 		}catch (Exception e){
@@ -878,20 +880,23 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				if (status.isStarted()) {
-					finishFlowActionReport(id, "start","Started flow successfully","info");
+					finishFlowActionReport(id, "start","Started flow successfully | id=" + id,"info");
 				}else{
 					finishFlowActionReport(id, "error","Failed starting flow | id=" + id,"error");
 				}
+			}else if(result.equals("started")) {
+				finishFlowActionReport(id, "start","Started flow successfully | id=" + id,"info");
 			}
 
-		}catch (Exception e) {
+
+	}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id);
-				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=" + e.getMessage(),"error");
-				log.error("Start flow " + id + " failed.",e);
+				finishFlowActionReport(id, "error","Start flow failed | id=" + id + " | error=" + e.getMessage(),"error");
+				log.error("Start flow failed. | id=" + id,e);
 			}else{
-				finishFlowActionReport(id, "error","Failed starting flow | id=" + id + " | error=Integration isn't running","error");
-				log.error("Start flow " + id + " failed.",e);
+				finishFlowActionReport(id, "error","Start flow failed | id=" + id + " | error=Integration isn't running","error");
+				log.error("Start flow failed. | id=" + id,e);
 			}
 		}
 
@@ -948,14 +953,13 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 		}catch (Exception e) {
-			log.error("Restart flow " + id + " failed.",e);
+			log.error("Restart flow failed. | id=" + id,e);
 			finishFlowActionReport(id, "error", e.getMessage(),"error");
 		}
 
 		return loadReport;
 
 	}
-
 
 
 	public String stopFlow(String id) {
@@ -973,14 +977,11 @@ public class CamelIntegration extends BaseIntegration {
 				context.removeRoute(routeId);
 			}
 
-
-
-
-			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
+			finishFlowActionReport(id, "stop","Stopped flow successfully | id=" + id,"info");
 
 		}catch (Exception e) {
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
-			log.error("Stop flow " + id + " failed.",e);
+			log.error("Stop flow failed. | id=" + id,e);
 		}
 
 		return loadReport;
@@ -1015,10 +1016,10 @@ public class CamelIntegration extends BaseIntegration {
 					do {
 						status = routeController.getRouteStatus(routeId);
 						if(status.isSuspended()) {
-							log.info("Paused (suspend) flow | id=" + id + ", step " + routeId);
+							log.info("Paused (suspend) flow | id=" + id + "| step id=" + routeId);
 							break;
 						}else if(status.isStopped()){
-							log.info("Paused (stopped) flow | id=" + id + ", step " + routeId);
+							log.info("Paused (stopped) flow | id=" + id + "| step id=" + routeId);
 
 							break;
 						}
@@ -1028,13 +1029,13 @@ public class CamelIntegration extends BaseIntegration {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				finishFlowActionReport(id, "pause","Paused flow successfully","info");
+				finishFlowActionReport(id, "pause","Paused flow successfully | id=" + id,"info");
 			}else {
 				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 		}catch (Exception e) {
-			log.error("Pause flow " + id + " failed.",e);
+			log.error("Pause flow failed. | id=" + id,e);
 			stopFlow(id); //Stop flow if one of the routes cannot be paused.
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
@@ -1069,7 +1070,7 @@ public class CamelIntegration extends BaseIntegration {
 						} while (status.isStarting() || count < 3000);
 
 						resumed = true;
-						log.info("Resumed flow id=" + id + ", step " + routeId);
+						log.info("Resumed flow  | id=" + id + " | step id=" + routeId);
 
 					}
 					else if (status.isStopped()){
@@ -1080,7 +1081,7 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 				if(resumed){
-					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
+					finishFlowActionReport(id, "resume","Resumed flow successfully | id=" + id,"info");
 				}else {
 					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
 				}
@@ -1099,22 +1100,22 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void initFlowActionReport(String id, String event) {
-		log.info(event + " flow | id=" + id);
 		flowLoaderReport = new FlowLoaderReport();
-		flowLoaderReport.initReport(id, id);
+		flowLoaderReport.initReport(id, id, event);
 	}
 
 	private void finishFlowActionReport(String id, String event, String message, String messageType) {
 
+		String eventCapitalized = StringUtils.capitalize(event);
+
 		//logs event to
 		if(messageType.equalsIgnoreCase("error")){
-			log.error(event + " flow " + id + " failed.",message);
+			log.error(eventCapitalized + " flow " + id + " failed.",message);
 		}else if(messageType.equalsIgnoreCase("warning"))
-			log.warn(event + " flow " + id + " failed.",message);
+			log.warn(eventCapitalized + " flow " + id + " failed.",message);
 		else{
 			log.info(message);
 		}
-
 
 		TreeMap<String, String> flowProps = null;
 		try {
