@@ -1020,7 +1020,6 @@ public class CamelIntegration extends BaseIntegration {
 							break;
 						}else if(status.isStopped()){
 							log.info("Paused (stopped) flow | id=" + id + "| step id=" + routeId);
-
 							break;
 						}
 
