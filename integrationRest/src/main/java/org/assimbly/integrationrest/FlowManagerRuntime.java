@@ -226,14 +226,14 @@ public class FlowManagerRuntime {
     }
 
     @PostMapping(path = "/integration/{integrationId}/flow/{flowId}/install", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.installFlow(flowId, mediaType, configuration);
+            status = integration.installFlow(flowId, contentType, configuration);
 
             //Send message to websocket
             if (this.messagingTemplate != null) {
