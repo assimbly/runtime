@@ -777,11 +777,20 @@ public class CamelIntegration extends BaseIntegration {
 		return status;
 	}
 
-	public String testFlow(String flowId, String mediaType, String configuration, boolean stopTest) throws Exception {
-		if(stopTest){
-			return stopFlow(flowId);
-		}
+	public String installFlow(String flowId, String mediaType, String configuration) throws Exception {
 		return configureAndStartFlow(flowId, mediaType, configuration);
+	}
+
+	public String uninstallFlow(String flowId, String mediaType) throws Exception {
+		removeFlow(flowId);
+		String status = stopFlow(flowId);
+
+		if(mediaType.equals("application/xml")){
+			status = DocConverter.convertJsonToXml(status);
+		}
+
+		return status;
+
 	}
 
 	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception {

@@ -334,9 +334,11 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String resumeFlow(String id) throws Exception;
 
-	public abstract String testFlow(String id, String mediaType, String configuration, boolean stopTest) throws Exception;
-
 	public abstract String routesFlow(String id, String mediaType, String configuration) throws Exception;
+
+	public abstract String installFlow(String id, String mediaType, String configuration) throws Exception;
+
+	public abstract String uninstallFlow(String id, String mediaType) throws Exception;
 
 	public abstract String fileInstallFlow(String id, String mediaType, String configuration) throws Exception;
 
