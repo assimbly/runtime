@@ -267,11 +267,15 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            status = integration.uninstallFlow(flowId, mediaType);
+            status = integration.uninstallFlow(flowId);
 
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
+            }
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Stopped flow successfully")) {
@@ -294,7 +298,8 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.fileInstallFlow(flowId, mediaType, configuration);
+            status = integration.fileInstallFlow(flowId, configuration);
+
             if (status.equals("saved")) {
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install/file", "flow " + flowId + " saved in the deploy directory", "flow " + flowId + " saved in the deploy directory", flowId);
             } else {
@@ -313,7 +318,8 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.fileUninstallFlow(flowId, mediaType);
+            status = integration.fileUninstallFlow(flowId);
+
             if (status.equals("deleted")) {
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall/file", "flow " + flowId + " deleted from deploy directory", "flow " + flowId + " deleted from the deploy directory", flowId);
             } else {
