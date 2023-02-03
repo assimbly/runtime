@@ -582,33 +582,30 @@ public interface Integration {
 	 * Configure and Starts a flow (for testing)
 	 *
 	 * @param  flowId the id of the flow
-	 * @param  mediaType (XML,JSON,YAML)
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId, String mediaType) throws Exception;
+	public String uninstallFlow(String flowId) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory
 	*
 	* @param  flowId the id of the flow
-	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the Camel routes XML)
 	* @return returns a confirmation message ("saved")
 	* @throws Exception if flow doesn't start
 	*/	
-	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String fileInstallFlow(String flowId, String configuration) throws Exception;
 
 
 	/**
 	* Uninstalls a flow by deleting the configuration as a file in the deploy directory
 	*
 	* @param  flowId the id of the flow
-	* @param  mediaType (XML,JSON,YAML)
 	* @return returns a confirmation message ("deleted")
 	* @throws Exception if flow doesn't start
 	*/	
-	public String fileUninstallFlow(String flowId, String mediaType) throws Exception;
+	public String fileUninstallFlow(String flowId) throws Exception;
 
 	
 	/**

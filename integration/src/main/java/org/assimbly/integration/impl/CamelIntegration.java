@@ -781,19 +781,14 @@ public class CamelIntegration extends BaseIntegration {
 		return configureAndStartFlow(flowId, mediaType, configuration);
 	}
 
-	public String uninstallFlow(String flowId, String mediaType) throws Exception {
+	public String uninstallFlow(String flowId) throws Exception {
 		removeFlow(flowId);
 		String status = stopFlow(flowId);
-
-		if(mediaType.equals("application/xml")){
-			status = DocConverter.convertJsonToXml(status);
-		}
-
 		return status;
 
 	}
 
-	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String fileInstallFlow(String flowId, String configuration) throws Exception {
 
 		try {
 			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
@@ -806,7 +801,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String fileUninstallFlow(String flowId, String mediaType) throws Exception {
+	public String fileUninstallFlow(String flowId) throws Exception {
 
 		try {
 			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
