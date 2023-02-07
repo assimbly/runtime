@@ -4,13 +4,13 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.9.0</version>
+    <version>3.8.2</version>
   </parent>
 
-  <name>dil</name>
+  <name>integration</name>
   <packaging>jar</packaging>
 
-  <artifactId>dil</artifactId>
+  <artifactId>integration</artifactId>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,31 +27,33 @@
     </distributionManagement>
 
   <dependencies>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>camel-base</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
+
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>common-base</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camel-components</artifactId>
-		  <version>${assimbly.version}</version>
+  		  <version>${assimbly.version}</version>
 	  </dependency>
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>dil</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>extra</artifactId>
- 		  <version>${assimbly.version}</version>
+		  <artifactId>database-drivers</artifactId>
+  		  <version>${assimbly.version}</version>
 	  </dependency>
-    	<dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>test-base</artifactId>
-			<version>${assimbly.version}</version>
-		</dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>utils</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>test-base</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
+
   </dependencies>
 
 	<build>
