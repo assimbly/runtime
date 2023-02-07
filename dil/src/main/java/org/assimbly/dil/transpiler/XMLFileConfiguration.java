@@ -32,6 +32,8 @@ import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
@@ -39,6 +41,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 public class XMLFileConfiguration {
+
+	final static Logger log = LoggerFactory.getLogger(XMLFileConfiguration.class);
 
 	private TreeMap<String, String> properties;
 	private List<TreeMap<String, String>> propertiesList;
@@ -90,7 +94,7 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
-		System.out.println(xml);
+		log.debug("Configuration File: " + xml);
 
 		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
@@ -112,7 +116,7 @@ public class XMLFileConfiguration {
 	
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		IntegrationUtil.printTreemap(properties);
+		//IntegrationUtil.printTreemap(properties);
 
 		return properties;
 
