@@ -62,9 +62,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
+                log.error("Start flow " + flowId + " successfully. Status:\n\n " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/start",status,plainResponse);
             } else {
-                log.error("Start flow " + flowId + " failed. Status: " + status);
+                log.error("Start flow " + flowId + " failed. Status:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/start", status, plainResponse);
             }
         } catch (Exception e) {
@@ -225,14 +226,14 @@ public class FlowManagerRuntime {
     }
 
     @PostMapping(path = "/integration/{integrationId}/flow/{flowId}/install", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.testFlow(flowId, mediaType, configuration, stopTest);
+            status = integration.installFlow(flowId, contentType, configuration);
 
             //Send message to websocket
             if (this.messagingTemplate != null) {
@@ -243,10 +244,11 @@ public class FlowManagerRuntime {
                 status = DocConverter.convertJsonToXml(status);
             }
 
-            if (status.equals("started") || status.equals("stopped")) {
+            if (status.contains("Started flow successfully")) {
+                log.info("Install flow " + flowId + " failed. Install report:\n\n " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/install",status,plainResponse);
             } else {
-                log.error("Test flow " + flowId + " failed. Status: " + status);
+                log.error("Install flow " + flowId + " failed. Install report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install", status, plainResponse);
             }
         } catch (Exception e) {
@@ -257,7 +259,7 @@ public class FlowManagerRuntime {
     }
 
     @DeleteMapping(path = "/integration/{integrationId}/flow/{flowId}/uninstall", produces = {"application/xml","application/json","text/plain"})
-    public ResponseEntity<String>  uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -265,22 +267,22 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            integration.removeFlow(flowId);
-            status = integration.stopFlow(flowId);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
+            status = integration.uninstallFlow(flowId);
 
             //Send message to websocket
             if (this.messagingTemplate != null) {
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
             }
 
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
             if (status.contains("Stopped flow successfully")) {
+                log.error("Uninstall flow " + flowId + " succesfully. Status: " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/uninstall",status,plainResponse);
             } else {
-                log.error("Stop flow " + flowId + " failed. Status: " + status);
+                log.error("Uninstall flow " + flowId + " failed. Status: " + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall", status, plainResponse);
             }
         } catch (Exception e) {
@@ -296,7 +298,8 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.fileInstallFlow(flowId, mediaType, configuration);
+            status = integration.fileInstallFlow(flowId, configuration);
+
             if (status.equals("saved")) {
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install/file", "flow " + flowId + " saved in the deploy directory", "flow " + flowId + " saved in the deploy directory", flowId);
             } else {
@@ -315,7 +318,8 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.fileUninstallFlow(flowId, mediaType);
+            status = integration.fileUninstallFlow(flowId);
+
             if (status.equals("deleted")) {
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall/file", "flow " + flowId + " deleted from deploy directory", "flow " + flowId + " deleted from the deploy directory", flowId);
             } else {

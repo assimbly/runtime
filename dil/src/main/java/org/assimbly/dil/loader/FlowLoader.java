@@ -1,6 +1,6 @@
 package org.assimbly.dil.loader;
 
-import java.util.Set;
+import java.util.List;
 import java.util.TreeMap;
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
@@ -66,13 +66,16 @@ public class FlowLoader extends RouteBuilder {
 
 		flowLoaderReport = new FlowLoaderReport();
 
-		flowLoaderReport.initReport(flowId, flowName);
+		flowLoaderReport.initReport(flowId, flowName, "start");
 
 		setExtendedCamelContext();
 
 	}
 
 	private void finish() {
+
+		flowLoaderReport.logResult(flowId,flowName,flowEvent);
+
 		if (isFlowLoaded){
 			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Started flow successfully");
 		}else{
@@ -80,7 +83,7 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void setExtendedCamelContext() {		
+	private void setExtendedCamelContext() {
 		context = getContext();
 		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
 	}
@@ -121,6 +124,7 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
+					context.removeRoute(id);
 					loadOrUpdateStep(routeConfiguration, "routeconfiguration", id, null);
 				}
 			}
@@ -163,7 +167,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setRoutes() throws Exception{
 		for(String prop : props.keySet()){
-			if(prop.endsWith("route")){							
+			if(prop.endsWith("route")){
 
 				String route = props.get(prop);
 				String id = props.get(prop + ".id");
@@ -196,7 +200,7 @@ public class FlowLoader extends RouteBuilder {
 	private void updateStep(Resource resource, String route, String type, String id, String uri){
 		try {
 			log.info(logMessage("Updating step", id, type, route));
-			loader.updateRoutes(resource);
+			loader.updateRoutes(List.of(resource));
 
 			//context
 			flowLoaderReport.setStep(id, uri, type, "success", null);
@@ -212,15 +216,14 @@ public class FlowLoader extends RouteBuilder {
 
 	private void loadStep(Resource resource, String route, String type, String id, String uri){
 
-		System.out.println("1. id=" + id);
-		System.out.println("1. StepUri=" + uri);
-
 		try {
 			log.info(logMessage("Loading step", id, type, route));
-			loader.loadRoutes(resource);
+
+			loader.loadRoutes(List.of(resource));
 			flowEvent = "start";
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 		}catch (Exception e){
+			e.printStackTrace();
 			try {
 				String errorMessage = e.getMessage();
 

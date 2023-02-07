@@ -68,7 +68,6 @@ public abstract class BaseIntegration implements Integration {
 
 		String newId = configuration.get("id");
 
-
 		Iterator<TreeMap<String, String>> i = this.properties.iterator();
 		
 		while (i.hasNext()) {
@@ -130,10 +129,8 @@ public abstract class BaseIntegration implements Integration {
 		}
 
 		if (configuredFlows.containsKey(flowId)){
-			System.out.println("replace");
 			configuredFlows.replace(flowId,flowConfiguration);
 		}else{
-			System.out.println("put");
 			configuredFlows.put(flowId,flowConfiguration);
 		}
 
@@ -337,13 +334,15 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String resumeFlow(String id) throws Exception;
 
-	public abstract String testFlow(String id, String mediaType, String configuration, boolean stopTest) throws Exception;
-
 	public abstract String routesFlow(String id, String mediaType, String configuration) throws Exception;
 
-	public abstract String fileInstallFlow(String id, String mediaType, String configuration) throws Exception;
+	public abstract String installFlow(String id, String mediaType, String configuration) throws Exception;
 
-	public abstract String fileUninstallFlow(String id, String mediaType) throws Exception;
+	public abstract String uninstallFlow(String id) throws Exception;
+
+	public abstract String fileInstallFlow(String id, String configuration) throws Exception;
+
+	public abstract String fileUninstallFlow(String id) throws Exception;
 	
 	public abstract boolean isFlowStarted(String id) throws Exception;
 

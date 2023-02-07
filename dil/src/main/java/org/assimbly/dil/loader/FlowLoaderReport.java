@@ -21,9 +21,10 @@ public class FlowLoaderReport {
 	private JSONObject stepsLoaded;
 
 
-	public void initReport(String flowId, String flowName){
+	public void initReport(String flowId, String flowName, String event){
 
-		log.info("Start flow | name=" + flowName + " | id=" + flowId);
+		String eventCapitalized = StringUtils.capitalize(event);
+		log.info(eventCapitalized + " flow | id=" + flowId);
 
 		json = new JSONObject();
 		flow = new JSONObject();
@@ -54,8 +55,6 @@ public class FlowLoaderReport {
 		json.put("flow", flow);
 
 		report = json.toString(4);
-
-		logResult(flowId, flowName, event);
 
 	}
 
@@ -93,19 +92,19 @@ public class FlowLoaderReport {
 		return report;
 	}
 
-	private void logResult(String flowId, String flowName, String event){
+	public void logResult(String flowId, String flowName, String event){
 		//logging
 		if(loaded == loadedSuccess) {
 			if(loadedSuccess == 1){
-				log.info(loadedSuccess + " step loaded succesfully");
-			}else{
-				log.info(loadedSuccess + " steps loaded succesfully");
+				log.info(loadedSuccess + " step loaded successfully");
+			}else if(loadedSuccess > 1){
+				log.info(loadedSuccess + " steps loaded successfully");
 			}
 			log.info("Start flow | name=" + flowName + " | id=" + flowId);
 		}else{
 			if(loadedError == 1){
 				log.error(loadedError + " step failed to load");
-			}else{
+			}else if(loadedError > 1){
 				log.error(loadedError + " steps failed to load");
 			}
 			log.error("Event=" + event + " | name=" + flowName + " | id=" + flowId);
