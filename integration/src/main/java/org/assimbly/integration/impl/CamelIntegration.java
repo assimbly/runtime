@@ -1642,8 +1642,6 @@ public class CamelIntegration extends BaseIntegration {
 			flow.put("tracing",tracing);
 			flow.put("lastFailed",lastFailed);
 			flow.put("lastCompleted",lastCompleted);
-			flow.put("failed",failedMessages);
-			flow.put("pending",pendingMessages);
 		}
 		if(includeSteps){
 			flow.put("steps",steps);
