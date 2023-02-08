@@ -1631,19 +1631,19 @@ public class CamelIntegration extends BaseIntegration {
 
 		flow.put("id",flowId);
 		flow.put("total",totalMessages);
-		flow.put("completedExchanges",completedMessages);
-		flow.put("failedExchanges",failedMessages);
-		flow.put("pendingExchanges",pendingMessages);
+		flow.put("completed",completedMessages);
+		flow.put("failed",failedMessages);
+		flow.put("pending",pendingMessages);
 		if(fullStats){
 			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
 			flow.put("status",status);
 			flow.put("tracing",tracing);
-			flow.put("lastFailedExchange",lastFailed);
-			flow.put("lastCompletedExchange",lastCompleted);
-			flow.put("failedExchanges",failedMessages);
-			flow.put("pendingExchanges",pendingMessages);
+			flow.put("lastFailed",lastFailed);
+			flow.put("lastCompleted",lastCompleted);
+			flow.put("failed",failedMessages);
+			flow.put("pending",pendingMessages);
 		}
 		if(includeSteps){
 			flow.put("steps",steps);
