@@ -56,9 +56,13 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
 
+import javax.management.JMX;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -1626,14 +1630,13 @@ public class CamelIntegration extends BaseIntegration {
 		flow.put("failed",failedMessages);
 		flow.put("pending",pendingMessages);
 		if(fullStats){
+			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
 			flow.put("status",status);
 			flow.put("tracing",tracing);
 			flow.put("lastFailed",lastFailed);
 			flow.put("lastCompleted",lastCompleted);
-			flow.put("failed",failedMessages);
-			flow.put("pending",pendingMessages);
 		}
 		if(includeSteps){
 			flow.put("steps",steps);
@@ -1647,6 +1650,14 @@ public class CamelIntegration extends BaseIntegration {
 
 		return flowStats;
 
+	}
+
+	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
+		String managementName = context.getManagementNameStrategy().getName();
+		ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
+
+		ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
+		return managedCamelContextMBean.getTimeout();
 	}
 
 	/*
