@@ -1182,7 +1182,7 @@ public class CamelIntegration extends BaseIntegration {
 			flow.put("status",getFlowStatus(id));
 			flow.put("uptime",getFlowUptime(id));
 		}else{
-			flow.put("id",props.get("id"));
+			flow.put("id",id);
 			flow.put("status",getFlowStatus(id));
 		}
 
