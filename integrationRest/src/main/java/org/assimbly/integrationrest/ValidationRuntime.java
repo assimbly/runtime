@@ -13,13 +13,11 @@ import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
-import org.eclipse.jetty.util.security.CertificateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
@@ -297,23 +295,28 @@ public class ValidationRuntime {
     }
 
     @PostMapping(path = "/validation/{integrationId}/xslt",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateXslt(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
             @PathVariable Long integrationId,
-            @RequestBody MultiValueMap<String, String> formParameters
+            @RequestBody String body
     ) throws Exception {
 
         plainResponse = true;
 
         try {
+            HashMap<String,String> paramList = null;
+            if(body!=null){
+                paramList = new ObjectMapper().readValue(body, new TypeReference<HashMap<String,String>>(){});
+            }
+
             integration = integrationRuntime.getIntegration();
             List<ValidationErrorMessage> expressionResp = integration.validateXslt(
-                    formParameters.getFirst("xsltUrl"),
-                    formParameters.getFirst("xsltBody")
+                    paramList.get("xsltUrl"),
+                    paramList.get("xsltBody")
             );
 
             if(expressionResp!=null) {
