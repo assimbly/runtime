@@ -77,7 +77,7 @@ public class MessageManagerRuntime {
                 integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
             }
 
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send","Sent succesfully");
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send","Sent successfully");
         } catch (Exception e) {
             log.error("Send message to " + uri + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send","Error: " + e.getMessage() + " Cause: " + e.getCause());

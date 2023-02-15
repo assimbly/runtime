@@ -25,7 +25,14 @@ public class SSLConfiguration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	public void setUseGlobalSslContextParameters(CamelContext context,String componentName) throws Exception {
+	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) throws Exception {
+		for (String sslComponent : sslComponentNames) {
+			setUseGlobalSslContextParameter(context, sslComponent);
+		}
+	}
+
+
+	public void setUseGlobalSslContextParameter(CamelContext context,String componentName) throws Exception {
 		((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
 	}
 
@@ -89,7 +96,9 @@ public class SSLConfiguration {
 	public KeyStoreParameters createKeystoreParameters(String keystorePath, String keystorePassword){
 
 		KeyStoreParameters keystoreParameters = new KeyStoreParameters();
-		keystoreParameters.setResource(keystorePath);
+		//keystoreParameters.setResource(keystorePath);
+		//keystoreParameters.setResource("keystore.jks");
+		keystoreParameters.setResource("file:" + keystorePath);
 		keystoreParameters.setPassword(keystorePassword);
 
 		return keystoreParameters;

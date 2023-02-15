@@ -16,7 +16,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.Language;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.dil.event.FlowEvent;
+import org.assimbly.dil.event.domain.FlowEvent;
 import org.assimbly.util.BaseDirectory;
 
 import javax.xml.xpath.XPathFactory;

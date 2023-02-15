@@ -90,6 +90,24 @@ public interface Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
+	 * Add collector configuration from a string for a specific format (XML,JSON,YAML).
+	 *
+	 * @param  collectorId Id of the collector (String)
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  configuration (the XML, JSON or YAML file)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
+
+	/**
+	 * Sets the collector configuration from a string for a specific format (XML,JSON,YAML).
+	 *
+	 * @param  collectorId Id of the collector (String)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String removeCollectorConfiguration(String collectorId) throws Exception;
+
+	/**
 	 * gets the integration configuration currently set (in use).
 	 *
 	 * @param  props Properties of connection
@@ -120,7 +138,7 @@ public interface Integration {
 	* @param  host (dnsname or ip of server)
 	* @param  port number (1 through 65535)
 	* @param  timeOut in seconds
-	* @return Message "Connection succesfully opened" or "Connection error"
+	* @return Message "Connection successfully opened" or "Connection error"
 	*/
 	public String testConnection(String host, int port, int timeOut);
 

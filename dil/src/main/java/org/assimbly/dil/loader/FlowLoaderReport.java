@@ -24,7 +24,7 @@ public class FlowLoaderReport {
 	public void initReport(String flowId, String flowName, String event){
 
 		String eventCapitalized = StringUtils.capitalize(event);
-		log.info(eventCapitalized + " flow | id=" + flowId);
+		log.info(eventCapitalized + " flow | flowid=" + flowId);
 
 		json = new JSONObject();
 		flow = new JSONObject();
@@ -107,7 +107,7 @@ public class FlowLoaderReport {
 			}else if(loadedError > 1){
 				log.error(loadedError + " steps failed to load");
 			}
-			log.error("Event=" + event + " | name=" + flowName + " | id=" + flowId);
+			log.error("Event=" + event + " | name=" + flowName + " | flowid=" + flowId);
 		}
 
 	}

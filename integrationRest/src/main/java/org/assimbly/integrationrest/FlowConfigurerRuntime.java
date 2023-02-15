@@ -32,11 +32,11 @@ public class FlowConfigurerRuntime {
     private Integration integration;
 
     /**
-     * POST  /integration/{integrationId}/flow/{flowId}/configure : Set configuration from XML.
+     * POST  /integration/{integrationId}/flow/{flowId}/configure : Set configuration.
      *
      * @param integrationId (integrationId)
      * @param flowId (FlowId)
-     * @param configuration as XML
+     * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
