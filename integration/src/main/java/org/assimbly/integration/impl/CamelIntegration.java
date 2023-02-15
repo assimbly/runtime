@@ -2404,6 +2404,12 @@ public class CamelIntegration extends BaseIntegration {
 		return scriptValidator.validate(scriptRequest);
 	}
 
+	@Override
+	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
+		XsltValidator xsltValidator = new XsltValidator();
+		return xsltValidator.validate(url, xsltBody);
+	}
+
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
 		setEncryptedPropertiesComponent();
