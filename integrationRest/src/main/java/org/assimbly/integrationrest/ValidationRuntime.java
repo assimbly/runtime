@@ -17,7 +17,9 @@ import org.eclipse.jetty.util.security.CertificateValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
@@ -292,6 +294,42 @@ public class ValidationRuntime {
         } catch (Exception e) {
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/validation/{integrationId}/urizx",e.getMessage());
         }
+    }
+
+    @PostMapping(path = "/validation/{integrationId}/xslt",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> validateXslt(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
+            @PathVariable Long integrationId,
+            @RequestBody MultiValueMap<String, String> formParameters
+    ) throws Exception {
+
+        plainResponse = true;
+
+        try {
+            integration = integrationRuntime.getIntegration();
+            List<ValidationErrorMessage> expressionResp = integration.validateXslt(
+                    formParameters.getFirst("xsltUrl"),
+                    formParameters.getFirst("xsltBody")
+            );
+
+            if(expressionResp!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(out, expressionResp);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", out.toString(), plainResponse);
+            } else {
+                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+            }
+
+        } catch (Exception e) {
+            log.error("Error",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", e.getMessage(), plainResponse);
+        }
+
     }
 
     @GetMapping(path = "/validation/{integrationId}/connection/{host}/{port}/{timeout}", produces = {"text/plain","application/xml","application/json"})
