@@ -342,11 +342,11 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String installFlow(String id, String mediaType, String configuration) throws Exception;
 
-	public abstract String uninstallFlow(String id, String mediaType) throws Exception;
+	public abstract String uninstallFlow(String id) throws Exception;
 
-	public abstract String fileInstallFlow(String id, String mediaType, String configuration) throws Exception;
+	public abstract String fileInstallFlow(String id, String configuration) throws Exception;
 
-	public abstract String fileUninstallFlow(String id, String mediaType) throws Exception;
+	public abstract String fileUninstallFlow(String id) throws Exception;
 	
 	public abstract boolean isFlowStarted(String id) throws Exception;
 

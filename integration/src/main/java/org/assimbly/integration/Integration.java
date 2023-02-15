@@ -600,33 +600,30 @@ public interface Integration {
 	 * Configure and Starts a flow (for testing)
 	 *
 	 * @param  flowId the id of the flow
-	 * @param  mediaType (XML,JSON,YAML)
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId, String mediaType) throws Exception;
+	public String uninstallFlow(String flowId) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory
 	*
 	* @param  flowId the id of the flow
-	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the Camel routes XML)
 	* @return returns a confirmation message ("saved")
 	* @throws Exception if flow doesn't start
 	*/	
-	public String fileInstallFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String fileInstallFlow(String flowId, String configuration) throws Exception;
 
 
 	/**
 	* Uninstalls a flow by deleting the configuration as a file in the deploy directory
 	*
 	* @param  flowId the id of the flow
-	* @param  mediaType (XML,JSON,YAML)
 	* @return returns a confirmation message ("deleted")
 	* @throws Exception if flow doesn't start
 	*/	
-	public String fileUninstallFlow(String flowId, String mediaType) throws Exception;
+	public String fileUninstallFlow(String flowId) throws Exception;
 
 	
 	/**
@@ -908,7 +905,7 @@ public interface Integration {
 	/**
 	 * Validates a cron expression
 	 *
-	 * @param  cron the cron expression
+	 * @param  cronExpression the cron expression
 	 * @return result of validation
 	 */
 	public ValidationErrorMessage validateCron(String cronExpression);
@@ -916,7 +913,7 @@ public interface Integration {
 	/**
 	 * Validates a certificate
 	 *
-	 * @param  certificate
+	 * @param  httpsUrl
 	 * @return result of validation	 */
 	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
@@ -931,7 +928,7 @@ public interface Integration {
 	/**
 	 * Validates an expression
 	 *
-	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
+	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
 	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
@@ -939,7 +936,7 @@ public interface Integration {
 	/**
 	 * Validates a ftp expression
 	 *
-	 * @param  ftp
+	 * @param  ftpSettings
 	 * @return result of validation
 	 */
 	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
@@ -955,7 +952,7 @@ public interface Integration {
 	/**
 	 * Validates a script
 	 *
-	 * @param  script the script (for example Groovy)
+	 * @param  scriptRequest the script (for example Groovy)
 	 * @return result of validation
 	 */
 	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
