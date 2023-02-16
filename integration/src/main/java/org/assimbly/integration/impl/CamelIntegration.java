@@ -21,7 +21,7 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.support.jsse.*;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -30,7 +30,9 @@ import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
+import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -40,8 +42,6 @@ import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.blocks.connections.Connection;
-import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
-import org.assimbly.dil.event.EventCollector;
 import org.assimbly.util.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
@@ -55,10 +55,15 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
-
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.management.JMX;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -121,9 +126,6 @@ public class CamelIntegration extends BaseIntegration {
 		if(useDefaultSettings){
 			setDefaultSettings();
 		}
-
-		//collect events
-		context.getManagementStrategy().addEventNotifier(new EventCollector());
 
 		//set management tasks
 		routeController = context.getRouteController();
@@ -282,6 +284,31 @@ public class CamelIntegration extends BaseIntegration {
 		reload.start();
 
 	}*/
+
+	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception{
+
+		if(mediaType.contains("xml")){
+			configuration = DocConverter.convertXmlToJson(configuration);
+		}else if(mediaType.contains("yaml")){
+			configuration = DocConverter.convertYamlToJson(configuration);
+		}
+
+		EventConfigurer eventConfigurer = new EventConfigurer(collectorId, context);
+
+		String result = eventConfigurer.add(configuration);
+
+		return result;
+
+	}
+
+	public String removeCollectorConfiguration(String collectorId) throws Exception{
+
+		EventConfigurer eventConfigurer = new EventConfigurer(collectorId, context);
+
+		String result = eventConfigurer.remove(collectorId);
+
+		return result;
+	}
 
 
 	public void setDeployDirectory(boolean deployOnStart, boolean deployOnEvent) throws Exception {
@@ -884,23 +911,23 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				if (status.isStarted()) {
-					finishFlowActionReport(id, "start","Started flow successfully | id=" + id,"info");
+					finishFlowActionReport(id, "start","Started flow successfully","info");
 				}else{
-					finishFlowActionReport(id, "error","Failed starting flow | id=" + id,"error");
+					finishFlowActionReport(id, "error","Failed starting flow","error");
 				}
 			}else if(result.equals("started")) {
-				finishFlowActionReport(id, "start","Started flow successfully | id=" + id,"info");
+				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
 
 
 	}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id);
-				finishFlowActionReport(id, "error","Start flow failed | id=" + id + " | error=" + e.getMessage(),"error");
-				log.error("Start flow failed. | id=" + id,e);
+				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
+				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
-				finishFlowActionReport(id, "error","Start flow failed | id=" + id + " | error=Integration isn't running","error");
-				log.error("Start flow failed. | id=" + id,e);
+				finishFlowActionReport(id, "error","Start flow failed | error=Integration isn't running","error");
+				log.error("Start flow failed. | flowid=" + id,e);
 			}
 		}
 
@@ -915,11 +942,11 @@ public class CamelIntegration extends BaseIntegration {
 		status = routeController.getRouteStatus(routeId);
 
 		if(status.isStarted()) {
-			log.info("Started step | id=" + routeId);
+			log.info("Started step | stepid=" + routeId);
 		} else {
 			try {
 
-				log.info("Starting step | id=" + routeId);
+				log.info("Starting step | stepid=" + routeId);
 
 				routeController.startRoute(routeId);
 
@@ -933,11 +960,11 @@ public class CamelIntegration extends BaseIntegration {
 				} while (status.isStarting() || count < 3000);
 
 			} catch (Exception e) {
-				log.error("Failed starting step | id=" + routeId);
+				log.error("Failed starting step | stepid=" + routeId);
 				return status;
 			}
 
-			log.info("Started step | id=" + routeId);
+			log.info("Started step | stepid=" + routeId);
 
 		}
 
@@ -957,7 +984,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 		}catch (Exception e) {
-			log.error("Restart flow failed. | id=" + id,e);
+			log.error("Restart flow failed. | flowid=" + id,e);
 			finishFlowActionReport(id, "error", e.getMessage(),"error");
 		}
 
@@ -976,16 +1003,16 @@ public class CamelIntegration extends BaseIntegration {
 
 			for (Route route : routeList) {
 				String routeId = route.getId();
-				log.info("Stopping step | id=" + route.getId());
+				log.info("Stopping step | flowid=" + route.getId());
 				routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
 				context.removeRoute(routeId);
 			}
 
-			finishFlowActionReport(id, "stop","Stopped flow successfully | id=" + id,"info");
+			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
 
 		}catch (Exception e) {
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
-			log.error("Stop flow failed. | id=" + id,e);
+			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
 		return loadReport;
@@ -1020,10 +1047,10 @@ public class CamelIntegration extends BaseIntegration {
 					do {
 						status = routeController.getRouteStatus(routeId);
 						if(status.isSuspended()) {
-							log.info("Paused (suspend) flow | id=" + id + "| step id=" + routeId);
+							log.info("Paused (suspend) flow | flowid=" + id + "| stepid=" + routeId);
 							break;
 						}else if(status.isStopped()){
-							log.info("Paused (stopped) flow | id=" + id + "| step id=" + routeId);
+							log.info("Paused (stopped) flow | flowid=" + id + "| stepid=" + routeId);
 							break;
 						}
 
@@ -1032,13 +1059,13 @@ public class CamelIntegration extends BaseIntegration {
 
 					} while (status.isSuspending() || count < 6000);
 				}
-				finishFlowActionReport(id, "pause","Paused flow successfully | id=" + id,"info");
+				finishFlowActionReport(id, "pause","Paused flow successfully","info");
 			}else {
 				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 		}catch (Exception e) {
-			log.error("Pause flow failed. | id=" + id,e);
+			log.error("Pause flow failed. | flowid=" + id,e);
 			stopFlow(id); //Stop flow if one of the routes cannot be paused.
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
@@ -1073,7 +1100,7 @@ public class CamelIntegration extends BaseIntegration {
 						} while (status.isStarting() || count < 3000);
 
 						resumed = true;
-						log.info("Resumed flow  | id=" + id + " | step id=" + routeId);
+						log.info("Resumed flow  | flowid=" + id + " | stepid=" + routeId);
 
 					}
 					else if (status.isStopped()){
@@ -1084,7 +1111,7 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 				if(resumed){
-					finishFlowActionReport(id, "resume","Resumed flow successfully | id=" + id,"info");
+					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 				}else {
 					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
 				}
@@ -1113,11 +1140,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		//logs event to
 		if(messageType.equalsIgnoreCase("error")){
-			log.error(eventCapitalized + " flow " + id + " failed.",message);
+			log.error(eventCapitalized + " flow " + id + " failed | flowid=" + id,message);
 		}else if(messageType.equalsIgnoreCase("warning"))
-			log.warn(eventCapitalized + " flow " + id + " failed.",message);
+			log.warn(eventCapitalized + " flow" + id + " failed | flowid=" + id,message);
 		else{
-			log.info(message);
+			log.info(message + " | flowid=" + id);
 		}
 
 		TreeMap<String, String> flowProps = null;
@@ -1178,7 +1205,7 @@ public class CamelIntegration extends BaseIntegration {
 			flow.put("status",getFlowStatus(id));
 			flow.put("uptime",getFlowUptime(id));
 		}else{
-			flow.put("id",props.get("id"));
+			flow.put("id",id);
 			flow.put("status",getFlowStatus(id));
 		}
 
@@ -1626,14 +1653,13 @@ public class CamelIntegration extends BaseIntegration {
 		flow.put("failed",failedMessages);
 		flow.put("pending",pendingMessages);
 		if(fullStats){
+			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
 			flow.put("status",status);
 			flow.put("tracing",tracing);
 			flow.put("lastFailed",lastFailed);
 			flow.put("lastCompleted",lastCompleted);
-			flow.put("failed",failedMessages);
-			flow.put("pending",pendingMessages);
 		}
 		if(includeSteps){
 			flow.put("steps",steps);
@@ -1647,6 +1673,14 @@ public class CamelIntegration extends BaseIntegration {
 
 		return flowStats;
 
+	}
+
+	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
+		String managementName = context.getManagementNameStrategy().getName();
+		ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
+
+		ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
+		return managedCamelContextMBean.getTimeout();
 	}
 
 	/*
@@ -2393,6 +2427,12 @@ public class CamelIntegration extends BaseIntegration {
 		return scriptValidator.validate(scriptRequest);
 	}
 
+	@Override
+	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
+		XsltValidator xsltValidator = new XsltValidator();
+		return xsltValidator.validate(url, xsltBody);
+	}
+
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
 		setEncryptedPropertiesComponent();
@@ -2436,15 +2476,20 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
-		context.setSSLContextParameters(sslContextParameters);
+		try {
+			SSLContext sslContext = sslContextParameters.createSSLContext(context);
+			SSLEngine engine = sslContext.createSSLEngine();
+		}catch (Exception e){
+			log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: " + e.getMessage());
+		}
 
 		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
 
-		for (String sslComponent : sslComponents) {
-			sslConfiguration.setUseGlobalSslContextParameters(context, sslComponent);
-		}
+		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
 		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
+
+
 	}
 
 	/**

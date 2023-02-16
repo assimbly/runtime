@@ -90,6 +90,24 @@ public interface Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
+	 * Add collector configuration from a string for a specific format (XML,JSON,YAML).
+	 *
+	 * @param  collectorId Id of the collector (String)
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  configuration (the XML, JSON or YAML file)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
+
+	/**
+	 * Sets the collector configuration from a string for a specific format (XML,JSON,YAML).
+	 *
+	 * @param  collectorId Id of the collector (String)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String removeCollectorConfiguration(String collectorId) throws Exception;
+
+	/**
 	 * gets the integration configuration currently set (in use).
 	 *
 	 * @param  props Properties of connection
@@ -120,7 +138,7 @@ public interface Integration {
 	* @param  host (dnsname or ip of server)
 	* @param  port number (1 through 65535)
 	* @param  timeOut in seconds
-	* @return Message "Connection succesfully opened" or "Connection error"
+	* @return Message "Connection successfully opened" or "Connection error"
 	*/
 	public String testConnection(String host, int port, int timeOut);
 
@@ -887,7 +905,7 @@ public interface Integration {
 	/**
 	 * Validates a cron expression
 	 *
-	 * @param  cron the cron expression
+	 * @param  cronExpression the cron expression
 	 * @return result of validation
 	 */
 	public ValidationErrorMessage validateCron(String cronExpression);
@@ -895,7 +913,7 @@ public interface Integration {
 	/**
 	 * Validates a certificate
 	 *
-	 * @param  certificate
+	 * @param  httpsUrl
 	 * @return result of validation	 */
 	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
@@ -910,7 +928,7 @@ public interface Integration {
 	/**
 	 * Validates an expression
 	 *
-	 * @param  expression the expression (for example simple, xpath, jsonpath or Groovy)
+	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
 	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
@@ -918,7 +936,7 @@ public interface Integration {
 	/**
 	 * Validates a ftp expression
 	 *
-	 * @param  ftp
+	 * @param  ftpSettings
 	 * @return result of validation
 	 */
 	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
@@ -934,9 +952,18 @@ public interface Integration {
 	/**
 	 * Validates a script
 	 *
-	 * @param  script the script (for example Groovy)
+	 * @param  scriptRequest the script (for example Groovy)
 	 * @return result of validation
 	 */
 	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
+
+	/**
+	 * Validates a xslt
+	 *
+	 * @param  url location of the XSLT file
+	 * @param  xsltBody the body of the XSLT file
+	 * @return result of validation
+	 */
+	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
 
 }

@@ -283,6 +283,10 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract void setHistoryMetrics(boolean historyMetrics);
 
+	public abstract String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
+
+	public abstract String removeCollectorConfiguration(String collectorId) throws Exception;
+
 	public abstract void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 
 	public abstract String getStats(String mediaType) throws Exception;
@@ -450,5 +454,7 @@ public abstract class BaseIntegration implements Integration {
 	public abstract AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	public abstract EvaluationResponse validateScript(EvaluationRequest scriptRequest);
+
+	public abstract List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
 
 }

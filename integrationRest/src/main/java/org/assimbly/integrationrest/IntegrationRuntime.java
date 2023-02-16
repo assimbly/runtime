@@ -3,7 +3,7 @@ package org.assimbly.integrationrest;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
-import org.assimbly.integrationrest.event.FailureListener;
+import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.util.rest.ResponseUtil;
 
 import org.slf4j.Logger;
@@ -37,7 +37,7 @@ public class IntegrationRuntime {
     private boolean integrationIsStarting;
 
     @Autowired
-    private FailureListener failureListener;
+    private FailureCollector failureCollector;
 
     public IntegrationRuntime() throws Exception {
     }
@@ -63,7 +63,7 @@ public class IntegrationRuntime {
             if (integration.isStarted()) {
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration already running");
             } else {
-            	integration.addEventNotifier(failureListener);
+            	integration.addEventNotifier(failureCollector);
             	integration.setTracing(false, "default");
             	integration.start();
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration started");
@@ -278,6 +278,57 @@ public class IntegrationRuntime {
         }
     }
 
+    /**
+     * POST  /integration/{integrationId}/collector/{collectorId}/add : Set collector configuration
+     *
+     * @param integrationId (integrationId)
+     * @param collectorId (CollectorId)
+     * @param configuration as JSON or XML
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping(path = "/integration/{integrationId}/collector/{collectorId}/add", consumes =  {"application/json", "application/xml", "text/plain"}, produces = {"application/json","application/xml","text/plain"})
+    public ResponseEntity<String> addCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String collectorId, @RequestBody String configuration) throws Exception {
+
+        log.info("Add collector with id=" + collectorId);
+
+        try {
+            String result = integration.addCollectorConfiguration(collectorId,mediaType, configuration);
+            if(!result.equalsIgnoreCase("configured")){
+                log.error("Add collector " + collectorId + " failed. Message: " + result);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/add",result);
+            }
+
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/add",result);
+        } catch (Exception e) {
+            log.error("Add collector " + collectorId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/add",e.getMessage());
+        }
+
+    }
+
+    /**
+     * DELETE  /integration/{integrationId}/collector/{collectorId}/remove : Remove collector configuration
+     *
+     * @param integrationId (integrationId)
+     * @param collectorId (CollectorId)
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the remove of configuration failed
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @DeleteMapping(path = "/integration/{integrationId}/collector/{collectorId}/remove", produces = {"application/json","application/xml","text/plain"})
+    public ResponseEntity<String> removeCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String collectorId) throws Exception {
+
+        log.info("Remove collector with id=" + collectorId);
+
+        try {
+            String result = integration.removeCollectorConfiguration(collectorId);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",result);
+        } catch (Exception e) {
+            log.error("Remove collector " + collectorId + " failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",e.getMessage());
+        }
+
+    }
 
     // Generates a generic error response (exceptions outside try catch):
     @ExceptionHandler({Exception.class})
@@ -305,7 +356,7 @@ public class IntegrationRuntime {
             try {
 
                 //add notifier before starting integration
-                integration.addEventNotifier(failureListener);
+                integration.addEventNotifier(failureCollector);
                 integration.start();
                 integrationIsStarting = true;
 

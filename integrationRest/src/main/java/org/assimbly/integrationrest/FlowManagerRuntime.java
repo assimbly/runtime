@@ -61,8 +61,8 @@ public class FlowManagerRuntime {
                 status = DocConverter.convertJsonToXml(status);
             }
 
-            if (status.contains("Started flow successfully")) {
-                log.error("Start flow " + flowId + " successfully. Status:\n\n " + status);
+            if (status.contains("successfully")) {
+                log.info("Start flow " + flowId + " successfully. Status:\n\n " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/start",status,plainResponse);
             } else {
                 log.error("Start flow " + flowId + " failed. Status:\n\n" + status);
@@ -279,7 +279,7 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
-                log.error("Uninstall flow " + flowId + " succesfully. Status: " + status);
+                log.error("Uninstall flow " + flowId + " successfully. Status: " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/uninstall",status,plainResponse);
             } else {
                 log.error("Uninstall flow " + flowId + " failed. Status: " + status);

@@ -1,4 +1,4 @@
-package org.assimbly.dil.event;
+package org.assimbly.dil.event.domain;
 
 import java.util.Date;
 

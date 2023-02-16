@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 // Check the following page for all EventObject instances of Camel: http://camel.apache.org/maven/current/camel-core/apidocs/org/apache/camel/management/event/package-summary.html
 
 @Component
-public class FailureListener extends EventNotifierSupport {
+public class FailureCollector extends EventNotifierSupport {
 
    protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -54,7 +54,7 @@ public class FailureListener extends EventNotifierSupport {
 
             if (flowIdPart != -1)
 			{
-				flowId= flowId.substring(0 , flowIdPart); //this will give abc
+				flowId= flowId.substring(0 , flowIdPart);
 			}
 
 	        if(this.messagingTemplate!=null) {
