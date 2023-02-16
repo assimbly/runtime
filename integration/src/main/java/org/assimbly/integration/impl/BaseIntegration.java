@@ -455,4 +455,6 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
+	public abstract List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
+
 }

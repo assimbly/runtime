@@ -957,4 +957,13 @@ public interface Integration {
 	 */
 	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
+	/**
+	 * Validates a xslt
+	 *
+	 * @param  url location of the XSLT file
+	 * @param  xsltBody the body of the XSLT file
+	 * @return result of validation
+	 */
+	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
+
 }
