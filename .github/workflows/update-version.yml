@@ -18,7 +18,7 @@ jobs:
       run: |
         echo "Updating to version: $(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)"
         mvn versions:set -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
-        mvn pom.xml versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
+        mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
 
     - name: Diff check
       run: git diff
