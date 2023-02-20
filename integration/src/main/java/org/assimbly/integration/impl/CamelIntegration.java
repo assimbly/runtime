@@ -218,19 +218,19 @@ public class CamelIntegration extends BaseIntegration {
 
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		//bindByName("","world.dovetail.aggregate.AggregateStrategy");
-		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
-		bindByName("Er7ToHl7Converter","world.dovetail.hl7.Er7Encoder");
-		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");
-		bindByName("flowCookieStore","world.dovetail.cookies.CookieStore");
-		bindByName("Hl7ToXmlConverter","world.dovetail.hl7.XmlMarshaller");
-		bindByName("multipartProcessor","world.dovetail.multipart.processor.MultipartProcessor");
-		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
-		bindByName("XmlToHl7Converter","world.dovetail.hl7.XmlEncoder");
+		//bindByName("","org.assimbly.aggregate.AggregateStrategy");
+		bindByName("CurrentEnrichStrategy","org.assimbly.enrich.EnrichStrategy");
+		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
+		bindByName("ExtendedHeaderFilterStrategy","org.assimbly.cookies.CookieStore");
+		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
+		bindByName("Hl7ToXmlConverter","org.assimbly.hl7.XmlMarshaller");
+		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
+		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
+		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 
-		addServiceByName("world.dovetail.mail.component.mail.MailComponent");
-		addServiceByName("world.dovetail.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
-		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
+		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
+		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
+		addServiceByName("org.assimbly.xmltojson.CustomXmlJsonDataFormat");
 
 	}
 
@@ -1997,7 +1997,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		Class<?> clazz;
 		try {
-			clazz = Class.forName("world.dovetail.soap.SoapActionsService");
+			clazz = Class.forName("org.assimbly.soap.SoapActionsService");
 			Object soapActions =  clazz.getDeclaredConstructor().newInstance();
 			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
 			result = (String) method.invoke(soapActions, url);
