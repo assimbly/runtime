@@ -39,7 +39,6 @@ import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.loader.ConnectorRoute;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.util.*;
@@ -577,34 +576,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String addFlow(TreeMap<String, String> props)  {
 
-		String result = "error";
-
 		try{
 			//create connections & install dependencies if needed
 			createConnections(props);
 
-			//set up flow by type
-			String flowType  = props.get("flow.type");
-
-			if(flowType.equalsIgnoreCase("connector")){
-				addConnectorFlow(props);
-				result = "loaded";
-			}else if(flowType.equalsIgnoreCase("routes")){
-				addRoutesFlow(props);
-				result = "loaded";
-			}else{
-				result = loadFlow(props);
-				if(result.equalsIgnoreCase("loaded")){
-					result = "started";
-				}
-			}
+			return loadFlow(props);
 
 		}catch (Exception e){
 			log.error("add flow failed: ", e);
-			result = "error reason: " + e.getMessage();
+			return "error reason: " + e.getMessage();
 		}
-
-		return result;
 
 	}
 
@@ -634,11 +615,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 	}
 
-	public void addConnectorFlow(final TreeMap<String, String> props) throws Exception {
-		ConnectorRoute flow = new ConnectorRoute(props);
-		flow.updateRoutesToCamelContext(context);
-	}
-
 	public String loadFlow(final TreeMap<String, String> props) throws Exception {
 
 		FlowLoader flow = new FlowLoader(props);
@@ -650,31 +626,8 @@ public class CamelIntegration extends BaseIntegration {
 			return "error";
 		}
 
-		return "loaded";
+		return "started";
 
-	}
-
-	public void addRoutesFlow(final TreeMap<String, String> props) throws Exception {
-
-		for (String key : props.keySet()) {
-
-			if (key.endsWith("route")){
-				String xml = props.get(key);
-				updateRoute(xml);
-			}
-		}
-	}
-
-	//later move to https://www.javadoc.io/doc/org.apache.camel/camel-api/3.14.2/org/apache/camel/spi/RoutesLoader.html
-	//ExtendedCamelContext extended = context.getExtension(ExtendedCamelContext.class);
-	//extended.getRoutesLoader().updateRoutes(resources);
-	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
-
-	public void updateRoute(String route) throws Exception {
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-		Resource resource = IntegrationUtil.setResource(route);
-		loader.updateRoutes(resource);
 	}
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
