@@ -17,7 +17,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>   
+    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>
+	<hamcrest.version>2.2</hamcrest.version>
+	<spring-boot.version>2.7.8</spring-boot.version>
   </properties>
 
   <distributionManagement> 
@@ -33,6 +35,31 @@
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>integration</artifactId>
 		  <version>${assimbly.version}</version>
+	  </dependency>
+
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-websocket</artifactId>
+		  <version>${spring-boot.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-web</artifactId>
+		  <version>${spring-boot.version}</version>
+	  </dependency>
+
+	  <!-- tests -->
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-test</artifactId>
+		  <version>${spring-boot.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.hamcrest</groupId>
+		  <artifactId>hamcrest</artifactId>
+		  <version>${hamcrest.version}</version>
+		  <scope>test</scope>
 	  </dependency>
   </dependencies>
 
