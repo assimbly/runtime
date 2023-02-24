@@ -2,7 +2,7 @@ package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
-import static org.hamcrest.Matchers.*;
+import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +16,11 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Map;
+
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(classes = ValidationRuntime.class)
 @ComponentScan(basePackageClasses = {
@@ -40,7 +41,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateCronWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/cron",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("expression", "0 0/5 * * * ?")
@@ -53,7 +54,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateCronWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/cron",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("expression", "0 0/5 * * *")
@@ -71,7 +72,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateCertificateWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/certificate",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpsUrl", "https://authenticationtest.com/HTTPAuth/")
@@ -90,7 +91,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateCertificateWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/certificate",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpsUrl", "https://authenticationtest2.com/HTTPAuth/")
@@ -111,7 +112,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateUrlWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/url",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpUrl", "https://integrationmadeeasy.com/")
@@ -124,7 +125,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateUrlWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/url",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpUrl", "https://integrationmadeasy.com/")
@@ -151,7 +152,7 @@ class ValidationRuntimeTest {
                 "expressionType", "groovy"
         )));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/expression",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -175,7 +176,7 @@ class ValidationRuntimeTest {
                 "expressionType", "groovy"
         )));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/expression",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -210,7 +211,7 @@ class ValidationRuntimeTest {
                 "pkfd", ""
         ));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/ftp",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -237,7 +238,7 @@ class ValidationRuntimeTest {
                 "pkfd", ""
         ));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/ftp",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -261,7 +262,7 @@ class ValidationRuntimeTest {
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*)"));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/regex",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -285,7 +286,7 @@ class ValidationRuntimeTest {
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*"));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/regex",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -321,7 +322,7 @@ class ValidationRuntimeTest {
                 "script", scriptJsonObject
         ));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/script",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -357,7 +358,7 @@ class ValidationRuntimeTest {
                 "script", scriptJsonObject
         ));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/script",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -381,7 +382,7 @@ class ValidationRuntimeTest {
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xsl"));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/xslt",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -403,7 +404,7 @@ class ValidationRuntimeTest {
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xml"));
 
-        MockHttpServletRequestBuilder requestBuilder = buildPostMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 "/api/validation/1/xslt",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
@@ -423,7 +424,7 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateUriWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = buildGetMockHttpServletRequestBuilder(
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 "/api/validation/1/uri",
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE, "Uri", "2342424"),
                 null
@@ -434,42 +435,4 @@ class ValidationRuntimeTest {
         resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-
-    private MockHttpServletRequestBuilder buildGetMockHttpServletRequestBuilder(
-            String endpoint,
-            Map<String,String> headers,
-            Map<String,String> params
-    ) {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders.get(endpoint);
-        if(headers!=null)
-            headers.entrySet().stream().forEach(
-                    entry -> mockHttpServletRequestBuilder.header(entry.getKey(), entry.getValue())
-            );
-        if(params!=null)
-            params.entrySet().stream().forEach(
-                    entry -> mockHttpServletRequestBuilder.param(entry.getKey(), entry.getValue())
-            );
-        return mockHttpServletRequestBuilder;
-    }
-
-    private MockHttpServletRequestBuilder buildPostMockHttpServletRequestBuilder(
-            String endpoint,
-            Map<String,String> headers,
-            Map<String,String> params,
-            String contentType,
-            String contentBody
-    ) {
-        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders.post(endpoint);
-        if(headers!=null)
-            headers.entrySet().stream().forEach(
-                    entry -> mockHttpServletRequestBuilder.header(entry.getKey(), entry.getValue())
-            );
-        if(params!=null)
-            params.entrySet().stream().forEach(
-                    entry -> mockHttpServletRequestBuilder.param(entry.getKey(), entry.getValue())
-            );
-        mockHttpServletRequestBuilder.contentType(contentType);
-        mockHttpServletRequestBuilder.content(contentBody);
-        return mockHttpServletRequestBuilder;
-    }
 }
