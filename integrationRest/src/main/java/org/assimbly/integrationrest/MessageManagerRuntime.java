@@ -11,6 +11,7 @@ import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -40,7 +41,11 @@ public class MessageManagerRuntime {
      * @return if message has been send
      * @throws Exception Message send failure
      */
-    @PostMapping(path = "/integration/{integrationId}/send/{numberOfTimes}", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/send/{numberOfTimes}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> send(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
                                        @RequestHeader(name = "stepId", required = false) String stepId,
@@ -91,7 +96,11 @@ public class MessageManagerRuntime {
      * @return the reply message
      * @throws Exception Message send failure
      */
-    @PostMapping(path = "/integration/{integrationId}/sendrequest", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/sendrequest",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> sendRequest(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
                                        @RequestHeader(name = "uri", required = false) String uri,
                                        @RequestHeader(name = "stepId", required = false) String stepId,

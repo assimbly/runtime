@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.attribute.standard.Media;
 import java.io.ByteArrayOutputStream;
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -44,7 +45,10 @@ public class ValidationRuntime {
 
     //validations
 
-    @GetMapping(path = "/validation/{integrationId}/cron", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/validation/{integrationId}/cron",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateCron(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @Parameter String expression,
@@ -73,7 +77,10 @@ public class ValidationRuntime {
         }
     }
 
-    @GetMapping(path = "/validation/{integrationId}/certificate", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/validation/{integrationId}/certificate",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateCertificate(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @Parameter String httpsUrl,
@@ -101,7 +108,10 @@ public class ValidationRuntime {
         }
     }
 
-    @GetMapping(path = "/validation/{integrationId}/url", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/validation/{integrationId}/url",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateUrl(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @Parameter String httpUrl,
@@ -130,7 +140,11 @@ public class ValidationRuntime {
     }
 
 
-    @PostMapping(path = "/validation/{integrationId}/expression", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/validation/{integrationId}/expression",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateExpression(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
@@ -165,7 +179,11 @@ public class ValidationRuntime {
 
     }
 
-    @PostMapping(path = "/validation/{integrationId}/ftp", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/validation/{integrationId}/ftp",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateFtp(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest",defaultValue = "false") boolean stopTest,
@@ -200,7 +218,11 @@ public class ValidationRuntime {
 
     }
 
-    @PostMapping(path = "/validation/{integrationId}/regex", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/validation/{integrationId}/regex",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateRegex(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
@@ -242,7 +264,11 @@ public class ValidationRuntime {
 
     }
 
-    @PostMapping(path = "/validation/{integrationId}/script", consumes =  {"application/json"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/validation/{integrationId}/script",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateScript(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
@@ -283,7 +309,10 @@ public class ValidationRuntime {
 
     }
 
-    @GetMapping(path = "/validation/{integrationId}/uri", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/validation/{integrationId}/uri",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> validateUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
         try {
             integration = integrationRuntime.getIntegration();
@@ -295,8 +324,8 @@ public class ValidationRuntime {
     }
 
     @PostMapping(path = "/validation/{integrationId}/xslt",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE}
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateXslt(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
@@ -335,7 +364,10 @@ public class ValidationRuntime {
 
     }
 
-    @GetMapping(path = "/validation/{integrationId}/connection/{host}/{port}/{timeout}", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/validation/{integrationId}/connection/{host}/{port}/{timeout}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> testConnection(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String host,@PathVariable int port, @PathVariable int timeout) throws Exception {
 
         try {
