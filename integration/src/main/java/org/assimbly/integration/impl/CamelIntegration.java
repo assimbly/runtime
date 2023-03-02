@@ -1676,11 +1676,15 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
-		String managementName = context.getManagementNameStrategy().getName();
-		ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
+		try {
+			String managementName = context.getManagementNameStrategy().getName();
+			ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
 
-		ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
-		return managedCamelContextMBean.getTimeout();
+			ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
+			return managedCamelContextMBean.getTimeout();
+		} catch (Exception e) {
+			return 0L;
+		}
 	}
 
 	/*
