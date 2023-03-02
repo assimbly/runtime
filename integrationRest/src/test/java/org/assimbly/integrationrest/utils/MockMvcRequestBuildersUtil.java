@@ -45,4 +45,21 @@ public class MockMvcRequestBuildersUtil {
         return mockHttpServletRequestBuilder;
     }
 
+    public static MockHttpServletRequestBuilder buildDeleteMockHttpServletRequestBuilder(
+            String endpoint,
+            Map<String,String> headers,
+            Map<String,String> params
+    ) {
+        MockHttpServletRequestBuilder mockHttpServletRequestBuilder = MockMvcRequestBuilders.delete(endpoint);
+        if(headers!=null)
+            headers.entrySet().stream().forEach(
+                    entry -> mockHttpServletRequestBuilder.header(entry.getKey(), entry.getValue())
+            );
+        if(params!=null)
+            params.entrySet().stream().forEach(
+                    entry -> mockHttpServletRequestBuilder.param(entry.getKey(), entry.getValue())
+            );
+        return mockHttpServletRequestBuilder;
+    }
+
 }
