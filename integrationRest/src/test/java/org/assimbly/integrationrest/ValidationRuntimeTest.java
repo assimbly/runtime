@@ -16,11 +16,11 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes = ValidationRuntime.class)
 @ComponentScan(basePackageClasses = {
@@ -42,20 +42,20 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateCronWithSuccess() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/cron",
+                String.format("/api/validation/%d/cron",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("expression", "0 0/5 * * * ?")
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
-        resultActions.andExpect(MockMvcResultMatchers.status().isNoContent());
+        resultActions.andExpect(status().isNoContent());
     }
 
     @Test
     void shouldValidateCronWithError() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/cron",
+                String.format("/api/validation/%d/cron",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("expression", "0 0/5 * * *")
         );
@@ -63,17 +63,16 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("error")
-                        .value("Cron Validation error: Unexpected end of expression."));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("error").value("Cron Validation error: Unexpected end of expression."))
+        ;
     }
 
     @Test
     void shouldValidateCertificateWithSuccess() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/certificate",
+                String.format("/api/validation/%d/certificate",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpsUrl", "https://authenticationtest.com/HTTPAuth/")
         );
@@ -81,18 +80,17 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.
-                        jsonPath("validationResultStatus").
-                        value("VALID"))
-                .andExpect(MockMvcResultMatchers.jsonPath("message").isEmpty());
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("validationResultStatus").value("VALID"))
+                .andExpect(jsonPath("message").isEmpty())
+        ;
     }
 
     @Test
     void shouldValidateCertificateWithError() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/certificate",
+                String.format("/api/validation/%d/certificate",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpsUrl", "https://authenticationtest2.com/HTTPAuth/")
         );
@@ -100,33 +98,30 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("validationResultStatus")
-                        .value("UNKNOWN"))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("message")
-                        .value("authenticationtest2.com"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("validationResultStatus").value("UNKNOWN"))
+                .andExpect(jsonPath("message").value("authenticationtest2.com"))
+        ;
     }
 
     @Test
     void shouldValidateUrlWithSuccess() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/url",
+                String.format("/api/validation/%d/url",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpUrl", "https://integrationmadeeasy.com/")
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
-        resultActions.andExpect(MockMvcResultMatchers.status().isNoContent());
+        resultActions.andExpect(status().isNoContent());
     }
 
     @Test
     void shouldValidateUrlWithError() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/url",
+                String.format("/api/validation/%d/url",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 Map.of("httpUrl", "https://integrationmadeasy.com/")
         );
@@ -134,11 +129,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("error")
-                        .value("Url is not reachable from the server!"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("error").value("Url is not reachable from the server!"))
+        ;
     }
 
     @Test
@@ -153,7 +147,7 @@ class ValidationRuntimeTest {
         )));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/expression",
+                String.format("/api/validation/%d/expression",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -162,7 +156,7 @@ class ValidationRuntimeTest {
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
-        resultActions.andExpect(MockMvcResultMatchers.status().isNoContent());
+        resultActions.andExpect(status().isNoContent());
     }
 
     @Test
@@ -177,7 +171,7 @@ class ValidationRuntimeTest {
         )));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/expression",
+                String.format("/api/validation/%d/expression",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -187,14 +181,11 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("$[*].error")
-                        .value(hasItem(matchesRegex(
-                                ".*nested exception is groovy.lang.MissingPropertyException: No such property: testing.*"
-                        )))
-                );
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[*].error").value(hasItem(matchesRegex(
+                        ".*nested exception is groovy.lang.MissingPropertyException: No such property: testing.*"))))
+        ;
     }
 
     @Test
@@ -212,7 +203,7 @@ class ValidationRuntimeTest {
         ));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/ftp",
+                String.format("/api/validation/%d/ftp",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -221,7 +212,7 @@ class ValidationRuntimeTest {
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
-        resultActions.andExpect(MockMvcResultMatchers.status().isNoContent());
+        resultActions.andExpect(status().isNoContent());
     }
 
     @Test
@@ -239,7 +230,7 @@ class ValidationRuntimeTest {
         ));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/ftp",
+                String.format("/api/validation/%d/ftp",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -249,11 +240,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("error")
-                        .value("Cannot login into FTP Server!"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("error").value("Cannot login into FTP Server!"))
+        ;
     }
 
     @Test
@@ -263,7 +253,7 @@ class ValidationRuntimeTest {
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*)"));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/regex",
+                String.format("/api/validation/%d/regex",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -273,11 +263,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("message")
-                        .value("2"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("message").value("2"))
+        ;
     }
 
     @Test
@@ -287,7 +276,7 @@ class ValidationRuntimeTest {
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*"));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/regex",
+                String.format("/api/validation/%d/regex",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -297,11 +286,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("message")
-                        .value("Unclosed group near index 8\n(.*) (.*"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("message").value("Unclosed group near index 8\n(.*) (.*"))
+        ;
     }
 
     @Test
@@ -323,7 +311,7 @@ class ValidationRuntimeTest {
         ));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/script",
+                String.format("/api/validation/%d/script",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -333,11 +321,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("result")
-                        .value("5"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("result").value("5"))
+        ;
     }
 
     @Test
@@ -359,7 +346,7 @@ class ValidationRuntimeTest {
         ));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/script",
+                String.format("/api/validation/%d/script",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -369,11 +356,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("message")
-                        .value(matchesRegex("Invalid groovy script.*")));
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("message").value(matchesRegex("Invalid groovy script.*")))
+        ;
     }
 
     @Test
@@ -383,7 +369,7 @@ class ValidationRuntimeTest {
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xsl"));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/xslt",
+                String.format("/api/validation/%d/xslt",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -393,9 +379,10 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$", is(empty())));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", is(empty())))
+        ;
     }
 
     @Test
@@ -405,7 +392,7 @@ class ValidationRuntimeTest {
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xml"));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                "/api/validation/1/xslt",
+                String.format("/api/validation/%d/xslt",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
@@ -415,24 +402,24 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers
-                        .jsonPath("$[*].error")
-                        .value(hasItem(matchesRegex("The supplied file does not appear to be a stylesheet.*"))));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[*].error")
+                        .value(hasItem(matchesRegex("The supplied file does not appear to be a stylesheet.*"))))
+        ;
     }
 
     @Test
     void shouldValidateUriWithSuccess() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                "/api/validation/1/uri",
+                String.format("/api/validation/%d/uri",1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE, "Uri", "2342424"),
                 null
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions.andExpect(status().isOk());
     }
 
 }
