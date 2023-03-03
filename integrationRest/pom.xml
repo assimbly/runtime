@@ -20,6 +20,7 @@
     <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>
 	<hamcrest.version>2.2</hamcrest.version>
 	<spring-boot.version>2.7.8</spring-boot.version>
+	<maven-api.version>3.8.1</maven-api.version>
   </properties>
 
   <distributionManagement> 
@@ -80,6 +81,20 @@
 		  <version>${hamcrest.version}</version>
 		  <scope>test</scope>
 	  </dependency>
+
+	  <dependency>
+		  <groupId>org.apache.maven</groupId>
+		  <artifactId>maven-model</artifactId>
+		  <version>${maven-api.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.maven</groupId>
+		  <artifactId>maven-model-builder</artifactId>
+		  <version>${maven-api.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+
   </dependencies>
 
 	<build>
