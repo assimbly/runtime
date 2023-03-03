@@ -2,6 +2,7 @@ package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
+import org.assimbly.integrationrest.utils.MavenUtil;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,20 +48,20 @@ class StatisticsRuntimeTest {
         camelContext
     }
 
+    Properties camelContextProp = buildCamelContextExample();
+
     @BeforeEach
     void beforeEach() throws Exception{
         integrationRuntime.getIntegration().getContext().start();
-    }
-
-    @Test
-    void shouldGetStats() throws Exception {
-
-        Properties camelContextProp = buildCamelContextExample();
 
         installFlow(
                 (String)camelContextProp.get(CamelPropertyField.id.name()),
                 (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
+    }
+
+    @Test
+    void shouldGetStats() throws Exception {
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/stats", 1),
@@ -88,13 +89,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetMessages() throws Exception {
 
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/messages", 1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -116,13 +110,6 @@ class StatisticsRuntimeTest {
 
     @Test
     void shouldGetStatsByFlowIds() throws Exception {
-
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/statsbyflowids", 1),
@@ -151,13 +138,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetStatsByFlowId() throws Exception {
 
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/stats", 1, camelContextProp.getProperty(CamelPropertyField.id.name())),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -179,13 +159,6 @@ class StatisticsRuntimeTest {
 
     @Test
     void shouldGetStatsByFlowIdWithFullStats() throws Exception {
-
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/stats", 1, camelContextProp.get(CamelPropertyField.id.name())),
@@ -213,13 +186,6 @@ class StatisticsRuntimeTest {
 
     @Test
     void shouldGetStatsByFlowIdWithFullStatsAndIncludeSteps() throws Exception {
-
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/stats", 1, camelContextProp.get(CamelPropertyField.id.name())),
@@ -251,13 +217,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetFlowStepStats() throws Exception {
 
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/step/%s/stats", 1,
                         camelContextProp.get(CamelPropertyField.id.name()),
@@ -282,13 +241,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetFlowMessages() throws Exception {
 
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/messages", 1, camelContextProp.get(CamelPropertyField.id.name())),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -311,13 +263,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetFlowTotalMessages() throws Exception {
 
-        Properties camelContextProp = buildCamelContextExample();
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
-        );
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/flow/%s/messages/total", 1, camelContextProp.get(CamelPropertyField.id.name())),
                 Map.of("Accept", MediaType.TEXT_PLAIN_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
@@ -332,6 +277,135 @@ class StatisticsRuntimeTest {
                         HttpHeaders.CONTENT_TYPE,
                         String.format("%s;charset=%s", MediaType.TEXT_PLAIN_VALUE, StandardCharsets.ISO_8859_1.displayName())))
                 .andExpect(content().string("0"))
+        ;
+    }
+
+    @Test
+    void shouldGetFlowCompletedMessages() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/flow/%s/messages/completed", 1, camelContextProp.get(CamelPropertyField.id.name())),
+                Map.of("Accept", MediaType.TEXT_PLAIN_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_TYPE,
+                        String.format("%s;charset=%s", MediaType.TEXT_PLAIN_VALUE, StandardCharsets.ISO_8859_1.displayName())))
+                .andExpect(content().string("0"))
+        ;
+    }
+
+    @Test
+    void shouldGetFlowFailedMessages() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/flow/%s/messages/failed", 1, camelContextProp.get(CamelPropertyField.id.name())),
+                Map.of("Accept", MediaType.TEXT_PLAIN_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_TYPE,
+                        String.format("%s;charset=%s", MediaType.TEXT_PLAIN_VALUE, StandardCharsets.ISO_8859_1.displayName())))
+                .andExpect(content().string("0"))
+        ;
+    }
+
+    @Test
+    void shouldGetFlowPendingMessages() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/flow/%s/messages/pending", 1, camelContextProp.get(CamelPropertyField.id.name())),
+                Map.of("Accept", MediaType.TEXT_PLAIN_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_TYPE,
+                        String.format("%s;charset=%s", MediaType.TEXT_PLAIN_VALUE, StandardCharsets.ISO_8859_1.displayName())))
+                .andExpect(content().string("0"))
+        ;
+    }
+
+    @Test
+    void shouldGetStepMessages() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/flow/%s/step/%s/messages", 1,
+                        camelContextProp.get(CamelPropertyField.id.name()), camelContextProp.get(CamelPropertyField.routeId1.name())),
+                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("step.total").value(0))
+                .andExpect(jsonPath("step.pending").value(0))
+                .andExpect(jsonPath("step.id").value(camelContextProp.get(CamelPropertyField.id.name())))
+                .andExpect(jsonPath("step.completed").value(0))
+                .andExpect(jsonPath("step.failed").value(0))
+        ;
+    }
+
+    @Test
+    void shouldGetMetrics() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/metrics", 1),
+                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("version").value(MavenUtil.getModelVersion()))
+                .andExpect(jsonPath(String.format("timers['%s.%s-%s.responses']",
+                        integrationRuntime.getIntegration().getContext().getName(),
+                        camelContextProp.get(CamelPropertyField.id.name()),
+                        camelContextProp.get(CamelPropertyField.routeId1.name())))
+                        .value(notNullValue()))
+        ;
+    }
+
+    @Test
+    void shouldGetHistoryMetrics() throws Exception {
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/historymetrics", 1),
+                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
+                null
+        );
+
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("version").value(MavenUtil.getModelVersion()))
+                .andExpect(jsonPath("gauges").isEmpty())
+                .andExpect(jsonPath("counters").isEmpty())
+                .andExpect(jsonPath("histograms").isEmpty())
+                .andExpect(jsonPath("meters").isEmpty())
+                .andExpect(jsonPath("timers").isEmpty())
         ;
     }
 
