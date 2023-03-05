@@ -1,6 +1,7 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.io.Resources;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -44,6 +45,7 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.util.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
+import org.assimbly.util.helper.JsonHelper;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
@@ -64,7 +66,9 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -434,7 +438,7 @@ public class CamelIntegration extends BaseIntegration {
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
 			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
-			if(loadReport.contains("error")||loadReport.contains("failed")){
+			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"")){
 				log.error(loadReport);
 			}
 		}else{
@@ -502,6 +506,13 @@ public class CamelIntegration extends BaseIntegration {
 			if(flowId==null || flowId.isEmpty()){
 				log.warn("Configuration: routes element doesn't have an id attribute");
 			}
+		}else if(root.equals("route")){
+			flowId = xPath.evaluate("/route/@id",doc);
+			if(flowId==null || flowId.isEmpty()){
+				log.warn("Configuration: routes element doesn't have an id attribute");
+			}
+		}else{
+			log.warn("Unknown configuration. Either a DIL file (starting with a <dil> element) or Camel file (starting with <routes> element) is expected");
 		}
 
 		return flowId;
@@ -872,7 +883,6 @@ public class CamelIntegration extends BaseIntegration {
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
 
-
 	}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id);
@@ -1185,8 +1195,14 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			try {
-				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(updatedId).get(0).getId());
-				flowStatus = status.toString().toLowerCase();
+				List<Route> routesList = getRoutesByFlowId(updatedId);
+				if(routesList.isEmpty()){
+					flowStatus = "unconfigured";
+				}else{
+					String flowId = routesList.get(0).getId();
+					ServiceStatus status = routeController.getRouteStatus(flowId);
+					flowStatus = status.toString().toLowerCase();
+				}
 			}catch (Exception e) {
 				log.error("Get status flow " + id + " failed.",e);
 
@@ -2025,11 +2041,17 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getComponents(String mediaType) throws Exception {
+	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
 		String components = catalog.listComponentsAsJson();
+
+		if(includeCustomComponents){
+			URL url = Resources.getResource("custom-steps.json");
+			String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
+			components = JsonHelper.mergeJsonArray(components,customComponent);
+		}
 
 		if(mediaType.contains("xml")) {
 			components = DocConverter.convertJsonToXml(components);

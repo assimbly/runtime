@@ -125,13 +125,13 @@ public class FlowConfigurerRuntime {
     }
 
 	@GetMapping(path = "/integration/{integrationId}/flow/components", produces = {"application/xml","application/json","text/plain"})
-	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("IncludeCustomComponents") Boolean includeCustomComponents, @PathVariable Long integrationId) throws Exception {
 
 		plainResponse = true;
 
 		try {
 			integration = integrationRuntime.getIntegration();
-			String components = integration.getComponents(mediaType);
+			String components = integration.getComponents(includeCustomComponents, mediaType);
 			if(components.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components);
 			}

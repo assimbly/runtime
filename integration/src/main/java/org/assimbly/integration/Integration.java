@@ -368,7 +368,7 @@ public interface Integration {
 	 * @throws Exception if components couldn't get found
 	 * @return returns list of components
 	 */
-	public String getComponents(String mediaType) throws Exception;
+	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
 
 	/**
 	* Gets the documentation/schema of a component
