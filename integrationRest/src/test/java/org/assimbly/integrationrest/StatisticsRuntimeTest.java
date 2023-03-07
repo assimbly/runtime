@@ -4,6 +4,7 @@ import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.MavenUtil;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SimpMessageSendingOperations.class
 })
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class StatisticsRuntimeTest {
 
     @Autowired
@@ -52,12 +56,17 @@ class StatisticsRuntimeTest {
 
     @BeforeEach
     void beforeEach() throws Exception{
+        integrationRuntime.getIntegration().getContext().init();
         integrationRuntime.getIntegration().getContext().start();
-
         installFlow(
                 (String)camelContextProp.get(CamelPropertyField.id.name()),
                 (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
+    }
+
+    @AfterEach
+    void afterEach() throws Exception{
+        integrationRuntime.getIntegration().getContext().stop();
     }
 
     @Test
@@ -412,7 +421,7 @@ class StatisticsRuntimeTest {
 
     private void installFlow(String id, String camelContext) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/integration/1/flow/%s/install", id),
+                String.format("/api/integration/%d/flow/%s/install", 1, id),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_XML_VALUE,
@@ -422,8 +431,19 @@ class StatisticsRuntimeTest {
         resultActions.andExpect(status().isOk());
     }
 
+    private void uninstallFlow(String id, String camelContext) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildDeleteMockHttpServletRequestBuilder(
+                String.format("/api/integration/%d/flow/%s/uninstall", 1, id),
+                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
+                null
+        );
+        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+        resultActions.andExpect(status().isOk());
+    }
+
     private Properties buildCamelContextExample() {
         Properties props = new Properties();
+        UUID randomContextPath = UUID.randomUUID();
 
         StringBuffer camelContextBuf = new StringBuffer();
         camelContextBuf.append("<camelContext id=\"ID_63ee34e25827222b3d000022\" xmlns=\"http://camel.apache.org/schema/blueprint\" useMDCLogging=\"true\" streamCache=\"true\">");
@@ -437,7 +457,7 @@ class StatisticsRuntimeTest {
         camelContextBuf.append("<setExchangePattern pattern=\"InOnly\"/>");
         camelContextBuf.append("</onException>");
         camelContextBuf.append("<route id=\"0bc12100-ae01-11ed-8f2a-c39ccdb17c7e\">");
-        camelContextBuf.append("<from uri=\"jetty:https://0.0.0.0:9001/1/sdfsadgdsagdsfg?httpBinding=#customHttpBinding&amp;matchOnUriPrefix=false&amp;sslContextParameters=sslContext\"/>");
+        camelContextBuf.append("<from uri=\"jetty:https://0.0.0.0:9001/1/"+randomContextPath.toString()+"?matchOnUriPrefix=false\"/>");
         camelContextBuf.append("<removeHeaders pattern=\"CamelHttp*\"/>");
         camelContextBuf.append("<to uri=\"direct:ID_63ee34e25827222b3d000022_test_0bc12100-ae01-11ed-8f2a-c39ccdb17c7e?exchangePattern=InOut\"/>");
         camelContextBuf.append("</route>");

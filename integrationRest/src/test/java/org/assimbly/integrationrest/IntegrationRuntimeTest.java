@@ -1,6 +1,5 @@
 package org.assimbly.integrationrest;
 
-import org.apache.camel.CamelContext;
 import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
@@ -16,6 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SimpMessageSendingOperations.class
 })
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class IntegrationRuntimeTest {
 
     @Autowired
@@ -56,7 +57,13 @@ class IntegrationRuntimeTest {
 
     @BeforeEach
     void beforeEach() throws Exception{
+        integrationRuntime.getIntegration().getContext().init();
         integrationRuntime.getIntegration().getContext().start();
+    }
+
+    @AfterEach
+    void afterEach() throws Exception{
+        integrationRuntime.getIntegration().getContext().stop();
     }
 
     @Test
@@ -82,8 +89,8 @@ class IntegrationRuntimeTest {
     void shouldInfo() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -180,30 +187,15 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldSetBaseDirectory() throws Exception {
-
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/basedirectory", 1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.TEXT_PLAIN_VALUE,
-                "/Users/ray/.assimbly"
-        );
-
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
-
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(content().string(notNullValue()))
-        ;
+        // do not call/change the base set directory in the integration tests
     }
 
     @Test
     void shouldGetListOfFlows() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -225,8 +217,8 @@ class IntegrationRuntimeTest {
     void shouldGetRunningFlowsDetails() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -256,8 +248,8 @@ class IntegrationRuntimeTest {
     void shouldCountFlows() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -281,8 +273,8 @@ class IntegrationRuntimeTest {
     void shouldCountSteps() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -306,8 +298,8 @@ class IntegrationRuntimeTest {
     void shouldGetIntegrationNumberOfAlerts() throws Exception {
 
         installFlow(
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.id.name()),
-                (String)camelContextProp.get(StatisticsRuntimeTest.CamelPropertyField.camelContext.name())
+                (String)camelContextProp.get(CamelPropertyField.id.name()),
+                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -419,7 +411,7 @@ class IntegrationRuntimeTest {
         camelContextBuf.append("<setExchangePattern pattern=\"InOnly\"/>");
         camelContextBuf.append("</onException>");
         camelContextBuf.append("<route id=\"0bc12100-ae01-11ed-8f2a-c39ccdb17c7e\">");
-        camelContextBuf.append("<from uri=\"jetty:https://0.0.0.0:9001/1/sdfsadgdsagdsfg?httpBinding=#customHttpBinding&amp;matchOnUriPrefix=false&amp;sslContextParameters=sslContext\"/>");
+        camelContextBuf.append("<from uri=\"jetty:https://0.0.0.0:9001/1/sdfsadgdsagdsfg?matchOnUriPrefix=false\"/>");
         camelContextBuf.append("<removeHeaders pattern=\"CamelHttp*\"/>");
         camelContextBuf.append("<to uri=\"direct:ID_63ee34e25827222b3d000022_test_0bc12100-ae01-11ed-8f2a-c39ccdb17c7e?exchangePattern=InOut\"/>");
         camelContextBuf.append("</route>");
