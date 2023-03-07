@@ -2,6 +2,8 @@ package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
+import org.assimbly.integrationrest.utils.CamelContextUtil;
+import org.assimbly.integrationrest.utils.FlowUtil;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.json.JSONArray;
 import org.json.simple.JSONObject;
@@ -46,14 +48,7 @@ class IntegrationRuntimeTest {
     @Autowired
     private MockMvc mockMvc;
 
-    public enum CamelPropertyField {
-        id,
-        routeId1,
-        routeId2,
-        camelContext
-    }
-
-    private Properties camelContextProp = buildCamelContextExample();
+    private Properties camelContextProp = CamelContextUtil.buildExample();
 
     @BeforeEach
     void beforeEach() throws Exception{
@@ -68,7 +63,6 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldStart() throws Exception {
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/start", 1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -87,10 +81,10 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldInfo() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -113,7 +107,6 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldBeStarted() throws Exception {
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/isStarted", 1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -131,7 +124,6 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldGetLastError() throws Exception {
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/lasterror", 1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -148,8 +140,7 @@ class IntegrationRuntimeTest {
     }
 
     @Test
-        void shouldResolveDependencyByScheme() throws Exception {
-
+    void shouldResolveDependencyByScheme() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/resolvedependencybyscheme/%s", 1, "component"),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -169,7 +160,6 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldGetBaseDirectory() throws Exception {
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/basedirectory", 1),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -192,10 +182,10 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldGetListOfFlows() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -209,16 +199,16 @@ class IntegrationRuntimeTest {
         resultActions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$[0].id").value(camelContextProp.get(CamelPropertyField.id.name())))
+                .andExpect(jsonPath("$[0].id").value(camelContextProp.get(CamelContextUtil.Field.id.name())))
         ;
     }
 
     @Test
     void shouldGetRunningFlowsDetails() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -233,8 +223,8 @@ class IntegrationRuntimeTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$[0].flow.isRunning").value(true))
-                .andExpect(jsonPath("$[0].flow.name").value(camelContextProp.get(CamelPropertyField.id.name())))
-                .andExpect(jsonPath("$[0].flow.id").value(camelContextProp.get(CamelPropertyField.id.name())))
+                .andExpect(jsonPath("$[0].flow.name").value(camelContextProp.get(CamelContextUtil.Field.id.name())))
+                .andExpect(jsonPath("$[0].flow.id").value(camelContextProp.get(CamelContextUtil.Field.id.name())))
                 .andExpect(jsonPath("$[0].flow.status").value("started"))
         ;
     }
@@ -246,10 +236,10 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldCountFlows() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -271,10 +261,10 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldCountSteps() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -296,10 +286,10 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldGetIntegrationNumberOfAlerts() throws Exception {
-
-        installFlow(
-                (String)camelContextProp.get(CamelPropertyField.id.name()),
-                (String)camelContextProp.get(CamelPropertyField.camelContext.name())
+        FlowUtil.installFlow(
+                this.mockMvc,
+                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
+                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
         );
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
@@ -315,13 +305,12 @@ class IntegrationRuntimeTest {
                 .andExpect(header().string(
                         HttpHeaders.CONTENT_TYPE,
                         String.format("%s;charset=%s", MediaType.TEXT_PLAIN_VALUE, StandardCharsets.ISO_8859_1.displayName())))
-                .andExpect(content().string(String.format("{%s=%d}", camelContextProp.get(CamelPropertyField.id.name()), 0)))
+                .andExpect(content().string(String.format("{%s=%d}", camelContextProp.get(CamelContextUtil.Field.id.name()), 0)))
         ;
     }
 
     @Test
     void shouldAddCollectorConfiguration() throws Exception {
-
         // build body in json format
         JSONArray eventsJsonObject = new JSONArray()
                 .put("RouteReloaded").put("RouteStarted").put("RouteStarting").put("RouteStopped").put("RouteStopping");
@@ -353,7 +342,6 @@ class IntegrationRuntimeTest {
 
     @Test
     void shouldRemoveCollectorConfiguration() throws Exception {
-
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildDeleteMockHttpServletRequestBuilder(
                 String.format("/api/integration/%d/collector/%d/remove", 1, 3),
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
@@ -368,68 +356,6 @@ class IntegrationRuntimeTest {
                 .andExpect(jsonPath("details").value("successful"))
                 .andExpect(jsonPath("message").value("removed"))
         ;
-    }
-
-
-
-    private void installFlow(String id, String camelContext) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/integration/1/flow/%s/install", id),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_XML_VALUE,
-                camelContext
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
-        resultActions.andExpect(status().isOk());
-    }
-
-    private void stopFlow(String id, String camelContext) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/integration/1/flow/%s/stop", id),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_XML_VALUE,
-                camelContext
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
-        resultActions.andExpect(status().isOk());
-    }
-
-    private Properties buildCamelContextExample() {
-        Properties props = new Properties();
-
-        StringBuffer camelContextBuf = new StringBuffer();
-        camelContextBuf.append("<camelContext id=\"ID_63ee34e25827222b3d000022\" xmlns=\"http://camel.apache.org/schema/blueprint\" useMDCLogging=\"true\" streamCache=\"true\">");
-        camelContextBuf.append("<jmxAgent id=\"agent\" loadStatisticsEnabled=\"true\"/>");
-        camelContextBuf.append("<streamCaching id=\"streamCacheConfig\" spoolThreshold=\"0\" spoolDirectory=\"tmp/camelcontext-#camelId#\" spoolUsedHeapMemoryThreshold=\"70\"/>");
-        camelContextBuf.append("<threadPoolProfile id=\"wiretapProfile\" defaultProfile=\"false\" poolSize=\"0\" maxPoolSize=\"5\" maxQueueSize=\"2000\" rejectedPolicy=\"DiscardOldest\" keepAliveTime=\"10\"/>");
-        camelContextBuf.append("<threadPoolProfile id=\"defaultProfile\" defaultProfile=\"true\" poolSize=\"0\" maxPoolSize=\"10\" maxQueueSize=\"1000\" rejectedPolicy=\"CallerRuns\" keepAliveTime=\"30\"/>");
-        camelContextBuf.append("<onException>");
-        camelContextBuf.append("<exception>java.lang.Exception</exception>");
-        camelContextBuf.append("<redeliveryPolicy maximumRedeliveries=\"0\" redeliveryDelay=\"5000\"/>");
-        camelContextBuf.append("<setExchangePattern pattern=\"InOnly\"/>");
-        camelContextBuf.append("</onException>");
-        camelContextBuf.append("<route id=\"0bc12100-ae01-11ed-8f2a-c39ccdb17c7e\">");
-        camelContextBuf.append("<from uri=\"jetty:https://0.0.0.0:9001/1/sdfsadgdsagdsfg?matchOnUriPrefix=false\"/>");
-        camelContextBuf.append("<removeHeaders pattern=\"CamelHttp*\"/>");
-        camelContextBuf.append("<to uri=\"direct:ID_63ee34e25827222b3d000022_test_0bc12100-ae01-11ed-8f2a-c39ccdb17c7e?exchangePattern=InOut\"/>");
-        camelContextBuf.append("</route>");
-        camelContextBuf.append("<route id=\"0e3d92b0-ae01-11ed-8f2a-c39ccdb17c7e\">");
-        camelContextBuf.append("<from uri=\"direct:ID_63ee34e25827222b3d000022_test_0bc12100-ae01-11ed-8f2a-c39ccdb17c7e\"/>");
-        camelContextBuf.append("<setHeader headerName=\"CamelVelocityTemplate\">");
-        camelContextBuf.append("<simple>sdfgsdfgdsfg</simple>");
-        camelContextBuf.append("</setHeader>");
-        camelContextBuf.append("<to uri=\"velocity:generate\"/>");
-        camelContextBuf.append("</route>");
-        camelContextBuf.append("</camelContext>");
-
-        props.setProperty(CamelPropertyField.id.name(), "ID_63ee34e25827222b3d000022");
-        props.setProperty(CamelPropertyField.routeId1.name(), "0bc12100-ae01-11ed-8f2a-c39ccdb17c7e");
-        props.setProperty(CamelPropertyField.routeId2.name(), "0e3d92b0-ae01-11ed-8f2a-c39ccdb17c7e");
-        props.setProperty(CamelPropertyField.camelContext.name(), camelContextBuf.toString());
-
-        return props;
     }
 
 }

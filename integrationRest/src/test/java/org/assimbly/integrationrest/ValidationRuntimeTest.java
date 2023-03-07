@@ -5,7 +5,6 @@ import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,10 +35,6 @@ class ValidationRuntimeTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-    }
 
     @Test
     void shouldValidateCronWithSuccess() throws Exception {
@@ -139,7 +134,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateExpressionWithSuccess() throws Exception {
-
         // build body in json format
         JSONArray bodyJsonArray = new JSONArray();
         bodyJsonArray.add(new JSONObject(Map.of(
@@ -163,7 +157,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateExpressionWithError() throws Exception {
-
         // build body in json format
         JSONArray bodyJsonArray = new JSONArray();
         bodyJsonArray.add(new JSONObject(Map.of(
@@ -192,7 +185,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateFtpWithSuccess() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of(
                 "protocol", "ftp",
@@ -219,7 +211,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateFtpWithError() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of(
                 "protocol", "ftp",
@@ -250,7 +241,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateRegexWithSuccess() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*)"));
 
@@ -273,7 +263,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateRegexWithError() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*"));
 
@@ -296,7 +285,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateScriptWithSuccess() throws Exception {
-
         // build body in json format
         JSONObject exchangeJsonObject = new JSONObject(Map.of(
                 "properties", new JSONObject(),
@@ -331,7 +319,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateScriptWithError() throws Exception {
-
         // build body in json format
         JSONObject exchangeJsonObject = new JSONObject(Map.of(
                 "properties", new JSONObject(),
@@ -366,7 +353,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateXsltWithSuccess() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xsl"));
 
@@ -389,7 +375,6 @@ class ValidationRuntimeTest {
 
     @Test
     void shouldValidateXsltWithError() throws Exception {
-
         // build body in json format
         JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xml"));
 
