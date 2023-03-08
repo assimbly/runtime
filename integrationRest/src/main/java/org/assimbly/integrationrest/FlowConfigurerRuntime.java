@@ -139,19 +139,20 @@ public class FlowConfigurerRuntime {
 			log.error("Get documentation failed",e);
 			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/documentation/{componenttype}",e.getMessage());
 		}
-    }
+  }
+
 
 	@GetMapping(
 			path = "/integration/{integrationId}/flow/components",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("IncludeCustomComponents") Boolean includeCustomComponents, @PathVariable Long integrationId) throws Exception {
 
 		plainResponse = true;
 
 		try {
 			integration = integrationRuntime.getIntegration();
-			String components = integration.getComponents(mediaType);
+			String components = integration.getComponents(includeCustomComponents, mediaType);
 			if(components.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components);
 			}

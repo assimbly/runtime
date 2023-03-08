@@ -496,9 +496,11 @@ public class RouteTemplate {
 
     private void createLinks(String[] links, String stepXPath, String type, String flowId){
 
+        //set default links when not configured.
         createDefaultLinks(stepXPath, flowId);
 
         if(links.length > 0){
+            //overwrite default links with configured links.
             createCustomLinks(links, stepXPath, type);
         }
 
@@ -517,7 +519,6 @@ public class RouteTemplate {
             String previousStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + previousStepIndex + "]");
 
             String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
-
 
             String previousStepId = Objects.toString(conf.getProperty("(" + previousStepXPath + "id)[1]"), "0");
             String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
@@ -543,7 +544,6 @@ public class RouteTemplate {
     private void createCustomLinks(String[] links, String stepXPath, String type){
 
         int index = 1;
-
 
         for(String link : links) {
 
@@ -602,16 +602,22 @@ public class RouteTemplate {
         } else {
             NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
+            Boolean parameterUpdated = false;
             for (Node oldParameter : iterable(oldParameters)) {
 
                 Node name = oldParameter.getAttributes().getNamedItem("name");
+
                 if (name.getNodeValue().equals(bound)) {
+                    parameterUpdated = true;
                     parameter = createParameter(templateDoc, bound, endpoint);
-
                     templatedRoute.replaceChild(parameter, oldParameter);
-
                 }
 
+            }
+
+            if(!parameterUpdated){
+                parameter = createParameter(templateDoc, bound, endpoint);
+                templatedRoute.appendChild(parameter);
             }
 
         }

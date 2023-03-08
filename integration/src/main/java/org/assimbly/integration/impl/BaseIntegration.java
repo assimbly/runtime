@@ -303,7 +303,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getDocumentation(String componentType, String mediaType) throws Exception;
 
-	public abstract String getComponents(String mediaType) throws Exception;
+	public abstract String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
 
 	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
 

@@ -85,6 +85,9 @@
                                                 <xsl:value-of select="//*:camelContext/@id"/>
                                             </xsl:when>
                                             <xsl:when test="//*:routes/@id">
+                                                <xsl:value-of select="//*:routes/@id"/>
+                                            </xsl:when>
+                                            <xsl:when test="//*:route/@id">
                                                 <xsl:value-of select="//*:route/@id"/>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -99,6 +102,9 @@
                                             </xsl:when>
                                             <xsl:when test="//*:routes/@id">
                                                 <xsl:value-of select="//*:routes/@id"/>
+                                            </xsl:when>
+                                            <xsl:when test="//*:route/@id">
+                                                <xsl:value-of select="//*:route/@id"/>
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <xsl:value-of  select="current-dateTime()"/>
