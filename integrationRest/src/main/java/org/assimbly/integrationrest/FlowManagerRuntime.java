@@ -66,14 +66,14 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("successfully")) {
-                log.info("Start flow " + flowId + " successfully. Status:\n\n " + status);
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/start",status,plainResponse);
             } else {
-                log.error("Start flow " + flowId + " failed. Status:\n\n" + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/start", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Start flow " + flowId + " failed",e);
+            log.error("FlowManager Report:\n\n" + status);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
         }
 
@@ -103,9 +103,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/stop",status,plainResponse);
             } else {
-                log.error("Stop flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/stop/", status, plainResponse);
             }
         } catch (Exception e) {
@@ -138,9 +139,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/restart",status,plainResponse);
             } else {
-                log.error("Restart flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/restart", status, plainResponse);
             }
         } catch (Exception e) {
@@ -173,9 +175,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Paused flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/pause",status,plainResponse);
             } else {
-                log.error("Pause flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/pause", status, plainResponse);
             }
         } catch (Exception e) {
@@ -208,9 +211,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Resumed flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/resume",status,plainResponse);
             } else {
-                log.error("Resume flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/resume", status, plainResponse);
             }
         } catch (Exception e) {
@@ -269,10 +273,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
-                log.info("Install flow " + flowId + " failed. Install report:\n\n " + status);
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/install",status,plainResponse);
             } else {
-                log.error("Install flow " + flowId + " failed. Install report:\n\n" + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install", status, plainResponse);
             }
         } catch (Exception e) {
@@ -306,10 +310,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
-                log.error("Uninstall flow " + flowId + " successfully. Status: " + status);
+                log.info("Uninstalled flow " + flowId + " successfully. Report: " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/uninstall",status,plainResponse);
             } else {
-                log.error("Uninstall flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall", status, plainResponse);
             }
         } catch (Exception e) {
@@ -332,8 +336,10 @@ public class FlowManagerRuntime {
             status = integration.fileInstallFlow(flowId, configuration);
 
             if (status.equals("saved")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install/file", "flow " + flowId + " saved in the deploy directory", "flow " + flowId + " saved in the deploy directory", flowId);
             } else {
+                log.error("FlowManager Report:\n\n" + status);
                 throw new Exception(status);
             }
         } catch (Exception e) {
@@ -355,8 +361,10 @@ public class FlowManagerRuntime {
             status = integration.fileUninstallFlow(flowId);
 
             if (status.equals("deleted")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall/file", "flow " + flowId + " deleted from deploy directory", "flow " + flowId + " deleted from the deploy directory", flowId);
             } else {
+                log.error("FlowManager Report:\n\n" + status);
                 throw new Exception(status);
             }
         } catch (Exception e) {
