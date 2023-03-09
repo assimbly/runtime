@@ -277,9 +277,9 @@ class ValidationRuntimeTest {
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
 
         resultActions
-                .andExpect(status().isOk())
+                .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("message").value("Unclosed group near index 8\n(.*) (.*"))
+                .andExpect(content().string("Unclosed group near index 8\n(.*) (.*"))
         ;
     }
 
