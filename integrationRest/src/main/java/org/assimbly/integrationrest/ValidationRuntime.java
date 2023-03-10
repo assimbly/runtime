@@ -3,6 +3,7 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -242,13 +243,8 @@ public class ValidationRuntime {
             AbstractMap.SimpleEntry regexResp = integration.validateRegex(regex);
 
             if(regexResp!=null) {
-                if (regexResp.getKey().equals("-1")) {
-                    ValidationErrorMessage validationErrorMessage = new ValidationErrorMessage();
-                    validationErrorMessage.setError((String)regexResp.getValue());
-                    final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    final ObjectMapper mapper = new ObjectMapper();
-                    mapper.writeValue(out, regexResp);
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", out.toString(), plainResponse);
+                if ((Integer)regexResp.getKey() == -1) {
+                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue(), plainResponse);
                 } else {
                     // success - return group count
                     return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue());
