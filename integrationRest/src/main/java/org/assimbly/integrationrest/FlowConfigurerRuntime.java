@@ -153,6 +153,7 @@ public class FlowConfigurerRuntime {
 		try {
 			integration = integrationRuntime.getIntegration();
 			String components = integration.getComponents(includeCustomComponents, mediaType);
+			//String components = integration.getComponents(includeCustomComponents, mediaType);
 			if(components.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/schema/{componenttype}",components);
 			}
