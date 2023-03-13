@@ -69,7 +69,6 @@ public class FailureProcessor implements Processor {
 
 			}
 
-			in.removeHeader("AssimblyHeaderId");
 		}
 
 		  //Write alert to disk

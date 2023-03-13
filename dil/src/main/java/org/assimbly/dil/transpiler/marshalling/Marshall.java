@@ -110,9 +110,7 @@ public class Marshall {
 
 		addElement(configuration, flow, "autostart", "flow.autostart");
 
-		addElement(configuration, flow, "assimblyHeaders", "flow.assimblyHeaders");
-
-		addElement(configuration, flow, "parallelProcessing", "flow.v");
+		addElement(configuration, flow, "parallelProcessing", "flow.parallelProcessing");
 
 		addElement(configuration, flow, "maximumRedeliveries", "flow.maximumRedeliveries");
 
