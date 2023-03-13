@@ -237,7 +237,7 @@ public class Unmarshall {
 
 		blocksXPath = stepXPath + "blocks/block/";
 
-		setHeader();
+		setMessage();
 
 		setConnection();
 
@@ -271,11 +271,11 @@ public class Unmarshall {
 
 	}
 
-	private void setHeader() throws ConfigurationException {
-		String headerId = conf.getString(blocksXPath + "options/header_id");
+	private void setMessage() throws ConfigurationException {
+		String messageId = conf.getString(blocksXPath + "options/message_id");
 
-		if(headerId != null)
-			properties =  new Header(properties, conf).setHeader(type, stepId, headerId);
+		if(messageId != null)
+			properties =  new Message(properties, conf).setMessage(type, stepId, messageId);
 	}
 
 	private void setConnection() throws ConfigurationException {

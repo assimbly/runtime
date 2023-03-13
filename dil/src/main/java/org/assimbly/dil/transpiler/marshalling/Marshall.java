@@ -22,13 +22,13 @@ public class Marshall {
 	private Element routes;
 	private Element routeConfigurations;
 	private Element connections;
-	private Element headers;
+	private Element messages;
 	private Element flow;
 	private Element integration;
 
 	private List<String> routesList;
 	private List<String> connectionsList;
-	private List<String> headersList;
+	private List<String> messageList;
 
 	private Element steps;
 
@@ -77,18 +77,18 @@ public class Marshall {
 		routes = doc.createElement("routes");
 		routeConfigurations = doc.createElement("routeConfigurations");
 		connections = doc.createElement("connections");
-		headers = doc.createElement("headers");
+		messages = doc.createElement("messages");
 
 		integration.appendChild(flows);
 		integration.appendChild(routes);
 		integration.appendChild(routeConfigurations);
 		integration.appendChild(connections);
-		integration.appendChild(headers);
+		integration.appendChild(messages);
 
 		//List to ensure no double entries
 		routesList = new ArrayList<String>();
 		connectionsList = new ArrayList<String>();
-		headersList = new ArrayList<String>();
+		messageList = new ArrayList<String>();
 
 	}
 
@@ -151,14 +151,14 @@ public class Marshall {
 				String confStepId = confUriKeySplitted[1];
 
 				String confConnectionId = configuration.get(confType + "." + confStepId + ".connection.id");
-				String confHeaderId = configuration.get(confType + "." + confStepId + ".header.id");
+				String confmessageid = configuration.get(confType + "." + confStepId + ".message.id");
 				String confRouteId = configuration.get(confType + "." + confStepId + ".route.id");
 
-				setStepFromConfiguration(confType, confUri, confStepId, confConnectionId, confHeaderId, confRouteId, confRouteId, configuration);
+				setStepFromConfiguration(confType, confUri, confStepId, confConnectionId, confmessageid, confRouteId, confRouteId, configuration);
 			}
 	}
 
-	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confConnectionId, String confHeaderId, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
+	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confConnectionId, String confmessageid, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
 
 		Element step = doc.createElement("step");
 		Element uri = doc.createElement("uri");
@@ -166,7 +166,7 @@ public class Marshall {
 		Element stepId = doc.createElement("id");
 		Element options = doc.createElement("options");
 		Element connectionid = doc.createElement("connection_id");
-		Element headerid = doc.createElement("header_id");
+		Element messageid = doc.createElement("message_id");
 		Element responseId = doc.createElement("response_id");
 		Element routeId = doc.createElement("route_id");
 
@@ -233,10 +233,10 @@ public class Marshall {
 			setConnectionFromConfiguration(confConnectionId, configuration);
 		}
 
-		if(confHeaderId!=null) {
-			step.appendChild(headerid);
-			headerid.setTextContent(confHeaderId);
-			setHeaderFromConfiguration(confHeaderId, configuration);
+		if(confmessageid!=null) {
+			step.appendChild(messageid);
+			messageid.setTextContent(confmessageid);
+			setMessageFromConfiguration(confmessageid, configuration);
 		}
 
 	}
@@ -291,46 +291,46 @@ public class Marshall {
 		}
 	}
 
-	private void setHeaderFromConfiguration(String headerid, TreeMap<String, String> configuration) throws Exception {
+	private void setMessageFromConfiguration(String messageid, TreeMap<String, String> configuration) throws Exception {
 
-		if(!headersList.contains(headerid)) {
+		if(!messageList.contains(messageid)) {
 
-			headersList.add(headerid);
+			messageList.add(messageid);
 
-			Element header = doc.createElement("header");
-			headers.appendChild(header);
+			Element message = doc.createElement("message");
+			messages.appendChild(message);
 
-			Element headerIdParameter = doc.createElement("id");
-			headerIdParameter.setTextContent(headerid);
-			header.appendChild(headerIdParameter);
+			Element messageidParameter = doc.createElement("id");
+			messageidParameter.setTextContent(messageid);
+			message.appendChild(messageidParameter);
 
 			for(Map.Entry<String,String> entry : configuration.entrySet()) {
 				String key = entry.getKey();
 				String parameterValue = entry.getValue();
 
-				if(key.startsWith("header." + headerid + ".xpath") && parameterValue!=null) {
+				if(key.startsWith("message." + messageid + ".xpath") && parameterValue!=null) {
 					String parameterName = StringUtils.substringAfterLast(key, "xpath.");
-					Element headerParameter = doc.createElement(parameterName);
-					headerParameter.setTextContent(parameterValue);
-					headerParameter.setAttribute("type", "xpath");
-					header.appendChild(headerParameter);
-				}else if(key.startsWith("header." + headerid +  ".constant") && parameterValue!=null) {
+					Element messageParameter = doc.createElement(parameterName);
+					messageParameter.setTextContent(parameterValue);
+					messageParameter.setAttribute("type", "xpath");
+					message.appendChild(messageParameter);
+				}else if(key.startsWith("message." + messageid +  ".constant") && parameterValue!=null) {
 					String parameterName = StringUtils.substringAfterLast(key, "constant.");
-					Element headerParameter = doc.createElement(parameterName);
-					headerParameter.setTextContent(parameterValue);
-					headerParameter.setAttribute("type", "constant");
-					header.appendChild(headerParameter);
-				}else if(key.startsWith("header." + headerid +  ".simple") && parameterValue!=null) {
+					Element messageParameter = doc.createElement(parameterName);
+					messageParameter.setTextContent(parameterValue);
+					messageParameter.setAttribute("type", "constant");
+					message.appendChild(messageParameter);
+				}else if(key.startsWith("message." + messageid +  ".simple") && parameterValue!=null) {
 					String parameterName = StringUtils.substringAfterLast(key, "simple.");
-					Element headerParameter = doc.createElement(parameterName);
-					headerParameter.setTextContent(parameterValue);
-					headerParameter.setAttribute("type", "simple");
-					header.appendChild(headerParameter);
-				}else if(key.startsWith("header." + headerid) && parameterValue!=null) {
-					String parameterName = StringUtils.substringAfterLast(key, "header." + headerid + ".");
-					Element headerParameter = doc.createElement(parameterName);
-					headerParameter.setTextContent(parameterValue);
-					header.appendChild(headerParameter);
+					Element messageParameter = doc.createElement(parameterName);
+					messageParameter.setTextContent(parameterValue);
+					messageParameter.setAttribute("type", "simple");
+					message.appendChild(messageParameter);
+				}else if(key.startsWith("message." + messageid) && parameterValue!=null) {
+					String parameterName = StringUtils.substringAfterLast(key, "message." + messageid + ".");
+					Element messageParameter = doc.createElement(parameterName);
+					messageParameter.setTextContent(parameterValue);
+					message.appendChild(messageParameter);
 				}
 			}
 		}

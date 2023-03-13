@@ -36,13 +36,13 @@ public class FailureProcessor implements Processor {
 		//first set error headers
 		Message in = exchange.getIn();
 
-		String stepId = props.get("error.header.id");
+		String stepId = props.get("error.message.id");
 
 		if (stepId != null) {
 
 			Map<String, String> headers = props.entrySet()
 					.stream()
-					.filter(map -> map.getKey().startsWith("header." + stepId))
+					.filter(map -> map.getKey().startsWith("message." + stepId))
 					.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
 			for (Map.Entry<String, String> entry : headers.entrySet()) {
