@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 public class Unmarshall {
 
 	private TreeMap<String, String> properties;
-
 	private XMLConfiguration conf;
 
 	Document doc;
@@ -275,7 +274,7 @@ public class Unmarshall {
 		String messageId = conf.getString(blocksXPath + "options/message_id");
 
 		if(messageId != null)
-			properties =  new Message(properties, conf).setMessage(type, stepId, messageId);
+			properties =  new Message(properties, conf).setHeader(type, stepId, messageId);
 	}
 
 	private void setConnection() throws ConfigurationException {
