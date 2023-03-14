@@ -58,7 +58,6 @@ public class FlowManagerRuntime {
 
             //Send message to websocket
             if (this.messagingTemplate != null) {
-                System.out.println("send status of " + flowId + " to frontend" + status);
                 this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event", status);
             }
 
