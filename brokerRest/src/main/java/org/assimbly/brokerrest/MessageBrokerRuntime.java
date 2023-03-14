@@ -29,7 +29,7 @@ public class MessageBrokerRuntime {
     private static final long ID = 0L;
 
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on step.
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
@@ -37,7 +37,7 @@ public class MessageBrokerRuntime {
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
-            path = "/brokers/{brokerType}/messages/{stepName}/{filter}",
+            path = "/brokers/{brokerType}/messages/{endpointName}/{filter}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object listMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
@@ -56,14 +56,14 @@ public class MessageBrokerRuntime {
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on step.
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
-            path = "/brokers/{brokerType}/messages/{stepName}/count",
+            path = "/brokers/{brokerType}/messages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object countMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
@@ -82,7 +82,7 @@ public class MessageBrokerRuntime {
     }
 
     /**
-     * GET  /brokers/{brokerType}/message/{endpointName}/browse/{messageId} : get a message on a step by messageId.
+     * GET  /brokers/{brokerType}/message/{endpointName}/browse/{messageId} : get a message on a endpoint by messageId.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
@@ -90,7 +90,7 @@ public class MessageBrokerRuntime {
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
-            path = "/brokers/{brokerType}/message/{stepName}/browse/{messageId}",
+            path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object browseMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
@@ -109,14 +109,14 @@ public class MessageBrokerRuntime {
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/browse : list of messages on the specified step
+     * GET  /brokers/{brokerType}/messages/{endpointName}/browse : list of messages on the specified endpoint
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
-            path = "/brokers/{brokerType}/messages/{stepName}/browse",
+            path = "/brokers/{brokerType}/messages/{endpointName}/browse",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object browseMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
@@ -138,12 +138,12 @@ public class MessageBrokerRuntime {
      * POST  /brokers/{brokerType}/message/{endpointName}/send/{messageHeaders} : send a message.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param endpointName, the name of the step (queue or topic)
+     * @param endpointName, the name of the endpoint (queue or topic)
      * @param messageHeaders, the message headers (json map)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @PostMapping(
-            path = "/brokers/{brokerType}/message/{stepName}/send",
+            path = "/brokers/{brokerType}/message/{endpointName}/send",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
@@ -168,14 +168,14 @@ public class MessageBrokerRuntime {
 
 
     /**
-     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId : remove a message on a step by Messageid.
+     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId : remove a message on a endpoint by Messageid.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue or topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(
-            path = "/brokers/{brokerType}/message/{stepName}/{messageId}",
+            path = "/brokers/{brokerType}/message/{endpointName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
@@ -193,19 +193,19 @@ public class MessageBrokerRuntime {
     }
 
     /**
-     * DELETE  /brokers/{brokerType}/messages/{endpointName} : remove all messages on a step.
+     * DELETE  /brokers/{brokerType}/messages/{endpointName} : remove all messages on a endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param endpointName, the name of the step (topic or queue)
+     * @param endpointName, the name of the endpoint (topic or queue)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
     @DeleteMapping(
-            path = "/brokers/{brokerType}/messages/{stepName}",
+            path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object removeMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
 
-        log.debug("REST request to remove messages for step : {}", endpointName);
+        log.debug("REST request to remove messages for endpoint : {}", endpointName);
 
         try {
             result = broker.removeMessages(brokerType,endpointName);
