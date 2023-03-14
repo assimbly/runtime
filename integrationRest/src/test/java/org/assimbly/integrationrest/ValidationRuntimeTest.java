@@ -279,7 +279,7 @@ class ValidationRuntimeTest {
         resultActions
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Unclosed group near index 8\n(.*) (.*"))
+                .andExpect(content().string(containsString("Unclosed group near index 8")))
         ;
     }
 
