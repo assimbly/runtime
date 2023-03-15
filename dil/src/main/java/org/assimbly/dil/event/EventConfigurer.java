@@ -35,6 +35,8 @@ public class EventConfigurer {
 
     public String checkConfiguration(String jsonConfiguration) {
 
+        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
+
         try {
             configuration = new Collection().fromJson(jsonConfiguration);
         } catch (JsonProcessingException e) {
@@ -48,9 +50,9 @@ public class EventConfigurer {
         type = configuration.getType();
 
         if(type==null){
-            return "Event type is missing. Valid types are message,log and step.";
+            return "The type of collector is missing. Valid types are: message,log or step.";
         }else if(!type.equals("log") && !type.equals("message") && !type.equals("step")){
-            return "Invalid event collector: " + type + ". Valid types are message,log and step.";
+            return "Invalid event collector: " + type + ". Valid types are message,log or step.";
         }
 
         String id = configuration.getId();
@@ -63,6 +65,8 @@ public class EventConfigurer {
         if(isConfigured()){
             remove(collectorId);
         }
+
+        log.info("Event collector configuration is valid");
 
         return "ok";
 
@@ -193,8 +197,13 @@ public class EventConfigurer {
 
         ArrayList<String> packageNames = configuration.getEvents();
 
-        for(String packageName: packageNames){
-            addLogger(logCollector, packageName, "info");
+        if(packageNames.size() > 0) {
+            for (String packageName : packageNames) {
+                log.info("Add log event: " + packageName);
+                addLogger(logCollector, packageName, "info");
+            }
+        }else{
+            log.error("No log events are configured. Please provide one or more packageName");
         }
 
         context.getRegistry().bind(id, logCollector);
