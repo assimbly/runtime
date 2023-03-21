@@ -2070,6 +2070,21 @@ public class CamelIntegration extends BaseIntegration {
 
 		String schema = catalog.componentJSonSchema(componentType);
 
+		if(schema==null || schema.isEmpty()) {
+			URL url = Resources.getResource("custom-steps-parameters.json");
+			String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
+			JSONArray jsonArray = new JSONArray(customSchemas);
+			for(int i=0;i<jsonArray.length();i++)
+			{
+				JSONObject components = jsonArray.getJSONObject(i);
+				JSONObject component = components.getJSONObject("component");
+				String name = component.getString("name");
+				if(name.equalsIgnoreCase(componentType)){
+					schema = components.toString();
+					break;
+				}
+			}
+		}
 
 		if(schema==null || schema.isEmpty()) {
 			schema = "Unknown component";

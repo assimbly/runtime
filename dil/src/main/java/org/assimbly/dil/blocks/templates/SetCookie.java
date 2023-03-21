@@ -11,29 +11,27 @@ public class SetCookie extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
                  .templateParameter("out")
-                 .templateParameter("path","org.assimbly")
-                 .templateParameter("name","AssimblyCookie")
+                 .templateParameter("domain","org.assimbly")
+                 .templateParameter("path","AssimblyCookie")
                  .templateParameter("value")
                  .templateParameter("cookiePath","")
                  .templateParameter("isSecure","false")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{name}}','{{value}}','{{path}}','cookiePath',{{isSecure}})")
+                     .to("bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})")
                      .to("{{out}}");
 
          routeTemplate("setcookie-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("options")
                  .templateParameter("in")
-                 .templateParameter("path","org.assimbly")
-                 .templateParameter("name","AssimblyCookie")
+                 .templateParameter("domain","org.assimbly")
+                 .templateParameter("path","AssimblyCookie")
                  .templateParameter("value")
                  .templateParameter("cookiePath","")
                  .templateParameter("isSecure","false")
                  .from("{{in}}")
                  .routeConfigurationId("{{routeconfiguration_id}}")
-                 .to("bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{name}}','{{value}}','{{path}}','cookiePath',{{isSecure}})");
-
+                 .to("bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})");
     }
 
 }

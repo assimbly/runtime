@@ -1,0 +1,208 @@
+[{
+  "component": {
+    "kind": "component",
+    "name": "aggregate"
+  },
+  "properties": {
+    "aggregateType": { "kind": "parameter", "displayName": "Aggregate Type", "group": "common", "label": "","defaultValue": "text/xml", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The type of the files that are aggregated together. Valid values text/xml, application/json." },
+    "completionSize": { "kind": "parameter", "displayName": "Completion Size", "group": "common", "label": "","defaultValue": "3", "required": false, "type": "int", "javaType": "int", "deprecated": false, "autowired": false, "secret": false, "description": "The amount of messages the aggregate component should aggregate before sending them to the next component." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "csvtoxml"
+    },
+    "properties": {
+      "delimiter": { "kind": "parameter", "displayName": "Delimiter", "group": "common", "label": "", "defaultValue": ",", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Specifies the delimiter character for the fields of a CSV line." },
+      "useheader": { "kind": "parameter", "displayName": "Use Header", "group": "common", "label": "", "defaultValue": "yes", "required": false, "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "If you want to use the first line of CSV to function as header values. If the first line of the CSV don't contain header values, set this to option to no." },
+      "encoding": { "kind": "parameter", "displayName": "Encoding", "group": "common", "label": "", "defaultValue": "utf-8", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Specifies the encoding for the resulting XML." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "edifactstoxml"
+    },
+    "properties": {
+      "edifactType": { "kind": "parameter", "displayName": "EdifactType", "group": "common", "label": "", "defaultValue": ",", "required": true, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Sets the edifacttype (check documentation for available options)." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "editoxml"
+    },
+    "properties": {
+      "segment": { "kind": "parameter", "displayName": "Segment", "group": "common", "label": "", "defaultValue": "LB", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Delimiter to identify different segments, the first is considered to be the header." },
+      "field": { "kind": "parameter", "displayName": "Field", "group": "common", "label": "", "defaultValue": "~", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Delimiter to identify different fields." },
+      "component": { "kind": "parameter", "displayName": "Component", "group": "common", "label": "", "defaultValue": "^", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Delimiter to identify different components." },
+      "subComponent": { "kind": "parameter", "displayName": "SubComponent", "group": "common", "label": "", "defaultValue": "!", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Delimiter to identify different sub-components." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "formtoxml"
+    },
+    "properties": {
+      "encoding": { "kind": "parameter", "displayName": "Encoding", "group": "common", "label": "", "defaultValue": "utf-8", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Characterset to use." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "jsontoxml"
+    },
+    "properties": {
+      "elementName": { "kind": "parameter", "displayName": "Element Name", "group": "common", "label": "", "defaultValue": "e", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Specifies the name of the XML tags representing array element." },
+      "arrayName": { "kind": "parameter", "displayName": "Array Name", "group": "common", "label": "", "defaultValue": "a", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Specifies the name of the top-level XML element. For example, when converting [1, 2, 3], it will be output by default as 123. By setting this option or rootName, you can alter the name of element 'a'." },
+      "rootName": { "kind": "parameter", "displayName": "Root Name", "group": "common", "label": "", "defaultValue": "none", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "When converting any JSON string to XML, it specifies the name of the top-level element. If not set, it wil use o as a default value. If set to 'root', the JSON string { 'x': 'value1', 'y' : 'value2' } would turn into value1value2, otherwise the 'root' element would be named 'o'." },
+      "namespaceLenient": { "kind": "parameter", "displayName": "Namespace Lenient", "group": "common", "label": "", "defaultValue": "false", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Whether to tolerate incomplete namespace prefixes." },
+      "typeHints": { "kind": "parameter", "displayName": "Type Hints", "group": "common", "label": "", "defaultValue": "false", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Adds type hints to the resulting XML to aid conversion back to JSON. Used for unmarshalling (JSON to XML conversion)." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "queuethrottle"
+    },
+    "properties": {
+      "timePeriod": { "kind": "parameter", "displayName": "Time Period", "group": "common", "label": "", "defaultValue": "5000","required": false, "type": "int", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Time in milliseconds a message waits on the queue." },
+      "maxRequests": { "kind": "parameter", "displayName": "Maximum Requests", "group": "common", "label": "", "defaultValue": "1", "required": false, "type": "int", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Maximum number of waits." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "removecookie"
+    },
+    "properties": {
+      "domain": { "kind": "parameter", "displayName": "Domain", "group": "common", "label": "", "defaultValue": "org.assimbly", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "The domain on which the cookie was available." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "removeheaders"
+    },
+    "properties": {
+      "excludePattern": { "kind": "parameter", "displayName": "Exclude Pattern", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Regex expression to exclude headers." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "replace"
+    },
+    "properties": {
+      "regex": { "kind": "parameter", "displayName": "Regex", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "To match all the text that needs to be replaced." },
+      "multiLineFlag": { "kind": "parameter", "displayName": "Multiline Flag", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Find an replace text on multiple lines." },
+      "ignoreCaseFlag": { "kind": "parameter", "displayName": "Ignore Case Flag", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Find and replace text while ignoring case of text." },
+      "dotallFlag": { "kind": "parameter", "displayName": "Dotall Flag", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Dot will match all characters including new line and other special characters. This is also known as 'Single-line' flag." },
+      "replaceWith": { "kind": "parameter", "displayName": "Replace With", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "To replace the found text with." },
+      "group": { "kind": "parameter", "displayName": "Group", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Shows up after you filled in a regex and clicked the 'Retrieve Groups & Verify Regex' button. It has a default of all. If the regex has one or more groups you can select which group you want to use to find and replace text." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "setbody"
+    },
+    "properties": {
+      "language": { "kind": "parameter", "displayName": "Language", "group": "common", "label": "", "defaultValue": "constant", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Expression language to use. Valid values: constant, simple, jsonpath, xpath, groovy." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "setcookie"
+    },
+    "properties": {
+      "domain": { "kind": "parameter", "displayName": "Domain", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The domain on which the cookie was available." },
+      "value": { "kind": "parameter", "displayName": "Value", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "The value to set on the cookie." },
+      "path": { "kind": "parameter", "displayName": "Path", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "The path for which the cookie should be valid." },
+      "isSecure": { "kind": "parameter", "displayName": "Is Secure", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Only allow this cookie for encrypted connections (HTTPS)." }
+    }
+  },
+  {
+  "component": {
+    "kind": "component",
+    "name": "setheader"
+  },
+  "properties": {
+    "value": { "kind": "parameter", "displayName": "Value", "group": "common", "label": "","required": true, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The value or expression  of the header." },
+    "language": { "kind": "parameter", "displayName": "Language", "group": "common", "label": "", "defaultValue": "constant", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Expression language to use. Valid values: constant, simple, jsonpath, xpath, groovy." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "setproperty"
+    },
+    "properties": {
+      "value": { "kind": "parameter", "displayName": "Value", "group": "common", "label": "", "required": true, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The value or expression  of the property." },
+      "language": { "kind": "parameter", "displayName": "Language", "group": "common", "label": "", "defaultValue": "constant", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Expression language to use. Valid values: constant, simple, jsonpath, xpath, groovy." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "setpattern"
+    },
+    "properties": {
+      "pattern": { "kind": "parameter", "displayName": "pattern", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The exchange pattern to set. Valid values: InOnly, InOptionalOut, InOut" }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "setuuid"
+    },
+    "properties": {
+      "generator": { "kind": "parameter", "displayName": "UUID Generator", "group": "common", "label": "", "defaultValue":  "default", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Type of UUID Generator. Valid values: default, classic, short and simple" }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "throttle"
+    },
+    "properties": {
+      "maximumRequestCount": { "kind": "parameter", "displayName": "Maximum Request Count", "group": "common", "label": "", "defaultValue":  "1", "required": false, "type": "int", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "The maximum number of messages to throttle per request." },
+      "timePeriod": { "kind": "parameter", "displayName": "Time Period", "group": "common", "label": "", "required": false, "defaultValue":  "1000", "type": "int", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Sets the time period in milliseconds during which the maximum request count is valid for." },
+      "asyncDelayed": { "kind": "parameter", "displayName": "Async Delayed", "group": "common", "label": "", "required": false, "defaultValue":  "true", "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Enables asynchronous delay which means the thread will not block while delaying." },
+      "rejectExecution": { "kind": "parameter", "displayName": "Reject Execution", "group": "common", "label": "", "required": false, "defaultValue":  "false", "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "Whether or not throttler throws the ThrottlerRejectedExecutionException when the exchange exceeds the request limit Is by default" }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "xmltocsv"
+    },
+    "properties": {
+      "includeHeader": { "kind": "parameter", "displayName": "Include Header", "group": "common", "label": "", "defaultValue":  "Yes", "required": false, "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "This option allows you to determine whether to include a header in the CSV output." },
+      "includeIndexColumn": { "kind": "parameter", "displayName": "Include Index Column", "group": "common", "label": "", "required": false, "defaultValue":  "no", "type": "boolean", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This option allows you to determine whether to include an index column in the CSV output." },
+      "indexColumnName": { "kind": "parameter", "displayName": "Index Column Name", "group": "common", "label": "", "required": false, "defaultValue":  "line", "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This option allows you to specify the name of the index column that is to be added in the CSV output. The default value for this option is line." },
+      "delimiter": { "kind": "parameter", "displayName": "Delimeter", "group": "common", "label": "", "defaultValue":  ",", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "This option allows you to specify the character that separates the column values in the CSV output." },
+      "lineSeparator": { "kind": "parameter", "displayName": "Line Separator", "group": "common", "label": "", "required": false, "type": "int", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This option allows you to determine the character that separates the lines in the CSV output." },
+      "sortColumns": { "kind": "parameter", "displayName": "Sort Columns", "group": "common", "label": "", "required": false, "defaultValue":  "original", "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This option allows you to determine how the columns must be sorted (by their names) in the CSV output. Valid values are: original, ascending, descending." },
+      "quoteFields": { "kind": "parameter", "displayName": "Quote Fields", "group": "common", "label": "", "required": false, "defaultValue":  "allfields", "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This option allows you to determine which fields must be quoted in the CSV output.Valid values: all fields, non integer fields, no fields." },
+      "xpathExpression": { "kind": "parameter", "displayName": "XPath Expression", "group": "common", "label": "", "required": false, "type": "string", "javaType": "java.lang.String", "deprecated": false, "autowired": false, "secret": false, "description": "This options allows you to specify an XPath expression that determines the content of the XML that is to be processed." }
+    }
+  },
+  {
+    "component": {
+      "kind": "component",
+      "name": "xmltojson"
+    },
+    "properties": {
+      "forceTopLevelstring": { "kind": "parameter", "displayName": "Force TopLevel string", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Determines whether the resulting JSON will start off with a top-most element whose name matches the XML root element. If disabled, XML string 12 turns into { 'x: '1', 'y': '2' }. When enabled it turns into { 'a': { 'x: '1', 'y': '2' }}." },
+      "skipwhitespace": { "kind": "parameter", "displayName": "Skip Whitespace", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "autowired": false, "secret": false, "description": "Determines whether white spaces between XML elements will be interpreted as text values or will be ignored." },
+      "trimSpaces": { "kind": "parameter", "displayName": "Trim Space", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "autowired": false, "secret": false, "description": "Determines whether leading and trailing white spaces will be omitted from String values." },
+      "skipNamespaces": { "kind": "parameter", "displayName": "Skip Namespace", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "deprecationNote": "", "autowired": false, "secret": false, "description": "Signals whether namespaces should be ignored. By default they will be added to the JSON output using @xmlns elements" },
+      "removeNamespacePrefixes": { "kind": "parameter", "displayName": "Remove Namespace Prefixes", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "autowired": false, "secret": false, "description": "Removes the namespace prefixes from XML qualified elements, so that the resulting JSON string does not contain them." },
+      "typeHints": { "kind": "parameter", "displayName": "Type Hints", "group": "common", "label": "", "required": false, "type": "boolean", "javaType": "java.lang.Boolean", "deprecated": false, "autowired": false, "secret": false, "description": "Adds type hints to the resulting XML to aid conversion back to JSON. Used for unmarshalling (JSON to XML conversion)." }
+    }
+  }
+]

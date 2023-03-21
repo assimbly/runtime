@@ -10,7 +10,7 @@ public class Delay extends RouteBuilder {
          routeTemplate("delay-action")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
-                 .templateParameter("delay","5000")
+                 .templateParameter("path","5000")
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
