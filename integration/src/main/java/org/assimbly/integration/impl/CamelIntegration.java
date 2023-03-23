@@ -20,14 +20,15 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.camel.component.sjms.SjmsComponent;
-import org.apache.camel.component.sjms.SjmsComponentConfigurer;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.*;
+import org.apache.camel.spi.EventNotifier;
+import org.apache.camel.spi.Language;
+import org.apache.camel.spi.RouteController;
+import org.apache.camel.spi.Tracer;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.*;
+import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -36,9 +37,11 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
+import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
+import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
@@ -47,8 +50,6 @@ import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.dil.loader.FlowLoader;
-import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.util.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
@@ -63,11 +64,12 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
+
 import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
@@ -643,6 +645,9 @@ public class CamelIntegration extends BaseIntegration {
 	public String addFlow(TreeMap<String, String> props)  {
 
 		try{
+			// add custom connections if needed
+			addCustomActiveMQConnection(props, "dovetail");
+
 			//create connections & install dependencies if needed
 			createConnections(props);
 
@@ -653,6 +658,28 @@ public class CamelIntegration extends BaseIntegration {
 			return "error reason: " + e.getMessage();
 		}
 
+	}
+
+	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
+		String activemqName = "activemq";
+		String activemqUrl = "tcp://localhost:61617";
+		if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+			Component activemqComp = this.context.getComponent(activemqName);
+			if(activemqComp!=null) {
+				if (activemqComp instanceof ActiveMQComponent) {
+					String brokenUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
+					if(brokenUrl!=null && !brokenUrl.equals(activemqUrl)) {
+						// remove first the old one
+						this.context.removeComponent(activemqName);
+						// add a custom activemq
+						this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+					}
+				}
+			} else {
+				// just add the new ActiveMQComponent
+				this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+			}
+		}
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
