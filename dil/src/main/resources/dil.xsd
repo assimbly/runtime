@@ -72,9 +72,15 @@
 			<xs:element type="linksType" name="links" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="coordinatesType" name="coordinates" minOccurs="0" maxOccurs="1"/>
 			<xs:element type="dependenciesType" name="dependencies" minOccurs="0" maxOccurs="1"/>
+			<xs:element type="propertiesType" name="properties" minOccurs="0" maxOccurs="1"/>
 		</xs:choice>
 	</xs:group>
 	<xs:complexType name="optionsType">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="propertiesType">
 		<xs:sequence maxOccurs="unbounded">
 			<xs:any namespace="##any" minOccurs="0" processContents="lax" />
 		</xs:sequence>
