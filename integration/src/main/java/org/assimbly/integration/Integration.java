@@ -90,11 +90,21 @@ public interface Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
-	 * Add collector configuration from a string for a specific format (XML,JSON,YAML).
+	 * Add configuration for multiple collectors from a JSON Configuration File.
+	 *
+	 * @param  mediaType (JSON)
+	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+
+
+	/**
+	 * Add collector configuration from a JSON Configuration File.
 	 *
 	 * @param  collectorId Id of the collector (String)
-	 * @param  mediaType (XML,JSON,YAML)
-	 * @param  configuration (the XML, JSON or YAML file)
+	 * @param  mediaType (JSON)
+	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
 	 * @throws Exception if configuration can't be set
 	 */
 	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;

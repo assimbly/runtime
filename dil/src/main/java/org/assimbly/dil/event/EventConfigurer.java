@@ -33,15 +33,7 @@ public class EventConfigurer {
         this.context = context;
     }
 
-    public String checkConfiguration(String jsonConfiguration) {
-
-        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
-
-        try {
-            configuration = new Collection().fromJson(jsonConfiguration);
-        } catch (JsonProcessingException e) {
-            return e.getMessage();
-        }
+    public String checkConfiguration() {
 
         if(configuration == null){
             return "Invalid event format (json)";
@@ -74,33 +66,30 @@ public class EventConfigurer {
 
     public String add(String jsonConfiguration) {
 
-        String checkMessage = checkConfiguration(jsonConfiguration);
+        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
 
-        if(!checkMessage.equals("ok")){
-            return checkMessage;
-        }else{
-
-            try {
-
-                switch (type) {
-                    case "message":
-                        configureMessageCollector();
-                        break;
-                    case "step":
-                        configureStepCollector();
-                        break;
-                    case "log":
-                        configureLogCollector();
-                        break;
-                }
-            } catch (Exception e){
-                return e.getMessage();
-            }
-
-            return "configured";
-
+        try {
+            configuration = new Collection().fromJson(jsonConfiguration);
+        } catch (JsonProcessingException e) {
+            return e.getMessage();
         }
+
+        String result = configureCollector();
+
+        return result;
+
     }
+
+    public String add(Collection configuration) {
+
+        this.configuration = configuration;
+
+        String result = configureCollector();
+
+        return result;
+
+    }
+
 
 
     public String remove(String collectorId) {
@@ -126,6 +115,40 @@ public class EventConfigurer {
         }
 
         return "removed";
+    }
+
+    public String configureCollector(){
+
+        String checkMessage = checkConfiguration();
+
+        if(!checkMessage.equals("ok")){
+            return checkMessage;
+        }else{
+
+            try {
+
+                switch (type) {
+                    case "message":
+                        configureMessageCollector();
+                        break;
+                    case "step":
+                        configureStepCollector();
+                        break;
+                    case "log":
+                        configureLogCollector();
+                        break;
+                }
+
+            } catch (Exception e){
+                System.out.println("komt hier");
+                e.printStackTrace();
+                return e.getMessage();
+            }
+
+            return "configured";
+
+        }
+
     }
 
     public boolean isConfigured(){

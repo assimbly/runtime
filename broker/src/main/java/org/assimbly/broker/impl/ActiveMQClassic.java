@@ -58,10 +58,6 @@ public class ActiveMQClassic implements Broker {
             String brokerPath = brokerFile.getCanonicalPath();
 
             String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
-            //brokerUrl = "xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8");
-            //System.out.println("2 brokerUrl:"  + brokerUrl);
-
-
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
@@ -371,11 +367,13 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    private void checkIfEndpointExist(String endpointName) throws EndpointNotFoundException {
+    private void checkIfEndpointExist(String endpointName) throws Exception {
 
         if (!endpointExist(endpointName)) {
             throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
         }
+
+        endpointType = getEndpointType(endpointName);
     }
 
 

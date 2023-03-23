@@ -1,7 +1,9 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -10,6 +12,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.directvm.DirectVmComponent;
 import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -17,6 +20,8 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.sjms.SjmsComponent;
+import org.apache.camel.component.sjms.SjmsComponentConfigurer;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
@@ -27,11 +32,13 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
+import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
@@ -64,6 +71,7 @@ import javax.management.ObjectName;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -142,6 +150,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setDefaultBlocks();
 
+		setGlobalOptions();
+
 		setThreadProfile(0,5,5000);
 
 		setDebugging(false);
@@ -219,7 +229,6 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
-
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.aggregate.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","org.assimbly.enrich.EnrichStrategy");
@@ -245,6 +254,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public void setGlobalOptions(){
+		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
+		activemq.setTestConnectionOnStartup(true);
+	}
 
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
@@ -287,6 +300,48 @@ public class CamelIntegration extends BaseIntegration {
 		reload.start();
 
 	}*/
+
+	public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception{
+
+		String result = "unconfigured";
+
+		if(mediaType.contains("xml")){
+			configuration = DocConverter.convertXmlToJson(configuration);
+		}else if(mediaType.contains("yaml")){
+			configuration = DocConverter.convertYamlToJson(configuration);
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		List<Collection> collections = Arrays.asList(mapper.readValue(configuration, Collection[].class));
+
+		for(Collection collection: collections){
+
+			System.out.println("");
+
+			System.out.println("1. add id=" + collection.getId());
+			System.out.println("1. add string=" + collection.toString());
+
+			EventConfigurer eventConfigurer = new EventConfigurer(collection.getId(), context);
+
+			result = eventConfigurer.add(collection);
+
+			System.out.println("1. add result=" + result);
+			System.out.println("");
+
+			if(!result.equalsIgnoreCase("configured")){
+				break;
+			}
+		}
+
+		return result;
+
+	}
+
+	public String serialize(String json) throws IOException {
+		Gson gson = new Gson();
+		String g = gson.toJson(json);
+		return StringEscapeUtils.escapeEcmaScript(g);
+	}
 
 	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception{
 

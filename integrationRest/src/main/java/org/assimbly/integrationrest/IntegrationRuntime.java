@@ -322,8 +322,41 @@ public class IntegrationRuntime {
         }
     }
 
+     /*
+     * POST  /integration/{integrationId}/collectors/add : Set configuration for multiple collectors
+     *
+             * @param integrationId (integrationId)
+     * @param collectorId (CollectorId)
+     * @param configuration as JSON or XML
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping(
+            path = "/integration/{integrationId}/collectors/add",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> addCollectorConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String configuration) throws Exception {
+
+        log.info("Add collectors");
+
+        try {
+            String result = integration.addCollectorsConfiguration(mediaType, configuration);
+            if(!result.equalsIgnoreCase("configured")){
+                log.error("Add collector failed. Message: " + result);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",result);
+            }
+
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",result);
+        } catch (Exception e) {
+            log.error("Add collector failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",e.getMessage());
+        }
+
+    }
+
     /**
-     * POST  /integration/{integrationId}/collector/{collectorId}/add : Set collector configuration
+     * POST  /integration/{integrationId}/collector/{collectorId}/add : Set the configuraton of a collector
      *
      * @param integrationId (integrationId)
      * @param collectorId (CollectorId)
@@ -373,10 +406,10 @@ public class IntegrationRuntime {
 
         try {
             String result = integration.removeCollectorConfiguration(collectorId);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",result);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove", result);
         } catch (Exception e) {
             log.error("Remove collector " + collectorId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",e.getMessage());
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove", e.getMessage());
         }
 
     }

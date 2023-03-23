@@ -99,7 +99,7 @@ public class MessageBrokerRuntime {
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = broker.browseMessage(brokerType,endpointName, messageId, mediaType, excludeBody);
+            result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);

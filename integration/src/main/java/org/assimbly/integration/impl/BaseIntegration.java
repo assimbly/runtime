@@ -283,6 +283,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract void setHistoryMetrics(boolean historyMetrics);
 
+	public abstract String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+
 	public abstract String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
 
 	public abstract String removeCollectorConfiguration(String collectorId) throws Exception;
