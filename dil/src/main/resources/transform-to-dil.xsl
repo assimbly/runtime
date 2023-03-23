@@ -76,6 +76,10 @@
                             <options>
                                 <environmentName>PRODUCTION</environmentName>
                                 <stage>PRODUCTION</stage>
+                                <xsl:if test="//*:property[@key='frontend.engine']">
+                                <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
+                                    <frontend><xsl:value-of select="$frontend"/></frontend>
+                                </xsl:if>
                             </options>
                             <flows>
                                 <flow>
