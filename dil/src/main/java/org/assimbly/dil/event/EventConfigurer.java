@@ -140,7 +140,6 @@ public class EventConfigurer {
                 }
 
             } catch (Exception e){
-                System.out.println("komt hier");
                 e.printStackTrace();
                 return e.getMessage();
             }
