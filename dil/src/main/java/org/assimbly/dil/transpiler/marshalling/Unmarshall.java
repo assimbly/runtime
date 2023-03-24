@@ -156,6 +156,8 @@ public class Unmarshall {
 
 		String environment = xPath.evaluate("//integrations/integration[1]/options/environment",doc);
 
+		String frontend = xPath.evaluate("//integrations/integration[1]/options/frontend",doc);
+
 		String dependenciesXpath = "integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency";
 
 		String[] dependencies = conf.getStringArray(dependenciesXpath);
@@ -170,6 +172,7 @@ public class Unmarshall {
 
 		properties.put("id",flowId);
 		properties.put("environment",environment);
+		properties.put("frontend",frontend);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
 		properties.put("flow.version",flowVersion);
