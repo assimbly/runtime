@@ -662,7 +662,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
 		String activemqName = "activemq";
-		String activemqUrl = "tcp://localhost:61617";
+		String activemqUrl = "tcp://localhost:61616";
 		if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
 			Component activemqComp = this.context.getComponent(activemqName);
 			if(activemqComp!=null) {
