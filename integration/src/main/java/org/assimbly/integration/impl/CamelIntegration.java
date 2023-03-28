@@ -2057,7 +2057,7 @@ public class CamelIntegration extends BaseIntegration {
 			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
 			result = (String) method.invoke(soapActions, url);
 		} catch (Exception e) {
-			log.error("SOAP Actions couldn't be retrieved.");
+			log.error("SOAP Actions couldn't be retrieved.", e);
 			result = "[]";
 		}
 
