@@ -29,7 +29,7 @@ import java.util.TreeMap;
 @RequestMapping("/api")
 public class IntegrationRuntime {
 
-   	protected Logger log = LoggerFactory.getLogger(getClass());
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private Integration integration = new CamelIntegration(true);
 
@@ -67,9 +67,9 @@ public class IntegrationRuntime {
             if (integration.isStarted()) {
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration already running");
             } else {
-            	integration.addEventNotifier(failureCollector);
-            	integration.setTracing(false, "default");
-            	integration.start();
+                integration.addEventNotifier(failureCollector);
+                integration.setTracing(false, "default");
+                integration.start();
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration started");
             }
 
@@ -178,13 +178,13 @@ public class IntegrationRuntime {
     )
     public ResponseEntity<String> resolveDepedencyByScheme(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String scheme) throws Exception {
 
-       	try {
-       		String result = integration.resolveDependency(scheme);
-       		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
-   		} catch (Exception e) {
+        try {
+            String result = integration.resolveDependency(scheme);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
+        } catch (Exception e) {
             log.error("Resolve dependency for scheme=" + scheme + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
-   		}
+        }
 
     }
 
@@ -216,7 +216,7 @@ public class IntegrationRuntime {
         plainResponse = true;
 
         try {
-			integration.setBaseDirectory(directory);
+            integration.setBaseDirectory(directory);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory","success",plainResponse);
         } catch (Exception e) {
             log.error("Set base directory for Assimbly failed",e);
@@ -322,10 +322,10 @@ public class IntegrationRuntime {
         }
     }
 
-     /*
+    /*
      * POST  /integration/{integrationId}/collectors/add : Set configuration for multiple collectors
      *
-             * @param integrationId (integrationId)
+     * @param integrationId (integrationId)
      * @param collectorId (CollectorId)
      * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
@@ -418,12 +418,12 @@ public class IntegrationRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+        Long integrationId = 0L; // set integrationid to 0, as we may get a string value
+        String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
+        String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        String message = error.getMessage();
 
-    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+        return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
     }
 
     public Integration getIntegration() {

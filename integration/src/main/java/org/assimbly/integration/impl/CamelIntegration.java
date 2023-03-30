@@ -318,17 +318,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		for(Collection collection: collections){
 
-			System.out.println("");
-
-			System.out.println("1. add id=" + collection.getId());
-			System.out.println("1. add string=" + collection.toString());
-
 			EventConfigurer eventConfigurer = new EventConfigurer(collection.getId(), context);
 
 			result = eventConfigurer.add(collection);
-
-			System.out.println("1. add result=" + result);
-			System.out.println("");
 
 			if(!result.equalsIgnoreCase("configured")){
 				break;
