@@ -83,25 +83,18 @@ public class ActiveMQClassic implements Broker {
 
             }
 
-            log.info("4. brokerurl=");
-
             if(!broker.isStarted()) {
-                log.info("5. brokerurl=");
                 broker.start();
-                log.info("6. brokerurl=");
             }
-
-            log.info("7. brokerurl=");
 
             if(broker.isStarted()) {
                 setBrokerViewMBean();
             }
 
-            log.info("8. brokerurl=");
-
             return status();
         }catch (Exception e) {
-            log.error("Failed to start broker. Reason: ", e);
+            log.error("Failed to start broker. Reason: ", e.getMessage());
+            e.printStackTrace();
             return "Failed to start broker. Reason: " + e.getMessage();
         }
 
