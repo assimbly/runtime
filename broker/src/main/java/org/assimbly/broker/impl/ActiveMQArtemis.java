@@ -3,6 +3,7 @@ package org.assimbly.broker.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ import static java.util.Arrays.stream;
 
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
@@ -34,6 +36,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.JMX;
+import javax.management.MBeanNotificationInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
@@ -84,8 +90,9 @@ public class ActiveMQArtemis implements Broker {
 
 			return status();
 
-		} catch (Exception  e) {
-			log.error("Failed to start broker. Reason:", e);
+		} catch (Throwable e) {
+			log.error("Failed to start broker. Reason:", e.getMessage());
+			e.printStackTrace();
 			return "Failed to start broker. Reason: " + e.getMessage();
 		}
 
@@ -153,6 +160,7 @@ public class ActiveMQArtemis implements Broker {
 
 		if(activeBroker!=null) {
 			log.debug("State=" + activeBroker.getState().name());
+
 			if(activeBroker.isActive()) {
 				status = "started";
 			}else if(activeBroker.getState().name().equals("STARTED")){

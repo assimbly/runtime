@@ -46,13 +46,13 @@ public class ManagedBrokerRuntime {
         status = getStatus(brokerType);
 
         if(status.equals("stopped")) {
-            log.info("Starting ActiveMQ broker");
+            log.info("Starting ActiveMQ " + brokerType + " broker");
             if (brokerConfigurationType.equals("file")) {
                 status = broker.start();
             }else if (brokerConfigurationType.equals("embedded")) {
                 status = broker.startEmbedded();
             }
-            log.info("Started ActiveMQ Artemis broker");
+            log.info("Started ActiveMQ " + brokerType + " broker");
 
         }
 
