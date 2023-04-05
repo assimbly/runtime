@@ -655,7 +655,12 @@ public class CamelIntegration extends BaseIntegration {
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
 		String activemqName = "activemq";
 		String environment = props.get("environment");
-		String activemqUrl = String.format("tcp://assimbly-broker-%s:61616", environment);
+		int port = 61616;
+		String activemqUrl = (
+				environment !=null && !environment.isEmpty() ?
+						String.format("tcp://assimbly-broker-%s:%d", environment, port) :
+						String.format("tcp://localhost:%d", port)
+		);
 		log.info("activemqUrl > "+activemqUrl);
 		if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
 			Component activemqComp = this.context.getComponent(activemqName);
