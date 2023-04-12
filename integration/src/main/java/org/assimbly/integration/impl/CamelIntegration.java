@@ -666,8 +666,8 @@ public class CamelIntegration extends BaseIntegration {
 				Component activemqComp = this.context.getComponent(activemqName);
 				if(activemqComp!=null) {
 					if (activemqComp instanceof ActiveMQComponent) {
-						String brokenUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
-						if(brokenUrl!=null && !brokenUrl.equals(activemqUrl)) {
+						String brokerUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
+						if(brokerUrl!=null && !brokerUrl.equals(activemqUrl)) {
 							// remove first the old one
 							this.context.removeComponent(activemqName);
 							// add a custom activemq
