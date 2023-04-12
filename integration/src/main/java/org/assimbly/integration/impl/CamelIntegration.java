@@ -76,7 +76,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -87,6 +89,7 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -653,33 +656,47 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
-		String activemqName = "activemq";
-		String environment = props.get("environment");
-		int port = 61616;
-		String activemqUrl = (
-				environment !=null && !environment.isEmpty() ?
-						String.format("tcp://assimbly-broker-%s:%d", environment, port) :
-						String.format("tcp://localhost:%d", port)
-		);
-		log.info("activemqUrl > "+activemqUrl);
-		if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
-			Component activemqComp = this.context.getComponent(activemqName);
-			if(activemqComp!=null) {
-				if (activemqComp instanceof ActiveMQComponent) {
-					String brokenUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
-					log.info("brokenUrl >"+brokenUrl);
-					if(brokenUrl!=null && !brokenUrl.equals(activemqUrl)) {
-						// remove first the old one
-						this.context.removeComponent(activemqName);
-						// add a custom activemq
-						this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+		try {
+			String activemqName = "activemq";
+			String environment = "localhost";
+			environment = buildCustomEnvironment(environment);
+			int port = 61616;
+			String activemqUrl = String.format("tcp://%s:%d", environment, port);
+			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+				Component activemqComp = this.context.getComponent(activemqName);
+				if(activemqComp!=null) {
+					if (activemqComp instanceof ActiveMQComponent) {
+						String brokenUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
+						if(brokenUrl!=null && !brokenUrl.equals(activemqUrl)) {
+							// remove first the old one
+							this.context.removeComponent(activemqName);
+							// add a custom activemq
+							this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+						}
 					}
+				} else {
+					// just add the new ActiveMQComponent
+					this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
 				}
-			} else {
-				// just add the new ActiveMQComponent
-				this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
 			}
+		} catch (Exception e) {
+			log.error("Error to add custom activeMQ connection", e);
 		}
+	}
+
+	private String buildCustomEnvironment(String environment) throws UnknownHostException {
+		try {
+			String hostname = InetAddress.getLocalHost().getHostName();
+			String pattern = "(.*)assimbly-(.*)";
+			Pattern p = Pattern.compile(pattern);
+			Matcher m = p.matcher(hostname);
+			if (m.find()) {
+				environment = String.format("assimbly-broker-%s", m.group(2));
+			}
+		} catch (UnknownError e) {
+			log.info("Error to build custom environment - hostname:"+InetAddress.getLocalHost().getHostName());
+		}
+		return environment;
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
