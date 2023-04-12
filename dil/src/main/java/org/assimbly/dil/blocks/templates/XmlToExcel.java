@@ -23,11 +23,15 @@ public class XmlToExcel extends RouteBuilder {
 
          routeTemplate("xmltoexcel-sink")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateOptionalParameter("options")
+                 .templateParameter("includeHeader","true")
+                 .templateParameter("includeIndexColumn","false")
+                 .templateParameter("indexColumnName","line")
+                 .templateParameter("orderHeaders","UNORDERED")
+                 .templateParameter("excelFormat","XLSX")
                  .templateParameter("in")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                 .to("xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}");
+                     .to("xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}");
     }
 
 }

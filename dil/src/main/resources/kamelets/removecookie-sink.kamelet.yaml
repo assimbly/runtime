@@ -1,0 +1,40 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: removecookie-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "removecookie sink"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+          title: 
+          description: .
+          type: string
+      path:
+          title: .
+          description: .
+          type: string
+          default: assimbly
+      name:
+          title: .
+          description: .
+          type: string
+          default: AssimblyCookie
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "kamelet:sink"

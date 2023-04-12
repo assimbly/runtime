@@ -808,9 +808,9 @@ public interface Integration {
 	public String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;	
 
 	/**
-	* Gets all the running routes as XML/JSON by id
+	* Gets all the running routes as XML/JSON/YAML by id
 	*
-	* @param  mediaType (xml or json)
+	* @param  mediaType (xml, json, yaml)
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/	

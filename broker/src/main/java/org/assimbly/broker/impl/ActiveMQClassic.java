@@ -38,13 +38,9 @@ import static javax.jms.DeliveryMode.PERSISTENT;
 public class ActiveMQClassic implements Broker {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-	
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-
     private File brokerFile = new File(baseDir + "/broker/activemq.xml");
-
     private BrokerService broker;
-
     private BrokerViewMBean brokerViewMBean;
     private QueueViewMBean queueViewMbean;
     private TopicViewMBean topicViewMbean;

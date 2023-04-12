@@ -16,12 +16,9 @@ import org.slf4j.LoggerFactory;
 public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
 	private TreeMap<String, String> props;
-
 	private CamelContext context;
 	private ExtendedCamelContext extendedCamelContext;
-
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
@@ -29,9 +26,7 @@ public class FlowLoader extends RouteBuilder {
 	private String flowEvent;
 	private String flowVersion;
 	private String flowEnvironment;
-
 	private boolean isFlowLoaded = true;
-
 	private FlowLoaderReport flowLoaderReport;
 
 	public FlowLoader(final TreeMap<String, String> props){
