@@ -1,6 +1,8 @@
 package org.assimbly.dil.transpiler.ssl;
 
 import org.apache.camel.*;
+import org.apache.camel.component.jetty.JettyHttpComponent;
+import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
@@ -27,6 +29,7 @@ public class SSLConfiguration {
 
 	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) throws Exception {
 		for (String sslComponent : sslComponentNames) {
+			System.out.println("set UseGlobalSSL=" + sslComponent);
 			setUseGlobalSslContextParameter(context, sslComponent);
 		}
 	}
@@ -94,10 +97,7 @@ public class SSLConfiguration {
 	}
 
 	public KeyStoreParameters createKeystoreParameters(String keystorePath, String keystorePassword){
-
 		KeyStoreParameters keystoreParameters = new KeyStoreParameters();
-		//keystoreParameters.setResource(keystorePath);
-		//keystoreParameters.setResource("keystore.jks");
 		keystoreParameters.setResource("file:" + keystorePath);
 		keystoreParameters.setPassword(keystorePassword);
 

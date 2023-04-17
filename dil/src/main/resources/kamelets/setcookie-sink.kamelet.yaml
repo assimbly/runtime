@@ -1,0 +1,45 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setcookie-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "setcookie sink"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+          title: .
+          description: .
+          type: string
+          default: AssimblyCookie
+      value:
+          title: 
+          description: .
+          type: string
+      cookiePath:
+          title: .
+          description: .
+          type: string
+          default: 0
+      isSecure:
+          title: .
+          description: .
+          type: string
+          default: false
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "kamelet:sink"

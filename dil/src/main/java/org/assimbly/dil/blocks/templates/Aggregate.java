@@ -12,7 +12,7 @@ public class Aggregate extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateOptionalParameter("path")
                  .templateParameter("aggregateType","text/xml")
-                 .templateParameter("completionSize", "3")
+                 .templateParameter("completionSize","3")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")

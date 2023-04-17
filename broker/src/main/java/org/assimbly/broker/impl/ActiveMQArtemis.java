@@ -247,9 +247,9 @@ public class ActiveMQArtemis implements Broker {
 				//Copy file from resources into empty file
 				ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 				InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
-				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-				if(is==null) {
+				if(is!=null) {
+					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					is.close();
 					log.info("AIO Directory is set to " + aioFile.getParent());
 				}else{

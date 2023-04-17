@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: python-script
+  labels:
+    camel.apache.org/kamelet.type: "script"
+spec:
+  definition:
+    title: "python script"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+          title: 
+          description: .
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "kamelet:sink"

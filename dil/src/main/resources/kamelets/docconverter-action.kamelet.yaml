@@ -1,0 +1,33 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: docconverter-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "DocConverter Action"
+    description: |-
+      Convert formats
+    type: object
+    properties:
+      in:
+          title: Source endpoint
+          description: The Camel uri of the source endpoint.
+          type: string
+          default: kamelet:source
+      out:
+          title: Sink endpoint
+          description: The Camel uri of the sink endpoint.
+          type: string
+          default: kamelet:sink
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "kamelet:sink"

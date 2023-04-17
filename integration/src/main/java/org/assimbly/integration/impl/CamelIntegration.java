@@ -4,6 +4,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -14,6 +16,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.directvm.DirectVmComponent;
+import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -23,11 +26,9 @@ import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.spi.Language;
-import org.apache.camel.spi.RouteController;
-import org.apache.camel.spi.Tracer;
+import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
@@ -94,7 +95,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-
 public class CamelIntegration extends BaseIntegration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
@@ -103,28 +103,22 @@ public class CamelIntegration extends BaseIntegration {
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 
 	private CamelContext context;
-
 	private static boolean started = false;
 	private final int stopTimeout = 10;
 	private ServiceStatus status;
 	private String flowStatus;
-
 	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
-
 	private Properties encryptionProperties;
-
 	private boolean watchDeployDirectoryInitialized = false;
 	private TreeMap<String, String> props;
-
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
-
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -284,8 +278,57 @@ public class CamelIntegration extends BaseIntegration {
 			if(template instanceof RouteBuilder){
 				context.addRoutes((RouteBuilder) template);
 			}
+		}
+
+		/*
+		List<String> resourceNames;
+		try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
+			resourceNames = scanResult.getAllResources().getPaths();
+		}
+
+		String properties = "    properties:\n" +
+				"      in:\n" +
+				"          title: Source endpoint\n" +
+				"          description: The Camel uri of the source endpoint.\n" +
+				"          type: string\n" +
+				"          default: kamelet:source\n" +
+				"      out:\n" +
+				"          title: Sink endpoint\n" +
+				"          description: The Camel uri of the sink endpoint.\n" +
+				"          type: string\n" +
+				"          default: kamelet:sink\t";
+
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+
+
+
+		for(String resourceName: resourceNames){
+
+			URL url = Resources.getResource(resourceName);
+
+			//System.out.println("url=" + url);
+
+			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+			//replace values
+			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
+			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
+			resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
+			resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
+			resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
+			resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
+
+			Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
+			try{
+				loader.loadRoutes(resource);
+			}catch (Exception e){
+				log.warn("could not load: " + resourceName + ". Reason: " + e.getMessage());
+			}
 
 		}
+
+		 */
 
 	}
 
@@ -1621,16 +1664,135 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception {
 
+		File directory = new File("C:/messages/templates");
+		java.util.Collection<File> files = FileUtils.listFiles(directory, null, false);
+
+		for (File file : files) {
+			String content = Files.readString(file.toPath());
+			String[] templates = StringUtils.substringsBetween(content,"routeTemplate",";");
+
+			if(templates.length > 0){
+
+				for(String template: templates){
+					String[] lines = template.split("\\.");
+					if(lines.length > 0){
+
+						String name = StringUtils.substringsBetween(lines[0],"(\"","\")")[0];
+						List<String> parameters = new ArrayList<>();
+						for(String line: lines){
+							if((line.contains("templateParameter") || line.contains("templateOptionalParameter")) && !line.contains("in") && !line.contains("out") && !line.contains("routeconfiguration_id")){
+								String[] parameterList = StringUtils.substringsBetween(line, "(\"", "\")");
+								if(parameterList.length > 0 ){
+									String parameter = parameterList[0];
+									parameters.add(parameter);
+								}
+							}
+						}
+
+						String result = createKamelet(name, parameters);
+						System.out.println("Result=\n\n" + result);
+						System.out.println("");
+					}
+				}
+
+			}
+
+		}
+
+		/*
 		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
+
+		for(Route route: context.getRoutes()){
+			ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getRouteId());
+			System.out.println("routexml for route=" + route.getId());
+			System.out.println(managedRoute.dumpRouteAsXml(true));
+		}
 
 		String camelRoutesConfiguration = managedCamelContext.dumpRoutesAsXml(true);
 
 		if(mediaType.contains("json")) {
 			camelRoutesConfiguration = DocConverter.convertXmlToJson(camelRoutesConfiguration);
-		}
+		}else if(mediaType.contains("yaml")){
+			camelRoutesConfiguration = DocConverter.convertXmlToYaml(camelRoutesConfiguration);
+		}*/
+
+		String camelRoutesConfiguration = "{x}";
 
 		return camelRoutesConfiguration;
 
+	}
+
+	private String createKamelet(String name, List<String> parameters) throws IOException {
+
+		String baseName = StringUtils.substringBefore(name, "-");
+		String type = StringUtils.substringAfter(name, "-");
+
+		String parametersString = "";
+		for(String parameter: parameters){
+
+			if(parameter.contains(", ")){
+
+				String[] splittedParameter = parameter.split("\", \"");
+
+				parametersString = parametersString +
+						"      " + splittedParameter[0] + ":\n" +
+						"          title: .\n" +
+						"          description: .\n" +
+						"          type: string\n" +
+						"          default: " + splittedParameter[1] + "\n";
+
+			}else if(parameter.contains(",")){
+
+				String[] splittedParameter = parameter.split("\",\"");
+
+				parametersString = parametersString +
+						"      " + splittedParameter[0] + ":\n" +
+						"          title: .\n" +
+						"          description: .\n" +
+						"          type: string\n" +
+						"          default: " + splittedParameter[1] + "\n";
+
+			}else{
+				parametersString = parametersString +
+						"      " + parameter + ":\n" +
+						"          title: \n" +
+						"          description: .\n" +
+						"          type: string\n";
+			}
+		}
+
+		String kamelet = "apiVersion: camel.apache.org/v1alpha1\n" +
+				"kind: Kamelet\n" +
+				"metadata:\n" +
+				"  name: " + name + "\n" +
+				"  labels:\n" +
+				"    camel.apache.org/kamelet.type: \"" + type + "\"\n" +
+				"spec:\n" +
+				"  definition:\n" +
+				"    title: \"" + baseName + " " + type + "\"\n" +
+				"    description: |-\n" +
+				"      to do\n" +
+				"    type: object\n" +
+				"    properties:\n" +
+				"      routeconfiguration_id:\n" +
+				"        type: string\n" +
+				"        default: \"0\"\n" +
+				parametersString +
+				"  dependencies:\n" +
+				"    - \"camel:kamelet\"\n" +
+				"  template:\n" +
+				"    route-configuration-id: \"{{routeconfiguration_id}}\"\n" +
+				"    from:\n" +
+				"      uri: \"kamelet:source\"\n" +
+				"      steps:\n" +
+				"      - to:\n" +
+				"        uri: \"kamelet.sink\"";
+
+		File file = new File("c:/messages/kameletes/" + name + ".kamelet.yaml" );
+
+		FileUtils.writeStringToFile(file,kamelet,Charset.defaultCharset());
+
+		return kamelet;
 	}
 
 
@@ -2560,6 +2722,9 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
+		JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
+		jetty.setSslContextParameters(sslContextParameters);
+
 		try {
 			SSLContext sslContext = sslContextParameters.createSSLContext(context);
 			SSLEngine engine = sslContext.createSSLEngine();
@@ -2571,8 +2736,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
-
+		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
 
 	}
 
