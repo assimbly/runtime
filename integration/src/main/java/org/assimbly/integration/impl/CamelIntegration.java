@@ -99,6 +99,9 @@ public class CamelIntegration extends BaseIntegration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
+	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
+	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
+
 	private CamelContext context;
 
 	private static boolean started = false;
@@ -658,10 +661,13 @@ public class CamelIntegration extends BaseIntegration {
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
 		try {
 			String activemqName = "activemq";
-			String environment = "localhost";
-			environment = buildCustomEnvironment(environment);
-			int port = 61616;
-			String activemqUrl = String.format("tcp://%s:%d", environment, port);
+			String brokerHost = System.getenv(BROKER_HOST);
+			String brokerPort = System.getenv(BROKER_PORT);
+			String activemqUrl = (
+					brokerHost!=null && brokerPort!=null ?
+							String.format("tcp://%s:%s", brokerHost, brokerPort) :
+							"tcp://localhost:61616"
+			);
 			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
 				Component activemqComp = this.context.getComponent(activemqName);
 				if(activemqComp!=null) {
@@ -682,21 +688,6 @@ public class CamelIntegration extends BaseIntegration {
 		} catch (Exception e) {
 			log.error("Error to add custom activeMQ connection", e);
 		}
-	}
-
-	private String buildCustomEnvironment(String environment) throws UnknownHostException {
-		try {
-			String hostname = InetAddress.getLocalHost().getHostName();
-			String pattern = "(.*)assimbly-(.*)";
-			Pattern p = Pattern.compile(pattern);
-			Matcher m = p.matcher(hostname);
-			if (m.find()) {
-				environment = String.format("assimbly-broker-%s", m.group(2));
-			}
-		} catch (UnknownError e) {
-			log.info("Error to build custom environment - hostname:"+InetAddress.getLocalHost().getHostName());
-		}
-		return environment;
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
