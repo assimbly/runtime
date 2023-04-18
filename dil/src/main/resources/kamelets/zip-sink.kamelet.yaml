@@ -8,17 +8,22 @@ spec:
   definition:
     title: "zip sink"
     description: |-
-      to do
+      Zips a message
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       preservePathElements:
-          title: .
-          description: .
-          type: string
-          default: true
+        title: Preserve Path Elements
+        description: .
+        type: string
+        default: true
+      usingIterator:
+        title: Using Iterator
+        description: .
+        type: string
+        default: true
   dependencies:
     - "camel:kamelet"
   template:
@@ -28,4 +33,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "dataformat:zipFileDataFormat:marshal?usingIterator={{usingIterator}}&amp;preservePathElements={{preservePathElements}}"

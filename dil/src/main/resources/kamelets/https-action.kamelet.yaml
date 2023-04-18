@@ -16,7 +16,7 @@ spec:
         default: "0"
       path:
         title: Path
-        description: url path
+        description: Path of the URL
         type: string
       options:
         title: Options

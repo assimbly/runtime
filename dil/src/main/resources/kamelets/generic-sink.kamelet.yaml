@@ -8,16 +8,16 @@ spec:
   definition:
     title: "generic sink"
     description: |-
-      to do
+      Generic kamelet for Camel Components
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       uri:
-          title: 
-          description: .
-          type: string
+        title: URI
+        description: Endpoint URI
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -26,5 +26,5 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - toD:
+              uri: "{{uri}}"

@@ -8,15 +8,15 @@ spec:
   definition:
     title: "aleris action"
     description: |-
-      to do
+      Aleris component
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "aleris:{{path}}"
           - to:
               uri: "kamelet:sink"

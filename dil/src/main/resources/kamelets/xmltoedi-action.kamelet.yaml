@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xmltoedi action"
     description: |-
-      to do
+      Converts XML to EDI
     type: object
     properties:
       routeconfiguration_id:
@@ -22,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "dataformat:edi:unmarshal"
           - to:
               uri: "kamelet:sink"

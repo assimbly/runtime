@@ -8,16 +8,12 @@ spec:
   definition:
     title: "simplereplace action"
     description: |-
-      to do
+      Replace simple expression in the message body
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
-      options:
-          title: 
-          description: .
-          type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -26,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "dataformat:simple-replace:unmarshal"
           - to:
               uri: "kamelet:sink"

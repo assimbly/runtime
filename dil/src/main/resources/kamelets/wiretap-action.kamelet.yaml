@@ -8,15 +8,15 @@ spec:
   definition:
     title: "wiretap action"
     description: |-
-      to do
+      Copy the original in a fire and forget style
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,8 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - wire-tap:
+              uri: "{{path}}"
+              executor-service: "wiretapProfile"
           - to:
               uri: "kamelet:sink"

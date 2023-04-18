@@ -8,21 +8,21 @@ spec:
   definition:
     title: "multipart sink"
     description: |-
-      to do
+      Add multipart to message
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
       contentType:
-          title: .
-          description: .
-          type: string
-          default: multipart/form-data
+        title: Content-Type
+        description: Content-Type on the message
+        type: string
+        default: multipart/form-data
   dependencies:
     - "camel:kamelet"
   template:
@@ -31,5 +31,20 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - choice:
+            when:
+              - simple: "${header.Content-Type}"
+                steps:
+                  - set-header:
+                      name: MultipartFieldName
+                      constant: "{{path}}"
+            otherwise:
+              steps:
+                - set-header:
+                    name: Content-Type
+                    constant: "{{contentType}}"
+                - set-header:
+                    name: MultipartFieldName
+                    constant: "{{path}}"
+          - process:
+              ref: "multipartProcessor"

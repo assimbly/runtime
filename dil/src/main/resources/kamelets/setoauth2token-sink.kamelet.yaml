@@ -8,12 +8,14 @@ spec:
   definition:
     title: "setoauth2token sink"
     description: |-
-      to do
+      Set oAuth2token
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
+      options:
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -23,4 +25,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "setoauth2token://?{{options}}"

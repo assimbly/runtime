@@ -8,15 +8,15 @@ spec:
   definition:
     title: "link action"
     description: |-
-      to do
+      Links steps
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       uri:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"

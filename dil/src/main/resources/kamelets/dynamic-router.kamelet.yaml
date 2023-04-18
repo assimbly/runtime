@@ -8,12 +8,14 @@ spec:
   definition:
     title: "dynamic router"
     description: |-
-      to do
+      Dynamic route message to on or more addresses
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
+      out_rules_list:
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -22,5 +24,13 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - set-property:
+              name: routingRules
+              constant: "{{path}}"
+          - set-property:
+              name: defaultEndpoint
+              constant: "{{out}}"
+          - process:
+              ref: "RoutingRulesProcessor"
+          - toD:
+              uri: "${exchangeProperty.endpoint}"

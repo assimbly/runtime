@@ -8,7 +8,7 @@ spec:
   definition:
     title: "formtoxml sink"
     description: |-
-      to do
+      Convert Form to XML
     type: object
     properties:
       routeconfiguration_id:
@@ -22,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "formtoxml://?{{options}}"
           - to:
               uri: "kamelet:sink"

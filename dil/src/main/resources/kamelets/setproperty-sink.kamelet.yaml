@@ -8,24 +8,25 @@ spec:
   definition:
     title: "setproperty sink"
     description: |-
-      to do
+      Set an exchange property
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
       value:
-          title: 
-          description: .
-          type: string
+        title: Value
+        description: Value of property
+        type: string
       language:
-          title: 
-          description: .
-          type: string
+        title: Language
+        description: Expression language to evaluate
+        type: string
+        default: constant
   dependencies:
     - "camel:kamelet"
   template:
@@ -34,5 +35,30 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - choice:
+            when:
+              - simple: "'{{language}}' == 'simple'"
+                steps:
+                  - set-property:
+                    name: "{{path}}"
+                    simple: "{{value}}"
+              - simple: "'{{language}}' == 'xpath'"
+                steps:
+                  - set-property:
+                    name: "{{path}}"
+                    xpath: "{{value}}"
+              - simple: "'{{language}}' == 'jsonpath'"
+                steps:
+                  - set-property:
+                    name: "{{path}}"
+                    jsonpath: "{{value}}"
+              - simple: "'{{language}}' == 'groovy'"
+                steps:
+                  - set-property:
+                    name: "{{path}}"
+                    groovy: "{{value}}"
+            otherwise:
+              steps:
+                - set-property:
+                  name: "{{path}}"
+                  consant: "{{value}}"

@@ -8,20 +8,20 @@ spec:
   definition:
     title: "queuethrottle action"
     description: |-
-      to do
+      Throttle messages on an ActiveMQ queue
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       timePeriod:
-          title: .
-          description: .
+          title: Time Period
+          description: Time Period
           type: string
           default: 5000
       maxRequests:
-          title: .
-          description: .
+          title: Max Requests
+          description: Max requests
           type: string
           default: 1
   dependencies:
@@ -32,5 +32,31 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - set-property:
+              name: AssimblyQueueName
+              constant: "{{path}}"
+          - process:
+              ref: "ManageQueueMessageCheckerFlowProcessor"
+          - filter:
+              simpe: "${exchangeProperty.AssimblyQueueHasMessages} == true"
+          - loop:
+              constant: {{maxRequests}}
+              steps:
+                - set-property:
+                    name: Enrich-Type
+                    constant: "application/override"
+                - set-property:
+                    name: AssimblyAggregateNoExceptionOnNull
+                    simple: "true"
+                - poll-enrich:
+                    constant: "activemq:{{path}}"
+                    timeout: "{{timePeriod}}"
+                    aggregationStrategy: "CurrentEnrichStrategy"
+                - filter:
+                    simple: "${body} != null"
+                    steps:
+                      - remove-headers:
+                          pattern: "fireTime|jobRunTime|nextFireTime|previousFireTime|refireCount|scheduledFireTime|triggerGroup|triggerName|jobDetail|jobInstance|mergedJobDataMap|result|scheduler|trigger"
+                          excludePattern: "breadcrumbId"
           - to:
               uri: "kamelet:sink"

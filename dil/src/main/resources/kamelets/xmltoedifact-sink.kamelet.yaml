@@ -14,10 +14,10 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      path:
-          title: 
-          description: .
-          type: string
+      options:
+        title: options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "dataformat:edifact:unmarshal?{{options}}"

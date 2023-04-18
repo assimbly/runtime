@@ -22,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - unmarshal:
+              base64: {}
           - to:
               uri: "kamelet:sink"

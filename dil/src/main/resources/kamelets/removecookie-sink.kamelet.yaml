@@ -8,26 +8,22 @@ spec:
   definition:
     title: "removecookie sink"
     description: |-
-      to do
+      Sets a browser cookie
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
-      options:
-          title: 
-          description: .
-          type: string
       path:
-          title: .
-          description: .
-          type: string
-          default: assimbly
-      name:
-          title: .
-          description: .
-          type: string
-          default: AssimblyCookie
+        title: Path
+        description: Path
+        type: string
+        default: AssimblyCookie
+      domain:
+        title: Domain
+        description: Domain
+        type: string
+        default: "org.assimbly"
   dependencies:
     - "camel:kamelet"
   template:
@@ -37,4 +33,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{path}}','{{domain}}')"

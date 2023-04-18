@@ -8,7 +8,7 @@ spec:
   definition:
     title: "setbodyasstring action"
     description: |-
-      to do
+      Set body as a string type
     type: object
     properties:
       routeconfiguration_id:
@@ -22,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - convert-body-to:
+              type: "java.lang.String"
           - to:
               uri: "kamelet:sink"

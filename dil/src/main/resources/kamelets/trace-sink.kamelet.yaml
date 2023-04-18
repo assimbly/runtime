@@ -8,15 +8,15 @@ spec:
   definition:
     title: "trace sink"
     description: |-
-      to do
+      REST Endpoint for the trace method
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
+          title: Options
+          description: Endpoint options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "rest:trace:{{path}}?{{options}}"

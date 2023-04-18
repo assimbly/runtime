@@ -8,15 +8,15 @@ spec:
   definition:
     title: "googledrive source"
     description: |-
-      to do
+      Get files from GoogleDrive
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
+          title: Options
+          description: Options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -24,7 +24,7 @@ spec:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "googledrive://?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

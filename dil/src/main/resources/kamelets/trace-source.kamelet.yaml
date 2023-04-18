@@ -19,8 +19,8 @@ spec:
           description: .
           type: string
       options:
-          title: 
-          description: .
+          title: Options
+          description: Endpoint options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -28,7 +28,7 @@ spec:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "rest:trace:{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

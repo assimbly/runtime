@@ -8,19 +8,16 @@ spec:
   definition:
     title: "DocConverter Action"
     description: |-
-      Convert formats
+      Convert between various formats (XML, JSON, YAML and CSV)
     type: object
     properties:
-      in:
-          title: Source endpoint
-          description: The Camel uri of the source endpoint.
-          type: string
-          default: kamelet:source
-      out:
-          title: Sink endpoint
-          description: The Camel uri of the sink endpoint.
-          type: string
-          default: kamelet:sink
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+        title: Path
+        description: Path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -29,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "docconverter:{{path}}"
           - to:
               uri: "kamelet:sink"

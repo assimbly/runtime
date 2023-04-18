@@ -16,7 +16,7 @@ spec:
         default: "0"
       path:
           title: Path
-          description: Path of the url
+          description: Path of the URL
           type: string
   dependencies:
     - "camel:kamelet"

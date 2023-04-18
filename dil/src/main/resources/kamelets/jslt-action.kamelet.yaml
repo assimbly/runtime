@@ -15,8 +15,8 @@ spec:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,10 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - set-header:
+              name: CamelJsltString
+              path: "{{path}}"
+          - to:
+              uri: "jslt:dummy?allowTemplateFromHeader=true"
           - to:
               uri: "kamelet:sink"

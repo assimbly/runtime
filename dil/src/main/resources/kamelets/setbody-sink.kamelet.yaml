@@ -15,14 +15,14 @@ spec:
         type: string
         default: "0"
       language:
-          title: Language
-          description: Expression language
-          type: string
-          default: constant
+        title: Set Body
+        description: Set Body of a message
+        type: string
+        default: constant
       path:
-          title: Path
-          description: The body
-          type: string
+        title: Path
+        description: Path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:

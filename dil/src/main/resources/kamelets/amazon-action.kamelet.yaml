@@ -8,7 +8,7 @@ spec:
   definition:
     title: "amazon action"
     description: |-
-      to do
+      Amazon component
     type: object
     properties:
       routeconfiguration_id:
@@ -23,6 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
+              uri: "amazon:{{path}}?{{options}}"
+          - to:
               uri: "kamelet:sink"
-
-

@@ -8,16 +8,16 @@ spec:
   definition:
     title: "edifacttoxml sink"
     description: |-
-      to do
+      Converts Edifact to XML
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
-      path:
-          title: 
-          description: .
-          type: string
+      options:
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "dataformat:edifact:marshal?{{options}}"

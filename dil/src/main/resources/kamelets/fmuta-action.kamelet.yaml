@@ -14,6 +14,14 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
+      path:
+        title: Path
+        description: Path
+        type: string
+      options:
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -22,5 +30,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "fmuta:{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"

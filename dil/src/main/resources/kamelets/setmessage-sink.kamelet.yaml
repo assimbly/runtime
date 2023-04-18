@@ -8,26 +8,26 @@ spec:
   definition:
     title: "setmessage sink"
     description: |-
-      to do
+      Set message (body and headers)
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       headers:
-          title: .
-          description: .
-          type: string
-          default: 0
+        title: Headers
+        description: Headers
+        type: string
+        default: 0
       language:
-          title: .
-          description: .
-          type: string
-          default: constant
+        title: Language
+        description: Language
+        type: string
+        default: constant
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -36,5 +36,16 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - set-property:
+              name: assimbly.body
+              constant: "{{path}}"
+          - set-property:
+              name: assimbly.language
+              constant: "{{language}}"
+          - set-property:
+              name: assimbly.headers
+              constant: "{{headers}}"
+          - process:
+              ref: "SetBodyProcessor"
+          - process:
+              ref: "SetHeadersProcessor"

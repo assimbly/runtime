@@ -8,15 +8,15 @@ spec:
   definition:
     title: "generic action"
     description: |-
-      to do
+      Generic kamelet for Camel Components
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       uri:
-          title: 
-          description: .
+          title: URI
+          description: Endpoint URI
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - toD:
+              uri: "{{uri}}"
           - to:
               uri: "kamelet:sink"

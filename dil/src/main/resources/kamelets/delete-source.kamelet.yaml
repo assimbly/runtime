@@ -15,20 +15,20 @@ spec:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
       options:
-          title: 
-          description: .
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "rest:delete:{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

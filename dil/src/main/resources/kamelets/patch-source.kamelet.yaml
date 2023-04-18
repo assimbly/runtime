@@ -28,7 +28,7 @@ spec:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "rest:patch:{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

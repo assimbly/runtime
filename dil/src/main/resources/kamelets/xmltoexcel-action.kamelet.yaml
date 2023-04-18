@@ -8,19 +8,34 @@ spec:
   definition:
     title: "xmltoexcel action"
     description: |-
-      to do
+      Convert XML to Excel
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
+      includeHeader:
+        title: Include Header
+        description: .
+        type: string
+        default: true
+      includeIndexColumn:
+        title: Include Index Column
+        description: .
+        type: string
+        default: false
+      indexColumnName:
+        title: Index ColumnName
+        description: .
+        type: string
+        default: line
       orderHeaders:
-          title: .
+          title: Order Headers
           description: .
           type: string
           default: UNORDERED
       excelFormat:
-          title: .
+          title: Excel Format
           description: .
           type: string
           default: XLSX
@@ -32,5 +47,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}"
           - to:
               uri: "kamelet:sink"

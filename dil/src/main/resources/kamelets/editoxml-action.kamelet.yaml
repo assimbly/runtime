@@ -8,15 +8,15 @@ spec:
   definition:
     title: "editoxml action"
     description: |-
-      to do
+      Convert EDI to XML
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
+          title: Options
+          description: Options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "dataformat:edi:marshal?{{options}}"
           - to:
               uri: "kamelet:sink"

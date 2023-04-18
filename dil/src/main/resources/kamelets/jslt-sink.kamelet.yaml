@@ -6,7 +6,7 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "jslt sink"
+    title: "jslt action"
     description: |-
       to do
     type: object
@@ -14,10 +14,10 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      options:
-          title: 
-          description: .
-          type: string
+      path:
+        title: Path
+        description: Path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -26,5 +26,8 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - set-header:
+              name: CamelJsltString
+              path: "{{path}}"
           - to:
-              uri: "kamelet:sink"
+              uri: "jslt:dummy?allowTemplateFromHeader=true"

@@ -8,16 +8,16 @@ spec:
   definition:
     title: "replace action"
     description: |-
-      to do
+      Replace in message
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -26,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "replace://?{{options}}"
           - to:
               uri: "kamelet:sink"

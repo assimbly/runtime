@@ -8,15 +8,15 @@ spec:
   definition:
     title: "hl7xml action"
     description: |-
-      to do
+      Convert HL7 to XML
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"
@@ -26,5 +26,9 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "bean:XmlToHl7Converter"
+          - to:
+              uri: "mllp:{{path}}"
           - to:
               uri: "kamelet:sink"

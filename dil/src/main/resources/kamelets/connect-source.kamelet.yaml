@@ -15,12 +15,12 @@ spec:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
+          title: Path
+          description: Path
           type: string
-      connect:
-          title: 
-          description: .
+      options:
+          title: Options
+          description: Options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -28,7 +28,7 @@ spec:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "rest:connect:{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

@@ -8,15 +8,15 @@ spec:
   definition:
     title: "jsontoxml sink"
     description: |-
-      to do
+      Convert JSON to XML
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
+          title: Options
+          description: Options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"

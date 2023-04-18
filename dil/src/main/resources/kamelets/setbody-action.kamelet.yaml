@@ -15,13 +15,13 @@ spec:
         type: string
         default: "0"
       language:
-          title: setbody
-          description: .
+          title: Set Body
+          description: Set Body of a message
           type: string
           default: constant
       path:
           title: Path
-          description: .
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"

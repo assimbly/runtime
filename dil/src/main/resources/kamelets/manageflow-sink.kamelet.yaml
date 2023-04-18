@@ -15,14 +15,14 @@ spec:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
       action:
-          title: .
-          description: .
-          type: string
-          default: startflow
+        title: Path
+        description: Path
+        type: string
+        default: "startflow"
   dependencies:
     - "camel:kamelet"
   template:
@@ -31,5 +31,11 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "kamelet:sink"
+          - set-property:
+              name: flowId
+              constant: "{{path}}"
+          - set-property:
+              name: action
+              constant: "{{action}}"
+          - process:
+              ref: "ManageFlowProcessor"

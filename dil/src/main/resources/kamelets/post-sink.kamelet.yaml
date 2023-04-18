@@ -14,10 +14,14 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
+      path:
+        title: Path
+        description: Path
+        type: string
       options:
-          title: 
-          description: .
-          type: string
+        title: Options
+        description: Endpoint options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,4 +31,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "rest:post:{{path}}?{{options}}"

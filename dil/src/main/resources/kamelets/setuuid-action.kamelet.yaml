@@ -8,20 +8,20 @@ spec:
   definition:
     title: "setuuid action"
     description: |-
-      to do
+      Set UUID as message header
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: .
-          description: .
+          title: Path
+          description: Path
           type: string
           default: uuid
       generator:
-          title: .
-          description: .
+          title: Generator
+          description: Type of UUID Generator
           type: string
           default: default
   dependencies:
@@ -32,5 +32,8 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - set-header:
+              name: "{{path}}"
+              constant: "${uuid({{generator}}}"
           - to:
               uri: "kamelet:sink"

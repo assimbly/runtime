@@ -15,8 +15,8 @@ spec:
         type: string
         default: "0"
       uri:
-          title: 
-          description: .
+          title: Uri
+          description: Uri
           type: string
   dependencies:
     - "camel:kamelet"
@@ -24,7 +24,7 @@ spec:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
       from:
-        uri: "kamelet:source"
+        uri: "{{uri}}"
         steps:
           - to:
               uri: "kamelet:sink"

@@ -8,7 +8,7 @@ spec:
   definition:
     title: "link sink"
     description: |-
-      to do
+      Links steps
     type: object
     properties:
       routeconfiguration_id:
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "mock:link"

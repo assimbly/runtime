@@ -15,9 +15,9 @@ spec:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
-          type: string
+        title: options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -26,5 +26,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - to:
+              uri: "dataformat:edifact:unmarshal?{{options}}"
           - to:
               uri: "kamelet:sink"

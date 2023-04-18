@@ -257,6 +257,10 @@ public class CamelIntegration extends BaseIntegration {
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
 
+		// Enable to load custom templates (Java DSL)
+
+		/*
+
 		// create scanner and disable default filters (that is the 'false' argument)
 		final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
 		provider.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")));
@@ -273,7 +277,10 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
-		/*
+
+		 */
+
+		// Enable to load custom Kamelets (Yaml DSL)
 		List<String> resourceNames;
 		try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
 			resourceNames = scanResult.getAllResources().getPaths();
@@ -300,8 +307,6 @@ public class CamelIntegration extends BaseIntegration {
 
 			URL url = Resources.getResource(resourceName);
 
-			//System.out.println("url=" + url);
-
 			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
 
 			//replace values
@@ -320,8 +325,6 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 		}
-
-		 */
 
 	}
 

@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xslt sink"
     description: |-
-      to do
+      Apply XSLT on message
     type: object
     properties:
       routeconfiguration_id:
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"

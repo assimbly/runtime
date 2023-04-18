@@ -8,7 +8,7 @@ spec:
   definition:
     title: "texttobase64 action"
     description: |-
-      to do
+      Convert text to base64 string
     type: object
     properties:
       routeconfiguration_id:
@@ -22,5 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - marshal:
+              base64: {}
           - to:
               uri: "kamelet:sink"

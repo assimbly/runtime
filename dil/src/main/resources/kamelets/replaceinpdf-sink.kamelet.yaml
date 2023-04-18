@@ -8,20 +8,20 @@ spec:
   definition:
     title: "replaceinpdf sink"
     description: |-
-      to do
+      Replace headers in PDF
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       path:
-          title: 
-          description: .
-          type: string
+        title: Path
+        description: Path
+        type: string
       options:
-          title: 
-          description: .
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -31,4 +31,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "kamelet:sink"
+              uri: "pdf-transform://{{path}}?{{options}}"

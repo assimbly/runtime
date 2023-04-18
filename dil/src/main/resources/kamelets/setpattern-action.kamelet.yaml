@@ -8,7 +8,7 @@ spec:
   definition:
     title: "setpattern action"
     description: |-
-      to do
+      Set the exchange pattern
     type: object
     properties:
       routeconfiguration_id:
@@ -19,8 +19,8 @@ spec:
           description: .
           type: string
       pattern:
-          title: .
-          description: .
+          title: Pattern
+          description: Pattern to use (inOnly, inOut, inOptionalOut)
           type: string
           default: InOnly
   dependencies:
@@ -31,5 +31,6 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - set-exchange-pattern: "{{pattern}}"
           - to:
               uri: "kamelet:sink"
