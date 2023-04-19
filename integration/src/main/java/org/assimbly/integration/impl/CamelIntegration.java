@@ -77,7 +77,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -88,6 +90,7 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -95,6 +98,10 @@ import java.util.stream.IntStream;
 public class CamelIntegration extends BaseIntegration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
+
+	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
+	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
+
 	private CamelContext context;
 	private static boolean started = false;
 	private final int stopTimeout = 10;
@@ -698,24 +705,34 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
-		String activemqName = "activemq";
-		String activemqUrl = "tcp://localhost:61616";
-		if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
-			Component activemqComp = this.context.getComponent(activemqName);
-			if(activemqComp!=null) {
-				if (activemqComp instanceof ActiveMQComponent) {
-					String brokenUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
-					if(brokenUrl!=null && !brokenUrl.equals(activemqUrl)) {
-						// remove first the old one
-						this.context.removeComponent(activemqName);
-						// add a custom activemq
-						this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+		try {
+			String activemqName = "activemq";
+			String brokerHost = System.getenv(BROKER_HOST);
+			String brokerPort = System.getenv(BROKER_PORT);
+			String activemqUrl = (
+					brokerHost!=null && brokerPort!=null ?
+							String.format("tcp://%s:%s", brokerHost, brokerPort) :
+							"tcp://localhost:61616"
+			);
+			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+				Component activemqComp = this.context.getComponent(activemqName);
+				if(activemqComp!=null) {
+					if (activemqComp instanceof ActiveMQComponent) {
+						String brokerUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
+						if(brokerUrl!=null && !brokerUrl.equals(activemqUrl)) {
+							// remove first the old one
+							this.context.removeComponent(activemqName);
+							// add a custom activemq
+							this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+						}
 					}
+				} else {
+					// just add the new ActiveMQComponent
+					this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
 				}
-			} else {
-				// just add the new ActiveMQComponent
-				this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
 			}
+		} catch (Exception e) {
+			log.error("Error to add custom activeMQ connection", e);
 		}
 	}
 
