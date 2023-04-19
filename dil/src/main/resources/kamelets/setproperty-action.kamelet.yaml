@@ -36,31 +36,31 @@ spec:
         uri: "kamelet:source"
         steps:
           - choice:
-            when:
-              - simple: "'{{language}}' == 'simple'"
-                steps:
+              when:
+                - simple: "'{{language}}' == 'simple'"
+                  steps:
                   - set-property:
-                    name: "{{path}}"
-                    simple: "{{value}}"
-              - simple: "'{{language}}' == 'xpath'"
-                steps:
+                      name: "{{path}}"
+                      simple: "{{value}}"
+                - simple: "'{{language}}' == 'xpath'"
+                  steps:
                   - set-property:
-                    name: "{{path}}"
-                    xpath: "{{value}}"
-              - simple: "'{{language}}' == 'jsonpath'"
-                steps:
+                      name: "{{path}}"
+                      xpath: "{{value}}"
+                - simple: "'{{language}}' == 'jsonpath'"
+                  steps:
                   - set-property:
-                    name: "{{path}}"
-                    jsonpath: "{{value}}"
-              - simple: "'{{language}}' == 'groovy'"
-                steps:
+                      name: "{{path}}"
+                      jsonpath: "{{value}}"
+                - simple: "'{{language}}' == 'groovy'"
+                  steps:
                   - set-property:
-                    name: "{{path}}"
-                    groovy: "{{value}}"
-            otherwise:
-              steps:
+                      name: "{{path}}"
+                      groovy: "{{value}}"
+              otherwise:
+                steps:
                 - set-property:
-                  name: "{{path}}"
-                  consant: "{{value}}"
+                    name: "{{path}}"
+                    constant: "{{value}}"
           - to:
               uri: "kamelet:sink"

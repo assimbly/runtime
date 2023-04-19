@@ -32,20 +32,20 @@ spec:
         uri: "kamelet:source"
         steps:
           - choice:
-            when:
-              - simple: "${header.Content-Type}"
-                steps:
-                  - set-header:
-                      name: MultipartFieldName
-                      constant: "{{path}}"
-            otherwise:
-                steps:
-                  - set-header:
-                      name: Content-Type
-                      constant: "{{contentType}}"
-                  - set-header:
-                      name: MultipartFieldName
-                      constant: "{{path}}"
+              when:
+                - simple: "${header.Content-Type}"
+                  steps:
+                    - set-header:
+                        name: MultipartFieldName
+                        constant: "{{path}}"
+              otherwise:
+                  steps:
+                    - set-header:
+                        name: Content-Type
+                        constant: "{{contentType}}"
+                    - set-header:
+                        name: MultipartFieldName
+                        constant: "{{path}}"
           - process:
               ref: "multipartProcessor"
           - to:

@@ -37,7 +37,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - unmarshall:
+          - unmarshal:
               csv:
           - to:
               uri: "csvtoxml://?delimiter={{delimiter}}&useHeader={{useheader}}&encoding={{encoding}}"

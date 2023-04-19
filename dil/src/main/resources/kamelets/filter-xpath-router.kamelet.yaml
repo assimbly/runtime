@@ -31,6 +31,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - filter:
-            xpath: "{{expression}}"
+              xpath: "{{expression}}"
           - to:
               uri: "{{out_rule}}"

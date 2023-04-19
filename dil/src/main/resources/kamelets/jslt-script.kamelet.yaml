@@ -28,7 +28,7 @@ spec:
         steps:
           - set-header:
               name: CamelJsltString
-              path: "{{path}}"
+              constant: "{{path}}"
           - to:
               uri: "jslt:dummy?allowTemplateFromHeader=true"
           - to:

@@ -29,7 +29,6 @@ public class SSLConfiguration {
 
 	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) throws Exception {
 		for (String sslComponent : sslComponentNames) {
-			System.out.println("set UseGlobalSSL=" + sslComponent);
 			setUseGlobalSslContextParameter(context, sslComponent);
 		}
 	}

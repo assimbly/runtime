@@ -8,15 +8,15 @@ spec:
   definition:
     title: "enrich router"
     description: |-
-      to do
+      Enrich message
     type: object
     properties:
       routeconfiguration_id:
         type: string
         default: "0"
       options:
-          title: 
-          description: .
+          title: Options
+          description: Options
           type: string
       enrichType:
           title: .
@@ -38,7 +38,7 @@ spec:
               name: action
               constant: "stopflow"
           - enrich:
-              resource-uri: "{{out_rule}}"
+              constant: "{{out_rule}}"
               aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
           - to:
               uri: "kamelet:sink"

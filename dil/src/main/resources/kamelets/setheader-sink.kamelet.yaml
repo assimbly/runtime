@@ -36,29 +36,29 @@ spec:
         uri: "kamelet:source"
         steps:
           - choice:
-            when:
-              - simple: "'{{language}}' == 'simple'"
+              when:
+                - simple: "'{{language}}' == 'simple'"
+                  steps:
+                    - set-header:
+                        name: "{{path}}"
+                        simple: "{{value}}"
+                - simple: "'{{language}}' == 'xpath'"
+                  steps:
+                    - set-header:
+                        name: "{{path}}"
+                        xpath: "{{value}}"
+                - simple: "'{{language}}' == 'jsonpath'"
+                  steps:
+                    - set-header:
+                        name: "{{path}}"
+                        jsonpath: "{{value}}"
+                - simple: "'{{language}}' == 'groovy'"
+                  steps:
+                    - set-header:
+                        name: "{{path}}"
+                        groovy: "{{value}}"
+              otherwise:
                 steps:
                   - set-header:
-                    name: "{{path}}"
-                    simple: "{{value}}"
-              - simple: "'{{language}}' == 'xpath'"
-                steps:
-                  - set-header:
-                    name: "{{path}}"
-                    xpath: "{{value}}"
-              - simple: "'{{language}}' == 'jsonpath'"
-                steps:
-                  - set-header:
-                    name: "{{path}}"
-                    jsonpath: "{{value}}"
-              - simple: "'{{language}}' == 'groovy'"
-                steps:
-                  - set-header:
-                    name: "{{path}}"
-                    groovy: "{{value}}"
-            otherwise:
-              steps:
-                - set-header:
-                  name: "{{path}}"
-                  consant: "{{value}}"
+                      name: "{{path}}"
+                      constant: "{{value}}"

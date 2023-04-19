@@ -36,29 +36,29 @@ spec:
         uri: "kamelet:source"
         steps:
           - choice:
-            when:
-              - simple: "'{{language}}' == 'simple'"
+              when:
+                - simple: "'{{language}}' == 'simple'"
+                  steps:
+                    - set-property:
+                        name: "{{path}}"
+                        simple: "{{value}}"
+                - simple: "'{{language}}' == 'xpath'"
+                  steps:
+                    - set-property:
+                        name: "{{path}}"
+                        xpath: "{{value}}"
+                - simple: "'{{language}}' == 'jsonpath'"
+                  steps:
+                    - set-property:
+                        name: "{{path}}"
+                        jsonpath: "{{value}}"
+                - simple: "'{{language}}' == 'groovy'"
+                  steps:
+                    - set-property:
+                        name: "{{path}}"
+                        groovy: "{{value}}"
+              otherwise:
                 steps:
                   - set-property:
-                    name: "{{path}}"
-                    simple: "{{value}}"
-              - simple: "'{{language}}' == 'xpath'"
-                steps:
-                  - set-property:
-                    name: "{{path}}"
-                    xpath: "{{value}}"
-              - simple: "'{{language}}' == 'jsonpath'"
-                steps:
-                  - set-property:
-                    name: "{{path}}"
-                    jsonpath: "{{value}}"
-              - simple: "'{{language}}' == 'groovy'"
-                steps:
-                  - set-property:
-                    name: "{{path}}"
-                    groovy: "{{value}}"
-            otherwise:
-              steps:
-                - set-property:
-                  name: "{{path}}"
-                  consant: "{{value}}"
+                      name: "{{path}}"
+                      constant: "{{value}}"

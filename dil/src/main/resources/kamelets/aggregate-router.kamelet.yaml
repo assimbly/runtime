@@ -40,7 +40,6 @@ spec:
               name: Aggregate-Type
               constant: "{{aggregateType}}"
           - aggregate:
-              constant: true
               aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.AggregateStrategy"
               completionSize: "{{completionSize}}"
           - to:

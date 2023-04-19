@@ -44,8 +44,8 @@ spec:
                     simple: ${exchangeProperty.CamelSplitComplete.toString().trim()}
                 - to: "{{out_rule}}"
           - choice:
-            when:
-              - simple: "{{out}}!='mock:0'"
-                steps:
-                  - to:
-                      uri: "kamelet:sink"
+              when:
+                - simple: "{{out}}!='mock:0'"
+                  steps:
+                    - to:
+                        uri: "kamelet:sink"

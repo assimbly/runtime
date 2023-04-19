@@ -38,9 +38,9 @@ spec:
           - process:
               ref: "ManageQueueMessageCheckerFlowProcessor"
           - filter:
-              simpe: "${exchangeProperty.AssimblyQueueHasMessages} == true"
+              simple: "${exchangeProperty.AssimblyQueueHasMessages} == true"
           - loop:
-              constant: {{maxRequests}}
+              constant: "{{maxRequests}}"
               steps:
                 - set-property:
                     name: Enrich-Type
