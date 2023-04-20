@@ -14,10 +14,6 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      uri:
-          title: Path
-          description: Path
-          type: string
   dependencies:
     - "camel:kamelet"
   template:

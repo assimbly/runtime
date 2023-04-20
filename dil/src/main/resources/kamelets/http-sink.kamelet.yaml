@@ -14,9 +14,9 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      path:
-        title: Path
-        description: Path of the URL
+      uri:
+        title: URI
+        description: Endpoint URI
         type: string
   dependencies:
     - "camel:kamelet"
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "http:{{path}}?{{options}}"
+              uri: "{{uri}}"

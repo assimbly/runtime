@@ -14,18 +14,14 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      path:
-          title: Path
-          description: Path
-          type: string
       aggregateType:
-          title: .
-          description: .
+          title: Aggregate Type
+          description: Aggregate Type
           type: string
-          default: text/xml
+          default: "text/xml"
       completionSize:
-          title: .
-          description: .
+          title: Completion Size
+          description: Completion Size
           type: string
           default: 3
   dependencies:
@@ -40,7 +36,9 @@ spec:
               name: Aggregate-Type
               constant: "{{aggregateType}}"
           - aggregate:
-              aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.AggregateStrategy"
-              completionSize: "{{completionSize}}"
+              aggregation-strategy: "AggregateStrategy"
+              completion-size: "{{completionSize}}"
+              correlation-expression:
+                constant: "true"
           - to:
               uri: "kamelet:sink"

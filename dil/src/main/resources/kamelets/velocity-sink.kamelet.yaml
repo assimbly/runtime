@@ -15,8 +15,8 @@ spec:
         type: string
         default: "0"
       path:
-          title: path
-          description: .
+          title: Path
+          description: Path
           type: string
   dependencies:
     - "camel:kamelet"

@@ -22,6 +22,11 @@ spec:
           title: Options
           description: Options
           type: string
+      timeout:
+        title: Time Out
+        description: Time Out
+        type: string
+        default: "60000"
   dependencies:
     - "camel:kamelet"
   template:

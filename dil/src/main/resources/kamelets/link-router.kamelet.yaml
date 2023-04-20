@@ -14,6 +14,10 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
+      out_list:
+        title: Out List
+        description: Out List
+        type: string
   dependencies:
     - "camel:kamelet"
   template:

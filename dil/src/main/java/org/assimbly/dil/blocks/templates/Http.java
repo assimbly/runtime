@@ -32,8 +32,8 @@ public class Http extends RouteBuilder {
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
-                 .to("http:{{path}}?{{options}}")
-                 .to("{{out}}");
+                     .to("http:{{path}}?{{options}}")
+                     .to("{{out}}");
 
          routeTemplate("https-action")
                  .templateParameter("routeconfiguration_id","0")
@@ -42,8 +42,6 @@ public class Http extends RouteBuilder {
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
-                     .setHeader("CamelHttpMethod").constant("{{httpMethod}}")
-                     .setHeader("user-agent").constant("{{userAgent}}")
                      .to("https:{{path}}?{{options}}")
                      .to("{{out}}");
 
@@ -53,7 +51,7 @@ public class Http extends RouteBuilder {
                  .templateParameter("options")
                  .templateParameter("in")
                  .from("{{in}}")
-                 .to("http:{{path}}?{{options}}");
+                     .to("http:{{path}}?{{options}}");
 
          routeTemplate("https-sink")
                  .templateParameter("path")
@@ -61,11 +59,6 @@ public class Http extends RouteBuilder {
                  .templateParameter("in")
                  .from("{{in}}")
                      .to("https:{{path}}?{{options}}");
-
-
-
-
-
      }
 
 }

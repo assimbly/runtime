@@ -23,12 +23,12 @@ spec:
           title: Use Header
           description: Wether to use header or not
           type: string
-          default: yes
+          default: "yes"
       encoding:
         title: Encoding
         description: Type of encoding
         type: string
-        default: UTF-8
+        default: "UTF-8"
   dependencies:
     - "camel:kamelet"
   template:
@@ -39,7 +39,9 @@ spec:
         steps:
           - unmarshal:
               csv:
+                delimiter: "{{delimiter}}"
+                useHeader: "{{useheader}}"
           - to:
-              uri: "csvtoxml://?delimiter={{delimiter}}&useHeader={{useheader}}&encoding={{encoding}}"
+              uri: "csvtoxml://?encoding={{encoding}}"
           - to:
               uri: "kamelet:sink"

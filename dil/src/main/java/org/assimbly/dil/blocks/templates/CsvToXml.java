@@ -22,7 +22,7 @@ public class CsvToXml extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .unmarshal(csv)
-                     .to("csvtoxml://?delimiter={{delimiter}}&useHeader={{useheader}}&encoding={{encoding}}")
+                     .to("csvtoxml://?encoding={{encoding}}")
                      .to("{{out}}");
 
          routeTemplate("csvtoxml-sink")
@@ -34,7 +34,7 @@ public class CsvToXml extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                      .unmarshal(csv)
-                     .to("csvtoxml://?delimiter={{delimiter}}&useHeader={{useheader}}&encoding={{encoding}}");
+                     .to("csvtoxml://?&encoding={{encoding}}");
 
     }
 

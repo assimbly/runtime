@@ -14,15 +14,20 @@ spec:
       routeconfiguration_id:
         type: string
         default: "0"
-      options:
-          title: Options
-          description: Options
+      out_rule:
+          title: Out Rule
+          description: Out Rule
           type: string
       enrichType:
-          title: .
-          description: .
+          title: Enrich Type
+          description: Type of enrichment
           type: string
           default: text/xml
+      errorRoute:
+        title: Error Route
+        description: Error Route
+        type: string
+        default: text/xml
   dependencies:
     - "camel:kamelet"
   template:
@@ -32,11 +37,11 @@ spec:
         uri: "kamelet:source"
         steps:
           - set-property:
-              name: flowId
-              constant: "{{path}}"
+              name: Enrich-Type
+              constant: "{{enrichType}}"
           - set-property:
-              name: action
-              constant: "stopflow"
+              name: Error-Route
+              constant: "{{errorRoute}}"
           - enrich:
               constant: "{{out_rule}}"
               aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"

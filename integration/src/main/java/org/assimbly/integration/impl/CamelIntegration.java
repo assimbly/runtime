@@ -231,9 +231,11 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
+		registry.bind("AggregateStrategy", new AggregateStrategy());
+
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		//bindByName("","org.assimbly.aggregate.AggregateStrategy");
-		bindByName("CurrentEnrichStrategy","org.assimbly.enrich.EnrichStrategy");
+		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
+		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
 		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
 		bindByName("ExtendedHeaderFilterStrategy","org.assimbly.cookies.CookieStore");
 		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
@@ -317,6 +319,10 @@ public class CamelIntegration extends BaseIntegration {
 			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
 
 			//replace values
+			if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
+				resourceAsString = resourceAsString + "      - to:\n" +
+						"          uri: \"kamelet:sink\"";
+			}
 			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
 			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
 			resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");

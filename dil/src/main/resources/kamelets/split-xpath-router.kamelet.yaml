@@ -19,9 +19,13 @@ spec:
           description: Path
           type: string
       expression:
-          title: 
-          description: .
+          title: Expression
+          description: Expression
           type: string
+      out_rule:
+        title: Out Rule
+        description: Out Rule
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -35,17 +39,13 @@ spec:
               steps:
                 - set-header:
                     name: CamelSplitIndex
-                    simple: ${exchangeProperty.CamelSplitIndex}
+                    simple: "${exchangeProperty.CamelSplitIndex}"
                 - set-header:
                     name: CamelSplitSize
-                    simple: ${exchangeProperty.CamelSplitSize}
+                    simple: "${exchangeProperty.CamelSplitSize}"
                 - set-header:
                     name: CamelSplitComplete
-                    simple: ${exchangeProperty.CamelSplitComplete.toString().trim()}
+                    simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
                 - to: "{{out_rule}}"
-          - choice:
-              when:
-                - simple: "{{out}}!='mock:0'"
-                  steps:
-                    - to:
-                        uri: "kamelet:sink"
+          - to:
+              uri: "{{out}}?failIfNoConsumers=false"
