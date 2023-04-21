@@ -8,7 +8,7 @@ spec:
   definition:
     title: "queuethrottle action"
     description: |-
-      Throttle messages on an ActiveMQ queue
+      Throttles messages on an ActiveMQ queue
     type: object
     properties:
       routeconfiguration_id:
@@ -19,9 +19,9 @@ spec:
           description: Time Period
           type: string
           default: 5000
-      maxRequests:
-          title: Max Requests
-          description: Max requests
+      messages:
+          title: Messages
+          description: Max number of messages
           type: string
           default: 1
   dependencies:
@@ -36,11 +36,11 @@ spec:
               name: AssimblyQueueName
               constant: "{{path}}"
           - process:
-              ref: "ManageQueueMessageCheckerFlowProcessor"
+              ref: "QueueMessageChecker"
           - filter:
               simple: "${exchangeProperty.AssimblyQueueHasMessages} == true"
           - loop:
-              constant: "{{maxRequests}}"
+              constant: "{{messages}}"
               steps:
                 - set-property:
                     name: Enrich-Type

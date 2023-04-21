@@ -1960,7 +1960,7 @@ public class CamelIntegration extends BaseIntegration {
 		return stepStats;
 	}
 
-	private JSONObject getStepStats(String routeid, boolean fullStats){
+	private JSONObject getStepStats(String routeid, boolean fullStats) throws Exception {
 
 		JSONObject json = new JSONObject();
 		JSONObject step = new JSONObject();

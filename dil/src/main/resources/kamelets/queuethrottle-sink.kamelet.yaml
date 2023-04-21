@@ -8,7 +8,7 @@ spec:
   definition:
     title: "queuethrottle sink"
     description: |-
-      Throttle messages on an ActiveMQ queue
+      Throttles messages on an ActiveMQ queue
     type: object
     properties:
       routeconfiguration_id:
@@ -26,6 +26,28 @@ spec:
         default: 1
   dependencies:
     - "camel:kamelet"
+spec:
+  definition:
+    title: "queuethrottle sink"
+    description: |-
+      Throttle messages on an ActiveMQ queue
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      timePeriod:
+        title: Time Period
+        description: Time Period
+        type: string
+        default: 5000
+      messages:
+        title: Messages
+        description: Max number of messages
+        type: string
+        default: 1
+  dependencies:
+    - "camel:kamelet"
   template:
     route:
       route-configuration-id: "{{routeconfiguration_id}}"
@@ -36,11 +58,11 @@ spec:
               name: AssimblyQueueName
               constant: "{{path}}"
           - process:
-              ref: "ManageQueueMessageCheckerFlowProcessor"
+              ref: "QueueMessageChecker"
           - filter:
               simple: "${exchangeProperty.AssimblyQueueHasMessages} == true"
           - loop:
-              constant: "{{maxRequests}}"
+              constant: "{{messages}}"
               steps:
                 - set-property:
                     name: Enrich-Type

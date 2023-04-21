@@ -536,7 +536,6 @@ public class RouteTemplate {
 
                 parameter = createParameter(templateDoc, "in", value);
                 templatedRoute.appendChild(parameter);
-
             }
         }
     }
@@ -591,12 +590,16 @@ public class RouteTemplate {
                 parameter = createParameter(templateDoc, bound + "_rule", endpoint);
                 templatedRoute.appendChild(parameter);
             } else {
-                parameter = createParameter(templateDoc, bound, endpoint);
+                parameter = createParameter(templateDoc, bound , endpoint);
                 templatedRoute.appendChild(parameter);
             }
 
             if (bound != null && bound.equalsIgnoreCase("out")) {
                 createLinkLists(rule, expression, endpoint);
+                if (rule != null) {
+                    parameter = createParameter(templateDoc, bound + "_default", endpoint);
+                    templatedRoute.appendChild(parameter);
+                }
             }
 
         } else {

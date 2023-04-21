@@ -26,6 +26,11 @@ spec:
         title: Out Rule
         description: Out Rule
         type: string
+      out_default:
+        title: Out Rule
+        description: Out Rule
+        type: string
+        default: "mock:0"
   dependencies:
     - "camel:kamelet"
   template:
@@ -48,4 +53,4 @@ spec:
                     simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
                 - to: "{{out_rule}}"
           - to:
-              uri: "{{out}}?failIfNoConsumers=false"
+              uri: "{{out_default}}"
