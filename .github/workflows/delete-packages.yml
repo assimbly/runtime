@@ -1,11 +1,6 @@
-name: Publish Snapshots
+name: Delete Packages
 
 on:
-    schedule:
-        - cron: '0 0 * * *'
-    push:
-        branches:
-            - 'snapshots-tests'
 
 jobs:
   delete_older_snapshots:
