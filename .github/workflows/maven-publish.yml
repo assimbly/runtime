@@ -2,9 +2,6 @@ name: Publish package to GitHub Packages
 on:
   release:
     types: [ released ]
-  push:
-    branches:
-      - 'snapshots-tests'
 
 
 jobs:

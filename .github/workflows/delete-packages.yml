@@ -1,0 +1,31 @@
+name: Publish Snapshots
+
+on:
+  push:
+    branches:
+      - 'snapshots-tests'
+
+jobs:
+  delete_older_snapshots:
+
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+
+    steps:
+
+      - name: Delete older snapshots
+        uses: smartsquaregmbh/delete-old-packages@v0.7.0
+        with:
+          organization: assimbly
+          type: maven
+          keep: 0
+          version-pattern: "^\\S+\\-SNAPSHOT$"
+          names: |
+            org.assimbly.runtime
+            org.assimbly.integration-rest
+            org.assimbly.integration
+            org.assimbly.dil
+            org.assimbly.broker-rest
+            org.assimbly.broker
