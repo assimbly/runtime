@@ -36,13 +36,6 @@ jobs:
     needs: [delete_older_snapshots]
 
     runs-on: ubuntu-latest
-    permissions:
-        contents: read
-        packages: write
-
-    env:
-      GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
 
@@ -59,14 +52,18 @@ jobs:
 
       - name: Setup Maven settings.xml
         uses: whelk-io/maven-settings-xml-action@v20
+        env:
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
         with:
           
           repositories: >
               [
                   {
-                      "id": "maven",
-                      "name": "Maven Central",
-                      "url": "https://repo1.maven.org/maven2"
+                    "id": "maven",
+                    "name": "Maven Central",
+                    "url": "https://repo1.maven.org/maven2"
                   },
                   {
                     "id": "github",
