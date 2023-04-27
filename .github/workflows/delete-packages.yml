@@ -1,9 +1,11 @@
 name: Publish Snapshots
 
 on:
-  push:
-    branches:
-      - 'snapshots-tests'
+    schedule:
+        - cron: '0 0 * * *'
+    push:
+        branches:
+            - 'snapshots-tests'
 
 jobs:
   delete_older_snapshots:
