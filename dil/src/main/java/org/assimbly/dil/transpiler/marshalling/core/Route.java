@@ -36,7 +36,17 @@ public class Route {
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
-        routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
+        System.out.println("routeAsString1=" + routeAsString);
+        System.out.println("routeId=" + routeId);
+
+        if(routeAsString.contains("yamldsl")){
+            routeAsString = StringUtils.substringBetween(routeAsString,"<yamldsl xmlns=\"http://camel.apache.org/schema/spring\">","</yamldsl>");
+            routeAsString = StringUtils.replace(routeAsString,"id: " + routeId,"id: " + flowId + "-" + routeId);
+        }else{
+            routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
+        }
+
+        System.out.println("routeAsString2=" + routeAsString);
 
         return routeAsString;
 

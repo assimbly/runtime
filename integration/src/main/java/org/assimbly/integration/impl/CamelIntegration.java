@@ -2,6 +2,7 @@ package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
@@ -65,6 +66,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
@@ -266,7 +268,7 @@ public class CamelIntegration extends BaseIntegration {
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
 
-		// Enable to load custom templates (Java DSL)
+		// Load custom templates (Java DSL)
 
 		/*
 
@@ -285,15 +287,76 @@ public class CamelIntegration extends BaseIntegration {
 				context.addRoutes((RouteBuilder) template);
 			}
 		}
-
-
 		 */
 
-		// Enable to load custom Kamelets (Yaml DSL)
-		List<String> resourceNames;
-		try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
-			resourceNames = scanResult.getAllResources().getPaths();
+
+		//load kamelets into Camel Context
+
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+
+		List<String> resourceNames = getKamelets();
+
+		for(String resourceName: resourceNames){
+
+			URL url;
+			if(resourceName.startsWith("file:")){
+				url = new URL(resourceName);
+			}else{
+				url = Resources.getResource(resourceName);
+			}
+
+			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+			Resource resource = convertKameletToStep(resourceName, resourceAsString);
+
+			try{
+				loader.loadRoutes(resource);
+			}catch (Exception e){
+				log.warn("could not load: " + resourceName + ". Reason: " + e.getMessage());
+			}
+
 		}
+
+	}
+
+	private List<String> getKamelets() throws IOException {
+
+		List<String> kamelets = new ArrayList<>();
+
+		// Add resource paths from classpath (/kamelets under resources)
+		List<String> classpathNames;
+		try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
+			classpathNames = scanResult.getAllResources().getPaths();
+		}
+
+		if(classpathNames != null || classpathNames.isEmpty()){
+			kamelets.addAll(classpathNames);
+		}
+
+		// Add resource paths from filepath (Kamelets .assimbly/kamelets directory)
+		List<String> filepathNames = new ArrayList<>();
+
+		File kameletDir = new File(baseDir + "/kamelets");
+		if(!kameletDir.exists()){
+			FileUtils.forceMkdir(kameletDir);
+		}else{
+
+			Files.walk(Paths.get(baseDir + "/kamelets"))
+					.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
+					.forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\","/")));
+
+			if(filepathNames != null && !filepathNames.isEmpty()){
+				kamelets.addAll(filepathNames);
+			}
+
+		}
+
+		return kamelets;
+
+	}
+
+	private Resource convertKameletToStep(String resourceName, String resourceAsString){
 
 		String properties = "    properties:\n" +
 				"      in:\n" +
@@ -307,39 +370,60 @@ public class CamelIntegration extends BaseIntegration {
 				"          type: string\n" +
 				"          default: kamelet:sink\t";
 
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-
-
-
-		for(String resourceName: resourceNames){
-
-			URL url = Resources.getResource(resourceName);
-
-			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
-
-			//replace values
-			if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
-				resourceAsString = resourceAsString + "      - to:\n" +
-						"          uri: \"kamelet:sink\"";
-			}
-			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
-			resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
-			resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
-			resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
-			resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
-			resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
-
-			Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
-			try{
-				loader.loadRoutes(resource);
-			}catch (Exception e){
-				log.warn("could not load: " + resourceName + ". Reason: " + e.getMessage());
-			}
-
+		//replace values
+		if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
+			resourceAsString = resourceAsString + "      - to:\n" +
+					"          uri: \"kamelet:sink\"";
 		}
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
+		resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
+
+		Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
+
+		return resource;
 
 	}
+
+	public String getListOfStepTemplates() throws IOException {
+
+		List<String> kamelets = getKamelets();
+
+		for (int i = 0; i < kamelets.size(); i++) {
+			String kamelet = kamelets.get(i);
+			if (kamelet.endsWith(".kamelet.yaml")) {
+				kamelets.set(i, kamelet.substring(9, kamelet.length() - 13));
+			}
+		}
+
+		Collections.sort(kamelets);
+
+		JSONArray jsonArray = new JSONArray(kamelets);
+
+		return jsonArray.toString();
+
+	}
+
+	public String getStepTemplate(String mediaType, String stepName) throws Exception {
+
+		String resourceName = "kamelets/" + stepName + ".kamelet.yaml";
+		URL	url = Resources.getResource(resourceName);
+		String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+		if(mediaType.contains("xml")){
+			resourceAsString = DocConverter.convertYamlToXml(resourceAsString);
+		}else if(mediaType.contains("json")){
+			resourceAsString = DocConverter.convertYamlToJson(resourceAsString);
+		}
+
+		return resourceAsString;
+
+	}
+
+
 
 	// (Un)install files
 
@@ -535,8 +619,56 @@ public class CamelIntegration extends BaseIntegration {
 		if(mediaType.contains("json")){
 			configuration = DocConverter.convertJsonToXml(configuration);
 			mediaType = "xml";
+
 		}else if(mediaType.contains("yaml")){
-			configuration = DocConverter.convertYamlToXml(configuration);
+			if(configuration.contains("dil")){
+				configuration = DocConverter.convertYamlToXml(configuration);
+			}else{
+
+				String xmlRoute = "";
+				Yaml yaml = new Yaml();
+
+				if (configuration.startsWith("- from:") || configuration.contains("kind: Integration") || configuration.contains("kind: Kamelet")) {
+					if (configuration.startsWith("- from:")){
+						configuration= StringUtils.replace(configuration,"\n","\n  ");
+					}
+
+					configuration = StringUtils.substringAfter(configuration, "from:");
+
+					configuration = "- route:\n" +
+							"    id: " + fileName + "-1\n" +
+							"    from:" + configuration;
+				}
+
+				String[] routes = StringUtils.splitByWholeSeparator(configuration,"- route:\n");
+
+				for(String route: routes){
+
+					route = "- route:\n" + route;
+
+					List<Map<String,Object>> yamlRoutes = yaml.load(route);
+
+					int index = 0;
+					for(Map<String,Object> yamlRoute: yamlRoutes){
+
+						Map<String,String> routeMap = (Map<String, String>) yamlRoute.get("route");
+
+						String id = routeMap.get("id");
+						if(id == null || id.isEmpty()){
+							id = fileName + "-" + index++;
+						}
+
+						//put yaml route into xml route
+						xmlRoute = xmlRoute + "<route id=\"" + id + "\"><yamldsl><![CDATA[" + route + "]]></yamldsl></route>";
+
+					}
+
+				}
+
+				configuration = "<routes id=\"" + fileName + "\" xmlns=\"http://camel.apache.org/schema/spring\">" + xmlRoute + "</routes>";
+
+			}
+
 			mediaType = "xml";
 		}
 
@@ -582,44 +714,48 @@ public class CamelIntegration extends BaseIntegration {
 
 		String configurationUTF8 = new String(configuration.getBytes("UTF-8"));
 
-		Document doc = DocConverter.convertStringToDoc(configurationUTF8);
-		XPath xPath = XPathFactory.newInstance().newXPath();
+		if(IntegrationUtil.isXML(configurationUTF8)) {
+			Document doc = DocConverter.convertStringToDoc(configurationUTF8);
+			XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String root = doc.getDocumentElement().getTagName();
+			String root = doc.getDocumentElement().getTagName();
 
-		if(root.equals("dil") || root.equals("integrations") || root.equals("flows")){
-			flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
-			}
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flows/flow[1]/name",doc);
-			}
-		}else if(root.equals("flow")){
-			flowId = xPath.evaluate("//flow[id='" + filename + "']/id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flow/id",doc);
-			}
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flow/name",doc);
-			}
-		}else if(root.equals("camelContext")){
-			flowId = xPath.evaluate("/camelContext/@id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				log.warn("Configuration: CamelContext element doesn't have an id attribute");
-			}
-		}else if(root.equals("routes")){
-			flowId = xPath.evaluate("/routes/@id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				log.warn("Configuration: routes element doesn't have an id attribute");
-			}
-		}else if(root.equals("route")){
-			flowId = xPath.evaluate("/route/@id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				log.warn("Configuration: routes element doesn't have an id attribute");
+			if (root.equals("dil") || root.equals("integrations") || root.equals("flows")) {
+				flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flows/flow[1]/id", doc);
+				}
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flows/flow[1]/name", doc);
+				}
+			} else if (root.equals("flow")) {
+				flowId = xPath.evaluate("//flow[id='" + filename + "']/id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flow/id", doc);
+				}
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flow/name", doc);
+				}
+			} else if (root.equals("camelContext")) {
+				flowId = xPath.evaluate("/camelContext/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: CamelContext element doesn't have an id attribute");
+				}
+			} else if (root.equals("routes")) {
+				flowId = xPath.evaluate("/routes/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: routes element doesn't have an id attribute");
+				}
+			} else if (root.equals("route")) {
+				flowId = xPath.evaluate("/route/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: routes element doesn't have an id attribute");
+				}
+			} else {
+				log.warn("Unknown configuration. Either a DIL file (starting with a <dil> element) or Camel file (starting with <routes> element) is expected");
 			}
 		}else{
-			log.warn("Unknown configuration. Either a DIL file (starting with a <dil> element) or Camel file (starting with <routes> element) is expected");
+			flowId = filename;
 		}
 
 		return flowId;
@@ -1669,7 +1805,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		return camelRouteConfiguration;
 	}
-
 
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception {
 

@@ -241,7 +241,42 @@ public class FlowConfigurerRuntime {
 
     }
 
-    @DeleteMapping(
+	@GetMapping(
+			path = "/integration/{integrationId}/flow/step/{templatename}",
+			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+	)
+
+	public ResponseEntity<String> getStepTemplate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String templatename) throws Exception {
+
+		try {
+			integration = integrationRuntime.getIntegration();
+			String stepTemplate = integration.getStepTemplate(mediaType, templatename);
+			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/routes",stepTemplate,true);
+		} catch (Exception e) {
+			log.error("Get step template failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/routes",e.getMessage());
+		}
+
+	}
+
+	@GetMapping(
+			path = "/integration/{integrationId}/flow/list/steps",
+			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
+	)
+	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+
+		try {
+			integration = integrationRuntime.getIntegration();
+			String stepTemplates = integration.getListOfStepTemplates();
+			return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/list/steps",stepTemplates,true);
+		} catch (Exception e) {
+			log.error("Get all step templates failed",e);
+			return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/flow/list/steps",e.getMessage());
+		}
+
+	}
+
+	@DeleteMapping(
 			path = "/integration/{integrationId}/flow/{flowId}/remove",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)

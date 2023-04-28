@@ -333,6 +333,25 @@ public interface Integration {
 	 */
 	public String getListOfSoapActions(String url, String mediaType) throws Exception;
 
+
+	/**
+	 * Gets the template of steps (templates)
+	 *
+	 * @param  mediaType (xml, json or yaml)
+	 * @param  stepName name of the step template
+	 * @throws Exception if step template isn't found
+	 * @return returns an array of flows with id
+	 */
+	public abstract String getStepTemplate(String mediaType, String stepName) throws Exception;
+
+	/**
+	 * Gets list of step templates
+	 *
+	 * @throws Exception if list failed to retreive
+	 * @return returns an array of flows with id
+	 */
+	public abstract String getListOfStepTemplates() throws Exception;
+
 	/**
 	 * Count the number of (loaded) flows
 	 *
