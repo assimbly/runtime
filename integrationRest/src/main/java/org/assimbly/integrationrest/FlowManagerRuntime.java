@@ -258,6 +258,8 @@ public class FlowManagerRuntime {
 
         plainResponse = true;
 
+        log.info("Install flowId" + flowId + ". Configuration:\n\n" + configuration);
+
         try {
             integration = integrationRuntime.getIntegration();
 

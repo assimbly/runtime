@@ -2,13 +2,18 @@ package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import java.util.TreeMap;
 
 public class Route {
+
+    final static Logger log = LoggerFactory.getLogger(Route.class);
 
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
@@ -59,7 +64,11 @@ public class Route {
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");
-            return route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
+            if(dataFormatAsString!=null) {
+                return route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
+            }else{
+                log.warn("Route:\n\n" + route + "\n\n Contains custom dataformat, but dataFormat is null");
+            }
         }
 
         return route;
