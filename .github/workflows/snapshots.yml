@@ -38,7 +38,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -83,7 +82,7 @@ jobs:
               [
                   {
                       "id": "github",
-                      "username": "$GITHUB_ACTOR",
+                      "username": "assimbly",
                       "password": "$GITHUB_TOKEN"
                   }
               ]
