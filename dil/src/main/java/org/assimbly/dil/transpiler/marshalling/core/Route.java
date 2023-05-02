@@ -41,17 +41,12 @@ public class Route {
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
-        System.out.println("routeAsString1=" + routeAsString);
-        System.out.println("routeId=" + routeId);
-
         if(routeAsString.contains("yamldsl")){
             routeAsString = StringUtils.substringBetween(routeAsString,"<yamldsl xmlns=\"http://camel.apache.org/schema/spring\">","</yamldsl>");
             routeAsString = StringUtils.replace(routeAsString,"id: " + routeId,"id: " + flowId + "-" + routeId);
         }else{
             routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
         }
-
-        System.out.println("routeAsString2=" + routeAsString);
 
         return routeAsString;
 
@@ -63,11 +58,44 @@ public class Route {
             Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
             String dataFormatAsString = DocConverter.convertNodeToString(node);
-            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats");
+            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
+            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<csv", "/>");
             if(dataFormatAsString!=null) {
-                return route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
+                route = route.replaceAll("<customDataFormat ref=(.*)", "<csv" + dataFormatAsString + "/>");
             }else{
                 log.warn("Route:\n\n" + route + "\n\n Contains custom dataformat, but dataFormat is null");
+            }
+        }
+
+        if (route.contains("<unmarshal ref=\"fmuta")){
+            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
+
+            String dataFormatAsString = DocConverter.convertNodeToString(node);
+
+            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
+
+            String[] csvFormats = dataFormatAsString.split("<univocityCsv");
+            for(String csvFormat: csvFormats){
+                if(csvFormat.contains("fmuta-csv2pojo")){
+                    csvFormat = csvFormat.replaceAll("id=\"(.*)\"", "");
+                    route = route.replaceAll("<unmarshal ref=(.*)/>", "<unmarshal><univocityCsv" + csvFormat + "</unmarshal>");
+                }
+            }
+        }
+
+        if (route.contains("<marshal ref=\"fmuta")){
+            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
+
+            String dataFormatAsString = DocConverter.convertNodeToString(node);
+
+            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
+
+            String[] csvFormats = dataFormatAsString.split("<univocityCsv");
+            for(String csvFormat: csvFormats){
+                if(csvFormat.contains("fmuta-pojo2csv")){
+                    csvFormat = csvFormat.replaceAll("id=\"(.*)\"", "");
+                    route = route.replaceAll("<marshal ref=(.*)/>", "<marshal><univocityCsv" + csvFormat + "</marshal>");
+                }
             }
         }
 
