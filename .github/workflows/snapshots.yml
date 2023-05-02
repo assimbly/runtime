@@ -97,6 +97,6 @@ jobs:
             mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=${VERSION}
 
       - name: Publish package
-        run: mvn --batch-mode deploy
+        run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeplyAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
