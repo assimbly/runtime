@@ -36,14 +36,16 @@ jobs:
     needs: [delete_older_snapshots]
 
     runs-on: ubuntu-latest
-
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
 
       - name: Checkout the code
         uses: actions/checkout@v3
+        with:
+          ref: "develop"
       
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -83,11 +85,19 @@ jobs:
                   {
                       "id": "github",
                       "username": "assimbly",
-                      "password": "$GITHUB_TOKEN"
+                      "password": "${{ secrets.GITHUB_TOKEN }}"
                   }
               ]
 
+      - name: Update POM Version
+        env:
+          VERSION: 4.0.0-SNAPSHOT
+        run: |
+            echo "Updating to version: ${VERSION}"
+            mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION}
+            mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=${VERSION}
+
       - name: Publish package
-        run: mvn clean source:jar deploy -DuniqueVersion=false -Dmaven.source.useDefaultManifestFile=true -DdeplyAtEnd=true -Dmaven.source.includePom=true -Dmaven.install.skip=true
+        run: mvn --batch-mode deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
