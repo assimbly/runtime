@@ -1,9 +1,19 @@
 name: Update POM files version
 
 on:
-  push:
-    branches:
-      - 'update-development-version'
+  workflow_dispatch:
+    inputs:
+      BRANCH:
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - master
+      VERSION:
+        description: '4.0.0'
+        required: true
+        default: '4.0.0'
 
 jobs:
   update_version:
