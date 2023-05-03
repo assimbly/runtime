@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
- 
   <modelVersion>4.0.0</modelVersion>
- 
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>null</version>
+    <version>4.0.0</version>
   </parent>
 
-  <name>broker-rest</name>
+  <name>dil</name>
   <packaging>jar</packaging>
 
-  <artifactId>broker-rest</artifactId>
+  <artifactId>dil</artifactId>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>    
+    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>
   </properties>
 
   <distributionManagement> 
@@ -31,7 +29,27 @@
   <dependencies>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>broker</artifactId>
+		  <artifactId>camel-base</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-components</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>extra</artifactId>
+ 		  <version>${assimbly.version}</version>
+	  </dependency>
+    	<dependency>
+			<groupId>org.assimbly</groupId>
+			<artifactId>test-base</artifactId>
+			<version>${assimbly.version}</version>
+		</dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
   </dependencies>

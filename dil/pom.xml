@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>4.0.0</version>
+    <version>null</version>
   </parent>
 
   <name>dil</name>
