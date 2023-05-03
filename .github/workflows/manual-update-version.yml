@@ -1,4 +1,4 @@
-name: Update POM files version
+name: Manual Version Update
 
 on:
   workflow_dispatch:
@@ -14,6 +14,10 @@ on:
         description: '4.0.0'
         required: true
         default: '4.0.0'
+        
+  push:
+    branches:
+      - 'update-development-version'
 
 jobs:
   update_version:
