@@ -496,9 +496,11 @@ public class RouteTemplate {
 
     private void createLinks(String[] links, String stepXPath, String type, String flowId){
 
+        //set default links when not configured.
         createDefaultLinks(stepXPath, flowId);
 
         if(links.length > 0){
+            //overwrite default links with configured links.
             createCustomLinks(links, stepXPath, type);
         }
 
@@ -518,7 +520,6 @@ public class RouteTemplate {
 
             String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
 
-
             String previousStepId = Objects.toString(conf.getProperty("(" + previousStepXPath + "id)[1]"), "0");
             String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
             String nextStepId = Objects.toString(conf.getProperty("(" + nextStepXPath + "id)[1]"), "0");
@@ -535,7 +536,6 @@ public class RouteTemplate {
 
                 parameter = createParameter(templateDoc, "in", value);
                 templatedRoute.appendChild(parameter);
-
             }
         }
     }
@@ -543,7 +543,6 @@ public class RouteTemplate {
     private void createCustomLinks(String[] links, String stepXPath, String type){
 
         int index = 1;
-
 
         for(String link : links) {
 
@@ -591,27 +590,37 @@ public class RouteTemplate {
                 parameter = createParameter(templateDoc, bound + "_rule", endpoint);
                 templatedRoute.appendChild(parameter);
             } else {
-                parameter = createParameter(templateDoc, bound, endpoint);
+                parameter = createParameter(templateDoc, bound , endpoint);
                 templatedRoute.appendChild(parameter);
             }
 
             if (bound != null && bound.equalsIgnoreCase("out")) {
                 createLinkLists(rule, expression, endpoint);
+                if (rule != null) {
+                    parameter = createParameter(templateDoc, bound + "_default", endpoint);
+                    templatedRoute.appendChild(parameter);
+                }
             }
 
         } else {
             NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
+            Boolean parameterUpdated = false;
             for (Node oldParameter : iterable(oldParameters)) {
 
                 Node name = oldParameter.getAttributes().getNamedItem("name");
+
                 if (name.getNodeValue().equals(bound)) {
+                    parameterUpdated = true;
                     parameter = createParameter(templateDoc, bound, endpoint);
-
                     templatedRoute.replaceChild(parameter, oldParameter);
-
                 }
 
+            }
+
+            if(!parameterUpdated){
+                parameter = createParameter(templateDoc, bound, endpoint);
+                templatedRoute.appendChild(parameter);
             }
 
         }

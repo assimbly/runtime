@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setoauth2token-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "setoauth2token sink"
+    description: |-
+      Set oAuth2token
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "setoauth2token://?{{options}}"

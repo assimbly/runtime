@@ -1,6 +1,12 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -9,7 +15,9 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
+import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.directvm.DirectVmComponent;
+import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.component.jetty9.JettyHttpComponent9;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -21,16 +29,21 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.jsse.*;
+import org.apache.camel.support.ResourceHelper;
+import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
+import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
+import org.assimbly.dil.event.domain.Collection;
+import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
@@ -39,12 +52,10 @@ import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.loader.ConnectorRoute;
-import org.assimbly.dil.loader.FlowLoader;
-import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.util.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
+import org.assimbly.util.helper.JsonHelper;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
@@ -55,17 +66,24 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
+import org.yaml.snakeyaml.Yaml;
+
 import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,38 +92,35 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 
 public class CamelIntegration extends BaseIntegration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	private CamelContext context;
+	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
+	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 
+	private CamelContext context;
 	private static boolean started = false;
 	private final int stopTimeout = 10;
 	private ServiceStatus status;
 	private String flowStatus;
-
 	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
-
 	private Properties encryptionProperties;
-
 	private boolean watchDeployDirectoryInitialized = false;
 	private TreeMap<String, String> props;
-
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
-
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -138,6 +153,8 @@ public class CamelIntegration extends BaseIntegration {
 		setRouteTemplates();
 
 		setDefaultBlocks();
+
+		setGlobalOptions();
 
 		setThreadProfile(0,5,5000);
 
@@ -216,21 +233,22 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
+		registry.bind("AggregateStrategy", new AggregateStrategy());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		//bindByName("","world.dovetail.aggregate.AggregateStrategy");
-		bindByName("CurrentEnrichStrategy","world.dovetail.enrich.EnrichStrategy");
-		bindByName("Er7ToHl7Converter","world.dovetail.hl7.Er7Encoder");
-		bindByName("ExtendedHeaderFilterStrategy","world.dovetail.cookies.CookieStore");
-		bindByName("flowCookieStore","world.dovetail.cookies.CookieStore");
-		bindByName("Hl7ToXmlConverter","world.dovetail.hl7.XmlMarshaller");
-		bindByName("multipartProcessor","world.dovetail.multipart.processor.MultipartProcessor");
-		bindByName("QueueMessageChecker","world.dovetail.throttling.QueueMessageChecker");
-		bindByName("XmlToHl7Converter","world.dovetail.hl7.XmlEncoder");
+		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
+		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
+		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
+		bindByName("ExtendedHeaderFilterStrategy","org.assimbly.cookies.CookieStore");
+		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
+		bindByName("Hl7ToXmlConverter","org.assimbly.hl7.XmlMarshaller");
+		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
+		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
+		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 
-		addServiceByName("world.dovetail.mail.component.mail.MailComponent");
-		addServiceByName("world.dovetail.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
-		addServiceByName("world.dovetail.xmltojson.CustomXmlJsonDataFormat");
+		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
+		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
+		addServiceByName("org.assimbly.xmltojson.CustomXmlJsonDataFormat");
 
 	}
 
@@ -242,9 +260,17 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public void setGlobalOptions(){
+		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
+		activemq.setTestConnectionOnStartup(true);
+	}
 
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
+
+		// Load custom templates (Java DSL)
+
+		/*
 
 		// create scanner and disable default filters (that is the 'false' argument)
 		final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
@@ -260,10 +286,144 @@ public class CamelIntegration extends BaseIntegration {
 			if(template instanceof RouteBuilder){
 				context.addRoutes((RouteBuilder) template);
 			}
+		}
+		 */
+
+
+		//load kamelets into Camel Context
+
+		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+
+		List<String> resourceNames = getKamelets();
+
+		for(String resourceName: resourceNames){
+
+			URL url;
+			if(resourceName.startsWith("file:")){
+				url = new URL(resourceName);
+			}else{
+				url = Resources.getResource(resourceName);
+			}
+
+			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+			Resource resource = convertKameletToStep(resourceName, resourceAsString);
+
+			try{
+				loader.loadRoutes(resource);
+			}catch (Exception e){
+				log.warn("could not load: " + resourceName + ". Reason: " + e.getMessage());
+			}
 
 		}
 
 	}
+
+	private List<String> getKamelets() throws IOException {
+
+		List<String> kamelets = new ArrayList<>();
+
+		// Add resource paths from classpath (/kamelets under resources)
+		List<String> classpathNames;
+		try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
+			classpathNames = scanResult.getAllResources().getPaths();
+		}
+
+		if(classpathNames != null || classpathNames.isEmpty()){
+			kamelets.addAll(classpathNames);
+		}
+
+		// Add resource paths from filepath (Kamelets .assimbly/kamelets directory)
+		List<String> filepathNames = new ArrayList<>();
+
+		File kameletDir = new File(baseDir + "/kamelets");
+		if(!kameletDir.exists()){
+			FileUtils.forceMkdir(kameletDir);
+		}else{
+
+			Files.walk(Paths.get(baseDir + "/kamelets"))
+					.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
+					.forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\","/")));
+
+			if(filepathNames != null && !filepathNames.isEmpty()){
+				kamelets.addAll(filepathNames);
+			}
+
+		}
+
+		return kamelets;
+
+	}
+
+	private Resource convertKameletToStep(String resourceName, String resourceAsString){
+
+		String properties = "    properties:\n" +
+				"      in:\n" +
+				"          title: Source endpoint\n" +
+				"          description: The Camel uri of the source endpoint.\n" +
+				"          type: string\n" +
+				"          default: kamelet:source\n" +
+				"      out:\n" +
+				"          title: Sink endpoint\n" +
+				"          description: The Camel uri of the sink endpoint.\n" +
+				"          type: string\n" +
+				"          default: kamelet:sink\t";
+
+		//replace values
+		if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
+			resourceAsString = resourceAsString + "      - to:\n" +
+					"          uri: \"kamelet:sink\"";
+		}
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
+		resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
+
+		Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
+
+		return resource;
+
+	}
+
+	public String getListOfStepTemplates() throws IOException {
+
+		List<String> kamelets = getKamelets();
+
+		for (int i = 0; i < kamelets.size(); i++) {
+			String kamelet = kamelets.get(i);
+			if (kamelet.endsWith(".kamelet.yaml")) {
+				kamelets.set(i, kamelet.substring(9, kamelet.length() - 13));
+			}
+		}
+
+		Collections.sort(kamelets);
+
+		JSONArray jsonArray = new JSONArray(kamelets);
+
+		return jsonArray.toString();
+
+	}
+
+	public String getStepTemplate(String mediaType, String stepName) throws Exception {
+
+		String resourceName = "kamelets/" + stepName + ".kamelet.yaml";
+		URL	url = Resources.getResource(resourceName);
+		String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+		if(mediaType.contains("xml")){
+			resourceAsString = DocConverter.convertYamlToXml(resourceAsString);
+		}else if(mediaType.contains("json")){
+			resourceAsString = DocConverter.convertYamlToJson(resourceAsString);
+		}
+
+		return resourceAsString;
+
+	}
+
+
 
 	// (Un)install files
 
@@ -284,6 +444,40 @@ public class CamelIntegration extends BaseIntegration {
 		reload.start();
 
 	}*/
+
+	public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception{
+
+		String result = "unconfigured";
+
+		if(mediaType.contains("xml")){
+			configuration = DocConverter.convertXmlToJson(configuration);
+		}else if(mediaType.contains("yaml")){
+			configuration = DocConverter.convertYamlToJson(configuration);
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		List<Collection> collections = Arrays.asList(mapper.readValue(configuration, Collection[].class));
+
+		for(Collection collection: collections){
+
+			EventConfigurer eventConfigurer = new EventConfigurer(collection.getId(), context);
+
+			result = eventConfigurer.add(collection);
+
+			if(!result.equalsIgnoreCase("configured")){
+				break;
+			}
+		}
+
+		return result;
+
+	}
+
+	public String serialize(String json) throws IOException {
+		Gson gson = new Gson();
+		String g = gson.toJson(json);
+		return StringEscapeUtils.escapeEcmaScript(g);
+	}
 
 	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception{
 
@@ -425,8 +619,56 @@ public class CamelIntegration extends BaseIntegration {
 		if(mediaType.contains("json")){
 			configuration = DocConverter.convertJsonToXml(configuration);
 			mediaType = "xml";
+
 		}else if(mediaType.contains("yaml")){
-			configuration = DocConverter.convertYamlToXml(configuration);
+			if(configuration.contains("dil")){
+				configuration = DocConverter.convertYamlToXml(configuration);
+			}else{
+
+				String xmlRoute = "";
+				Yaml yaml = new Yaml();
+
+				if (configuration.startsWith("- from:") || configuration.contains("kind: Integration") || configuration.contains("kind: Kamelet")) {
+					if (configuration.startsWith("- from:")){
+						configuration= StringUtils.replace(configuration,"\n","\n  ");
+					}
+
+					configuration = StringUtils.substringAfter(configuration, "from:");
+
+					configuration = "- route:\n" +
+							"    id: " + fileName + "-1\n" +
+							"    from:" + configuration;
+				}
+
+				String[] routes = StringUtils.splitByWholeSeparator(configuration,"- route:\n");
+
+				for(String route: routes){
+
+					route = "- route:\n" + route;
+
+					List<Map<String,Object>> yamlRoutes = yaml.load(route);
+
+					int index = 0;
+					for(Map<String,Object> yamlRoute: yamlRoutes){
+
+						Map<String,String> routeMap = (Map<String, String>) yamlRoute.get("route");
+
+						String id = routeMap.get("id");
+						if(id == null || id.isEmpty()){
+							id = fileName + "-" + index++;
+						}
+
+						//put yaml route into xml route
+						xmlRoute = xmlRoute + "<route id=\"" + id + "\"><yamldsl><![CDATA[" + route + "]]></yamldsl></route>";
+
+					}
+
+				}
+
+				configuration = "<routes id=\"" + fileName + "\" xmlns=\"http://camel.apache.org/schema/spring\">" + xmlRoute + "</routes>";
+
+			}
+
 			mediaType = "xml";
 		}
 
@@ -435,7 +677,7 @@ public class CamelIntegration extends BaseIntegration {
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
 			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
-			if(loadReport.contains("error")||loadReport.contains("failed")){
+			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"")){
 				log.error(loadReport);
 			}
 		}else{
@@ -472,37 +714,48 @@ public class CamelIntegration extends BaseIntegration {
 
 		String configurationUTF8 = new String(configuration.getBytes("UTF-8"));
 
-		Document doc = DocConverter.convertStringToDoc(configurationUTF8);
-		XPath xPath = XPathFactory.newInstance().newXPath();
+		if(IntegrationUtil.isXML(configurationUTF8)) {
+			Document doc = DocConverter.convertStringToDoc(configurationUTF8);
+			XPath xPath = XPathFactory.newInstance().newXPath();
 
-		String root = doc.getDocumentElement().getTagName();
+			String root = doc.getDocumentElement().getTagName();
 
-		if(root.equals("dil") || root.equals("integrations") || root.equals("flows")){
-			flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flows/flow[1]/id",doc);
+			if (root.equals("dil") || root.equals("integrations") || root.equals("flows")) {
+				flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flows/flow[1]/id", doc);
+				}
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flows/flow[1]/name", doc);
+				}
+			} else if (root.equals("flow")) {
+				flowId = xPath.evaluate("//flow[id='" + filename + "']/id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flow/id", doc);
+				}
+				if (flowId == null || flowId.isEmpty()) {
+					flowId = xPath.evaluate("//flow/name", doc);
+				}
+			} else if (root.equals("camelContext")) {
+				flowId = xPath.evaluate("/camelContext/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: CamelContext element doesn't have an id attribute");
+				}
+			} else if (root.equals("routes")) {
+				flowId = xPath.evaluate("/routes/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: routes element doesn't have an id attribute");
+				}
+			} else if (root.equals("route")) {
+				flowId = xPath.evaluate("/route/@id", doc);
+				if (flowId == null || flowId.isEmpty()) {
+					log.warn("Configuration: routes element doesn't have an id attribute");
+				}
+			} else {
+				log.warn("Unknown configuration. Either a DIL file (starting with a <dil> element) or Camel file (starting with <routes> element) is expected");
 			}
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flows/flow[1]/name",doc);
-			}
-		}else if(root.equals("flow")){
-			flowId = xPath.evaluate("//flow[id='" + filename + "']/id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flow/id",doc);
-			}
-			if(flowId==null || flowId.isEmpty()){
-				flowId = xPath.evaluate("//flow/name",doc);
-			}
-		}else if(root.equals("camelContext")){
-			flowId = xPath.evaluate("/camelContext/@id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				log.warn("Configuration: CamelContext element doesn't have an id attribute");
-			}
-		}else if(root.equals("routes")){
-			flowId = xPath.evaluate("/routes/@id",doc);
-			if(flowId==null || flowId.isEmpty()){
-				log.warn("Configuration: routes element doesn't have an id attribute");
-			}
+		}else{
+			flowId = filename;
 		}
 
 		return flowId;
@@ -577,35 +830,52 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String addFlow(TreeMap<String, String> props)  {
 
-		String result = "error";
-
 		try{
+			// add custom connections if needed
+			addCustomActiveMQConnection(props, "dovetail");
+
 			//create connections & install dependencies if needed
 			createConnections(props);
 
-			//set up flow by type
-			String flowType  = props.get("flow.type");
-
-			if(flowType.equalsIgnoreCase("connector")){
-				addConnectorFlow(props);
-				result = "loaded";
-			}else if(flowType.equalsIgnoreCase("routes")){
-				addRoutesFlow(props);
-				result = "loaded";
-			}else{
-				result = loadFlow(props);
-				if(result.equalsIgnoreCase("loaded")){
-					result = "started";
-				}
-			}
+			return loadFlow(props);
 
 		}catch (Exception e){
 			log.error("add flow failed: ", e);
-			result = "error reason: " + e.getMessage();
+			return "error reason: " + e.getMessage();
 		}
 
-		return result;
+	}
 
+	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
+		try {
+			String activemqName = "activemq";
+			String brokerHost = System.getenv(BROKER_HOST);
+			String brokerPort = System.getenv(BROKER_PORT);
+			String activemqUrl = (
+					brokerHost!=null && brokerPort!=null ?
+							String.format("tcp://%s:%s", brokerHost, brokerPort) :
+							"tcp://localhost:61616"
+			);
+			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+				Component activemqComp = this.context.getComponent(activemqName);
+				if(activemqComp!=null) {
+					if (activemqComp instanceof ActiveMQComponent) {
+						String brokerUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
+						if(brokerUrl!=null && !brokerUrl.equals(activemqUrl)) {
+							// remove first the old one
+							this.context.removeComponent(activemqName);
+							// add a custom activemq
+							this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+						}
+					}
+				} else {
+					// just add the new ActiveMQComponent
+					this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+				}
+			}
+		} catch (Exception e) {
+			log.error("Error to add custom activeMQ connection", e);
+		}
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
@@ -634,11 +904,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 	}
 
-	public void addConnectorFlow(final TreeMap<String, String> props) throws Exception {
-		ConnectorRoute flow = new ConnectorRoute(props);
-		flow.updateRoutesToCamelContext(context);
-	}
-
 	public String loadFlow(final TreeMap<String, String> props) throws Exception {
 
 		FlowLoader flow = new FlowLoader(props);
@@ -650,31 +915,8 @@ public class CamelIntegration extends BaseIntegration {
 			return "error";
 		}
 
-		return "loaded";
+		return "started";
 
-	}
-
-	public void addRoutesFlow(final TreeMap<String, String> props) throws Exception {
-
-		for (String key : props.keySet()) {
-
-			if (key.endsWith("route")){
-				String xml = props.get(key);
-				updateRoute(xml);
-			}
-		}
-	}
-
-	//later move to https://www.javadoc.io/doc/org.apache.camel/camel-api/3.14.2/org/apache/camel/spi/RoutesLoader.html
-	//ExtendedCamelContext extended = context.getExtension(ExtendedCamelContext.class);
-	//extended.getRoutesLoader().updateRoutes(resources);
-	// https://stackoverflow.com/questions/67758503/load-a-apache-camel-route-at-runtime-from-a-file
-
-	public void updateRoute(String route) throws Exception {
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
-		Resource resource = IntegrationUtil.setResource(route);
-		loader.updateRoutes(resource);
 	}
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
@@ -918,7 +1160,6 @@ public class CamelIntegration extends BaseIntegration {
 			}else if(result.equals("started")) {
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
-
 
 	}catch (Exception e) {
 			if(context.isStarted()) {
@@ -1232,8 +1473,14 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			try {
-				ServiceStatus status = routeController.getRouteStatus(getRoutesByFlowId(updatedId).get(0).getId());
-				flowStatus = status.toString().toLowerCase();
+				List<Route> routesList = getRoutesByFlowId(updatedId);
+				if(routesList.isEmpty()){
+					flowStatus = "unconfigured";
+				}else{
+					String flowId = routesList.get(0).getId();
+					ServiceStatus status = routeController.getRouteStatus(flowId);
+					flowStatus = status.toString().toLowerCase();
+				}
 			}catch (Exception e) {
 				log.error("Get status flow " + id + " failed.",e);
 
@@ -1559,19 +1806,137 @@ public class CamelIntegration extends BaseIntegration {
 		return camelRouteConfiguration;
 	}
 
-
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception {
 
+		File directory = new File("C:/messages/templates");
+		java.util.Collection<File> files = FileUtils.listFiles(directory, null, false);
+
+		for (File file : files) {
+			String content = Files.readString(file.toPath());
+			String[] templates = StringUtils.substringsBetween(content,"routeTemplate",";");
+
+			if(templates.length > 0){
+
+				for(String template: templates){
+					String[] lines = template.split("\\.");
+					if(lines.length > 0){
+
+						String name = StringUtils.substringsBetween(lines[0],"(\"","\")")[0];
+						List<String> parameters = new ArrayList<>();
+						for(String line: lines){
+							if((line.contains("templateParameter") || line.contains("templateOptionalParameter")) && !line.contains("in") && !line.contains("out") && !line.contains("routeconfiguration_id")){
+								String[] parameterList = StringUtils.substringsBetween(line, "(\"", "\")");
+								if(parameterList.length > 0 ){
+									String parameter = parameterList[0];
+									parameters.add(parameter);
+								}
+							}
+						}
+
+						String result = createKamelet(name, parameters);
+						System.out.println("Result=\n\n" + result);
+						System.out.println("");
+					}
+				}
+
+			}
+
+		}
+
+		/*
 		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
+
+		for(Route route: context.getRoutes()){
+			ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getRouteId());
+			System.out.println("routexml for route=" + route.getId());
+			System.out.println(managedRoute.dumpRouteAsXml(true));
+		}
 
 		String camelRoutesConfiguration = managedCamelContext.dumpRoutesAsXml(true);
 
 		if(mediaType.contains("json")) {
 			camelRoutesConfiguration = DocConverter.convertXmlToJson(camelRoutesConfiguration);
-		}
+		}else if(mediaType.contains("yaml")){
+			camelRoutesConfiguration = DocConverter.convertXmlToYaml(camelRoutesConfiguration);
+		}*/
+
+		String camelRoutesConfiguration = "{x}";
 
 		return camelRoutesConfiguration;
 
+	}
+
+	private String createKamelet(String name, List<String> parameters) throws IOException {
+
+		String baseName = StringUtils.substringBefore(name, "-");
+		String type = StringUtils.substringAfter(name, "-");
+
+		String parametersString = "";
+		for(String parameter: parameters){
+
+			if(parameter.contains(", ")){
+
+				String[] splittedParameter = parameter.split("\", \"");
+
+				parametersString = parametersString +
+						"      " + splittedParameter[0] + ":\n" +
+						"          title: .\n" +
+						"          description: .\n" +
+						"          type: string\n" +
+						"          default: " + splittedParameter[1] + "\n";
+
+			}else if(parameter.contains(",")){
+
+				String[] splittedParameter = parameter.split("\",\"");
+
+				parametersString = parametersString +
+						"      " + splittedParameter[0] + ":\n" +
+						"          title: .\n" +
+						"          description: .\n" +
+						"          type: string\n" +
+						"          default: " + splittedParameter[1] + "\n";
+
+			}else{
+				parametersString = parametersString +
+						"      " + parameter + ":\n" +
+						"          title: \n" +
+						"          description: .\n" +
+						"          type: string\n";
+			}
+		}
+
+		String kamelet = "apiVersion: camel.apache.org/v1alpha1\n" +
+				"kind: Kamelet\n" +
+				"metadata:\n" +
+				"  name: " + name + "\n" +
+				"  labels:\n" +
+				"    camel.apache.org/kamelet.type: \"" + type + "\"\n" +
+				"spec:\n" +
+				"  definition:\n" +
+				"    title: \"" + baseName + " " + type + "\"\n" +
+				"    description: |-\n" +
+				"      to do\n" +
+				"    type: object\n" +
+				"    properties:\n" +
+				"      routeconfiguration_id:\n" +
+				"        type: string\n" +
+				"        default: \"0\"\n" +
+				parametersString +
+				"  dependencies:\n" +
+				"    - \"camel:kamelet\"\n" +
+				"  template:\n" +
+				"    route-configuration-id: \"{{routeconfiguration_id}}\"\n" +
+				"    from:\n" +
+				"      uri: \"kamelet:source\"\n" +
+				"      steps:\n" +
+				"      - to:\n" +
+				"        uri: \"kamelet.sink\"";
+
+		File file = new File("c:/messages/kameletes/" + name + ".kamelet.yaml" );
+
+		FileUtils.writeStringToFile(file,kamelet,Charset.defaultCharset());
+
+		return kamelet;
 	}
 
 
@@ -1676,11 +2041,15 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
-		String managementName = context.getManagementNameStrategy().getName();
-		ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
+		try {
+			String managementName = context.getManagementNameStrategy().getName();
+			ObjectName objectName = context.getManagementStrategy().getManagementObjectNameStrategy().getObjectNameForCamelContext(managementName, context.getName());
 
-		ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
-		return managedCamelContextMBean.getTimeout();
+			ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
+			return managedCamelContextMBean.getTimeout();
+		} catch (Exception e) {
+			return 0L;
+		}
 	}
 
 	/*
@@ -1726,7 +2095,7 @@ public class CamelIntegration extends BaseIntegration {
 		return stepStats;
 	}
 
-	private JSONObject getStepStats(String routeid, boolean fullStats){
+	private JSONObject getStepStats(String routeid, boolean fullStats) throws Exception {
 
 		JSONObject json = new JSONObject();
 		JSONObject step = new JSONObject();
@@ -1997,12 +2366,12 @@ public class CamelIntegration extends BaseIntegration {
 
 		Class<?> clazz;
 		try {
-			clazz = Class.forName("world.dovetail.soap.SoapActionsService");
+			clazz = Class.forName("org.assimbly.soap.SoapActionsService");
 			Object soapActions =  clazz.getDeclaredConstructor().newInstance();
 			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
 			result = (String) method.invoke(soapActions, url);
 		} catch (Exception e) {
-			log.error("SOAP Actions couldn't be retrieved.");
+			log.error("SOAP Actions couldn't be retrieved.", e);
 			result = "[]";
 		}
 
@@ -2072,11 +2441,17 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getComponents(String mediaType) throws Exception {
+	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
 		String components = catalog.listComponentsAsJson();
+
+		if(includeCustomComponents){
+			URL url = Resources.getResource("custom-steps.json");
+			String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
+			components = JsonHelper.mergeJsonArray(components,customComponent);
+		}
 
 		if(mediaType.contains("xml")) {
 			components = DocConverter.convertJsonToXml(components);
@@ -2091,6 +2466,21 @@ public class CamelIntegration extends BaseIntegration {
 
 		String schema = catalog.componentJSonSchema(componentType);
 
+		if(schema==null || schema.isEmpty()) {
+			URL url = Resources.getResource("custom-steps-parameters.json");
+			String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
+			JSONArray jsonArray = new JSONArray(customSchemas);
+			for(int i=0;i<jsonArray.length();i++)
+			{
+				JSONObject components = jsonArray.getJSONObject(i);
+				JSONObject component = components.getJSONObject("component");
+				String name = component.getString("name");
+				if(name.equalsIgnoreCase(componentType)){
+					schema = components.toString();
+					break;
+				}
+			}
+		}
 
 		if(schema==null || schema.isEmpty()) {
 			schema = "Unknown component";
@@ -2476,6 +2866,9 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
+		JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
+		jetty.setSslContextParameters(sslContextParameters);
+
 		try {
 			SSLContext sslContext = sslContextParameters.createSSLContext(context);
 			SSLEngine engine = sslContext.createSSLEngine();
@@ -2487,8 +2880,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-		sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
-
+		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
 
 	}
 

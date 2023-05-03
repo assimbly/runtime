@@ -7,7 +7,7 @@ public class Log extends RouteBuilder {
      @Override
      public void configure() throws Exception {
 
-         routeTemplate("log-action")
+         routeTemplate("simplelog-action")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
                  .templateParameter("out")
@@ -27,7 +27,7 @@ public class Log extends RouteBuilder {
                      .to("log:{{loggerName}}?skipBodyLineSeparator={{skipBodyLineSeparator}}&multiline={{multiline}}&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBodyType}}&showProperties={{showProperties}}&showFiles={{showFiles}}&showException={{showException}}&showStackTrace={{showStackTrace}}&style={{style}}")
                      .to("{{out}}");
 
-         routeTemplate("log-sink")
+         routeTemplate("simplelog-sink")
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
                  .templateParameter("loggerName","org.assimbly.runtime")

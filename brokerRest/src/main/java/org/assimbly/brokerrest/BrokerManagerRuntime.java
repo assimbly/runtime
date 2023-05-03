@@ -3,6 +3,7 @@ package org.assimbly.brokerrest;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,7 +141,10 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of connections with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/connections", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/brokers/{brokerType}/connections",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get connections");
@@ -161,7 +165,10 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of consumers with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/consumers", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/brokers/{brokerType}/consumers",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to get get consumers");

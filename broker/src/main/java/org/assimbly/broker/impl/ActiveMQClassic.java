@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONObject;
@@ -31,16 +32,15 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
+import static javax.jms.DeliveryMode.NON_PERSISTENT;
+import static javax.jms.DeliveryMode.PERSISTENT;
+
 public class ActiveMQClassic implements Broker {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-	
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-
     private File brokerFile = new File(baseDir + "/broker/activemq.xml");
-
     private BrokerService broker;
-
     private BrokerViewMBean brokerViewMBean;
     private QueueViewMBean queueViewMbean;
     private TopicViewMBean topicViewMbean;
@@ -58,10 +58,6 @@ public class ActiveMQClassic implements Broker {
             String brokerPath = brokerFile.getCanonicalPath();
 
             String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
-            //brokerUrl = "xbean:" + URLEncoder.encode(brokerFile.getCanonicalPath(), "UTF-8");
-            //System.out.println("2 brokerUrl:"  + brokerUrl);
-
-
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
@@ -78,8 +74,8 @@ public class ActiveMQClassic implements Broker {
                 brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
 
                 URI urlConfig = new URI(brokerUrl);
-                broker = BrokerFactory.createBroker(urlConfig);
 
+                broker = BrokerFactory.createBroker(urlConfig);
 
             }
 
@@ -93,12 +89,12 @@ public class ActiveMQClassic implements Broker {
 
             return status();
         }catch (Exception e) {
-            log.error("Failed to start broker. Reason: ", e);
+            log.error("Failed to start broker. Reason: ", e.getMessage());
+            e.printStackTrace();
             return "Failed to start broker. Reason: " + e.getMessage();
         }
 
     }
-
 
     public String startEmbedded() throws Exception {
 
@@ -190,12 +186,20 @@ public class ActiveMQClassic implements Broker {
                 return xmlValidation;
             }
 
+            brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
             FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
         }else {
             FileUtils.touch(brokerFile);
-            InputStream is = classloader.getResourceAsStream("activemq.xml");
-            Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            is.close();
+            InputStream inputStream = classloader.getResourceAsStream("activemq.xml");
+
+            brokerConfiguration = DocConverter.convertStreamToString(inputStream);
+
+            inputStream.close();
+
+            brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
+
+            FileUtils.writeStringToFile(brokerFile,brokerConfiguration, StandardCharsets.UTF_8);
+
         }
 
         return "configuration set";
@@ -371,11 +375,13 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    private void checkIfEndpointExist(String endpointName) throws EndpointNotFoundException {
+    private void checkIfEndpointExist(String endpointName) throws Exception {
 
         if (!endpointExist(endpointName)) {
             throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
         }
+
+        endpointType = getEndpointType(endpointName);
     }
 
 
@@ -516,13 +522,14 @@ public class ActiveMQClassic implements Broker {
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
         if(MapUtils.isEmpty(messageHeaders)){
-            destinationViewMBean.sendTextMessage(messageBody);
+            messageHeaders.put("JMSDeliveryMode", PERSISTENT);
+            destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
         }else{
             if(messageHeaders.containsKey("JMSDeliveryMode")) {
-                if (messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("PERSISTENT") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("0")) {
-                    messageHeaders.put("JMSDeliveryMode", 0);
+                if (messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("PERSISTENT") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("0") || messageHeaders.get("JMSDeliveryMode").toString().equalsIgnoreCase("2")) {
+                    messageHeaders.put("JMSDeliveryMode", PERSISTENT);
                 } else {
-                    messageHeaders.put("JMSDeliveryMode", 1);
+                    messageHeaders.put("JMSDeliveryMode", NON_PERSISTENT);
                 }
             }
 

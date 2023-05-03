@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: xmltojson-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "xmltojson sink"
+    description: |-
+      Convert XML to JSON
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+          title: options
+          description: Options
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "dataformat:custom-xmljson:marshal?{{options}}"

@@ -9,6 +9,7 @@ import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ import java.util.TreeMap;
 @RequestMapping("/api")
 public class IntegrationRuntime {
 
-   	protected Logger log = LoggerFactory.getLogger(getClass());
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private Integration integration = new CamelIntegration(true);
 
@@ -55,7 +56,10 @@ public class IntegrationRuntime {
      * @throws Exception
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @GetMapping(path = "/integration/{integrationId}/start", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/start",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> start(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -63,9 +67,9 @@ public class IntegrationRuntime {
             if (integration.isStarted()) {
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration already running");
             } else {
-            	integration.addEventNotifier(failureCollector);
-            	integration.setTracing(false, "default");
-            	integration.start();
+                integration.addEventNotifier(failureCollector);
+                integration.setTracing(false, "default");
+                integration.start();
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/integration/{integrationId}/start", "Integration started");
             }
 
@@ -83,7 +87,10 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @GetMapping(path = "/integration/{integrationId}/stop", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/stop",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> stop(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -103,7 +110,10 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @GetMapping(path = "/integration/{integrationId}/info", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/info",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> info(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -123,7 +133,10 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      * @throws Exception
      */
-    @GetMapping(path = "/integration/{integrationId}/isStarted", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/isStarted",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -136,7 +149,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/lasterror", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/lasterror",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -156,20 +172,26 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(path = "/integration/{integrationId}/resolvedependencybyscheme/{scheme}", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/resolvedependencybyscheme/{scheme}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> resolveDepedencyByScheme(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId,@PathVariable String scheme) throws Exception {
 
-       	try {
-       		String result = integration.resolveDependency(scheme);
-       		return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
-   		} catch (Exception e) {
+        try {
+            String result = integration.resolveDependency(scheme);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",result);
+        } catch (Exception e) {
             log.error("Resolve dependency for scheme=" + scheme + " failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
-   		}
+        }
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/basedirectory", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/basedirectory",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
@@ -184,13 +206,17 @@ public class IntegrationRuntime {
 
     }
 
-    @PostMapping(path = "/integration/{integrationId}/basedirectory", consumes = {"text/plain"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/basedirectory",
+            consumes = {MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> setBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String directory) throws Exception {
 
         plainResponse = true;
 
         try {
-			integration.setBaseDirectory(directory);
+            integration.setBaseDirectory(directory);
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/basedirectory","success",plainResponse);
         } catch (Exception e) {
             log.error("Set base directory for Assimbly failed",e);
@@ -199,7 +225,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/list/flows", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/list/flows",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getListOfFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -212,7 +241,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/list/flows/details", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/list/flows/details",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getRunningFlowsDetails(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -226,7 +258,10 @@ public class IntegrationRuntime {
     }
 
 
-    @PostMapping(path = "/integration/{integrationId}/list/soap/action", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/list/soap/action",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getListOfSoapActions(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String url) throws Exception {
 
         try {
@@ -239,7 +274,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/count/flows", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/count/flows",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> countFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -252,7 +290,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/count/steps", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/count/steps",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> countSteps(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -265,7 +306,10 @@ public class IntegrationRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/numberofalerts", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/numberofalerts",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getIntegrationNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         try {
@@ -278,8 +322,8 @@ public class IntegrationRuntime {
         }
     }
 
-    /**
-     * POST  /integration/{integrationId}/collector/{collectorId}/add : Set collector configuration
+    /*
+     * POST  /integration/{integrationId}/collectors/add : Set configuration for multiple collectors
      *
      * @param integrationId (integrationId)
      * @param collectorId (CollectorId)
@@ -287,7 +331,44 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(path = "/integration/{integrationId}/collector/{collectorId}/add", consumes =  {"application/json", "application/xml", "text/plain"}, produces = {"application/json","application/xml","text/plain"})
+    @PostMapping(
+            path = "/integration/{integrationId}/collectors/add",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> addCollectorConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestBody String configuration) throws Exception {
+
+        log.info("Add collectors");
+
+        try {
+            String result = integration.addCollectorsConfiguration(mediaType, configuration);
+            if(!result.equalsIgnoreCase("configured")){
+                log.error("Add collector failed. Message: " + result);
+                return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",result);
+            }
+
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",result);
+        } catch (Exception e) {
+            log.error("Add collector failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collectors/add",e.getMessage());
+        }
+
+    }
+
+    /**
+     * POST  /integration/{integrationId}/collector/{collectorId}/add : Set the configuraton of a collector
+     *
+     * @param integrationId (integrationId)
+     * @param collectorId (CollectorId)
+     * @param configuration as JSON or XML
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping(
+            path = "/integration/{integrationId}/collector/{collectorId}/add",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> addCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String collectorId, @RequestBody String configuration) throws Exception {
 
         log.info("Add collector with id=" + collectorId);
@@ -315,17 +396,20 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the remove of configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @DeleteMapping(path = "/integration/{integrationId}/collector/{collectorId}/remove", produces = {"application/json","application/xml","text/plain"})
+    @DeleteMapping(
+            path = "/integration/{integrationId}/collector/{collectorId}/remove",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> removeCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String collectorId) throws Exception {
 
         log.info("Remove collector with id=" + collectorId);
 
         try {
             String result = integration.removeCollectorConfiguration(collectorId);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",result);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove", result);
         } catch (Exception e) {
             log.error("Remove collector " + collectorId + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove",e.getMessage());
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/collector/{collectorId}/remove", e.getMessage());
         }
 
     }
@@ -334,12 +418,12 @@ public class IntegrationRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+        Long integrationId = 0L; // set integrationid to 0, as we may get a string value
+        String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
+        String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        String message = error.getMessage();
 
-    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+        return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
     }
 
     public Integration getIntegration() {

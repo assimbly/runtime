@@ -76,6 +76,10 @@
                             <options>
                                 <environmentName>PRODUCTION</environmentName>
                                 <stage>PRODUCTION</stage>
+                                <xsl:if test="//*:property[@key='frontend.engine']">
+                                <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
+                                    <frontend><xsl:value-of select="$frontend"/></frontend>
+                                </xsl:if>
                             </options>
                             <flows>
                                 <flow>
@@ -85,6 +89,9 @@
                                                 <xsl:value-of select="//*:camelContext/@id"/>
                                             </xsl:when>
                                             <xsl:when test="//*:routes/@id">
+                                                <xsl:value-of select="//*:routes/@id"/>
+                                            </xsl:when>
+                                            <xsl:when test="//*:route/@id">
                                                 <xsl:value-of select="//*:route/@id"/>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -99,6 +106,9 @@
                                             </xsl:when>
                                             <xsl:when test="//*:routes/@id">
                                                 <xsl:value-of select="//*:routes/@id"/>
+                                            </xsl:when>
+                                            <xsl:when test="//*:route/@id">
+                                                <xsl:value-of select="//*:route/@id"/>
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <xsl:value-of  select="current-dateTime()"/>
@@ -224,7 +234,7 @@
                                         </xsl:choose>
                                     </xsl:attribute>
                                     <xsl:apply-templates select="//*:camelContext/*:onException" mode="copy-no-namespaces"/>
-                                    <!--<xsl:apply-templates select="//*:camelContext/*:dataFormats" mode="copy-no-namespaces"/>-->
+                                    <xsl:apply-templates select="//*:camelContext/*:dataFormats" mode="copy-no-namespaces"/>
                                 </routeConfiguration>
                             </xsl:if>
                         </routeConfigurations>

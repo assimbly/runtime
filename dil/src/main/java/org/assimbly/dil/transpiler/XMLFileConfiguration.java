@@ -100,7 +100,11 @@ public class XMLFileConfiguration {
 		if(!xml.endsWith("</dil>")){
 			dilXml = Transform.transformToDil(xml);
 		}
-		
+
+		log.info("---------------------------- DIL START----------------------------");
+		log.info(dilXml);
+		log.info("---------------------------- DIL END----------------------------");
+
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()

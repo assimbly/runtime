@@ -11,11 +11,11 @@ public class RemoveCookie extends RouteBuilder {
                  .templateParameter("routeconfiguration_id","0")
                  .templateParameter("in")
                  .templateParameter("out")
-                 .templateParameter("path","org.assimbly")
-                 .templateParameter("name","AssimblyCookie")
+                 .templateParameter("domain","org.assimbly")
+                 .templateParameter("path","AssimblyCookie")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{name}}','{{path}}')")
+                     .to("bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{path}}','{{domain}}')")
                      .to("{{out}}");
 
          routeTemplate("removecookie-sink")
@@ -26,7 +26,7 @@ public class RemoveCookie extends RouteBuilder {
                  .templateParameter("name","AssimblyCookie")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .to("bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{name}}','{{path}}')");
+                     .to("bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{path}}','{{domain}}')");
 
     }
 

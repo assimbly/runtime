@@ -6,6 +6,7 @@ import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +34,10 @@ public class StatisticsRuntime {
 
     //statistics of integrations, flows and steps
 
-    @GetMapping(path = "/integration/{integrationId}/stats", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/stats",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
@@ -49,7 +53,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/messages", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/messages",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
@@ -65,7 +72,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/statsbyflowids", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/statsbyflowids",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getStatsByFlowIds(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String flowIds, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
@@ -81,7 +91,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/stats", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/stats",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=true,defaultValue="false",value="FullStats") boolean fullStats, @RequestHeader(required=true,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -98,7 +111,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/step/{stepId}/stats", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/step/{stepId}/stats",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowStepStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=true,defaultValue="false",value="FullStats") boolean fullStats, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         plainResponse = true;
@@ -115,7 +131,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/messages", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/messages",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=true,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -129,7 +148,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/messages/total", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/messages/total",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowTotalMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -143,7 +165,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/messages/completed", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/messages/completed",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowCompletedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -157,7 +182,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/messages/failed", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/messages/failed",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowFailedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -171,7 +199,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/messages/pending", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/messages/pending",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowPendingMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -185,7 +216,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/step/{stepId}/messages", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/step/{stepId}/messages",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getStepMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @PathVariable String stepId) throws Exception {
 
         try {
@@ -200,7 +234,10 @@ public class StatisticsRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/metrics", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/metrics",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;
@@ -216,7 +253,10 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/historymetrics", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/historymetrics",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getHistoryMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
 
         plainResponse = true;

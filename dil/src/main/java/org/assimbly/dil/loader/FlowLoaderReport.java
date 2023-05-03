@@ -100,7 +100,7 @@ public class FlowLoaderReport {
 			}else if(loadedSuccess > 1){
 				log.info(loadedSuccess + " steps loaded successfully");
 			}
-			log.info("Start flow | name=" + flowName + " | id=" + flowId);
+			log.info("Start flow | name=" + flowName + " | flowid=" + flowId);
 		}else{
 			if(loadedError == 1){
 				log.error(loadedError + " step failed to load");

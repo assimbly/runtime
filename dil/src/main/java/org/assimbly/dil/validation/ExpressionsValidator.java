@@ -46,7 +46,7 @@ public class ExpressionsValidator {
                     error = xpathValidator.validate(expression);
                     break;
                 default:
-                    throw new RuntimeException("Dovetail could not validate the type of expression submitted.");
+                    throw new RuntimeException("Could not validate the type of expression submitted.");
             }
 
             if (error != null) {

@@ -1,4 +1,4 @@
-name: Update POM files version
+name: Automatic Version Update on Release
 
 on:
   pull_request:
@@ -12,13 +12,15 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
-    - uses: actions/checkout@v3
+
+    - name: Checkout the code
+      uses: actions/checkout@v3
 
     - name: Update POM Version
       run: |
         echo "Updating to version: $(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)"
         mvn versions:set -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
-        mvn pom.xml versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
+        mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
 
     - name: Diff check
       run: git diff

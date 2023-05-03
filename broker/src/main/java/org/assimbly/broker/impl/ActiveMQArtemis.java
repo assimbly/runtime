@@ -3,6 +3,7 @@ package org.assimbly.broker.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ import static java.util.Arrays.stream;
 
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
@@ -34,15 +36,17 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.JMX;
+import javax.management.MBeanNotificationInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
 
 	final static Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
-	
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-
 	private File brokerFile = new File(baseDir + "/broker/broker.xml");
 	private File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
 	private ActiveMQServerControlImpl manageBroker;
@@ -61,7 +65,6 @@ public class ActiveMQArtemis implements Broker {
 			setAIO();
 
 			broker = new EmbeddedActiveMQ();
-
 
 			//
 			if (brokerFile.exists()) {
@@ -87,8 +90,9 @@ public class ActiveMQArtemis implements Broker {
 
 			return status();
 
-		} catch (Exception  e) {
-			log.error("Failed to start broker. Reason:", e);
+		} catch (Throwable e) {
+			log.error("Failed to start broker. Reason:", e.getMessage());
+			e.printStackTrace();
 			return "Failed to start broker. Reason: " + e.getMessage();
 		}
 
@@ -110,6 +114,7 @@ public class ActiveMQArtemis implements Broker {
 			broker.start();
 
 			return status();
+
 	}
 
 	
@@ -155,6 +160,7 @@ public class ActiveMQArtemis implements Broker {
 
 		if(activeBroker!=null) {
 			log.debug("State=" + activeBroker.getState().name());
+
 			if(activeBroker.isActive()) {
 				status = "started";
 			}else if(activeBroker.getState().name().equals("STARTED")){
@@ -241,9 +247,9 @@ public class ActiveMQArtemis implements Broker {
 				//Copy file from resources into empty file
 				ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 				InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
-				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-				if(is==null) {
+				if(is!=null) {
+					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					is.close();
 					log.info("AIO Directory is set to " + aioFile.getParent());
 				}else{
@@ -575,13 +581,13 @@ public class ActiveMQArtemis implements Broker {
 
 	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
-		if (!endpointExist) {
-			throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
-		}
+		checkIfEndpointExist(endpointName);
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+
+		queueControl.getFirstMessageAsJSON();
 
 		CompositeData[] messages = queueControl.browse();
 

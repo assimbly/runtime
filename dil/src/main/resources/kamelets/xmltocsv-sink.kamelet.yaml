@@ -1,0 +1,31 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: xmltocsv-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "xmltocsv sink"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+          title: 
+          description: .
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "xmltocsv://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&quoteFields={{quoteFields}}&delimiter=RAW({{delimiter}})&lineSeparator=RAW({{lineSeparator}})"
+

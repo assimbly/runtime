@@ -1,0 +1,49 @@
+name: Manual Version Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      BRANCH:
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - master
+      VERSION:
+        description: '4.0.0'
+        required: true
+        default: '4.0.0'
+        
+  push:
+    branches:
+      - 'update-development-version'
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout the code
+      uses: actions/checkout@v3
+      with:
+        ref: 'develop'
+
+    - name: Update POM Version
+      env:
+        VERSION: '4.0.0-SNAPSHOT'
+      run: |
+        echo "Updating to version: $VERSION"
+        mvn versions:set -DnewVersion=$VERSION
+        mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=$VERSION
+
+    - name: Diff check
+      run: git diff
+
+    - name: Add & Commit
+      uses: EndBug/add-and-commit@v9.1.1
+      with:
+        add: '.'
+        default_author: github_actions
+        push: origin HEAD:develop --force

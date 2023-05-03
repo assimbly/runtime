@@ -1,0 +1,38 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: stopflow-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "stopflow action"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+        title: Path
+        description: Path
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - set-property:
+              name: flowId
+              constant: "{{path}}"
+          - set-property:
+              name: action
+              constant: "stopflow"
+          - process:
+              ref: "ManageFlowProcessor"
+          - to:
+              uri: "kamelet:sink"

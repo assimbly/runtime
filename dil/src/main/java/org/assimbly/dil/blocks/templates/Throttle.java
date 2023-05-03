@@ -9,18 +9,18 @@ public class Throttle extends RouteBuilder {
 
          routeTemplate("throttle-action")
                  .templateParameter("routeconfiguration_id","0")
-                 .templateParameter("maximumrequestcount","1")
-                 .templateParameter("timeperiod","1000")
+                 .templateParameter("maximumRequestCount","1")
+                 .templateParameter("timePeriod","1000")
                  .templateParameter("asyncDelayed","true")
                  .templateParameter("rejectExecution","false")
                  .templateParameter("in")
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .throttle().simple("{{maximumrequestcount}}")
+                     .throttle().simple("{{maximumRequestCount}}")
                         .asyncDelayed("{{asyncDelayed}}")
                         .rejectExecution("{{rejectExecution}}")
-                        .timePeriodMillis("{{timeperiod}}")
+                        .timePeriodMillis("{{timePeriod}}")
                      .to("{{out}}");
 
     }

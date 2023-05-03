@@ -21,7 +21,7 @@ public class FtpValidator {
 
     private static final int TIMEOUT = 3000;
     private static final ValidationErrorMessage UNREACHABLE_ERROR =
-            new ValidationErrorMessage("Cannot login into FTP from the Dovetail server!");
+            new ValidationErrorMessage("Cannot login into FTP Server!");
 
     public ValidationErrorMessage validate(FtpSettings ftpSettings) {
 
