@@ -32,7 +32,7 @@ jobs:
 
     - name: Update POM Version
       env:
-        VERSION: '4.0.0'
+        VERSION: '4.0.0-SNAPSHOT'
       run: |
         echo "Updating to version: $VERSION"
         mvn versions:set -DnewVersion=$VERSION
