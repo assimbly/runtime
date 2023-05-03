@@ -1,0 +1,60 @@
+name: Publish packages to GitHub Packages
+
+on:
+  release:
+    types: [ released ]
+  push:
+    branches:
+        - 'release-publish'
+ 
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest 
+
+    steps:
+
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Update POM Version
+        run: |
+            echo "Updating to version: $(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)"
+            mvn versions:set -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
+            mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
+
+      - name: Diff check
+        run: git diff
+
+      - name: Add & Commit
+        uses: EndBug/add-and-commit@v9.1.1
+        with:
+        add: '.'
+        default_author: github_actions
+        push: origin HEAD:develop --force
+
+  publish_packages:
+    needs: [update_version]
+
+    runs-on: ubuntu-latest 
+    permissions: 
+        contents: read
+        packages: write 
+    
+    steps:
+
+      - name: Checkout the code
+        uses: actions/checkout@v3
+        with:
+            ref: 'master'
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+      - name: Publish package
+        run: mvn --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
