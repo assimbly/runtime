@@ -549,10 +549,11 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("started")) {
-                                status = integration.pauseFlow(flowId);
+                                String report = integration.pauseFlow(flowId);
+                                status = integration.getFlowStatus(flowId);
                                 if(status.equals("suspended") || status.equals("stopped")) {
                                     if(this.messagingTemplate!=null) {
-                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:suspended");
+                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event",report);
                                     }
                                 }else {
                                     throw new Exception(status);
@@ -567,9 +568,9 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("suspended")) {
-                                status = integration.startFlow(flowId);
-                                if(status.equals("started") && this.messagingTemplate!=null) {
-                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
+                                String report = integration.startFlow(flowId);
+                                if(this.messagingTemplate!=null) {
+                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event",report);
                                 }
                             }
                         }

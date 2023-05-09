@@ -50,11 +50,13 @@ public class CertificateManagerRuntime {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(
-            path = "/certificates",
+            path = "/certificates/set",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
+
+        log.debug("REST request to set certificates for url: {}", url);
 
         try {
             integrationRuntime.getIntegration().setCertificatesInKeystore(keystoreName, keystorePassword, url);

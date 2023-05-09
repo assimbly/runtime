@@ -134,17 +134,17 @@ public class IntegrationRuntime {
      * @throws Exception
      */
     @GetMapping(
-            path = "/integration/{integrationId}/isStarted",
+            path = "/integration/{integrationId}/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @PathVariable Long integrationId) throws Exception {
 
         try {
             Boolean started = integration.isStarted();
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/isStarted",started.toString());
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/isstarted",started.toString());
         } catch (Exception e) {
             log.error("Check if integration with id=" + integrationId + " is started failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/isStarted",e.getMessage());
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/isstarted",e.getMessage());
         }
 
     }
