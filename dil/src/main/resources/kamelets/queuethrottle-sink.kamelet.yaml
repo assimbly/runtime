@@ -1,7 +1,7 @@
 apiVersion: camel.apache.org/v1alpha1
 kind: Kamelet
 metadata:
-  name: queuethrottle-sink
+  name: queuethrottle-action
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
@@ -9,28 +9,6 @@ spec:
     title: "queuethrottle sink"
     description: |-
       Throttles messages on an ActiveMQ queue
-    type: object
-    properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
-      timePeriod:
-        title: Time Period
-        description: Time Period
-        type: string
-        default: 5000
-      maxRequests:
-        title: Max Requests
-        description: Max requests
-        type: string
-        default: 1
-  dependencies:
-    - "camel:kamelet"
-spec:
-  definition:
-    title: "queuethrottle sink"
-    description: |-
-      Throttle messages on an ActiveMQ queue
     type: object
     properties:
       routeconfiguration_id:
