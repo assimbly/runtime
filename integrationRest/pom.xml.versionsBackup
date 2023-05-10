@@ -6,7 +6,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>3.8.1</version>
+    <version>4.0.0</version>
   </parent>
 
   <name>integration-rest</name>
@@ -17,7 +17,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>   
+    <maven-versions-rules>file:///${project.parent.basedir}/rules.xml</maven-versions-rules>
   </properties>
 
   <distributionManagement> 
@@ -34,6 +34,64 @@
 		  <artifactId>integration</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-websocket</artifactId>
+		  <version>${spring-boot.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-web</artifactId>
+		  <version>${spring-boot.version}</version>
+	  </dependency>
+
+	  <!-- tests -->
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-test</artifactId>
+		  <version>${spring-boot.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-data-jpa</artifactId>
+		  <version>${spring-boot.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.camel</groupId>
+		  <artifactId>camel-test-spring-junit5</artifactId>
+		  <version>${camel-spring-junit5.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+
+	  <dependency>
+		  <groupId>com.h2database</groupId>
+		  <artifactId>h2</artifactId>
+		  <version>${h2database.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.hamcrest</groupId>
+		  <artifactId>hamcrest</artifactId>
+		  <version>${hamcrest.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+
+	  <dependency>
+		  <groupId>org.apache.maven</groupId>
+		  <artifactId>maven-model</artifactId>
+		  <version>${maven-api.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.maven</groupId>
+		  <artifactId>maven-model-builder</artifactId>
+		  <version>${maven-api.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+
   </dependencies>
 
 	<build>

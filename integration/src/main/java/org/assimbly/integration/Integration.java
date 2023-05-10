@@ -90,11 +90,21 @@ public interface Integration {
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
-	 * Add collector configuration from a string for a specific format (XML,JSON,YAML).
+	 * Add configuration for multiple collectors from a JSON Configuration File.
+	 *
+	 * @param  mediaType (JSON)
+	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
+	 * @throws Exception if configuration can't be set
+	 */
+	public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+
+
+	/**
+	 * Add collector configuration from a JSON Configuration File.
 	 *
 	 * @param  collectorId Id of the collector (String)
-	 * @param  mediaType (XML,JSON,YAML)
-	 * @param  configuration (the XML, JSON or YAML file)
+	 * @param  mediaType (JSON)
+	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
 	 * @throws Exception if configuration can't be set
 	 */
 	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
@@ -323,6 +333,25 @@ public interface Integration {
 	 */
 	public String getListOfSoapActions(String url, String mediaType) throws Exception;
 
+
+	/**
+	 * Gets the template of steps (templates)
+	 *
+	 * @param  mediaType (xml, json or yaml)
+	 * @param  stepName name of the step template
+	 * @throws Exception if step template isn't found
+	 * @return returns an array of flows with id
+	 */
+	public abstract String getStepTemplate(String mediaType, String stepName) throws Exception;
+
+	/**
+	 * Gets list of step templates
+	 *
+	 * @throws Exception if list failed to retreive
+	 * @return returns an array of flows with id
+	 */
+	public abstract String getListOfStepTemplates() throws Exception;
+
 	/**
 	 * Count the number of (loaded) flows
 	 *
@@ -368,7 +397,7 @@ public interface Integration {
 	 * @throws Exception if components couldn't get found
 	 * @return returns list of components
 	 */
-	public String getComponents(String mediaType) throws Exception;
+	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
 
 	/**
 	* Gets the documentation/schema of a component
@@ -798,9 +827,9 @@ public interface Integration {
 	public String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;	
 
 	/**
-	* Gets all the running routes as XML/JSON by id
+	* Gets all the running routes as XML/JSON/YAML by id
 	*
-	* @param  mediaType (xml or json)
+	* @param  mediaType (xml, json, yaml)
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/	

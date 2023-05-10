@@ -21,14 +21,12 @@ public class LogCollector extends AppenderBase {
     private final String tag;
     private final ArrayList<Filter> filters;
 
-
     public LogCollector(String collectorId, String tag, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
         this.tag = tag;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
     }
-
 
     @Override
     protected void append(Object o) {

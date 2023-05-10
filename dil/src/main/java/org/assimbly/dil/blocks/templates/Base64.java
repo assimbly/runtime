@@ -13,7 +13,6 @@ public class Base64 extends RouteBuilder {
                  .templateParameter("out")
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
-                     .marshal("base64")
                      .to("{{out}}");
 
          routeTemplate("texttobase64-sink")

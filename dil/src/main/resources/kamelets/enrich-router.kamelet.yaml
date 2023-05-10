@@ -1,0 +1,49 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: enrich-router
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "enrich router"
+    description: |-
+      Enrich message
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      out_rule:
+          title: Out Rule
+          description: Out Rule
+          type: string
+      enrichType:
+          title: Enrich Type
+          description: Type of enrichment
+          type: string
+          default: text/xml
+      errorRoute:
+        title: Error Route
+        description: Error Route
+        type: string
+        default: text/xml
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - set-property:
+              name: Enrich-Type
+              constant: "{{enrichType}}"
+          - set-property:
+              name: Error-Route
+              constant: "{{errorRoute}}"
+          - enrich:
+              constant: "{{out_rule}}"
+              aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
+          - to:
+              uri: "kamelet:sink"

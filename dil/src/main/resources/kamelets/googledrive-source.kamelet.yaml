@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: googledrive-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "googledrive source"
+    description: |-
+      Get files from GoogleDrive
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+          title: Options
+          description: Options
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "googledrive://?{{options}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"

@@ -1,0 +1,31 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: unzip-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "unzip sink"
+    description: |-
+      Unzips a message
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      usingIterator:
+        title: Using Iterator
+        description: .
+        type: string
+        default: true
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "dataformat:checkedZipFileDataFormat:unmarshal?usingIterator={{usingIterator}}"

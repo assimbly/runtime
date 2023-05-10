@@ -283,6 +283,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract void setHistoryMetrics(boolean historyMetrics);
 
+	public abstract String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+
 	public abstract String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
 
 	public abstract String removeCollectorConfiguration(String collectorId) throws Exception;
@@ -303,7 +305,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getDocumentation(String componentType, String mediaType) throws Exception;
 
-	public abstract String getComponents(String mediaType) throws Exception;
+	public abstract String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
 
 	public abstract String getComponentSchema(String componentType, String mediaType) throws Exception;
 
@@ -387,6 +389,10 @@ public abstract class BaseIntegration implements Integration {
 	public abstract String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
 	public abstract String getListOfSoapActions(String url, String mediaType) throws Exception;
+
+	public abstract String getStepTemplate(String mediaType, String stepName) throws Exception;
+
+	public abstract String getListOfStepTemplates() throws Exception;
 
 	public abstract String countFlows(String filter, String mediaType) throws Exception;
 

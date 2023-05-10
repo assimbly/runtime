@@ -1,0 +1,52 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: multipart-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "multipart action"
+    description: |-
+      Add multipart to message
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+        title: Path
+        description: Path
+        type: string
+      contentType:
+        title: Content-Type
+        description: Content-Type on the message
+        type: string
+        default: multipart/form-data
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - choice:
+              when:
+                - simple: "${header.Content-Type}"
+                  steps:
+                    - set-header:
+                        name: MultipartFieldName
+                        constant: "{{path}}"
+              otherwise:
+                  steps:
+                    - set-header:
+                        name: Content-Type
+                        constant: "{{contentType}}"
+                    - set-header:
+                        name: MultipartFieldName
+                        constant: "{{path}}"
+          - process:
+              ref: "multipartProcessor"
+          - to:
+              uri: "kamelet:sink"

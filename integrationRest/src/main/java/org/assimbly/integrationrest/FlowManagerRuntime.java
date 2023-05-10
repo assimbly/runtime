@@ -7,6 +7,7 @@ import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +25,8 @@ import java.util.List;
 @RequestMapping("/api")
 public class FlowManagerRuntime {
 
-	protected Logger log = LoggerFactory.getLogger(getClass());
-	
+    protected Logger log = LoggerFactory.getLogger(getClass());
+
     @Autowired
     private IntegrationRuntime integrationRuntime;
 
@@ -41,7 +42,10 @@ public class FlowManagerRuntime {
     private SimpMessageSendingOperations messagingTemplate;
 
     //manage flows
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/start", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/start",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -62,20 +66,23 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("successfully")) {
-                log.info("Start flow " + flowId + " successfully. Status:\n\n " + status);
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/start",status,plainResponse);
             } else {
-                log.error("Start flow " + flowId + " failed. Status:\n\n" + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/start", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Start flow " + flowId + " failed",e);
+            log.error("FlowManager Report:\n\n" + status);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/start/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
         }
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/stop", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/stop",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -96,9 +103,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/stop",status,plainResponse);
             } else {
-                log.error("Stop flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/stop/", status, plainResponse);
             }
         } catch (Exception e) {
@@ -108,7 +116,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/restart", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/restart",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -128,9 +139,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/restart",status,plainResponse);
             } else {
-                log.error("Restart flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/restart", status, plainResponse);
             }
         } catch (Exception e) {
@@ -140,7 +152,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/pause", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/pause",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String>  pauseFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -160,9 +175,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Paused flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/pause",status,plainResponse);
             } else {
-                log.error("Pause flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/pause", status, plainResponse);
             }
         } catch (Exception e) {
@@ -172,7 +188,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/resume" , produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/resume" ,
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> resumeFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -192,9 +211,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Resumed flow successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/resume",status,plainResponse);
             } else {
-                log.error("Resume flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/resume", status, plainResponse);
             }
         } catch (Exception e) {
@@ -203,7 +223,11 @@ public class FlowManagerRuntime {
         }
     }
 
-	@PostMapping(path = "/integration/{integrationId}/flow/{flowId}/routes", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/routes",
+            consumes = {MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> flowRoutes(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         try {
@@ -225,10 +249,16 @@ public class FlowManagerRuntime {
 
     }
 
-    @PostMapping(path = "/integration/{integrationId}/flow/{flowId}/install", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/install",
+            consumes =  {MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         plainResponse = true;
+
+        log.info("Install flowId" + flowId + ". Configuration:\n\n" + configuration);
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -245,10 +275,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
-                log.info("Install flow " + flowId + " failed. Install report:\n\n " + status);
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/install",status,plainResponse);
             } else {
-                log.error("Install flow " + flowId + " failed. Install report:\n\n" + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install", status, plainResponse);
             }
         } catch (Exception e) {
@@ -258,7 +288,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @DeleteMapping(path = "/integration/{integrationId}/flow/{flowId}/uninstall", produces = {"application/xml","application/json","text/plain"})
+    @DeleteMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/uninstall",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -279,10 +312,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
-                log.error("Uninstall flow " + flowId + " successfully. Status: " + status);
+                log.info("Uninstalled flow " + flowId + " successfully. Report: " + status);
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/uninstall",status,plainResponse);
             } else {
-                log.error("Uninstall flow " + flowId + " failed. Status: " + status);
+                log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall", status, plainResponse);
             }
         } catch (Exception e) {
@@ -292,7 +325,11 @@ public class FlowManagerRuntime {
 
     }
 
-    @PostMapping(path = "/integration/{integrationId}/flow/{flowId}/install/file", consumes =  {"application/xml"}, produces = {"application/xml","application/json","text/plain"})
+    @PostMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/install/file",
+            consumes = {MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> fileInstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         try {
@@ -301,8 +338,10 @@ public class FlowManagerRuntime {
             status = integration.fileInstallFlow(flowId, configuration);
 
             if (status.equals("saved")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install/file", "flow " + flowId + " saved in the deploy directory", "flow " + flowId + " saved in the deploy directory", flowId);
             } else {
+                log.error("FlowManager Report:\n\n" + status);
                 throw new Exception(status);
             }
         } catch (Exception e) {
@@ -310,9 +349,12 @@ public class FlowManagerRuntime {
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/install/file", e.getMessage(), "unable to save flow " + flowId, flowId);
         }
 
-    }	
+    }
 
-	@DeleteMapping(path = "/integration/{integrationId}/flow/{flowId}/uninstall/file", produces = {"application/xml","application/json","text/plain"})
+    @DeleteMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/uninstall/file",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> fileUninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -321,8 +363,10 @@ public class FlowManagerRuntime {
             status = integration.fileUninstallFlow(flowId);
 
             if (status.equals("deleted")) {
+                log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall/file", "flow " + flowId + " deleted from deploy directory", "flow " + flowId + " deleted from the deploy directory", flowId);
             } else {
+                log.error("FlowManager Report:\n\n" + status);
                 throw new Exception(status);
             }
         } catch (Exception e) {
@@ -330,16 +374,19 @@ public class FlowManagerRuntime {
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType, "/integration/{integrationId}/flow/{flowId}/uninstall/file", e.getMessage(), "unable to save flow " + flowId, flowId);
         }
 
-    }	
+    }
 
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/isstarted", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/isstarted",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> isFlowStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
             //integrationResource.init();
             integration = integrationRuntime.getIntegration();
-   
+
             boolean started = integration.isFlowStarted(flowId);
             String isStarted = Boolean.toString(started);
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/isstarted",isStarted,isStarted,flowId);
@@ -350,7 +397,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/info", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/info",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowInfo(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
@@ -366,7 +416,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/status", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/status",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowStatus(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -381,7 +434,10 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/uptime", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/uptime",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowUptime(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
@@ -397,64 +453,80 @@ public class FlowManagerRuntime {
 
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/lasterror", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/lasterror",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
-		try {
+        try {
             //integrationResource.init();
             integration = integrationRuntime.getIntegration();
 
-    		String lastError = integration.getFlowLastError(flowId);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/lasterror",lastError,lastError,flowId);
-		} catch (Exception e) {
+            String lastError = integration.getFlowLastError(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/lasterror",lastError,lastError,flowId);
+        } catch (Exception e) {
             log.error("Get last error of flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/lasterror",e.getMessage(),"unable to get last error for flow " + flowId,flowId);
-		}
+        }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/alerts", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/alerts",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowAlertsLog(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
-		try {
+        try {
             integration = integrationRuntime.getIntegration();
 
             String log = integration.getFlowAlertsLog(flowId,100);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/alerts",log,log,flowId);
-		} catch (Exception e) {
+            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/alerts",log,log,flowId);
+        } catch (Exception e) {
             log.error("Get alerts for flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/alerts",e.getMessage(),"unable to get failed log of flow" + flowId,flowId);
-		}
+        }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/alerts/count", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/alerts/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
-		try {
-        	integration = integrationRuntime.getIntegration();
+        try {
+            integration = integrationRuntime.getIntegration();
             String numberOfEntries = integration.getFlowAlertsCount(flowId);
 
             return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/alerts/count",numberOfEntries,numberOfEntries,flowId);
-		} catch (Exception e) {
+        } catch (Exception e) {
             log.error("Get number of alerts for flow " + flowId + " failed",e);
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/alerts/count",e.getMessage(),"unable to get failed entries of flow log" + flowId,flowId);
-		}
+        }
     }
 
-    @GetMapping(path = "/integration/{integrationId}/flow/{flowId}/events", produces = {"application/xml","application/json","text/plain"})
+    @GetMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/events",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getFlowEvents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
-		try {
+        try {
             integration = integrationRuntime.getIntegration();
             String log = integration.getFlowEventsLog(flowId,100);
-			return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/events",log,log,flowId);
-		} catch (Exception e) {
+            return ResponseUtil.createSuccessResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/events",log,log,flowId);
+        } catch (Exception e) {
             log.error("Get events log for flow " + flowId + " failed",e);
 
             return ResponseUtil.createFailureResponseWithHeaders(integrationId, mediaType,"/integration/{integrationId}/flow/{flowId}/events",e.getMessage(),"unable to get event log of flow " + flowId,flowId);
-		}
+        }
     }
 
-    @PostMapping(path = "/integration/{integrationId}/flow/maintenance/{time}", consumes = {"application/json"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/integration/{integrationId}/flow/maintenance/{time}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable Long time, @RequestBody List<String> ids) throws Exception {
 
         try {
@@ -477,10 +549,11 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("started")) {
-                                status = integration.pauseFlow(flowId);
+                                String report = integration.pauseFlow(flowId);
+                                status = integration.getFlowStatus(flowId);
                                 if(status.equals("suspended") || status.equals("stopped")) {
                                     if(this.messagingTemplate!=null) {
-                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:suspended");
+                                        this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event",report);
                                     }
                                 }else {
                                     throw new Exception(status);
@@ -495,9 +568,9 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("suspended")) {
-                                status = integration.startFlow(flowId);
-                                if(status.equals("started") && this.messagingTemplate!=null) {
-                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event","event:resumed");
+                                String report = integration.startFlow(flowId);
+                                if(this.messagingTemplate!=null) {
+                                    this.messagingTemplate.convertAndSend("/topic/" + flowId + "/event",report);
                                 }
                             }
                         }
@@ -523,12 +596,12 @@ public class FlowManagerRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+        Long integrationId = 0L; // set integrationid to 0, as we may get a string value
+        String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
+        String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        String message = error.getMessage();
 
-    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+        return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
     }
 
 }

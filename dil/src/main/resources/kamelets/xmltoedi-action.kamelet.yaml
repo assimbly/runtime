@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: xmltoedi-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "xmltoedi action"
+    description: |-
+      Converts XML to EDI
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "dataformat:edi:unmarshal"
+          - to:
+              uri: "kamelet:sink"

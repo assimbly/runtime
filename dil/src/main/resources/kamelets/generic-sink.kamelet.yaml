@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: generic-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "generic sink"
+    description: |-
+      Generic kamelet for Camel Components
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      uri:
+        title: URI
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "{{uri}}"

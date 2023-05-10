@@ -1,0 +1,32 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: jsontoxml-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "jsontoxml action"
+    description: |-
+      Convert JSON to XML
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      options:
+          title: Options
+          description: Options
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"
+          - to:
+              uri: "kamelet:sink"

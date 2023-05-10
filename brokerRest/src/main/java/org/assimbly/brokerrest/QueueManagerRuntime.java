@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +31,10 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (success or failed) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/brokers/{brokerType}/queue/{queueName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> createQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to create queue : {}", queueName);
@@ -52,7 +56,10 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @DeleteMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
+    @DeleteMapping(
+            path = "/brokers/{brokerType}/queue/{queueName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> deleteQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get delete queue : {}", queueName);
@@ -74,7 +81,10 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return Queue destination details
      */
-    @GetMapping(path = "/brokers/{brokerType}/queue/{queueName}", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/brokers/{brokerType}/queue/{queueName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to get get queue information : {}", queueName);
@@ -96,7 +106,10 @@ public class QueueManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path= "/brokers/{brokerType}/queues", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path= "/brokers/{brokerType}/queues",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> getQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
 
         log.debug("REST request to get get queues");
@@ -118,7 +131,10 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/queue/{queueName}/clear", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/brokers/{brokerType}/queue/{queueName}/clear",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> clearQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
 
         log.debug("REST request to clear queue : {}", queueName);
@@ -139,7 +155,10 @@ public class QueueManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/queues/clear", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/brokers/{brokerType}/queues/clear",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> clearQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
 
         log.debug("REST request to clear queues : this removes all messages on the broker!");

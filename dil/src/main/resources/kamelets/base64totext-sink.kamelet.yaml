@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: base64totext-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "base64totext sink"
+    description: |-
+      to do
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - unmarshal:
+              base64: {}
+          - to:
+              uri: "kamelet:sink"

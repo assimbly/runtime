@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,8 +49,14 @@ public class CertificateManagerRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(path = "/certificates", consumes =  {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/certificates/set",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
+
+        log.debug("REST request to set certificates for url: {}", url);
 
         try {
             integrationRuntime.getIntegration().setCertificatesInKeystore(keystoreName, keystorePassword, url);
@@ -69,7 +76,10 @@ public class CertificateManagerRuntime {
      * @return the ResponseEntity<String> with status 200 (Imported) and with body (certificates), or with status 400 (Bad Request) if the certificates failed to import
      * @throws Exception
      */
-    @PostMapping(path = "/certificates/import", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/certificates/import",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> importCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestBody String url, @RequestHeader String keystoreName, @RequestHeader String keystorePassword) throws Exception {
 
         log.debug("REST request to import certificates for url: {}", url);
@@ -96,7 +106,11 @@ public class CertificateManagerRuntime {
     }
 
 
-    @PostMapping(path = "/certificates/upload", consumes = {"text/plain"}, produces = {"text/plain","application/xml", "application/json"})
+    @PostMapping(
+            path = "/certificates/upload",
+            consumes = {MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> uploadCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @RequestHeader("FileType") String fileType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String certificate) throws Exception {
 
         try {
@@ -132,7 +146,11 @@ public class CertificateManagerRuntime {
 
     }
 
-    @PostMapping(path = "/certificates/uploadp12", consumes = {"text/plain"}, produces = {"text/plain","application/xml", "application/json"})
+    @PostMapping(
+            path = "/certificates/uploadp12",
+            consumes = {MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> uploadP12Certificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @RequestHeader("FileType") String fileType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestHeader("password") String password, @RequestBody String certificate) throws Exception {
 
         try {
@@ -151,7 +169,10 @@ public class CertificateManagerRuntime {
 
     }
 
-    @GetMapping(path = "/certificates/generate", produces = {"text/plain","application/xml", "application/json"})
+    @GetMapping(
+            path = "/certificates/generate",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> generateCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("cn") String cn, @RequestHeader String keystoreName, @RequestHeader String keystorePassword) throws Exception {
 
         try {
@@ -189,7 +210,10 @@ public class CertificateManagerRuntime {
      * @param certificateName the name (alias) of the certificate to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @GetMapping(path = "/certificates/delete/{certificateName}", produces = {"text/plain","application/xml","application/json"})
+    @GetMapping(
+            path = "/certificates/delete/{certificateName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public ResponseEntity<String> deleteCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @PathVariable String certificateName) throws Exception {
         log.debug("REST request to delete certificate : {}", certificateName);
 

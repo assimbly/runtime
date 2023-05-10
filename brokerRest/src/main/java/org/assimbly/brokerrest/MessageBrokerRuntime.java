@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,111 +29,127 @@ public class MessageBrokerRuntime {
     private static final long ID = 0L;
 
     /**
-     * GET  /brokers/{brokerType}/messages/{stepName}/{filter} : get list of messages on step.
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the queue
+     * @param endpointName, the name of the queue
      * @param filter, the filter
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/messages/{stepName}/{filter}", produces = {"text/plain","application/xml","application/json"})
-    public Object listMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
+    @GetMapping(
+            path = "/brokers/{brokerType}/messages/{endpointName}/{filter}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object listMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
 
-        log.debug("REST request to list messages for queue : {}", stepName);
+        log.debug("REST request to list messages for queue : {}", endpointName);
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = broker.listMessages(brokerType, stepName, filter, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{stepName}/{filter}", result);
+            result = broker.listMessages(brokerType, endpointName, filter, mediaType);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/{filter}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", e.getMessage());
         }
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/{stepName}/{filter} : get list of messages on step.
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the queue
+     * @param endpointName, the name of the queue
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/messages/{stepName}/count", produces = {"text/plain","application/xml","application/json"})
-    public Object countMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName)  throws Exception {
+    @GetMapping(
+            path = "/brokers/{brokerType}/messages/{endpointName}/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object countMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
 
-        log.debug("REST request to list messages for queue : {}", stepName);
+        log.debug("REST request to list messages for queue : {}", endpointName);
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = broker.countMessages(brokerType, stepName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", result);
+            result = broker.countMessages(brokerType, endpointName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/count", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", e.getMessage());
         }
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/message/{stepName}/browse/{messageId} : get a message on a step by messageId.
+     * GET  /brokers/{brokerType}/message/{endpointName}/browse/{messageId} : get a message on a endpoint by messageId.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the queue
+     * @param endpointName, the name of the queue
      * @param messageId, the messageId (retrieved to listMessages)
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName, @PathVariable String messageId, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
+    @GetMapping(
+            path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object browseMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
 
-        log.debug("REST request to browse message on: {}", stepName);
+        log.debug("REST request to browse message on: {}", endpointName);
 
         try {
             //brokermanager = brokerManagerResource.getBrokerManager();
-            result = broker.browseMessage(brokerType,stepName, messageId, mediaType, excludeBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", result);
+            result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/browse/{messageId}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", e.getMessage());
         }
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/{stepName}/browse : list of messages on the specified step
+     * GET  /brokers/{brokerType}/messages/{endpointName}/browse : list of messages on the specified endpoint
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the queue
+     * @param endpointName, the name of the queue
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
-    @GetMapping(path = "/brokers/{brokerType}/messages/{stepName}/browse", produces = {"text/plain","application/xml","application/json"})
-    public Object browseMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
+    @GetMapping(
+            path = "/brokers/{brokerType}/messages/{endpointName}/browse",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object browseMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
 
-        log.debug("REST request to browse messages on: {}", stepName);
+        log.debug("REST request to browse messages on: {}", endpointName);
 
         try {
-            result = broker.browseMessages(brokerType,stepName, page, numberOfMessages, mediaType, excludeBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{stepName}/browse", result);
+            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
         } catch (Exception e) {
             log.error("Can't browse messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}/browse", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/browse", e.getMessage());
         }
 
     }
 
 
     /**
-     * POST  /brokers/{brokerType}/message/{stepName}/send/{messageHeaders} : send a message.
+     * POST  /brokers/{brokerType}/message/{endpointName}/send/{messageHeaders} : send a message.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the step (queue or topic)
+     * @param endpointName, the name of the endpoint (queue or topic)
      * @param messageHeaders, the message headers (json map)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/message/{stepName}/send", consumes = {"text/plain","application/xml","application/json"}, produces = {"text/plain","application/xml","application/json"})
-    public Object sendMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName, @RequestParam(value = "messageHeaders", required = false) String messageHeaders, @RequestBody String messageBody) throws Exception {
+    @PostMapping(
+            path = "/brokers/{brokerType}/message/{endpointName}/send",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object sendMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) String messageHeaders, @RequestBody String messageBody) throws Exception {
 
-        log.debug("REST request to send messages from queue : " + stepName);
+        log.debug("REST request to send messages from queue : " + endpointName);
 
         Map<String,Object> messageHeadersMap = null;
         if(messageHeaders!=null){
@@ -140,56 +157,62 @@ public class MessageBrokerRuntime {
         }
 
         try {
-            result = broker.sendMessage(brokerType,stepName,messageHeadersMap,messageBody);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", result);
+            result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
         } catch (Exception e) {
             log.error("Can't send message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/send/{messageHeaders}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", e.getMessage());
         }
 
     }
 
 
     /**
-     * DELETE /brokers/{brokerType}/message/{stepName}/{messageId : remove a message on a step by Messageid.
+     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId : remove a message on a endpoint by Messageid.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the queue or topic
+     * @param endpointName, the name of the queue or topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @DeleteMapping(path = "/brokers/{brokerType}/message/{stepName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
-    public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName, @PathVariable String messageId)  throws Exception {
+    @DeleteMapping(
+            path = "/brokers/{brokerType}/message/{endpointName}/{messageId}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
 
-        log.debug("REST request to remove messages for queue : {}", stepName);
+        log.debug("REST request to remove messages for queue : {}", endpointName);
 
         try {
-            result = broker.removeMessage(brokerType,stepName, messageId);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", result);
+            result = broker.removeMessage(brokerType,endpointName, messageId);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't remove message", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{stepName}/{messageId}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", e.getMessage());
         }
 
     }
 
     /**
-     * DELETE  /brokers/{brokerType}/messages/{stepName} : remove all messages on a step.
+     * DELETE  /brokers/{brokerType}/messages/{endpointName} : remove all messages on a endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param stepName, the name of the step (topic or queue)
+     * @param endpointName, the name of the endpoint (topic or queue)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @DeleteMapping(path = "/brokers/{brokerType}/messages/{stepName}", produces = {"text/plain","application/xml","application/json"})
-    public Object removeMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String stepName)  throws Exception {
+    @DeleteMapping(
+            path = "/brokers/{brokerType}/messages/{endpointName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object removeMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
 
-        log.debug("REST request to remove messages for step : {}", stepName);
+        log.debug("REST request to remove messages for endpoint : {}", endpointName);
 
         try {
-            result = broker.removeMessages(brokerType,stepName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}", result);
+            result = broker.removeMessages(brokerType,endpointName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", result);
         } catch (Exception e) {
             log.error("Can't remove messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{stepName}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", e.getMessage());
         }
 
     }
@@ -202,7 +225,10 @@ public class MessageBrokerRuntime {
      * @param targetQueueName, the name of the target queue
      * @return the status (source) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public Object moveMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, @PathVariable String messageId)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
@@ -226,7 +252,10 @@ public class MessageBrokerRuntime {
      * @param targetQueueName, the name of the target queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
-    @PostMapping(path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", produces = {"text/plain","application/xml","application/json"})
+    @PostMapping(
+            path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
     public Object moveMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);

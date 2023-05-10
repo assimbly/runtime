@@ -2,11 +2,14 @@ package org.assimbly.dil.blocks.connections;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.commons.collections4.MapUtils;
 import org.assimbly.dil.blocks.connections.broker.*;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
+import org.assimbly.util.IntegrationUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 public class Connection {
@@ -45,7 +48,6 @@ public class Connection {
         if(connectionIdValue!=null) {
             startConnection();        
         }
-
 
 		return properties;
 
@@ -91,8 +93,13 @@ public class Connection {
 	}
 
     private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
+
         EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) context.getPropertiesComponent()).getInitialProperties();
-        decryptedProperties.putAll(properties);
+
+        for (Map.Entry<String,String> entry : properties.entrySet()) {
+            MapUtils.safeAddToMap(decryptedProperties,entry.getKey(), entry.getValue());
+        }
+
         return decryptedProperties;
     }
 

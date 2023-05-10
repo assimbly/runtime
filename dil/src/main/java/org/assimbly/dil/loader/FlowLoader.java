@@ -16,12 +16,9 @@ import org.slf4j.LoggerFactory;
 public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
 	private TreeMap<String, String> props;
-
 	private CamelContext context;
 	private ExtendedCamelContext extendedCamelContext;
-
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
@@ -29,9 +26,7 @@ public class FlowLoader extends RouteBuilder {
 	private String flowEvent;
 	private String flowVersion;
 	private String flowEnvironment;
-
 	private boolean isFlowLoaded = true;
-
 	private FlowLoaderReport flowLoaderReport;
 
 	public FlowLoader(final TreeMap<String, String> props){
@@ -109,7 +104,10 @@ public class FlowLoader extends RouteBuilder {
 		for(String prop : props.keySet()){
 			if(prop.startsWith("error") && prop.endsWith("uri")){
 				String errorUri = props.get(prop);
-				setErrorHandler(errorUri);
+				String id = StringUtils.substringBetween(prop,"error.",".uri");
+				if(!props.containsKey("error." + id + ".route") && !props.containsKey("error." + id + ".routeconfiguration")){
+					setErrorHandler(id, errorUri);
+				}
 			}
 		}
 
@@ -197,29 +195,13 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void updateStep(Resource resource, String route, String type, String id, String uri){
-		try {
-			log.info(logMessage("Updating step", id, type, route));
-			loader.updateRoutes(List.of(resource));
-
-			//context
-			flowLoaderReport.setStep(id, uri, type, "success", null);
-			flowEvent = "start";
-		}catch (Exception e) {
-			String errorMessage = e.getMessage();
-			log.error("Failed updating step | stepid=" + id);
-			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
-			flowEvent = "error";
-			isFlowLoaded = false;
-		}
-	}
-
 	private void loadStep(Resource resource, String route, String type, String id, String uri){
 
 		try {
 			log.info(logMessage("Loading step", id, type, route));
 
 			loader.loadRoutes(List.of(resource));
+
 			flowEvent = "start";
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 		}catch (Exception e){
@@ -246,7 +228,24 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void setErrorHandler(String errorUri) throws Exception {
+	private void updateStep(Resource resource, String route, String type, String id, String uri){
+		try {
+			log.info(logMessage("Updating step", id, type, route));
+			loader.updateRoutes(List.of(resource));
+
+			//context
+			flowLoaderReport.setStep(id, uri, type, "success", null);
+			flowEvent = "start";
+		}catch (Exception e) {
+			String errorMessage = e.getMessage();
+			log.error("Failed updating step | stepid=" + id);
+			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
+			flowEvent = "error";
+			isFlowLoaded = false;
+		}
+	}
+
+	private void setErrorHandler(String id, String errorUri) throws Exception {
 
 		if (errorUri!=null && !errorUri.isEmpty()) {
 			routeErrorHandler = new DeadLetterChannelBuilder();
@@ -260,6 +259,8 @@ public class FlowLoader extends RouteBuilder {
 		routeErrorHandler = errorHandler.configure();
 
 		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);
+
+		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
 
 	}
 

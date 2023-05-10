@@ -1,0 +1,52 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setcookie-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setcookie action"
+    description: |-
+      Sets browser cookie
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+          title: Path
+          description: Path
+          type: string
+          default: AssimblyCookie
+      domain:
+        title: Domain
+        description: Domain
+        type: string
+        default: "org.assimbly"
+      value:
+          title: Value
+          description: Value
+          type: string
+      cookiePath:
+          title: Cookie Path
+          description: Cookie Path
+          type: string
+          default: "0"
+      isSecure:
+          title: Is Secure
+          description: Is Secure
+          type: string
+          default: false
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      route-configuration-id: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})"
+          - to:
+              uri: "kamelet:sink"

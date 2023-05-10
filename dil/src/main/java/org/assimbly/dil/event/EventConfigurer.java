@@ -33,13 +33,7 @@ public class EventConfigurer {
         this.context = context;
     }
 
-    public String checkConfiguration(String jsonConfiguration) {
-
-        try {
-            configuration = new Collection().fromJson(jsonConfiguration);
-        } catch (JsonProcessingException e) {
-            return e.getMessage();
-        }
+    public String checkConfiguration() {
 
         if(configuration == null){
             return "Invalid event format (json)";
@@ -48,9 +42,9 @@ public class EventConfigurer {
         type = configuration.getType();
 
         if(type==null){
-            return "Event type is missing. Valid types are message,log and step.";
+            return "The type of collector is missing. Valid types are: message,log or step.";
         }else if(!type.equals("log") && !type.equals("message") && !type.equals("step")){
-            return "Invalid event collector: " + type + ". Valid types are message,log and step.";
+            return "Invalid event collector: " + type + ". Valid types are message,log or step.";
         }
 
         String id = configuration.getId();
@@ -64,39 +58,38 @@ public class EventConfigurer {
             remove(collectorId);
         }
 
+        log.info("Event collector configuration is valid");
+
         return "ok";
 
     }
 
     public String add(String jsonConfiguration) {
 
-        String checkMessage = checkConfiguration(jsonConfiguration);
+        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
 
-        if(!checkMessage.equals("ok")){
-            return checkMessage;
-        }else{
-
-            try {
-
-                switch (type) {
-                    case "message":
-                        configureMessageCollector();
-                        break;
-                    case "step":
-                        configureStepCollector();
-                        break;
-                    case "log":
-                        configureLogCollector();
-                        break;
-                }
-            } catch (Exception e){
-                return e.getMessage();
-            }
-
-            return "configured";
-
+        try {
+            configuration = new Collection().fromJson(jsonConfiguration);
+        } catch (JsonProcessingException e) {
+            return e.getMessage();
         }
+
+        String result = configureCollector();
+
+        return result;
+
     }
+
+    public String add(Collection configuration) {
+
+        this.configuration = configuration;
+
+        String result = configureCollector();
+
+        return result;
+
+    }
+
 
 
     public String remove(String collectorId) {
@@ -122,6 +115,39 @@ public class EventConfigurer {
         }
 
         return "removed";
+    }
+
+    public String configureCollector(){
+
+        String checkMessage = checkConfiguration();
+
+        if(!checkMessage.equals("ok")){
+            return checkMessage;
+        }else{
+
+            try {
+
+                switch (type) {
+                    case "message":
+                        configureMessageCollector();
+                        break;
+                    case "step":
+                        configureStepCollector();
+                        break;
+                    case "log":
+                        configureLogCollector();
+                        break;
+                }
+
+            } catch (Exception e){
+                e.printStackTrace();
+                return e.getMessage();
+            }
+
+            return "configured";
+
+        }
+
     }
 
     public boolean isConfigured(){
@@ -193,8 +219,13 @@ public class EventConfigurer {
 
         ArrayList<String> packageNames = configuration.getEvents();
 
-        for(String packageName: packageNames){
-            addLogger(logCollector, packageName, "info");
+        if(packageNames.size() > 0) {
+            for (String packageName : packageNames) {
+                log.info("Add log event: " + packageName);
+                addLogger(logCollector, packageName, "info");
+            }
+        }else{
+            log.error("No log events are configured. Please provide one or more packageName");
         }
 
         context.getRegistry().bind(id, logCollector);
