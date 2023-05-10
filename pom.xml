@@ -9,7 +9,7 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
-	<version>4.0.0</version>
+	<version>null</version>
 
 	<modules>
 		<module>broker</module>
@@ -24,7 +24,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
-        <assimbly.version>4.0.0</assimbly.version>
+        <assimbly.version>null</assimbly.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<spring-boot.version>2.7.11</spring-boot.version>
 		<maven-api.version>3.9.1</maven-api.version>
