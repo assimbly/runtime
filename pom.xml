@@ -27,7 +27,7 @@
         <assimbly.version>4.0.0</assimbly.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<spring-boot.version>2.7.11</spring-boot.version>
-		<maven-api.version>3.9.1</maven-api.version>
+		<maven-api.version>3.9.2</maven-api.version>
 		<camel-spring-junit5.version>3.20.4</camel-spring-junit5.version>
 		<h2database.version>2.1.214</h2database.version>
 	</properties>
