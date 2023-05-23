@@ -211,6 +211,7 @@ public class CamelIntegration extends BaseIntegration {
 		factory.setPrettyPrint(true);
 		factory.setMetricsRegistry(metricRegistry);
 		context.setMessageHistoryFactory(factory);
+		context.setSourceLocationEnabled(true);
 	}
 
 	public void setDefaultBlocks() throws Exception {
