@@ -28,8 +28,9 @@
 		<hamcrest.version>2.2</hamcrest.version>
 		<spring-boot.version>2.7.12</spring-boot.version>
 		<maven-api.version>3.9.2</maven-api.version>
-		<camel-spring-junit5.version>3.20.4</camel-spring-junit5.version>
+		<camel-spring-junit5.version>3.20.5</camel-spring-junit5.version>
 		<h2database.version>2.1.214</h2database.version>
+		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 	</properties>
 
 	<distributionManagement> 
@@ -70,11 +71,11 @@
 				<!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
 				<plugin>
 					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.3.0</version>
+					<version>3.3.1</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.10.1</version>
+					<version>3.11.0</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-toolchains-plugin</artifactId>
@@ -96,7 +97,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.22.2</version>
+					<version>3.1.0</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-jar-plugin</artifactId>
@@ -108,7 +109,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.0.0</version>
+					<version>3.1.1</version>
 				</plugin>
 				<!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
 				<plugin>
@@ -117,7 +118,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.4.1</version>
+					<version>3.4.3</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -130,15 +131,15 @@
                     <target>11</target>
                 </configuration>
             </plugin>
-            <plugin>
-		      <groupId>org.codehaus.mojo</groupId>
-		      <artifactId>versions-maven-plugin</artifactId>
-		      <version>2.15.0</version>
-	          <configuration>
-		          <rulesUri>${maven-versions-rules}</rulesUri>
-	    	  </configuration>
-		    </plugin>           
-        </plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.15.0</version>
+				<configuration>
+					<rulesUri>${maven.versions.rules}</rulesUri>
+				</configuration>
+			</plugin>
+		</plugins>
     </build>
 	
 </project>
