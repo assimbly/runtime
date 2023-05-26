@@ -96,16 +96,16 @@ public class FlowLoaderReport {
 		//logging
 		if(loaded == loadedSuccess) {
 			if(loadedSuccess == 1){
-				log.info(loadedSuccess + " step loaded successfully");
+				log.info(loadedSuccess + " step loaded successfully | flowid=" + flowId);
 			}else if(loadedSuccess > 1){
-				log.info(loadedSuccess + " steps loaded successfully");
+				log.info(loadedSuccess + " steps loaded successfully | flowid=" + flowId);
 			}
 			log.info("Start flow | name=" + flowName + " | flowid=" + flowId);
 		}else{
 			if(loadedError == 1){
-				log.error(loadedError + " step failed to load");
+				log.error(loadedError + " step failed to load | flowid=" + flowId);
 			}else if(loadedError > 1){
-				log.error(loadedError + " steps failed to load");
+				log.error(loadedError + " steps failed to load | flowid=" + flowId);
 			}
 			log.error("Event=" + event + " | name=" + flowName + " | flowid=" + flowId);
 		}
