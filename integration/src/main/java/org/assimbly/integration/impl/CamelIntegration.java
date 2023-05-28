@@ -105,7 +105,7 @@ public class CamelIntegration extends BaseIntegration {
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 
 	private CamelContext context;
-	private static boolean started = false;
+	private static boolean started;
 	private final int stopTimeout = 10;
 	private ServiceStatus status;
 	private String flowStatus;
@@ -116,7 +116,7 @@ public class CamelIntegration extends BaseIntegration {
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 	private Properties encryptionProperties;
-	private boolean watchDeployDirectoryInitialized = false;
+	private boolean watchDeployDirectoryInitialized;
 	private TreeMap<String, String> props;
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;

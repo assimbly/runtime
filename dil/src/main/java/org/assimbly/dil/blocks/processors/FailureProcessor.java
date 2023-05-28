@@ -45,6 +45,8 @@ public class FailureProcessor implements Processor {
 					.filter(map -> map.getKey().startsWith("message." + stepId))
 					.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 
+			XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+
 			for (Map.Entry<String, String> entry : headers.entrySet()) {
 
 				String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
@@ -57,7 +59,6 @@ public class FailureProcessor implements Processor {
 				} else if (language.equalsIgnoreCase("constant")) {
 					result = value;
 				} else if (language.equalsIgnoreCase("xpath")) {
-					XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
 					result = XPathBuilder.xpath(value).factory(fac).evaluate(exchange, String.class);
 				} else {
 					Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
