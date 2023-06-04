@@ -138,8 +138,15 @@ public class CamelIntegration extends BaseIntegration {
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
 
+		//load settings into a separate thread
 		if(useDefaultSettings){
-			setDefaultSettings();
+			new Thread(() -> {
+				try {
+					setDefaultSettings();
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}).start();
 		}
 
 		//set management tasks

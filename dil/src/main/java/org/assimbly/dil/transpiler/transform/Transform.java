@@ -15,26 +15,16 @@ public final class Transform {
 
     public static String transformToDil(String xml){
 
-        StopWatch watch = new StopWatch();
-        watch.start();
-
 		//convert camel2 to camel3
         String camel3Xml = camel2ToCamel3(xml);
 
-        System.out.println("T1. Time Elapsed: " + watch.getTime());
-
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
-
-        System.out.println("T2. Time Elapsed: " + watch.getTime());
 
         //transform to DIL format
 		String dilXml = TransformUtil.transformXML(camel3Xml,is);
 
         log.debug("The DIL format:\n\n" + dilXml);
-
-        System.out.println("T3. Time Elapsed: " + watch.getTime());
-        watch.stop();
 
         return dilXml;
 
