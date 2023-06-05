@@ -170,16 +170,10 @@ public class FlowLoader extends RouteBuilder {
 				String route = props.get(prop);
 				String id = props.get(prop + ".id");
 
-				if(prop.startsWith("route")){
-					loadOrUpdateStep(route, "route",id, null);
-				}else{
-					loadOrUpdateStep(route, "route", id, null);
-				}
+				loadOrUpdateStep(route, "route",id, null);
 			}
 		}
 	}
-
-
 
 	private void loadOrUpdateStep(String route, String type, String id, String uri) throws Exception {
 
@@ -248,17 +242,16 @@ public class FlowLoader extends RouteBuilder {
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
 		if (errorUri!=null && !errorUri.isEmpty()) {
-			routeErrorHandler = new DeadLetterChannelBuilder();
-			routeErrorHandler = deadLetterChannel(errorUri);
+			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
 		}
 
 		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
 
-		routeErrorHandler = errorHandler.configure();
+		DeadLetterChannelBuilder updatedErrorHandler = errorHandler.configure();
 
-		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);
+		extendedCamelContext.setErrorHandlerFactory(updatedErrorHandler);
 
 		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
 

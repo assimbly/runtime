@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.print.attribute.standard.Media;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +68,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, cronResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/cron", out.toString(), plainResponse);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/cron", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
@@ -99,7 +100,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, certificateResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(), plainResponse);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", "", plainResponse);
             }
@@ -130,7 +131,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, urlResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(), plainResponse);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
@@ -168,7 +169,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, expressionResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(), plainResponse);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
@@ -207,7 +208,7 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, ftpResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(), plainResponse);
+                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(integrationId, mediaType);
             }
@@ -289,10 +290,10 @@ public class ValidationRuntime {
                 final ObjectMapper mapper = new ObjectMapper();
                 if(scriptResp.getCode() == 1) {
                     mapper.writeValue(out, scriptResp);
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(), plainResponse);
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 } else {
                     mapper.writeValue(out, new BadRequestResponse(scriptResp.getResult()));
-                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(), plainResponse);
+                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 }
             } else {
                 return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", "", plainResponse);
@@ -330,28 +331,31 @@ public class ValidationRuntime {
             @RequestBody String body
     ) throws Exception {
 
-        plainResponse = true;
-
         try {
+
+            plainResponse = true;
+
             HashMap<String,String> paramList = null;
+
             if(body!=null){
                 paramList = new ObjectMapper().readValue(body, new TypeReference<HashMap<String,String>>(){});
+
+                integration = integrationRuntime.getIntegration();
+                List<ValidationErrorMessage> expressionResp = integration.validateXslt(
+                        paramList.get("xsltUrl"),
+                        paramList.get("xsltBody")
+                );
+
+                if(expressionResp!=null) {
+                    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    final ObjectMapper mapper = new ObjectMapper();
+                    mapper.writeValue(out, expressionResp);
+                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", out.toString(StandardCharsets.UTF_8), plainResponse);
+                }
+
             }
 
-            integration = integrationRuntime.getIntegration();
-            List<ValidationErrorMessage> expressionResp = integration.validateXslt(
-                    paramList.get("xsltUrl"),
-                    paramList.get("xsltBody")
-            );
-
-            if(expressionResp!=null) {
-                final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, expressionResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", out.toString(), plainResponse);
-            } else {
-                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
-            }
+            return ResponseUtil.createNoContentResponse(integrationId, mediaType);
 
         } catch (Exception e) {
             log.error("Error",e);

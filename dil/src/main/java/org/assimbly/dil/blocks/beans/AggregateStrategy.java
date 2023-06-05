@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 public class AggregateStrategy implements AggregationStrategy {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     private AggregationStrategy aggregateStrategy;
 
     @Override

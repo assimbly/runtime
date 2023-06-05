@@ -15,9 +15,9 @@ import java.util.List;
 
 public class HttpsCertificateValidator implements CertificateRetriever {
 
-    static private List<FileBasedTrustStore> trustStores = new ArrayList<>();
-    static private FileBasedTrustStore customTrustStore;
-    static private HttpClient httpClient;
+    private List<FileBasedTrustStore> trustStores = new ArrayList<>();
+    private FileBasedTrustStore customTrustStore;
+    private static HttpClient httpClient;
 
     /**
      * Checks if the certificate of the given HTTPS url is valid or not.
@@ -44,7 +44,7 @@ public class HttpsCertificateValidator implements CertificateRetriever {
         req.setConfig(reqConfig);
 
         try {
-            HttpResponse response = httpClient.execute(req);
+            httpClient.execute(req);
         } catch (SSLException e) {
             return new ValidationResult(ValidationResultStatus.INVALID, getRootCause(e).getMessage());
         } catch (IOException e) {
@@ -99,7 +99,7 @@ public class HttpsCertificateValidator implements CertificateRetriever {
         VALID, INVALID, UNKNOWN
     }
 
-    public class ValidationResult {
+    public static class ValidationResult {
         private final ValidationResultStatus validationResultStatus;
         private final String message;
 

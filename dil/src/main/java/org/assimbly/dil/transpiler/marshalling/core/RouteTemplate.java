@@ -638,7 +638,7 @@ public class RouteTemplate {
 
         String endpoint;
 
-        Objects.toString(conf.getProperty(xpath + "options"), null);
+        //Objects.toString(conf.getProperty(xpath + "options"), null);
 
         if (options == null || options.isEmpty()) {
             endpoint = transport + ":" + id;

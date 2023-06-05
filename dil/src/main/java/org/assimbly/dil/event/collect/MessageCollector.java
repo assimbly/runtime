@@ -11,6 +11,7 @@ import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
 import org.assimbly.dil.event.domain.MessageEvent;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -98,9 +99,9 @@ public class MessageCollector extends EventNotifierSupport {
                 String typeName = message.getBody().getClass().getTypeName();
                 return "<" + typeName + ">";
             }else if (body.length > 250000) {
-                return new String(Arrays.copyOfRange(body, 0, 250000));
+                return new String(Arrays.copyOfRange(body, 0, 250000), StandardCharsets.UTF_8);
             }else{
-                return new String (body);
+                return new String (body, StandardCharsets.UTF_8);
             }
 
         } catch (Exception e) {

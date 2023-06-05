@@ -6,6 +6,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -347,7 +348,7 @@ public class Marshall {
 
         DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = dbFactory.newDocumentBuilder();
-        Document document = builder.parse(new ByteArrayInputStream(xml.getBytes()));
+        Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 
         return document;
 

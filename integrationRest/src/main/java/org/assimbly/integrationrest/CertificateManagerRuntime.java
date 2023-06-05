@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -123,7 +124,7 @@ public class CertificateManagerRuntime {
             }else{
                 //create certificate from String
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                InputStream certificateStream = new ByteArrayInputStream(certificate.getBytes());
+                InputStream certificateStream = new ByteArrayInputStream(certificate.getBytes(StandardCharsets.UTF_8));
                 cert = cf.generateCertificate(certificateStream);
             }
 

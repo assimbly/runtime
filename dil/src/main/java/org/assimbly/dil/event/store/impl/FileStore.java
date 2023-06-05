@@ -23,7 +23,7 @@ public class FileStore {
         this.store = store;
 
         if(file==null){
-            createFile(collectorId, store);
+            createFile(this.collectorId, this.store);
         }
 
     }

@@ -53,7 +53,7 @@ public class XsltValidator {
         }
     }
 
-    private class ValidationErrorListener implements ErrorListener {
+    private static class ValidationErrorListener implements ErrorListener {
 
         protected final List<ValidationErrorMessage> errors = new ArrayList<>();
 
