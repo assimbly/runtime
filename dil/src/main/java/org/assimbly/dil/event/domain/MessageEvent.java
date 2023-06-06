@@ -26,21 +26,21 @@ public class MessageEvent {
     private static final String JMS_PREFIX = "JMS";
 
     private final String id;
-    private final String stepId;
+    private final String flowId;
     private final String flowVersion;
 
-    private final String step;
+    private final String stepId;
     private final String timestamp;
     private final String expiryDate;
     private final Map<String, Object> headers;
     private final String body;
 
-    public MessageEvent(String timestamp, String id, String stepId, String flowVersion, String step, Map<String, Object> headers, String body, String expiryDate) {
+    public MessageEvent(String timestamp, String id, String flowId, String flowVersion, String stepId, Map<String, Object> headers, String body, String expiryDate) {
         this.timestamp = timestamp;
         this.id = id;
-        this.stepId = stepId;
+        this.flowId = flowId;
         this.flowVersion = flowVersion;
-        this.step = step;
+        this.stepId = stepId;
         this.headers = headers;
         this.body = body;
         this.expiryDate = expiryDate;
@@ -57,8 +57,8 @@ public class MessageEvent {
     }
 
     @JsonProperty("bundleId")
-    public String getStepId() {
-        return stepId;
+    public String getFlowId() {
+        return flowId;
     }
 
     @JsonProperty("flowVersion")
@@ -68,7 +68,7 @@ public class MessageEvent {
 
     @JsonProperty("component")
     public String getStep() {
-        return step;
+        return stepId;
     }
 
     /**

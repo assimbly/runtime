@@ -5,6 +5,7 @@ import org.apache.camel.Message;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
@@ -26,8 +27,10 @@ public class MessageCollector extends EventNotifierSupport {
     private final String expiryInHours;
     private final ArrayList<Filter> filters;
     private final ArrayList<String> events;
+    private final String collectorId;
 
     public MessageCollector(String collectorId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+        this.collectorId = collectorId;
         this.events = events;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
@@ -59,16 +62,16 @@ public class MessageCollector extends EventNotifierSupport {
 
             //process and store the exchange
             if(stepId!=null && filters==null){
-                processEvent(exchange, stepId);
+                processEvent(exchange, collectorId, stepId);
             }else if(stepId!=null && EventUtil.isFiltered(filters, stepId)){
-                processEvent(exchange, stepId);
+                processEvent(exchange, collectorId, stepId);
             }
 
         }
 
     }
 
-    private void processEvent(Exchange exchange, String stepId){
+    private void processEvent(Exchange exchange, String flowId, String stepId){
 
         //set fields
         Message message = exchange.getMessage();
@@ -78,7 +81,7 @@ public class MessageCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getTimestamp();
 
         //create json
-        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, stepId, "0", stepId, headers, body, expiryInHours);
+        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, "0", stepId, headers, body, expiryInHours);
         String json = messageEvent.toJson();
 
         //store the event
