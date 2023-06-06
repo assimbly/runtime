@@ -33,6 +33,57 @@ public class EventConfigurer {
         this.context = context;
     }
 
+    public String add(String jsonConfiguration) {
+
+        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
+
+        try {
+            configuration = new Collection().fromJson(jsonConfiguration);
+        } catch (JsonProcessingException e) {
+            return e.getMessage();
+        }
+
+        String result = configureCollector();
+
+        return result;
+
+    }
+
+    public String add(Collection configuration) {
+
+        this.configuration = configuration;
+
+        String result = configureCollector();
+
+        return result;
+
+    }
+
+    public String remove(String collectorId) {
+
+        log.info("Removing collector with id=" + collectorId);
+
+        Object collector = context.getRegistry().lookupByName(collectorId);
+
+       if(collector instanceof MessageCollector){
+           ((MessageCollector) collector).shutdown();
+           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
+           log.info("Removed message collector with id=" + collectorId);
+       }else if(collector instanceof StepCollector){
+           ((StepCollector) collector).shutdown();
+           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
+           log.info("Removed step collector with id=" + collectorId);
+       }else if(collector instanceof LogCollector ){
+            LogCollector logCollector = (LogCollector) collector;
+            removeLogger(logCollector);
+            log.info("Removed log collector with id=" + collectorId);
+        }else{
+            log.warn("Collector with id=" + collectorId + " does not exist");
+        }
+
+        return "removed";
+    }
+
     public String checkConfiguration() {
 
         if(configuration == null){
@@ -64,57 +115,13 @@ public class EventConfigurer {
 
     }
 
-    public String add(String jsonConfiguration) {
-
-        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
-
-        try {
-            configuration = new Collection().fromJson(jsonConfiguration);
-        } catch (JsonProcessingException e) {
-            return e.getMessage();
-        }
-
-        String result = configureCollector();
-
-        return result;
-
-    }
-
-    public String add(Collection configuration) {
-
-        this.configuration = configuration;
-
-        String result = configureCollector();
-
-        return result;
-
-    }
-
-
-
-    public String remove(String collectorId) {
-
-        log.info("Removing collector with id=" + collectorId);
-
+    public boolean isConfigured(){
         Object collector = context.getRegistry().lookupByName(collectorId);
-
-       if(collector instanceof MessageCollector){
-           ((MessageCollector) collector).shutdown();
-           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
-           log.info("Removed message collector with id=" + collectorId);
-       }else if(collector instanceof StepCollector){
-           ((StepCollector) collector).shutdown();
-           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
-           log.info("Removed step collector with id=" + collectorId);
-       }else if(collector instanceof LogCollector ){
-            LogCollector logCollector = (LogCollector) collector;
-            removeLogger(logCollector);
-            log.info("Removed log collector with id=" + collectorId);
+        if(collector==null){
+            return false;
         }else{
-            log.warn("Collector with id=" + collectorId + " does not exist");
+            return true;
         }
-
-        return "removed";
     }
 
     public String configureCollector(){
@@ -149,16 +156,6 @@ public class EventConfigurer {
         }
 
     }
-
-    public boolean isConfigured(){
-        Object collector = context.getRegistry().lookupByName(collectorId);
-        if(collector==null){
-            return false;
-        }else{
-            return true;
-        }
-    }
-
 
     public void configureStepCollector() {
 

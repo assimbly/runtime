@@ -340,6 +340,8 @@ public class IntegrationRuntime {
 
         log.info("Add collectors");
 
+        log.info("Collectors configuration: \n\n" + configuration + "\n");
+
         try {
             String result = integration.addCollectorsConfiguration(mediaType, configuration);
             if(!result.equalsIgnoreCase("configured")){
