@@ -2,6 +2,7 @@ package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.xerces.dom.DocumentImpl;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
@@ -11,10 +12,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.sql.Timestamp;
@@ -63,7 +60,7 @@ public class RouteTemplate {
 
         this.baseUri = baseUri;
 
-        templateDoc = createNewDocument();
+        templateDoc = new DocumentImpl();
 
         routeId = flowId + "-" + stepId;
         this.options = options;
@@ -73,7 +70,7 @@ public class RouteTemplate {
         createTemplateId(baseUri, type);
 
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
-            contentRouteDoc = createNewDocument();
+            contentRouteDoc = new DocumentImpl();
             createContentRouter(links, stepXPath, type, flowId, stepId);
         }else if(!predefinedStep && baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
@@ -85,7 +82,7 @@ public class RouteTemplate {
     }
 
 
-    private void createContentRouter(String[] links, String stepXPath, String type, String flowId, String stepId){
+    private void createContentRouter(String[] links, String stepXPath, String type, String flowId, String stepId)  throws Exception {
 
         createContentRoute(links, stepXPath);
 
@@ -234,7 +231,7 @@ public class RouteTemplate {
         return choice;
     }
 
-    private void createStep(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId, String stepId){
+    private void createStep(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId, String stepId) throws Exception {
 
         createTemplatedRoute(optionProperties, links, stepXPath, type, flowId);
 
@@ -325,18 +322,6 @@ public class RouteTemplate {
         }
 
 
-    }
-
-
-
-    private Document createNewDocument() throws ParserConfigurationException {
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-
-        // root elements
-        Document doc = docBuilder.newDocument();
-
-        return doc;
     }
 
     private void createTemplateId(String uri,String type){

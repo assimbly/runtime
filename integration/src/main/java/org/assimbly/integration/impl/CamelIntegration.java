@@ -35,6 +35,7 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
@@ -836,14 +837,24 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String addFlow(TreeMap<String, String> props)  {
 
+		StopWatch watch = new StopWatch();
+		watch.start();
+
 		try{
 			// add custom connections if needed
 			addCustomActiveMQConnection(props, "dovetail");
+			System.out.println("Time Elapsed 1 add: " + watch.getTime());
 
 			//create connections & install dependencies if needed
 			createConnections(props);
 
-			return loadFlow(props);
+			System.out.println("Time Elapsed 2 add: " + watch.getTime());
+
+			String result = loadFlow(props);
+
+			System.out.println("Time Elapsed 2 add: " + watch.getTime());
+
+			return result;
 
 		}catch (Exception e){
 			log.error("add flow failed: ", e);
@@ -912,10 +923,30 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String loadFlow(final TreeMap<String, String> props) throws Exception {
 
-		FlowLoader flow = new FlowLoader(props);
-		flow.updateRoutesToCamelContext(context);
+		StopWatch watch = new StopWatch();
+		watch.start();
 
+		FlowLoader flow = new FlowLoader(props,context);
+
+		System.out.println("Time Elapsed 1 load: " + watch.getTime());
+
+		context.addRoutes(flow);
+
+		//flow.configure();
+
+		//flow.configureRoutes(context);
+
+		//flow.addRoutesToCamelContext(context);
+
+		//flow.addTemplatedRoutesToCamelContext(context);
+
+
+		//flow.updateRoutesToCamelContext(context);
+
+		System.out.println("Time Elapsed 2 load: " + watch.getTime());
 		loadReport = flow.getReport();
+
+		System.out.println("Time Elapsed 3 load: " + watch.getTime());
 
 		if(!flow.isFlowLoaded()){
 			return "error";
@@ -1109,6 +1140,9 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id) {
 
+		StopWatch watch = new StopWatch();
+		watch.start();
+
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
@@ -1134,11 +1168,15 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			if(addFlow){
+				System.out.println("Time Elapsed 1: " + watch.getTime());
 				result = addFlow(props);
+				System.out.println("Time Elapsed 2: " + watch.getTime());
 			}else{
 				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
 				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
+
+
 
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
@@ -1158,7 +1196,7 @@ public class CamelIntegration extends BaseIntegration {
 					status = startStep(step);
 				}
 
-				if (status.isStarted()) {
+				if (status!= null && status.isStarted()) {
 					finishFlowActionReport(id, "start","Started flow successfully","info");
 				}else{
 					finishFlowActionReport(id, "error","Failed starting flow","error");
@@ -1177,6 +1215,8 @@ public class CamelIntegration extends BaseIntegration {
 				log.error("Start flow failed. | flowid=" + id,e);
 			}
 		}
+
+		watch.stop();
 
 		return loadReport;
 
