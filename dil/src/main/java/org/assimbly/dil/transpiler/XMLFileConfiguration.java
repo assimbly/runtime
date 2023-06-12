@@ -27,6 +27,7 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang3.time.StopWatch;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
@@ -101,10 +102,6 @@ public class XMLFileConfiguration {
 			dilXml = Transform.transformToDil(xml);
 		}
 
-		log.info("---------------------------- DIL START----------------------------");
-		log.info(dilXml);
-		log.info("---------------------------- DIL END----------------------------");
-
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
@@ -117,7 +114,7 @@ public class XMLFileConfiguration {
 		FileHandler fh = new FileHandler(conf);
 
 		fh.load(DocConverter.convertStringToStream(dilXml));
-	
+
 		properties = new Unmarshall().getProperties(conf,flowId);
 
 		//IntegrationUtil.printTreemap(properties);

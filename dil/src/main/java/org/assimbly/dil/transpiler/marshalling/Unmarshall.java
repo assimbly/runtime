@@ -3,10 +3,14 @@ package org.assimbly.dil.transpiler.marshalling;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.xpath.CachedXPathAPI;
+import org.apache.xpath.objects.XObject;
 import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
+
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,6 +46,8 @@ public class Unmarshall {
 	private String flowParallelProcessing;
 	private String stepId;
 
+	CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
+
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
 		//create a Treemap for the configuration
@@ -74,11 +80,9 @@ public class Unmarshall {
 
 	private String setFlowSelector() throws Exception{
 
-		XPath xPath = XPathFactory.newInstance().newXPath();
-
 		String selector = "1";
 
-		Integer numberOfFlows = Integer.parseInt(xPath.evaluate("count(//flows/flow)",doc));
+		Integer numberOfFlows = Integer.parseInt(evaluateXpath("count(//flows/flow)"));
 
 		if(numberOfFlows > 1){
 
@@ -86,7 +90,7 @@ public class Unmarshall {
 			String originalFlowId = flowId;
 			selector = "id='" + originalFlowId + "'";
 
-			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
+			flowId = evaluateXpath("//flows/flow[" + selector + "]/id");
 
 			if(!originalFlowId.equals(flowId)) {
 				ConfigurationException configurationException = new ConfigurationException("The flow ID " + originalFlowId + " doesn't exists in XML Configuration");
@@ -94,7 +98,7 @@ public class Unmarshall {
 				throw configurationException;
 			}
 		}else{
-			flowId = xPath.evaluate("//flows/flow[" + selector + "]/id",doc);
+			flowId = evaluateXpath("//flows/flow[" + selector + "]/id");
 		}
 
 		return selector;
@@ -130,19 +134,16 @@ public class Unmarshall {
 
 	}
 
-	public void setFlowProperties(String flowSelector) throws XPathExpressionException {
+	public void setFlowProperties(String flowSelector) throws Exception {
 
-		XPath xPath = XPathFactory.newInstance().newXPath();
+		flowName = evaluateXpath("//flows/flow[" + flowSelector + "]/name");
+		flowType = evaluateXpath("//flows/flow[" + flowSelector + "]/type");
+		flowVersion = evaluateXpath("//flows/flow[" + flowSelector + "]/version");
 
-		flowName = xPath.evaluate("//flows/flow[" + flowSelector + "]/name",doc);
-		flowType = xPath.evaluate("//flows/flow[" + flowSelector + "]/type",doc);
-
-		flowVersion = xPath.evaluate("//flows/flow[" + flowSelector + "]/version", doc);
-
-		flowMaximumRedeliveries = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/maximumRedeliveries",doc);
-		flowRedeliveryDelay = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/redeliveryDelay",doc);
-		flowLogLevel = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/logLevel",doc);
-		flowParallelProcessing = xPath.evaluate("//flows/flow[" + flowSelector + "]/options/parallelProcessing",doc);
+		flowMaximumRedeliveries = evaluateXpath("//flows/flow[" + flowSelector + "]/options/maximumRedeliveries");
+		flowRedeliveryDelay = evaluateXpath("//flows/flow[" + flowSelector + "]/options/redeliveryDelay");
+		flowLogLevel = evaluateXpath("//flows/flow[" + flowSelector + "]/options/logLevel");
+		flowParallelProcessing = evaluateXpath("//flows/flow[" + flowSelector + "]/options/parallelProcessing");
 
 		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
 
@@ -154,9 +155,11 @@ public class Unmarshall {
 			}
 		}
 
-		String environment = xPath.evaluate("//integrations/integration[1]/options/environment",doc);
+		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
 
-		String frontend = xPath.evaluate("//integrations/integration[1]/options/frontend",doc);
+		String environment = evaluateXpath("//integrations/integration[1]/options/environment");
+
+		String frontend = evaluateXpath("//integrations/integration[1]/options/frontend");
 
 		String dependenciesXpath = "integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency";
 
@@ -378,5 +381,11 @@ public class Unmarshall {
 
 		return options;
 	}
+
+	private String evaluateXpath(String xpath) throws TransformerException {
+		XObject xObject = cachedXPathAPI.eval(doc, xpath);
+		return xObject.xstr(cachedXPathAPI.getXPathContext()).toString();
+	}
+
 
 }

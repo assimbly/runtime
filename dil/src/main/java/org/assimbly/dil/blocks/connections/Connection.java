@@ -25,8 +25,8 @@ public class Connection {
 	private CamelContext context;
 	private String stepType;
     private Object stepId;
-
     private String connectionType;
+    private static final Random RANDOM = new Random();
 
 	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
@@ -65,7 +65,7 @@ public class Connection {
                 new ActiveMQConnection(context, decryptedProperties, connectionId, "amazonmq").start();
                 break;
             case "SonicMQ":
-                String connectId = stepType + connectionIdValue + new Random().nextInt(1000000);
+                String connectId = stepType + connectionIdValue + RANDOM.nextInt(1000000);
                 new SonicMQConnection(context, decryptedProperties, connectionId, "sonicmq").start(flowId, connectId, connectionIdValue);
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
                 properties.put(stepType + "." + stepId + ".uri", uri);						

@@ -175,7 +175,6 @@
                                                                 <xsl:choose>
                                                                     <xsl:when test="//*:camelContext/@id">
                                                                         <xsl:value-of select="concat(//*:camelContext/@id,'_',$timestamp)"/>
-                                                                        <xsl:value-of select="//*:camelContext/@id"/>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
                                                                         <xsl:value-of  select="generate-id(.)"/>

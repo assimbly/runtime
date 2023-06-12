@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 
 public class JsonEnrichStrategy implements AggregationStrategy {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
 

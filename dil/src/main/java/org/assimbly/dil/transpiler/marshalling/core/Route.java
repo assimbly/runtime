@@ -54,10 +54,11 @@ public class Route {
 
     private String createDataFormat(String route) throws Exception {
 
+        String dataFormatAsString = null;
         if (route.contains("<customDataFormat ref")){
             Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
-            String dataFormatAsString = DocConverter.convertNodeToString(node);
+            dataFormatAsString = DocConverter.convertNodeToString(node);
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<csv", "/>");
             if(dataFormatAsString!=null) {
@@ -70,7 +71,9 @@ public class Route {
         if (route.contains("<unmarshal ref=\"fmuta")){
             Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
-            String dataFormatAsString = DocConverter.convertNodeToString(node);
+            if(dataFormatAsString==null){
+                dataFormatAsString = DocConverter.convertNodeToString(node);
+            }
 
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
 
@@ -86,7 +89,9 @@ public class Route {
         if (route.contains("<marshal ref=\"fmuta")){
             Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
-            String dataFormatAsString = DocConverter.convertNodeToString(node);
+            if(dataFormatAsString==null){
+                dataFormatAsString = DocConverter.convertNodeToString(node);
+            }
 
             dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
 
@@ -102,6 +107,5 @@ public class Route {
         return route;
 
     }
-
 
 }

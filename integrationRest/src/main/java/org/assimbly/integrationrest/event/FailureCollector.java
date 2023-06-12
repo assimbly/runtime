@@ -50,7 +50,7 @@ public class FailureCollector extends EventNotifierSupport {
             ExchangeFailureHandledEvent exchangeFailedEvent = (ExchangeFailureHandledEvent) event;
 	        flowId = exchangeFailedEvent.getExchange().getFromRouteId();
 
-            int flowIdPart = flowId.indexOf("-"); //this finds the first occurrence of "."
+            int flowIdPart = flowId.indexOf('-'); //this finds the first occurrence of "."
 
             if (flowIdPart != -1)
 			{
@@ -68,7 +68,7 @@ public class FailureCollector extends EventNotifierSupport {
             ExchangeFailedEvent exchangeFailedEvent = (ExchangeFailedEvent) event;
 	        flowId = exchangeFailedEvent.getExchange().getFromRouteId();
 
-            int flowIdPart = flowId.indexOf("-"); //this finds the first occurrence of "."
+            int flowIdPart = flowId.indexOf('-'); //this finds the first occurrence of "."
 
             if (flowIdPart != -1)
 			{

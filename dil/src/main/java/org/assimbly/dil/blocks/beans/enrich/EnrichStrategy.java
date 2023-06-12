@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 public class EnrichStrategy implements AggregationStrategy {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     private AggregationStrategy enrichStrategy;
 
     @Override
