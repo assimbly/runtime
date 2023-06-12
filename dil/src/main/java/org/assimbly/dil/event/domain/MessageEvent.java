@@ -24,11 +24,9 @@ their Java name to make them the same to DIL/Camel3.
 public class MessageEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String JMS_PREFIX = "JMS";
-
     private final String id;
     private final String flowId;
     private final String flowVersion;
-
     private final String stepId;
     private final String timestamp;
     private final String expiryDate;

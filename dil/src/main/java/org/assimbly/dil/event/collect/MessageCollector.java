@@ -28,9 +28,14 @@ public class MessageCollector extends EventNotifierSupport {
     private final ArrayList<Filter> filters;
     private final ArrayList<String> events;
     private final String collectorId;
+    private final String flowId;
+    private final String flowVersion;
 
-    public MessageCollector(String collectorId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+
+    public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
+        this.flowId = flowId;
+        this.flowVersion = flowVersion;
         this.events = events;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
@@ -62,9 +67,9 @@ public class MessageCollector extends EventNotifierSupport {
 
             //process and store the exchange
             if(stepId!=null && filters==null){
-                processEvent(exchange, collectorId, stepId);
+                processEvent(exchange, flowId, stepId);
             }else if(stepId!=null && EventUtil.isFiltered(filters, stepId)){
-                processEvent(exchange, collectorId, stepId);
+                processEvent(exchange, flowId, stepId);
             }
 
         }
@@ -81,7 +86,7 @@ public class MessageCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getTimestamp();
 
         //create json
-        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, "0", stepId, headers, body, expiryInHours);
+        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, flowVersion, stepId, headers, body, expiryInHours);
         String json = messageEvent.toJson();
 
         //store the event

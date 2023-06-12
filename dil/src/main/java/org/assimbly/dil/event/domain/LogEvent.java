@@ -49,7 +49,7 @@ public class LogEvent {
         this.timestamp = timestamp;
     }
 
-    @JsonProperty("bundleId")
+    @JsonProperty("camelContextId")
     public String getFlowId() {
         return this.flowId;
     }

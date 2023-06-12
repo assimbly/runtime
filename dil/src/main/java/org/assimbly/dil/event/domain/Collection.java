@@ -12,6 +12,8 @@ public class Collection {
     private static final ObjectMapper mapper = new ObjectMapper();
     private String id;
     private String type;
+    private String flowId;
+    private String flowVersion;
     private ArrayList<String> events;
     private ArrayList<Store> stores;
     private ArrayList<Filter> filters;
@@ -32,6 +34,24 @@ public class Collection {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @JsonProperty("flowId")
+    public String getFlowId() {
+        return this.flowId;
+    }
+
+    public void setFlowId(String flowId) {
+        this.flowId = flowId;
+    }
+
+    @JsonProperty("flowVersion")
+    public String getFlowVersion() {
+        return this.flowVersion;
+    }
+
+    public void setFlowVersion(String flowVersion) {
+        this.flowVersion = flowVersion;
     }
 
     @JsonProperty("events")

@@ -18,14 +18,14 @@ public class StepEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
     private String logLevel;
     private String timestamp;
-    private String stepId;
+    private String flowId;
     private String tag;
     private String message;
     private String exception;
 
-    public StepEvent(String timestamp, String stepId, String logLevel, String tag, String message, String exception) {
+    public StepEvent(String timestamp, String flowId, String logLevel, String tag, String message, String exception) {
         this.timestamp = timestamp;
-        this.stepId = stepId;
+        this.flowId = flowId;
         this.logLevel = logLevel;
         this.tag = tag;
         this.message = message;
@@ -50,6 +50,16 @@ public class StepEvent {
         this.timestamp = timestamp;
     }
 
+    @JsonProperty("camelContextId")
+    public String getFlowId() {
+        return this.flowId;
+    }
+
+    public void setFlowId(String flowId) {
+        this.flowId = flowId;
+    }
+
+    /*
     @JsonProperty("stepId")
     public String getStepId() {
         return this.stepId;
@@ -58,6 +68,8 @@ public class StepEvent {
     public void setStepId(String stepId) {
         this.stepId = stepId;
     }
+
+    */
 
     @JsonProperty("tag")
     public String getTag() {

@@ -161,11 +161,13 @@ public class EventConfigurer {
 
         log.info("Configure collection of step events");
         String id = configuration.getId();
+        String flowId = configuration.getFlowId();
+
         ArrayList<String> events = configuration.getEvents();
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        StepCollector stepCollector = new StepCollector(id, events, filters, stores);
+        StepCollector stepCollector = new StepCollector(id, flowId, events, filters, stores);
         stepCollector.setIgnoreCamelContextEvents(true);
         stepCollector.setIgnoreCamelContextInitEvents(true);
         stepCollector.setIgnoreExchangeEvents(true);
@@ -181,11 +183,13 @@ public class EventConfigurer {
         log.info("Configure collection of message events");
 
         String id = configuration.getId();
+        String flowId = configuration.getFlowId();
+        String flowVersion = configuration.getFlowVersion();
         ArrayList<String> events = configuration.getEvents();
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        MessageCollector messageCollector = new MessageCollector(id, events, filters, stores);
+        MessageCollector messageCollector = new MessageCollector(id, flowId, flowVersion, events, filters, stores);
         messageCollector.setIgnoreCamelContextEvents(true);
         messageCollector.setIgnoreCamelContextInitEvents(true);
         messageCollector.setIgnoreRouteEvents(true);
@@ -202,14 +206,14 @@ public class EventConfigurer {
         log.info("Configure collection of log events");
 
         String id = configuration.getId();
-        String tag = "LOG";
+        String flowId = configuration.getFlowId();
         ArrayList<String> events = configuration.getEvents();
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        LogCollector logCollector = new LogCollector(id, tag, events, filters, stores);
+        LogCollector logCollector = new LogCollector(id, flowId, events, filters, stores);
         logCollector.setContext(loggerContext);
         logCollector.setName(collectorId);
         logCollector.start();

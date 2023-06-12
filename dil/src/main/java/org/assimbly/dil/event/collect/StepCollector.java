@@ -19,11 +19,13 @@ import java.util.List;
 
 public class StepCollector extends EventNotifierSupport {
 
+    private final String flowId;
     private final ArrayList<Filter> filters;
     private final ArrayList<String> events;
     private final StoreManager storeManager;
 
-    public StepCollector(String collectorId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public StepCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+        this.flowId = flowId;
         this.events = events;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
@@ -63,7 +65,7 @@ public class StepCollector extends EventNotifierSupport {
         String exception = "";
 
         //create json
-        StepEvent stepEvent = new StepEvent(timestamp, stepId, logLevel, "STEP", message, exception);
+        StepEvent stepEvent = new StepEvent(timestamp, flowId, logLevel, "FLOW", message, exception);
         String json = stepEvent.toJson();
 
         //store event
