@@ -26,7 +26,7 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         Message resourceMessage;
 
-        if(resource == null){
+        if(resource != null){
             resourceMessage = resource.getIn();
         }else{
             log.error("Could not get a response from your requested resource.");

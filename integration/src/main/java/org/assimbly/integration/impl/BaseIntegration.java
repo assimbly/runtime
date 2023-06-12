@@ -34,12 +34,8 @@ public abstract class BaseIntegration implements Integration {
 	private List<TreeMap<String, String>> properties = new ArrayList<>();
 	private TreeMap<String, String> flowProperties;
 
-	private List<TreeMap<String, String>> connections = new ArrayList<>();
-
 	private TreeMap<String, String> configuredFlows = new TreeMap<>();
 
-	//configuration are strings
-	private String configuration;
 	private String flowConfiguration;
 
 	private Properties encryptionProperties;

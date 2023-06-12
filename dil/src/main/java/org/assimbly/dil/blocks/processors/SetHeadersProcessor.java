@@ -29,7 +29,8 @@ public class SetHeadersProcessor implements Processor {
 
 			  String language;
 			  String type;
-
+			  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+			  
 			  if (node.getNodeType() == Node.ELEMENT_NODE) {
 				  String headerKey = node.getNodeName();
 				  String headerValue = node.getTextContent();
@@ -43,7 +44,6 @@ public class SetHeadersProcessor implements Processor {
 				  if (language.equalsIgnoreCase("constant")) {
 					  result = headerValue;
 				  } else if (language.equalsIgnoreCase("xpath")) {
-					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
 					  result = XPathBuilder.xpath(headerValue).factory(fac).evaluate(exchange, String.class);
 				  } else {
 					  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);

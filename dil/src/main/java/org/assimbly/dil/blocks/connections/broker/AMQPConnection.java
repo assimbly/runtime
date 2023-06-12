@@ -87,13 +87,13 @@ public class AMQPConnection {
         String modifiedUrl = "";
         String multipleUrls;
 
-        if (url.indexOf(",") == -1) {
+        if (url.indexOf(',') == -1) {
             log.info("SSLEnabled Normal Url: ");
             modifiedUrl = addSSLParameterToUrl(url);
         }else{
             log.info("SSLEnabled Failover Url: ");
 
-            if (url.indexOf("(") != -1) {
+            if (url.indexOf('(') != -1) {
                 multipleUrls = StringUtils.substringBetween(url,"(",")");
             }else{
                 multipleUrls = url;
@@ -110,7 +110,7 @@ public class AMQPConnection {
                 }
             }
 
-            if (url.indexOf("(") != -1) {
+            if (url.indexOf('(') != -1) {
                 modifiedUrl = "failover:(" + modifiedUrl + ")";
             }
 
@@ -131,7 +131,7 @@ public class AMQPConnection {
         String baseDirURI = baseDir.replace("\\", "/");
 
         String sslUrl = url;
-        if (url.indexOf("?") == -1) {
+        if (url.indexOf('?') == -1) {
             sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
         } else {
             String[] urlSplitted = url.split("/?");

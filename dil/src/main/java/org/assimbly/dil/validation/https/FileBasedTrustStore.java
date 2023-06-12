@@ -10,6 +10,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.SecureRandom;
@@ -37,7 +39,7 @@ public class FileBasedTrustStore {
     public KeyStore loadTrustStore() throws KeyStoreException, IOException {
         try {
             KeyStore trustStore = KeyStore.getInstance(type);
-            trustStore.load(new FileInputStream(path), password.toCharArray());
+            trustStore.load(Files.newInputStream(Paths.get(path)), password.toCharArray());
 
             return trustStore;
         } catch (IOException e) {
@@ -53,7 +55,7 @@ public class FileBasedTrustStore {
 
         try {
             synchronized (this) {
-                trustStore.store(new FileOutputStream(path), password.toCharArray());
+                trustStore.store(Files.newOutputStream(Paths.get(path)), password.toCharArray());
             }
         } catch (IOException e) {
             throw e;

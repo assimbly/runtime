@@ -99,14 +99,12 @@ import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
 
-	protected Logger log = LoggerFactory.getLogger(getClass());
-
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 
 	private CamelContext context;
-	private static boolean started = false;
-	private final int stopTimeout = 10;
+	private boolean started;
+	private final static int stopTimeout = 10;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -116,7 +114,7 @@ public class CamelIntegration extends BaseIntegration {
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 	private Properties encryptionProperties;
-	private boolean watchDeployDirectoryInitialized = false;
+	private boolean watchDeployDirectoryInitialized;
 	private TreeMap<String, String> props;
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
@@ -138,8 +136,15 @@ public class CamelIntegration extends BaseIntegration {
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
 
+		//load settings into a separate thread
 		if(useDefaultSettings){
-			setDefaultSettings();
+			new Thread(() -> {
+				try {
+					setDefaultSettings();
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}).start();
 		}
 
 		//set management tasks
@@ -331,7 +336,7 @@ public class CamelIntegration extends BaseIntegration {
 			classpathNames = scanResult.getAllResources().getPaths();
 		}
 
-		if(classpathNames != null || classpathNames.isEmpty()){
+		if(classpathNames != null && !classpathNames.isEmpty()){
 			kamelets.addAll(classpathNames);
 		}
 
@@ -713,7 +718,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = null;
 
-		String configurationUTF8 = new String(configuration.getBytes("UTF-8"));
+		String configurationUTF8 = new String(configuration.getBytes(StandardCharsets.UTF_8),StandardCharsets.UTF_8);
 
 		if(IntegrationUtil.isXML(configurationUTF8)) {
 			Document doc = DocConverter.convertStringToDoc(configurationUTF8);
@@ -838,7 +843,16 @@ public class CamelIntegration extends BaseIntegration {
 			//create connections & install dependencies if needed
 			createConnections(props);
 
-			return loadFlow(props);
+			FlowLoader flow = new FlowLoader(props);
+
+			flow.addRoutesToCamelContext(context);
+			loadReport = flow.getReport();
+
+			if(!flow.isFlowLoaded()){
+				return "error";
+			}
+
+			return "started";
 
 		}catch (Exception e){
 			log.error("add flow failed: ", e);
@@ -903,21 +917,6 @@ public class CamelIntegration extends BaseIntegration {
 				}
 			}
 		}
-	}
-
-	public String loadFlow(final TreeMap<String, String> props) throws Exception {
-
-		FlowLoader flow = new FlowLoader(props);
-		flow.updateRoutesToCamelContext(context);
-
-		loadReport = flow.getReport();
-
-		if(!flow.isFlowLoaded()){
-			return "error";
-		}
-
-		return "started";
-
 	}
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
@@ -1093,7 +1092,7 @@ public class CamelIntegration extends BaseIntegration {
 		props.put("flow.type","esb");
 		props.put("route.1.route", configuration);
 
-		loadFlow(props);
+		addFlow(props);
 
 		String status = startFlow(flowId);
 
@@ -1153,7 +1152,7 @@ public class CamelIntegration extends BaseIntegration {
 					status = startStep(step);
 				}
 
-				if (status.isStarted()) {
+				if (status!= null && status.isStarted()) {
 					finishFlowActionReport(id, "start","Started flow successfully","info");
 				}else{
 					finishFlowActionReport(id, "error","Failed starting flow","error");
@@ -1692,8 +1691,6 @@ public class CamelIntegration extends BaseIntegration {
 		JSONObject json = new JSONObject();
 		JSONObject step = new JSONObject();
 
-		List<Route> routes = getRoutesByFlowId(flowId);
-
 		step.put("id",flowId);
 		step.put("total",totalMessages);
 		step.put("completed",completedMessages);
@@ -1807,8 +1804,12 @@ public class CamelIntegration extends BaseIntegration {
 		return camelRouteConfiguration;
 	}
 
+
+	//to do
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception {
 
+		//if used this path needs to be updated
+		/*
 		File directory = new File("C:/messages/templates");
 		java.util.Collection<File> files = FileUtils.listFiles(directory, null, false);
 
@@ -1844,6 +1845,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		}
 
+		 */
+
 		/*
 		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
 
@@ -1861,7 +1864,7 @@ public class CamelIntegration extends BaseIntegration {
 			camelRoutesConfiguration = DocConverter.convertXmlToYaml(camelRoutesConfiguration);
 		}*/
 
-		String camelRoutesConfiguration = "{x}";
+		String camelRoutesConfiguration = "{not available yet}";
 
 		return camelRoutesConfiguration;
 
@@ -2848,7 +2851,10 @@ public class CamelIntegration extends BaseIntegration {
 		File securityPath = new File(baseDir + "/security");
 
 		if (!securityPath.exists()) {
-			securityPath.mkdirs();
+			boolean securityPathCreated = securityPath.mkdirs();
+			if(!securityPathCreated){
+				throw new Exception("Directory: " + securityPath.getAbsolutePath() + " cannot be create to store keystore files");
+			}
 		}
 
 		String keyStorePath = baseDir2 + "/security/keystore.jks";
@@ -2872,7 +2878,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		try {
 			SSLContext sslContext = sslContextParameters.createSSLContext(context);
-			SSLEngine engine = sslContext.createSSLEngine();
+			sslContext.createSSLEngine();
 		}catch (Exception e){
 			log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: " + e.getMessage());
 		}

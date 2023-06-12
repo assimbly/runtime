@@ -21,10 +21,14 @@ public class RouteConfiguration {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
 
-        String routeAsString = DocConverter.convertNodeToString(node);
+        if(node!=null){
 
-        properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
-        properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
+            String routeAsString = DocConverter.convertNodeToString(node);
+
+            properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
+            properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
+
+        }
 
         return properties;
     }

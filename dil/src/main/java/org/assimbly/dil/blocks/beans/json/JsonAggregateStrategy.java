@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 public class JsonAggregateStrategy implements AggregationStrategy {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
 

@@ -77,6 +77,6 @@ public class CompositeTrustManager implements X509TrustManager {
             acceptedIssuers.addAll(Arrays.asList(trustManager.getAcceptedIssuers()));
         }
 
-        return acceptedIssuers.toArray(new X509Certificate[acceptedIssuers.size()]);
+        return acceptedIssuers.toArray(new X509Certificate[0]);
     }
 }

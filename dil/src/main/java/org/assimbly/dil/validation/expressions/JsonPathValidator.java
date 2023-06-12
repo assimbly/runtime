@@ -11,7 +11,7 @@ public class JsonPathValidator implements Validator {
     @Override
     public ValidationErrorMessage validate(Expression expression){
         try {
-            JsonPath path = JsonPath.compile(expression.getExpression());
+            JsonPath.compile(expression.getExpression());
         } catch(InvalidPathException e) {
             if(expression.getName() == null) {
                 return new ValidationErrorMessage(e.getMessage());

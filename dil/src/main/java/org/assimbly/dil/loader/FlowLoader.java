@@ -1,10 +1,8 @@
 package org.assimbly.dil.loader;
 
-import java.util.List;
 import java.util.TreeMap;
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
-import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
@@ -29,13 +27,13 @@ public class FlowLoader extends RouteBuilder {
 	private boolean isFlowLoaded = true;
 	private FlowLoaderReport flowLoaderReport;
 
+	public FlowLoader() {
+		super();
+	}
+
 	public FlowLoader(final TreeMap<String, String> props){
 		super();
 		this.props = props;
-	}
-
-	public FlowLoader() {
-		super();
 	}
 
 	public interface FailureProcessorListener {
@@ -47,7 +45,7 @@ public class FlowLoader extends RouteBuilder {
 
 		init();
 
-		loadFlowSteps();
+		load();
 
 		finish();
 	}
@@ -67,6 +65,21 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
+	private void load() throws Exception {
+
+		setErrorHandlers();
+
+		setRouteConfigurations();
+
+		defineRouteTemplates();
+
+		setRouteTemplates();
+
+		setRoutes();
+
+	}
+
+
 	private void finish() {
 
 		flowLoaderReport.logResult(flowId,flowName,flowEvent);
@@ -81,24 +94,8 @@ public class FlowLoader extends RouteBuilder {
 	private void setExtendedCamelContext() {
 		context = getContext();
 		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
+		loader = extendedCamelContext.getRoutesLoader();
 	}
-
-
-
-	private void loadFlowSteps() throws Exception {
-
-		setErrorHandlers();
-
-		setRouteConfigurations();
-
-		defineRouteTemplates();
-
-		setRouteTemplates();
-
-		setRoutes();
-
-	}
-
 	private void setErrorHandlers() throws Exception{
 
 		for(String prop : props.keySet()){
@@ -123,7 +120,7 @@ public class FlowLoader extends RouteBuilder {
 
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
 					context.removeRoute(id);
-					loadOrUpdateStep(routeConfiguration, "routeconfiguration", id, null);
+					loadStep(routeConfiguration, "routeconfiguration", id, null);
 				}
 			}
 		}
@@ -138,7 +135,7 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadOrUpdateStep(routeTemplate, "routeTemplate definition", id, null);
+					loadStep(routeTemplate, "routeTemplate definition", id, null);
 				}
 
 			}
@@ -156,7 +153,7 @@ public class FlowLoader extends RouteBuilder {
 				String uri = props.get(basePath + "uri");
 
 				if(routeTemplate!=null && !routeTemplate.isEmpty()){
-					loadOrUpdateStep(routeTemplate, "routeTemplate", id, uri);
+					loadStep(routeTemplate, "routeTemplate", id, uri);
 				}
 
 			}
@@ -170,75 +167,23 @@ public class FlowLoader extends RouteBuilder {
 				String route = props.get(prop);
 				String id = props.get(prop + ".id");
 
-				if(prop.startsWith("route")){
-					loadOrUpdateStep(route, "route",id, null);
-				}else{
-					loadOrUpdateStep(route, "route", id, null);
-				}
+				loadStep(route, "route",id, null);
 			}
 		}
 	}
 
-
-
-	private void loadOrUpdateStep(String route, String type, String id, String uri) throws Exception {
-
-		loader = extendedCamelContext.getRoutesLoader();
-
-		Resource resource = IntegrationUtil.setResource(route);
-
-		if(isStepLoaded(id)) {
-			updateStep(resource,route, type, id, uri);
-		}else{
-			loadStep(resource,route, type, id, uri);
-		}
-
-	}
-
-	private void loadStep(Resource resource, String route, String type, String id, String uri){
+	private void loadStep(String route, String type, String id, String uri){
 
 		try {
 			log.info(logMessage("Loading step", id, type, route));
-
-			loader.loadRoutes(List.of(resource));
-
-			flowEvent = "start";
-			flowLoaderReport.setStep(id, uri, type, "success", null);
-		}catch (Exception e){
-			e.printStackTrace();
-			try {
-				String errorMessage = e.getMessage();
-
-				if(errorMessage.contains("duplicate id detected")) {
-					updateStep(resource, route, type, id, uri);
-				}else if(errorMessage.contains("Route configuration already exists with id")){
-					updateStep(resource, route, type, id, uri);
-				}else{
-					log.error("Failed loading step | stepid=" + id);
-					isFlowLoaded = false;
-					flowEvent = "error";
-					flowLoaderReport.setStep(id, uri, type,"error",errorMessage);
-				}
-			}catch (Exception e2){
-				log.error("Failed updating step | stepid=" + id);
-				isFlowLoaded = false;
-				flowEvent = "error";
-				flowLoaderReport.setStep(id,uri, type,"error",e2.getMessage());
-			}
-		}
-	}
-
-	private void updateStep(Resource resource, String route, String type, String id, String uri){
-		try {
-			log.info(logMessage("Updating step", id, type, route));
-			loader.updateRoutes(List.of(resource));
+			loader.loadRoutes(IntegrationUtil.setResource(route));
 
 			//context
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 			flowEvent = "start";
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
-			log.error("Failed updating step | stepid=" + id);
+			log.error("Failed loading step | stepid=" + id);
 			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
 			flowEvent = "error";
 			isFlowLoaded = false;
@@ -248,31 +193,19 @@ public class FlowLoader extends RouteBuilder {
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
 		if (errorUri!=null && !errorUri.isEmpty()) {
-			routeErrorHandler = new DeadLetterChannelBuilder();
-			routeErrorHandler = deadLetterChannel(errorUri);
+			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
 		}
 
 		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
 
-		routeErrorHandler = errorHandler.configure();
+		DeadLetterChannelBuilder updatedErrorHandler = errorHandler.configure();
 
-		extendedCamelContext.setErrorHandlerFactory(routeErrorHandler);
+		extendedCamelContext.setErrorHandlerFactory(updatedErrorHandler);
 
 		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
 
-	}
-
-	public boolean isStepLoaded(String id){
-
-		Route route = context.getRoute(id);
-
-		if(route != null && route.getUptimeMillis()>0){
-			return true;
-		}
-
-		return false;
 	}
 
 	public boolean isFlowLoaded(){
