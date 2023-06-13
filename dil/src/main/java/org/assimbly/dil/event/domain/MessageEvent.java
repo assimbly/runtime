@@ -98,7 +98,7 @@ public class MessageEvent {
         return body;
     }
 
-    @JsonProperty("expiry")
+    @JsonProperty("expiryDate")
     public String getExpiryDate() {
         return expiryDate;
     }

@@ -84,9 +84,10 @@ public class MessageCollector extends EventNotifierSupport {
         Map<String, Object> headers = message.getHeaders();
         String messageId = message.getMessageId();
         String timestamp = EventUtil.getTimestamp();
+        String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
-        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, flowVersion, stepId, headers, body, expiryInHours);
+        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, flowVersion, stepId, headers, body, expiryDate);
         String json = messageEvent.toJson();
 
         //store the event
