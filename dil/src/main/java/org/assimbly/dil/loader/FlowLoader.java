@@ -31,9 +31,10 @@ public class FlowLoader extends RouteBuilder {
 		super();
 	}
 
-	public FlowLoader(final TreeMap<String, String> props){
+	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
 		super();
 		this.props = props;
+		this.flowLoaderReport = flowLoaderReport;
 	}
 
 	public interface FailureProcessorListener {
@@ -50,16 +51,17 @@ public class FlowLoader extends RouteBuilder {
 		finish();
 	}
 
-	private void init(){
+	private void init() {
 
 		flowId = props.get("id");
 		flowName = props.get("flow.name");
 		flowVersion = props.get("flow.version");
 		flowEnvironment = props.get("environment");
 
-		flowLoaderReport = new FlowLoaderReport();
-
-		flowLoaderReport.initReport(flowId, flowName, "start");
+		if(flowLoaderReport==null){
+		  flowLoaderReport = new FlowLoaderReport();
+		  flowLoaderReport.initReport(flowId, flowName, "start");
+		}
 
 		setExtendedCamelContext();
 

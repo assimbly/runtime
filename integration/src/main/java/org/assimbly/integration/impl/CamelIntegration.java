@@ -25,6 +25,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.vm.VmComponent;
+import org.apache.camel.dataformat.zipfile.ZipSplitter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
@@ -240,6 +241,8 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 		registry.bind("AggregateStrategy", new AggregateStrategy());
+
+		registry.bind("ZipSplitter", new ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
@@ -683,8 +686,11 @@ public class CamelIntegration extends BaseIntegration {
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
 			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
-			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"")){
+
+			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
 				log.error(loadReport);
+			}else{
+				log.info(loadReport);
 			}
 		}else{
 			log.error("File install for " + pathAsString + " failed. Invalid configuration file.");
@@ -843,7 +849,7 @@ public class CamelIntegration extends BaseIntegration {
 			//create connections & install dependencies if needed
 			createConnections(props);
 
-			FlowLoader flow = new FlowLoader(props);
+			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
 
 			flow.addRoutesToCamelContext(context);
 			loadReport = flow.getReport();

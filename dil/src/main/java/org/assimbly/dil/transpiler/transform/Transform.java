@@ -59,12 +59,10 @@ public final class Transform {
         map.put("form2xml:","formtoxml:");
         map.put("univocity-csv","univocityCsv");
         map.put("univocity-header","univocityHeader");
+        map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal");
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
-		
-		//you may uncheck the method below, because it maybe faster on large maps
-		//replaceMultipleString2(input, map);
-		
+
 		return output;
 		
 	}
