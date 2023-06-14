@@ -27,7 +27,11 @@ public class EventUtil {
 
     public static String getExpiryTimestamp(String expiryInHours){
 
-        long hours = Long.parseLong(expiryInHours);
+        long hours = 8;
+        if(expiryInHours!=null){
+            hours = Long.parseLong(expiryInHours);
+        }
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
         ZonedDateTime now = ZonedDateTime.now(Clock.systemUTC()).plusHours(hours);

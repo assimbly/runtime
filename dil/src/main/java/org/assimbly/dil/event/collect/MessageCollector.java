@@ -5,7 +5,6 @@ import org.apache.camel.Message;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
@@ -13,9 +12,6 @@ import org.assimbly.dil.event.util.EventUtil;
 import org.assimbly.dil.event.domain.MessageEvent;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
