@@ -39,7 +39,7 @@ public class MessageCollector extends EventNotifierSupport {
         if(elasticStores.size()==1){
             this.expiryInHours = elasticStores.get(0).getExpiryInHours();
         }else{
-            this.expiryInHours = "8";
+            this.expiryInHours = "1";
         }
     }
 

@@ -27,7 +27,7 @@ public class EventUtil {
 
     public static String getExpiryTimestamp(String expiryInHours){
 
-        long hours = 8;
+        long hours = 1;
         if(expiryInHours!=null){
             hours = Long.parseLong(expiryInHours);
         }
