@@ -24,7 +24,7 @@ public final class Transform {
         //transform to DIL format
 		String dilXml = TransformUtil.transformXML(camel3Xml,is);
 
-        log.debug("The DIL format:\n\n" + dilXml);
+        log.info("The DIL format:\n\n" + dilXml);
 
         return dilXml;
 

@@ -43,9 +43,7 @@ public class RouteTemplate {
     private boolean predefinedStep;
     private String blockUri;
     private String baseUri;
-
     private String outList;
-
     private String outRulesList;
 
     private String updatedRouteConfigurationId;
@@ -300,6 +298,8 @@ public class RouteTemplate {
 
                     }else if(blockType.equalsIgnoreCase("routeConfiguration")){
 
+                        System.out.println("block routeConfiguration");
+
                         String routeConfigurationId = baseUri;
                         String timestamp = getTimestamp();
                         Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
@@ -308,6 +308,10 @@ public class RouteTemplate {
 
                         updatedRouteConfigurationId = baseUri + "_" + timestamp;
                         String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
+
+                        if (updatedRouteConfiguration.contains("<dataFormats>")){
+                            updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.|\\n)*)<\\/dataFormats>", "");
+                        }
 
                         properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
                         properties.put(type + "." + stepId + ".routeconfiguration", updatedRouteConfiguration);

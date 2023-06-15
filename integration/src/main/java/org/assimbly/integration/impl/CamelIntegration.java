@@ -61,11 +61,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -73,16 +68,13 @@ import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -93,8 +85,6 @@ import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -139,13 +129,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		//load settings into a separate thread
 		if(useDefaultSettings){
-			new Thread(() -> {
-				try {
-					setDefaultSettings();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}).start();
+			setDefaultSettings();
 		}
 
 		//set management tasks
@@ -164,13 +148,13 @@ public class CamelIntegration extends BaseIntegration {
 
 		setThreadProfile(0,5,5000);
 
+		setCertificateStore(true);
+
 		setDebugging(false);
 
 		setSuppressLoggingOnTimeout(true);
 
 		setStreamCaching(true);
-
-		setCertificateStore(true);
 
 		setMetrics(true);
 
@@ -2874,6 +2858,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
 
+		System.out.println("Set registry ssl");
 		registry.bind("default", sslContextParameters);
 		registry.bind("sslContext", sslContextParameters);
 		registry.bind("keystore", sslContextParametersKeystoreOnly);

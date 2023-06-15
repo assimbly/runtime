@@ -14,7 +14,6 @@ import java.util.TreeMap;
 public class Route {
 
     final static Logger log = LoggerFactory.getLogger(Route.class);
-
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
 

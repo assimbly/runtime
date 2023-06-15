@@ -1,6 +1,7 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Node;
@@ -24,6 +25,10 @@ public class RouteConfiguration {
         if(node!=null){
 
             String routeAsString = DocConverter.convertNodeToString(node);
+
+            if (routeAsString.contains("<dataFormats>")){
+                routeAsString = routeAsString.replaceAll("<dataFormats>((.|\\n)*)<\\/dataFormats>", "");
+            }
 
             properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
             properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
