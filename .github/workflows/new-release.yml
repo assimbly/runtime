@@ -9,7 +9,7 @@ jobs:
 
   publish_prod_packages:
 
-    name: Publish Snapshot Packages
+    name: Publish Production Packages
     runs-on: ubuntu-latest
     steps:
 
@@ -24,7 +24,58 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Update to snapshot version
+      - name: Setup Maven settings.xml
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          
+          repositories: >
+            [
+              {
+                "id": "maven",
+                "name": "Maven Central",
+                "url": "https://repo1.maven.org/maven2"
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Base Repository",
+                "url": "https://maven.pkg.github.com/assimbly/base",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Runtime Repository",
+                "url": "https://maven.pkg.github.com/assimbly/runtime",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Custom-Components Repository",
+                "url": "https://maven.pkg.github.com/assimbly/custom-components",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "aurea",
+                "name": "Aurea Sonic Repository",
+                "url": "https://int-factory.aurea.com/nexus/content/repositories/sonic-releases/"
+              }
+            ]
+
+          servers: >
+            [
+              {
+                "id": "github",
+                "username": "assimbly",
+                "password": "${{ secrets.GITHUB_TOKEN }}"
+              }
+            ]
+
+      - name: Update to production version
         env:
           VERSION: ${{ github.ref_name }}
         run: |
@@ -53,6 +104,57 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+
+      - name: Setup Maven settings.xml
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          
+          repositories: >
+            [
+              {
+                "id": "maven",
+                "name": "Maven Central",
+                "url": "https://repo1.maven.org/maven2"
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Base Repository",
+                "url": "https://maven.pkg.github.com/assimbly/base",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Runtime Repository",
+                "url": "https://maven.pkg.github.com/assimbly/runtime",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "github",
+                "name": "Assimbly Custom-Components Repository",
+                "url": "https://maven.pkg.github.com/assimbly/custom-components",
+                "snapshots": {
+                  "enabled": "true"
+                }
+              },
+              {
+                "id": "aurea",
+                "name": "Aurea Sonic Repository",
+                "url": "https://int-factory.aurea.com/nexus/content/repositories/sonic-releases/"
+              }
+            ]
+
+          servers: >
+            [
+              {
+                "id": "github",
+                "username": "assimbly",
+                "password": "${{ secrets.GITHUB_TOKEN }}"
+              }
+            ]
 
       - name: Update to snapshot version
         env:
