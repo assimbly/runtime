@@ -14,7 +14,7 @@ on:
         type: boolean
 
 jobs:
-  delete_base_packages:
+  delete_runtime_packages:
     runs-on: ubuntu-latest
     permissions:
       contents: read
