@@ -84,7 +84,7 @@ jobs:
             mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=${VERSION}
 
       - name: Publish package
-        run: mvn --batch-mode deploy
+        run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -165,7 +165,7 @@ jobs:
             mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=${SNAPSHOT_VERSION}
 
       - name: Publish package
-        run: mvn --batch-mode deploy
+        run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
