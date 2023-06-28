@@ -73,6 +73,7 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -110,6 +111,8 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
+
+	private final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -2915,6 +2918,22 @@ public class CamelIntegration extends BaseIntegration {
 			//Ignore if class not found
 		}
 
+	}
+
+	public long convertSizeToKb(double size) {
+		return (long) (size / 1024);
+	}
+
+	public Object invokeMethod(String methodName) {
+		try {
+			Class<?> unixOS = Class.forName("com.sun.management.UnixOperatingSystemMXBean");
+
+			if (unixOS.isInstance(operatingSystemMXBean))
+				return unixOS.getMethod(methodName).invoke(operatingSystemMXBean);
+
+		} catch (Throwable ignored) { }
+
+		return "Unknown";
 	}
 
 }
