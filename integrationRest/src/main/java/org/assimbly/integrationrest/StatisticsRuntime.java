@@ -1,6 +1,8 @@
 package org.assimbly.integrationrest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.dil.validation.stats.BackendResponse;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -9,6 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayOutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
+import java.lang.management.ThreadMXBean;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -269,6 +279,43 @@ public class StatisticsRuntime {
         } catch (Exception e) {
             log.error("Get history metrics failed",e);
             return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/historymetrics",e.getMessage());
+        }
+    }
+
+    @GetMapping(
+            path = "/integration/{integrationId}/jvm",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getJvmStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
+
+        plainResponse = true;
+        integration = integrationRuntime.getIntegration();
+
+        try {
+            final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            final ObjectMapper mapper = new ObjectMapper();
+            final BackendResponse backendResponse = new BackendResponse();
+            final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+
+            MemoryUsage mem = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+
+            backendResponse.addMemory("current", integration.convertSizeToKb(mem.getUsed()));
+            backendResponse.addMemory("max", integration.convertSizeToKb(mem.getMax()));
+            backendResponse.addMemory("committed", integration.convertSizeToKb(mem.getCommitted()));
+            backendResponse.addMemory("cached", integration.convertSizeToKb(mem.getCommitted() - mem.getUsed()));
+            backendResponse.addMemory("currentUsedPercentage", (mem.getUsed() * 100 / mem.getMax()));
+
+            backendResponse.addThread("threadCount", threadMXBean.getThreadCount());
+            backendResponse.addThread("peakThreadCount", threadMXBean.getPeakThreadCount());
+
+            backendResponse.addJvm("openFileDescriptors", integration.invokeMethod("getOpenFileDescriptorCount"));
+            backendResponse.addJvm("maxFileDescriptors", integration.invokeMethod("getMaxFileDescriptorCount"));
+
+            mapper.writeValue(out, backendResponse);
+            return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/jvm", out.toString(StandardCharsets.UTF_8), plainResponse);
+        } catch (Exception e) {
+            log.error("Get jvm failed",e);
+            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/jvm",e.getMessage());
         }
     }
 
