@@ -12,17 +12,14 @@ import org.slf4j.LoggerFactory;
 public class MQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-
     private CamelContext context;
     private EncryptableProperties properties;
     private String componentName;
     private String connectionId;
-
     private String url;
     private String username;
     private String password;
     private String jmsProvider;
-
     private SjmsComponent sjmsComponent;
 
     public MQConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
@@ -30,9 +27,7 @@ public class MQConnection {
         this.properties = properties;
         this.connectionId = connectionId;
         this.componentName = componentName;
-
     }
-
 
     public void start(String direction, Object stepId) throws Exception {
 
@@ -64,7 +59,7 @@ public class MQConnection {
         }else if (jmsProvider.equalsIgnoreCase("ActiveMQ Classic")){
             startActiveMQClassicConnection();
         }else{
-            throw new Exception("Unknown jms provider (valid are ActiveMQ Classic, AcitveMQ Artemis, AMQ).\n");
+            throw new Exception("Unknown jms provider (valid are ActiveMQ Classic, ActiveMQ Artemis, AMQ).\n");
         }
 
     }

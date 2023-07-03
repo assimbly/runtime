@@ -25,13 +25,10 @@ public class RouteTemplate {
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
     private String uri;
-
     private Document contentRouteDoc;
-
     private Document templateDoc;
     private Element templatedRoutes;
     private Element templatedRoute;
-
     private String routeId;
     private String templateId;
     private String path;
@@ -45,7 +42,6 @@ public class RouteTemplate {
     private String baseUri;
     private String outList;
     private String outRulesList;
-
     private String updatedRouteConfigurationId;
 
 
