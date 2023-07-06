@@ -282,41 +282,4 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(
-            path = "/integration/{integrationId}/jvm",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> getJvmStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId) throws Exception {
-
-        plainResponse = true;
-        integration = integrationRuntime.getIntegration();
-
-        try {
-            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            final ObjectMapper mapper = new ObjectMapper();
-            final BackendResponse backendResponse = new BackendResponse();
-            final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-
-            MemoryUsage mem = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-
-            backendResponse.addMemory("current", integration.convertSizeToKb(mem.getUsed()));
-            backendResponse.addMemory("max", integration.convertSizeToKb(mem.getMax()));
-            backendResponse.addMemory("committed", integration.convertSizeToKb(mem.getCommitted()));
-            backendResponse.addMemory("cached", integration.convertSizeToKb(mem.getCommitted() - mem.getUsed()));
-            backendResponse.addMemory("currentUsedPercentage", (mem.getUsed() * 100 / mem.getMax()));
-
-            backendResponse.addThread("threadCount", threadMXBean.getThreadCount());
-            backendResponse.addThread("peakThreadCount", threadMXBean.getPeakThreadCount());
-
-            backendResponse.addJvm("openFileDescriptors", integration.invokeMethod("getOpenFileDescriptorCount"));
-            backendResponse.addJvm("maxFileDescriptors", integration.invokeMethod("getMaxFileDescriptorCount"));
-
-            mapper.writeValue(out, backendResponse);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/jvm", out.toString(StandardCharsets.UTF_8), plainResponse);
-        } catch (Exception e) {
-            log.error("Get jvm failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/jvm",e.getMessage());
-        }
-    }
-
 }

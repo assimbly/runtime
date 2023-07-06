@@ -995,8 +995,4 @@ public interface Integration {
 	 */
 	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
 
-	public long convertSizeToKb(double size);
-
-	public Object invokeMethod(String methodName);
-
 }
