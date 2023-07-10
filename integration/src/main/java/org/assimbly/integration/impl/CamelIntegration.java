@@ -164,6 +164,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
+
 		if(traceType.equalsIgnoreCase("backlog")){
 			context.setBacklogTracing(true);
 		}else if (traceType.equalsIgnoreCase("default")) {
@@ -255,6 +256,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public void setGlobalOptions(){
+
+		context.setUseBreadcrumb(true);
+
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
 	}
