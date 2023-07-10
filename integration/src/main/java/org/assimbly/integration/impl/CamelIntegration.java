@@ -112,8 +112,6 @@ public class CamelIntegration extends BaseIntegration {
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
 
-	private final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-
 	public CamelIntegration() throws Exception {
 		super();
 		context = new DefaultCamelContext(registry);
@@ -2918,22 +2916,6 @@ public class CamelIntegration extends BaseIntegration {
 			//Ignore if class not found
 		}
 
-	}
-
-	public long convertSizeToKb(double size) {
-		return (long) (size / 1024);
-	}
-
-	public Object invokeMethod(String methodName) {
-		try {
-			Class<?> unixOS = Class.forName("com.sun.management.UnixOperatingSystemMXBean");
-
-			if (unixOS.isInstance(operatingSystemMXBean))
-				return unixOS.getMethod(methodName).invoke(operatingSystemMXBean);
-
-		} catch (Throwable ignored) { }
-
-		return "Unknown";
 	}
 
 }
