@@ -87,13 +87,21 @@ public interface Broker {
 	public String restartEmbedded() throws Exception;
 	
 	/**
-	* Status of the broker: "started" or "stopped" 
+	* Status of the broker: "started" or "stopped"
 	*
-    * @return status of broker 
+    * @return status of broker
 	* @throws Exception if broker can't be started
 	*/
 	public String status() throws Exception;
-	
+
+	/**
+	 * Stats of the broker
+	 *
+	 * @return stats of broker
+	 * @throws Exception if broker can't be started
+	 */
+	public Map<String, Object> stats() throws Exception;
+
 	/**
 	* Info of the running broker. This is comma separated string 
 	*

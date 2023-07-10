@@ -9,8 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.net.UrlEscapers;
 import org.apache.activemq.broker.*;
@@ -28,6 +31,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -223,6 +228,38 @@ public class ActiveMQClassic implements Broker {
             return info;
         }else {
             return "no info. broker not running";
+        }
+
+    }
+
+    @Override
+    public Map<String, Object> stats() throws Exception {
+
+        if(status().equals("started")) {
+
+            BrokerView adminView = broker.getAdminView();
+
+            String query = broker.getBroker().getBrokerService().getTransportConnectorByName("openwire").getConnectUri().getQuery();
+            Pattern pattern = Pattern.compile("maximumConnections=(\\d+)");
+            Matcher matcher = pattern.matcher(query);
+            int maxConnections = 0;
+
+            if(matcher.find())
+                maxConnections = Integer.parseInt(matcher.group(1));
+
+            return Map.of(
+                    "openConnections", broker.getTotalConnections(),
+                    "maxConnections", maxConnections,
+                    "totalNumberOfQueues", adminView.getQueues().length,
+                    "totalNumberOfTemporaryQueues", adminView.getTemporaryQueues().length,
+                    "tmpPercentUsage", adminView.getTempPercentUsage(),
+                    "storePercentUsage", adminView.getStorePercentUsage(),
+                    "memoryPercentUsage", adminView.getMemoryPercentUsage(),
+                    "averageMessageSize", adminView.getAverageMessageSize()
+            );
+
+        }else {
+            return null;
         }
 
     }
