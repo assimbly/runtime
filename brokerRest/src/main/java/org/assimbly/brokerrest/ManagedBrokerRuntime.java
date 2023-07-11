@@ -99,6 +99,11 @@ public class ManagedBrokerRuntime {
         return broker.status();
     }
 
+    public Map<String, Object> getStats(String brokerType) throws Exception {
+        broker = getBroker(brokerType);
+        return broker.stats();
+    }
+
     public String getInfo(String brokerType) throws Exception {
         broker = getBroker(brokerType);
         return broker.info();
