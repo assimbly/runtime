@@ -79,6 +79,10 @@ public class MessageCollector extends EventNotifierSupport {
         String body = getBody(message);
         Map<String, Object> headers = message.getHeaders();
         String messageId = message.getMessageId();
+
+        //use breadcrumbId when available
+        messageId = message.getHeader("breadcrumbId",messageId,String.class);
+
         String timestamp = EventUtil.getTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
