@@ -81,12 +81,12 @@ public class ErrorHandler {
 			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.log("flowid=" + flowId + "\n")
-			.logExhaustedMessageBody(true)
+			.log("org.assimbly.dil.blocks.errorhandler." + flowId)
 			.logRetryStackTrace(false)
 			.logStackTrace(true)
 			.logHandled(true)
 			.logExhausted(true)
+			.logExhaustedMessageBody(true)
 			.logExhaustedMessageHistory(true);
 
 		deadLetterChannelBuilder.onExceptionOccurred(failureProcessor);
