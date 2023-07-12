@@ -72,22 +72,22 @@ public class FailureProcessor implements Processor {
 
 		}
 
-		  //Write alert to disk
-		  Date date = new Date();
-		  String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		  String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
+		//Write alert to disk
+		Date date = new Date();
+		String today = new SimpleDateFormat("yyyyMMdd").format(date);
+		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 		FlowEvent flowEvent = new FlowEvent(exchange.getFromRouteId(), date, exchange.getException().getMessage());
 
-			if(flowEvent.getFlowId().indexOf("-") == -1){
-				flowId = flowEvent.getFlowId();
-			}else{
-				flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");
-			}
+		if(flowEvent.getFlowId().indexOf("-") == -1){
+			flowId = flowEvent.getFlowId();
+		}else{
+			flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");
+		}
 
-		  File file = new File(baseDir + "/alerts/" + flowId  + "/" + today + "_alerts.log");
-		  List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
-		  FileUtils.writeLines(file, line, true);
+		File file = new File(baseDir + "/alerts/" + flowId  + "/" + today + "_alerts.log");
+		List<String> line = Arrays.asList(timestamp + " : " + flowEvent.getError());
+		FileUtils.writeLines(file, line, true);
 		
-	  }
+	}
 	
 }

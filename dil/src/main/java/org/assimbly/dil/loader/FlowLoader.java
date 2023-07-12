@@ -100,14 +100,24 @@ public class FlowLoader extends RouteBuilder {
 	}
 	private void setErrorHandlers() throws Exception{
 
+		String errorUri = "";
+		String id = "0";
+		Boolean useErrorHandler = true;
+
 		for(String prop : props.keySet()){
 			if(prop.startsWith("error") && prop.endsWith("uri")){
-				String errorUri = props.get(prop);
-				String id = StringUtils.substringBetween(prop,"error.",".uri");
+				errorUri = props.get(prop);
+				id = StringUtils.substringBetween(prop,"error.",".uri");
 				if(!props.containsKey("error." + id + ".route") && !props.containsKey("error." + id + ".routeconfiguration")){
-					setErrorHandler(id, errorUri);
+					useErrorHandler = false;
 				}
 			}
+		}
+
+		if(useErrorHandler) {
+			setErrorHandler(id, errorUri);
+		}else{
+			System.out.println("Set error handler is true");
 		}
 
 	}
@@ -200,7 +210,7 @@ public class FlowLoader extends RouteBuilder {
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
 		}
 
-		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props);
+		ErrorHandler errorHandler = new ErrorHandler(routeErrorHandler, props, flowId);
 
 		DeadLetterChannelBuilder updatedErrorHandler = errorHandler.configure();
 

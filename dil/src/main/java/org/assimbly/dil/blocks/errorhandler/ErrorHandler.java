@@ -7,7 +7,6 @@ import org.assimbly.dil.blocks.processors.FailureProcessor;
 import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +24,12 @@ public class ErrorHandler {
 
 	private TreeMap<String, String> props;
 
-	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props){
+	private String flowId;
+
+	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props, String flowId){
 		this.deadLetterChannelBuilder = deadLetterChannelBuilder;
-		this.props = props;		
+		this.props = props;
+		this.flowId = flowId;
 	}
 	
 	
@@ -79,19 +81,20 @@ public class ErrorHandler {
 			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.onExceptionOccurred(failureProcessor)			
+			.log("flowid=" + flowId + "\n")
+			.logExhaustedMessageBody(true)
 			.logRetryStackTrace(false)
 			.logStackTrace(true)
 			.logHandled(true)
 			.logExhausted(true)
-			.logExhaustedMessageHistory(true)
-			.log(log);
+			.logExhaustedMessageHistory(true);
+
+		deadLetterChannelBuilder.onExceptionOccurred(failureProcessor);
 
 		deadLetterChannelBuilder.asyncDelayedRedelivery();
 
 		return deadLetterChannelBuilder;
 		
 	}
-	
 
 }
