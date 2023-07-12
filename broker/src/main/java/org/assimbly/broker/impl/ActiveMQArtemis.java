@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -25,6 +27,7 @@ import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImp
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
@@ -169,6 +172,11 @@ public class ActiveMQArtemis implements Broker {
 		}
 
 		return status;
+	}
+
+	@Override
+	public Map<String, Object> stats() throws Exception {
+		return Map.of();
 	}
 
 	public String info() throws Exception {
