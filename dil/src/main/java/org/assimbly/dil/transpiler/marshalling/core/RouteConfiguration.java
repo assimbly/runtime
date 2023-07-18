@@ -27,7 +27,7 @@ public class RouteConfiguration {
             String routeAsString = DocConverter.convertNodeToString(node);
 
             if (routeAsString.contains("<dataFormats>")){
-                routeAsString = routeAsString.replaceAll("<dataFormats>((.|\\n)*)<\\/dataFormats>", "");
+                routeAsString = StringUtils.substringBefore(routeAsString,"<dataFormats>") + StringUtils.substringAfter(routeAsString,"</dataFormats>");
             }
 
             properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);

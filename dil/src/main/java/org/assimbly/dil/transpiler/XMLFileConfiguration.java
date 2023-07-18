@@ -117,7 +117,7 @@ public class XMLFileConfiguration {
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		//IntegrationUtil.printTreemap(properties);
+		IntegrationUtil.printTreemap(properties);
 
 		return properties;
 

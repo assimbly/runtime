@@ -100,13 +100,8 @@ public class MessageCollector extends EventNotifierSupport {
 
             byte[] body = message.getBody(byte[].class);
 
-            if (body == null) {
-                return "<null>";
-            }else if (body.length == 0) {
+            if (body == null || body.length == 0) {
                 return "<empty>";
-            }if (!(message.getBody() instanceof String)) {
-                String typeName = message.getBody().getClass().getTypeName();
-                return "<" + typeName + ">";
             }else if (body.length > 250000) {
                 return new String(Arrays.copyOfRange(body, 0, 250000), StandardCharsets.UTF_8);
             }else{
@@ -114,7 +109,12 @@ public class MessageCollector extends EventNotifierSupport {
             }
 
         } catch (Exception e) {
-            return "<unable to convert>";
+            String typeName = message.getBody().getClass().getTypeName();
+            if(typeName!= null && !typeName.isEmpty()){
+                return "<" + typeName + ">";
+            }else{
+                return "<unable to convert>";
+            }
         }
 
     }
