@@ -41,6 +41,7 @@ public final class Transform {
         map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
         map.put("xslt:","xslt-saxon:");
         map.put("jetty:http:","jetty-nossl:http:");
+        map.put("log:nl.kabisa.flux//","log:org.assimbly.runtime");
         map.put("&amp;saxon=true","");
         map.put("?saxon=true\"","");
         map.put("?saxon=true&amp;","?");
