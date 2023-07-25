@@ -48,7 +48,8 @@ public final class Transform {
         map.put("xml2excel","xmltoexcel");
         map.put("excel2xml","exceltoxml");
         map.put("csv2xml","csvtoxml");
-        map.put("global-variables","globalvariables");
+        map.put("global-variables","tenantvariables");
+        map.put("tenant-variables","tenantvariables");
         map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
         map.put("strategyRef","aggregationStrategy");
         map.put("executorServiceRef","executorService");
