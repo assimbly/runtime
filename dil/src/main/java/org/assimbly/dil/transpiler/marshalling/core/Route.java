@@ -86,13 +86,14 @@ public class Route {
         }
 
         if (route.contains("<marshal ref=\"fmuta")){
+
             Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
 
             if(dataFormatAsString==null){
+                System.out.println("1. dataFormat == null");
                 dataFormatAsString = DocConverter.convertNodeToString(node);
+                dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
             }
-
-            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
 
             String[] csvFormats = dataFormatAsString.split("<univocityCsv");
             for(String csvFormat: csvFormats){
