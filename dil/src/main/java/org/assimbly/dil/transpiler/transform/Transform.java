@@ -62,6 +62,7 @@ public final class Transform {
         map.put("univocity-csv","univocityCsv");
         map.put("univocity-header","univocityHeader");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal");
+        map.put("ref=\"checkedZipFileDataFormat\"","ref=\"zipFileDataFormat\"");
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 

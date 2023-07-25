@@ -81,6 +81,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
@@ -546,7 +547,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
 				.addDirectories(path)
-				.setPreExistingAsCreated(false)
+				.setPreExistingAsCreated(true)
 				.build(new DirectoryWatcher.Listener() {
 					private long diff;
 					private long timeCreated;
@@ -559,7 +560,16 @@ public class CamelIntegration extends BaseIntegration {
 								try {
 									pathCreated = path;
 									timeCreated = System.currentTimeMillis();
-									fileInstall(path);
+									Long lastModified = FileUtils.lastModifiedFileTime(path.toFile()).toMillis();
+
+									diff = timeCreated - lastModified;
+
+									System.out.println("time modified: " + diff);
+
+									if(diff < 5000){
+										fileInstall(path);
+									}
+
 								} catch (Exception e) {
 									log.error("FileInstall for created " + path.toString() + " failed",e);
 								}

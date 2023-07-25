@@ -184,10 +184,15 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void loadStep(String route, String type, String id, String uri){
+	private void loadStep(String route, String type, String id, String uri) throws Exception {
 
 		try {
 			log.info(logMessage("Loading step", id, type, route));
+
+			if(context.getRoute(id)!=null){
+				context.removeRoute(id);
+			}
+
 			loader.loadRoutes(IntegrationUtil.setResource(route));
 
 			//context
