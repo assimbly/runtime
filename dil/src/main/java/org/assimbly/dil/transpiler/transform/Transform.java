@@ -36,6 +36,7 @@ public final class Transform {
 
 		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
 		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
+        map.put("consumer.delay","delay");
 		map.put("headerName","name");
         map.put("propertyName","name");
         map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
