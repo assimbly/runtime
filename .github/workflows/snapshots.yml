@@ -34,7 +34,7 @@ jobs:
             org.assimbly.broker            
 
   publish_new_snapshot:
-    needs: [delete_older_snapshots]
+    needs: [delete_old_snapshots]
 
     runs-on: ubuntu-latest
     permissions:
