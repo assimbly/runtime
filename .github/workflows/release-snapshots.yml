@@ -3,7 +3,7 @@ name: Release Snapshots
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 1 * * *'
 
 jobs:
   delete_old_snapshots:
@@ -31,5 +31,6 @@ jobs:
             org.assimbly.broker            
 
   call-release-jars:
+    needs: delete_old_snapshots
     uses: ./.github/workflows/release-jars.yml
     secrets: inherit

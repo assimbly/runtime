@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 jobs:
-  publish_jar:
+  release_jars:
 
     runs-on: ubuntu-latest
     permissions:
