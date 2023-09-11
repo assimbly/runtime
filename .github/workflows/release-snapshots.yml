@@ -34,3 +34,5 @@ jobs:
     needs: delete_old_snapshots
     uses: ./.github/workflows/release-jars.yml
     secrets: inherit
+    with:
+      branch: 'develop'
