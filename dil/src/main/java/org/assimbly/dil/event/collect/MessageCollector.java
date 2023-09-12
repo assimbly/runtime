@@ -59,12 +59,15 @@ public class MessageCollector extends EventNotifierSupport {
             Exchange exchange = exchangeEvent.getExchange();
 
             //get the stepid
-            String stepId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
+            String stepId = exchange.getFromRouteId();
+
+            //get the stepid alternative
+            // stepId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
 
             //process and store the exchange
-            if(stepId!=null && filters==null){
+            if(stepId!=null && stepId.startsWith(flowId) && filters==null){
                 processEvent(exchange, flowId, stepId);
-            }else if(stepId!=null && EventUtil.isFiltered(filters, stepId)){
+            }else if(stepId!=null && stepId.startsWith(flowId) && EventUtil.isFiltered(filters, stepId)){
                 processEvent(exchange, flowId, stepId);
             }
 
@@ -81,7 +84,7 @@ public class MessageCollector extends EventNotifierSupport {
         String messageId = message.getMessageId();
 
         //use breadcrumbId when available
-        messageId = message.getHeader("breadcrumbId",messageId,String.class);
+        messageId = message.getHeader("breadcrumbId", messageId, String.class);
 
         String timestamp = EventUtil.getTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
