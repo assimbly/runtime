@@ -1,33 +1,36 @@
-name: Automatic Version Update on Release
+name: Update Version Number
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    branches:
-      - '!workflows'
-      - master
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        default: 'develop'
+        type: string
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
 
 jobs:
   update_version:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
 
-    - name: Checkout the code
-      uses: actions/checkout@v3
+      - name: Update POM Version
+        run: |
+          echo "Updating to version: ${{ inputs.milestone }}"
+          mvn versions:set -DnewVersion=${{ inputs.milestone }}
+          mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=${{ inputs.milestone }}
 
-    - name: Update POM Version
-      run: |
-        echo "Updating to version: $(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)"
-        mvn versions:set -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
-        mvn versions:set-property -Dproperty=assimbly.version -DnewVersion=$(jq -r '.pull_request.milestone.title' $GITHUB_EVENT_PATH)
+      - name: Diff check
+        run: git diff
 
-    - name: Diff check
-      run: git diff
-
-    - name: Add & Commit
-      uses: EndBug/add-and-commit@v9.1.1
-      with:
-        add: '.'
-        default_author: github_actions
-        push: origin HEAD:develop --force
+      - name: Add & Commit
+        uses: EndBug/add-and-commit@v9.1.1
+        with:
+          add: '.'
+          default_author: github_actions
+          push: origin HEAD:${{ inputs.branch }} --force
