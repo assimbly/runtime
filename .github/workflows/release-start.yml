@@ -29,5 +29,5 @@ jobs:
     uses: ./.github/workflows/update-version.yml
     secrets: inherit
     with:
-      branch: '${{inputs.milestone}}'
+      branch: '${{inputs.branch}}'
       milestone: '${{inputs.milestone}}'
