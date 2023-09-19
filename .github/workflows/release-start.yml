@@ -8,7 +8,9 @@ on:
         description: 'Branch to use'
         default: 'develop'
         type: string
-
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
 jobs:
   release:
 
