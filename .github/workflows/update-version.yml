@@ -14,10 +14,18 @@ on:
 
 jobs:
   update_version:
+
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - uses: actions/checkout@v3
+
+      - name: Checkout the code
+        uses: actions/checkout@v3
+        with:
+          ref: "${{ inputs.branch }}"
 
       - name: Update POM Version
         run: |
@@ -33,4 +41,4 @@ jobs:
         with:
           add: '.'
           default_author: github_actions
-          push: origin HEAD:${{ inputs.branch }} --force
+          push: "origin HEAD:${{ inputs.branch }} --force"
