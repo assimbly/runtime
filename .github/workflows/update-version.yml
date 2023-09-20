@@ -19,6 +19,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      repository-projects: write
 
     steps:
 
