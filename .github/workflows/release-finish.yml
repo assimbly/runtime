@@ -43,6 +43,7 @@ jobs:
       - name: create a new branch
         run: |
           git checkout -b ${{inputs.milestone}}
+          git fetch
           git branch --set-upstream-to=origin/${{inputs.milestone}}
           git config --local user.email "raymondmeester@gmail.com"
           git config --local user.name "skin27"
