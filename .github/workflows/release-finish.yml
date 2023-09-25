@@ -41,13 +41,11 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: create a new branch
-        run: git checkout -b ${{inputs.milestone}}
-
-      - name: Commit files
         run: |
+          git checkout -b ${{inputs.milestone}}
+          git branch --set-upstream-to=origin/${{inputs.milestone}}
           git config --local user.email "raymondmeester@gmail.com"
           git config --local user.name "skin27"
-          git commit -a -m "Update version to ${{inputs.milestone}}"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
