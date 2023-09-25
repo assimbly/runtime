@@ -2,6 +2,15 @@ name: Finish Release
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        default: 'develop'
+        type: string
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
+
   workflow_call:
     inputs:
       branch:
@@ -11,15 +20,29 @@ on:
       milestone:
         description: 'Milestone to use as version'
         type: string
+
 jobs:
-  release:
+
+  create-new-branch:
 
     runs-on: ubuntu-latest
+
     permissions:
-        contents: read
-        packages: write
+      contents: write
+      packages: write
 
     steps:
+      - uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          branch: "${{ inputs.milestone }}"
+          sha: '${{ github.event.pull_request.head.sha }}'
 
-      - name: Finish release
-        run: echo "Finish release of base"
+  call-gateway-update-version:
+    needs: create-new-branch
+    uses: ./.github/workflows/update-version.yml
+    secrets: inherit
+    with:
+      branch: "${{ inputs.milestone }}"
+      milestone: "${{ inputs.milestone }}"
