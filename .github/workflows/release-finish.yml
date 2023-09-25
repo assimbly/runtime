@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: assimbly/base
-          ref: ${{ inputs.branch }}
+          ref: "develop"
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
 
