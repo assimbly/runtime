@@ -32,12 +32,30 @@ jobs:
       packages: write
 
     steps:
-      - uses: peterjgrainger/action-create-branch@v2.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      - name: Checkout the code
+        uses: actions/checkout@v3
         with:
-          branch: "${{ inputs.milestone }}"
-          sha: '${{ github.event.pull_request.head.sha }}'
+          repository: assimbly/base
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: create a new branch
+        run: git checkout -b ${{inputs.milestone}}
+
+      - name: Commit files
+        run: |
+          git config --local user.email "raymondmeester@gmail.com"
+          git config --local user.name "skin27"
+          git commit -a -m "Update version to ${{inputs.milestone}}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+          repository: assimbly/base
+          branch: ${{ inputs.milestone }}
+          force_with_lease: true
 
   call-gateway-update-version:
     needs: create-new-branch
