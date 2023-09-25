@@ -35,7 +35,7 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v3
         with:
-          repository: assimbly/base
+          repository: assimbly/runtime
           ref: "develop"
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.RELEASE_TOKEN }}
-          repository: assimbly/base
+          repository: assimbly/runtime
           branch: ${{ inputs.milestone }}
           force_with_lease: true
 
