@@ -75,6 +75,14 @@ jobs:
 
     steps:
 
+      - name: Checkout the code
+        uses: actions/checkout@v3
+        with:
+          repository: assimbly/runtime
+          ref: ${{ inputs.milestone }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
       - name: Merge release to main
         uses: devmasx/merge-branch@master
         with:
