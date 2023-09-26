@@ -65,11 +65,11 @@ jobs:
                 {
                     "id": "github",
                     "username": "assimbly",
-                    "password": "${{ secrets.RELEASE_TOKEN }}"
+                    "password": "${{ secrets.MAVEN_TOKEN }}"
                 }
             ]
 
       - name: Publish package
         run: mvn --batch-mode deploy -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
