@@ -84,7 +84,7 @@ jobs:
           message: "Release ${{ inputs.milestone }}"
           github_token: ${{ secrets.RELEASE_TOKEN }}
 
-  delete_old_packages:
+  delete-old-packages:
 
     needs: merge-new-branch
     runs-on: ubuntu-latest
