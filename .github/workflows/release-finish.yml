@@ -64,9 +64,60 @@ jobs:
       branch: "${{ inputs.milestone }}"
       milestone: "${{ inputs.milestone }}"
 
+  merge-new-branch:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+
+      - name: Merge release to main
+        needs: call-update-version
+        uses: devmasx/merge-branch@master
+        with:
+          type: now
+          from_branch: ${{ inputs.milestone }}
+          target_branch: main
+          message: "Release ${{ inputs.milestone }}"
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+
+  delete_old_packages:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+
+      - name: Delete older snapshots
+        needs: merge-new-version
+        uses: smartsquaregmbh/delete-old-packages@v0.7.0
+        with:
+          organization: assimbly
+          type: maven
+          keep: 0
+          token: ${{ secrets.MAVEN_TOKEN }}
+          semver-pattern: ${{ inputs.milestone }}
+          names: |
+            org.assimbly.base
+            org.assimbly.common-base
+            org.assimbly.camel-base
+            org.assimbly.spring-base
+            org.assimbly.activemq-base
+            org.assimbly.test-base
+            org.assimbly.database-drivers
+            org.assimbly.camel-components
+            org.assimbly.utils
+            org.assimbly.extra
+
   call-release-jars:
-    needs: call-update-version
+    needs: delete-old-packages
     uses: ./.github/workflows/release-jars.yml
     secrets: inherit
     with:
       branch: 'main'
+
