@@ -86,7 +86,7 @@ jobs:
 
   delete_old_packages:
 
-    needs: merge-new-version
+    needs: merge-new-branch
     runs-on: ubuntu-latest
     permissions:
       contents: read
