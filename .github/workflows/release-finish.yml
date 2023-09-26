@@ -89,7 +89,7 @@ jobs:
           git config --global push.autoSetupRemote true
           git config --local user.email "raymondmeester@gmail.com"
           git config --local user.name "skin27"
-          git merge ${{inputs.milestone}}
+          git merge origin/${{inputs.milestone}}
           git push 
 
   delete-old-packages:
