@@ -1,4 +1,0 @@
-feature: ['feature/*', 'feat/*']
-bug: ['fix/*', 'bug-fix/*']
-chore: ['chore/*', 'maintenance/*', 'wip/*']
-skip-release: ['workflows']
