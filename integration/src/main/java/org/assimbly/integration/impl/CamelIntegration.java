@@ -97,7 +97,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private CamelContext context;
 	private boolean started;
-	private final static int stopTimeout = 10;
+	private final static int stopTimeout = 5;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();

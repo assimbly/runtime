@@ -65,9 +65,9 @@ public class MessageCollector extends EventNotifierSupport {
             // stepId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
 
             //process and store the exchange
-            if(stepId!=null && stepId.startsWith(flowId) && filters==null){
+            if (stepId != null && stepId.startsWith(flowId) && filters == null) {
                 processEvent(exchange, flowId, stepId);
-            }else if(stepId!=null && stepId.startsWith(flowId) && EventUtil.isFiltered(filters, stepId)){
+            } else if (stepId != null && stepId.startsWith(flowId) && EventUtil.isFiltered(filters, stepId)) {
                 processEvent(exchange, flowId, stepId);
             }
 
