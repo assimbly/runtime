@@ -4,6 +4,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
+import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.EventNotifierSupport;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;

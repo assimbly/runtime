@@ -28,6 +28,10 @@ import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.dataformat.zipfile.ZipSplitter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.model.Model;
+import org.apache.camel.model.ModelCamelContext;
+import org.apache.camel.model.RouteConfigurationDefinition;
+import org.apache.camel.model.RouteConfigurationsDefinition;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.ResourceHelper;
@@ -162,6 +166,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setHistoryMetrics(true);
 
+		setTracing(true,"backlog");
+
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -172,6 +178,9 @@ public class CamelIntegration extends BaseIntegration {
 			Tracer tracer = context.getTracer();
 			tracer.setEnabled(tracing);
 		}
+
+
+
 	}
 
 	public void setDebugging(boolean debugging) {
@@ -1253,6 +1262,9 @@ public class CamelIntegration extends BaseIntegration {
 				log.info("Stopping step | flowid=" + route.getId());
 				routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
 				context.removeRoute(routeId);
+				if(route.getConfigurationId()!=null) {
+					removeRouteConfiguration(route.getConfigurationId());
+				}
 			}
 
 			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
@@ -1264,6 +1276,15 @@ public class CamelIntegration extends BaseIntegration {
 
 		return loadReport;
 
+	}
+
+	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
+		ModelCamelContext modelContext = context.adapt(ModelCamelContext.class);
+		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
+		if(routeConfigurationDefinition!=null){
+			log.info("Remove routeConfiguration=" + routeConfigurationDefinition.getId());
+			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
+		}
 	}
 
 	public String pauseFlow(String id) {
