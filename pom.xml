@@ -26,9 +26,9 @@
         <main.basedir>${project.basedir}</main.basedir>
         <assimbly.version>4.1.0-SNAPSHOT</assimbly.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<spring-boot.version>2.7.17</spring-boot.version>
+		<spring-boot.version>3.1.5</spring-boot.version>
 		<maven-api.version>3.9.5</maven-api.version>
-		<camel-spring-junit5.version>3.20.7</camel-spring-junit5.version>
+		<camel-spring-junit5.version>4.1.0</camel-spring-junit5.version>
 		<h2database.version>2.2.224</h2database.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 	</properties>

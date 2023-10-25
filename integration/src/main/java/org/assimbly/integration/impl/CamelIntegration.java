@@ -2,7 +2,6 @@ package org.assimbly.integration.impl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
@@ -11,32 +10,29 @@ import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.activemq.ActiveMQComponent;
-import org.apache.camel.component.directvm.DirectVmComponent;
+import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty.JettyHttpComponent;
-import org.apache.camel.component.jetty9.JettyHttpComponent9;
+import org.apache.camel.component.jetty11.JettyHttpComponent11;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.camel.component.vm.VmComponent;
+import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.dataformat.zipfile.ZipSplitter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.model.Model;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
-import org.apache.camel.model.RouteConfigurationsDefinition;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -77,7 +73,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -85,23 +80,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
 
-	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
-	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-
 	private CamelContext context;
 	private boolean started;
 	private final static int stopTimeout = 5;
+	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
+	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -140,7 +132,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		//set management tasks
 		routeController = context.getRouteController();
-		managed = context.getExtension(ManagedCamelContext.class);
+		managed = (ManagedCamelContext) context;
 
 	}
 
@@ -221,10 +213,10 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("uuid-function", new UuidExtensionFunction());
 
-		context.addComponent("sync", new DirectVmComponent());
-		context.addComponent("async", new VmComponent());
+		context.addComponent("sync", new DirectComponent());
+		context.addComponent("async", new SedaComponent());
 
-		context.addComponent("jetty-nossl", new JettyHttpComponent9());
+		context.addComponent("jetty-nossl", new JettyHttpComponent11());
 
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 
@@ -260,7 +252,7 @@ public class CamelIntegration extends BaseIntegration {
 	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
 
 		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
-		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
+		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).keepAliveTime(10L);
 		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
 
 	}
@@ -300,8 +292,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		//load kamelets into Camel Context
 
-		ExtendedCamelContext extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-		RoutesLoader loader = extendedCamelContext.getRoutesLoader();
+		RoutesLoader loader = PluginHelper.getRoutesLoader(context);
 
 		List<String> resourceNames = getKamelets();
 
@@ -829,7 +820,8 @@ public class CamelIntegration extends BaseIntegration {
 		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
+				//routeController.stopRoute(route.getId(), stopTimeout, java.util.concurrent.TimeUnit.Seconds);
+				routeController.stopRoute(route.getId());
 				context.removeRoute(route.getId());
 			}
 
@@ -1260,7 +1252,8 @@ public class CamelIntegration extends BaseIntegration {
 			for (Route route : routeList) {
 				String routeId = route.getId();
 				log.info("Stopping step | flowid=" + route.getId());
-				routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
+				//routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
+				routeController.stopRoute(routeId);
 				context.removeRoute(routeId);
 				if(route.getConfigurationId()!=null) {
 					removeRouteConfiguration(route.getConfigurationId());
@@ -1279,7 +1272,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
-		ModelCamelContext modelContext = context.adapt(ModelCamelContext.class);
+		ModelCamelContext modelContext = (ModelCamelContext) context;
 		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
 		if(routeConfigurationDefinition!=null){
 			log.info("Remove routeConfiguration=" + routeConfigurationDefinition.getId());
@@ -1880,10 +1873,10 @@ public class CamelIntegration extends BaseIntegration {
 		for(Route route: context.getRoutes()){
 			ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getRouteId());
 			System.out.println("routexml for route=" + route.getId());
-			System.out.println(managedRoute.dumpRouteAsXml(true));
+			System.out.println(managedRoute.dumpRoutes("xml"));
 		}
 
-		String camelRoutesConfiguration = managedCamelContext.dumpRoutesAsXml(true);
+		String camelRoutesConfiguration = managedCamelContext.dumpRoutes("xml");
 
 		if(mediaType.contains("json")) {
 			camelRoutesConfiguration = DocConverter.convertXmlToJson(camelRoutesConfiguration);

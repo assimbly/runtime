@@ -4,6 +4,7 @@ import java.util.TreeMap;
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
 import org.apache.camel.spi.RoutesLoader;
+import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
@@ -95,8 +96,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setExtendedCamelContext() {
 		context = getContext();
-		extendedCamelContext = context.adapt(ExtendedCamelContext.class);
-		loader = extendedCamelContext.getRoutesLoader();
+		loader = PluginHelper.getRoutesLoader(context);
 	}
 	private void setErrorHandlers() throws Exception{
 
