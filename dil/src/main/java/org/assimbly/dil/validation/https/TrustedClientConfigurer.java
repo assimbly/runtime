@@ -22,7 +22,6 @@ public class TrustedClientConfigurer implements HttpClientConfigurer {
 
     private List<FileBasedTrustStore> trustStores = new ArrayList<>();
 
-    @Override
     public void configureHttpClient(HttpClientBuilder clientBuilder) {
         CompositeTrustManager compositeTrustManager = new CompositeTrustManager();
 
@@ -56,5 +55,10 @@ public class TrustedClientConfigurer implements HttpClientConfigurer {
 
     public void setTrustStores(List<FileBasedTrustStore> trustStores) {
         this.trustStores = trustStores;
+    }
+
+    @Override
+    public void configureHttpClient(org.apache.hc.client5.http.impl.classic.HttpClientBuilder clientBuilder) {
+        //todo
     }
 }

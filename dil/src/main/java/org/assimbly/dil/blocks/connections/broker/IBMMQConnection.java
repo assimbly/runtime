@@ -2,6 +2,7 @@ package org.assimbly.dil.blocks.connections.broker;
 
 import com.ibm.mq.jms.MQConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
+import jakarta.jms.ConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
@@ -102,12 +103,12 @@ public class IBMMQConnection {
         log.info("Setting up IBM MQ client connection.");
         if (context.hasComponent(componentName) == null) {
             JmsComponent jmsComponent = new JmsComponent();
-            jmsComponent.setConnectionFactory(cf);
+            jmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, jmsComponent);
         } else {
             context.removeComponent(componentName);
             JmsComponent jmsComponent = new JmsComponent();
-            jmsComponent.setConnectionFactory(cf);
+            jmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, jmsComponent);
         }
 

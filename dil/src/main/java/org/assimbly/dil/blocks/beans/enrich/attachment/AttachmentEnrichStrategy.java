@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.beans.enrich.attachment;
 
+import jakarta.activation.DataSource;
 import org.apache.axiom.attachments.ByteArrayDataSource;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
@@ -10,7 +11,7 @@ import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -58,7 +59,8 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         ByteArrayDataSource byteArrayDataSource = new ByteArrayDataSource(data, mimeType);
 
-        dataHandler = new DataHandler(byteArrayDataSource);
+        //to do in Jakarta/Camel4 migration
+        //dataHandler = new DataHandler((DataSource) byteArrayDataSource);
 
         log.info(String.format("Adding attachment '%s' with mime type: '%s'", attachmentName, mimeType));
 
@@ -66,7 +68,9 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
         log.info(String.format("\tsize: %s", data.length));
 
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
-        am.addAttachment(attachmentName, dataHandler);
+
+        //to do in Jakarta/Camel4 migration
+        //am.addAttachment(attachmentName, dataHandler);
 
         return original;
     }
