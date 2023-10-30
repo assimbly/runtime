@@ -52,6 +52,12 @@
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+      <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-pool</artifactId>
+          <version>5.18.3</version>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
 
 	<build>

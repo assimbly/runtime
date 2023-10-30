@@ -1,8 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ConnectionFailedException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.jasypt.properties.EncryptableProperties;
@@ -65,7 +63,6 @@ public class MQConnection {
 
     }
 
-    //to do in Jakarta/Camel4 migration (casting connectionFactory?)
     private void startActiveMQArtemisConnection(){
 
         org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf;
@@ -88,12 +85,12 @@ public class MQConnection {
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            sjmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, sjmsComponent);
         } else {
             context.removeComponent(componentName);
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            sjmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, sjmsComponent);
         }
 

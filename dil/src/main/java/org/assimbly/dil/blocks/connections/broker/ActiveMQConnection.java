@@ -1,6 +1,8 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.activemq.ActiveMQConfiguration;
@@ -116,16 +118,14 @@ public class ActiveMQConnection {
 
     private void startPooledConnection(){
 
-        //to do after migration to Jakarta
-
-        /*
         try {
             PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
             pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
             pooledConnectionFactory.setMaxConnections(Integer.parseInt(maxConnections));
 
             ActiveMQConfiguration configuration = new ActiveMQConfiguration();
-            configuration.setConnectionFactory(pooledConnectionFactory);
+
+            configuration.setConnectionFactory((ConnectionFactory) pooledConnectionFactory);
             configuration.setConcurrentConsumers(Integer.parseInt(concurentConsumers));
             configuration.setUsePooledConnection(true);
 
@@ -137,7 +137,7 @@ public class ActiveMQConnection {
             log.error("Failed to start pooled connection. Reason:", e);
         }
 
-         */
+
 
     }
 

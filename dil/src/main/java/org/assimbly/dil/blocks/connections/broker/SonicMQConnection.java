@@ -84,7 +84,7 @@ public class SonicMQConnection {
 
 
 
-    private void setConnection(String flowId, String connectId, String connectionIdValue) throws JMSException {
+    private void setConnection(String flowId, String connectId, String connectionIdValue) throws JMSException, javax.jms.JMSException {
 
         ConnectionFactory connection = new ConnectionFactory(url, username, password);
         connection.setConnectID("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
