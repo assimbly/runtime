@@ -68,43 +68,6 @@ public class Route {
             }
         }
 
-        if (route.contains("<unmarshal ref=\"fmuta")){
-            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
-
-            if(dataFormatAsString==null){
-                dataFormatAsString = DocConverter.convertNodeToString(node);
-            }
-
-            dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
-
-            String[] csvFormats = dataFormatAsString.split("<univocityCsv");
-            for(String csvFormat: csvFormats){
-                if(csvFormat.contains("fmuta-csv2pojo")){
-                    csvFormat = csvFormat.replaceAll("id=\"(.*)\"", "");
-                    route = route.replaceAll("<unmarshal ref=(.*)/>", "<unmarshal><univocityCsv" + csvFormat + "</unmarshal>");
-                }
-            }
-        }
-
-        if (route.contains("<marshal ref=\"fmuta")){
-
-            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats");
-
-            if(dataFormatAsString==null){
-                System.out.println("1. dataFormat == null");
-                dataFormatAsString = DocConverter.convertNodeToString(node);
-                dataFormatAsString = StringUtils.substringBetween(dataFormatAsString, "<dataFormats>", "</dataFormats>");
-            }
-
-            String[] csvFormats = dataFormatAsString.split("<univocityCsv");
-            for(String csvFormat: csvFormats){
-                if(csvFormat.contains("fmuta-pojo2csv")){
-                    csvFormat = csvFormat.replaceAll("id=\"(.*)\"", "");
-                    route = route.replaceAll("<marshal ref=(.*)/>", "<marshal><univocityCsv" + csvFormat + "</marshal>");
-                }
-            }
-        }
-
         return route;
 
     }
