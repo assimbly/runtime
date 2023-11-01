@@ -17,7 +17,6 @@ public class FlowLoader extends RouteBuilder {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private TreeMap<String, String> props;
 	private CamelContext context;
-	private ExtendedCamelContext extendedCamelContext;
 	private RoutesLoader loader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
@@ -219,7 +218,7 @@ public class FlowLoader extends RouteBuilder {
 
 		DeadLetterChannelBuilder updatedErrorHandler = errorHandler.configure();
 
-		extendedCamelContext.setErrorHandlerFactory(updatedErrorHandler);
+		context.getCamelContextExtension().setErrorHandlerFactory(updatedErrorHandler);
 
 		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
 

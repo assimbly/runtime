@@ -132,7 +132,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		//set management tasks
 		routeController = context.getRouteController();
-		managed = (ManagedCamelContext) context;
+		managed = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
 
 	}
 

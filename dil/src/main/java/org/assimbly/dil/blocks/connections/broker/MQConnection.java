@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
@@ -85,12 +86,12 @@ public class MQConnection {
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         } else {
             context.removeComponent(componentName);
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         }
 
