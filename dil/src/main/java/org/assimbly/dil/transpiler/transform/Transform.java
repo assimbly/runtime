@@ -61,8 +61,8 @@ public final class Transform {
         map.put("pdf2txt:","pdftotext:");
         map.put("form2xml:","formtoxml:");
         map.put("univocity-csv","univocityCsv");
-        map.put("univocity-header","univocityHeader");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
+        map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile usingIterator=\"true\"/>");
         map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile usingIterator=\"true\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
 
