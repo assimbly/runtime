@@ -25,7 +25,6 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.vm.VmComponent;
-import org.apache.camel.dataformat.zipfile.ZipSplitter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.Model;
@@ -238,7 +237,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("AggregateStrategy", new AggregateStrategy());
 
-		registry.bind("ZipSplitter", new ZipSplitter());
+		//registry.bind("ZipSplitter", new ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
@@ -251,9 +250,15 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 
+		bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
+		bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
+
+
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
 		addServiceByName("org.assimbly.xmltojson.CustomXmlJsonDataFormat");
+
+
 
 	}
 
@@ -268,6 +273,12 @@ public class CamelIntegration extends BaseIntegration {
 	public void setGlobalOptions(){
 
 		context.setUseBreadcrumb(true);
+
+		context.setStreamCaching(true);
+		context.getStreamCachingStrategy().setSpoolEnabled(true);
+		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
+		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
+		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
