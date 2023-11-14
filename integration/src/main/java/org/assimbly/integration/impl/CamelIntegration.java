@@ -232,10 +232,10 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
 
+		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
-		registry.bind("AggregateStrategy", new AggregateStrategy());
 
 		//registry.bind("ZipSplitter", new ZipSplitter());
 
