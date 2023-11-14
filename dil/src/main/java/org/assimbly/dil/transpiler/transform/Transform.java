@@ -65,8 +65,8 @@ public final class Transform {
         //map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<custom ref=\"zipFileDataFormat\"/>");
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<simple>${exchange.getIn(AttachmentMessage.class).hasAttachments()}</simple>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
-        map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile usingIterator=\"true\"/>");
-        map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile usingIterator=\"true\"/>");
+        map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
+        map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
