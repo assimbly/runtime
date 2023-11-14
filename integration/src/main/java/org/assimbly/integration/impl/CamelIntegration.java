@@ -159,7 +159,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setSuppressLoggingOnTimeout(true);
 
-		setStreamCaching(true);
+		setStreamCaching(false);
 
 		setMetrics(true);
 
@@ -188,6 +188,11 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setStreamCaching(boolean streamCaching) {
 		context.setStreamCaching(streamCaching);
+		context.getStreamCachingStrategy().setSpoolEnabled(true);
+		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
+		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
+		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
+
 	}
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
@@ -273,12 +278,6 @@ public class CamelIntegration extends BaseIntegration {
 	public void setGlobalOptions(){
 
 		context.setUseBreadcrumb(true);
-
-		context.setStreamCaching(true);
-		context.getStreamCachingStrategy().setSpoolEnabled(true);
-		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
-		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
-		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
