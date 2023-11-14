@@ -63,7 +63,7 @@ public final class Transform {
         map.put("univocity-csv","univocityCsv");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
         //map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<custom ref=\"zipFileDataFormat\"/>");
-        map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<simple>${exchange.getIn(AttachmentMessage.class).hasAttachments()}</simple>");
+        map.put("<simple>$\\{exchange.getIn().hasAttachments\\}</simple>","<simple>$\\{exchange.getIn(AttachmentMessage.class).hasAttachments()\\}</simple>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
         map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
