@@ -192,7 +192,6 @@ public class CamelIntegration extends BaseIntegration {
 		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
 		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
 		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
-
 	}
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
@@ -242,7 +241,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
 
-		//registry.bind("ZipSplitter", new ZipSplitter());
+		registry.bind("ZipSplitter", new ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
