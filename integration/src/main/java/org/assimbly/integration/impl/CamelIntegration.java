@@ -237,13 +237,13 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
+		registry.bind("Unzip", new UnzipProcessor());
 
 		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
-
-		//registry.bind("ZipSplitter", new ZipSplitter());
+		//registry.bind("ZipSplitter", new org.apache.camel.dataformat.zipfile.ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
@@ -256,9 +256,9 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 
-		bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
-		bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
+		//bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
+		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
