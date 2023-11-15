@@ -11,6 +11,8 @@ import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
+import org.apache.camel.attachment.AttachmentMessage;
+import org.apache.camel.attachment.DefaultAttachmentMessage;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 
 public final class Transform {
@@ -63,7 +64,8 @@ public final class Transform {
         map.put("univocity-csv","univocityCsv");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
         //map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<custom ref=\"zipFileDataFormat\"/>");
-        map.put("<simple>$\\{exchange.getIn().hasAttachments\\}</simple>","<simple>$\\{exchange.getIn(AttachmentMessage.class).hasAttachments()\\}</simple>");
+        //map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
+        map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
         map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile usingIterator=\"false\"/>");
