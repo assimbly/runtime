@@ -71,6 +71,8 @@ public final class Transform {
         map.put("<unmarshal><custom ref=\"checkedZipFileDataFormat\"/></unmarshal>","<process ref=\"Unzip\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
 
+        input = input.replaceAll("\\s*[\\r\\n]+\\s*", "").trim();
+
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 
 		return output;
