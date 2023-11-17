@@ -14,10 +14,10 @@ public final class Transform {
 
     final static Logger log = LoggerFactory.getLogger(Transform.class);
 
-    public static String transformToDil(String xml){
+    public static String transformToDil(String xml, String flowId){
 
 		//convert camel2 to camel3
-        String camel3Xml = camel2ToCamel3(xml);
+        String camel3Xml = camel2ToCamel3(xml, flowId);
 
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
@@ -31,7 +31,7 @@ public final class Transform {
 
 	}
 			
-	private static String camel2ToCamel3(String input){
+	private static String camel2ToCamel3(String input, String flowId){
 		
 		Map<String, String> map = new HashMap<>();
 
@@ -43,7 +43,7 @@ public final class Transform {
         map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
         map.put("xslt:","xslt-saxon:");
         map.put("jetty:http:","jetty-nossl:http:");
-        map.put("log:nl.kabisa.flux//","log:org.assimbly.runtime");
+        map.put("log:nl.kabisa.flux//","log:org.assimbly.runtime." + flowId);
         map.put("&amp;saxon=true","");
         map.put("?saxon=true\"","");
         map.put("?saxon=true&amp;","?");
