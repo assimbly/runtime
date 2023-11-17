@@ -33,10 +33,11 @@ public class LogCollector extends AppenderBase {
         if(event!=null){
 
             String message = event.getMessage();
-
+            String loggerName = event.getLoggerName();
+    
             if(filters==null){
                 processEvent(event, message);
-            }else if(EventUtil.isFiltered(filters, message)){
+            }else if(EventUtil.isFiltered(filters, message + loggerName)){
                 processEvent(event, message);
             }
 
