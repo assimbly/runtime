@@ -155,7 +155,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setSuppressLoggingOnTimeout(true);
 
-		setStreamCaching(false);
+		setStreamCaching(true);
 
 		setMetrics(true);
 
@@ -173,6 +173,7 @@ public class CamelIntegration extends BaseIntegration {
 			Tracer tracer = context.getTracer();
 			tracer.setEnabled(tracing);
 		}
+
 
 
 
