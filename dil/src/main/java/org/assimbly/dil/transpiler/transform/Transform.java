@@ -70,6 +70,9 @@ public final class Transform {
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile/>");
         map.put("<unmarshal><custom ref=\"checkedZipFileDataFormat\"/></unmarshal>","<process ref=\"Unzip\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
+        map.put("DovetailQueueName","AssimblyQueueName");
+        map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
+        map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");
 
         input = input.replaceAll("\\s*[\\r\\n]+\\s*", "").trim();
 

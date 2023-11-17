@@ -34,7 +34,7 @@ public class LogCollector extends AppenderBase {
 
             String message = event.getMessage();
             String loggerName = event.getLoggerName();
-    
+
             if(filters==null){
                 processEvent(event, message);
             }else if(EventUtil.isFiltered(filters, message + loggerName)){
