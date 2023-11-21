@@ -942,6 +942,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
+		context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
 	}
 
 	public boolean removeFlow(String id) throws Exception {

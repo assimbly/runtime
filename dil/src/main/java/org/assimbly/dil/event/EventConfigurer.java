@@ -3,6 +3,7 @@ package org.assimbly.dil.event;
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
+import org.apache.camel.spi.EventFactory;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.event.collect.MessageCollector;
 import org.assimbly.dil.event.collect.LogCollector;

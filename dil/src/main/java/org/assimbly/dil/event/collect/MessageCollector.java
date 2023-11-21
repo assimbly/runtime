@@ -53,17 +53,25 @@ public class MessageCollector extends EventNotifierSupport {
         //filter only the configured events
         if(events!=null && events.contains(type)) {
 
-            //Cast to exchange event
+            // Cast to exchange event
             CamelEvent.ExchangeEvent exchangeEvent = (CamelEvent.ExchangeEvent) event;
 
-            //Get the message exchange from exchange event
+            // Get the message exchange from exchange event
             Exchange exchange = exchangeEvent.getExchange();
 
-            //get the stepid
+            // Get the stepid
             String stepId = exchange.getFromRouteId();
 
-            //get the stepid alternative
+            // Get the stepid alternative
             // stepId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
+
+            //Set default headers for the response time
+            Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
+            exchange.getIn().setHeader("ComponentInitTime", exchange.getCreated());
+            if(initTime != null) {
+                long duration = Calendar.getInstance().getTimeInMillis() - (long)initTime;
+                exchange.getIn().setHeader("ComponentResponseTime", String.valueOf(duration));
+            }
 
             //process and store the exchange
             if (stepId != null && stepId.startsWith(flowId) && filters == null) {
