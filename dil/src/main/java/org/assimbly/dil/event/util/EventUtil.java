@@ -13,7 +13,7 @@ import java.util.List;
 public class EventUtil {
 
     public static boolean isFiltered(final List<Filter> filters, final String text){
-        return filters.stream().anyMatch(o -> text.contains(o.getFilter()));
+        return filters.stream().anyMatch(o -> text.equals(o.getFilter()));
     }
 
     public static String getTimestamp(){

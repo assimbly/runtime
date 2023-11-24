@@ -64,11 +64,15 @@ public class MessageCollector extends EventNotifierSupport {
 
             //Set default headers for the response time
             long created = exchange.getCreated();
+
+            System.out.println("Created=" + created);
+
             if(created!=0){
                 Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
                 exchange.getIn().setHeader("ComponentInitTime", created);
                 if(initTime != null) {
                     long duration = created - (long)initTime;
+                    System.out.println("Duration=" + duration);
                     exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
                 }
             }
