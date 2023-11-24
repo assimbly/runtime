@@ -1,11 +1,13 @@
 package org.assimbly.dil.event.collect;
 
+import ca.uhn.hl7v2.util.StringUtil;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
@@ -51,7 +53,7 @@ public class MessageCollector extends EventNotifierSupport {
         String type = event.getType().name();
 
         //filter only the configured events
-        if(events!=null && events.contains(type)) {
+        if (events != null && events.contains(type)) {
 
             // Cast to exchange event
             CamelEvent.ExchangeEvent exchangeEvent = (CamelEvent.ExchangeEvent) event;
@@ -60,32 +62,38 @@ public class MessageCollector extends EventNotifierSupport {
             Exchange exchange = exchangeEvent.getExchange();
 
             // Get the stepid
-            String stepId = exchange.getFromRouteId();
+            String routeId = exchange.getFromRouteId();
 
-            //Set default headers for the response time
-            long created = exchange.getCreated();
+            if(routeId!= null && routeId.startsWith(flowId)){
 
-            System.out.println("Created=" + created);
+                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-            if(created!=0){
-                Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
-                exchange.getIn().setHeader("ComponentInitTime", created);
-                if(initTime != null) {
-                    long duration = created - (long)initTime;
-                    System.out.println("Duration=" + duration);
-                    exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
+                //Set default headers for the response time
+                long created = exchange.getCreated();
+
+                //process and store the exchange
+                if (filters == null) {
+                    processEvent(exchange, flowId, stepId);
+                } else if (EventUtil.isFilteredEquals(filters, stepId)) {
+                    setResponseTime(exchange, created);
+                    processEvent(exchange, flowId, stepId);
                 }
-            }
 
-            //process and store the exchange
-            if (stepId != null && stepId.startsWith(flowId) && filters == null) {
-                processEvent(exchange, flowId, stepId);
-            } else if (stepId != null && stepId.startsWith(flowId) && EventUtil.isFilteredEquals(filters, stepId)) {
-                processEvent(exchange, flowId, stepId);
             }
 
         }
+    }
 
+    private void setResponseTime(Exchange exchange, long created){
+        if(created!=0) {
+            Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
+            exchange.getIn().setHeader("ComponentInitTime", created);
+            if (initTime != null) {
+                long duration = created - (long) initTime;
+                System.out.println("Duration=" + duration);
+                exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
+            }
+        }
     }
 
     private void processEvent(Exchange exchange, String flowId, String stepId){
