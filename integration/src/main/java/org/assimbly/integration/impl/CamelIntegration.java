@@ -250,7 +250,7 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
-
+		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
 
 		//bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
 		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
@@ -258,8 +258,6 @@ public class CamelIntegration extends BaseIntegration {
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
 		addServiceByName("org.assimbly.xmltojson.CustomXmlJsonDataFormat");
-
-
 
 	}
 
