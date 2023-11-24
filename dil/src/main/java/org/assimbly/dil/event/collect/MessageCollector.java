@@ -80,7 +80,7 @@ public class MessageCollector extends EventNotifierSupport {
             //process and store the exchange
             if (stepId != null && stepId.startsWith(flowId) && filters == null) {
                 processEvent(exchange, flowId, stepId);
-            } else if (stepId != null && stepId.startsWith(flowId) && EventUtil.isFiltered(filters, stepId)) {
+            } else if (stepId != null && stepId.startsWith(flowId) && EventUtil.isFilteredEquals(filters, stepId)) {
                 processEvent(exchange, flowId, stepId);
             }
 

@@ -13,6 +13,10 @@ import java.util.List;
 public class EventUtil {
 
     public static boolean isFiltered(final List<Filter> filters, final String text){
+        return filters.stream().anyMatch(o -> text.contains(o.getFilter()));
+    }
+
+    public static boolean isFilteredEquals(final List<Filter> filters, final String text){
         return filters.stream().anyMatch(o -> text.equals(o.getFilter()));
     }
 
