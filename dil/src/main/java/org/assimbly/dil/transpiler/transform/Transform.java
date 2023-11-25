@@ -1,6 +1,5 @@
 package org.assimbly.dil.transpiler.transform;
 
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +16,11 @@ public final class Transform {
 		//convert camel2 to camel3
         String camel3Xml = camel2ToCamel3(xml, flowId);
 
-        String[] replaceList = StringUtils.substringsBetween(camel3Xml, "<simple>", "</simple>");
-
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
 
         //transform to DIL format
 		String dilXml = TransformUtil.transformXML(camel3Xml,is);
-
-        String[] searchList = StringUtils.substringsBetween(dilXml, "<simple>", "</simple>");
 
         log.info("The DIL format:\n\n" + dilXml);
 
