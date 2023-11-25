@@ -22,6 +22,9 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.velocity.VelocityComponent;
+import org.apache.camel.component.velocity.VelocityEndpoint;
+import org.apache.camel.component.velocity.VelocityEndpointConfigurer;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
@@ -36,11 +39,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.runtime.VelocityEngineVersion;
+import org.apache.velocity.script.VelocityScriptEngine;
+import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
+import org.assimbly.dil.blocks.templates.Velocity;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
@@ -60,6 +68,7 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -275,6 +284,10 @@ public class CamelIntegration extends BaseIntegration {
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
+
+		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
+		//velocity.setPropertiesFile("classpath:velocity.properties");
+
 	}
 
 	//loads templates in the template package

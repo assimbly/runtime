@@ -1,14 +1,12 @@
 package org.assimbly.dil.transpiler.transform;
 
-import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
-
 
 public final class Transform {
 
@@ -19,11 +17,15 @@ public final class Transform {
 		//convert camel2 to camel3
         String camel3Xml = camel2ToCamel3(xml, flowId);
 
+        String[] replaceList = StringUtils.substringsBetween(camel3Xml, "<simple>", "</simple>");
+
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
 
         //transform to DIL format
 		String dilXml = TransformUtil.transformXML(camel3Xml,is);
+
+        String[] searchList = StringUtils.substringsBetween(dilXml, "<simple>", "</simple>");
 
         log.info("The DIL format:\n\n" + dilXml);
 
@@ -74,13 +76,10 @@ public final class Transform {
         map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
         map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");
 
-        input = input.replaceAll("\\s*[\\r\\n]+\\s*", "").trim();
-
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 
 		return output;
 		
 	}
-
 
 }
