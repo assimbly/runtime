@@ -50,10 +50,8 @@ public class MessageCollector extends EventNotifierSupport {
     @Override
     public void notify(CamelEvent event) throws Exception {
 
-        String type = event.getType().name();
-
         //filter only the configured events
-        if (events != null && events.contains(type)) {
+        if (events != null && events.contains(event.getType().name())) {
 
             // Cast to exchange event
             CamelEvent.ExchangeEvent exchangeEvent = (CamelEvent.ExchangeEvent) event;
@@ -68,15 +66,12 @@ public class MessageCollector extends EventNotifierSupport {
 
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-                //Set default headers for the response time
-                long created = exchange.getCreated();
-
                 //process and store the exchange
                 if (filters == null) {
-                    processEvent(exchange, flowId, stepId);
+                    processEvent(exchange, stepId);
                 } else if (EventUtil.isFilteredEquals(filters, stepId)) {
-                    setResponseTime(exchange, created);
-                    processEvent(exchange, flowId, stepId);
+                    setResponseTime(exchange);
+                    processEvent(exchange, stepId);
                 }
 
             }
@@ -84,19 +79,22 @@ public class MessageCollector extends EventNotifierSupport {
         }
     }
 
-    private void setResponseTime(Exchange exchange, long created){
+    private void setResponseTime(Exchange exchange){
+        //Set default headers for the response time
+        long created = exchange.getCreated();
+
         if(created!=0) {
             Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
             exchange.getIn().setHeader("ComponentInitTime", created);
             if (initTime != null) {
                 long duration = created - (long) initTime;
-                System.out.println("Duration=" + duration);
                 exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
             }
         }
+
     }
 
-    private void processEvent(Exchange exchange, String flowId, String stepId){
+    private void processEvent(Exchange exchange, String stepId){
 
         //set fields
         Message message = exchange.getMessage();
@@ -107,7 +105,8 @@ public class MessageCollector extends EventNotifierSupport {
         //use breadcrumbId when available
         messageId = message.getHeader("breadcrumbId", messageId, String.class);
 
-        String timestamp = EventUtil.getTimestamp();
+        //calculate times
+        String timestamp = EventUtil.getCreatedTimestamp(exchange.getCreated());
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
