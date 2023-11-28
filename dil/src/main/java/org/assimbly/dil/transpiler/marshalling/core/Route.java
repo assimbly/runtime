@@ -68,6 +68,11 @@ public class Route {
             }
         }
 
+        if (route.contains("marshal ref=\"multipart")){
+            route = route.replaceAll("<unmarshal ref=(.*)", "<unmarshal><mimeMultipart/></unmarshal>");
+            route = route.replaceAll("<marshal ref=(.*)", "<marshal><mimeMultipart/></marshal>");
+        }
+
         return route;
 
     }

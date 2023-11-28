@@ -596,6 +596,8 @@ public class FlowManagerRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
+        log.error("IntegrationErrorHandler", error);
+
         Long integrationId = 0L; // set integrationid to 0, as we may get a string value
         String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
         String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();

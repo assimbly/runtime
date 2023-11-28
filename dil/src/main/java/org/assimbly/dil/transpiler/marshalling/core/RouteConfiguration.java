@@ -24,14 +24,14 @@ public class RouteConfiguration {
 
         if(node!=null){
 
-            String routeAsString = DocConverter.convertNodeToString(node);
+            String routeConfigurationAsString = DocConverter.convertNodeToString(node);
 
-            if (routeAsString.contains("<dataFormats>")){
-                routeAsString = StringUtils.substringBefore(routeAsString,"<dataFormats>") + StringUtils.substringAfter(routeAsString,"</dataFormats>");
+            if (routeConfigurationAsString.contains("<dataFormats>")){
+                routeConfigurationAsString = StringUtils.substringBefore(routeConfigurationAsString,"<dataFormats>") + StringUtils.substringAfter(routeConfigurationAsString,"</dataFormats>");
             }
 
             properties.put(type + "." + stepId + ".routeconfiguration.id", routeConfigurationId);
-            properties.put(type + "." + stepId + ".routeconfiguration", routeAsString);
+            properties.put(type + "." + stepId + ".routeconfiguration", routeConfigurationAsString);
 
         }
 

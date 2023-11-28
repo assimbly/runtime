@@ -2,7 +2,7 @@
 <xsl:stylesheet version="2.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-    <xsl:output indent="yes"/>
+    <xsl:output omit-xml-declaration="yes" indent="yes"/>
 
     <xsl:variable name="timestamp">
         <xsl:value-of  select="format-dateTime(current-dateTime(),'[Y][M00][D00][H00][m00][s00][f000]')"/>
@@ -215,7 +215,7 @@
                                             </xsl:choose>
                                         </xsl:attribute>
                                     </xsl:if>
-                                    <xsl:copy-of select="./*" copy-namespaces="no"/>
+                                   <xsl:copy-of select="./*" copy-namespaces="no"/>
                                 </route>
                             </xsl:for-each>
                         </routes>

@@ -1,11 +1,13 @@
 package org.assimbly.dil.event.collect;
 
+import ca.uhn.hl7v2.util.StringUtil;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
@@ -48,35 +50,51 @@ public class MessageCollector extends EventNotifierSupport {
     @Override
     public void notify(CamelEvent event) throws Exception {
 
-        String type = event.getType().name();
-
         //filter only the configured events
-        if(events!=null && events.contains(type)) {
+        if (events != null && events.contains(event.getType().name())) {
 
-            //Cast to exchange event
+            // Cast to exchange event
             CamelEvent.ExchangeEvent exchangeEvent = (CamelEvent.ExchangeEvent) event;
 
-            //Get the message exchange from exchange event
+            // Get the message exchange from exchange event
             Exchange exchange = exchangeEvent.getExchange();
 
-            //get the stepid
-            String stepId = exchange.getFromRouteId();
+            // Get the stepid
+            String routeId = exchange.getFromRouteId();
 
-            //get the stepid alternative
-            // stepId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
+            if(routeId!= null && routeId.startsWith(flowId)){
 
-            //process and store the exchange
-            if (stepId != null && stepId.startsWith(flowId) && filters == null) {
-                processEvent(exchange, flowId, stepId);
-            } else if (stepId != null && stepId.startsWith(flowId) && EventUtil.isFiltered(filters, stepId)) {
-                processEvent(exchange, flowId, stepId);
+                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+
+                //process and store the exchange
+                if (filters == null) {
+                    processEvent(exchange, stepId);
+                } else if (EventUtil.isFilteredEquals(filters, stepId)) {
+                    setResponseTime(exchange);
+                    processEvent(exchange, stepId);
+                }
+
             }
 
+        }
+    }
+
+    private void setResponseTime(Exchange exchange){
+        //Set default headers for the response time
+        long created = exchange.getCreated();
+
+        if(created!=0) {
+            Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
+            exchange.getIn().setHeader("ComponentInitTime", created);
+            if (initTime != null) {
+                long duration = created - (long) initTime;
+                exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
+            }
         }
 
     }
 
-    private void processEvent(Exchange exchange, String flowId, String stepId){
+    private void processEvent(Exchange exchange, String stepId){
 
         //set fields
         Message message = exchange.getMessage();
@@ -87,7 +105,8 @@ public class MessageCollector extends EventNotifierSupport {
         //use breadcrumbId when available
         messageId = message.getHeader("breadcrumbId", messageId, String.class);
 
-        String timestamp = EventUtil.getTimestamp();
+        //calculate times
+        String timestamp = EventUtil.getCreatedTimestamp(exchange.getCreated());
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json

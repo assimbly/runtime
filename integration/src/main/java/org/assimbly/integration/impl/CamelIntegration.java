@@ -22,8 +22,10 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.velocity.VelocityComponent;
+import org.apache.camel.component.velocity.VelocityEndpoint;
+import org.apache.camel.component.velocity.VelocityEndpointConfigurer;
 import org.apache.camel.component.seda.SedaComponent;
-import org.apache.camel.dataformat.zipfile.ZipSplitter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
@@ -37,11 +39,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.runtime.VelocityEngineVersion;
+import org.apache.velocity.script.VelocityScriptEngine;
+import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
+import org.assimbly.dil.blocks.templates.Velocity;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
@@ -61,6 +68,7 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -173,6 +181,7 @@ public class CamelIntegration extends BaseIntegration {
 
 
 
+
 	}
 
 	public void setDebugging(boolean debugging) {
@@ -181,6 +190,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setStreamCaching(boolean streamCaching) {
 		context.setStreamCaching(streamCaching);
+		context.getStreamCachingStrategy().setSpoolEnabled(true);
+		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
+		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
+		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
 	}
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
@@ -224,13 +237,13 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
+		registry.bind("Unzip", new UnzipProcessor());
 
+		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 
-		registry.bind("AggregateStrategy", new AggregateStrategy());
-
-		registry.bind("ZipSplitter", new ZipSplitter());
+		//registry.bind("ZipSplitter", new org.apache.camel.dataformat.zipfile.ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
@@ -242,6 +255,10 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
+		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
+
+		//bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
+		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
@@ -263,6 +280,10 @@ public class CamelIntegration extends BaseIntegration {
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
+
+		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
+		//velocity.setPropertiesFile("classpath:velocity.properties");
+
 	}
 
 	//loads templates in the template package
@@ -928,6 +949,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
 		context.getManagementStrategy().addEventNotifier(eventNotifier);
+		context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
 	}
 
 	public boolean removeFlow(String id) throws Exception {
