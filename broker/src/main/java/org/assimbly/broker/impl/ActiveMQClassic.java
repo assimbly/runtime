@@ -37,8 +37,8 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
-import static javax.jms.DeliveryMode.NON_PERSISTENT;
-import static javax.jms.DeliveryMode.PERSISTENT;
+import static jakarta.jms.DeliveryMode.NON_PERSISTENT;
+import static jakarta.jms.DeliveryMode.PERSISTENT;
 
 public class ActiveMQClassic implements Broker {
 

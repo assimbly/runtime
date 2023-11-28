@@ -647,12 +647,6 @@ public class RouteTemplate {
                 } else {
                     options = options + "&exchangePattern=InOut";
                 }
-            } else if (pattern.equalsIgnoreCase("inoptionalout")) {
-                if (options == null) {
-                    options = "exchangePattern=InOptionalOut";
-                } else {
-                    options = options + "&exchangePattern=InOptionalOut";
-                }
             } else if (pattern.equalsIgnoreCase("inonly") || pattern.equalsIgnoreCase("oneway") || pattern.equalsIgnoreCase("event") || pattern.equalsIgnoreCase("fireandforget")) {
                 if (options == null) {
                     options = "exchangePattern=InOnly";
