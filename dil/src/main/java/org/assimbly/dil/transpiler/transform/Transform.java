@@ -60,8 +60,8 @@ public final class Transform {
         map.put("form2xml:","formtoxml:");
         map.put("univocity-csv","univocityCsv");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
-        //map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<custom ref=\"zipFileDataFormat\"/>");
-        //map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
+        map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<custom ref=\"zipFileDataFormat\"/>");
+        map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile/>");
