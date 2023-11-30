@@ -260,8 +260,7 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
-
-		//bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
+		bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
 		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
