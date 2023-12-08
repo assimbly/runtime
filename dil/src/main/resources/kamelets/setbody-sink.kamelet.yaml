@@ -27,14 +27,14 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: assimbly.body
               constant: "{{path}}"
-          - set-property:
+          - setProperty:
               name: assimbly.language
               constant: "{{language}}"
           - process:

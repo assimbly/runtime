@@ -31,7 +31,7 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
@@ -39,27 +39,27 @@ spec:
               when:
                 - simple: "'{{language}}' == 'simple'"
                   steps:
-                  - set-header:
+                  - setHeader:
                       name: "{{path}}"
                       simple: "{{value}}"
                 - simple: "'{{language}}' == 'xpath'"
                   steps:
-                  - set-header:
+                  - setHeader:
                       name: "{{path}}"
                       xpath: "{{value}}"
                 - simple: "'{{language}}' == 'jsonpath'"
                   steps:
-                  - set-header:
+                  - setHeader:
                       name: "{{path}}"
                       jsonpath: "{{value}}"
                 - simple: "'{{language}}' == 'groovy'"
                   steps:
-                  - set-header:
+                  - setHeader:
                       name: "{{path}}"
                       groovy: "{{value}}"
               otherwise:
                 steps:
-                  - set-header:
+                  - setHeader:
                       name: "{{path}}"
                       constant: "{{value}}"
           - to:

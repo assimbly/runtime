@@ -25,7 +25,7 @@ public class BrokerConfigurerRuntime {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/configure")
-    public String getConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType) {
+    public String getConfigurationBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType) {
         log.debug("REST request to get configuration of Broker : {}", id);
 
         String configuration = "unknown";
@@ -48,7 +48,7 @@ public class BrokerConfigurerRuntime {
      * @throws Exception
      */
     @PostMapping(path = "/brokers/{id}/configure")
-    public ResponseEntity<String> setConfigurationBroker(@PathVariable Long id, @RequestParam String brokerType, @RequestParam String brokerConfigurationType, @RequestBody(required = false) String brokerConfiguration) throws Exception {
+    public ResponseEntity<String> setConfigurationBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType, @RequestParam("brokerConfigurationType") String brokerConfigurationType, @RequestBody(required = false) String brokerConfiguration) throws Exception {
         log.debug("REST request to set configuration of Broker : {}", id);
 
        	try {

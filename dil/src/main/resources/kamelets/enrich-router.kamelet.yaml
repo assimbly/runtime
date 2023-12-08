@@ -32,14 +32,14 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: Enrich-Type
               constant: "{{enrichType}}"
-          - set-property:
+          - setProperty:
               name: Error-Route
               constant: "{{errorRoute}}"
           - enrich:

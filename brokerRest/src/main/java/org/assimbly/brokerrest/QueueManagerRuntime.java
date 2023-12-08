@@ -35,7 +35,7 @@ public class QueueManagerRuntime {
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> createQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> createQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "queueName") String queueName) throws Exception {
 
         log.debug("REST request to create queue : {}", queueName);
 
@@ -60,7 +60,7 @@ public class QueueManagerRuntime {
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> deleteQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> deleteQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "queueName") String queueName) throws Exception {
 
         log.debug("REST request to get delete queue : {}", queueName);
 
@@ -85,7 +85,7 @@ public class QueueManagerRuntime {
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> getQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "queueName") String queueName) throws Exception {
 
         log.debug("REST request to get get queue information : {}", queueName);
 
@@ -110,7 +110,7 @@ public class QueueManagerRuntime {
             path= "/brokers/{brokerType}/queues",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType) throws Exception {
+    public ResponseEntity<String> getQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType) throws Exception {
 
         log.debug("REST request to get get queues");
 
@@ -135,7 +135,7 @@ public class QueueManagerRuntime {
             path = "/brokers/{brokerType}/queue/{queueName}/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> clearQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String queueName) throws Exception {
+    public ResponseEntity<String> clearQueue(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "queueName") String queueName) throws Exception {
 
         log.debug("REST request to clear queue : {}", queueName);
 
@@ -159,7 +159,7 @@ public class QueueManagerRuntime {
             path = "/brokers/{brokerType}/queues/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> clearQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> clearQueues(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType)  throws Exception {
 
         log.debug("REST request to clear queues : this removes all messages on the broker!");
 

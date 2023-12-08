@@ -27,10 +27,10 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-exchange-pattern: "{{pattern}}"
+          - setExchangePattern: "{{pattern}}"
           - to:
               uri: "kamelet:sink"

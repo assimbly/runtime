@@ -1,6 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
@@ -10,8 +10,6 @@ import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jakarta.jms.JMSException;
 
 
 public class ActiveMQConnection {
@@ -88,7 +86,7 @@ public class ActiveMQConnection {
 
 
 
-    private void setConnection() throws JMSException, jakarta.jms.JMSException {
+    private void setConnection() throws JMSException {
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
@@ -105,8 +103,7 @@ public class ActiveMQConnection {
 
     }
 
-    //to do in Jakarta/Camel4 migration (JMSException?)
-    private void startBasicConnection() throws JMSException, jakarta.jms.JMSException {
+    private void startBasicConnection() throws JMSException {
 
         org.apache.activemq.ActiveMQConnection connection = (org.apache.activemq.ActiveMQConnection) activeMQConnectionFactory.createConnection();
         connection.start();
@@ -125,7 +122,7 @@ public class ActiveMQConnection {
 
             ActiveMQConfiguration configuration = new ActiveMQConfiguration();
 
-            configuration.setConnectionFactory((ConnectionFactory) pooledConnectionFactory);
+            configuration.setConnectionFactory(pooledConnectionFactory);
             configuration.setConcurrentConsumers(Integer.parseInt(concurentConsumers));
             configuration.setUsePooledConnection(true);
 
@@ -136,8 +133,6 @@ public class ActiveMQConnection {
         } catch (Exception e) {
             log.error("Failed to start pooled connection. Reason:", e);
         }
-
-
 
     }
 

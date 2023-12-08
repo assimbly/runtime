@@ -27,7 +27,6 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
-import org.apache.commons.lang3.time.StopWatch;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
@@ -113,7 +112,9 @@ public class XMLFileConfiguration {
 
 		FileHandler fh = new FileHandler(conf);
 
-		fh.load(DocConverter.convertStringToStream(dilXml));
+		InputStream is = DocConverter.convertStringToStream(dilXml);
+
+		fh.load(is);
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 

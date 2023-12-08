@@ -35,7 +35,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> createTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> createTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "topicName") String topicName)  throws Exception {
 
         log.debug("REST request to get create topic : {}", topicName);
 
@@ -61,7 +61,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> deleteTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> deleteTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "topicName") String topicName)  throws Exception {
 
         log.debug("REST request to get delete topic : {}", topicName);
             try {
@@ -86,7 +86,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName)  throws Exception {
+    public ResponseEntity<String> getTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "topicName") String topicName)  throws Exception {
 
         log.debug("REST request to get get topic : {}", topicName);
 
@@ -112,7 +112,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType)  throws Exception {
 
         log.debug("REST request to get get topics");
 
@@ -138,7 +138,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topic/{topicName}/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> clearTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String topicName) throws Exception {
+    public ResponseEntity<String> clearTopic(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "topicType") String topicName) throws Exception {
 
         log.debug("REST request to clear topic : {}", topicName);
 
@@ -163,7 +163,7 @@ public class TopicManagerRuntime {
             path = "/brokers/{brokerType}/topics/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> clearTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> clearTopics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType)  throws Exception {
 
         log.debug("REST request to clear topics : this removes all messages on the broker!");
 

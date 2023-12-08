@@ -31,7 +31,7 @@ public class BrokerManagerRuntime {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/status")
-    public String statusBroker(@PathVariable Long id, @RequestParam String brokerType) {
+    public String statusBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType) {
         log.debug("REST request to get status of Broker : {}", id);
 
         String status = "stopped";
@@ -53,7 +53,7 @@ public class BrokerManagerRuntime {
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/info")
-    public String infoBroker(@PathVariable Long id, @RequestParam String brokerType) {
+    public String infoBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType) {
         log.debug("REST request to get status of Broker : {}", id);
 
         String info = "unknown";
@@ -74,7 +74,7 @@ public class BrokerManagerRuntime {
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/start")
-    public ResponseEntity<String> startBroker(@PathVariable Long id, @RequestParam String brokerType, @RequestParam String brokerConfigurationType) throws Exception {
+    public ResponseEntity<String> startBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType, @RequestParam("brokerConfigurationType") String brokerConfigurationType) throws Exception {
         log.debug("REST request to start Broker : {}", id);
 
         try {
@@ -99,7 +99,7 @@ public class BrokerManagerRuntime {
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/restart")
-    public ResponseEntity<String> restartBroker(@PathVariable Long id, @RequestParam String brokerType, @RequestParam String brokerConfigurationType) throws Exception {
+    public ResponseEntity<String> restartBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType, @RequestParam("brokerConfigurationType") String brokerConfigurationType) throws Exception {
         log.debug("REST request to restart Broker : {}", id);
 
         try {
@@ -109,7 +109,6 @@ public class BrokerManagerRuntime {
         	log.error("Can't restart broker", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
     	}
-
 
     }
 
@@ -121,7 +120,7 @@ public class BrokerManagerRuntime {
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/stop")
-    public ResponseEntity<String> stopBroker(@PathVariable Long id, @RequestParam String brokerType) throws Exception {
+    public ResponseEntity<String> stopBroker(@PathVariable("id") Long id, @RequestParam("brokerType") String brokerType) throws Exception {
         log.debug("REST request to stop Broker : {}", id);
 
         try {
@@ -145,7 +144,7 @@ public class BrokerManagerRuntime {
             path = "/brokers/{brokerType}/connections",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConnections(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType)  throws Exception {
 
         log.debug("REST request to get get connections");
 
@@ -169,7 +168,7 @@ public class BrokerManagerRuntime {
             path = "/brokers/{brokerType}/consumers",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType)  throws Exception {
+    public ResponseEntity<String> getConsumers(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType)  throws Exception {
 
         log.debug("REST request to get get consumers");
 

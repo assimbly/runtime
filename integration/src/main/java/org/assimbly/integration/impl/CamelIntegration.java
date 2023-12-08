@@ -319,6 +319,10 @@ public class CamelIntegration extends BaseIntegration {
 
 		for(String resourceName: resourceNames){
 
+			if(resourceName.equals("kamelets/resolve-pojo-schema-action.kamelet.yaml")){
+				continue;
+			}
+
 			URL url;
 			if(resourceName.startsWith("file:")){
 				url = new URL(resourceName);
@@ -2910,7 +2914,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
 
-		System.out.println("Set registry ssl");
 		registry.bind("default", sslContextParameters);
 		registry.bind("sslContext", sslContextParameters);
 		registry.bind("keystore", sslContextParametersKeystoreOnly);

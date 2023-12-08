@@ -46,7 +46,6 @@ public class CertificateManagerRuntime {
     /**
      * POST  /certificates/ : Sets TLS certificates.
      *
-     * @param integrationId (gatewayId)
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
@@ -55,17 +54,17 @@ public class CertificateManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
+    public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
 
         log.debug("REST request to set certificates for url: {}", url);
 
         try {
             integrationRuntime.getIntegration().setCertificatesInKeystore(keystoreName, keystorePassword, url);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}","Certificates set");
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/setcertificates/{id}","Certificates set");
         } catch (Exception e) {
             log.error("Set certificates for keystore=" + keystoreName + " for url=" + url + " failed",e);
 
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/setcertificates/{id}",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/setcertificates/{id}",e.getMessage());
         }
 
     }
@@ -215,7 +214,7 @@ public class CertificateManagerRuntime {
             path = "/certificates/delete/{certificateName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> deleteCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @PathVariable String certificateName) throws Exception {
+    public ResponseEntity<String> deleteCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @PathVariable(value = "certificateName") String certificateName) throws Exception {
         log.debug("REST request to delete certificate : {}", certificateName);
 
         try {

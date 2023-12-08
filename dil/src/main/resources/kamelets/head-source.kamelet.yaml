@@ -26,7 +26,7 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "rest:head:{{path}}?{{options}}"
         steps:

@@ -22,11 +22,11 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false"
         steps:
-          - remove-headers:
+          - removeHeaders:
               pattern: "CamelHttp*"
           - to:
               uri: "kamelet:sink"

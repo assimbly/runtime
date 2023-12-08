@@ -27,11 +27,11 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - remove-headers:
+          - removeHeaders:
               pattern: "{{path}}"
               exclude-pattern: "{{excludePattern}}"
           - to:

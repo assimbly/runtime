@@ -31,11 +31,11 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - poll-enrich:
+          - pollEnrich:
               simple: "{{path}}?{{options}}"
               timeout: "{{timeout}}"
           - to:

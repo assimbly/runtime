@@ -28,17 +28,17 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: Aggregate-Type
               constant: "{{aggregateType}}"
           - aggregate:
-              aggregation-strategy: "AggregateStrategy"
-              completion-size: "{{completionSize}}"
-              correlation-expression:
+              aggregationStrategy: "AggregateStrategy"
+              completionSize: "{{completionSize}}"
+              correlationExpression:
                 constant: "true"
           - to:
               uri: "kamelet:sink"

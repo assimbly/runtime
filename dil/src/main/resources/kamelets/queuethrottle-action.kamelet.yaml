@@ -28,11 +28,11 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: AssimblyQueueName
               constant: "{{path}}"
           - process:
@@ -42,20 +42,20 @@ spec:
           - loop:
               constant: "{{messages}}"
               steps:
-                - set-property:
+                - setProperty:
                     name: Enrich-Type
                     constant: "application/override"
-                - set-property:
+                - setProperty:
                     name: AssimblyAggregateNoExceptionOnNull
                     simple: "true"
-                - poll-enrich:
+                - pollEnrich:
                     constant: "activemq:{{path}}"
                     timeout: "{{timePeriod}}"
                     aggregationStrategy: "CurrentEnrichStrategy"
                 - filter:
                     simple: "${body} != null"
                     steps:
-                      - remove-headers:
+                      - removeHeaders:
                           pattern: "fireTime|jobRunTime|nextFireTime|previousFireTime|refireCount|scheduledFireTime|triggerGroup|triggerName|jobDetail|jobInstance|mergedJobDataMap|result|scheduler|trigger"
                           excludePattern: "breadcrumbId"
           - to:

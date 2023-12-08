@@ -35,20 +35,20 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
+      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
           - split:
               xpath: "{{expression}}"
               steps:
-                - set-header:
+                - setHeader:
                     name: CamelSplitIndex
                     simple: "${exchangeProperty.CamelSplitIndex}"
-                - set-header:
+                - setHeader:
                     name: CamelSplitSize
                     simple: "${exchangeProperty.CamelSplitSize}"
-                - set-header:
+                - setHeader:
                     name: CamelSplitComplete
                     simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
                 - to: "{{out_rule}}"
