@@ -58,6 +58,7 @@ public final class Transform {
         map.put("sql-component:","sql-custom:");
         map.put("pdf2txt:","pdftotext:");
         map.put("form2xml:","formtoxml:");
+        map.put("google-drive:","googledrive:");
         map.put("univocity-csv","univocityCsv");
         map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
         map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile/>");
