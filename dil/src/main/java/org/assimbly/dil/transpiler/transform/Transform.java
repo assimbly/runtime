@@ -29,10 +29,12 @@ public final class Transform {
 	}
 			
 	private static String camel2ToCamel3(String input, String flowId){
-		
+
+        input = input.replaceAll("[\\r\\n\\t]+\\s*", "");
+
 		Map<String, String> map = new HashMap<>();
 
-		map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");		
+        map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");
 		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
         map.put("consumer.delay","delay");
 		map.put("headerName=","name=");
@@ -60,13 +62,11 @@ public final class Transform {
         map.put("form2xml:","formtoxml:");
         map.put("google-drive:","googledrive:");
         map.put("univocity-csv","univocityCsv");
-        map.put("checkedZipFileDataFormat:unmarshal?usingIterator=true","zipFile:unmarshal?usingIterator=true");
-        map.put("<custom ref=\"checkedZipFileDataFormat\"/>","<zipFile/>");
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile/>");
+        map.put("<unmarshal><custom ref=\"checkedZipFileDataFormat\"/></unmarshal>","<process ref=\"Unzip\"/>");
         map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
-        map.put("<unmarshal><custom ref=\"checkedZipFileDataFormat\"/></unmarshal>","<process ref=\"Unzip\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
         map.put("DovetailQueueName","AssimblyQueueName");
         map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
