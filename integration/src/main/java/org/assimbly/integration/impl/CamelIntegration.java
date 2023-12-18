@@ -2002,7 +2002,7 @@ public class CamelIntegration extends BaseIntegration {
 		long uptimeMillis = 0;
 		Date lastFailed = null;
 		Date lastCompleted = null;
-		String status = "Stopped";
+		String status = "stopped";
 		Boolean tracing = false;
 
 		List<Route> routes = getRoutesByFlowId(flowId);
@@ -2039,7 +2039,7 @@ public class CamelIntegration extends BaseIntegration {
 							lastCompleted = completed;
 						}
 					}
-					status = route.getState();
+					status = route.getState().toLowerCase();
 					tracing = route.getTracing();
 				}
 
