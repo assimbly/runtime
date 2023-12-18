@@ -20,6 +20,7 @@ public class UnzipProcessor implements Processor {
         Message in = exchange.getIn();
         InputStream inputStream = in.getBody(InputStream.class);
         ArrayList<byte[]> unzipped = new ArrayList<>();
+        ArrayList<String> unzippedCamelFileName = new ArrayList<>();
         List<String> fileExtensions = Arrays.asList(
                 "txt", "csv", "conf", "cfg", "data", "docx", "edi", "edifact", "edf","log", "ini",
                 "md", "msg", "bat", "sh", "json", "rtf", "tsv", "xml", "html", "yaml"
@@ -36,6 +37,7 @@ public class UnzipProcessor implements Processor {
                 textFiles = false;
             }
             if (!entry.isDirectory()) {
+                unzippedCamelFileName.add(entry.getName());
                 unzipped.add(getZipContents(zipInputStream));
             }
             zipInputStream.closeEntry();
@@ -48,6 +50,7 @@ public class UnzipProcessor implements Processor {
                 unzippedText.add(new String(byteArray, StandardCharsets.UTF_8));
             }
             in.setBody(unzippedText);
+            in.setHeader("CamelFileName", unzippedCamelFileName);
         } else{
             in.setBody(unzipped);
         }
