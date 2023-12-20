@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1alpha1
 kind: Kamelet
 metadata:
-  name: setuuid-action
+  name: setoriginalbody-sink
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "setuuid action"
+    title: "setoriginalbody sink"
     description: |-
-      Set UUID as message header
+      Set body from header
     type: object
     properties:
       routeconfiguration_id:
@@ -18,12 +18,6 @@ spec:
           title: Path
           description: Path
           type: string
-          default: uuid
-      generator:
-          title: Generator
-          description: Type of UUID Generator
-          type: string
-          default: default
   dependencies:
     - "camel:kamelet"
   template:
@@ -32,8 +26,5 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setHeader:
-              name: "{{path}}"
-              constant: "${uuid({{generator}}}"
-          - to:
-              uri: "kamelet:sink"
+          - setBody:
+              simple: "${originalBody}"

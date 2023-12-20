@@ -1,0 +1,32 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setprettybody-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setprettyBody action"
+    description: |-
+      Converts the body to a String, and attempts to pretty print if JSon or XML, otherwise the body is returned as the String value.
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+          title: Path
+          description: Path
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setBody:
+              simple: "${prettyBody}"
+          - to:
+              uri: "kamelet:sink"

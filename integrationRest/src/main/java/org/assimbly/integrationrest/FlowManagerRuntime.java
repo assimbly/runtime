@@ -343,7 +343,6 @@ public class FlowManagerRuntime {
     public ResponseEntity<String> isFlowStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         try {
-            //integrationResource.init();
             integration = integrationRuntime.getIntegration();
 
             boolean started = integration.isFlowStarted(flowId);
@@ -400,7 +399,6 @@ public class FlowManagerRuntime {
     public ResponseEntity<String> getFlowUptime(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         try {
-            //integrationResource.init();
             integration = integrationRuntime.getIntegration();
 
             String uptime = integration.getFlowUptime(flowId);
@@ -419,7 +417,6 @@ public class FlowManagerRuntime {
     public ResponseEntity<String> getFlowLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         try {
-            //integrationResource.init();
             integration = integrationRuntime.getIntegration();
 
             String lastError = integration.getFlowLastError(flowId);

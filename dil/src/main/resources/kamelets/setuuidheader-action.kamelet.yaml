@@ -1,0 +1,39 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setuuid-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setuuid action"
+    description: |-
+      Set UUID as message header
+    type: object
+    properties:
+      routeconfiguration_id:
+        type: string
+        default: "0"
+      path:
+          title: Path
+          description: Path
+          type: string
+          default: uuid
+      generator:
+          title: Generator
+          description: Type of UUID Generator
+          type: string
+          default: default
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeconfiguration_id}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setHeader:
+              name: "{{path}}"
+              constant: "${uuid({{generator}})}"
+          - to:
+              uri: "kamelet:sink"

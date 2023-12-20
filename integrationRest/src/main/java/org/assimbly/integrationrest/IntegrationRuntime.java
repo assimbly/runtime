@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.integrationrest.event.FailureCollector;

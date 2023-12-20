@@ -16,7 +16,7 @@ import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty.JettyHttpComponent;
-import org.apache.camel.component.jetty11.JettyHttpComponent11;
+import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -48,7 +48,6 @@ import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
-import org.assimbly.dil.blocks.templates.Velocity;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
@@ -152,7 +151,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setThreadProfile(0,5,5000);
+		setThreadProfile(0,20,10000);
 
 		setCertificateStore(true);
 
@@ -229,7 +228,7 @@ public class CamelIntegration extends BaseIntegration {
 		context.addComponent("sync", new DirectComponent());
 		context.addComponent("async", new SedaComponent());
 
-		context.addComponent("jetty-nossl", new JettyHttpComponent11());
+		context.addComponent("jetty-nossl", new JettyHttpComponent12());
 
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 
@@ -269,7 +268,15 @@ public class CamelIntegration extends BaseIntegration {
 	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
 
 		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
-		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).keepAliveTime(10L);
+		builder
+				.poolSize(poolSize)
+				.maxPoolSize(maxPoolSize)
+				.maxQueueSize(maxQueueSize)
+				.keepAliveTime(10L);
+
+		//enable virtual threads
+		System.setProperty("camel.threads.virtual.enabled","true");
+
 		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
 
 	}
@@ -288,28 +295,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	//loads templates in the template package
 	public void setRouteTemplates() throws Exception {
-
-		// Load custom templates (Java DSL)
-
-		/*
-
-		// create scanner and disable default filters (that is the 'false' argument)
-		final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-		provider.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")));
-
-		// get matching classes defined in the package
-		final Set<org.springframework.beans.factory.config.BeanDefinition> classes = provider.findCandidateComponents("org.assimbly.dil.blocks.templates");
-
-		// this is how you can load the class type from BeanDefinition instance
-		for (BeanDefinition bean: classes) {
-			Class<?> clazz = Class.forName(bean.getBeanClassName());
-			Object template = clazz.getDeclaredConstructor().newInstance();
-			if(template instanceof RouteBuilder){
-				context.addRoutes((RouteBuilder) template);
-			}
-		}
-		 */
-
 
 		//load kamelets into Camel Context
 

@@ -33,7 +33,11 @@ public class SSLConfiguration {
 
 
 	public void setUseGlobalSslContextParameter(CamelContext context,String componentName) throws Exception {
-		((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
+		if(context.getComponent(componentName)!=null){
+			((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
+		}else{
+			log.warn("Can't set SSL for component " + componentName + ". Component is not loaded on the classpath");
+		}
 	}
 
 	public SSLContextParameters createSSLContextParameters(String keystorePath, String keystorePassword, String truststorePath, String truststorePassword) throws GeneralSecurityException, IOException {
