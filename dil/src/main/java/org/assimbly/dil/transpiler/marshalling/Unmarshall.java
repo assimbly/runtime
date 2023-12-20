@@ -310,9 +310,9 @@ public class Unmarshall {
 			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}else{
 			String scheme = StringUtils.substringBefore(baseUri,":");
-			if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
-				baseUri = "block:" + baseUri;
-			};
+			//if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
+			//	baseUri = "block:" + baseUri;
+			//};
 			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}
 	}

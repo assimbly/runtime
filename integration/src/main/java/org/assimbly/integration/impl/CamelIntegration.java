@@ -923,12 +923,14 @@ public class CamelIntegration extends BaseIntegration {
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
-					if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase()) && context.hasComponent(scheme.toLowerCase()) == null) {
-						log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
-						if(INetUtil.isHostAvailable("repo1.maven.org")){
-							log.info(resolveDependency(scheme));
-						}else{
-							log.error("Failed to resolve " + scheme + ". No available internet is found. Cannot reach http://repo1.maven.org/maven2/");
+					if(context.getComponent(scheme.toLowerCase()) == null) {
+						if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
+							log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
+							if(INetUtil.isHostAvailable("repo1.maven.org")){
+								log.info(resolveDependency(scheme));
+							}else{
+								log.error("Failed to resolve " + scheme + ". No available internet is found. Cannot reach http://repo1.maven.org/maven2/");
+							}
 						}
 					}
 				}

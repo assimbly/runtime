@@ -37,7 +37,6 @@ public class RouteTemplate {
     private String blockType;
     private Element parameter;
     private String transport;
-    private boolean predefinedStep;
     private String blockUri;
     private String baseUri;
     private String outList;
@@ -66,7 +65,7 @@ public class RouteTemplate {
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
             contentRouteDoc = new DocumentImpl();
             createContentRouter(links, stepXPath, type, flowId, stepId);
-        }else if(!predefinedStep && baseUri.startsWith("block")){
+        }else if(baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
         }else{
             createStep(optionProperties, links, stepXPath, type, flowId, stepId);
@@ -331,7 +330,6 @@ public class RouteTemplate {
         }else if(uri.startsWith("block")){
             String componentName = uri.split(":")[1];
             componentName = componentName.toLowerCase();
-            predefinedStep = DependencyUtil.PredefinedBlocks.hasBlock(componentName);
             templateId = componentName + "-" + type;
         }else{
             templateId = "generic-" + type;
