@@ -475,11 +475,8 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		Queue queue = activeBroker.locateQueue(new SimpleString(endpointName));
 
-		if (queue == null) {
-			return false;
-		}else{
-			return true;
-		}
+		return queue == null;
+
 	}
 
 	//Manage Messages
@@ -624,7 +621,7 @@ public class ActiveMQArtemis implements Broker {
 			Long countMessages = queueControl.countMessages();
 
 			if(countMessages > 10000){
-				throw new Exception("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
+				throw new RuntimeException("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
 			}else{
 				messages = queueControl.browse();
 			}

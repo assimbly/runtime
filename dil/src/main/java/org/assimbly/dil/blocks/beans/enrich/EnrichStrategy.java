@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 public class EnrichStrategy implements AggregationStrategy {
 
-    private AggregationStrategy enrichStrategy;
-
     @Override
     public Exchange aggregate(Exchange originalExchange, Exchange resourceExchange) {
 
@@ -22,6 +20,8 @@ public class EnrichStrategy implements AggregationStrategy {
         if (originalExchange != null && originalExchange.getProperty("Enrich-Type") != null) {
             enrichType = originalExchange.getProperty("Enrich-Type", String.class);
         }
+
+        AggregationStrategy enrichStrategy;
 
         switch(enrichType) {
             case "text/xml":

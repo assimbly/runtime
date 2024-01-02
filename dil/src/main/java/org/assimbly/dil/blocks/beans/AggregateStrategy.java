@@ -9,13 +9,18 @@ import org.slf4j.LoggerFactory;
 
 
 public class AggregateStrategy implements AggregationStrategy {
-    private AggregationStrategy aggregateStrategy;
+
     @Override
     public Exchange aggregate(Exchange firstExchange, Exchange newExchange) {
+
         String aggregateType = newExchange.getProperty("Aggregate-Type", String.class);
+
         if (firstExchange != null) {
             aggregateType = firstExchange.getProperty("Aggregate-Type", String.class);
         }
+
+        AggregationStrategy aggregateStrategy;
+
         switch(aggregateType) {
             case "xml":
             case "text/xml":
@@ -28,6 +33,8 @@ public class AggregateStrategy implements AggregationStrategy {
             default:
                 throw new UnsupportedOperationException("Unknown aggregateType");
         }
+
         return aggregateStrategy.aggregate(firstExchange, newExchange);
+
     }
 }
