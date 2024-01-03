@@ -30,9 +30,7 @@ public final class Transform {
 			
 	private static String camel2ToCamel3(String input, String flowId){
 
-        input = input.replaceAll("[\\r\\n\\t]+\\s*", "");
-
-		Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
 
         map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");
 		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
@@ -63,7 +61,6 @@ public final class Transform {
         map.put("google-drive:","googledrive:");
         map.put("univocity-csv","univocityCsv");
         map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile/>");
-        map.put("<unmarshal><custom ref=\"checkedZipFileDataFormat\"/></unmarshal>","<process ref=\"Unzip\"/>");
         map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
@@ -74,8 +71,17 @@ public final class Transform {
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 
-		return output;
+        output = replaceUnmarshalCheckedZipFileDataFormat(output);
+
+        return output;
 		
 	}
+
+    private static String replaceUnmarshalCheckedZipFileDataFormat(String xml) {
+        return xml.replaceAll(
+                "<unmarshal>([\\r\\n\\t\\s]*)<custom ref=\"checkedZipFileDataFormat\"\\/>([\\r\\n\\t\\s]*)<\\/unmarshal>",
+                "<process ref=\"Unzip\"/>"
+        );
+    }
 
 }
