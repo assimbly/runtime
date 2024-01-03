@@ -796,14 +796,15 @@ public interface Integration {
 	public String getFlowEventsLog(String flowId, Integer numberOfEntries) throws Exception;	
 	
 	/**
-	* Gets the details stats of a flow
-	*
-	* @param  flowId the id of the flow
-	* @param  mediaType (xml or json)
-	* @throws Exception if flow doesn't start
-	* @return returns number of messages
-	*/
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception;
+	 * Gets the details stats of a flow
+	 *
+	 * @param flowId    the id of the flow
+	 * @param mediaType (xml or json)
+	 * @param type
+	 * @return returns number of messages
+	 * @throws Exception if flow doesn't start
+	 */
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step

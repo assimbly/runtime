@@ -81,7 +81,7 @@ public class ErrorHandler {
 			.backOffMultiplier(backOffMultiplier)
 			.retriesExhaustedLogLevel(LoggingLevel.ERROR)
 			.retryAttemptedLogLevel(LoggingLevel.DEBUG)
-			.log("org.assimbly.dil.blocks.errorhandler." + flowId)
+			.log("org.assimbly.errorhandler." + flowId)
 			.logRetryStackTrace(false)
 			.logStackTrace(true)
 			.logHandled(true)

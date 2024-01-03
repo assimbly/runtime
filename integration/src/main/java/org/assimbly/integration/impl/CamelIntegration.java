@@ -22,9 +22,6 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.camel.component.velocity.VelocityComponent;
-import org.apache.camel.component.velocity.VelocityEndpoint;
-import org.apache.camel.component.velocity.VelocityEndpointConfigurer;
 import org.apache.camel.component.vm.VmComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
@@ -39,16 +36,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.runtime.VelocityEngineVersion;
-import org.apache.velocity.script.VelocityScriptEngine;
-import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
-import org.assimbly.dil.blocks.templates.Velocity;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
@@ -68,7 +60,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -81,7 +72,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -89,7 +79,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
@@ -1988,7 +1977,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception  {
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception  {
 
 		JSONObject json = new JSONObject();
 		JSONObject flow = new JSONObject();
@@ -2009,6 +1998,10 @@ public class CamelIntegration extends BaseIntegration {
 
 		for(Route r : routes){
 			String routeId = r.getId();
+
+			if (!filter.isEmpty() && routeId.contains(filter)) {
+				continue;
+			}
 
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
 			if(route != null){
@@ -2258,7 +2251,7 @@ public class CamelIntegration extends BaseIntegration {
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowstats = getFlowStats(flowId, fullStats,includeSteps,"application/json");
+			String flowstats = getFlowStats(flowId, fullStats,includeSteps,"", "application/json");
 			JSONObject flow = new JSONObject(flowstats);
 			flows.put(flow);
 		}
