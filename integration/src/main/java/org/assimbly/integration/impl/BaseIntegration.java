@@ -291,7 +291,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getMessages(String mediaType) throws Exception;
 
-	public abstract String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
+	public abstract String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
 	public abstract String getMetrics(String mediaType) throws Exception;
 

@@ -76,13 +76,16 @@ public class StatisticsRuntime {
             path = "/integration/{integrationId}/statsbyflowids",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getStatsByFlowIds(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String flowIds, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> getStatsByFlowIds(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String flowIds,
+            @RequestHeader(required=false,defaultValue="",value="filter") String filter, @PathVariable Long integrationId
+    ) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();
 
         try {
-            String stats = integration.getStatsByFlowIds(flowIds, mediaType);
+            String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/statsbyflowids",stats,plainResponse);
         } catch (Exception e) {

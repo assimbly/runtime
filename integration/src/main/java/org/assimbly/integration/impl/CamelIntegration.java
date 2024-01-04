@@ -2231,12 +2231,12 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception {
+	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
 
 		String[] values = flowIds.split(",");
 		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, true, false);
+		String result = getStatsFromList(flowSet, filter, true, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2247,20 +2247,22 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeSteps) throws Exception {
+		return getStatsFromList(flowIds, "", fullStats, includeSteps);
+	}
+
+	private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeSteps) throws Exception {
 
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowstats = getFlowStats(flowId, fullStats,includeSteps,"", "application/json");
-			JSONObject flow = new JSONObject(flowstats);
+			String flowStats = getFlowStats(flowId, fullStats, includeSteps, filter, "application/json");
+			JSONObject flow = new JSONObject(flowStats);
 			flows.put(flow);
 		}
 
 		String result = flows.toString();
 
-
 		return result;
-
 	}
 
 
