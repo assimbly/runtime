@@ -284,7 +284,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
+	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the metrics of an integration
