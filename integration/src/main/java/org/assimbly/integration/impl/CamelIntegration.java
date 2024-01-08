@@ -698,7 +698,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
+			String loadReport = configureAndStartFlow(flowId, stopTimeout, mediaType, configuration);
 
 			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
 				log.error(loadReport);
@@ -726,7 +726,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = setFlowId(fileName, oldConfiguration);
 
-		stopFlow(flowId);
+		stopFlow(flowId, stopTimeout);
 
 		fileInstall(path);
 
@@ -798,19 +798,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-			stopFlow(flowId);
+			stopFlow(flowId, stopTimeout);
 		}else{
 			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
 		}
 
-		/*
-		String pathAsString = path.toString();
-		String flowId = FilenameUtils.getBaseName(pathAsString);
-
-		log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-
-		stopFlow(flowId);
-		*/
 	}
 
 
@@ -982,7 +974,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = startFlow(props.get("id"));
+			flowStatus = startFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("started")) {
 				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -998,7 +990,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = restartFlow(props.get("id"));
+			flowStatus = restartFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1014,7 +1006,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = restartFlow(props.get("id"));
+			flowStatus = restartFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1046,7 +1038,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = stopFlow(props.get("id"));
+			flowStatus = stopFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to stop flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1055,25 +1047,25 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public String configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String configureAndStartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = startFlow(flowId);
+		String status = startFlow(flowId, timeout);
 		return status;
 	}
 
-	public String configureAndRestartFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String configureAndRestartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = restartFlow(flowId);
+		String status = restartFlow(flowId, timeout);
 		return status;
 	}
 
-	public String installFlow(String flowId, String mediaType, String configuration) throws Exception {
-		return configureAndStartFlow(flowId, mediaType, configuration);
+	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
+		return configureAndStartFlow(flowId, timeout, mediaType, configuration);
 	}
 
-	public String uninstallFlow(String flowId) throws Exception {
+	public String uninstallFlow(String flowId, int timeout) throws Exception {
 		removeFlow(flowId);
-		String status = stopFlow(flowId);
+		String status = stopFlow(flowId, timeout);
 		return status;
 
 	}
@@ -1115,19 +1107,19 @@ public class CamelIntegration extends BaseIntegration {
 
 		addFlow(props);
 
-		String status = startFlow(flowId);
+		String status = startFlow(flowId, stopTimeout);
 
 		return status;
 
 	}
 
 
-	public String startFlow(String id) {
+	public String startFlow(String id, int timeout) {
 
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			stopFlow(id);
+			stopFlow(id, timeout);
 		}
 
 		boolean addFlow = false;
@@ -1158,7 +1150,7 @@ public class CamelIntegration extends BaseIntegration {
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
-					stopFlow(id);
+					stopFlow(id, timeout);
 					loadReport = startReport;
 				}else{
 					finishFlowActionReport(id, "error",result,"error");
@@ -1184,7 +1176,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}catch (Exception e) {
 			if(context.isStarted()) {
-				stopFlow(id);
+				stopFlow(id, stopTimeout);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
 				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
@@ -1234,15 +1226,15 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String restartFlow(String id) {
+	public String restartFlow(String id, int timeout) {
 
 		try {
 
 			if(hasFlow(id)) {
-				stopFlow(id);
-				startFlow(id);
+				stopFlow(id, timeout);
+				startFlow(id, timeout);
 			}else {
-				startFlow(id);
+				startFlow(id, timeout);
 			}
 
 		}catch (Exception e) {
@@ -1255,7 +1247,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String stopFlow(String id) {
+	public String stopFlow(String id, int timeout) {
 
 		initFlowActionReport(id, "stop");
 
@@ -1266,7 +1258,7 @@ public class CamelIntegration extends BaseIntegration {
 			for (Route route : routeList) {
 				String routeId = route.getId();
 				log.info("Stopping step | flowid=" + route.getId());
-				routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
+				routeController.stopRoute(routeId, timeout, TimeUnit.SECONDS);
 				context.removeRoute(routeId);
 				if(route.getConfigurationId()!=null) {
 					removeRouteConfiguration(route.getConfigurationId());
@@ -1340,7 +1332,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}catch (Exception e) {
 			log.error("Pause flow failed. | flowid=" + id,e);
-			stopFlow(id); //Stop flow if one of the routes cannot be paused.
+			stopFlow(id, stopTimeout); //Stop flow if one of the routes cannot be paused.
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
 
@@ -1380,7 +1372,7 @@ public class CamelIntegration extends BaseIntegration {
 					else if (status.isStopped()){
 
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
-						startFlow(routeId);
+						startFlow(routeId, stopTimeout);
 						resumed = true;
 					}
 				}

@@ -564,7 +564,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String startFlow(String flowId) throws Exception;
+	public String startFlow(String flowId, int timeout) throws Exception;
 
 	/**
 	* Restarts a flow
@@ -573,7 +573,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String restartFlow(String flowId) throws Exception;
+	public String restartFlow(String flowId, int timeout) throws Exception;
 	
 	/**
 	* Stops a flow
@@ -582,7 +582,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String stopFlow(String flowId) throws Exception;
+	public String stopFlow(String flowId, int timeout) throws Exception;
 	
 	/**
 	* Resumes a flow if paused
@@ -623,7 +623,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String installFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)
@@ -632,7 +632,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId) throws Exception;
+	public String uninstallFlow(String flowId, int timeout) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory

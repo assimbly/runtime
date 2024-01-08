@@ -138,7 +138,7 @@ public class StatisticsRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=true,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> getFlowMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
