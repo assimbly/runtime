@@ -18,6 +18,7 @@ public class Aggregate extends RouteBuilder {
                  .from("{{in}}")
                      .routeConfigurationId("{{routeconfiguration_id}}")
                         .setProperty("Aggregate-Type").constant("{{aggregateType}}")
+                 .choice()
                         .aggregate(constant(true), new AggregateStrategy())
                             .completionSize("{{completionSize}}")
                          .to("{{out}}");
