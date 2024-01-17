@@ -215,7 +215,7 @@
                                             </xsl:choose>
                                         </xsl:attribute>
                                     </xsl:if>
-                                   <xsl:copy-of select="./*" copy-namespaces="no"/>
+                                   <xsl:copy-of select="./*" copy-namespaces="yes"/>
                                 </route>
                             </xsl:for-each>
                         </routes>

@@ -42,7 +42,7 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -50,7 +50,7 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            status = integration.startFlow(flowId);
+            status = integration.startFlow(flowId, timeout);
 
             if(mediaType.equals("application/xml")){
                 status = DocConverter.convertJsonToXml(status);
@@ -74,7 +74,7 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -82,7 +82,7 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            status = integration.stopFlow(flowId);
+            status = integration.stopFlow(flowId, timeout);
 
             if(mediaType.equals("application/xml")){
                 status = DocConverter.convertJsonToXml(status);
@@ -106,14 +106,14 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/restart",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
 
         plainResponse = true;
 
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.restartFlow(flowId);
+            status = integration.restartFlow(flowId, timeout);
 
             if(mediaType.equals("application/xml")){
                 status = DocConverter.convertJsonToXml(status);
@@ -222,7 +222,7 @@ public class FlowManagerRuntime {
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@RequestHeader(required=false,defaultValue="5",value="timeout") int timeout,  @PathVariable(value = "flowId") String flowId, @RequestBody String configuration) throws Exception {
 
         plainResponse = true;
 
@@ -231,7 +231,7 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            status = integration.installFlow(flowId, contentType, configuration);
+            status = integration.installFlow(flowId, timeout, contentType, configuration);
 
 
             if(mediaType.equals("application/xml")){
@@ -256,7 +256,7 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout,  @PathVariable(value = "flowId") String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -264,7 +264,7 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            status = integration.uninstallFlow(flowId);
+            status = integration.uninstallFlow(flowId, timeout);
 
             if(mediaType.equals("application/xml")){
                 status = DocConverter.convertJsonToXml(status);
@@ -483,7 +483,7 @@ public class FlowManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") Long time, @RequestBody List<String> ids) throws Exception {
+    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable(value = "flowId") Long time, @RequestBody List<String> ids) throws Exception {
 
         try {
 
@@ -518,7 +518,9 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("suspended")) {
-                                String report = integration.startFlow(flowId);
+
+                                String report = integration.startFlow(flowId, timeout);
+
                             }
                         }
 

@@ -22,9 +22,6 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
-import org.apache.camel.component.velocity.VelocityComponent;
-import org.apache.camel.component.velocity.VelocityEndpoint;
-import org.apache.camel.component.velocity.VelocityEndpointConfigurer;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
@@ -39,10 +36,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.runtime.VelocityEngineVersion;
-import org.apache.velocity.script.VelocityScriptEngine;
-import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
 import org.assimbly.dil.blocks.beans.UuidExtensionFunction;
@@ -67,7 +60,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -91,6 +83,7 @@ import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -255,8 +248,7 @@ public class CamelIntegration extends BaseIntegration {
 		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
 		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
-
-		//bindByName("zipFileDataFormat","org.assimbly.archive.zipFileDataFormat");
+		bindByName("zipFileDataFormat","org.assimbly.archive.ZipFileDataFormat");
 		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
@@ -694,7 +686,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			String loadReport = configureAndStartFlow(flowId, mediaType, configuration);
+			String loadReport = configureAndStartFlow(flowId, stopTimeout, mediaType, configuration);
 
 			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
 				log.error(loadReport);
@@ -722,7 +714,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String flowId = setFlowId(fileName, oldConfiguration);
 
-		stopFlow(flowId);
+		stopFlow(flowId, stopTimeout);
 
 		fileInstall(path);
 
@@ -794,19 +786,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-			stopFlow(flowId);
+			stopFlow(flowId, stopTimeout);
 		}else{
 			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
 		}
 
-		/*
-		String pathAsString = path.toString();
-		String flowId = FilenameUtils.getBaseName(pathAsString);
-
-		log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-
-		stopFlow(flowId);
-		*/
 	}
 
 
@@ -981,7 +965,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = startFlow(props.get("id"));
+			flowStatus = startFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("started")) {
 				return "failed to start flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -997,7 +981,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = restartFlow(props.get("id"));
+			flowStatus = restartFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1013,7 +997,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = restartFlow(props.get("id"));
+			flowStatus = restartFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to restart flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1045,7 +1029,7 @@ public class CamelIntegration extends BaseIntegration {
 		Iterator<TreeMap<String, String>> it = allProps.iterator();
 		while(it.hasNext()){
 			TreeMap<String, String> props = it.next();
-			flowStatus = stopFlow(props.get("id"));
+			flowStatus = stopFlow(props.get("id"), stopTimeout);
 			if(!flowStatus.equals("restarted")) {
 				return "failed to stop flow with id " + props.get("id") + ". Status is " + flowStatus;
 			}
@@ -1054,25 +1038,25 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public String configureAndStartFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String configureAndStartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = startFlow(flowId);
+		String status = startFlow(flowId, timeout);
 		return status;
 	}
 
-	public String configureAndRestartFlow(String flowId, String mediaType, String configuration) throws Exception {
+	public String configureAndRestartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = restartFlow(flowId);
+		String status = restartFlow(flowId, timeout);
 		return status;
 	}
 
-	public String installFlow(String flowId, String mediaType, String configuration) throws Exception {
-		return configureAndStartFlow(flowId, mediaType, configuration);
+	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
+		return configureAndStartFlow(flowId, timeout, mediaType, configuration);
 	}
 
-	public String uninstallFlow(String flowId) throws Exception {
+	public String uninstallFlow(String flowId, int timeout) throws Exception {
 		removeFlow(flowId);
-		String status = stopFlow(flowId);
+		String status = stopFlow(flowId, timeout);
 		return status;
 
 	}
@@ -1114,19 +1098,19 @@ public class CamelIntegration extends BaseIntegration {
 
 		addFlow(props);
 
-		String status = startFlow(flowId);
+		String status = startFlow(flowId, stopTimeout);
 
 		return status;
 
 	}
 
 
-	public String startFlow(String id) {
+	public String startFlow(String id, int timeout) {
 
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			stopFlow(id);
+			stopFlow(id, timeout);
 		}
 
 		boolean addFlow = false;
@@ -1157,7 +1141,7 @@ public class CamelIntegration extends BaseIntegration {
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
-					stopFlow(id);
+					stopFlow(id, timeout);
 					loadReport = startReport;
 				}else{
 					finishFlowActionReport(id, "error",result,"error");
@@ -1183,7 +1167,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}catch (Exception e) {
 			if(context.isStarted()) {
-				stopFlow(id);
+				stopFlow(id, stopTimeout);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
 				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
@@ -1233,15 +1217,15 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String restartFlow(String id) {
+	public String restartFlow(String id, int timeout) {
 
 		try {
 
 			if(hasFlow(id)) {
-				stopFlow(id);
-				startFlow(id);
+				stopFlow(id, timeout);
+				startFlow(id, timeout);
 			}else {
-				startFlow(id);
+				startFlow(id, timeout);
 			}
 
 		}catch (Exception e) {
@@ -1254,7 +1238,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String stopFlow(String id) {
+	public String stopFlow(String id, int timeout) {
 
 		initFlowActionReport(id, "stop");
 
@@ -1265,8 +1249,7 @@ public class CamelIntegration extends BaseIntegration {
 			for (Route route : routeList) {
 				String routeId = route.getId();
 				log.info("Stopping step | flowid=" + route.getId());
-				//routeController.stopRoute(routeId, stopTimeout, TimeUnit.SECONDS);
-				routeController.stopRoute(routeId);
+				routeController.stopRoute(routeId, timeout, TimeUnit.SECONDS);
 				context.removeRoute(routeId);
 				if(route.getConfigurationId()!=null) {
 					removeRouteConfiguration(route.getConfigurationId());
@@ -1340,7 +1323,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}catch (Exception e) {
 			log.error("Pause flow failed. | flowid=" + id,e);
-			stopFlow(id); //Stop flow if one of the routes cannot be paused.
+			stopFlow(id, stopTimeout); //Stop flow if one of the routes cannot be paused.
 			finishFlowActionReport(id, "error",e.getMessage(),"error");
 		}
 
@@ -1380,7 +1363,7 @@ public class CamelIntegration extends BaseIntegration {
 					else if (status.isStopped()){
 
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
-						startFlow(routeId);
+						startFlow(routeId, stopTimeout);
 						resumed = true;
 					}
 				}
@@ -1977,7 +1960,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception  {
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception  {
 
 		JSONObject json = new JSONObject();
 		JSONObject flow = new JSONObject();
@@ -1991,13 +1974,17 @@ public class CamelIntegration extends BaseIntegration {
 		long uptimeMillis = 0;
 		Date lastFailed = null;
 		Date lastCompleted = null;
-		String status = "Stopped";
+		String status = "stopped";
 		Boolean tracing = false;
 
 		List<Route> routes = getRoutesByFlowId(flowId);
 
 		for(Route r : routes){
 			String routeId = r.getId();
+
+			if (!filter.isEmpty() && routeId.contains(filter)) {
+				continue;
+			}
 
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
 			if(route != null){
@@ -2028,7 +2015,7 @@ public class CamelIntegration extends BaseIntegration {
 							lastCompleted = completed;
 						}
 					}
-					status = route.getState();
+					status = route.getState().toLowerCase();
 					tracing = route.getTracing();
 				}
 
@@ -2227,12 +2214,12 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception {
+	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
 
 		String[] values = flowIds.split(",");
 		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, true, false);
+		String result = getStatsFromList(flowSet, filter, true, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2243,20 +2230,22 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeSteps) throws Exception {
+		return getStatsFromList(flowIds, "", fullStats, includeSteps);
+	}
+
+	private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeSteps) throws Exception {
 
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowstats = getFlowStats(flowId, fullStats,includeSteps,"application/json");
-			JSONObject flow = new JSONObject(flowstats);
+			String flowStats = getFlowStats(flowId, fullStats, includeSteps, filter, "application/json");
+			JSONObject flow = new JSONObject(flowStats);
 			flows.put(flow);
 		}
 
 		String result = flows.toString();
 
-
 		return result;
-
 	}
 
 
@@ -2831,9 +2820,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions) {
+	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
 		ExpressionsValidator expressionValidator = new ExpressionsValidator();
-		return expressionValidator.validate(expressions);
+		return expressionValidator.validate(expressions, isPredicate);
 	}
 
 	@Override
