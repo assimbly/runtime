@@ -148,6 +148,7 @@ public class ValidationRuntime {
     public ResponseEntity<String> validateExpression(
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
+            @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate,
             @PathVariable Long integrationId, @RequestBody String body
     ) throws Exception {
 
@@ -161,7 +162,7 @@ public class ValidationRuntime {
                 expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<Expression>>(){});
             }
 
-            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList);
+            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList, isPredicate);
 
             if(expressionResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();

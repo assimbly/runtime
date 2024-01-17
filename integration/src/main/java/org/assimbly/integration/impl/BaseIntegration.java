@@ -449,7 +449,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract ValidationErrorMessage validateUrl(String url);
 
-	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
+	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
 
 	public abstract ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 

@@ -961,7 +961,7 @@ public interface Integration {
 	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
+	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
 
 	/**
 	 * Validates a ftp expression
