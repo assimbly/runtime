@@ -107,7 +107,7 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.startsWith("error") && prop.endsWith("uri")){
 				errorUri = props.get(prop);
 				id = StringUtils.substringBetween(prop,"error.",".uri");
-				if(!props.containsKey("error." + id + ".route") && !props.containsKey("error." + id + ".routeconfiguration")){
+				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
 			}
@@ -116,7 +116,7 @@ public class FlowLoader extends RouteBuilder {
 		if(useErrorHandler) {
 			setErrorHandler(id, errorUri);
 		}else{
-			System.out.println("Set error handler is true");
+			log.warn("ErrorHandler is not set");
 		}
 
 	}
