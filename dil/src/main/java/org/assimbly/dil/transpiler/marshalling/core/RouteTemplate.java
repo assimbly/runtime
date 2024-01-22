@@ -1,5 +1,7 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
+import org.apache.camel.kamelets.catalog.KameletsCatalog;
+import org.apache.camel.v1.Kamelet;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
@@ -43,6 +45,7 @@ public class RouteTemplate {
     private String outRulesList;
     private String updatedRouteConfigurationId;
 
+    private KameletsCatalog kameletCatalog = new KameletsCatalog();
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -327,15 +330,28 @@ public class RouteTemplate {
 
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
-        }else if(uri.startsWith("block")){
-            String componentName = uri.split(":")[1];
-            componentName = componentName.toLowerCase();
-            templateId = componentName + "-" + type;
         }else{
-            templateId = "generic-" + type;
+            String[] uriSplitted = uri.split(":");
+            String templateName = uriSplitted[0] + "-" + type;
+
+            if(templateExists(templateName)){
+                templateId = templateName;
+            }else if(uri.startsWith("block")){
+                String componentName = uriSplitted[1];
+                componentName = componentName.toLowerCase();
+                templateId = componentName + "-" + type;
+            }else{
+                templateId = "generic-" + type;
+            }
+
         }
 
     }
+
+    private boolean templateExists(String templateName){
+        return kameletCatalog.getKameletsName().contains(templateName);
+    }
+
 
     private void createTemplatedRoutes(){
         templatedRoutes = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoutes");

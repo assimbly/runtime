@@ -473,9 +473,10 @@ public class ActiveMQArtemis implements Broker {
 	private boolean endpointExist(String endpointName) {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
 		Queue queue = activeBroker.locateQueue(new SimpleString(endpointName));
 
-		return queue == null;
+		return queue != null;
 
 	}
 
