@@ -1972,7 +1972,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception  {
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception  {
 
 		JSONObject json = new JSONObject();
 		JSONObject flow = new JSONObject();
@@ -2048,26 +2048,45 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
+		Date x = null;
+		String y = null;
+
 		flow.put("id",flowId);
 		flow.put("total",totalMessages);
 		flow.put("completed",completedMessages);
 		flow.put("failed",failedMessages);
 		flow.put("pending",pendingMessages);
+
 		if(fullStats){
 			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
 			flow.put("status",status);
 			flow.put("tracing",tracing);
-			flow.put("lastFailed",lastFailed);
-			flow.put("lastCompleted",lastCompleted);
+			flow.put("lastFailed",lastFailed != null ? lastFailed : "");
+			flow.put("lastCompleted",lastCompleted != null ? lastCompleted : "");
 		}
+
+		if(includeMetaData){
+			TreeMap<String, String> flowProps = getFlowConfiguration(flowId);
+			if(flowProps!=null) {
+				for (var flowProp : flowProps.entrySet()) {
+					if (flowProp.getKey().startsWith("flow") && !flowProp.getKey().endsWith("id")) {
+						String key = StringUtils.substringAfter(flowProp.getKey(), "flow.");
+						flow.put(key, flowProp.getValue());
+					}
+				}
+			}
+
+		}
+
 		if(includeSteps){
 			flow.put("steps",steps);
 		}
 		json.put("flow",flow);
 
 		String flowStats = json.toString(4);
+
 		if(mediaType.contains("xml")) {
 			flowStats = DocConverter.convertJsonToXml(flowStats);
 		}
@@ -2192,7 +2211,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
-		String result = getStatsFromList(flowIds, true, false);
+		String result = getStatsFromList(flowIds, true, false, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2216,7 +2235,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
-		String result = getStatsFromList(flowIds, false, false);
+		String result = getStatsFromList(flowIds, false, false, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2231,7 +2250,7 @@ public class CamelIntegration extends BaseIntegration {
 		String[] values = flowIds.split(",");
 		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, filter, true, false);
+		String result = getStatsFromList(flowSet, filter, true, false,false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2241,16 +2260,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeSteps) throws Exception {
-		return getStatsFromList(flowIds, "", fullStats, includeSteps);
+	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
+		return getStatsFromList(flowIds, "", fullStats, includeMetaData, includeSteps);
 	}
 
-	private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeSteps) throws Exception {
+	private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
 
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowStats = getFlowStats(flowId, fullStats, includeSteps, filter, "application/json");
+			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, "application/json");
 			JSONObject flow = new JSONObject(flowStats);
 			flows.put(flow);
 		}

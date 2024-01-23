@@ -800,11 +800,14 @@ public interface Integration {
 	 *
 	 * @param flowId    the id of the flow
 	 * @param mediaType (xml or json)
-	 * @param type
+	 * @param fullStats (include additional fields)
+	 * @param includeMetaData (includes information about the flow)
+	 * @param includeSteps (include stats for every step)
+	 * @param filter
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception;
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
