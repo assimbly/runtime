@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
+import com.jcraft.jsch.JSch;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import org.apache.camel.*;
@@ -150,6 +151,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setCertificateStore(true);
 
+		enableSSHRSAOnJsch();
+
 		setDebugging(false);
 
 		setSuppressLoggingOnTimeout(true);
@@ -197,6 +200,17 @@ public class CamelIntegration extends BaseIntegration {
 	public void setCertificateStore(boolean certificateStore) throws Exception {
 		if(certificateStore){
 			setSSLContext();
+		}
+	}
+
+	public void enableSSHRSAOnJsch() throws Exception {
+		String serverHostKey = JSch.getConfig("server_host_key");
+		String pubkeyAcceptedAlgorithms = JSch.getConfig("PubkeyAcceptedAlgorithms");
+		if(!serverHostKey.endsWith(",ssh-rsa") && !serverHostKey.contains(",ssh-rsa,")) {
+			JSch.setConfig("server_host_key", JSch.getConfig("server_host_key") + ",ssh-rsa");
+		}
+		if(!pubkeyAcceptedAlgorithms.endsWith(",ssh-rsa") && !pubkeyAcceptedAlgorithms.contains(",ssh-rsa,")) {
+			JSch.setConfig("PubkeyAcceptedAlgorithms", JSch.getConfig("PubkeyAcceptedAlgorithms") + ",ssh-rsa");
 		}
 	}
 
