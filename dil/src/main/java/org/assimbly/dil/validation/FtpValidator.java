@@ -8,6 +8,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.assimbly.dil.validation.beans.FtpSettings;
+import org.assimbly.dil.validation.jsch.JschConfig;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.io.BufferedWriter;
@@ -39,6 +40,7 @@ public class FtpValidator {
     private Session setupDefaultSession(JSch jsch, String userName, String host, int port) throws JSchException {
         Session session = jsch.getSession(userName, host, port);
         session.setConfig("StrictHostKeyChecking", "no");
+        JschConfig.enableExtraConfigOnJsch(jsch);
 
         return session;
     }
