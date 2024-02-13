@@ -187,8 +187,8 @@ public class CamelIntegration extends BaseIntegration {
 		context.setStreamCaching(streamCaching);
 		context.getStreamCachingStrategy().setSpoolEnabled(true);
 		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
-		context.getStreamCachingStrategy().setSpoolThreshold(64 * 1024);
-		context.getStreamCachingStrategy().setBufferSize(16 * 1024);
+		context.getStreamCachingStrategy().setSpoolThreshold(256 * 1024);
+		context.getStreamCachingStrategy().setBufferSize(32 * 1024);
 	}
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {

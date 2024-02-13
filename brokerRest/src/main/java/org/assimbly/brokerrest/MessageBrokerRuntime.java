@@ -168,7 +168,7 @@ public class MessageBrokerRuntime {
 
 
     /**
-     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId : remove a message on a endpoint by Messageid.
+     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId} : remove a message on a endpoint by Messageid.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue or topic
@@ -178,7 +178,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{endpointName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "endpointName") String endpointName, @PathVariable String messageId)  throws Exception {
+    public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "endpointName") String endpointName, @PathVariable(value = "messageId") String messageId)  throws Exception {
 
         log.debug("REST request to remove messages for queue : {}", endpointName);
 
@@ -229,7 +229,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object moveMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "endpointName") String sourceQueueName, @PathVariable(value = "targetQueueName") String targetQueueName, @PathVariable(value = "messageId") String messageId)  throws Exception {
+    public Object moveMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "brokerType") String brokerType, @PathVariable(value = "sourceQueueName") String sourceQueueName, @PathVariable(value = "targetQueueName") String targetQueueName, @PathVariable(value = "messageId") String messageId)  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
