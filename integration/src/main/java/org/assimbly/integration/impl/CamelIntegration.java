@@ -1280,15 +1280,13 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void stopRoute(String routeId, int timeout) throws Exception{
-		TimeUnit timeUnit = TimeUnit.SECONDS;
-		if(timeout==0) {
-			// camel doesn't accept 0 seconds
-			// 1 milliseconds is nearly 0 seconds
-			timeUnit = TimeUnit.MILLISECONDS;
-			timeout = 1;
-		}
-		routeController.stopRoute(routeId, timeout, timeUnit);
-		return;
+		// camel doesn't accept 0 seconds
+		// 1 milliseconds is nearly 0 seconds
+		routeController.stopRoute(
+				routeId,
+				(timeout == 0 ? 1 : timeout),
+				(timeout == 0 ? TimeUnit.MILLISECONDS : TimeUnit.SECONDS)
+		);
 	}
 
 	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
