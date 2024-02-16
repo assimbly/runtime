@@ -829,7 +829,7 @@ public class CamelIntegration extends BaseIntegration {
 		super.getFlowConfigurations().clear();
 		if (context != null){
 			for (Route route : context.getRoutes()) {
-				routeController.stopRoute(route.getId(), stopTimeout, TimeUnit.SECONDS);
+				stopRoute(route.getId(), stopTimeout);
 				context.removeRoute(route.getId());
 			}
 
@@ -1261,7 +1261,7 @@ public class CamelIntegration extends BaseIntegration {
 			for (Route route : routeList) {
 				String routeId = route.getId();
 				log.info("Stopping step | flowid=" + route.getId());
-				routeController.stopRoute(routeId, timeout, TimeUnit.SECONDS);
+				stopRoute(routeId, timeout);
 				context.removeRoute(routeId);
 				if(route.getConfigurationId()!=null) {
 					removeRouteConfiguration(route.getConfigurationId());
@@ -1277,6 +1277,18 @@ public class CamelIntegration extends BaseIntegration {
 
 		return loadReport;
 
+	}
+
+	private void stopRoute(String routeId, int timeout) throws Exception{
+		TimeUnit timeUnit = TimeUnit.SECONDS;
+		if(timeout==0) {
+			// camel doesn't accept 0 seconds
+			// 1 milliseconds is nearly 0 seconds
+			timeUnit = TimeUnit.MILLISECONDS;
+			timeout = 1;
+		}
+		routeController.stopRoute(routeId, timeout, timeUnit);
+		return;
 	}
 
 	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
