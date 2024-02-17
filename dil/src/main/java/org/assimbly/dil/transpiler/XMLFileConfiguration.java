@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -27,6 +28,7 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
@@ -117,7 +119,7 @@ public class XMLFileConfiguration {
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		IntegrationUtil.printTreemap(properties);
+		//IntegrationUtil.printTreemap(properties);
 
 		return properties;
 

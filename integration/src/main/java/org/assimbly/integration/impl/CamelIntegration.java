@@ -35,6 +35,7 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.AggregateStrategy;
 import org.assimbly.dil.blocks.beans.CustomHttpBinding;
@@ -95,7 +96,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private CamelContext context;
 	private boolean started;
-	private final static int stopTimeout = 5;
+	private final static int stopTimeout = 1;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -701,7 +702,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			String loadReport = configureAndStartFlow(flowId, stopTimeout, mediaType, configuration);
+			String loadReport = installFlow(flowId, stopTimeout, mediaType, configuration);
 
 			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
 				log.error(loadReport);
@@ -1050,27 +1051,18 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public String configureAndStartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
-		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = startFlow(flowId, timeout);
-		return status;
-	}
-
 	public String configureAndRestartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
-		String status = restartFlow(flowId, timeout);
-		return status;
+		return restartFlow(flowId, timeout);
 	}
 
 	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
-		return configureAndStartFlow(flowId, timeout, mediaType, configuration);
+		super.setFlowConfiguration(flowId, mediaType, configuration);
+		return startFlow(flowId, timeout);
 	}
 
 	public String uninstallFlow(String flowId, int timeout) throws Exception {
-		removeFlow(flowId);
-		String status = stopFlow(flowId, timeout);
-		return status;
-
+		return stopFlow(flowId, timeout);
 	}
 
 	public String fileInstallFlow(String flowId, String configuration) throws Exception {
@@ -1115,7 +1107,6 @@ public class CamelIntegration extends BaseIntegration {
 		return status;
 
 	}
-
 
 	public String startFlow(String id, int timeout) {
 
@@ -1173,6 +1164,7 @@ public class CamelIntegration extends BaseIntegration {
 				}else{
 					finishFlowActionReport(id, "error","Failed starting flow","error");
 				}
+
 			}else if(result.equals("started")) {
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
@@ -1259,13 +1251,17 @@ public class CamelIntegration extends BaseIntegration {
 			List<Route> routeList = getRoutesByFlowId(id);
 
 			for (Route route : routeList) {
+
 				String routeId = route.getId();
-				log.info("Stopping step | flowid=" + route.getId());
-				routeController.stopRoute(routeId, timeout, TimeUnit.SECONDS);
-				context.removeRoute(routeId);
+				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
+
+				managedRoute.stop(500L, true);
+				managedRoute.remove();
+
 				if(route.getConfigurationId()!=null) {
 					removeRouteConfiguration(route.getConfigurationId());
 				}
+
 			}
 
 			finishFlowActionReport(id, "stop","Stopped flow successfully","info");

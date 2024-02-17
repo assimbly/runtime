@@ -1,5 +1,6 @@
 package org.assimbly.dil.transpiler.marshalling;
 
+import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
@@ -13,72 +14,36 @@ import org.w3c.dom.Document;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-//This class unmarshalls from a XML file to a Java treemap object
-//Functionally a DIL (Data Integration Language) file is converted to an Assimbly runtime configuration
+// This class unmarshalls an XML file into a Java treemap object
+// The XML file must be in DIL (Data Integration Language) format
 public class Unmarshall {
 
+	private Document doc;
 	private TreeMap<String, String> properties;
 	private XMLConfiguration conf;
-
-	Document doc;
-
-	private String integrationXPath;
-	private String stepXPath;
-	private String blocksXPath;
-
-	private String baseUri;
-	private String uri;
-	private String options;
-	private String type;
-	private List<String> optionProperties;
-	private String[] links;
-
 	private String flowId;
-	private String flowName;
-	private String flowType;
-	private String flowVersion;
 	private String flowDependencies;
-	private String flowMaximumRedeliveries;
-	private String flowRedeliveryDelay;
-	private String flowLogLevel;
-	private String flowParallelProcessing;
-	private String stepId;
-
 	CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
+	XPathFactory xf = new XPathFactoryImpl();
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
-		//create a Treemap for the configuration
-		properties = new TreeMap<String, String>();
-
-		//get the XML as document
+		this.flowId = flowId;
 		doc = configuration.getDocument();
 		conf = configuration;
-		this.flowId = flowId;
+		properties = new TreeMap<String, String>();
 
 		setFlows();
 
 		setSteps();
 
-		setFlowType();
-
 		return properties;
 
 	}
 
-	private void setFlows() throws Exception{
-
-		setFlowDefaults();
-
-		String flowSelector = setFlowSelector();
-
-		setFlowProperties(flowSelector);
-
-	}
-
-	private String setFlowSelector() throws Exception{
+	private String getFlowSelector() throws Exception{
 
 		String selector = "1";
 
@@ -105,47 +70,15 @@ public class Unmarshall {
 
 	}
 
-	//set up defaults settings for a flow if values are null or empty
-	public void setFlowDefaults(){
+	public void setFlows() throws Exception {
 
-		if(flowId == null || flowId.isEmpty()){
-			flowId = "flow" + System.currentTimeMillis();
-		}
+		String flowSelector = getFlowSelector();
+		String flowName = evaluateXpath("//flows/flow[" + flowSelector + "]/name");
+		String flowType = evaluateXpath("//flows/flow[" + flowSelector + "]/type");
+		String flowVersion = evaluateXpath("//flows/flow[" + flowSelector + "]/version");
+		String flowLogLevel = evaluateXpath("//flows/flow[" + flowSelector + "]/options/logLevel");
 
-		if(flowType == null || flowType.isEmpty()){
-			flowType = "default";
-		}
-
-		if(flowMaximumRedeliveries == null || flowMaximumRedeliveries.isEmpty()){
-			flowMaximumRedeliveries = "false";
-		}
-
-		if(flowRedeliveryDelay == null || flowRedeliveryDelay.isEmpty()){
-			flowRedeliveryDelay = "false";
-		}
-
-		if(flowLogLevel == null || flowLogLevel.isEmpty()){
-			flowLogLevel = "OFF";
-		}
-
-		if(flowParallelProcessing == null || flowParallelProcessing.isEmpty()){
-			flowParallelProcessing = "false";
-		}
-
-	}
-
-	public void setFlowProperties(String flowSelector) throws Exception {
-
-		flowName = evaluateXpath("//flows/flow[" + flowSelector + "]/name");
-		flowType = evaluateXpath("//flows/flow[" + flowSelector + "]/type");
-		flowVersion = evaluateXpath("//flows/flow[" + flowSelector + "]/version");
-
-		flowMaximumRedeliveries = evaluateXpath("//flows/flow[" + flowSelector + "]/options/maximumRedeliveries");
-		flowRedeliveryDelay = evaluateXpath("//flows/flow[" + flowSelector + "]/options/redeliveryDelay");
-		flowLogLevel = evaluateXpath("//flows/flow[" + flowSelector + "]/options/logLevel");
-		flowParallelProcessing = evaluateXpath("//flows/flow[" + flowSelector + "]/options/parallelProcessing");
-
-		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
+		String integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
 
 		String[] integrationProporties = conf.getStringArray(integrationXPath);
 
@@ -155,15 +88,9 @@ public class Unmarshall {
 			}
 		}
 
-		integrationXPath = "integrations/integration/flows/flow[" + flowSelector + "]";
-
 		String environment = evaluateXpath("//integrations/integration[1]/options/environment");
 
-		String frontend = evaluateXpath("//integrations/integration[1]/options/frontend");
-
-		String dependenciesXpath = "integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency";
-
-		String[] dependencies = conf.getStringArray(dependenciesXpath);
+		String[] dependencies = conf.getStringArray("integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency");
 
 		for(String dependency : dependencies){
 			if(flowDependencies==null){
@@ -175,198 +102,56 @@ public class Unmarshall {
 
 		properties.put("id",flowId);
 		properties.put("environment",environment);
-		properties.put("frontend",frontend);
+
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
 		properties.put("flow.version",flowVersion);
-
 		properties.put("flow.dependencies",flowDependencies);
-
-		properties.put("flow.maximumRedeliveries",flowMaximumRedeliveries);
-		properties.put("flow.redeliveryDelay",flowRedeliveryDelay);
 		properties.put("flow.logLevel",flowLogLevel);
-		properties.put("flow.parallelProcessing",flowParallelProcessing);
 
-	}
-
-	private void setFlowType(){
-		Set<String> fromUriSet = properties.keySet().stream().filter(s -> s.startsWith("from.") && s.endsWith(".uri")).collect(Collectors.toSet());
-
-		if(flowType.isEmpty() && !fromUriSet.isEmpty()){
-			properties.put("flow.type","default");
-		}else if (flowType.isEmpty()){
-			properties.put("flow.type", "none");
-		}
 	}
 
 	private void setSteps() throws Exception {
 
-		String stepsXpath = "//flows/flow[id='" + flowId + "']/steps/step/id";
+		String[] steps = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step/id");
 
-		String[] steps = conf.getStringArray(stepsXpath);
+		//set all steps in parallel
+		IntStream.range(1, steps.length)
+				.parallel()
+				.forEach(index -> {
+					try {
 
-		int index = 1;
+						String stepId = evaluateXpath2("/dil/integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/id");
+						String type = evaluateXpath2("/dil/integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/type");
 
-		for(String step : steps){
+						setUri(index, stepId, type);
+						setBlocks(index, stepId, type);
 
-			stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
-
-			setStepProperties(index);
-
-			setStepBlocks();
-
-			index++;
-		}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
 	}
 
-	private void setStepProperties(int index) throws XPathExpressionException, ConfigurationException {
+	private void setUri(int index, String stepId, String type) throws Exception {
 
-		stepId = conf.getString(stepXPath + "id");
-		type = conf.getString(stepXPath + "type");
+		String baseUri = evaluateXpath2("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		String uri = baseUri;
+		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
+		String options = getOptions(optionProperties);
 
-		optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
-		options = createOptions(optionProperties);
-
-		baseUri = createBaseUri(index);
-		uri = createUri(baseUri);
-
-		links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
+		if (options != null && !options.isEmpty()) {
+			uri = baseUri + "?" + options;
+		}
 
 		if(uri != null){
 			properties.put(type + "." + stepId + ".uri", uri);
 		}
-
 	}
 
-	private void setStepBlocks() throws Exception {
+	private String getOptions(List<String> optionProperties){
 
-		blocksXPath = stepXPath + "blocks/block/";
-
-		setMessage();
-
-		setConnection();
-
-		setRoute();
-
-		setRouteConfiguration();
-
-		setPropertiesByType(type);
-
-	}
-
-	public void setPropertiesByType(String type) throws Exception {
-
-		switch (type) {
-			case "source":
-			case "action":
-			case "router":
-			case "sink":
-			case "message":
-			case "api":
-			case "script":
-				setRouteTemplate();
-				break;
-			case "response":
-				setResponse();
-				break;
-			case "to":
-				setTo();
-				break;
-		}
-
-	}
-
-	private void setMessage() throws ConfigurationException {
-		String messageId = conf.getString(blocksXPath + "options/message_id");
-
-		if(messageId != null)
-			properties =  new Message(properties, conf).setHeader(type, stepId, messageId);
-	}
-
-	private void setConnection() throws ConfigurationException {
-		String connectionId = conf.getString(blocksXPath + "options/connection_id");
-
-		if(connectionId != null)
-			properties =  new Connection(properties, conf).setConnection(type, stepId, connectionId);
-
-	}
-
-	private void setRoute() throws Exception {
-		String routeId = conf.getString(blocksXPath + "options/route_id");
-
-		if(routeId != null)
-			properties =  new Route(properties, conf).setRoute(type, flowId, stepId, routeId);
-	}
-
-	private void setRouteConfiguration() throws Exception {
-		String routeConfigurationId = conf.getString(blocksXPath + "options/routeconfiguration_id");
-
-		if(routeConfigurationId != null)
-			properties =  new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeConfigurationId);
-	}
-
-	private void setRouteTemplate() throws Exception {
-		if(baseUri.startsWith("blocks") || baseUri.startsWith("component")){
-			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}else{
-			String scheme = StringUtils.substringBefore(baseUri,":");
-			if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
-				baseUri = "block:" + baseUri;
-			};
-			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}
-	}
-	private void setResponse(){
-		String responseId = conf.getString(blocksXPath + "options/response_id");
-		if(responseId != null) {
-			properties.put(type + "." + stepId + ".response.id", responseId);
-		}
-	}
-
-	private void setTo(){
-		String offrampUri = "";
-
-		if(stepId != null){
-			if(offrampUri.isEmpty()) {
-				offrampUri = "direct:flow=" + flowId + "step=" + stepId;
-			}else {
-				offrampUri = offrampUri + ",direct:flow=" + flowId + "step=" + stepId;
-			}
-		}
-
-		String responseId = conf.getString(blocksXPath + "options/response_id");
-
-		if(responseId != null) {
-			properties.put(type + "." + stepId + ".response.id", responseId);
-		}
-		properties.put("offramp.uri.list", offrampUri);
-	}
-
-	private String createBaseUri(int index) throws XPathExpressionException {
-
-		XPath xpath = XPathFactory.newInstance().newXPath();
-
-		XPathExpression expr = xpath.compile("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
-		baseUri = expr.evaluate(doc);
-
-		return baseUri;
-
-	}
-
-	private String createUri(String baseUri) {
-
-		if (options != null && !options.isEmpty()) {
-			uri = baseUri + "?" + options;
-		} else {
-			uri = baseUri;
-		}
-
-		return uri;
-	}
-
-	private String createOptions(List<String> optionProperties){
-
-		options = "";
+		String options = "";
 
 		for (String optionProperty : optionProperties) {
 			String name = optionProperty.split("options.")[1];
@@ -382,10 +167,61 @@ public class Unmarshall {
 		return options;
 	}
 
-	private String evaluateXpath(String xpath) throws TransformerException {
+
+	private void setBlocks(int index, String stepId, String type) throws Exception {
+
+		String blocksXPath = "/dil/integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/blocks/block/";
+		List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
+
+		String messageId = evaluateXpath2(blocksXPath + "options/message_id");
+		String connectionId = evaluateXpath2(blocksXPath + "options/connection_id");
+		String routeId = evaluateXpath2(blocksXPath + "options/route_id");
+		String routeConfigurationId = evaluateXpath2(blocksXPath + "options/routeconfiguration_id");
+
+		if(messageId != null  && !messageId.isEmpty())
+			properties =  new Message(properties, conf).setHeader(type, stepId, messageId);
+
+		if(connectionId != null && !connectionId.isEmpty())
+			properties =  new Connection(properties, conf).setConnection(type, stepId, connectionId);
+
+		if(routeId != null && !routeId.isEmpty())
+			properties =  new Route(properties, conf, doc).setRoute(type, flowId, stepId, routeId);
+
+		if(routeConfigurationId != null  && !routeConfigurationId.isEmpty())
+			properties =  new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeConfigurationId);
+
+		if(routeTemplateList.contains(type))
+			setRouteTemplate(index, stepId, type);
+	}
+
+	private void setRouteTemplate(int index, String stepId, String type) throws Exception {
+
+		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
+		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
+		String baseUri = evaluateXpath2("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
+		String options = getOptions(optionProperties);
+
+		if(baseUri.startsWith("blocks") || baseUri.startsWith("component")){
+			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+		}else{
+			String scheme = StringUtils.substringBefore(baseUri,":");
+			if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
+				baseUri = "block:" + baseUri;
+			};
+			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+		}
+
+	}
+
+	private String evaluateXpath(String xpath) throws TransformerException, XPathExpressionException {
 		XObject xObject = cachedXPathAPI.eval(doc, xpath);
 		return xObject.xstr(cachedXPathAPI.getXPathContext()).toString();
 	}
 
+	private String evaluateXpath2(String xpath) throws TransformerException, XPathExpressionException {
+		XPathExpression xp = xf.newXPath().compile(xpath);
+		return xp.evaluate(doc);
+	}
 
 }

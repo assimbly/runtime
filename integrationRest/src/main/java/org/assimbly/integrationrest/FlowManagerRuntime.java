@@ -292,7 +292,7 @@ public class FlowManagerRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="1",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 

@@ -1,5 +1,6 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
+import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
@@ -7,19 +8,28 @@ import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.util.TreeMap;
 
 public class Route {
 
     final static Logger log = LoggerFactory.getLogger(Route.class);
+    private final Document doc;
     private TreeMap<String, String> properties;
     private XMLConfiguration conf;
+    XPathFactory xf = new XPathFactoryImpl();
 
-    public Route(TreeMap<String, String> properties, XMLConfiguration conf) {
+    public Route(TreeMap<String, String> properties, XMLConfiguration conf, Document doc) {
         this.properties = properties;
         this.conf = conf;
+        this.doc = doc;
     }
 
     public TreeMap<String, String> setRoute(String type, String flowId, String stepId, String routeId) throws Exception {
@@ -36,7 +46,9 @@ public class Route {
 
     private String createRoute(String flowId, String routeId) throws Exception {
 
-        Node node = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
+       //Node node = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
+
+        Node node = evaluateNodeXpath("/dil/core/routes/route[@id='" + routeId + "']");
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
@@ -58,7 +70,8 @@ public class Route {
 
             String ref = StringUtils.substringBetween(route, "<customDataFormat ref=\"", "\"/>");
 
-            Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
+            //Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
+            Node node = evaluateNodeXpath("/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
 
             dataFormatAsString = DocConverter.convertNodeToString(node);
             if(dataFormatAsString!=null) {
@@ -76,5 +89,11 @@ public class Route {
         return route;
 
     }
+
+    private Node evaluateNodeXpath(String xpath) throws TransformerException, XPathExpressionException {
+        XPathExpression xp = xf.newXPath().compile(xpath);
+        return (Node) xp.evaluate(doc, XPathConstants.NODE);
+    }
+
 
 }
