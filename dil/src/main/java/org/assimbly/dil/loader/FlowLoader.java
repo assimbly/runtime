@@ -1,17 +1,11 @@
 package org.assimbly.dil.loader;
 
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
-import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
-import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
