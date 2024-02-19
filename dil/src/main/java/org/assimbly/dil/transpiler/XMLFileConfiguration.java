@@ -31,7 +31,6 @@ import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -118,7 +117,7 @@ public class XMLFileConfiguration {
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		IntegrationUtil.printTreemap(properties);
+		//IntegrationUtil.printTreemap(properties);
 
 		return properties;
 

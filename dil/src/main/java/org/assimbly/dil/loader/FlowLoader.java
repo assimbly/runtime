@@ -1,6 +1,7 @@
 package org.assimbly.dil.loader;
 
 import java.util.TreeMap;
+
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
 import org.apache.camel.spi.RoutesLoader;
@@ -49,6 +50,7 @@ public class FlowLoader extends RouteBuilder {
 		load();
 
 		finish();
+
 	}
 
 	private void init() {
@@ -57,6 +59,7 @@ public class FlowLoader extends RouteBuilder {
 		flowName = props.get("flow.name");
 		flowVersion = props.get("flow.version");
 		flowEnvironment = props.get("environment");
+		flowEvent = "start";
 
 		if(flowLoaderReport==null){
 		  flowLoaderReport = new FlowLoaderReport();
@@ -172,31 +175,29 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 	private void setRoutes() throws Exception{
+
 		for(String prop : props.keySet()){
+
 			if(prop.endsWith("route")){
 
 				String route = props.get(prop);
 				String id = props.get(prop + ".id");
 
 				loadStep(route, "route",id, null);
+
 			}
 		}
+
 	}
 
 	private void loadStep(String route, String type, String id, String uri) throws Exception {
 
 		try {
-			log.info(logMessage("Loading step", id, type, route));
-
-			if(context.getRoute(id)!=null){
-				context.removeRoute(id);
-			}
 
 			loader.loadRoutes(IntegrationUtil.setResource(route));
 
-			//context
 			flowLoaderReport.setStep(id, uri, type, "success", null);
-			flowEvent = "start";
+
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
 			log.error("Failed loading step | stepid=" + id);
@@ -226,18 +227,6 @@ public class FlowLoader extends RouteBuilder {
 
 	public boolean isFlowLoaded(){
 		return isFlowLoaded;
-	}
-
-	private String logMessage(String message, String stepId, String stepType, String route){
-
-		String logMessage = message + "\n\n";
-		logMessage = logMessage + "Step id: " + stepId + "\n";
-		logMessage = logMessage + "Step type: " + stepType + "\n";
-		if(route!=null) {
-			logMessage = logMessage + "Step configuration:\n\n" + route + "\n";
-		}
-
-		return logMessage;
 	}
 
 	public String getReport(){

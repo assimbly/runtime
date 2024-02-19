@@ -564,7 +564,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String startFlow(String flowId, int timeout) throws Exception;
+	public String startFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Restarts a flow
@@ -573,7 +573,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String restartFlow(String flowId, int timeout) throws Exception;
+	public String restartFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Stops a flow
@@ -582,7 +582,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String stopFlow(String flowId, int timeout) throws Exception;
+	public String stopFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Resumes a flow if paused
@@ -623,7 +623,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception;
+	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)
@@ -632,7 +632,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId, int timeout) throws Exception;
+	public String uninstallFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory
@@ -800,11 +800,14 @@ public interface Integration {
 	 *
 	 * @param flowId    the id of the flow
 	 * @param mediaType (xml or json)
-	 * @param type
+	 * @param fullStats (include additional fields)
+	 * @param includeMetaData (includes information about the flow)
+	 * @param includeSteps (include stats for every step)
+	 * @param filter
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String filter, String mediaType) throws Exception;
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
