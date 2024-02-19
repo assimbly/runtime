@@ -81,7 +81,7 @@ public class MessageCollector extends EventNotifierSupport {
 
     private void setResponseTime(Exchange exchange){
         //Set default headers for the response time
-        long created = exchange.getCreated();
+        long created = exchange.getClock().getCreated();
 
         if(created!=0) {
             Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);

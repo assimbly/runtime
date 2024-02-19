@@ -143,7 +143,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private void addResponseTimeHeader(Exchange exchange, Message message) {
-        Instant initInstant = Instant.ofEpochMilli(exchange.getCreated()); //created.toInstant();
+        Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated()); //created.toInstant();
         Instant nowInstant = Calendar.getInstance().toInstant();
         Duration duration = Duration.between(initInstant, nowInstant);
 

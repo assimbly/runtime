@@ -28,7 +28,7 @@
 		<hamcrest.version>2.2</hamcrest.version>
 		<spring-boot.version>3.2.2</spring-boot.version>
 		<maven-api.version>3.9.6</maven-api.version>
-		<camel-spring-junit5.version>4.3.0</camel-spring-junit5.version>
+		<camel-spring-junit5.version>4.4.0</camel-spring-junit5.version>
 		<h2database.version>2.2.224</h2database.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 	</properties>
