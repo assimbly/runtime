@@ -326,11 +326,11 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String stopAllFlows() throws Exception;
 	
-	public abstract String startFlow(String id, int timeout) throws Exception;
+	public abstract String startFlow(String id, long timeout) throws Exception;
 
-	public abstract String restartFlow(String id, int timeout) throws Exception;
+	public abstract String restartFlow(String id, long timeout) throws Exception;
 	
-	public abstract String stopFlow(String id, int timeout) throws Exception;
+	public abstract String stopFlow(String id, long timeout) throws Exception;
 
 	public abstract String pauseFlow(String id) throws Exception;
 	
@@ -338,9 +338,9 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String routesFlow(String id, String mediaType, String configuration) throws Exception;
 
-	public abstract String installFlow(String id, int timeout, String mediaType, String configuration) throws Exception;
+	public abstract String installFlow(String id, long timeout, String mediaType, String configuration) throws Exception;
 
-	public abstract String uninstallFlow(String id, int timeout) throws Exception;
+	public abstract String uninstallFlow(String id, long timeout) throws Exception;
 
 	public abstract String fileInstallFlow(String id, String configuration) throws Exception;
 

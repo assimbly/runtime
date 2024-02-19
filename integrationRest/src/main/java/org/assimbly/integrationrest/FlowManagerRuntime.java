@@ -46,7 +46,7 @@ public class FlowManagerRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -83,7 +83,7 @@ public class FlowManagerRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -120,7 +120,7 @@ public class FlowManagerRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/restart",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -254,7 +254,7 @@ public class FlowManagerRuntime {
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable String flowId, @RequestBody String configuration) throws Exception {
 
         plainResponse = true;
 
@@ -292,7 +292,7 @@ public class FlowManagerRuntime {
             path = "/integration/{integrationId}/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="1",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable String flowId) throws Exception {
 
         plainResponse = true;
 
@@ -527,7 +527,7 @@ public class FlowManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="5",value="timeout") int timeout, @PathVariable Long integrationId, @PathVariable Long time, @RequestBody List<String> ids) throws Exception {
+    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable Long integrationId, @PathVariable Long time, @RequestBody List<String> ids) throws Exception {
 
         try {
 

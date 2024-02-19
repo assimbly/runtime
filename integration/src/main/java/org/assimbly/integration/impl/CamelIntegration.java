@@ -96,7 +96,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private CamelContext context;
 	private boolean started;
-	private final static int stopTimeout = 1;
+	private final static long stopTimeout = 1000;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -1051,17 +1051,17 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public String configureAndRestartFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
+	public String configureAndRestartFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
 		return restartFlow(flowId, timeout);
 	}
 
-	public String installFlow(String flowId, int timeout, String mediaType, String configuration) throws Exception {
+	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
 		return startFlow(flowId, timeout);
 	}
 
-	public String uninstallFlow(String flowId, int timeout) throws Exception {
+	public String uninstallFlow(String flowId, long timeout) throws Exception {
 		return stopFlow(flowId, timeout);
 	}
 
@@ -1108,7 +1108,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String startFlow(String id, int timeout) {
+	public String startFlow(String id, long timeout) {
 
 		initFlowActionReport(id, "Start");
 
@@ -1221,7 +1221,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String restartFlow(String id, int timeout) {
+	public String restartFlow(String id, long timeout) {
 
 		try {
 
@@ -1242,7 +1242,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String stopFlow(String id, int timeout) {
+	public String stopFlow(String id, long timeout) {
 
 		initFlowActionReport(id, "stop");
 
@@ -1255,7 +1255,7 @@ public class CamelIntegration extends BaseIntegration {
 				String routeId = route.getId();
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
-				managedRoute.stop(500L, true);
+				managedRoute.stop(timeout, true);
 				managedRoute.remove();
 
 				if(route.getConfigurationId()!=null) {
