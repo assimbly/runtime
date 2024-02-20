@@ -116,7 +116,7 @@ public class Unmarshall {
 		String[] steps = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step/id");
 
 		//set all steps in parallel
-		IntStream.range(1, steps.length)
+		IntStream.range(1, steps.length + 1)
 				.parallel()
 				.forEach(index -> {
 					try {
