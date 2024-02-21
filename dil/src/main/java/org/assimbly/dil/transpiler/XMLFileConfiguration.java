@@ -93,6 +93,7 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
+		log.info("Configuration File: " + xml);
 		log.debug("Configuration File: " + xml);
 
 		String dilXml = xml;

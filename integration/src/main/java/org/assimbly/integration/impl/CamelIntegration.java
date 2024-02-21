@@ -807,7 +807,7 @@ public class CamelIntegration extends BaseIntegration {
 			context.start();
 			started = true;
 
-			log.info("Integration started");
+			log.info("Runtime started");
 
 		}
 
