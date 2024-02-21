@@ -89,7 +89,7 @@ public class Unmarshall {
 		}
 
 		String environment = evaluateXpath("//integrations/integration[1]/options/environment");
-
+		String frontend = evaluateXpath("//integrations/integration[1]/options/frontend");
 		String[] dependencies = conf.getStringArray("integrations/integration/flows/flow[" + flowSelector + "]/dependencies/dependency");
 
 		for(String dependency : dependencies){
@@ -102,7 +102,7 @@ public class Unmarshall {
 
 		properties.put("id",flowId);
 		properties.put("environment",environment);
-
+		properties.put("frontend",frontend);
 		properties.put("flow.name",flowName);
 		properties.put("flow.type",flowType);
 		properties.put("flow.version",flowVersion);

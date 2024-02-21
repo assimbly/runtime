@@ -884,6 +884,9 @@ public class CamelIntegration extends BaseIntegration {
 							String.format("tcp://%s:%s", brokerHost, brokerPort) :
 							"tcp://localhost:61616"
 			);
+
+
+
 			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
 				Component activemqComp = this.context.getComponent(activemqName);
 				if(activemqComp!=null) {
