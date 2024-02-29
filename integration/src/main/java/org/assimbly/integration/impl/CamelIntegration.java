@@ -1267,7 +1267,7 @@ public class CamelIntegration extends BaseIntegration {
 			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
 
 		}catch (Exception e) {
-			finishFlowActionReport(id, "error",e.getMessage(),"error");
+			finishFlowActionReport(id, "error","Stop flow failed | error=" + e.getMessage(),"error");
 			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
