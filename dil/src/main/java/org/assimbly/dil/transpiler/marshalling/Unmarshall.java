@@ -126,35 +126,7 @@ public class Unmarshall {
 
 		NodeList steps = flow.getElementsByTagName("step");
 
-		/*
-		IntStream.range(0, steps.getLength())
-				.parallel()
-				.forEach(index -> {
-					try {
 
-						Element stepElement = (Element) steps.item(index);
-
-						String stepId = stepElement.getElementsByTagName("id").item(0).getFirstChild().getTextContent();
-						String type = stepElement.getElementsByTagName("type").item(0).getFirstChild().getTextContent();
-						Node uriList = stepElement.getElementsByTagName("uri").item(0);
-
-						if(uriList != null){
-							String uri = uriList.getFirstChild().getTextContent();
-							setUri(uri, stepId, type, index + 1);
-						}
-
-						if(routeTemplateList.contains(type)) {
-							setRouteTemplate(index + 1, stepId, type);
-						}else{
-							setBlocks(stepElement, stepId, type);
-						}
-
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				});
-			*/
 
 		for (int i = 0; i < steps.getLength(); i++) {
 

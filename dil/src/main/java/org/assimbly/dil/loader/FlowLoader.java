@@ -179,15 +179,13 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setRoutes() throws Exception{
 
-		props.forEach((key, value) -> {
-			if (key.endsWith("route")) {
-				try {
-					loadRoute(value, "route",props.get(key + ".id"));
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+		for(String key : props.descendingKeySet()){
+			if(key.endsWith("route")){
+				String route = props.get(key);
+				String id = props.get(key + ".id");
+				loadRoute(route, "route",id);
 			}
-		});
+		}
 
 	}
 
@@ -215,10 +213,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			long startTime = System.currentTimeMillis();
 			loader.loadRoutes(IntegrationUtil.setResource(route));
-			long estimatedTime = System.currentTimeMillis() - startTime;
-			System.out.println("LoadStep: " + estimatedTime + "ms (id=" + id + ")");
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
