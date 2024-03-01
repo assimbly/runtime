@@ -273,6 +273,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
+		activemq.setAsyncStartListener(true);
+		activemq.setAsyncStopListener(true);
 
 		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
 		//velocity.setPropertiesFile("classpath:velocity.properties");
@@ -1256,6 +1258,7 @@ public class CamelIntegration extends BaseIntegration {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
 				managedRoute.stop(timeout, true);
+
 				managedRoute.remove();
 
 				if(route.getConfigurationId()!=null) {
@@ -1303,6 +1306,8 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				for(Route route : routeList){
+
+
 					String routeId = route.getId();
 
 					routeController.suspendRoute(routeId);

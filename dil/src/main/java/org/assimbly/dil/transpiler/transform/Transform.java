@@ -1,26 +1,44 @@
 package org.assimbly.dil.transpiler.transform;
 
+import net.sf.saxon.jaxp.TransformerImpl;
+import net.sf.saxon.s9api.*;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.InputStream;
+
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class Transform {
+public class Transform {
 
     final static Logger log = LoggerFactory.getLogger(Transform.class);
 
-    public static String transformToDil(String xml, String flowId){
+    private XsltTransformer transformer;
 
-		//convert camel2 to camel3
+    private Processor processor;
+
+    public Transform() throws SaxonApiException {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
+        processor = new Processor(false);
+        XsltCompiler compiler = processor.newXsltCompiler();
+        XsltExecutable executable = compiler.compile(new StreamSource(is));
+        transformer = executable.load();
+    }
+
+    public String transformToDil(String xml, String flowId) throws Exception {
+
+        //convert camel2 to camel3
         String camel3Xml = camel2ToCamel3(xml, flowId);
 
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
-
-        //transform to DIL format
-		String dilXml = TransformUtil.transformXML(camel3Xml,is);
+        String dilXml = transformXML6(camel3Xml, transformer, processor);
 
         log.info("The DIL format:\n\n" + dilXml);
 
@@ -28,7 +46,7 @@ public final class Transform {
 
 	}
 			
-	private static String camel2ToCamel3(String input, String flowId){
+	private String camel2ToCamel3(String input, String flowId){
 
         Map<String, String> map = new HashMap<>();
 
@@ -78,11 +96,110 @@ public final class Transform {
 		
 	}
 
-    private static String replaceUnmarshalCheckedZipFileDataFormat(String xml) {
+    private String replaceUnmarshalCheckedZipFileDataFormat(String xml) {
         return xml.replaceAll(
                 "<unmarshal>([\\r\\n\\t\\s]*)<custom ref=\"checkedZipFileDataFormat\"\\/>([\\r\\n\\t\\s]*)<\\/unmarshal>",
                 "<process ref=\"Unzip\"/>"
         );
+    }
+
+
+    public String transformXML2(String xml, InputStream is) {
+
+        String outputXML = null;
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null);
+            StreamSource sourcXsl = new StreamSource(is);
+            try {
+                TransformerImpl transformer = (TransformerImpl) transformerFactory.newTransformer(sourcXsl);
+
+                StringWriter writer = new StringWriter();
+
+                Result result = new StreamResult(writer);
+
+                Source xmlStream = new StreamSource(new StringReader(xml));
+                transformer.transform(xmlStream, result);
+
+                outputXML = writer.getBuffer().toString();
+
+                writer.close();
+
+            } catch (TransformerConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+
+        } catch (TransformerException te) {
+            te.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return outputXML;
+
+    }
+
+    private String transformXML4(String xml, InputStream is) throws Exception {
+
+        String outputXML = null;
+
+        SAXTransformerFactory stf = (SAXTransformerFactory)TransformerFactory.newInstance();
+
+        Templates templates1 = stf.newTemplates(new StreamSource(is));
+
+        TransformerHandler th1 = stf.newTransformerHandler(templates1);
+
+        StringWriter writer = new StringWriter();
+        Result result = new StreamResult(writer);
+        Source xmlStream = new StreamSource(new StringReader(xml));
+
+        th1.getTransformer().transform(xmlStream, result);
+
+        outputXML = writer.getBuffer().toString();
+
+        return outputXML;
+    }
+
+    public String transformXML5(String xmlString, InputStream is) throws SaxonApiException {
+
+        Processor processor = new Processor(false);
+        DocumentBuilder builder = processor.newDocumentBuilder();
+        XdmNode sourceDocument = builder.build(new StreamSource(new StringReader(xmlString)));
+
+        XsltCompiler compiler = processor.newXsltCompiler();
+        XsltExecutable executable = compiler.compile(new StreamSource(is));
+        XsltTransformer transformer = executable.load();
+
+        transformer.setInitialContextNode(sourceDocument);
+
+        Serializer out = processor.newSerializer();
+        StringWriter stringWriter = new StringWriter();
+        out.setOutputWriter(stringWriter);
+
+        transformer.setDestination(out);
+        transformer.transform();
+
+        return stringWriter.toString();
+
+    }
+
+
+
+    public String transformXML6(String xmlString, XsltTransformer transformer, Processor processor ) throws SaxonApiException {
+
+        DocumentBuilder builder = processor.newDocumentBuilder();
+
+        XdmNode sourceDocument = builder.build(new StreamSource(new StringReader(xmlString)));
+
+        transformer.setInitialContextNode(sourceDocument);
+
+        Serializer out = processor.newSerializer();
+        StringWriter stringWriter = new StringWriter();
+        out.setOutputWriter(stringWriter);
+
+        transformer.setDestination(out);
+        transformer.transform();
+
+        return stringWriter.toString();
+
     }
 
 }

@@ -3,15 +3,12 @@ package org.assimbly.dil.transpiler.marshalling.core;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 
-import javax.xml.transform.TransformerException;
+import javax.xml.transform.*;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -42,22 +39,16 @@ public class Route {
         properties.put(type + "." + stepId + ".route", route);
 
         return properties;
+
     }
 
     private String createRoute(String flowId, String routeId) throws Exception {
 
-       //Node node = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
-
-        Node node = evaluateNodeXpath("/dil/core/routes/route[@id='" + routeId + "']");
+        Node node = getRoute(routeId);
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
-        if(routeAsString.contains("yamldsl")){
-            routeAsString = StringUtils.substringBetween(routeAsString,"<yamldsl xmlns=\"http://camel.apache.org/schema/spring\">","</yamldsl>");
-            routeAsString = StringUtils.replace(routeAsString,"id: " + routeId,"id: " + flowId + "-" + routeId);
-        }else{
-            routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
-        }
+        routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
 
         return routeAsString;
 
@@ -70,7 +61,6 @@ public class Route {
 
             String ref = StringUtils.substringBetween(route, "<customDataFormat ref=\"", "\"/>");
 
-            //Node node = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
             Node node = evaluateNodeXpath("/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
 
             dataFormatAsString = DocConverter.convertNodeToString(node);
@@ -95,5 +85,23 @@ public class Route {
         return (Node) xp.evaluate(doc, XPathConstants.NODE);
     }
 
+    private Node getRoute(String routeId){
+
+        NodeList flow = doc.getElementsByTagName("route");
+
+        for (int i = 0; i < flow.getLength(); i++) {
+            Node node = flow.item(i);
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                String id = element.getAttribute("id");
+
+                if (routeId.equals(id)) {
+                    return node;
+                }
+            }
+        }
+
+        return null;
+    }
 
 }
