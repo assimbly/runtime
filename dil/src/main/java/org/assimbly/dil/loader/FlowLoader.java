@@ -1,9 +1,11 @@
 package org.assimbly.dil.loader;
 
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
+import org.apache.camel.spi.Resource;
+import org.apache.camel.spi.RoutesBuilderLoader;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +21,7 @@ public class FlowLoader extends RouteBuilder {
 	private TreeMap<String, String> props;
 	private CamelContext context;
 	private RoutesLoader loader;
+	private RoutesBuilderLoader routesBuilderLoader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
 	private String flowName;
@@ -27,10 +30,6 @@ public class FlowLoader extends RouteBuilder {
 	private String flowEnvironment;
 	private boolean isFlowLoaded = true;
 	private FlowLoaderReport flowLoaderReport;
-
-	public FlowLoader() {
-		super();
-	}
 
 	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
 		super();
@@ -53,7 +52,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void init() {
+	private void init() throws Exception {
 
 		flowId = props.get("id");
 		flowName = props.get("flow.name");
@@ -66,7 +65,7 @@ public class FlowLoader extends RouteBuilder {
 		  flowLoaderReport.initReport(flowId, flowName, "start");
 		}
 
-		setExtendedCamelContext();
+		setExtendedcontext();
 
 	}
 
@@ -96,10 +95,12 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void setExtendedCamelContext() {
+	private void setExtendedcontext() throws Exception {
 		context = getContext();
 		loader = PluginHelper.getRoutesLoader(context);
+		routesBuilderLoader = loader.getRoutesLoader("xml");
 	}
+
 	private void setErrorHandlers() throws Exception{
 
 		String errorUri = "";
@@ -158,36 +159,55 @@ public class FlowLoader extends RouteBuilder {
 
 	//this route create a route template (from a routetemplate definition)
 	private void setRouteTemplates() throws Exception{
-		for(String prop : props.keySet()){
-			if(prop.endsWith("routetemplate")){
 
-				String routeTemplate = props.get(prop);
-				String basePath = StringUtils.substringBefore(prop,"routetemplate");
-				String id = props.get(basePath + "routetemplate.id");
-				String uri = props.get(basePath + "uri");
+		props.forEach((key, value) -> {
+			if (key.endsWith("routetemplate")) {
+				try {
+					String routeTemplate = value;
+					String basePath = StringUtils.substringBefore(key,"routetemplate");
+					String id = props.get(basePath + "routetemplate.id");
+					String uri = props.get(basePath + "uri");
 
-				if(routeTemplate!=null && !routeTemplate.isEmpty()){
 					loadStep(routeTemplate, "routeTemplate", id, uri);
-				}
 
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 			}
-		}
+		});
+
 	}
 
 	private void setRoutes() throws Exception{
 
-		for(String prop : props.keySet()){
-
-			if(prop.endsWith("route")){
-
-				String route = props.get(prop);
-				String id = props.get(prop + ".id");
-
-				loadStep(route, "route",id, null);
-
+		for(String key : props.descendingKeySet()){
+			if(key.endsWith("route")){
+				String route = props.get(key);
+				String id = props.get(key + ".id");
+				loadRoute(route, "route",id);
 			}
 		}
 
+	}
+
+
+	private void loadRoute(String route, String type, String id) throws Exception {
+
+		try {
+
+			Resource resource = IntegrationUtil.setResource(route);
+			RoutesBuilder builder = routesBuilderLoader.loadRoutesBuilder(resource);
+			context.addRoutes(builder);
+
+			flowLoaderReport.setStep(id, null, type, "success", null);
+
+		}catch (Exception e) {
+			String errorMessage = e.getMessage();
+			log.error("Failed loading step | stepid=" + id);
+			flowLoaderReport.setStep(id, null, type, "error", errorMessage);
+			flowEvent = "error";
+			isFlowLoaded = false;
+		}
 	}
 
 	private void loadStep(String route, String type, String id, String uri) throws Exception {
@@ -225,12 +245,12 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	public boolean isFlowLoaded(){
-		return isFlowLoaded;
-	}
-
 	public String getReport(){
 		return flowLoaderReport.getReport();
+	}
+
+	public boolean isFlowLoaded(){
+		return isFlowLoaded;
 	}
 
 }

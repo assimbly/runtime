@@ -98,7 +98,7 @@ public class XMLFileConfiguration {
 
 		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
-			dilXml = Transform.transformToDil(xml, flowId);
+			dilXml = new Transform().transformToDil(xml, flowId);
 		}
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -317,6 +317,7 @@ public class XMLFileConfiguration {
 		}
 
 	}
+
 
 }
 

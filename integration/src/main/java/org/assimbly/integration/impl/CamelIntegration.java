@@ -282,6 +282,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
 		activemq.setTestConnectionOnStartup(true);
+		activemq.setAsyncStartListener(true);
+		activemq.setAsyncStopListener(true);
 
 		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
 		//velocity.setPropertiesFile("classpath:velocity.properties");
@@ -875,6 +877,9 @@ public class CamelIntegration extends BaseIntegration {
 							String.format("tcp://%s:%s", brokerHost, brokerPort) :
 							"tcp://localhost:61616"
 			);
+
+
+
 			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
 				Component activemqComp = this.context.getComponent(activemqName);
 				if(activemqComp!=null) {
@@ -1246,6 +1251,7 @@ public class CamelIntegration extends BaseIntegration {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
 				managedRoute.stop(timeout, true);
+
 				managedRoute.remove();
 
 				if(route.getConfigurationId()!=null) {
@@ -1257,7 +1263,7 @@ public class CamelIntegration extends BaseIntegration {
 			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
 
 		}catch (Exception e) {
-			finishFlowActionReport(id, "error",e.getMessage(),"error");
+			finishFlowActionReport(id, "error","Stop flow failed | error=" + e.getMessage(),"error");
 			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
@@ -1293,6 +1299,8 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				for(Route route : routeList){
+
+
 					String routeId = route.getId();
 
 					routeController.suspendRoute(routeId);
