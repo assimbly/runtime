@@ -26,7 +26,7 @@
         <main.basedir>${project.basedir}</main.basedir>
         <assimbly.version>5.0.0</assimbly.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<spring-boot.version>3.2.2</spring-boot.version>
+		<spring-boot.version>3.2.3</spring-boot.version>
 		<maven-api.version>3.9.6</maven-api.version>
 		<camel-spring-junit5.version>4.4.0</camel-spring-junit5.version>
 		<h2database.version>2.2.224</h2database.version>

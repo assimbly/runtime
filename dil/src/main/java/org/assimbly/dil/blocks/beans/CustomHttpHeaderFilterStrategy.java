@@ -28,7 +28,7 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
 
         getOutFilter().add("content-length");
         getOutFilter().add("content-type");
-        getOutFilter().add("host");
+        //getOutFilter().add("host");
         getOutFilter().add("cache-control");
         getOutFilter().add("connection");
         getOutFilter().add("pragma");

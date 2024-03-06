@@ -1251,7 +1251,6 @@ public class CamelIntegration extends BaseIntegration {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
 				managedRoute.stop(timeout, true);
-
 				managedRoute.remove();
 
 				if(route.getConfigurationId()!=null) {
