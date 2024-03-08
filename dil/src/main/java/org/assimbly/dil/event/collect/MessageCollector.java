@@ -1,11 +1,8 @@
 package org.assimbly.dil.event.collect;
 
-import ca.uhn.hl7v2.util.StringUtil;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.spi.CamelEvent;
-import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;

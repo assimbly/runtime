@@ -171,9 +171,6 @@ public class CamelIntegration extends BaseIntegration {
 			tracer.setEnabled(tracing);
 		}
 
-
-
-
 	}
 
 	public void setDebugging(boolean debugging) {
@@ -1987,12 +1984,11 @@ public class CamelIntegration extends BaseIntegration {
 		long uptimeMillis = 0;
 		Date lastFailed = null;
 		Date lastCompleted = null;
-		String status = "stopped";
-		Boolean tracing = false;
 
 		List<Route> routes = getRoutesByFlowId(flowId);
 
 		for(Route r : routes){
+
 			String routeId = r.getId();
 
 			if (!filter.isEmpty() && routeId.contains(filter)) {
@@ -2000,36 +1996,40 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			ManagedRouteMBean route = managed.getManagedRoute(routeId);
-			if(route != null){
-				totalMessages += route.getExchangesTotal();
-				completedMessages += route.getExchangesCompleted();
-				failedMessages += route.getExchangesFailed();
-				pendingMessages += route.getExchangesInflight();
-				if(fullStats){
-					if(uptime==null){
-						uptime = route.getUptime();
+
+			totalMessages += route.getExchangesTotal();
+			completedMessages += route.getExchangesCompleted();
+			failedMessages += route.getExchangesFailed();
+			pendingMessages += route.getExchangesInflight();
+
+			if(fullStats){
+
+				long startTime = System.currentTimeMillis();
+
+				if(uptime==null){
+					uptime = route.getUptime();
+				}
+
+				if(uptimeMillis==0){
+					uptimeMillis = route.getUptimeMillis();
+				}
+
+				if(lastFailed==null){
+					lastFailed = route.getLastExchangeFailureTimestamp();
+				}else{
+					Date failure = route.getLastExchangeFailureTimestamp();
+					if(failure!=null && failure.after(lastFailed)){
+						lastFailed = failure;
 					}
-					if(uptimeMillis==0){
-						uptimeMillis = route.getUptimeMillis();
+				}
+
+				if(lastCompleted==null){
+					lastCompleted = route.getLastExchangeCompletedTimestamp();
+				}else{
+					Date completed = route.getLastExchangeFailureTimestamp();
+					if(completed!=null && completed.after(lastCompleted)){
+						lastCompleted = completed;
 					}
-					if(lastFailed==null){
-						lastFailed = route.getLastExchangeFailureTimestamp();
-					}else{
-						Date failure = route.getLastExchangeFailureTimestamp();
-						if(failure!=null && failure.after(lastFailed)){
-							lastFailed = failure;
-						}
-					}
-					if(lastCompleted==null){
-						lastCompleted = route.getLastExchangeCompletedTimestamp();
-					}else{
-						Date completed = route.getLastExchangeFailureTimestamp();
-						if(completed!=null && completed.after(lastCompleted)){
-							lastCompleted = completed;
-						}
-					}
-					status = route.getState().toLowerCase();
-					tracing = route.getTracing();
 				}
 
 				if(includeSteps){
@@ -2046,11 +2046,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 					steps.put(step);
 				}
+
 			}
 		}
-
-		Date x = null;
-		String y = null;
 
 		flow.put("id",flowId);
 		flow.put("total",totalMessages);
@@ -2062,8 +2060,7 @@ public class CamelIntegration extends BaseIntegration {
 			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
-			flow.put("status",status);
-			flow.put("tracing",tracing);
+			flow.put("status",getFlowStatus(flowId));
 			flow.put("lastFailed",lastFailed != null ? lastFailed : "");
 			flow.put("lastCompleted",lastCompleted != null ? lastCompleted : "");
 		}
@@ -2249,6 +2246,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
 
 		String[] values = flowIds.split(",");
+
 		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
 		String result = getStatsFromList(flowSet, filter, true, false,false);
