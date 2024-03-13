@@ -44,6 +44,7 @@ import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
+import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -1090,6 +1091,26 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public String installRoute(String routeId, String route) throws Exception {
+
+		initFlowActionReport(routeId, "Start");
+
+		try{
+
+			RouteLoader routeLoader = new RouteLoader(routeId,route,flowLoaderReport);
+
+			routeLoader.addRoutesToCamelContext(context);
+
+			loadReport = routeLoader.getReport();
+
+			finishFlowActionReport(routeId, "start","Started flow successfully","info");
+		}catch(Exception e){
+			finishFlowActionReport(routeId, "error","Failed starting flow",e.getMessage());
+		}
+
+		return loadReport;
+
+	}
 
 	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception {
 
@@ -1168,7 +1189,7 @@ public class CamelIntegration extends BaseIntegration {
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
 
-	}catch (Exception e) {
+		}catch (Exception e) {
 			if(context.isStarted()) {
 				stopFlow(id, stopTimeout);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");

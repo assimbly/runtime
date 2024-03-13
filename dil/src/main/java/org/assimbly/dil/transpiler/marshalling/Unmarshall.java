@@ -1,13 +1,8 @@
 package org.assimbly.dil.transpiler.marshalling;
 
-import net.sf.saxon.dom.DOMNodeList;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.xpath.CachedXPathAPI;
-import org.apache.xpath.NodeSet;
-import org.apache.xpath.objects.XObject;
 import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
@@ -19,7 +14,6 @@ import org.w3c.dom.NodeList;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.util.*;
-import java.util.stream.IntStream;
 
 // This class unmarshalls an XML file into a Java treemap object
 // The XML file must be in DIL (Data Integration Language) format
@@ -126,8 +120,6 @@ public class Unmarshall {
 
 		NodeList steps = flow.getElementsByTagName("step");
 
-
-
 		for (int i = 0; i < steps.getLength(); i++) {
 
 			Element stepElement = (Element) steps.item(i);
@@ -136,7 +128,7 @@ public class Unmarshall {
 			String type = stepElement.getElementsByTagName("type").item(0).getFirstChild().getTextContent();
 			Node uriList = stepElement.getElementsByTagName("uri").item(0);
 
-			if(uriList != null){
+			if(uriList != null && uriList.hasChildNodes()){
 				String uri = uriList.getFirstChild().getTextContent();
 				setUri(uri, stepId, type, i + 1);
 			}
@@ -216,7 +208,7 @@ public class Unmarshall {
 
 		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
-		String baseUri = evaluateXpath2("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		String baseUri = evaluateXpath("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 		String options = getOptions(optionProperties);
 
@@ -232,7 +224,7 @@ public class Unmarshall {
 
 	}
 
-	private String evaluateXpath2(String xpath) throws TransformerException, XPathExpressionException {
+	private String evaluateXpath(String xpath) throws TransformerException, XPathExpressionException {
 		XPathExpression xp = xf.newXPath().compile(xpath);
 		return xp.evaluate(doc);
 	}

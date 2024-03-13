@@ -338,6 +338,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String routesFlow(String id, String mediaType, String configuration) throws Exception;
 
+	public abstract String installRoute(String routeId, String route) throws Exception;
+
 	public abstract String installFlow(String id, long timeout, String mediaType, String configuration) throws Exception;
 
 	public abstract String uninstallFlow(String id, long timeout) throws Exception;

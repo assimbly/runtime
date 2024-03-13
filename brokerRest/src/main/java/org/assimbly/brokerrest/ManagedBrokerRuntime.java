@@ -15,13 +15,9 @@ import java.util.Map;
 public class ManagedBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
     private Broker broker;
-
     private Broker classic = new ActiveMQClassic();
-
 	private Broker artemis = new ActiveMQArtemis();
-
 	private String status;
     private String result;
 
@@ -228,6 +224,14 @@ public class ManagedBrokerRuntime {
         if(mediaType.equalsIgnoreCase("application/xml")){
             result = DocConverter.convertJsonToXml(result);
         }
+
+        return result;
+    }
+
+    public String countMessagesFromList(String brokerType, String endpointNames) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.countMessagesFromList(endpointNames);
 
         return result;
     }

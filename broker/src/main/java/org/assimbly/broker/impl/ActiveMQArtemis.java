@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -570,6 +571,26 @@ public class ActiveMQArtemis implements Broker {
 		return messagesInfo.toString();
 
 	}
+
+	public String countMessagesFromList(String endpointList) throws Exception {
+
+		Long numberOfMessages = 0L;
+		List<String> endpointNames= Arrays.asList(endpointList.split("\\s*,\\s*"));
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		for(String endpointName: endpointNames){
+
+			if(endpointExist(endpointName)){
+				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+				numberOfMessages = queueControl.getMessageCount();
+			}
+
+		}
+
+		return Long.toString(numberOfMessages);
+
+	}
+
 
 	public String countMessages(String endpointName) throws Exception {
 

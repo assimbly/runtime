@@ -142,6 +142,7 @@
 					</xs:sequence>
 					<xs:attribute name="id" type="xs:string" />
 					<xs:attribute name="routeConfigurationId" type="xs:string"/>
+					<xs:attribute name="routePolicyRef" type="xs:string"/>
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>

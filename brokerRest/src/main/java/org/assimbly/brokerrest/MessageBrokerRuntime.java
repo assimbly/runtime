@@ -59,6 +59,32 @@ public class MessageBrokerRuntime {
      * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
+     * @param endpointNames, the name of the queue
+     * @return list of messages with status 200 (OK) or with status 404 (Not Found)
+     */
+    @PostMapping(
+            path = "/brokers/{brokerType}/messages/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object countMessagesFromList(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @RequestBody String endpointNames)  throws Exception {
+
+        log.debug("REST request to count messages for queue : {}", endpointNames);
+
+        try {
+            result = broker.countMessagesFromList(brokerType, endpointNames);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", result);
+        } catch (Exception e) {
+            log.error("Can't list messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", e.getMessage());
+        }
+
+    }
+
+
+    /**
+     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
+     *
+     * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
