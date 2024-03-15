@@ -257,6 +257,16 @@ public interface Broker {
 	/**
 	 * list all messages on the broker
 	 *
+	 * @param  endpointNames (List of names of queue or topic comma separated)
+	 * @return List of all messages
+	 * @throws Exception if list can't be retrieved
+	 */
+	public String countMessagesFromList(String endpointNames) throws Exception;
+
+
+	/**
+	 * list all messages on the broker
+	 *
 	 * @param  endpointName (name of queue or topic)
 	 * @return List of all messages
 	 * @throws Exception if list can't be retrieved

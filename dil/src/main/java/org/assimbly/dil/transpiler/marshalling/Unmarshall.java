@@ -127,7 +127,7 @@ public class Unmarshall {
 			String type = stepElement.getElementsByTagName("type").item(0).getFirstChild().getTextContent();
 			Node uriList = stepElement.getElementsByTagName("uri").item(0);
 
-			if(uriList != null){
+			if(uriList != null && uriList.hasChildNodes()){
 				String uri = uriList.getFirstChild().getTextContent();
 				setUri(uri, stepId, type, i + 1);
 			}
@@ -207,7 +207,7 @@ public class Unmarshall {
 
 		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
-		String baseUri = evaluateXpath2("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		String baseUri = evaluateXpath("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 		String options = getOptions(optionProperties);
 
@@ -223,7 +223,7 @@ public class Unmarshall {
 
 	}
 
-	private String evaluateXpath2(String xpath) throws TransformerException, XPathExpressionException {
+	private String evaluateXpath(String xpath) throws TransformerException, XPathExpressionException {
 		XPathExpression xp = xf.newXPath().compile(xpath);
 		return xp.evaluate(doc);
 	}

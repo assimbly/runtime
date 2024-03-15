@@ -218,7 +218,42 @@ public class FlowManagerRuntime {
     }
 
     @PostMapping(
-            path = "/integration/flow/{flowId}/install",
+            path = "/integration/{integrationId}/route/{routeId}/install",
+            consumes =  {MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> installRoute(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable String routeId, @RequestBody String route) throws Exception {
+
+        plainResponse = true;
+
+        log.info("Install routeId: " + routeId + ". Configuration:\n\n" + route);
+
+        try {
+            integration = integrationRuntime.getIntegration();
+
+            status = integration.installRoute(routeId, route);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            if (status.contains("successfully")) {
+                log.info("FlowManager Report:\n\n" + status);
+                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/{integrationId}/route/{flowId}/install",status,plainResponse);
+            } else {
+                log.error("FlowManager Report:\n\n" + status);
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/{integrationId}/route/{routeId}/install", status, plainResponse);
+            }
+        } catch (Exception e) {
+            log.error("Test flow " + flowId + " failed",e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/{integrationId}/route/{routeId}/install", e.getMessage(), "unable to run route " + routeId, routeId);
+        }
+
+    }
+
+
+    @PostMapping(
+            path = "/integration/{integrationId}/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )

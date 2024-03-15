@@ -539,6 +539,24 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+    public String countMessagesFromList(String endpointList) throws Exception {
+
+        Long numberOfMessages = 0L;
+        List<String> endpointNames= Arrays.asList(endpointList.split("\\s*,\\s*"));
+
+        for(String endpointName: endpointNames){
+
+            if(endpointExist(endpointName)){
+                endpointType = getEndpointType(endpointName);
+                numberOfMessages += getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+            }
+
+        }
+
+        return Long.toString(numberOfMessages);
+
+    }
+
     public String countMessages(String endpointName) throws Exception {
 
         checkIfEndpointExist(endpointName);

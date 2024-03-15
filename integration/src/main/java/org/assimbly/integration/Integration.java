@@ -614,6 +614,18 @@ public interface Integration {
 	 */
 	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
 
+
+
+	/**
+	 * Configure and Starts a flow (for testing)
+	 *
+	 * @param  routeId the id of the flow
+	 * @param  route (the XML of the route)
+	 * @return returns a confirmation message
+	 * @throws Exception if flow doesn't start
+	 */
+	public String installRoute(String routeId, String route) throws Exception;
+
 	/**
 	* Configure and Starts a flow (for testing)
 	*
