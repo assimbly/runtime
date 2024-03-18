@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
-public class MessageCollector extends EventNotifierSupport {
+public class ExchangeCollector extends EventNotifierSupport {
 
     private final StoreManager storeManager;
     private final String expiryInHours;
@@ -28,7 +28,7 @@ public class MessageCollector extends EventNotifierSupport {
     private final String flowVersion;
 
 
-    public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public ExchangeCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
         this.flowId = flowId;
         this.flowVersion = flowVersion;
