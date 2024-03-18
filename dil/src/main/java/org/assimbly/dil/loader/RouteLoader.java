@@ -1,12 +1,12 @@
 package org.assimbly.dil.loader;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesBuilderLoader;
 import org.apache.camel.spi.RoutesLoader;
+import org.apache.camel.support.PluginHelper;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ public class RouteLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private CamelContext context;
-	private ExtendedCamelContext extendedcontext;
 	private RoutesLoader loader;
 	private RoutesBuilderLoader routesBuilderLoader;
 	private String routeId;
@@ -84,8 +83,7 @@ public class RouteLoader extends RouteBuilder {
 
 	private void setExtendedcontext() throws Exception {
 		context = getContext();
-		extendedcontext = context.adapt(ExtendedCamelContext.class);
-		loader = extendedcontext.getRoutesLoader();
+		loader = PluginHelper.getRoutesLoader(context);
 		routesBuilderLoader = loader.getRoutesLoader("xml");
 	}
 
