@@ -421,7 +421,6 @@ public class CamelIntegration extends BaseIntegration {
 				"      routeConfigurationId: \"{{routeConfigurationId}}\"\n" +
 				"    from:");
 
-
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
 		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
