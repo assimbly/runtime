@@ -11,9 +11,6 @@ spec:
       Throttles messages on an ActiveMQ queue
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       timePeriod:
         title: Time Period
         description: Time Period
@@ -28,7 +25,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

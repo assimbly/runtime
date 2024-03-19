@@ -11,9 +11,6 @@ spec:
       Zips a message
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       preservePathElements:
         title: Preserve Path Elements
         description: .
@@ -28,7 +25,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

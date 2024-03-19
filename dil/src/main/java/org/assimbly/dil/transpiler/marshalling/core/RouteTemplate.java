@@ -366,6 +366,9 @@ public class RouteTemplate {
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
+        Element parameter = createParameter(templateDoc,"routeId",routeId);
+        templatedRoute.appendChild(parameter);
+
         try {
             createUriValues();
         } catch (XPathExpressionException e) {
@@ -381,7 +384,7 @@ public class RouteTemplate {
                 String name = optionProperty.split("options.")[1];
                 String value = conf.getProperty(optionProperty).toString();
 
-                Element parameter = createParameter(templateDoc,name,value);
+                parameter = createParameter(templateDoc,name,value);
                 templatedRoute.appendChild(parameter);
 
             }
@@ -394,7 +397,7 @@ public class RouteTemplate {
                         String name = option.split("=",2)[0];
                         String value = option.split("=",2)[1];
 
-                        Element parameter = createParameter(templateDoc,name,value);
+                        parameter = createParameter(templateDoc,name,value);
                         templatedRoute.appendChild(parameter);
                     }
                 }
@@ -403,7 +406,7 @@ public class RouteTemplate {
                     String name = options.split("=",2)[0];
                     String value = options.split("=",2)[1];
 
-                    Element parameter = createParameter(templateDoc,name,value);
+                    parameter = createParameter(templateDoc,name,value);
                     templatedRoute.appendChild(parameter);
                 }
             }

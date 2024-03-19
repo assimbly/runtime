@@ -11,9 +11,6 @@ spec:
       Converts CSV to XML
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       delimiter:
           title: Delimiter
           description: Delimiter
@@ -33,7 +30,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

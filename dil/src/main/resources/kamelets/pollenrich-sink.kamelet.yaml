@@ -11,9 +11,6 @@ spec:
       Enrich message by polling
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       path:
         title: Path
         description: Path
@@ -31,7 +28,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

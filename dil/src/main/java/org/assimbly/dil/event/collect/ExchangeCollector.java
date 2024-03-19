@@ -96,7 +96,7 @@ public class ExchangeCollector extends EventNotifierSupport {
         //set fields
         Message message = exchange.getMessage();
         String body = getBody(message);
-        Map<String, Object> headers = message.getHeaders();
+        Map<String, String> headers = getHeaders(message.getHeaders());
         String messageId = message.getMessageId();
 
         //use breadcrumbId when available
@@ -108,6 +108,7 @@ public class ExchangeCollector extends EventNotifierSupport {
 
         //create json
         MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, flowVersion, stepId, headers, body, expiryDate);
+
         String json = messageEvent.toJson();
 
         //store the event
@@ -138,5 +139,17 @@ public class ExchangeCollector extends EventNotifierSupport {
         }
 
     }
+
+    public Map<String,String> getHeaders(Map<String, Object> map) {
+        Map<String, String> newMap = new HashMap<String, String>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                newMap.put(entry.getKey(), (String) entry.getValue());
+            }
+        }
+        return newMap;
+
+    }
+
 
 }

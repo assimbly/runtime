@@ -12,10 +12,7 @@ import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
@@ -60,18 +57,21 @@ public class StepCollector extends EventNotifierSupport {
             Exchange exchange = stepEvent.getExchange();
 
             // Get the stepid
-            String routeId = exchange.getFromRouteId();
+            String stepId = stepEvent.getStepId();
+            if(stepId==null){
+                stepId = exchange.getFromRouteId();
+            }
 
-            if(routeId!= null && routeId.startsWith(flowId)){
+            if(stepId!= null && stepId.startsWith(flowId)){
 
-                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+                String stepShortId = StringUtils.substringAfter(stepId, flowId + "-");
 
                 //process and store the exchange
                 if (filters == null) {
-                    processEvent(exchange, stepId);
-                } else if (EventUtil.isFilteredEquals(filters, stepId)) {
+                    processEvent(exchange, stepShortId);
+                } else if (EventUtil.isFilteredEquals(filters, stepShortId)) {
                     setResponseTime(exchange);
-                    processEvent(exchange, stepId);
+                    processEvent(exchange, stepShortId);
                 }
 
             }
@@ -99,7 +99,7 @@ public class StepCollector extends EventNotifierSupport {
         //set fields
         Message message = exchange.getMessage();
         String body = getBody(message);
-        Map<String, Object> headers = message.getHeaders();
+        Map<String, String> headers = getHeaders(message.getHeaders());
         String messageId = message.getMessageId();
 
         //use breadcrumbId when available
@@ -140,6 +140,16 @@ public class StepCollector extends EventNotifierSupport {
             }
         }
 
+    }
+
+    public Map<String,String> getHeaders(Map<String, Object> map) {
+        Map<String, String> newMap = new HashMap<String, String>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                newMap.put(entry.getKey(), (String) entry.getValue());
+            }
+        }
+        return newMap;
     }
 
 }

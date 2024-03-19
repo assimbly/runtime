@@ -11,9 +11,6 @@ spec:
       Put files on GoogleDrive
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       options:
           title: Options
           description: Options
@@ -22,7 +19,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      routeConfigurationId: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

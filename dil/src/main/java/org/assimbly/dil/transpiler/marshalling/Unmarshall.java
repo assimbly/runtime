@@ -92,7 +92,7 @@ public class Unmarshall {
 
 		Node dependencies = element.getElementsByTagName("dependencies").item(0);
 
-		if(dependencies!=null && dependencies.hasChildNodes()) {
+		if(dependencies==null || !dependencies.hasChildNodes()) {
 			return;
 		}
 

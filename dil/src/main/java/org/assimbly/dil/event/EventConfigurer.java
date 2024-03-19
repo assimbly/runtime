@@ -99,8 +99,8 @@ public class EventConfigurer {
 
         if(type==null){
             return "The type of collector is missing. Valid types are: message,log or step.";
-        }else if(!type.equals("log") && !type.equals("message") && !type.equals("step")){
-            return "Invalid event collector: " + type + ". Valid types are message,log or step.";
+        }else if(!type.equals("log") && !type.equals("exchange") && !type.equals("route") && !type.equals("step")){
+            return "Invalid event collector: " + type + ". Valid types are exchange, route, step or log.";
         }
 
         String id = configuration.getId();

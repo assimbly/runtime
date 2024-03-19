@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
+import io.fabric8.kubernetes.api.model.AnyType;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import org.apache.camel.*;
@@ -73,7 +74,9 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -372,13 +375,53 @@ public class CamelIntegration extends BaseIntegration {
 				"          title: Sink endpoint\n" +
 				"          description: The Camel uri of the sink endpoint.\n" +
 				"          type: string\n" +
-				"          default: kamelet:sink\t";
+				"          default: kamelet:sink\n" +
+				"      routeId:\n" +
+				"          title: Route ID\n" +
+				"          description: The Camel route ID.\n" +
+				"          type: string\n" +
+				"      routeConfigurationId:\n" +
+				"          title: RouteConfiguration ID\n" +
+				"          description: The Camel routeconfiguration ID.\n" +
+				"          type: string\n" +
+				"          default: 0";
 
 		//replace values
 		if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
 			resourceAsString = resourceAsString + "      - to:\n" +
 					"          uri: \"kamelet:sink\"";
 		}
+
+		resourceAsString = StringUtils.replaceOnce(resourceAsString,"      steps:\n" +
+					"        -", "      steps:\n" +
+					"        - step:\n" +
+					"            id: \"{{routeId}}\"\n" +
+					"        -");
+
+		resourceAsString = StringUtils.replaceOnce(resourceAsString,"      steps:\n" +
+				"      -","      steps:\n" +
+				"      - step:\n" +
+				"          id: \"{{routeId}}\"\n" +
+				"      -");
+
+		if(resourceAsString.contains("route:")){
+
+			resourceAsString = StringUtils.replaceOnce(resourceAsString,"steps:","steps:\n" +
+					"          - step:\n" +
+					"              id: \"{{routeId}}\"");
+
+			resourceAsString = StringUtils.replaceOnce(resourceAsString,"route:","route:\n" +
+					"      routeConfigurationId: \"{{routeConfigurationId}}\"");
+
+		}
+
+		resourceAsString = StringUtils.replaceOnce(resourceAsString,"  template:\n" +
+				"    from:","  template:\n" +
+				"    route:\n" +
+				"      routeConfigurationId: \"{{routeConfigurationId}}\"\n" +
+				"    from:");
+
+
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
 		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
