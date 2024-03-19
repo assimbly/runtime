@@ -16,9 +16,13 @@
  */
 package org.assimbly.dil.blocks.beans;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 
 public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
+
+    private static final String DATE_HEADER = "date";
+    private static final String USE_CUSTOM_DATE_HEADER = "useCustomDateHeader";
 
     public CustomHttpHeaderFilterStrategy() {
         initialize();
@@ -31,6 +35,7 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
         getOutFilter().add("host");
         getOutFilter().add("cache-control");
         getOutFilter().add("connection");
+        getOutFilter().add("date");
         getOutFilter().add("pragma");
         getOutFilter().add("trailer");
         getOutFilter().add("transfer-encoding");
@@ -44,5 +49,39 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
         // must ignore case for Http based transports
         setOutFilterStartsWith(CAMEL_FILTER_STARTS_WITH);
         setInFilterStartsWith(CAMEL_FILTER_STARTS_WITH);
+    }
+
+    @Override
+    public boolean applyFilterToCamelHeaders(String headerName, Object headerValue, Exchange exchange) {
+        if (skipFilter(headerName, exchange)) {
+            // filter is not applied
+            return false;
+        }
+        // it will apply filter
+        return super.applyFilterToCamelHeaders(headerName, headerValue, exchange);
+    }
+
+    @Override
+    public boolean applyFilterToExternalHeaders(String headerName, Object headerValue, Exchange exchange) {
+        if (skipFilter(headerName, exchange)) {
+            // filter is not applied
+            return false;
+        }
+        // it will apply filter
+        return super.applyFilterToExternalHeaders(headerName, headerValue, exchange);
+    }
+
+    private boolean skipFilter(String headerName, Exchange exchange) {
+        // Check if the key is the date header
+        if (headerName.equalsIgnoreCase(DATE_HEADER)) {
+            Object useCustomHeaderObj = exchange.getProperty(USE_CUSTOM_DATE_HEADER);
+            boolean useCustomHeader = Boolean.parseBoolean(String.valueOf(useCustomHeaderObj));
+
+            // If useCustomHeader is true, do not filter the date header
+            if (useCustomHeader) {
+                return true;
+            }
+        }
+        return false;
     }
 }
