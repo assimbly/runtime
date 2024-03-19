@@ -8,15 +8,29 @@ public class JschConfig {
     private static final String PUBKEY_ACCEPTED_ALGORITHMS = "PubkeyAcceptedAlgorithms";
     private static final String KEX = "kex";
 
-    private static final String SSH_RSA = "ssh-rsa";
-    private static final String DIFFIE_HELLMAN_GROUP1_SHA1 = "diffie-hellman-group1-sha1";
-    private static final String DIFFIE_HELLMAN_GROUP14_SHA1 = "diffie-hellman-group14-sha1";
+    private static final String JSCH_SERVER_HOST_KEY_ENV_VAR = "JSCH_SERVER_HOST_KEY";
+    private static final String JSCH_PUBKEY_ACCEPTED_ALGORITHMS_ENV_VAR = "JSCH_PUBKEY_ACCEPTED_ALGORITHMS";
+    private static final String JSCH_KEX_ENV_VAR = "JSCH_KEX";
 
     public static void enableExtraConfigOnJsch(JSch jsch) {
-        setJschConfig(jsch, SERVER_HOST_KEY, SSH_RSA);
-        setJschConfig(jsch, PUBKEY_ACCEPTED_ALGORITHMS, SSH_RSA);
-        setJschConfig(jsch, KEX, DIFFIE_HELLMAN_GROUP1_SHA1);
-        setJschConfig(jsch, KEX, DIFFIE_HELLMAN_GROUP14_SHA1);
+        setExtraConfigFromEnvironmentVar(jsch, SERVER_HOST_KEY, JSCH_SERVER_HOST_KEY_ENV_VAR);
+        setExtraConfigFromEnvironmentVar(jsch, PUBKEY_ACCEPTED_ALGORITHMS, JSCH_PUBKEY_ACCEPTED_ALGORITHMS_ENV_VAR);
+        setExtraConfigFromEnvironmentVar(jsch, KEX, JSCH_KEX_ENV_VAR);
+    }
+
+    private static String[] getExtraConfigFromEnvironmentVar(String envVar) {
+        String envVarValue = System.getenv(envVar);
+        if(envVarValue!=null && !envVarValue.isEmpty()) {
+            return envVarValue.split(",");
+        }
+        return new String[0];
+    }
+
+    private static void setExtraConfigFromEnvironmentVar(JSch jsch, String key, String envVar) {
+        String[] extraConfArr = getExtraConfigFromEnvironmentVar(envVar);
+        for (String extraConf: extraConfArr) {
+            setJschConfig(jsch, key, extraConf);
+        }
     }
 
     private static void setJschConfig(JSch jsch, String key, String additionalKeyValue) {
