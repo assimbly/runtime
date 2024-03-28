@@ -218,11 +218,11 @@ public class FlowManagerRuntime {
     }
 
     @PostMapping(
-            path = "/integration/{integrationId}/route/{routeId}/install",
+            path = "/integration/route/{routeId}/install",
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> installRoute(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable String routeId, @RequestBody String route) throws Exception {
+    public ResponseEntity<String> installRoute(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "routeId") String routeId, @RequestBody String route) throws Exception {
 
         plainResponse = true;
 
@@ -230,6 +230,10 @@ public class FlowManagerRuntime {
 
         try {
             integration = integrationRuntime.getIntegration();
+
+            if(contentType.equals("application/json")){
+                route = DocConverter.convertJsonToXml(route);
+            }
 
             status = integration.installRoute(routeId, route);
 

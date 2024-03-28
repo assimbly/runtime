@@ -94,11 +94,11 @@ public class XMLFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
 		log.info("Configuration File: " + xml);
-		log.debug("Configuration File: " + xml);
 
 		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
-			dilXml = new Transform().transformToDil(xml, flowId);
+			Transform transform = new Transform("transform-to-dil.xsl");
+			dilXml = transform.transformToDil(xml, flowId);
 		}
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -123,6 +123,17 @@ public class XMLFileConfiguration {
 		return properties;
 
 	}
+
+	public String getRouteConfiguration(String flowId, String xml) throws Exception {
+
+		log.info("Configuration File: " + xml);
+
+		Transform transform = new Transform("transform-to-route.xsl");
+		return transform.transformToDil(xml, flowId);
+
+	}
+
+
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 

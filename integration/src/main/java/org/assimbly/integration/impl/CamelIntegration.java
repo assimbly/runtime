@@ -18,6 +18,7 @@ import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
+import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
@@ -48,6 +49,7 @@ import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
+import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -149,7 +151,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setThreadProfile(0,20,10000);
+		setThreadProfile("wiretapProfile",0,20,10000);
 
 		setCertificateStore(true);
 
@@ -223,6 +225,12 @@ public class CamelIntegration extends BaseIntegration {
 		context.addComponent("sync", new DirectComponent());
 		context.addComponent("async", new SedaComponent());
 
+		KameletComponent kameletComponent = new KameletComponent();
+		//kameletComponent.setLocation("ref:");
+		context.addComponent("function", kameletComponent);
+
+
+
 		context.addComponent("jetty-nossl", new JettyHttpComponent12());
 
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
@@ -261,23 +269,23 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+	public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {
 
-		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder(name);
 		builder
 				.poolSize(poolSize)
 				.maxPoolSize(maxPoolSize)
 				.maxQueueSize(maxQueueSize)
 				.keepAliveTime(10L);
 
-		//enable virtual threads
-		System.setProperty("camel.threads.virtual.enabled","true");
-
 		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
 
 	}
 
 	public void setGlobalOptions(){
+
+		//enable virtual threads
+		System.setProperty("camel.threads.virtual.enabled","true");
 
 		context.setUseBreadcrumb(true);
 
@@ -314,6 +322,8 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+
+			registry.bind(StringUtils.substringBetween(resourceName, "kamelets/",".kamelet.yaml"),resourceAsString);
 
 			Resource resource = convertKameletToStep(resourceName, resourceAsString);
 
@@ -1129,6 +1139,10 @@ public class CamelIntegration extends BaseIntegration {
 	public String installRoute(String routeId, String route) throws Exception {
 
 		initFlowActionReport(routeId, "Start");
+
+		if(!route.startsWith("<route")){
+			route = new XMLFileConfiguration().getRouteConfiguration(routeId,route);
+		}
 
 		try{
 
