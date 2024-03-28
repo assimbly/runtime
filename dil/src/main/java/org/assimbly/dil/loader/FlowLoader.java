@@ -182,6 +182,7 @@ public class FlowLoader extends RouteBuilder {
 		for(String key : props.descendingKeySet()){
 			if(key.endsWith("route")){
 				String route = props.get(key);
+				//route = "<camelContext><threadPoolProfile id=\"" + flowId + "Profile\" poolSize=\"10\" maxPoolSize=\"50\" maxQueueSize=\"5000\"/>" + route + "</camelContext>";
 				String id = props.get(key + ".id");
 				loadRoute(route, "route",id);
 			}

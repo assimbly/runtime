@@ -145,7 +145,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setThreadProfile(0,5,5000);
+		setDefaultThreadProfile(0,10,1000);
+
+		setThreadProfile("wiretapProfile", 0,5,2000);
 
 		setCertificateStore(true);
 
@@ -257,12 +259,17 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public void setThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
 
-		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder("wiretapProfile");
+	public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setPoolSize(poolSize);
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxPoolSize(maxPoolSize);
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxQueueSize(maxQueueSize);
+	}
+
+	public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {
+		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder(name);
 		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).keepAliveTime(10L);
 		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
-
 	}
 
 	public void setGlobalOptions(){
@@ -1138,6 +1145,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		boolean addFlow = false;
 		String result = "unloaded";
+
+		//setThreadProfile(id + "Profile", 10, 20, 2000);
 
 		try {
 
