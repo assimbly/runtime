@@ -145,7 +145,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setDefaultThreadProfile(0,10,1000);
+		setDefaultThreadProfile(5,50,5000);
 
 		setThreadProfile("wiretapProfile", 0,5,2000);
 
