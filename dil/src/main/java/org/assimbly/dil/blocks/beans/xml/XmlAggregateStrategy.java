@@ -1,11 +1,23 @@
 package org.assimbly.dil.blocks.beans.xml;
 
+import ca.uhn.hl7v2.conf.spec.usecase.AbstractUseCaseComponent;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.helper.XmlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 
 public class XmlAggregateStrategy implements AggregationStrategy {
@@ -13,62 +25,43 @@ public class XmlAggregateStrategy implements AggregationStrategy {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public Exchange aggregate(Exchange original, Exchange resource) {
-        try
-        {
-            Document aggregated = XmlHelper.newDocument("<Aggregated/>");
+    public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
 
-            if (resource == null && original == null) {
-                throw new Exception("Something went wrong fetching the input data.");
-            }
+        try {
 
-            Document originalXml = getXml(original),
-                     resourceXml = getXml(resource);
+            Document aggregated = DocConverter.convertStringToDoc("<Aggregated/>");
+
+            Document originalXml = getXml(oldExchange),
+                    resourceXml = getXml(newExchange);
 
             if(originalXml == null && resourceXml == null) {
-                throw new Exception("Something went wrong parsing the XML inputs.");
-            }
-
-            if (originalXml == null) {
-                aggregated = XmlHelper.mergeIn(aggregated, resourceXml);
-                resource.getIn().setBody(XmlHelper.prettyPrint(aggregated));
-                return resource;
-            }
-
-            if (resourceXml == null) {
-                aggregated = XmlHelper.mergeIn(aggregated, originalXml);
-                original.getIn().setBody(XmlHelper.prettyPrint(aggregated));
-                return original;
-            }
-            /*
-                This avoids creating a new root element "Aggregated" when two aggregate components are used after each other,
-                otherwise you would get:
-
-                <Aggregated>
-                    <Aggregated>
-
-                    </Aggregated>
-                </Aggregated>
-            */
-
-            if(originalXml.getDocumentElement().getTagName().equals("Aggregated")){
-                aggregated = originalXml;
-                aggregated = XmlHelper.mergeIn(aggregated, resourceXml);
+                throw new Exception("XML Aggregate: Something went wrong parsing the XML inputs.");
+            }else if(originalXml == null) {
+                aggregated = mergeDoc(aggregated, resourceXml);
+                newExchange.getIn().setBody(aggregated);
+                return newExchange;
+            }else if (resourceXml == null) {
+                aggregated = mergeDoc(aggregated, originalXml);
+            }else if(originalXml.getDocumentElement().getTagName().equals("Aggregated")){
+                aggregated = mergeDoc(originalXml, resourceXml);
             }else{
-                aggregated = XmlHelper.mergeIn(aggregated, originalXml);
-                aggregated = XmlHelper.mergeIn(aggregated, resourceXml);
+                aggregated = mergeDoc(aggregated, originalXml);
+                aggregated = mergeDoc(aggregated, resourceXml);
             }
-            original.getIn().setBody(XmlHelper.prettyPrint(aggregated));
+
+            oldExchange.getIn().setBody(aggregated);
+
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        return original;
+        return oldExchange;
     }
 
     private Document getXml(Exchange exchange) {
 
         try {
-            Document document = XmlHelper.newDocument(exchange.getIn().getBody(String.class));
+            String xml = exchange.getIn().getBody(String.class);
+            Document document = DocConverter.convertStringToDoc(xml);
 
             if (document == null) {
                 log.warn("No valid XML returned by the route to the Aggregate component.");
@@ -85,4 +78,13 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
         return null;
     }
+
+    public static Document mergeDoc(Document original, Document addition) {
+        Node copy = original.importNode(addition.getFirstChild(), true);
+        original.getFirstChild().appendChild(copy);
+        return original;
+    }
+
+
+
 }
