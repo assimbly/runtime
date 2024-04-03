@@ -38,6 +38,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
+import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
@@ -233,6 +235,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
+		registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());

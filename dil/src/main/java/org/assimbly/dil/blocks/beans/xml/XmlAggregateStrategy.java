@@ -4,6 +4,7 @@ import ca.uhn.hl7v2.conf.spec.usecase.AbstractUseCaseComponent;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import org.apache.camel.support.DefaultExchange;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.helper.XmlHelper;
 import org.slf4j.Logger;
@@ -33,38 +34,39 @@ public class XmlAggregateStrategy implements AggregationStrategy {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+    public Exchange aggregate(Exchange newExchange, Exchange splitExchange) {
 
         try {
 
-            boolean CamelSplitComplete = newExchange.getProperty("CamelSplitComplete",Boolean.class);
+            int CamelSplitIndex = splitExchange.getProperty("CamelSplitIndex",Integer.class);
 
-            String newXml = getXml(oldExchange, "old"),
-                    splitXml = getXml(newExchange, "new");
+            if(CamelSplitIndex==1){
+                return splitExchange;
+            }
+
+            String splitXml = getBody(splitExchange);
+            String newXml = getBody(newExchange);
 
             if(newXml == null && splitXml == null) {
-                throw new Exception("XML Aggregate: Something went wrong parsing the XML inputs.");
-            }else if(newXml==null){
-                newExchange.getIn().setBody(splitXml);
-                return newExchange;
-            }else{
-                newXml = newXml + splitXml;
+                throw new Exception("XML Aggregate: Inputs are empty.");
             }
+
+            newXml = newXml + splitXml;
+            boolean CamelSplitComplete = splitExchange.getProperty("CamelSplitComplete",Boolean.class);
 
             if(CamelSplitComplete){
                 newXml = format("<Aggregated>" + newXml + "</Aggregated>");
-                oldExchange.getIn().setBody(newXml);
-            }else{
-                oldExchange.getIn().setBody(newXml);
             }
+
+            newExchange.getIn().setBody(newXml);
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        return oldExchange;
+        return newExchange;
     }
 
-    private String getXml(Exchange exchange, String x) {
+    private String getBody(Exchange exchange) {
 
         try {
             return exchange.getIn().getBody(String.class);
@@ -77,6 +79,7 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
         return null;
     }
+
 
     public String format(String xml) {
 
