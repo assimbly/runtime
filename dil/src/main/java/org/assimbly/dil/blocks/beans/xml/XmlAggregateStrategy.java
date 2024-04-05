@@ -46,12 +46,13 @@ public class XmlAggregateStrategy implements AggregationStrategy {
     }
 
     private String buildAggregateBody(String newXml, String splitXml) {
-        if(newXml.startsWith(XML_DECLARATION_UTF_8)) {
-            newXml = StringUtils.substring(newXml, 0, newXml.length() - AGGREGATE_END_TAG.length()) + splitXml + AGGREGATE_END_TAG;
+        String result = "";
+        if(newXml.endsWith(AGGREGATE_END_TAG)) {
+            result = StringUtils.substring(newXml, 0, newXml.length() - AGGREGATE_END_TAG.length()) + splitXml + AGGREGATE_END_TAG;
         } else {
-            newXml = XML_DECLARATION_UTF_8 + AGGREGATE_INIT_TAG + splitXml + AGGREGATE_END_TAG;
+            result = XML_DECLARATION_UTF_8 + AGGREGATE_INIT_TAG + splitXml + AGGREGATE_END_TAG;
         }
-        return newXml;
+        return result;
     }
 
     private String getBody(Exchange exchange) {
