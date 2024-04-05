@@ -95,7 +95,7 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             final LSSerializer writer = impl.createLSSerializer();
 
             writer.getDomConfig().setParameter("format-pretty-print", Boolean.TRUE); // Set this to true if the output needs to be beautified.
-            writer.getDomConfig().setParameter("xml-declaration", true);
+            writer.getDomConfig().setParameter("xml-declaration", Boolean.TRUE);
 
             String serializedXml = writer.writeToString(document);
             serializedXml = serializedXml.replace("encoding=\"UTF-16\"", "encoding=\"UTF-8\"");
