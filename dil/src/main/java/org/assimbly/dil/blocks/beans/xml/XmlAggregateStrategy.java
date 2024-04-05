@@ -38,9 +38,12 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
         try {
 
-            int CamelSplitIndex = splitExchange.getProperty("CamelSplitIndex",Integer.class);
-
-            if(CamelSplitIndex==1){
+            try {
+                int CamelSplitIndex = splitExchange.getProperty("CamelSplitIndex", Integer.class);
+                if(CamelSplitIndex==0){
+                    return splitExchange;
+                }
+            } catch (Exception e) {
                 return splitExchange;
             }
 
@@ -86,19 +89,18 @@ public class XmlAggregateStrategy implements AggregationStrategy {
         try {
             final InputSource src = new InputSource(new StringReader(xml));
             final Node document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src).getDocumentElement();
-            final Boolean keepDeclaration = Boolean.valueOf(xml.startsWith("<?xml"));
-
-            //May need this: System.setProperty(DOMImplementationRegistry.PROPERTY,"com.sun.org.apache.xerces.internal.dom.DOMImplementationSourceImpl");
-
 
             final DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
             final DOMImplementationLS impl = (DOMImplementationLS) registry.getDOMImplementation("LS");
             final LSSerializer writer = impl.createLSSerializer();
 
             writer.getDomConfig().setParameter("format-pretty-print", Boolean.TRUE); // Set this to true if the output needs to be beautified.
-            writer.getDomConfig().setParameter("xml-declaration", keepDeclaration); // Set this to true if the declaration is needed to be outputted.
+            writer.getDomConfig().setParameter("xml-declaration", true);
 
-            return writer.writeToString(document);
+            String serializedXml = writer.writeToString(document);
+            serializedXml = serializedXml.replace("encoding=\"UTF-16\"", "encoding=\"UTF-8\"");
+
+            return serializedXml;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
