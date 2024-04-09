@@ -47,6 +47,13 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
     private String buildAggregateBody(String newXml, String splitXml) {
         String result = "";
+
+        if(splitXml.indexOf("?>") != -1) {
+            // removes xml declaration from splitXml
+            int declarationEndPos = splitXml.indexOf("?>");
+            splitXml = splitXml.substring(declarationEndPos + 2);
+        }
+
         if(newXml.endsWith(AGGREGATE_END_TAG)) {
             result = StringUtils.substring(newXml, 0, newXml.length() - AGGREGATE_END_TAG.length()) + splitXml + AGGREGATE_END_TAG;
         } else {
