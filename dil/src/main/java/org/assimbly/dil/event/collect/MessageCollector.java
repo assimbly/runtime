@@ -27,6 +27,9 @@ public class MessageCollector extends EventNotifierSupport {
     private final String flowId;
     private final String flowVersion;
 
+    private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
+    private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
+
 
     public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
@@ -119,11 +122,12 @@ public class MessageCollector extends EventNotifierSupport {
         try {
 
             byte[] body = message.getBody(byte[].class);
+            int limitBodyLength = getLimitBodyLength();
 
             if (body == null || body.length == 0) {
                 return "<empty>";
-            }else if (body.length > 250000) {
-                return new String(Arrays.copyOfRange(body, 0, 250000), StandardCharsets.UTF_8);
+            }else if (body.length > limitBodyLength) {
+                return new String(Arrays.copyOfRange(body, 0, limitBodyLength), StandardCharsets.UTF_8);
             }else{
                 return new String (body, StandardCharsets.UTF_8);
             }
@@ -137,6 +141,15 @@ public class MessageCollector extends EventNotifierSupport {
             }
         }
 
+    }
+
+    private int getLimitBodyLength() {
+        try {
+            String bodyLength = System.getenv(MSG_COLLECTOR_LIMIT_BODY_LENGTH);
+            return Integer.parseInt(bodyLength);
+        } catch (Exception e) {
+            return MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH;
+        }
     }
 
 }
