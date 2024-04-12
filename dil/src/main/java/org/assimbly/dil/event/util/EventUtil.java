@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 public class EventUtil {
 
@@ -52,6 +53,21 @@ public class EventUtil {
 
         return formatter.format(now);
 
+    }
+
+    public static long calcMapLength(Map<String, Object> map) {
+        long totalLength = 0;
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            totalLength += key.length();
+            if (value != null) {
+                totalLength += value.toString().length();
+            }
+        }
+
+        return totalLength;
     }
 
 }
