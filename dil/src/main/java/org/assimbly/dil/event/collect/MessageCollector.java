@@ -10,6 +10,8 @@ import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
 import org.assimbly.dil.event.domain.MessageEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,6 +32,14 @@ public class MessageCollector extends EventNotifierSupport {
     private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
 
+    private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
+    public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
+
+    public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
+    public static final String MESSAGE_HEADERS_LENGTH_PROPERTY = "HeadersLength";
+    public static final String MESSAGE_BODY_LENGTH_PROPERTY = "BodyLength";
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
@@ -66,63 +76,51 @@ public class MessageCollector extends EventNotifierSupport {
 
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-                //process and store the exchange
-                if (filters == null) {
-                    processEvent(exchange, stepId);
-                } else if (EventUtil.isFilteredEquals(filters, stepId)) {
-                    setResponseTime(exchange);
-                    processEvent(exchange, stepId);
+                if (EventUtil.isFilteredEquals(filters, stepId)) {
+                    // set response time property
+                    setResponseTimeProperty(exchange);
                 }
 
-            }
-
-        }
-    }
-
-    private void setResponseTime(Exchange exchange){
-        //Set default headers for the response time
-        long created = exchange.getCreated();
-
-        if(created!=0) {
-            Object initTime = exchange.getIn().getHeader("ComponentInitTime", Long.class);
-            exchange.getIn().setHeader("ComponentInitTime", created);
-            if (initTime != null) {
-                long duration = created - (long) initTime;
-                exchange.getIn().setHeader("ComponentResponseTime", Long.toString(duration));
+                //process and store the exchange
+                processEvent(exchange, stepId);
             }
         }
-
     }
 
     private void processEvent(Exchange exchange, String stepId){
 
         //set fields
         Message message = exchange.getMessage();
-        String body = getBody(message);
+        String body = getBody(exchange);
         Map<String, Object> headers = message.getHeaders();
+        Map<String, Object> properties = exchange.getProperties();
         String messageId = message.getMessageId();
 
         //use breadcrumbId when available
-        messageId = message.getHeader("breadcrumbId", messageId, String.class);
+        messageId = message.getHeader(BREADCRUMB_ID_HEADER, messageId, String.class);
 
         //calculate times
         String timestamp = EventUtil.getCreatedTimestamp(exchange.getCreated());
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
-        MessageEvent messageEvent = new MessageEvent(timestamp, messageId, flowId, flowVersion, stepId, headers, body, expiryDate);
+        MessageEvent messageEvent = new MessageEvent(
+                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
+        );
         String json = messageEvent.toJson();
 
         //store the event
         storeManager.storeEvent(json);
     }
 
-    public String getBody(Message message) {
+    public String getBody(Exchange exchange) {
 
         try {
-
-            byte[] body = message.getBody(byte[].class);
+            byte[] body = exchange.getMessage().getBody(byte[].class);
             int limitBodyLength = getLimitBodyLength();
+
+            // save initial body length
+            exchange.setProperty(MESSAGE_BODY_LENGTH_PROPERTY, body.length);
 
             if (body == null || body.length == 0) {
                 return "<empty>";
@@ -133,7 +131,7 @@ public class MessageCollector extends EventNotifierSupport {
             }
 
         } catch (Exception e) {
-            String typeName = message.getBody().getClass().getTypeName();
+            String typeName = exchange.getMessage().getBody().getClass().getTypeName();
             if(typeName!= null && !typeName.isEmpty()){
                 return "<" + typeName + ">";
             }else{
@@ -149,6 +147,20 @@ public class MessageCollector extends EventNotifierSupport {
             return Integer.parseInt(bodyLength);
         } catch (Exception e) {
             return MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH;
+        }
+    }
+
+    private void setResponseTimeProperty(Exchange exchange){
+        //Set default headers for the response time
+        long created = exchange.getCreated();
+
+        if(created!=0) {
+            Object initTime = exchange.getIn().getHeader(COMPONENT_INIT_TIME_HEADER, Long.class);
+            exchange.getIn().setHeader(COMPONENT_INIT_TIME_HEADER, created);
+            if (initTime != null) {
+                long duration = created - (long) initTime;
+                exchange.setProperty(RESPONSE_TIME_PROPERTY, Long.toString(duration));
+            }
         }
     }
 

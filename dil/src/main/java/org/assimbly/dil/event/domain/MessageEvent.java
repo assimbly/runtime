@@ -3,14 +3,14 @@ package org.assimbly.dil.event.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.assimbly.dil.event.collect.MessageCollector;
+import org.assimbly.dil.event.util.EventUtil;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.quartz.impl.StdScheduler;
 
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -24,6 +24,10 @@ their Java name to make them the same to DIL/Camel3.
 public class MessageEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String JMS_PREFIX = "JMS";
+    private static final Set<String> PROPERTIES_FILTER_SET = Set.of(
+            MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
+            MessageCollector.RESPONSE_TIME_PROPERTY
+    );
     private final String id;
     private final String flowId;
     private final String flowVersion;
@@ -31,15 +35,20 @@ public class MessageEvent {
     private final String timestamp;
     private final String expiryDate;
     private final Map<String, Object> headers;
+    private final Map<String, Object> properties;
     private final String body;
 
-    public MessageEvent(String timestamp, String id, String flowId, String flowVersion, String stepId, Map<String, Object> headers, String body, String expiryDate) {
+    public MessageEvent(
+            String timestamp, String id, String flowId, String flowVersion, String stepId,
+            Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate
+    ) {
         this.timestamp = timestamp;
         this.id = id;
         this.flowId = flowId;
         this.flowVersion = flowVersion;
         this.stepId = stepId;
         this.headers = headers;
+        this.properties = properties;
         this.body = body;
         this.expiryDate = expiryDate;
     }
@@ -79,6 +88,7 @@ public class MessageEvent {
                 .stream()
                 .filter(header -> !header.getKey().startsWith(JMS_PREFIX))
                 .filter(header -> header.getValue() != null)
+                .filter(header -> !header.getKey().equals(MessageCollector.COMPONENT_INIT_TIME_HEADER))
                 .filter(header -> !(header.getValue() instanceof StdScheduler))
                 .filter(header -> !(header.getValue() instanceof Response))
                 .filter(header -> !(header.getValue() instanceof Request))
@@ -91,6 +101,20 @@ public class MessageEvent {
                     return entry;
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @JsonProperty("properties")
+    public Map<String, Object> getProperties() {
+        Map<String, Object> propertiesMap = properties.entrySet()
+                .stream()
+                .filter(property -> property.getValue() != null)
+                .filter(property -> PROPERTIES_FILTER_SET.contains(property.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // add filtered headers length
+        propertiesMap.put(MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY, EventUtil.calcMapLength(getHeaders()));
+
+        return propertiesMap;
     }
 
     @JsonProperty("body")
