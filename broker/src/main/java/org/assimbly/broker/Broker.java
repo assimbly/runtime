@@ -263,6 +263,14 @@ public interface Broker {
 	 */
 	public String countMessagesFromList(String endpointNames) throws Exception;
 
+	/**
+	 * list of number of messages for each flow
+	 *
+	 * @param  excludeEmptyQueues (exclude empty queues from the response)
+	 * @return list of flows and how many messages.
+	 * @throws Exception if list can't be retrieved
+	 */
+	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception;
 
 	/**
 	 * list all messages on the broker
