@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.assimbly.dil.event.collect.MessageCollector;
-import org.assimbly.dil.event.util.EventUtil;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.quartz.impl.StdScheduler;
@@ -26,6 +25,7 @@ public class MessageEvent {
     private static final String JMS_PREFIX = "JMS";
     private static final Set<String> PROPERTIES_FILTER_SET = Set.of(
             MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
+            MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY,
             MessageCollector.RESPONSE_TIME_PROPERTY
     );
     private final String id;
@@ -84,37 +84,12 @@ public class MessageEvent {
      **/
     @JsonProperty("headers")
     public Map<String, Object> getHeaders() {
-        return headers.entrySet()
-                .stream()
-                .filter(header -> !header.getKey().startsWith(JMS_PREFIX))
-                .filter(header -> header.getValue() != null)
-                .filter(header -> !header.getKey().equals(MessageCollector.COMPONENT_INIT_TIME_HEADER))
-                .filter(header -> !(header.getValue() instanceof StdScheduler))
-                .filter(header -> !(header.getValue() instanceof Response))
-                .filter(header -> !(header.getValue() instanceof Request))
-                .map(entry -> {
-                    if(entry.getKey().toLowerCase().contains("firetime")
-                            && entry.getValue() instanceof Date) {
-                        return new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().toString());
-                    }
-
-                    return entry;
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return filterHeaders(headers);
     }
 
     @JsonProperty("properties")
     public Map<String, Object> getProperties() {
-        Map<String, Object> propertiesMap = properties.entrySet()
-                .stream()
-                .filter(property -> property.getValue() != null)
-                .filter(property -> PROPERTIES_FILTER_SET.contains(property.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        // add filtered headers length
-        propertiesMap.put(MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY, EventUtil.calcMapLength(getHeaders()));
-
-        return propertiesMap;
+        return filterProperties(properties);
     }
 
     @JsonProperty("body")
@@ -135,5 +110,33 @@ public class MessageEvent {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Map<String, Object> filterHeaders(Map<String, Object> headers) {
+        return headers.entrySet()
+                .stream()
+                .filter(header -> !header.getKey().startsWith(JMS_PREFIX))
+                .filter(header -> header.getValue() != null)
+                .filter(header -> !header.getKey().equals(MessageCollector.COMPONENT_INIT_TIME_HEADER))
+                .filter(header -> !(header.getValue() instanceof StdScheduler))
+                .filter(header -> !(header.getValue() instanceof Response))
+                .filter(header -> !(header.getValue() instanceof Request))
+                .map(entry -> {
+                    if(entry.getKey().toLowerCase().contains("firetime")
+                            && entry.getValue() instanceof Date) {
+                        return new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().toString());
+                    }
+
+                    return entry;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public static Map<String, Object> filterProperties(Map<String, Object> properties) {
+        return properties.entrySet()
+                .stream()
+                .filter(property -> property.getValue() != null)
+                .filter(property -> PROPERTIES_FILTER_SET.contains(property.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
