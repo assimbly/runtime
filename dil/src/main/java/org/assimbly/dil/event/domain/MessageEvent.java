@@ -23,11 +23,13 @@ their Java name to make them the same to DIL/Camel3.
 public class MessageEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String JMS_PREFIX = "JMS";
-    private static final Set<String> PROPERTIES_FILTER_SET = Set.of(
-            MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
-            MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY,
+    private static final Set<String> PROPERTIES_FILTER_BY_UNIT_MILLISECONDS_SET = Set.of(
             MessageCollector.RESPONSE_TIME_PROPERTY,
             MessageCollector.TIMESTAMP_PROPERTY
+    );
+    private static final Set<String> PROPERTIES_FILTER_BY_UNIT_BYTES_SET = Set.of(
+            MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
+            MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY
     );
     private final String id;
     private final String flowId;
@@ -90,7 +92,14 @@ public class MessageEvent {
 
     @JsonProperty("properties")
     public Map<String, Object> getProperties() {
-        return filterProperties(properties);
+        Map<String, Object> propsMilliseconds = filterProperties(properties, PROPERTIES_FILTER_BY_UNIT_MILLISECONDS_SET);
+        Map<String, Object> propsBytes = filterProperties(properties, PROPERTIES_FILTER_BY_UNIT_BYTES_SET);
+
+        Map<String, Object> propertiesMap = new HashMap<>();
+        propertiesMap.put("milliseconds", propsMilliseconds);
+        propertiesMap.put("bytes", propsBytes);
+
+        return propertiesMap;
     }
 
     @JsonProperty("body")
@@ -133,11 +142,11 @@ public class MessageEvent {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public static Map<String, Object> filterProperties(Map<String, Object> properties) {
+    public static Map<String, Object> filterProperties(Map<String, Object> properties, Set<String> propertiesFilter) {
         return properties.entrySet()
                 .stream()
                 .filter(property -> property.getValue() != null)
-                .filter(property -> PROPERTIES_FILTER_SET.contains(property.getKey()))
+                .filter(property -> propertiesFilter.contains(property.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
