@@ -36,6 +36,7 @@ public class MessageCollector extends EventNotifierSupport {
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
+    public static final String TIMESTAMP_PROPERTY = "Timestamp";
     public static final String MESSAGE_HEADERS_LENGTH_PROPERTY = "HeadersLength";
     public static final String MESSAGE_BODY_LENGTH_PROPERTY = "BodyLength";
 
@@ -150,6 +151,9 @@ public class MessageCollector extends EventNotifierSupport {
             // set response time property
             setResponseTimeProperty(exchange);
         }
+
+        // set timestamp property
+        exchange.setProperty(TIMESTAMP_PROPERTY, Calendar.getInstance().getTimeInMillis());
 
         // set BodyLength property
         byte[] body = exchange.getMessage().getBody(byte[].class);

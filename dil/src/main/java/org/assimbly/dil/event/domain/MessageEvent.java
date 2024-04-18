@@ -26,7 +26,8 @@ public class MessageEvent {
     private static final Set<String> PROPERTIES_FILTER_SET = Set.of(
             MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
             MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY,
-            MessageCollector.RESPONSE_TIME_PROPERTY
+            MessageCollector.RESPONSE_TIME_PROPERTY,
+            MessageCollector.TIMESTAMP_PROPERTY
     );
     private final String id;
     private final String flowId;
