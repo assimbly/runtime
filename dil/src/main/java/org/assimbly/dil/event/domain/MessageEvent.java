@@ -23,14 +23,33 @@ their Java name to make them the same to DIL/Camel3.
 public class MessageEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String JMS_PREFIX = "JMS";
-    private static final Set<String> PROPERTIES_FILTER_BY_UNIT_MILLISECONDS_SET = Set.of(
-            MessageCollector.RESPONSE_TIME_PROPERTY,
-            MessageCollector.TIMESTAMP_PROPERTY
+
+    private static final String PROPERTY_NAME = "name";
+    private static final String PROPERTY_VALUE = "value";
+    private static final String PROPERTY_UNIT = "unit";
+
+    private static final String UNIT_MILLISECONDS = "milliseconds";
+    private static final String UNIT_BYTES = "bytes";
+
+    private static final Set<String> PROPERTIES_MILLISECONDS_UNIT_SET = Set.of(
+            MessageCollector.RESPONSE_TIME_PROPERTY
     );
-    private static final Set<String> PROPERTIES_FILTER_BY_UNIT_BYTES_SET = Set.of(
+    private static final Set<String> PROPERTIES_BYTES_UNIT_SET = Set.of(
             MessageCollector.MESSAGE_BODY_SIZE_PROPERTY,
             MessageCollector.MESSAGE_HEADERS_SIZE_PROPERTY
     );
+    private static final Set<String> PROPERTIES_NO_UNIT_SET = Set.of(
+            MessageCollector.TIMESTAMP_PROPERTY
+    );
+    private static final Set<String> PROPERTIES_FILTER_SET;
+
+    static {
+        PROPERTIES_FILTER_SET = new HashSet<>();
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_MILLISECONDS_UNIT_SET);
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_BYTES_UNIT_SET);
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_NO_UNIT_SET);
+    }
+
     private final String id;
     private final String flowId;
     private final String flowVersion;
@@ -91,15 +110,24 @@ public class MessageEvent {
     }
 
     @JsonProperty("properties")
-    public Map<String, Object> getProperties() {
-        Map<String, Object> propsMilliseconds = filterProperties(properties, PROPERTIES_FILTER_BY_UNIT_MILLISECONDS_SET);
-        Map<String, Object> propsBytes = filterProperties(properties, PROPERTIES_FILTER_BY_UNIT_BYTES_SET);
+    public List<Map<String, Object>> getProperties() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        Map<String, Object> propsMap = filterProperties(properties, PROPERTIES_FILTER_SET);
 
-        Map<String, Object> propertiesMap = new HashMap<>();
-        propertiesMap.put("milliseconds", propsMilliseconds);
-        propertiesMap.put("bytes", propsBytes);
+        for (Map.Entry<String, Object> entry : propsMap.entrySet()) {
+            String name = entry.getKey();
+            Object value = entry.getValue();
+            String unit = getUnit(name);
 
-        return propertiesMap;
+            Map<String, Object> item = new HashMap<>();
+            item.put(PROPERTY_NAME, name);
+            item.put(PROPERTY_VALUE, value);
+            item.put(PROPERTY_UNIT, unit);
+
+            result.add(item);
+        }
+
+        return result;
     }
 
     @JsonProperty("body")
@@ -148,5 +176,16 @@ public class MessageEvent {
                 .filter(property -> property.getValue() != null)
                 .filter(property -> propertiesFilter.contains(property.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private String getUnit(String propertyName) {
+        if (PROPERTIES_MILLISECONDS_UNIT_SET.contains(propertyName)) {
+            return UNIT_MILLISECONDS;
+        } else if (PROPERTIES_BYTES_UNIT_SET.contains(propertyName)) {
+            return UNIT_BYTES;
+        } else if (PROPERTIES_NO_UNIT_SET.contains(propertyName)) {
+            return "";
+        }
+        return null; // No matching unit found
     }
 }
