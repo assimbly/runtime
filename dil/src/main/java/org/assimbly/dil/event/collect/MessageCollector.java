@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -153,7 +154,9 @@ public class MessageCollector extends EventNotifierSupport {
         }
 
         // set timestamp property
-        exchange.setProperty(TIMESTAMP_PROPERTY, Calendar.getInstance().getTimeInMillis());
+        Calendar calNow = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+        exchange.setProperty(TIMESTAMP_PROPERTY, sdf.format(calNow.getTime()));
 
         // set BodyLength property
         byte[] body = exchange.getMessage().getBody(byte[].class);
