@@ -28,8 +28,8 @@ public class MessageEvent {
             MessageCollector.TIMESTAMP_PROPERTY
     );
     private static final Set<String> PROPERTIES_FILTER_BY_UNIT_BYTES_SET = Set.of(
-            MessageCollector.MESSAGE_BODY_LENGTH_PROPERTY,
-            MessageCollector.MESSAGE_HEADERS_LENGTH_PROPERTY
+            MessageCollector.MESSAGE_BODY_SIZE_PROPERTY,
+            MessageCollector.MESSAGE_HEADERS_SIZE_PROPERTY
     );
     private final String id;
     private final String flowId;

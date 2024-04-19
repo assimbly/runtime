@@ -37,8 +37,8 @@ public class MessageCollector extends EventNotifierSupport {
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
-    public static final String MESSAGE_HEADERS_LENGTH_PROPERTY = "HeadersLength";
-    public static final String MESSAGE_BODY_LENGTH_PROPERTY = "BodyLength";
+    public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
+    public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -157,11 +157,11 @@ public class MessageCollector extends EventNotifierSupport {
 
         // set BodyLength property
         byte[] body = exchange.getMessage().getBody(byte[].class);
-        exchange.setProperty(MESSAGE_BODY_LENGTH_PROPERTY, body.length);
+        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body.length);
 
         // set HeadersLength property
         Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
-        exchange.setProperty(MESSAGE_HEADERS_LENGTH_PROPERTY, EventUtil.calcMapLength(headersMap));
+        exchange.setProperty(MESSAGE_HEADERS_SIZE_PROPERTY, EventUtil.calcMapLength(headersMap));
     }
 
     private void setResponseTimeProperty(Exchange exchange){
