@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,8 +37,9 @@ public class MessageCollector extends EventNotifierSupport {
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
-    public static final String MESSAGE_HEADERS_LENGTH_PROPERTY = "HeadersLength";
-    public static final String MESSAGE_BODY_LENGTH_PROPERTY = "BodyLength";
+    public static final String TIMESTAMP_PROPERTY = "Timestamp";
+    public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
+    public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -76,10 +78,8 @@ public class MessageCollector extends EventNotifierSupport {
 
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-                if (EventUtil.isFilteredEquals(filters, stepId)) {
-                    // set response time property
-                    setResponseTimeProperty(exchange);
-                }
+                // set custom properties
+                setCustomProperties(exchange, stepId);
 
                 //process and store the exchange
                 processEvent(exchange, stepId);
@@ -119,9 +119,6 @@ public class MessageCollector extends EventNotifierSupport {
             byte[] body = exchange.getMessage().getBody(byte[].class);
             int limitBodyLength = getLimitBodyLength();
 
-            // save initial body length
-            exchange.setProperty(MESSAGE_BODY_LENGTH_PROPERTY, body.length);
-
             if (body == null || body.length == 0) {
                 return "<empty>";
             }else if (body.length > limitBodyLength) {
@@ -148,6 +145,26 @@ public class MessageCollector extends EventNotifierSupport {
         } catch (Exception e) {
             return MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH;
         }
+    }
+
+    private void setCustomProperties(Exchange exchange, String stepId) {
+        if (EventUtil.isFilteredEquals(filters, stepId)) {
+            // set response time property
+            setResponseTimeProperty(exchange);
+        }
+
+        // set timestamp property
+        Calendar calNow = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+        exchange.setProperty(TIMESTAMP_PROPERTY, sdf.format(calNow.getTime()));
+
+        // set BodyLength property
+        byte[] body = exchange.getMessage().getBody(byte[].class);
+        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body.length);
+
+        // set HeadersLength property
+        Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
+        exchange.setProperty(MESSAGE_HEADERS_SIZE_PROPERTY, EventUtil.calcMapLength(headersMap));
     }
 
     private void setResponseTimeProperty(Exchange exchange){
