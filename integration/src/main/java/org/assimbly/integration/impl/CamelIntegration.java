@@ -285,6 +285,9 @@ public class CamelIntegration extends BaseIntegration {
 		activemq.setAsyncStartListener(true);
 		activemq.setAsyncStopListener(true);
 
+		VmComponent vmComponent = context.getComponent("vm", VmComponent.class);
+		vmComponent.setQueueSize(10000);
+
 		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
 		//velocity.setPropertiesFile("classpath:velocity.properties");
 
