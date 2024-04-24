@@ -46,9 +46,13 @@ public class Route {
 
         Node node = getRoute(routeId);
 
+
         String routeAsString = DocConverter.convertNodeToString(node);
 
         routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
+        routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
+
+
 
         return routeAsString;
 

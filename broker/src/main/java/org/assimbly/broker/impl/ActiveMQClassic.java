@@ -8,12 +8,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.UrlEscapers;
 import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.jmx.*;
@@ -567,6 +566,14 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+    public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+
+        Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(endpointType, excludeEmptyQueues);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(flowIdsMessageCountMap);
+    }
+
     public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
         checkIfEndpointExist(endpointName);
@@ -712,6 +719,47 @@ public class ActiveMQClassic implements Broker {
         DestinationViewMBean destinationViewMbean = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, DestinationViewMBean.class, true);
 
         return destinationViewMbean;
+    }
+
+    private Map<String, Long> getFlowIdsMessageCountMap(String destinationType, boolean excludeEmptyQueues) throws MalformedObjectNameException {
+        Map<String, Long> destinationMessageCounts = new HashMap<>();
+
+        try {
+            // Get all destinations
+            Set<ObjectName> destinations = broker.getManagementContext().queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",*"), null);
+
+            // Iterate over each destination
+            for (ObjectName destination : destinations) {
+                String destinationName = destination.getKeyProperty("destinationName");
+
+                if(!destinationName.startsWith("ID_")) {
+                    // discard destination without prefix ID_
+                    continue;
+                }
+
+                // extract flowId
+                String flowId = destinationName.substring(0, Math.min(destinationName.length(), 27));
+
+                // Get the DestinationViewMBean for the current destination
+                DestinationViewMBean destinationViewMBean = getQueueViewMBean(destinationType, destinationName);
+
+                // Get the message count for the current destination
+                long messageCount = destinationViewMBean.getQueueSize();
+
+                if(destinationMessageCounts.containsKey(flowId)) {
+                   messageCount += destinationMessageCounts.get(flowId);
+                }
+
+                if(messageCount > 0 || !excludeEmptyQueues) {
+                    // Add the destination name and message count to the map
+                    destinationMessageCounts.put(flowId, messageCount);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error to get all destinations and messages counts", e);
+        }
+
+        return destinationMessageCounts;
     }
 
     public QueueViewMBean getQueueViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {

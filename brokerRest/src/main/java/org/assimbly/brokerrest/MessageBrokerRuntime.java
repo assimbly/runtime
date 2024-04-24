@@ -80,6 +80,35 @@ public class MessageBrokerRuntime {
 
     }
 
+    /**
+     * GET  /brokers/{brokerType}/flows/messages/count : get a list of number of messages for each flow.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @return list of flows with status 200 (OK) or with status 404 (Not Found)
+     */
+    @GetMapping(
+            path = "/brokers/{brokerType}/flows/message/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object getFlowsMessageCountList(
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @PathVariable String brokerType,
+            @RequestParam(value = "excludeEmptyQueues", required = false) boolean excludeEmptyQueues
+    )  throws Exception {
+
+        log.debug("REST request to list number of messages for each flow");
+
+        try {
+            result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues);
+
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result);
+        } catch (Exception e) {
+            log.error("Can't list messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", e.getMessage());
+        }
+
+    }
+
 
     /**
      * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.

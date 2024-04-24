@@ -236,6 +236,14 @@ public class ManagedBrokerRuntime {
         return result;
     }
 
+    public String getFlowMessageCountsList(String brokerType, boolean excludeEmptyQueues) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.getFlowMessageCountsList(excludeEmptyQueues);
+
+        return result;
+    }
+
     public String countMessages(String brokerType, String endpointName) throws Exception {
 
         broker = getBroker(brokerType);

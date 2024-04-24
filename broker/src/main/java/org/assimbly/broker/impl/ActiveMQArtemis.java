@@ -9,19 +9,19 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
@@ -29,6 +29,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
@@ -40,10 +41,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.JMX;
-import javax.management.MBeanNotificationInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
@@ -604,6 +602,14 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
+	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+
+		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.writeValueAsString(flowIdsMessageCountMap);
+	}
+
 
 
 	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
@@ -654,6 +660,44 @@ public class ActiveMQArtemis implements Broker {
 
 		return result;
 
+	}
+
+	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) throws MalformedObjectNameException {
+		Map<String, Long> destinationMessageCounts = new HashMap<>();
+
+		try {
+			ActiveMQServer activeBroker = broker.getActiveMQServer();
+			// Get all queues names
+			String[] queueNames = activeBroker.getActiveMQServerControl().getQueueNames();
+
+			for (String queueName : queueNames) {
+				if(!queueName.startsWith("ID_")) {
+					// discard queues without prefix ID_
+					continue;
+				}
+
+				// extract flowId
+				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
+				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(ResourceNames.QUEUE + queueName);
+
+				// Get the message count for the current queue
+				long messageCount = queueControl.getMessageCount();
+
+				if(destinationMessageCounts.containsKey(flowId)) {
+					messageCount += destinationMessageCounts.get(flowId);
+				}
+
+				if(messageCount > 0 || !excludeEmptyQueues) {
+					// Add queue name and message count to the map
+					destinationMessageCounts.put(flowId, messageCount);
+				}
+			}
+
+		} catch (Exception e) {
+			log.error("Error to get all destinations and messages counts", e);
+		}
+
+		return destinationMessageCounts;
 	}
 
 	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {

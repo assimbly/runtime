@@ -32,16 +32,20 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.*;
+import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.camel.v1.Kamelet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
+import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
@@ -151,7 +155,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setThreadProfile("wiretapProfile",0,20,10000);
+		setDefaultThreadProfile(5,50,5000);
+
+		setThreadProfile("wiretapProfile", 0,5,2000);
 
 		setCertificateStore(true);
 
@@ -243,6 +249,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
+		registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
@@ -269,17 +277,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setPoolSize(poolSize);
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxPoolSize(maxPoolSize);
+		context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxQueueSize(maxQueueSize);
+	}
+
 	public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {
-
 		ThreadPoolProfileBuilder builder = new ThreadPoolProfileBuilder(name);
-		builder
-				.poolSize(poolSize)
-				.maxPoolSize(maxPoolSize)
-				.maxQueueSize(maxQueueSize)
-				.keepAliveTime(10L);
-
+		builder.poolSize(poolSize).maxPoolSize(maxPoolSize).maxQueueSize(maxQueueSize).rejectedPolicy(ThreadPoolRejectedPolicy.CallerRuns).keepAliveTime(10L);
 		context.getExecutorServiceManager().registerThreadPoolProfile(builder.build());
-
 	}
 
 	public void setGlobalOptions(){
@@ -293,9 +300,6 @@ public class CamelIntegration extends BaseIntegration {
 		activemq.setTestConnectionOnStartup(true);
 		activemq.setAsyncStartListener(true);
 		activemq.setAsyncStopListener(true);
-
-		//VelocityEndpoint velocity = context.getEndpoint("velocity", VelocityEndpoint.class);
-		//velocity.setPropertiesFile("classpath:velocity.properties");
 
 	}
 
@@ -1187,6 +1191,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		boolean addFlow = false;
 		String result = "unloaded";
+
+		//setThreadProfile(id + "Profile", 10, 20, 2000);
 
 		try {
 
@@ -2390,10 +2396,10 @@ public class CamelIntegration extends BaseIntegration {
 
 		info.put("name",context.getName());
 		info.put("version",context.getVersion());
-		info.put("startDate",context.getStartDate());
+		info.put("startDate", CamelContextHelper.getStartDate(context));
 		info.put("startupType",context.getStartupSummaryLevel());
 		info.put("uptime",context.getUptime());
-		info.put("uptimeMiliseconds",context.getUptimeMillis());
+		info.put("uptimeMiliseconds", context.getUptime().toMillis());
 		info.put("numberOfRunningSteps",context.getRoutesSize());
 
 		json.put("info",info);
