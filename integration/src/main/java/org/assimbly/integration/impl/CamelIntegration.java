@@ -241,6 +241,8 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
 
+		registry.bind("sslContextParameters", new SslContextParams());
+
 		//registry.bind("ZipSplitter", new org.apache.camel.dataformat.zipfile.ZipSplitter());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
