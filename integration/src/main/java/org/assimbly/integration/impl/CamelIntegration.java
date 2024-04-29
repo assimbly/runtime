@@ -147,7 +147,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setGlobalOptions();
 
-		setDefaultThreadProfile(5,50,5000);
+		setDefaultThreadProfile(0,20,5000);
 
 		setThreadProfile("wiretapProfile", 0,5,2000);
 
@@ -1152,8 +1152,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		boolean addFlow = false;
 		String result = "unloaded";
-
-		//setThreadProfile(id + "Profile", 10, 20, 2000);
 
 		try {
 
