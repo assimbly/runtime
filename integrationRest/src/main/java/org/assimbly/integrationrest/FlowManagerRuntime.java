@@ -243,21 +243,21 @@ public class FlowManagerRuntime {
 
             if (status.contains("successfully")) {
                 log.info("FlowManager Report:\n\n" + status);
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/{integrationId}/route/{flowId}/install",status,plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/route/{flowId}/install",status,plainResponse);
             } else {
                 log.error("FlowManager Report:\n\n" + status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/{integrationId}/route/{routeId}/install", status, plainResponse);
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/route/{routeId}/install", status, plainResponse);
             }
         } catch (Exception e) {
             log.error("Test flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/{integrationId}/route/{routeId}/install", e.getMessage(), "unable to run route " + routeId, routeId);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/route/{routeId}/install", e.getMessage(), "unable to run route " + routeId, routeId);
         }
 
     }
 
 
     @PostMapping(
-            path = "/integration/{integrationId}/flow/{flowId}/install",
+            path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
