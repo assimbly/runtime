@@ -28,6 +28,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
+
         Message target = exchange.hasOut() ? exchange.getMessage() : exchange.getIn();
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {

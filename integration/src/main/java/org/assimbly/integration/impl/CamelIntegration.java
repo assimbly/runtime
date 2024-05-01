@@ -4,7 +4,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
-import io.fabric8.kubernetes.api.model.AnyType;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import org.apache.camel.*;
@@ -26,8 +25,6 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.kamelets.catalog.KameletsCatalog;
-import org.apache.camel.kamelets.catalog.model.KameletAnnotationsNames;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
@@ -38,7 +35,6 @@ import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
-import org.apache.camel.v1.Kamelet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +90,6 @@ import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -235,8 +230,6 @@ public class CamelIntegration extends BaseIntegration {
 		//kameletComponent.setLocation("ref:");
 		context.addComponent("function", kameletComponent);
 
-
-
 		context.addComponent("jetty-nossl", new JettyHttpComponent12());
 
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
@@ -261,7 +254,6 @@ public class CamelIntegration extends BaseIntegration {
 		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
 		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
-		bindByName("ExtendedHeaderFilterStrategy","org.assimbly.cookies.CookieStore");
 		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
 		bindByName("Hl7ToXmlConverter","org.assimbly.hl7.XmlMarshaller");
 		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
@@ -2999,6 +2991,8 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("sslContext", sslContextParameters);
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
+
+		JettyHttpComponent12 jetty12 = context.getComponent("jetty", JettyHttpComponent12.class);
 
 		JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
 		jetty.setSslContextParameters(sslContextParameters);
