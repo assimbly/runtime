@@ -45,7 +45,11 @@ public class FlowConfigurerRuntime {
 			consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> setFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@PathVariable(value = "flowId") String flowId,@RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> setFlowConfiguration(
+			@PathVariable(value = "flowId") String flowId,
+			@RequestBody String configuration,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
        	try {
             integration = integrationRuntime.getIntegration();
@@ -68,7 +72,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/{flowId}/configure",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getFlowConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> getFlowConfiguration(
+			@PathVariable(value = "flowId") String flowId,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
     	plainResponse = true;
 
@@ -89,7 +96,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/{flowId}/isconfigured",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-	public ResponseEntity<String> hasFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+	public ResponseEntity<String> hasFlow(
+			@PathVariable(value = "flowId") String flowId,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
 		try {
 			integration = integrationRuntime.getIntegration();
@@ -106,7 +116,7 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/documentation/version",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
 		try {
             integration = integrationRuntime.getIntegration();
@@ -122,7 +132,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/documentation/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getDocumentation(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String componenttype) throws Exception {
+    public ResponseEntity<String> getDocumentation(
+			@PathVariable(value = "flowId") String componenttype,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
     	plainResponse = true;
 
@@ -144,7 +157,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/components",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-	public ResponseEntity<String> getComponents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("IncludeCustomComponents") Boolean includeCustomComponents) throws Exception {
+	public ResponseEntity<String> getComponents(
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+			@RequestHeader(value = "IncludeCustomComponents") Boolean includeCustomComponents
+	) throws Exception {
 
 		plainResponse = true;
 
@@ -166,7 +182,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/schema/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getComponentSchema(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "componenttype") String componenttype) throws Exception {
+    public ResponseEntity<String> getComponentSchema(
+			@PathVariable(value = "componenttype") String componenttype,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
     	plainResponse = true;
 
@@ -189,7 +208,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/options/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getComponentOptions(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "componenttype") String componenttype) throws Exception {
+    public ResponseEntity<String> getComponentOptions(
+			@PathVariable(value = "componenttype") String componenttype,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
     	plainResponse = true;
 
@@ -210,7 +232,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/{flowId}/route",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
 	)
-    public ResponseEntity<String> getCamelRoute(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getCamelRoute(
+			@PathVariable(value = "flowId") String flowId,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
 		try {
             integration = integrationRuntime.getIntegration();
@@ -226,7 +251,7 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/routes",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
 	)
-    public ResponseEntity<String> getAllCamelRoutes(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getAllCamelRoutes(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
 		try {
             integration = integrationRuntime.getIntegration();
@@ -244,7 +269,10 @@ public class FlowConfigurerRuntime {
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
 
-	public ResponseEntity<String> getStepTemplate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "templatename") String templatename) throws Exception {
+	public ResponseEntity<String> getStepTemplate(
+			@PathVariable(value = "templatename") String templatename,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
 		try {
 			integration = integrationRuntime.getIntegration();
@@ -261,7 +289,7 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/list/steps",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
 	)
-	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
 		try {
 			integration = integrationRuntime.getIntegration();
@@ -278,7 +306,10 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/{flowId}/remove",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> removeFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> removeFlow(
+			@PathVariable(value = "flowId") String flowId,
+			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+	) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();

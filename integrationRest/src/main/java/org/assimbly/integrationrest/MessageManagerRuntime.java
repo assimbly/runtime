@@ -45,14 +45,16 @@ public class MessageManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> send(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-                                       @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "stepId", required = false) String stepId,
-                                       @RequestHeader(name = "serviceid", required = false) String serviceId,
-                                       @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
-                                       @RequestHeader(name = "headerKeys", required = false) String headerKeys,
-                                       @PathVariable(value = "numberOfTimes") Integer numberOfTimes,
-                                       @RequestBody Optional<String> requestBody) throws Exception {
+    public ResponseEntity<String> send(
+            @RequestBody Optional<String> requestBody,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "uri", required = false) String uri,
+            @RequestHeader(value = "stepId", required = false) String stepId,
+            @RequestHeader(value = "serviceid", required = false) String serviceId,
+            @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
+            @RequestHeader(value = "headerKeys", required = false) String headerKeys,
+            @PathVariable(value = "numberOfTimes") Integer numberOfTimes
+    ) throws Exception {
 
         String body = requestBody.orElse(" ");
 
@@ -98,13 +100,15 @@ public class MessageManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> sendRequest(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-                                       @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "stepId", required = false) String stepId,
-                                       @RequestHeader(name = "serviceid", required = false) String serviceId,
-                                       @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
-                                       @RequestHeader(name = "headerKeys", required = false) String headerKeys,
-                                       @RequestBody Optional<String> requestBody) throws Exception {
+    public ResponseEntity<String> sendRequest(
+            @RequestBody Optional<String> requestBody,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "uri", required = false) String uri,
+            @RequestHeader(value = "stepId", required = false) String stepId,
+            @RequestHeader(value = "serviceid", required = false) String serviceId,
+            @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
+            @RequestHeader(value = "headerKeys", required = false) String headerKeys
+    ) throws Exception {
 
         String body = requestBody.orElse(" ");
         String result;

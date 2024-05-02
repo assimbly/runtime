@@ -38,7 +38,7 @@ public class StatisticsRuntime {
             path = "/integration/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();
@@ -57,7 +57,7 @@ public class StatisticsRuntime {
             path = "/integration/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getMessages(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();
@@ -77,8 +77,10 @@ public class StatisticsRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> getStatsByFlowIds(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String flowIds,
-            @RequestHeader(required=false,defaultValue="",value="filter") String filter) throws Exception {
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "flowIds") String flowIds,
+            @RequestHeader(required = false, defaultValue = "", value = "filter") String filter
+    ) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();
@@ -86,7 +88,7 @@ public class StatisticsRuntime {
         try {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/statsbyflowids",stats,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flowIds",stats,plainResponse);
         } catch (Exception e) {
             log.error("Get stats by flow ids failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/statsbyflowids",e.getMessage());
@@ -97,7 +99,14 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="false",value="FullStats") boolean fullStats, @RequestHeader(required=false,defaultValue="false",value="IncludeMetaData") boolean includeMetaData, @RequestHeader(required=false,defaultValue="false",value="IncludeSteps") boolean includeSteps, @RequestHeader(required=false,defaultValue="",value="filter") String filter, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> getFlowStats(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "false", value = "FullStats") boolean fullStats,
+            @RequestHeader(required = false, defaultValue = "false", value = "IncludeMetaData") boolean includeMetaData,
+            @RequestHeader(required = false, defaultValue = "false", value = "IncludeSteps") boolean includeSteps,
+            @RequestHeader(required = false, defaultValue = "",value = "filter") String filter
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -117,7 +126,12 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/step/{stepId}/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowStepStats(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(defaultValue="false", value="FullStats") boolean fullStats, @PathVariable(value = "flowId") String flowId, @PathVariable(value = "stepId") String stepId) throws Exception {
+    public ResponseEntity<String> getFlowStepStats(
+            @PathVariable(value = "flowId") String flowId,
+            @PathVariable(value = "stepId") String stepId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(defaultValue = "false", value = "FullStats") boolean fullStats
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -137,7 +151,11 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="false",value="IncludeSteps") boolean includeSteps, @PathVariable String flowId) throws Exception {
+    public ResponseEntity<String> getFlowMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "false", value = "IncludeSteps") boolean includeSteps
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -154,7 +172,10 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/messages/total",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowTotalMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowTotalMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -171,7 +192,10 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/messages/completed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowCompletedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowCompletedMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -188,7 +212,10 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/messages/failed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowFailedMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowFailedMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -205,7 +232,10 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/messages/pending",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowPendingMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowPendingMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -222,7 +252,11 @@ public class StatisticsRuntime {
             path = "/integration/flow/{flowId}/step/{stepId}/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getStepMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId, @PathVariable(value = "stepId") String stepId) throws Exception {
+    public ResponseEntity<String> getStepMessages(
+            @PathVariable(value = "flowId") String flowId,
+            @PathVariable(value = "stepId") String stepId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -240,7 +274,7 @@ public class StatisticsRuntime {
             path = "/integration/metrics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getMetrics(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();
@@ -259,7 +293,7 @@ public class StatisticsRuntime {
             path = "/integration/historymetrics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getHistoryMetrics(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getHistoryMetrics(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         plainResponse = true;
         integration = integrationRuntime.getIntegration();

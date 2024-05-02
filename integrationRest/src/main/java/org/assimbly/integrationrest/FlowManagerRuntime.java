@@ -42,7 +42,11 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> startFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> startFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -74,7 +78,11 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  stopFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String>  stopFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -106,7 +114,11 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/restart",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  restartFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String>  restartFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -137,7 +149,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/pause",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String>  pauseFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String>  pauseFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -168,7 +183,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/resume" ,
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> resumeFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> resumeFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -199,7 +217,11 @@ public class FlowManagerRuntime {
             consumes = {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> flowRoutes(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> flowRoutes(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -222,7 +244,12 @@ public class FlowManagerRuntime {
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> installRoute(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "routeId") String routeId, @RequestBody String route) throws Exception {
+    public ResponseEntity<String> installRoute(
+            @PathVariable(value = "routeId") String routeId,
+            @RequestBody String route,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -261,7 +288,13 @@ public class FlowManagerRuntime {
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> installFlow(@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout,  @PathVariable(value = "flowId") String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> installFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -295,7 +328,11 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout,  @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> uninstallFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -328,7 +365,11 @@ public class FlowManagerRuntime {
             consumes = {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> fileInstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> fileInstallFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -353,7 +394,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/uninstall/file",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> fileUninstallFlow(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> fileUninstallFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -379,7 +423,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> isFlowStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> isFlowStarted(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -398,7 +445,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/info",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowInfo(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowInfo(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -417,7 +467,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/status",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowStatus(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowStatus(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -435,7 +488,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/uptime",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowUptime(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowUptime(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -453,7 +509,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/lasterror",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowLastError(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -470,7 +529,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/alerts",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowAlertsLog(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowAlertsLog(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -487,7 +549,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/alerts/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowNumberOfAlerts(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -504,7 +569,10 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/events",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowEvents(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "flowId") String flowId) throws Exception {
+    public ResponseEntity<String> getFlowEvents(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -522,7 +590,12 @@ public class FlowManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setMaintenance(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader(required=false,defaultValue="3000",value="timeout") long timeout, @PathVariable(value = "flowId") Long time, @RequestBody List<String> ids) throws Exception {
+    public ResponseEntity<String> setMaintenance(
+            @PathVariable(value = "flowId") Long time,
+            @RequestBody List<String> ids,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) throws Exception {
 
         try {
 
