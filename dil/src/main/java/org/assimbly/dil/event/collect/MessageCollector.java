@@ -190,14 +190,15 @@ public class MessageCollector extends EventNotifierSupport {
 
     private static String[] getBlacklistedRoutesParts() {
         String[] blacklistedRoutesParts = {};
+
         try {
             String blacklistedRoutesPartsStr = System.getenv(BLACKLISTED_ROUTES_PARTS);
             if(blacklistedRoutesPartsStr!=null) {
                 blacklistedRoutesParts = blacklistedRoutesPartsStr.split(",");
             }
-        } catch (Exception e) {
             return blacklistedRoutesParts;
-        } finally {
+
+        } catch (Exception e) {
             return blacklistedRoutesParts;
         }
     }
