@@ -41,6 +41,9 @@ public class MessageCollector extends EventNotifierSupport {
     public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
 
+    private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
+    private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
+
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
@@ -74,7 +77,7 @@ public class MessageCollector extends EventNotifierSupport {
             // Get the stepid
             String routeId = exchange.getFromRouteId();
 
-            if(routeId!= null && routeId.startsWith(flowId)){
+            if(routeId!= null && routeId.startsWith(flowId) && !isBlackListed(routeId)){
 
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
@@ -178,6 +181,24 @@ public class MessageCollector extends EventNotifierSupport {
                 long duration = created - (long) initTime;
                 exchange.setProperty(RESPONSE_TIME_PROPERTY, Long.toString(duration));
             }
+        }
+    }
+
+    private boolean isBlackListed(String routeId) {
+        return Arrays.stream(blacklistedRoutesParts).anyMatch(routeId::contains);
+    }
+
+    private static String[] getBlacklistedRoutesParts() {
+        String[] blacklistedRoutesParts = {};
+        try {
+            String blacklistedRoutesPartsStr = System.getenv(BLACKLISTED_ROUTES_PARTS);
+            if(blacklistedRoutesPartsStr!=null) {
+                blacklistedRoutesParts = blacklistedRoutesPartsStr.split(",");
+            }
+        } catch (Exception e) {
+            return blacklistedRoutesParts;
+        } finally {
+            return blacklistedRoutesParts;
         }
     }
 
