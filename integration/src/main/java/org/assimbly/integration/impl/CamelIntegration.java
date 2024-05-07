@@ -248,20 +248,11 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
 
-		//registry.bind("ZipSplitter", new org.apache.camel.dataformat.zipfile.ZipSplitter());
-
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
-		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
 		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
-		bindByName("Hl7ToXmlConverter","org.assimbly.hl7.XmlMarshaller");
 		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
-		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
-		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
-		bindByName("zipFileDataFormat","org.assimbly.archive.ZipFileDataFormat");
-		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
