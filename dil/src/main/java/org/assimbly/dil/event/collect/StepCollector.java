@@ -59,10 +59,8 @@ public class StepCollector extends EventNotifierSupport {
 
     @Override
     public void notify(CamelEvent event) throws Exception {
-
         //filter only the configured events
         if (events != null && events.contains(event.getType().name())) {
-
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
             // Get the message exchange from exchange event
@@ -101,13 +99,13 @@ public class StepCollector extends EventNotifierSupport {
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
-        //MessageEvent messageEvent = new MessageEvent(
-        //        timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
-        //);
-        //String json = messageEvent.toJson();
+        MessageEvent messageEvent = new MessageEvent(
+                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
+        );
+        String json = messageEvent.toJson();
 
         //store the event
-        //storeManager.storeEvent(json);
+        storeManager.storeEvent(json);
     }
 
     public String getBody(Exchange exchange) {
@@ -157,7 +155,7 @@ public class StepCollector extends EventNotifierSupport {
 
         // set BodyLength property
         byte[] body = exchange.getMessage().getBody(byte[].class);
-        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body.length);
+        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body != null ? body.length : 0);
 
         // set HeadersLength property
         Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
