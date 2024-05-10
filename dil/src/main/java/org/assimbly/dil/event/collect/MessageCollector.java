@@ -160,7 +160,7 @@ public class MessageCollector extends EventNotifierSupport {
 
         // set BodyLength property
         byte[] body = exchange.getMessage().getBody(byte[].class);
-        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body.length);
+        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body != null ? body.length : 0);
 
         // set HeadersLength property
         Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
