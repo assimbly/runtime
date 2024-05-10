@@ -15,12 +15,10 @@ import org.slf4j.LoggerFactory;
 public class ActiveMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-
     private CamelContext context;
     private EncryptableProperties properties;
     private String componentName;
     private String connectionId;
-
     private ActiveMQConnectionFactory activeMQConnectionFactory;
     private String url;
     private String username;

@@ -77,7 +77,7 @@
                                 <environmentName>PRODUCTION</environmentName>
                                 <stage>PRODUCTION</stage>
                                 <xsl:if test="//*:property[@key='frontend.engine']">
-                                <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
+                                    <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
                                     <frontend><xsl:value-of select="$frontend"/></frontend>
                                 </xsl:if>
                             </options>
@@ -215,7 +215,21 @@
                                             </xsl:choose>
                                         </xsl:attribute>
                                     </xsl:if>
-                                   <xsl:copy-of select="./*" copy-namespaces="yes"/>
+                                    <xsl:copy-of select="*:from" copy-namespaces="yes"/>
+                                    <step>
+                                        <xsl:choose>
+                                            <xsl:when test="@id">
+                                                <xsl:attribute name="id" select="@id"/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+                                                <xsl:attribute name="id" select="generate-id(.)"/>
+                                            </xsl:otherwise>
+                                        </xsl:choose>
+                                        <to uri="mock:x"/>
+                                        <xsl:for-each select="./*[not(local-name() = 'from')]">
+                                            <xsl:copy-of select="." copy-namespaces="yes"/>
+                                        </xsl:for-each>
+                                    </step>
                                 </route>
                             </xsl:for-each>
                         </routes>
@@ -243,10 +257,15 @@
         </xsl:choose>
     </xsl:template>
 
-    <xsl:template match="node()|@*">
+    <xsl:template match="route[not(*:from)]">
         <xsl:copy>
             <xsl:apply-templates select="node()|@*"/>
         </xsl:copy>
+    </xsl:template>
+
+
+    <xsl:template match="route[not(*:from)]">
+        <xsl:copy-of select="."/>
     </xsl:template>
 
     <xsl:template match="integration[not(id)]">
