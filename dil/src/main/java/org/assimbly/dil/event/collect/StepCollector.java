@@ -59,10 +59,8 @@ public class StepCollector extends EventNotifierSupport {
 
     @Override
     public void notify(CamelEvent event) throws Exception {
-
         //filter only the configured events
         if (events != null && events.contains(event.getType().name())) {
-
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
             // Get the message exchange from exchange event

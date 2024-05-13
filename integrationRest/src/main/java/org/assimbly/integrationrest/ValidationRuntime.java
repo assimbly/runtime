@@ -50,8 +50,8 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateCron(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String expression
+            @RequestParam(value = "expression") String expression,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -81,8 +81,8 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateCertificate(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String httpsUrl
+            @RequestParam(value = "httpsUrl") String httpsUrl,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -111,8 +111,8 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateUrl(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String httpUrl
+            @RequestParam(value = "httpUrl") String httpUrl,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -143,9 +143,9 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateExpression(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate
     ) throws Exception {
 
         plainResponse = true;
@@ -182,9 +182,9 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateFtp(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest",defaultValue = "false") boolean stopTest,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -221,9 +221,9 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateRegex(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -262,9 +262,9 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateScript(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -304,7 +304,10 @@ public class ValidationRuntime {
             path = "/validation/uri",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> validateUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri) throws Exception {
+    public ResponseEntity<String> validateUri(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "Uri") String uri
+    ) throws Exception {
         try {
             integration = integrationRuntime.getIntegration();
             String flowValidation = integration.validateFlow(uri);
@@ -319,9 +322,9 @@ public class ValidationRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateXslt(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         try {
@@ -361,7 +364,12 @@ public class ValidationRuntime {
             path = "/validation/connection/{host}/{port}/{timeout}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> testConnection(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable(value = "host") String host,@PathVariable(value = "port") int port, @PathVariable(value = "timeout") int timeout) throws Exception {
+    public ResponseEntity<String> testConnection(
+            @PathVariable(value = "host") String host,
+            @PathVariable(value = "port") int port,
+            @PathVariable(value = "timeout") int timeout,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String testConnectionResult = integration.testConnection(host, port, timeout);

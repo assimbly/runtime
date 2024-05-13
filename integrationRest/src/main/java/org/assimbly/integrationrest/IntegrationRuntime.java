@@ -60,7 +60,7 @@ public class IntegrationRuntime {
             path = "/integration/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> start(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> start(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
 
@@ -90,7 +90,7 @@ public class IntegrationRuntime {
             path = "/integration/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> stop(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> stop(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
             integration.stop();
@@ -112,7 +112,7 @@ public class IntegrationRuntime {
             path = "/integration/info",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> info(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> info(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
             String info = integration.info(mediaType);
@@ -134,7 +134,7 @@ public class IntegrationRuntime {
             path = "/integration/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
             Boolean started = integration.isStarted();
@@ -150,7 +150,7 @@ public class IntegrationRuntime {
             path = "/integration/lasterror",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getLastError(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getLastError(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
             String error = integration.getLastError();
@@ -172,7 +172,10 @@ public class IntegrationRuntime {
             path = "/integration/resolvedependencybyscheme/{scheme}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> resolveDepedencyByScheme(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@PathVariable("scheme") String scheme) throws Exception {
+    public ResponseEntity<String> resolveDepedencyByScheme(
+            @PathVariable(value = "scheme") String scheme,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String result = integration.resolveDependency(scheme);
@@ -188,7 +191,7 @@ public class IntegrationRuntime {
             path = "/integration/basedirectory",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         plainResponse = true;
 
@@ -207,7 +210,10 @@ public class IntegrationRuntime {
             consumes = {MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setBaseDirectory(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestBody String directory) throws Exception {
+    public ResponseEntity<String> setBaseDirectory(
+            @RequestBody String directory,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         plainResponse = true;
 
@@ -225,7 +231,10 @@ public class IntegrationRuntime {
             path = "/integration/list/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getListOfFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter) throws Exception {
+    public ResponseEntity<String> getListOfFlows(
+            @RequestParam(required = false, value = "filterByStatus") String filter,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String flows = integration.getListOfFlows(filter, mediaType);
@@ -241,7 +250,10 @@ public class IntegrationRuntime {
             path = "/integration/list/flows/details",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getRunningFlowsDetails(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter) throws Exception {
+    public ResponseEntity<String> getRunningFlowsDetails(
+            @RequestParam(required = false, value = "filterByStatus") String filter,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String flowsDetails = integration.getListOfFlowsDetails(filter, mediaType);
@@ -258,7 +270,10 @@ public class IntegrationRuntime {
             path = "/integration/list/soap/action",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getListOfSoapActions(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestBody String url) throws Exception {
+    public ResponseEntity<String> getListOfSoapActions(
+            @RequestBody String url,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String flows = integration.getListOfSoapActions(url, mediaType);
@@ -274,7 +289,10 @@ public class IntegrationRuntime {
             path = "/integration/count/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> countFlows(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter) throws Exception {
+    public ResponseEntity<String> countFlows(
+            @RequestParam(required = false, value = "filterByStatus") String filter,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String flowsCount = integration.countFlows(filter, mediaType);
@@ -290,7 +308,10 @@ public class IntegrationRuntime {
             path = "/integration/count/steps",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> countSteps(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestParam(required=false,value="filterByStatus") String filter) throws Exception {
+    public ResponseEntity<String> countSteps(
+            @RequestParam(required = false, value = "filterByStatus") String filter,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String stepsCount = integration.countSteps(filter, mediaType);
@@ -306,7 +327,7 @@ public class IntegrationRuntime {
             path = "/integration/numberofalerts",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getIntegrationNumberOfAlerts(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getIntegrationNumberOfAlerts(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
             TreeMap<String,String> numberOfEntriesList = integration.getIntegrationAlertsCount();
@@ -331,7 +352,10 @@ public class IntegrationRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> addCollectorConfigurations(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> addCollectorConfigurations(
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         log.info("Add collectors");
 
@@ -365,7 +389,11 @@ public class IntegrationRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> addCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable("collectorId") String collectorId, @RequestBody String configuration) throws Exception {
+    public ResponseEntity<String> addCollectorConfiguration(
+            @PathVariable(value = "collectorId") String collectorId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         log.info("Add collector with id=" + collectorId);
 
@@ -395,7 +423,10 @@ public class IntegrationRuntime {
             path = "/integration/collector/{collectorId}/remove",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> removeCollectorConfiguration(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable("collectorId") String collectorId) throws Exception {
+    public ResponseEntity<String> removeCollectorConfiguration(
+            @PathVariable(value = "collectorId") String collectorId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         log.info("Remove collector with id=" + collectorId);
 

@@ -54,7 +54,12 @@ public class CertificateManagerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String url) throws Exception {
+    public ResponseEntity<String> setCertificates(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestBody String url,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword
+    ) throws Exception {
 
         log.debug("REST request to set certificates for url: {}", url);
 
@@ -80,7 +85,12 @@ public class CertificateManagerRuntime {
             path = "/certificates/import",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> importCertificates(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestBody String url, @RequestHeader String keystoreName, @RequestHeader String keystorePassword) throws Exception {
+    public ResponseEntity<String> importCertificates(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestBody String url,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword
+    ) throws Exception {
 
         log.debug("REST request to import certificates for url: {}", url);
 
@@ -111,7 +121,14 @@ public class CertificateManagerRuntime {
             consumes = {MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uploadCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @RequestHeader("FileType") String fileType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestBody String certificate) throws Exception {
+    public ResponseEntity<String> uploadCertificate(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @RequestBody String certificate,
+            @RequestHeader(value = "FileType") String fileType,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword
+    ) throws Exception {
 
         try {
 
@@ -151,7 +168,15 @@ public class CertificateManagerRuntime {
             consumes = {MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uploadP12Certificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,@Parameter(hidden = true) @RequestHeader("Content-Type") String contentType, @RequestHeader("FileType") String fileType, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestHeader("password") String password, @RequestBody String certificate) throws Exception {
+    public ResponseEntity<String> uploadP12Certificate(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @RequestBody String certificate,
+            @RequestHeader(value = "FileType") String fileType,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword,
+            @RequestHeader(value = "password") String password
+    ) throws Exception {
 
         try {
 
@@ -173,7 +198,12 @@ public class CertificateManagerRuntime {
             path = "/certificates/generate",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> generateCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("cn") String cn, @RequestHeader String keystoreName, @RequestHeader String keystorePassword) throws Exception {
+    public ResponseEntity<String> generateCertificate(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "cn") String cn,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword
+    ) throws Exception {
 
         try {
 
@@ -214,7 +244,12 @@ public class CertificateManagerRuntime {
             path = "/certificates/delete/{certificateName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> deleteCertificate(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,  @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @PathVariable(value = "certificateName") String certificateName) throws Exception {
+    public ResponseEntity<String> deleteCertificate(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword
+    ) throws Exception {
         log.debug("REST request to delete certificate : {}", certificateName);
 
         try {
@@ -233,7 +268,12 @@ public class CertificateManagerRuntime {
      * @return the ResponseEntity with status 200 (OK)
      */
     @PostMapping("/certificates/update")
-    public ResponseEntity<String> updateCertificates(@RequestBody String certificates, @RequestHeader String keystoreName, @RequestHeader String keystorePassword, @RequestParam String url) throws Exception {
+    public ResponseEntity<String> updateCertificates(
+            @RequestBody String certificates,
+            @RequestHeader(value = "keystoreName") String keystoreName,
+            @RequestHeader(value = "keystorePassword") String keystorePassword,
+            @RequestParam(value = "url") String url
+    ) throws Exception {
         log.debug("REST request to updates certificates in truststore for url ", url);
 
         if(certificates.isEmpty()) {
