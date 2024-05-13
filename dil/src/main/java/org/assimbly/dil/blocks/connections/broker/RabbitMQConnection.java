@@ -1,18 +1,11 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import jakarta.jms.JMSException;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.activemq.ActiveMQComponent;
-import org.apache.camel.component.activemq.ActiveMQConfiguration;
-import org.apache.camel.component.jms.JmsComponent;
-import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.Connection;
 
 
 public class RabbitMQConnection {
