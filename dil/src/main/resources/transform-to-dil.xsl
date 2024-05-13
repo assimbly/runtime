@@ -225,6 +225,7 @@
                                                 <xsl:attribute name="id" select="generate-id(.)"/>
                                             </xsl:otherwise>
                                         </xsl:choose>
+                                        <to uri="mock:x"/>
                                         <xsl:for-each select="./*[not(local-name() = 'from')]">
                                             <xsl:copy-of select="." copy-namespaces="yes"/>
                                         </xsl:for-each>

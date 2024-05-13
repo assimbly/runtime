@@ -6,6 +6,9 @@ import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import jakarta.jms.JMSException;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
@@ -13,10 +16,10 @@ import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
-import org.apache.camel.component.activemq.ActiveMQComponent;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
+import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -24,6 +27,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
@@ -65,6 +69,8 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.jms.connection.DelegatingConnectionFactory;
+import org.springframework.jms.connection.SingleConnectionFactory;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -92,6 +98,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.apache.camel.component.jms.JmsComponent.jmsComponentAutoAcknowledge;
 
 public class CamelIntegration extends BaseIntegration {
 
@@ -248,20 +256,11 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
 
-		//registry.bind("ZipSplitter", new org.apache.camel.dataformat.zipfile.ZipSplitter());
-
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		//bindByName("","org.assimbly.dil.blocks.beans.enrich.AggregateStrategy");
 		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
-		bindByName("Er7ToHl7Converter","org.assimbly.hl7.Er7Encoder");
 		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
-		bindByName("Hl7ToXmlConverter","org.assimbly.hl7.XmlMarshaller");
 		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
-		bindByName("QueueMessageChecker","org.assimbly.throttling.QueueMessageChecker");
-		bindByName("XmlToHl7Converter","org.assimbly.hl7.XmlEncoder");
 		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
-		bindByName("zipFileDataFormat","org.assimbly.archive.ZipFileDataFormat");
-		//bindByName("checkedZipFileDataFormat","org.assimbly.archive.CheckedZipFileDataFormat");
 
 		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
 		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
@@ -288,10 +287,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		context.setUseBreadcrumb(true);
 
-		ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
-		activemq.setTestConnectionOnStartup(true);
-		activemq.setAsyncStartListener(true);
-		activemq.setAsyncStopListener(true);
+		//ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
+		//activemq.setTestConnectionOnStartup(true);
+		//activemq.setAsyncStartListener(true);
+		//activemq.setAsyncStopListener(true);
+
 
 	}
 
@@ -914,7 +914,9 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
+
 		try {
+
 			String activemqName = "activemq";
 			String brokerHost = System.getenv(BROKER_HOST);
 			String brokerPort = System.getenv(BROKER_PORT);
@@ -924,28 +926,38 @@ public class CamelIntegration extends BaseIntegration {
 							"tcp://localhost:61616"
 			);
 
-
-
 			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+
 				Component activemqComp = this.context.getComponent(activemqName);
-				if(activemqComp!=null) {
-					if (activemqComp instanceof ActiveMQComponent) {
-						String brokerUrl = ((ActiveMQComponent) activemqComp).getBrokerURL();
-						if(brokerUrl!=null && !brokerUrl.equals(activemqUrl)) {
-							// remove first the old one
-							this.context.removeComponent(activemqName);
-							// add a custom activemq
-							this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
-						}
-					}
-				} else {
-					// just add the new ActiveMQComponent
-					this.context.addComponent(activemqName, ActiveMQComponent.activeMQComponent(activemqUrl));
+
+				if (activemqComp == null) {
+
+					JmsComponent jmsComponent = getJmsComponent(activemqUrl);
+
+					this.context.addComponent(activemqName, jmsComponent);
+
+
 				}
 			}
 		} catch (Exception e) {
 			log.error("Error to add custom activeMQ connection", e);
 		}
+
+	}
+
+	private static JmsComponent getJmsComponent(String activemqUrl) {
+
+		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
+
+		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
+		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
+		pooledConnectionFactory.setMaxConnections(1000); // Max connections in the pool
+		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
+
+		JmsComponent jmsComponent = new JmsComponent();
+		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+
+		return jmsComponent;
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
@@ -1323,6 +1335,7 @@ public class CamelIntegration extends BaseIntegration {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
 				managedRoute.stop(timeout, true);
+
 				managedRoute.remove();
 
 				if(route.getConfigurationId()!=null) {

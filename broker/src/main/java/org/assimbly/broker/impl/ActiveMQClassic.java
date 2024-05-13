@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -214,7 +215,8 @@ public class ActiveMQClassic implements Broker {
             BrokerView adminView = broker.getAdminView();
 
             String info = "uptime="+ broker.getUptime()
-                    + 	",totalConnections=" + broker.getTotalConnections()
+                    + ",totalConnections=" + broker.getTotalConnections()
+                    + ",currentConnections=" + broker.getCurrentConnections()
                     + ",totalConsumers=" + adminView.getTotalConsumerCount()
                     + ",totalMessages=" + adminView.getTotalMessageCount()
                     + ",nodeId=" + adminView.getBrokerId()
@@ -244,7 +246,7 @@ public class ActiveMQClassic implements Broker {
                 maxConnections = Integer.parseInt(matcher.group(1));
 
             return Map.of(
-                    "openConnections", broker.getTotalConnections(),
+                    "openConnections", adminView.getCurrentConnectionsCount(),
                     "maxConnections", maxConnections,
                     "totalNumberOfQueues", adminView.getQueues().length,
                     "totalNumberOfTemporaryQueues", adminView.getTemporaryQueues().length,

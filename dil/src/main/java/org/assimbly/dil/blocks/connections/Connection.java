@@ -82,6 +82,9 @@ public class Connection {
             case "IBMMQ":
                 new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start(stepType, stepId);
                 break;
+            case "RABBITMQ":
+                new RabbitMQConnection(context, decryptedProperties, connectionId, "rabbitmq").start();
+                break;
             case "JDBC":
                 new JDBCConnection(context, decryptedProperties, connectionId, "sql").start(stepType, stepId);
                 break;
