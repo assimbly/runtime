@@ -216,6 +216,7 @@
                                         </xsl:attribute>
                                     </xsl:if>
                                     <xsl:copy-of select="*:from" copy-namespaces="yes"/>
+                                    <xsl:copy-of select="*:onException" copy-namespaces="yes"/>
                                     <step>
                                         <xsl:choose>
                                             <xsl:when test="@id">
@@ -226,7 +227,7 @@
                                             </xsl:otherwise>
                                         </xsl:choose>
                                         <to uri="mock:x"/>
-                                        <xsl:for-each select="./*[not(local-name() = 'from')]">
+                                        <xsl:for-each select="./*[not(local-name() = 'from' or local-name() = 'onException')]">
                                             <xsl:copy-of select="." copy-namespaces="yes"/>
                                         </xsl:for-each>
                                     </step>

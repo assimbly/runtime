@@ -48,11 +48,6 @@
 		  <artifactId>database-drivers</artifactId>
   		  <version>${assimbly.version}</version>
 	  </dependency>
-      <!-- <dependency>
-           <groupId>org.assimbly</groupId>
-           <artifactId>test-base</artifactId>
-           <version>${assimbly.version}</version>
-       </dependency>-->
 
   </dependencies>
 

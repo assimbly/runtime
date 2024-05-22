@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.assimbly.dil.event.collect.ExchangeCollector;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
+//import org.eclipse.jetty.server.Request;
+//import org.eclipse.jetty.server.Response;
 import org.quartz.impl.StdScheduler;
 
 import java.io.IOException;
@@ -157,8 +157,8 @@ public class MessageEvent {
                 .filter(header -> header.getValue() != null)
                 .filter(header -> !header.getKey().equals(ExchangeCollector.COMPONENT_INIT_TIME_HEADER))
                 .filter(header -> !(header.getValue() instanceof StdScheduler))
-                .filter(header -> !(header.getValue() instanceof Response))
-                .filter(header -> !(header.getValue() instanceof Request))
+                //.filter(header -> !(header.getValue() instanceof Response))
+                //.filter(header -> !(header.getValue() instanceof Request))
                 .map(entry -> {
                     if(entry.getKey().toLowerCase().contains("firetime")
                             && entry.getValue() instanceof Date) {

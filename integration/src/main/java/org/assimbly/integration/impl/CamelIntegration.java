@@ -6,7 +6,6 @@ import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
-import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.*;
@@ -17,7 +16,6 @@ import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.direct.DirectComponent;
-import org.apache.camel.component.jetty.JettyHttpComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
@@ -27,7 +25,6 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
-import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
@@ -69,8 +66,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.jms.connection.DelegatingConnectionFactory;
-import org.springframework.jms.connection.SingleConnectionFactory;
 import org.w3c.dom.Document;
 import org.yaml.snakeyaml.Yaml;
 
@@ -82,9 +77,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -99,7 +92,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.apache.camel.component.jms.JmsComponent.jmsComponentAutoAcknowledge;
 
 public class CamelIntegration extends BaseIntegration {
 
@@ -238,7 +230,8 @@ public class CamelIntegration extends BaseIntegration {
 		//kameletComponent.setLocation("ref:");
 		context.addComponent("function", kameletComponent);
 
-		context.addComponent("jetty-nossl", new JettyHttpComponent12());
+		context.addComponent("jetty-nossl", new org.apache.camel.component.jetty12.JettyHttpComponent12());
+		context.addComponent("jetty", new JettyHttpComponent12());
 
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 
@@ -286,12 +279,6 @@ public class CamelIntegration extends BaseIntegration {
 		System.setProperty("camel.threads.virtual.enabled","true");
 
 		context.setUseBreadcrumb(true);
-
-		//ActiveMQComponent activemq = context.getComponent("activemq", ActiveMQComponent.class);
-		//activemq.setTestConnectionOnStartup(true);
-		//activemq.setAsyncStartListener(true);
-		//activemq.setAsyncStopListener(true);
-
 
 	}
 
@@ -3005,10 +2992,13 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
-		JettyHttpComponent12 jetty12 = context.getComponent("jetty", JettyHttpComponent12.class);
 
-		JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
-		jetty.setSslContextParameters(sslContextParameters);
+		// use default
+		//JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
+
+		//JettyHttpComponent12 jetty = context.getComponent("jetty", org.assimbly.jetty.JettyHttpComponent12.class);
+		//context.
+		//jetty.setSslContextParameters(sslContextParameters);
 
 		try {
 			SSLContext sslContext = sslContextParameters.createSSLContext(context);
