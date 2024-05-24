@@ -89,6 +89,7 @@ import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -195,6 +196,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
+		context.getShutdownStrategy().setTimeUnit(TimeUnit.MILLISECONDS);
 	}
 
 	public void setCertificateStore(boolean certificateStore) throws Exception {
@@ -1308,7 +1310,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-
 	public String stopFlow(String id, long timeout) {
 
 		initFlowActionReport(id, "stop");
@@ -1320,9 +1321,10 @@ public class CamelIntegration extends BaseIntegration {
 			for (Route route : routeList) {
 
 				String routeId = route.getId();
+
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
-				managedRoute.stop(timeout, true);
+				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
 
 				managedRoute.remove();
 
