@@ -10,6 +10,7 @@ import org.quartz.impl.StdScheduler;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /*
@@ -157,6 +158,9 @@ public class MessageEvent {
                 .filter(header -> header.getValue() != null)
                 .filter(header -> !header.getKey().equals(ExchangeCollector.COMPONENT_INIT_TIME_HEADER))
                 .filter(header -> !(header.getValue() instanceof StdScheduler))
+                .filter(header -> !(header.getValue() instanceof ScheduledThreadPoolExecutor))
+                .filter(header -> !(header.getValue() instanceof org.eclipse.jetty.ee10.servlet.ServletApiRequest))
+                .filter(header -> !(header.getValue() instanceof org.eclipse.jetty.ee10.servlet.ServletApiResponse))
                 //.filter(header -> !(header.getValue() instanceof Response))
                 //.filter(header -> !(header.getValue() instanceof Request))
                 .map(entry -> {
