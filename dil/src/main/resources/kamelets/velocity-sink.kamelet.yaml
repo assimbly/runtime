@@ -24,6 +24,6 @@ spec:
         steps:
           - setHeader:
               name: CamelVelocityTemplate
-              simple: "{{path}}"
+              constant: "{{path}}"
           - to:
               uri: "velocity:generate?allowTemplateFromHeader=true"
