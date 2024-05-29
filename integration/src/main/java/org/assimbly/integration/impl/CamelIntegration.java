@@ -41,6 +41,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
@@ -253,14 +254,14 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("FlowLogger", new FlowLogger());
 
 		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		bindByName("CurrentEnrichStrategy","org.assimbly.dil.blocks.beans.enrich.EnrichStrategy");
-		bindByName("flowCookieStore","org.assimbly.cookies.CookieStore");
-		bindByName("multipartProcessor","org.assimbly.multipart.processor.MultipartProcessor");
-		bindByName("AttachmentAttacher","org.assimbly.mail.component.mail.AttachmentAttacher");
+		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+		registry.bind("flowCookieStore", new org.assimbly.cookies.CookieStore());
+		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
+		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
 
-		addServiceByName("org.assimbly.mail.component.mail.MailComponent");
-		addServiceByName("org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat");
-		addServiceByName("org.assimbly.xmltojson.CustomXmlJsonDataFormat");
+		context.addService(new org.assimbly.mail.component.mail.MailComponent());
+		context.addService(new org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat());
+		context.addService(new org.assimbly.xmltojson.CustomXmlJsonDataFormat());
 
 	}
 
@@ -3027,32 +3028,6 @@ public class CamelIntegration extends BaseIntegration {
 	 */
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
-	}
-
-	public void bindByName(String beanId, String className){
-
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(className);
-			Object bean =  clazz.getDeclaredConstructor().newInstance();
-			registry.bind(beanId, bean);
-		} catch (Exception e) {
-			//Ignore if class not found
-		}
-
-	}
-
-	public void addServiceByName(String className){
-
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(className);
-			Object bean =  clazz.getDeclaredConstructor().newInstance();
-			context.addService(bean);
-		} catch (Exception e) {
-			//Ignore if class not found
-		}
-
 	}
 
 }
