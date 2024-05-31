@@ -62,25 +62,27 @@ public class StepCollector extends EventNotifierSupport {
 
     @Override
     public void notify(CamelEvent event) throws Exception {
+
         //filter only the configured events
         if (events != null && events.contains(event.getType().name())) {
+
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
             // Get the message exchange from exchange event
             Exchange exchange = stepEvent.getExchange();
 
             // Get the stepid
-            String routeId = exchange.getFromRouteId();
+            String routeId = stepEvent.getStepId();
+            String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-            if(routeId!= null && routeId.startsWith(flowId) && !isBlackListed(routeId)){
-
-                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+            if(stepId!= null && !isBlackListed(stepId)){
 
                 // set custom properties
                 setCustomProperties(exchange, stepId);
 
                 //process and store the exchange
                 processEvent(exchange, stepId);
+
             }
         }
     }
