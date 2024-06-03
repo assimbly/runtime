@@ -148,9 +148,9 @@ public class CamelIntegration extends BaseIntegration {
 
 		setRouteTemplates();
 
-		setDefaultBlocks();
-
 		setGlobalOptions();
+
+		setDefaultBlocks();
 
 		setDefaultThreadProfile(5,50,5000);
 
@@ -223,10 +223,16 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setDefaultBlocks() throws Exception {
 
-		registry.bind("customHttpBinding", new CustomHttpBinding());
-		registry.bind("uuid-function", new UuidExtensionFunction());
+		//Add services
+		context.addService(new org.assimbly.mail.component.mail.MailComponent());
+		context.addService(new org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat());
+		context.addService(new org.assimbly.xmltojson.CustomXmlJsonDataFormat());
 
-		context.addComponent("sync", new DirectComponent());
+		DirectComponent directComponent = new DirectComponent();
+		directComponent.setTimeout(300000);
+
+		//Add components to a custom name
+		context.addComponent("sync", directComponent);
 		context.addComponent("async", new SedaComponent());
 
 		KameletComponent kameletComponent = new KameletComponent();
@@ -236,32 +242,27 @@ public class CamelIntegration extends BaseIntegration {
 		context.addComponent("jetty-nossl", new org.apache.camel.component.jetty12.JettyHttpComponent12());
 		context.addComponent("jetty", new JettyHttpComponent12());
 
+		// Add bean/processors and other custom classes to the registry
+		registry.bind("AggregateStrategy", new AggregateStrategy());
+		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
+		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
+		registry.bind("customHttpBinding", new CustomHttpBinding());
+		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
+		registry.bind("flowCookieStore", new org.assimbly.cookies.CookieStore());
+		registry.bind("InputStreamToStringProcessor", new InputStreamToStringProcessor());
+		registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
-
+		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
+		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
-		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
 		registry.bind("Unzip", new UnzipProcessor());
-		registry.bind("InputStreamToStringProcessor", new InputStreamToStringProcessor());
-
-		registry.bind("AggregateStrategy", new AggregateStrategy());
-		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
+		registry.bind("uuid-function", new UuidExtensionFunction());
 		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
-		registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
-		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
-		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
-
-		//following beans are registered by name, because they are not always available (and are ignored if not available).
-		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-		registry.bind("flowCookieStore", new org.assimbly.cookies.CookieStore());
-		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
-		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
-
-		context.addService(new org.assimbly.mail.component.mail.MailComponent());
-		context.addService(new org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat());
-		context.addService(new org.assimbly.xmltojson.CustomXmlJsonDataFormat());
 
 	}
 
