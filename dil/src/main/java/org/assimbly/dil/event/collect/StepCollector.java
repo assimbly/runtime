@@ -77,11 +77,12 @@ public class StepCollector extends EventNotifierSupport {
 
             if(stepId!= null && !isBlackListed(stepId)){
 
-                // set custom properties
-                setCustomProperties(exchange, stepId);
-
-                //process and store the exchange
-                processEvent(exchange, stepId);
+                if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
+                    // set custom properties
+                    setCustomProperties(exchange, stepId);
+                    //process and store the exchange
+                    processEvent(exchange, stepId);
+                }
 
             }
         }
