@@ -71,7 +71,7 @@ public class EventConfigurer {
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed message collector with id=" + collectorId);
        }else if(collector instanceof StepCollector){
-           ((RouteCollector) collector).shutdown();
+           ((StepCollector) collector).shutdown();
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed step collector with id=" + collectorId);
        }else if(collector instanceof RouteCollector){
