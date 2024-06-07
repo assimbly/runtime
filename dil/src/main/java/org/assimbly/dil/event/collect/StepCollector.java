@@ -74,21 +74,22 @@ public class StepCollector extends EventNotifierSupport {
             // Get the stepid
             String routeId = stepEvent.getStepId();
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+            long stepTimestamp = stepEvent.getTimestamp();
 
             if(stepId!= null && !isBlackListed(stepId)){
 
                 if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
                     // set custom properties
-                    setCustomProperties(exchange, stepId);
+                    setCustomProperties(exchange, stepId, stepTimestamp);
                     //process and store the exchange
-                    processEvent(exchange, stepId);
+                    processEvent(exchange, stepId, stepTimestamp);
                 }
 
             }
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId){
+    private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
 
         //set fields
         Message message = exchange.getMessage();
@@ -101,7 +102,7 @@ public class StepCollector extends EventNotifierSupport {
         messageId = message.getHeader(BREADCRUMB_ID_HEADER, messageId, String.class);
 
         //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(exchange.getCreated());
+        String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
@@ -148,10 +149,10 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private void setCustomProperties(Exchange exchange, String stepId) {
+    private void setCustomProperties(Exchange exchange, String stepId, long stepTimestamp) {
         if (EventUtil.isFilteredEquals(filters, stepId)) {
             // set response time property
-            setResponseTimeProperty(exchange);
+            setResponseTimeProperty(exchange, stepTimestamp);
         }
 
         // set timestamp property
@@ -168,17 +169,14 @@ public class StepCollector extends EventNotifierSupport {
         exchange.setProperty(MESSAGE_HEADERS_SIZE_PROPERTY, EventUtil.calcMapLength(headersMap));
     }
 
-    private void setResponseTimeProperty(Exchange exchange){
+    private void setResponseTimeProperty(Exchange exchange, long stepTimestamp){
         //Set default headers for the response time
-        long created = exchange.getCreated();
 
-        if(created!=0) {
-            Object initTime = exchange.getIn().getHeader(COMPONENT_INIT_TIME_HEADER, Long.class);
-            exchange.getIn().setHeader(COMPONENT_INIT_TIME_HEADER, created);
-            if (initTime != null) {
-                long duration = created - (long) initTime;
-                exchange.setProperty(RESPONSE_TIME_PROPERTY, Long.toString(duration));
-            }
+        Object initTime = exchange.getIn().getHeader(COMPONENT_INIT_TIME_HEADER, Long.class);
+        exchange.getIn().setHeader(COMPONENT_INIT_TIME_HEADER, stepTimestamp);
+        if (initTime != null) {
+            long duration = stepTimestamp - (long) initTime;
+            exchange.setProperty(RESPONSE_TIME_PROPERTY, Long.toString(duration));
         }
     }
 
