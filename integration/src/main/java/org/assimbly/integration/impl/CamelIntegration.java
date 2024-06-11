@@ -45,6 +45,7 @@ import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
+import org.assimbly.dil.blocks.policysupport.MutalSSLRoutePolicyFactory;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
@@ -241,6 +242,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		context.addComponent("jetty-nossl", new org.apache.camel.component.jetty12.JettyHttpComponent12());
 		context.addComponent("jetty", new JettyHttpComponent12());
+
+		context.addRoutePolicyFactory(new MutalSSLRoutePolicyFactory());
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
