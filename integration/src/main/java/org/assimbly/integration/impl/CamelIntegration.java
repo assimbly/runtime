@@ -189,10 +189,15 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setStreamCaching(boolean streamCaching) {
 		context.setStreamCaching(streamCaching);
-		context.getStreamCachingStrategy().setSpoolEnabled(true);
-		context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
-		context.getStreamCachingStrategy().setSpoolThreshold(256 * 1024);
 		context.getStreamCachingStrategy().setBufferSize(32 * 1024);
+
+		// --> When spooling is enabled it will cache the stream of large files to disk
+		// --> The threshold is by default 128kb. Below is changed to 256KB
+		// --> Turn the spooling off, because lead to issues ("Cannot reset stream")
+		//context.getStreamCachingStrategy().setSpoolEnabled(true);
+		//context.getStreamCachingStrategy().setSpoolDirectory(baseDir + "/streamcache");
+		//context.getStreamCachingStrategy().setSpoolThreshold(256 * 1024);
+
 	}
 
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
