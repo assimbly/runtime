@@ -18,8 +18,7 @@ public class JsonAggregateStrategy implements AggregationStrategy {
             return newExchange;
         }
 
-        if(oldExchange.getProperty("hasBeenAggregated") != null
-                && oldExchange.getProperty("hasBeenAggregated", Boolean.class)) {
+        if(oldExchange.getProperty("hasBeenAggregated") != null && oldExchange.getProperty("hasBeenAggregated", Boolean.class)) {
             array = new JSONArray(oldExchange.getIn().getBody(String.class));
         }else{
             array = wrapInArray(new JSONArray(), oldExchange.getIn().getBody(String.class));
