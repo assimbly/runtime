@@ -395,23 +395,29 @@ public class CamelIntegration extends BaseIntegration {
 					"          uri: \"kamelet:sink\"";
 		}
 
+		/*
 		resourceAsString = StringUtils.replaceOnce(resourceAsString,"      steps:\n" +
 					"        -", "      steps:\n" +
 					"        - step:\n" +
 					"            id: \"{{routeId}}\"\n" +
 					"        -");
+		 */
 
+		/*
 		resourceAsString = StringUtils.replaceOnce(resourceAsString,"      steps:\n" +
 				"      -","      steps:\n" +
 				"      - step:\n" +
 				"          id: \"{{routeId}}\"\n" +
 				"      -");
+		 */
 
 		if(resourceAsString.contains("route:")){
 
+			/*
 			resourceAsString = StringUtils.replaceOnce(resourceAsString,"steps:","steps:\n" +
 					"          - step:\n" +
 					"              id: \"{{routeId}}\"");
+			 */
 
 			resourceAsString = StringUtils.replaceOnce(resourceAsString,"route:","route:\n" +
 					"      routeConfigurationId: \"{{routeConfigurationId}}\"");
@@ -923,19 +929,17 @@ public class CamelIntegration extends BaseIntegration {
 							"tcp://localhost:61616"
 			);
 
-			if(props.containsKey("frontend") && props.get("frontend").equals(frontendEngine)) {
+			Component activemqComp = this.context.getComponent(activemqName);
 
-				Component activemqComp = this.context.getComponent(activemqName);
+			if (activemqComp == null) {
 
-				if (activemqComp == null) {
+				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
 
-					JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-
-					this.context.addComponent(activemqName, jmsComponent);
+				this.context.addComponent(activemqName, jmsComponent);
 
 
-				}
 			}
+
 		} catch (Exception e) {
 			log.error("Error to add custom activeMQ connection", e);
 		}

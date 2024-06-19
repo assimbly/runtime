@@ -183,7 +183,6 @@ public class FlowLoader extends RouteBuilder {
 		for(String key : props.descendingKeySet()){
 			if(key.endsWith("route")){
 				String route = props.get(key);
-				//route = "<camelContext><threadPoolProfile id=\"" + flowId + "Profile\" poolSize=\"10\" maxPoolSize=\"50\" maxQueueSize=\"5000\"/>" + route + "</camelContext>";
 				String id = props.get(key + ".id");
 				loadRoute(route, "route",id);
 			}
@@ -211,11 +210,13 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void loadStep(String route, String type, String id, String uri) throws Exception {
+	private void loadStep(String step, String type, String id, String uri) throws Exception {
 
 		try {
 
-			loader.loadRoutes(IntegrationUtil.setResource(route));
+			log.info("Load step:\n\n" + step);
+
+			loader.loadRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
