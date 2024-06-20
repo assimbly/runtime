@@ -12,7 +12,9 @@ import org.assimbly.dil.event.util.EventUtil;
 import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.nio.charset.StandardCharsets;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,6 +43,8 @@ public class StepCollector extends EventNotifierSupport {
 
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
+
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -123,10 +127,18 @@ public class StepCollector extends EventNotifierSupport {
 
             if (body == null || body.length == 0) {
                 return "<empty>";
-            }else if (body.length > limitBodyLength) {
-                return new String(Arrays.copyOfRange(body, 0, limitBodyLength), StandardCharsets.UTF_8);
-            }else{
-                return new String (body, StandardCharsets.UTF_8);
+            } else if (body.length <= limitBodyLength) {
+                if (isText(body, CHARSET)) {
+                    return new String(body, CHARSET);
+                } else {
+                    return "<binary content>";
+                }
+            }
+
+            if (isText(body, CHARSET)) {
+                return new String(Arrays.copyOfRange(body, 0, limitBodyLength), CHARSET);
+            } else {
+                return "<binary content>";
             }
 
         } catch (Exception e) {
@@ -137,7 +149,18 @@ public class StepCollector extends EventNotifierSupport {
                 return "<unable to convert>";
             }
         }
+    }
 
+    private boolean isText(byte[] data, Charset charset) {
+        try {
+            CharsetDecoder decoder = charset.newDecoder();
+            decoder.onMalformedInput(CodingErrorAction.REPORT);
+            decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+            decoder.decode(ByteBuffer.wrap(data));
+            return true;
+        } catch (CharacterCodingException e) {
+            return false;
+        }
     }
 
     private int getLimitBodyLength() {
