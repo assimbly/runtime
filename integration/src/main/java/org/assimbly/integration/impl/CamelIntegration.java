@@ -781,7 +781,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		String configurationUTF8 = new String(configuration.getBytes(StandardCharsets.UTF_8),StandardCharsets.UTF_8);
 
+		System.out.println("Conf is XML: " + IntegrationUtil.isXML(configurationUTF8));
+		System.out.println("Conf: " + configurationUTF8);
+
 		if(IntegrationUtil.isXML(configurationUTF8)) {
+
 			Document doc = DocConverter.convertStringToDoc(configurationUTF8);
 			XPath xPath = XPathFactory.newInstance().newXPath();
 

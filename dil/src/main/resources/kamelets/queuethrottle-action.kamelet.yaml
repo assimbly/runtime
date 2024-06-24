@@ -28,31 +28,15 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setProperty:
-              name: AssimblyQueueName
-              constant: "{{path}}"
-          - process:
-              ref: "QueueMessageChecker"
-          - filter:
-              simple: "${exchangeProperty.AssimblyQueueHasMessages} == true"
-          - loop:
-              constant: "{{messages}}"
-              steps:
-                - setProperty:
-                    name: Enrich-Type
-                    constant: "application/override"
-                - setProperty:
-                    name: AssimblyAggregateNoExceptionOnNull
-                    simple: "true"
-                - pollEnrich:
-                    constant: "activemq:{{path}}"
-                    timeout: "{{timePeriod}}"
-                    aggregationStrategy: "CurrentEnrichStrategy"
-                - filter:
-                    simple: "${body} != null"
-                    steps:
-                      - removeHeaders:
-                          pattern: "fireTime|jobRunTime|nextFireTime|previousFireTime|refireCount|scheduledFireTime|triggerGroup|triggerName|jobDetail|jobInstance|mergedJobDataMap|result|scheduler|trigger"
-                          excludePattern: "breadcrumbId"
+          - throttle:
+              asyncDelayed: true
+              timePeriodMillis: "{{timePeriod}}"
+              expression:
+                constant: {{messages}}
+              correlationExpression:
+                constant:
+                  expression: "{{routeId}}"
+          - to:
+              uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&amp;timeToLive=86400000"
           - to:
               uri: "kamelet:sink"
