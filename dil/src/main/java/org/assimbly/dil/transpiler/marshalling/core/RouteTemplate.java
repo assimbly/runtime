@@ -765,13 +765,17 @@ public class RouteTemplate {
             }
 
             if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
+
                 Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/headers");
                 if (node == null) {
                     node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/headers");
                 }
+
                 String headerKeysAsString = DocConverter.convertNodeToString(node);
+
                 parameter = createParameter(templateDoc, "headers", headerKeysAsString);
                 templatedRoute.appendChild(parameter);
+
             }
         }
     }

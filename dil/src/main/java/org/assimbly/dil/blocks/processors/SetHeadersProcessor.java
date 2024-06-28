@@ -25,38 +25,37 @@ public class SetHeadersProcessor implements Processor {
 
 		  for (int i = 0; i < nodeList.getLength(); i++) {
 
-			  Node node = nodeList.item(i);
+			  Node header = nodeList.item(i);
 
-			  String language;
-			  String type;
-			  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-			  
-			  if (node.getNodeType() == Node.ELEMENT_NODE) {
-				  String headerKey = node.getNodeName();
-				  String headerValue = node.getTextContent();
+			  if (header.getNodeType() == Node.ELEMENT_NODE) {
 
-				  Element elem = (Element) node;
-				  language = elem.getAttribute("language");
-				  type = elem.getAttribute("type");
+				  Element headerElem = (Element) header.getChildNodes();
+
+				  String headerName = getElementValue(headerElem, "name");
+				  String headerValue = getElementValue(headerElem, "value");
+				  String headerLanguage = getElementValue(headerElem, "language");
+				  String headerType = getElementValue(headerElem, "type");
 
 				  String result;
 
-				  if (language.equalsIgnoreCase("constant")) {
+				  if (headerLanguage.equalsIgnoreCase("constant")) {
 					  result = headerValue;
-				  } else if (language.equalsIgnoreCase("xpath")) {
+				  } else if (headerLanguage.equalsIgnoreCase("xpath")) {
+					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
 					  result = XPathBuilder.xpath(headerValue).factory(fac).evaluate(exchange, String.class);
 				  } else {
-					  Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+					  Language resolvedLanguage = exchange.getContext().resolveLanguage(headerLanguage);
 					  Expression expression = resolvedLanguage.createExpression(headerValue);
 					  result = expression.evaluate(exchange, String.class);
 				  }
 
-				  if(type.equalsIgnoreCase("property")){
-					  exchange.setProperty(headerKey, result);
+				  if(headerType.equalsIgnoreCase("property")){
+					  exchange.setProperty(headerName, result);
+				  }else if(headerType.equalsIgnoreCase("variable")){
+					  exchange.setVariable(headerName, result);
 				  }else{
-					  in.setHeader(headerKey, result);
+					  in.setHeader(headerName, result);
 				  }
-
 
 			  }
 
@@ -67,5 +66,19 @@ public class SetHeadersProcessor implements Processor {
 	  }
 
 	}
+
+	private String getElementValue(Element element, String name){
+
+		String value = "";
+		NodeList nodeList = element.getElementsByTagName(name);
+
+		if(nodeList.getLength()>0){
+			value = nodeList.item(0).getTextContent();
+		}
+
+		return value;
+
+	}
+
 
 }
