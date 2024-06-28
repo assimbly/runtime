@@ -61,8 +61,8 @@ public class FlowLoader extends RouteBuilder {
 		flowEvent = "start";
 
 		if(flowLoaderReport==null){
-		  flowLoaderReport = new FlowLoaderReport();
-		  flowLoaderReport.initReport(flowId, flowName, "start");
+			flowLoaderReport = new FlowLoaderReport();
+			flowLoaderReport.initReport(flowId, flowName, "start");
 		}
 
 		setExtendedcontext();

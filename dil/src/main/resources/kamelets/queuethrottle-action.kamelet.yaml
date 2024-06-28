@@ -32,7 +32,7 @@ spec:
               asyncDelayed: true
               timePeriodMillis: "{{timePeriod}}"
               expression:
-                constant: {{messages}}
+                constant: "{{messages}}"
               correlationExpression:
                 constant:
                   expression: "{{routeId}}"
