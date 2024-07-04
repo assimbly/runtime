@@ -72,13 +72,13 @@ public class StatisticsRuntime {
         }
     }
 
-    @GetMapping(
+    @PostMapping(
             path = "/integration/statsbyflowids",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> getStatsByFlowIds(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(value = "flowIds") String flowIds,
+            @RequestBody String flowIds,
             @RequestHeader(required = false, defaultValue = "", value = "filter") String filter
     ) throws Exception {
 
