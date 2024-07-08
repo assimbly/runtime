@@ -234,6 +234,7 @@ public class FlowLoader extends RouteBuilder {
 		if (errorUri!=null && !errorUri.isEmpty()) {
 			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
+			System.out.println("setErrorHandler + default");
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
 		}
 

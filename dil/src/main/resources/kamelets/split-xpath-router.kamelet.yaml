@@ -24,8 +24,8 @@ spec:
         description: Out Rule
         type: string
       out_default:
-        title: Out Rule
-        description: Out Rule
+        title: Out Default Rule
+        description: Out Default Rule
         type: string
         default: "mock:0"
   dependencies:

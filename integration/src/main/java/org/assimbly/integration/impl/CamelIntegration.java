@@ -620,7 +620,7 @@ public class CamelIntegration extends BaseIntegration {
 
 									diff = timeCreated - lastModified;
 
-									System.out.println("time modified: " + diff);
+									log.info("time modified: " + diff);
 
 									if(diff < 5000){
 										fileInstall(path);
@@ -775,14 +775,39 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
+	public void fileUninstall(Path path) throws Exception {
+
+		String pathAsString = path.toString();
+		String fileName = FilenameUtils.getBaseName(pathAsString);
+		String mediaType = FilenameUtils.getExtension(pathAsString);
+		String configuration = confFiles.get(fileName);
+
+		confFiles.remove(fileName);
+
+		if(mediaType.contains("json")){
+			configuration = DocConverter.convertJsonToXml(configuration);
+			mediaType = "xml";
+		}else if(mediaType.contains("yaml")){
+			configuration = DocConverter.convertYamlToXml(configuration);
+			mediaType = "xml";
+		}
+
+		String flowId = setFlowId(fileName, configuration);
+
+		if(flowId!=null){
+			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
+			stopFlow(flowId, stopTimeout);
+		}else{
+			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
+		}
+
+	}
+
 	public String setFlowId(String filename, String configuration) throws Exception {
 
 		String flowId = null;
 
 		String configurationUTF8 = new String(configuration.getBytes(StandardCharsets.UTF_8),StandardCharsets.UTF_8);
-
-		System.out.println("Conf is XML: " + IntegrationUtil.isXML(configurationUTF8));
-		System.out.println("Conf: " + configurationUTF8);
 
 		if(IntegrationUtil.isXML(configurationUTF8)) {
 
@@ -832,25 +857,6 @@ public class CamelIntegration extends BaseIntegration {
 		return flowId;
 
 	}
-
-	public void fileUninstall(Path path) throws Exception {
-
-		String pathAsString = path.toString();
-		String fileName = FilenameUtils.getBaseName(pathAsString);
-		String configuration = confFiles.get(fileName);
-		confFiles.remove(fileName);
-
-		String flowId = setFlowId(fileName, configuration);
-
-		if(flowId!=null){
-			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-			stopFlow(flowId, stopTimeout);
-		}else{
-			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
-		}
-
-	}
-
 
 	//Manage integration
 
@@ -1337,17 +1343,15 @@ public class CamelIntegration extends BaseIntegration {
 
 				String routeId = route.getId();
 
-				ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
-
-				managedRoute.stop();
-
-				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
-
-				managedRoute.remove();
+				log.info("Stopping step id: " + routeId);
 
 				if(route.getConfigurationId()!=null) {
+					log.info("Remove routeConfiguration step id= " + routeId);
 					removeRouteConfiguration(route.getConfigurationId());
 				}
+
+				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
+				context.removeRoute(routeId);
 
 			}
 
@@ -1920,62 +1924,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	//to do
 	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception {
-
-		//if used this path needs to be updated
-		/*
-		File directory = new File("C:/messages/templates");
-		java.util.Collection<File> files = FileUtils.listFiles(directory, null, false);
-
-		for (File file : files) {
-			String content = Files.readString(file.toPath());
-			String[] templates = StringUtils.substringsBetween(content,"routeTemplate",";");
-
-			if(templates.length > 0){
-
-				for(String template: templates){
-					String[] lines = template.split("\\.");
-					if(lines.length > 0){
-
-						String name = StringUtils.substringsBetween(lines[0],"(\"","\")")[0];
-						List<String> parameters = new ArrayList<>();
-						for(String line: lines){
-							if((line.contains("templateParameter") || line.contains("templateOptionalParameter")) && !line.contains("in") && !line.contains("out") && !line.contains("routeconfiguration_id")){
-								String[] parameterList = StringUtils.substringsBetween(line, "(\"", "\")");
-								if(parameterList.length > 0 ){
-									String parameter = parameterList[0];
-									parameters.add(parameter);
-								}
-							}
-						}
-
-						String result = createKamelet(name, parameters);
-						System.out.println("Result=\n\n" + result);
-						System.out.println("");
-					}
-				}
-
-			}
-
-		}
-
-		 */
-
-		/*
-		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
-
-		for(Route route: context.getRoutes()){
-			ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getRouteId());
-			System.out.println("routexml for route=" + route.getId());
-			System.out.println(managedRoute.dumpRoutes("xml"));
-		}
-
-		String camelRoutesConfiguration = managedCamelContext.dumpRoutes("xml");
-
-		if(mediaType.contains("json")) {
-			camelRoutesConfiguration = DocConverter.convertXmlToJson(camelRoutesConfiguration);
-		}else if(mediaType.contains("yaml")){
-			camelRoutesConfiguration = DocConverter.convertXmlToYaml(camelRoutesConfiguration);
-		}*/
 
 		String camelRoutesConfiguration = "{not available yet}";
 

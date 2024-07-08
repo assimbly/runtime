@@ -37,6 +37,6 @@ spec:
                 constant:
                   expression: "{{routeId}}"
           - to:
-              uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&amp;timeToLive=86400000"
+              uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
           - to:
               uri: "kamelet:sink"

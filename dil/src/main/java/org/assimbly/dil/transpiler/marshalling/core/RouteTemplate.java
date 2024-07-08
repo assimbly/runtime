@@ -771,10 +771,12 @@ public class RouteTemplate {
                     node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/headers");
                 }
 
-                String headerKeysAsString = DocConverter.convertNodeToString(node);
+                if (node != null) {
+                    String headerKeysAsString = DocConverter.convertNodeToString(node);
 
-                parameter = createParameter(templateDoc, "headers", headerKeysAsString);
-                templatedRoute.appendChild(parameter);
+                    parameter = createParameter(templateDoc, "headers", headerKeysAsString);
+                    templatedRoute.appendChild(parameter);
+                }
 
             }
         }
