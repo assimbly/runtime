@@ -215,8 +215,8 @@
                                             </xsl:choose>
                                         </xsl:attribute>
                                     </xsl:if>
-                                    <xsl:copy-of select="*:from" copy-namespaces="yes"/>
                                     <xsl:copy-of select="*:onException" copy-namespaces="yes"/>
+                                    <xsl:copy-of select="*:from" copy-namespaces="yes"/>
                                     <step>
                                         <xsl:choose>
                                             <xsl:when test="@id">
