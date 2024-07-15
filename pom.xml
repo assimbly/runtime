@@ -29,7 +29,7 @@
 		<hamcrest.version>2.2</hamcrest.version>
 		<spring-boot.version>3.3.1</spring-boot.version>
 		<maven-api.version>3.9.8</maven-api.version>
-		<camel-spring-junit5.version>4.6.0</camel-spring-junit5.version>
+		<camel-spring-junit5.version>4.7.0</camel-spring-junit5.version>
 		<h2database.version>2.2.224</h2database.version>
 		<xalan.version>2.7.3</xalan.version>
 		<zip4j.version>2.11.5</zip4j.version>
