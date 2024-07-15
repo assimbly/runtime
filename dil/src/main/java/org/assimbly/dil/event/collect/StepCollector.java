@@ -83,8 +83,6 @@ public class StepCollector extends EventNotifierSupport {
             if(stepId!= null && !isBlackListed(stepId)){
 
                 if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
-                    // set custom properties
-                    setCustomProperties(exchange, stepId, stepTimestamp);
                     //process and store the exchange
                     processEvent(exchange, stepId, stepTimestamp);
                 }
@@ -95,9 +93,16 @@ public class StepCollector extends EventNotifierSupport {
 
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
 
+        // read body only once
+        byte[] body = exchange.getMessage().getBody(byte[].class);
+        int bodyLength =  body != null ? body.length : 0;
+
+        // set custom properties
+        setCustomProperties(exchange, bodyLength, stepId, stepTimestamp);
+
         //set fields
         Message message = exchange.getMessage();
-        String body = getBody(exchange);
+        String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
         Map<String, Object> headers = message.getHeaders();
         Map<String, Object> properties = exchange.getProperties();
         String messageId = message.getMessageId();
@@ -111,7 +116,7 @@ public class StepCollector extends EventNotifierSupport {
 
         //create json
         MessageEvent messageEvent = new MessageEvent(
-                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
+                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, bodyToStoreOnEvent, expiryDate
         );
         String json = messageEvent.toJson();
 
@@ -119,10 +124,9 @@ public class StepCollector extends EventNotifierSupport {
         storeManager.storeEvent(json);
     }
 
-    public String getBody(Exchange exchange) {
+    public String getBodyToStoreOnEvent(Exchange exchange, byte[] body) {
 
         try {
-            byte[] body = exchange.getMessage().getBody(byte[].class);
             int limitBodyLength = getLimitBodyLength();
 
             if (body == null || body.length == 0) {
@@ -172,7 +176,7 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private void setCustomProperties(Exchange exchange, String stepId, long stepTimestamp) {
+    private void setCustomProperties(Exchange exchange, int bodyLength, String stepId, long stepTimestamp) {
         if (EventUtil.isFilteredEquals(filters, stepId)) {
             // set response time property
             setResponseTimeProperty(exchange, stepTimestamp);
@@ -184,8 +188,7 @@ public class StepCollector extends EventNotifierSupport {
         exchange.setProperty(TIMESTAMP_PROPERTY, sdf.format(calNow.getTime()));
 
         // set BodyLength property
-        byte[] body = exchange.getMessage().getBody(byte[].class);
-        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, body != null ? body.length : 0);
+        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, bodyLength);
 
         // set HeadersLength property
         Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
