@@ -38,6 +38,7 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.beans.*;
@@ -45,7 +46,6 @@ import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
-import org.assimbly.dil.blocks.policysupport.MutalSSLRoutePolicyFactory;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
@@ -69,14 +69,19 @@ import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.management.JMX;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.net.ssl.SSLContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -108,7 +113,6 @@ public class CamelIntegration extends BaseIntegration {
 	private final MetricRegistry metricRegistry = new MetricRegistry();
 	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
-	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 	private Properties encryptionProperties;
@@ -117,6 +121,17 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
+
+	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
+	private final String SEP = "/";
+	private final String SECURITY_PATH = "security";
+	private final String TRUSTSTORE_FILE = "truststore.jks";
+	private final String KEYSTORE_FILE = "keystore.jks";
+	private final String KEYSTORE_PWD = "supersecret";
+
+	private final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
+	private final String RESOURCE_PROP = "resource";
+	private final String AUTH_PASSWORD_PROP = "authPassword";
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -242,8 +257,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		context.addComponent("jetty-nossl", new org.apache.camel.component.jetty12.JettyHttpComponent12());
 		context.addComponent("jetty", new JettyHttpComponent12());
-
-		context.addRoutePolicyFactory(new MutalSSLRoutePolicyFactory());
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
@@ -889,6 +902,12 @@ public class CamelIntegration extends BaseIntegration {
 			//create connections & install dependencies if needed
 			createConnections(props);
 
+			HashMap<String, String> mutualSSLInfoMap = getMutualSSLInfoFromProps(props);
+			if(mutualSSLInfoMap!=null && !mutualSSLInfoMap.isEmpty()) {
+				// add certificate on keystore
+				addCertificateFromUrl(mutualSSLInfoMap.get(RESOURCE_PROP), mutualSSLInfoMap.get(AUTH_PASSWORD_PROP));
+			}
+
 			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
 
 			flow.addRoutesToCamelContext(context);
@@ -906,6 +925,74 @@ public class CamelIntegration extends BaseIntegration {
 			return "error reason: " + e.getMessage();
 		}
 
+	}
+
+	// add certificate from url on the keystore
+	private void addCertificateFromUrl(String url, String authPassword) {
+		try {
+			byte[] fileContent;
+			try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(new URL(url)))) {
+				fileContent = IOUtils.toByteArray(byteArrayInputStream);
+			}
+			String encodedResourceContent = Base64.getEncoder().encodeToString(fileContent);
+
+			CertificatesUtil util = new CertificatesUtil();
+			String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
+			util.importP12Certificate(keystorePath, KEYSTORE_PWD, encodedResourceContent, authPassword);
+
+		} catch (Exception e) {
+			log.error("Error to add certificate", e);
+		}
+	}
+
+	// get mutual ssl info from props
+	private HashMap<String, String> getMutualSSLInfoFromProps(TreeMap<String, String> props) {
+		for (Map.Entry<String, String> entry : props.entrySet()) {
+			String xml = entry.getValue();
+			if(!xml.startsWith("<")) {
+				// skip prop if it's not an xml
+				continue;
+			}
+			HashMap<String, String> mutualSSLMap = getMutualSSLInfoFromXml(xml);
+			if(mutualSSLMap!=null && !mutualSSLMap.isEmpty()) {
+				return mutualSSLMap;
+			}
+		}
+		return null;
+	}
+
+	// get mutual ssl info from xml
+	private HashMap<String, String> getMutualSSLInfoFromXml(String xml) {
+		HashMap<String, String> map = new HashMap<>();
+
+		String httpMutualSSL = getPropertyValue(xml, HTTP_MUTUAL_SSL_PROP);
+		if(httpMutualSSL!=null && httpMutualSSL.equals("true")) {
+			String authPassword = getPropertyValue(xml, AUTH_PASSWORD_PROP);
+			String resource = getPropertyValue(xml, RESOURCE_PROP);
+			if(authPassword!=null && resource!=null) {
+				map.put(AUTH_PASSWORD_PROP, authPassword);
+				map.put(RESOURCE_PROP, resource);
+			}
+		}
+
+		return map;
+	}
+
+	// get property value by property name
+	private String getPropertyValue(String xml, String propName) {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		XPathFactory xpathFactory = XPathFactory.newInstance();
+		XPath xpath = xpathFactory.newXPath();
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(new InputSource(new java.io.StringReader(xml)));
+			String expression = String.format("//setProperty[@name='%s']/constant/text()", propName);
+			return xpath.evaluate(expression, doc);
+		} catch (Exception e) {
+			// do nothing
+		}
+
+		return null;
 	}
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
@@ -2830,7 +2917,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
-		String keystorePath = baseDir + "/security/" + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 		CertificatesUtil util = new CertificatesUtil();
 		return util.getCertificate(keystorePath, keystorePassword, certificateName);
 	}
@@ -2840,7 +2927,7 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 			CertificatesUtil util = new CertificatesUtil();
 			Certificate[] certificates = util.downloadCertificates(url);
-			String keystorePath = baseDir + "/security/" + keystoreName;
+			String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 			util.importCertificates(keystorePath, keystorePassword, certificates);
 		} catch (Exception e) {
 			log.error("Set certificates for url " + url + " failed.",e);
@@ -2851,7 +2938,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		CertificatesUtil util = new CertificatesUtil();
 
-		String keystorePath = baseDir + "/security/" + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
 		File file = new File(keystorePath);
 
@@ -2872,7 +2959,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		CertificatesUtil util = new CertificatesUtil();
 
-		String keystorePath = baseDir + "/security/" + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
 		File file = new File(keystorePath);
 
@@ -2888,14 +2975,14 @@ public class CamelIntegration extends BaseIntegration {
 
 		CertificatesUtil util = new CertificatesUtil();
 
-		String keystorePath = baseDir + "/security/" + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 		return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
 
 	}
 
 	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
 
-		String keystorePath = baseDir + "/security/" + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
 		CertificatesUtil util = new CertificatesUtil();
 		util.deleteCertificate(keystorePath, keystorePassword, certificateName);
@@ -2977,7 +3064,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
 
-		File securityPath = new File(baseDir + "/security");
+		File securityPath = new File(baseDir + SEP + SECURITY_PATH + SEP);
 
 		if (!securityPath.exists()) {
 			boolean securityPathCreated = securityPath.mkdirs();
@@ -2986,16 +3073,16 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
-		String keyStorePath = baseDir2 + "/security/keystore.jks";
-		String trustStorePath = baseDir2 + "/security/truststore.jks";
+		String keyStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
+		String trustStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
 
 		SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", trustStorePath, "supersecret");
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, KEYSTORE_PWD, trustStorePath, KEYSTORE_PWD);
 
-		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, "supersecret", null, null);
+		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, KEYSTORE_PWD, null, null);
 
-		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, "supersecret");
+		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, KEYSTORE_PWD);
 
 		registry.bind("default", sslContextParameters);
 		registry.bind("sslContext", sslContextParameters);
@@ -3021,7 +3108,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, "supersecret", trustStorePath, "supersecret");
+		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, KEYSTORE_PWD, trustStorePath, KEYSTORE_PWD);
 
 	}
 
