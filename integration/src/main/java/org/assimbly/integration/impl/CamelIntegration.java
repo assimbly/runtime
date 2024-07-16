@@ -69,7 +69,6 @@ import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
 
