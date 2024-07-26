@@ -259,8 +259,11 @@ public class CamelIntegration extends BaseIntegration {
 		//kameletComponent.setLocation("ref:");
 		context.addComponent("function", kameletComponent);
 
-		context.addComponent("jetty-nossl", new org.apache.camel.component.jetty12.JettyHttpComponent12());
-		context.addComponent("jetty", new JettyHttpComponent12());
+		JettyHttpComponent12 jettyHttpComponent12 = new org.apache.camel.component.jetty12.JettyHttpComponent12();
+		jettyHttpComponent12.setRequestHeaderSize(80000);
+		jettyHttpComponent12.setResponseHeaderSize(80000);
+		context.addComponent("jetty-nossl", jettyHttpComponent12);
+		context.addComponent("jetty", jettyHttpComponent12);
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
