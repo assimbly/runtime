@@ -26,11 +26,11 @@
         <main.basedir>${project.basedir}</main.basedir>
 		<activemq.version>6.1.2</activemq.version>
         <assimbly.version>5.0.0</assimbly.version>
-		<hamcrest.version>2.2</hamcrest.version>
-		<spring-boot.version>3.3.1</spring-boot.version>
+		<hamcrest.version>3.0</hamcrest.version>
+		<spring-boot.version>3.3.2</spring-boot.version>
 		<maven-api.version>3.9.8</maven-api.version>
 		<camel-spring-junit5.version>4.7.0</camel-spring-junit5.version>
-		<h2database.version>2.2.224</h2database.version>
+		<h2database.version>2.3.230</h2database.version>
 		<xalan.version>2.7.3</xalan.version>
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>

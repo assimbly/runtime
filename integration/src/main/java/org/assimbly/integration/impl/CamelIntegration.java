@@ -1997,10 +1997,6 @@ public class CamelIntegration extends BaseIntegration {
 				"      - to:\n" +
 				"        uri: \"kamelet.sink\"";
 
-		File file = new File("c:/messages/kameletes/" + name + ".kamelet.yaml" );
-
-		FileUtils.writeStringToFile(file,kamelet,Charset.defaultCharset());
-
 		return kamelet;
 	}
 
