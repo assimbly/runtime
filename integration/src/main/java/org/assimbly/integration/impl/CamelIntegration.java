@@ -126,7 +126,7 @@ public class CamelIntegration extends BaseIntegration {
 	private final String SECURITY_PATH = "security";
 	private final String TRUSTSTORE_FILE = "truststore.jks";
 	private final String KEYSTORE_FILE = "keystore.jks";
-	private final String KEYSTORE_PWD = "supersecret";
+	private final String KEYSTORE_PWD = "KEYSTORE_PWD";
 
 	private final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
 	private final String RESOURCE_PROP = "resource";
@@ -961,7 +961,7 @@ public class CamelIntegration extends BaseIntegration {
 
 			CertificatesUtil util = new CertificatesUtil();
 			String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
-			util.importP12Certificate(keystorePath, KEYSTORE_PWD, encodedResourceContent, authPassword);
+			util.importP12Certificate(keystorePath, getKeystorePassword(), encodedResourceContent, authPassword);
 
 		} catch (Exception e) {
 			log.error("Error to add certificate", e);
@@ -3041,11 +3041,11 @@ public class CamelIntegration extends BaseIntegration {
 
 		SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, KEYSTORE_PWD, trustStorePath, KEYSTORE_PWD);
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
 
-		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, KEYSTORE_PWD, null, null);
+		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), null, null);
 
-		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, KEYSTORE_PWD);
+		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
 
 		registry.bind("default", sslContextParameters);
 		registry.bind("sslContext", sslContextParameters);
@@ -3071,7 +3071,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, KEYSTORE_PWD, trustStorePath, KEYSTORE_PWD);
+		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
 
 	}
 
@@ -3082,6 +3082,15 @@ public class CamelIntegration extends BaseIntegration {
 	 */
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+	}
+
+	private String getKeystorePassword() {
+		String keystorePwd = System.getenv(KEYSTORE_PWD);
+		if(StringUtils.isEmpty(keystorePwd)) {
+			return "supersecret";
+		}
+
+		return keystorePwd;
 	}
 
 }
