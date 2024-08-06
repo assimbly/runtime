@@ -16,6 +16,8 @@ public class AMQPConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
+    private final String KEYSTORE_PWD = "KEYSTORE_PWD";
+
     private CamelContext context;
     private EncryptableProperties properties;
     private String componentName;
@@ -132,7 +134,7 @@ public class AMQPConnection {
 
         String sslUrl = url;
         if (url.indexOf('?') == -1) {
-            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=supersecret";
+            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=" + getKeystorePassword();
         } else {
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
@@ -146,7 +148,7 @@ public class AMQPConnection {
             }
 
             if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
-                sslUrl = url + "&transport.trustStorePassword=supersecret";
+                sslUrl = url + "&transport.trustStorePassword=" + getKeystorePassword();
             }
 
         }
@@ -155,5 +157,13 @@ public class AMQPConnection {
 
     }
 
+    private String getKeystorePassword() {
+        String keystorePwd = System.getenv(KEYSTORE_PWD);
+        if(StringUtils.isEmpty(keystorePwd)) {
+            return "supersecret";
+        }
+
+        return keystorePwd;
+    }
 
 }
