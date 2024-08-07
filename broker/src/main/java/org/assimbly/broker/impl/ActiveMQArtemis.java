@@ -594,6 +594,20 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
+	public String countDelayedMessages(String endpointName) throws Exception {
+
+		checkIfEndpointExist(endpointName);
+
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+
+		long numberOfMessages = queueControl.getScheduledCount();
+
+		return Long.toString(numberOfMessages);
+
+	}
+
 	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
 
 		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);

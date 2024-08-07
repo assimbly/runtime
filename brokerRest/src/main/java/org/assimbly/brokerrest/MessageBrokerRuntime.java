@@ -118,12 +118,11 @@ public class MessageBrokerRuntime {
 
     }
 
-
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
+     * GET  /brokers/{brokerType}/messages/{endpointName}/count : count the number of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param endpointName, the name of the queue
+     * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
@@ -143,8 +142,39 @@ public class MessageBrokerRuntime {
             result = broker.countMessages(brokerType, endpointName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
-            log.error("Can't list messages", e);
+            log.error("Can't count messages", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", e.getMessage());
+        }
+
+    }
+
+
+    /**
+     * GET  /brokers/{brokerType}/delayedmessages/{endpointName}/count : count the number of messages on endpoint.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @param endpointName, the name of the queue or topic
+     * @return list of messages with status 200 (OK) or with status 404 (Not Found)
+     */
+    @GetMapping(
+            path = "/brokers/{brokerType}/delayedmessages/{endpointName}/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object countDelayedMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
+
+        log.debug("REST request to list messages for queue : {}", endpointName);
+
+        try {
+            //brokermanager = brokerManagerResource.getBrokerManager();
+            result = broker.countDelayedMessages(brokerType, endpointName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", result);
+        } catch (Exception e) {
+            log.error("Can't count delayed messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", e.getMessage());
         }
 
     }

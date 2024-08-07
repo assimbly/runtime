@@ -273,14 +273,23 @@ public interface Broker {
 	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception;
 
 	/**
-	 * list all messages on the broker
+	 * count messages on specified endpoint
 	 *
 	 * @param  endpointName (name of queue or topic)
-	 * @return List of all messages
-	 * @throws Exception if list can't be retrieved
+	 * @return Number of messages
+	 * @throws Exception if number of messsages can't be retrieved
 	 */
 	public String countMessages(String endpointName) throws Exception;
 
+
+	/**
+	 * count delayed messages on specified endpoint
+	 *
+	 * @param  endpointName (name of queue or topic)
+	 * @return Number of delayed messages
+	 * @throws Exception if number of messsages can't be retrieved
+	 */
+	public String countDelayedMessages(String endpointName) throws Exception;
 
 	/**
 	 * removes a message on specified endpoint by messageId
