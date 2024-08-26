@@ -105,10 +105,14 @@ public class StepCollector extends EventNotifierSupport {
         String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
         Map<String, Object> headers = message.getHeaders();
         Map<String, Object> properties = exchange.getProperties();
-        String messageId = message.getMessageId();
+        String transactionId = message.getMessageId();
 
-        //use breadcrumbId when available
-        messageId = message.getHeader(BREADCRUMB_ID_HEADER, messageId, String.class);
+        //use breadcrumbId when available, otherwise set custom
+        transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
+        if(transactionId==null || transactionId.isEmpty()){
+            transactionId = message.getMessageId() + "_" +  stepId;
+            message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
+        }
 
         //calculate times
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
@@ -116,7 +120,7 @@ public class StepCollector extends EventNotifierSupport {
 
         //create json
         MessageEvent messageEvent = new MessageEvent(
-                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, bodyToStoreOnEvent, expiryDate
+                timestamp, transactionId, flowId, flowVersion, stepId, headers, properties, bodyToStoreOnEvent, expiryDate
         );
         String json = messageEvent.toJson();
 

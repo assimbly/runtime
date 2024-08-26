@@ -6,7 +6,7 @@ import org.assimbly.integrationrest.utils.CamelContextUtil;
 import org.assimbly.integrationrest.utils.FlowUtil;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.json.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -327,7 +327,7 @@ class IntegrationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);

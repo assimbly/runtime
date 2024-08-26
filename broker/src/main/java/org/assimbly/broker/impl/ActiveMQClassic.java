@@ -540,6 +540,17 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+
+    public String countMessages(String endpointName) throws Exception {
+
+        checkIfEndpointExist(endpointName);
+
+        Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+
+        return Long.toString(queueSize);
+
+    }
+
     public String countMessagesFromList(String endpointList) throws Exception {
 
         Long numberOfMessages = 0L;
@@ -557,17 +568,6 @@ public class ActiveMQClassic implements Broker {
         return Long.toString(numberOfMessages);
 
     }
-
-    public String countMessages(String endpointName) throws Exception {
-
-        checkIfEndpointExist(endpointName);
-
-        Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
-
-        return Long.toString(queueSize);
-
-    }
-
 
     public String countDelayedMessages(String endpointName) throws Exception {
 

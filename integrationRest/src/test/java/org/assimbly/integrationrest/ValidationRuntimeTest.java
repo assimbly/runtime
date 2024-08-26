@@ -3,8 +3,8 @@ package org.assimbly.integrationrest;
 import org.assimbly.integrationrest.config.IntegrationConfig;
 import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -136,7 +136,7 @@ class ValidationRuntimeTest {
     void shouldValidateExpressionWithSuccess() throws Exception {
         // build body in json format
         JSONArray bodyJsonArray = new JSONArray();
-        bodyJsonArray.add(new JSONObject(Map.of(
+        bodyJsonArray.put(new JSONObject(Map.of(
                 "name", "testHeader",
                 "expression", "def x = 5;",
                 "expressionType", "groovy"
@@ -147,7 +147,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonArray.toJSONString()
+                bodyJsonArray.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -159,7 +159,7 @@ class ValidationRuntimeTest {
     void shouldValidateExpressionWithError() throws Exception {
         // build body in json format
         JSONArray bodyJsonArray = new JSONArray();
-        bodyJsonArray.add(new JSONObject(Map.of(
+        bodyJsonArray.put(new JSONObject(Map.of(
                 "name", "testHeader",
                 "expression", "testing",
                 "expressionType", "groovy"
@@ -170,7 +170,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonArray.toJSONString()
+                bodyJsonArray.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -201,7 +201,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -227,7 +227,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -249,7 +249,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -271,7 +271,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -305,7 +305,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -339,7 +339,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -361,7 +361,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
@@ -383,7 +383,7 @@ class ValidationRuntimeTest {
                 Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
                 null,
                 MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toJSONString()
+                bodyJsonObject.toString()
         );
 
         ResultActions resultActions = this.mockMvc.perform(requestBuilder);
