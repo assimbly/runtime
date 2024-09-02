@@ -1299,8 +1299,6 @@ public class CamelIntegration extends BaseIntegration {
 		boolean addFlow = false;
 		String result = "unloaded";
 
-		//setThreadProfile(id + "Profile", 10, 20, 2000);
-
 		try {
 
 			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
