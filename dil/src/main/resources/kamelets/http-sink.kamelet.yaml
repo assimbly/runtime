@@ -11,9 +11,6 @@ spec:
       to do
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       uri:
         title: URI
         description: Endpoint URI
@@ -22,7 +19,6 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

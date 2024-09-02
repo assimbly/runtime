@@ -4,7 +4,10 @@ import java.util.*;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
-import org.apache.camel.spi.*;
+import org.apache.camel.spi.Resource;
+import org.apache.camel.spi.RoutesBuilderLoader;
+import org.apache.camel.spi.RoutesLoader;
+import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
@@ -17,7 +20,6 @@ public class FlowLoader extends RouteBuilder {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private TreeMap<String, String> props;
 	private CamelContext context;
-	private ExtendedCamelContext extendedcontext;
 	private RoutesLoader loader;
 	private RoutesBuilderLoader routesBuilderLoader;
 	private DeadLetterChannelBuilder routeErrorHandler;
@@ -59,8 +61,8 @@ public class FlowLoader extends RouteBuilder {
 		flowEvent = "start";
 
 		if(flowLoaderReport==null){
-		  flowLoaderReport = new FlowLoaderReport();
-		  flowLoaderReport.initReport(flowId, flowName, "start");
+			flowLoaderReport = new FlowLoaderReport();
+			flowLoaderReport.initReport(flowId, flowName, "start");
 		}
 
 		setExtendedcontext();
@@ -95,11 +97,10 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setExtendedcontext() throws Exception {
 		context = getContext();
-		extendedcontext = context.adapt(ExtendedCamelContext.class);
-		loader = extendedcontext.getRoutesLoader();
+		loader = PluginHelper.getRoutesLoader(context);
 		routesBuilderLoader = loader.getRoutesLoader("xml");
-
 	}
+
 	private void setErrorHandlers() throws Exception{
 
 		String errorUri = "";
@@ -110,7 +111,7 @@ public class FlowLoader extends RouteBuilder {
 			if(prop.startsWith("error") && prop.endsWith("uri")){
 				errorUri = props.get(prop);
 				id = StringUtils.substringBetween(prop,"error.",".uri");
-				if(!props.containsKey("error." + id + ".route") && !props.containsKey("error." + id + ".routeconfiguration")){
+				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
 			}
@@ -119,7 +120,7 @@ public class FlowLoader extends RouteBuilder {
 		if(useErrorHandler) {
 			setErrorHandler(id, errorUri);
 		}else{
-			System.out.println("Set error handler is true");
+			log.warn("ErrorHandler is not set");
 		}
 
 	}
@@ -182,7 +183,6 @@ public class FlowLoader extends RouteBuilder {
 		for(String key : props.descendingKeySet()){
 			if(key.endsWith("route")){
 				String route = props.get(key);
-				//route = "<camelContext><threadPoolProfile id=\"" + flowId + "Profile\" poolSize=\"10\" maxPoolSize=\"50\" maxQueueSize=\"5000\"/>" + route + "</camelContext>";
 				String id = props.get(key + ".id");
 				loadRoute(route, "route",id);
 			}
@@ -210,11 +210,13 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void loadStep(String route, String type, String id, String uri) throws Exception {
+	private void loadStep(String step, String type, String id, String uri) throws Exception {
 
 		try {
 
-			loader.loadRoutes(IntegrationUtil.setResource(route));
+			log.info("Load step:\n\n" + step);
+
+			loader.loadRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
@@ -239,7 +241,7 @@ public class FlowLoader extends RouteBuilder {
 
 		DeadLetterChannelBuilder updatedErrorHandler = errorHandler.configure();
 
-		extendedcontext.setErrorHandlerFactory(updatedErrorHandler);
+		context.getCamelContextExtension().setErrorHandlerFactory(updatedErrorHandler);
 
 		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
 

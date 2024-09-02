@@ -11,9 +11,6 @@ spec:
       Enrich message
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       out_rule:
           title: Out Rule
           description: Out Rule
@@ -32,14 +29,13 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: Enrich-Type
               constant: "{{enrichType}}"
-          - set-property:
+          - setProperty:
               name: Error-Route
               constant: "{{errorRoute}}"
           - enrich:

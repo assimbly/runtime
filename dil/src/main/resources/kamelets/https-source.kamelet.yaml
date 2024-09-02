@@ -11,9 +11,6 @@ spec:
       Receives HTTP Requests
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       path:
           title: Path
           description: Path of the URL
@@ -22,11 +19,10 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false"
         steps:
-          - remove-headers:
+          - removeHeaders:
               pattern: "CamelHttp*"
           - to:
               uri: "kamelet:sink"

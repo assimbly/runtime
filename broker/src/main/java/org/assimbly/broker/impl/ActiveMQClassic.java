@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,18 +30,16 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.MBeanServerConnection;
-import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
-import static javax.jms.DeliveryMode.NON_PERSISTENT;
-import static javax.jms.DeliveryMode.PERSISTENT;
+import static jakarta.jms.DeliveryMode.NON_PERSISTENT;
+import static jakarta.jms.DeliveryMode.PERSISTENT;
 
 public class ActiveMQClassic implements Broker {
 
-	protected Logger log = LoggerFactory.getLogger(getClass());
+    protected Logger log = LoggerFactory.getLogger(getClass());
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
     private File brokerFile = new File(baseDir + "/broker/activemq.xml");
     private BrokerService broker;
@@ -216,7 +215,8 @@ public class ActiveMQClassic implements Broker {
             BrokerView adminView = broker.getAdminView();
 
             String info = "uptime="+ broker.getUptime()
-                    + 	",totalConnections=" + broker.getTotalConnections()
+                    + ",totalConnections=" + broker.getTotalConnections()
+                    + ",currentConnections=" + broker.getCurrentConnections()
                     + ",totalConsumers=" + adminView.getTotalConsumerCount()
                     + ",totalMessages=" + adminView.getTotalMessageCount()
                     + ",nodeId=" + adminView.getBrokerId()
@@ -246,7 +246,7 @@ public class ActiveMQClassic implements Broker {
                 maxConnections = Integer.parseInt(matcher.group(1));
 
             return Map.of(
-                    "openConnections", broker.getTotalConnections(),
+                    "openConnections", adminView.getCurrentConnectionsCount(),
                     "maxConnections", maxConnections,
                     "totalNumberOfQueues", adminView.getQueues().length,
                     "totalNumberOfTemporaryQueues", adminView.getTemporaryQueues().length,
@@ -540,6 +540,17 @@ public class ActiveMQClassic implements Broker {
 
     }
 
+
+    public String countMessages(String endpointName) throws Exception {
+
+        checkIfEndpointExist(endpointName);
+
+        Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+
+        return Long.toString(queueSize);
+
+    }
+
     public String countMessagesFromList(String endpointList) throws Exception {
 
         Long numberOfMessages = 0L;
@@ -558,13 +569,18 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    public String countMessages(String endpointName) throws Exception {
+    public String countDelayedMessages(String endpointName) throws Exception {
 
         checkIfEndpointExist(endpointName);
 
-        Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+        Collection<?> collection = getJobSchedulerViewMBean().getAllJobs(true).values();
 
-        return Long.toString(queueSize);
+        long numberOfDelayedMessages = collection.stream()
+                .map(o -> (CompositeData) o)
+                .filter(row -> endpointName.equals(row.get("destinationName")))
+                .count();
+
+        return Long.toString(numberOfDelayedMessages);
 
     }
 
@@ -749,7 +765,7 @@ public class ActiveMQClassic implements Broker {
                 long messageCount = destinationViewMBean.getQueueSize();
 
                 if(destinationMessageCounts.containsKey(flowId)) {
-                   messageCount += destinationMessageCounts.get(flowId);
+                    messageCount += destinationMessageCounts.get(flowId);
                 }
 
                 if(messageCount > 0 || !excludeEmptyQueues) {
@@ -764,7 +780,7 @@ public class ActiveMQClassic implements Broker {
         return destinationMessageCounts;
     }
 
-    public QueueViewMBean getQueueViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+    private QueueViewMBean getQueueViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
 
         ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
         QueueViewMBean queueViewMbean  = (QueueViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, QueueViewMBean.class, true);
@@ -772,7 +788,7 @@ public class ActiveMQClassic implements Broker {
         return queueViewMbean;
     }
 
-    public TopicViewMBean getTopicViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+    private TopicViewMBean getTopicViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
 
         ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
         TopicViewMBean topicViewMbean  = (TopicViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, TopicViewMBean.class, true);
@@ -780,12 +796,21 @@ public class ActiveMQClassic implements Broker {
         return topicViewMbean;
     }
 
-    public ConnectorViewMBean getConnectorViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+    private ConnectorViewMBean getConnectorViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
 
         ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
         ConnectorViewMBean connectorViewMBean  = (ConnectorViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, ConnectorViewMBean.class, true);
 
         return connectorViewMBean;
+    }
+
+    private JobSchedulerViewMBean getJobSchedulerViewMBean() throws Exception {
+
+        ObjectName objectName = broker.getAdminView().getJMSJobScheduler();
+        JobSchedulerViewMBean jobSchedulerViewMBean  = (JobSchedulerViewMBean) broker.getManagementContext().newProxyInstance(objectName, JobSchedulerViewMBean.class, true);
+
+        return jobSchedulerViewMBean;
+
     }
 
 }

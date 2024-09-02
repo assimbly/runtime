@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setheaderbybody-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setbodybyheader action"
+    description: |-
+      Set header from body
+    type: object
+    properties:
+      path:
+          title: Path
+          description: Path
+          type: string
+          default: body
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setHeader:
+              name: "{{path}}"
+              simple: "${body}"
+          - to:
+              uri: "kamelet:sink"

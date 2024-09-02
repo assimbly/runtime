@@ -9,13 +9,16 @@ import org.slf4j.LoggerFactory;
 
 
 public class AggregateStrategy implements AggregationStrategy {
-    private AggregationStrategy aggregateStrategy;
+
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         String aggregateType = newExchange.getProperty("Aggregate-Type", String.class);
         if (oldExchange != null) {
             aggregateType = oldExchange.getProperty("Aggregate-Type", String.class);
         }
+
+        AggregationStrategy aggregateStrategy;
+
         switch(aggregateType) {
             case "xml":
             case "text/xml":

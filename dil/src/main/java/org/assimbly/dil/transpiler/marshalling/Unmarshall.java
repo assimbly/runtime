@@ -4,7 +4,6 @@ import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.marshalling.core.*;
-import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -93,7 +92,7 @@ public class Unmarshall {
 
 		Node dependencies = element.getElementsByTagName("dependencies").item(0);
 
-		if(dependencies!=null && dependencies.hasChildNodes()) {
+		if(dependencies==null || !dependencies.hasChildNodes()) {
 			return;
 		}
 
@@ -216,9 +215,9 @@ public class Unmarshall {
 			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}else{
 			String scheme = StringUtils.substringBefore(baseUri,":");
-			if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
-				baseUri = "block:" + baseUri;
-			};
+			//if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
+			//	baseUri = "block:" + baseUri;
+			//};
 			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}
 

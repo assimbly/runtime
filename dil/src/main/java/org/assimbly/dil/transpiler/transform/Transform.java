@@ -24,13 +24,17 @@ public class Transform {
 
     private Processor processor;
 
-    public Transform() throws SaxonApiException {
+    public Transform(String stylesheet) throws SaxonApiException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        InputStream is = classloader.getResourceAsStream("transform-to-dil.xsl");
+        InputStream is = classloader.getResourceAsStream(stylesheet);
         processor = new Processor(false);
         XsltCompiler compiler = processor.newXsltCompiler();
         XsltExecutable executable = compiler.compile(new StreamSource(is));
         transformer = executable.load();
+    }
+
+    public String transformToRoute(String xml, String flowId) throws Exception {
+        return transformXML(xml, transformer, processor);
     }
 
     public String transformToDil(String xml, String flowId) throws Exception {
@@ -84,6 +88,7 @@ public class Transform {
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
+        map.put("rabbitmq:","spring-rabbitmq:");
         map.put("DovetailQueueName","AssimblyQueueName");
         map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
         map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");

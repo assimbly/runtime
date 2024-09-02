@@ -46,7 +46,7 @@ public class MessageCollector extends EventNotifierSupport {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public MessageCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<Store> stores) {
         this.collectorId = collectorId;
         this.flowId = flowId;
         this.flowVersion = flowVersion;

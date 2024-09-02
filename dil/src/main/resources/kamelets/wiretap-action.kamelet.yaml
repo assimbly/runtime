@@ -11,9 +11,6 @@ spec:
       Copy the original in a fire and forget style
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       path:
           title: Path
           description: Path
@@ -22,11 +19,10 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - wire-tap:
+          - wireTap:
               uri: "{{path}}"
               executor-service: "wiretapProfile"
           - to:

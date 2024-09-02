@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -35,26 +35,26 @@ public class MessageManagerRuntime {
     private Integration integration;
 
     /**
-     * POST  /integration/{integrationId}/send : Send messages to an step (fire and forget).
+     * POST  /integration/send : Send messages to an step (fire and forget).
      *
-     * @param integrationId (gatewayId)
      * @return if message has been send
      * @throws Exception Message send failure
      */
     @PostMapping(
-            path = "/integration/{integrationId}/send/{numberOfTimes}",
+            path = "/integration/send/{numberOfTimes}",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> send(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-                                       @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "stepId", required = false) String stepId,
-                                       @RequestHeader(name = "serviceid", required = false) String serviceId,
-                                       @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
-                                       @RequestHeader(name = "headerKeys", required = false) String headerKeys,
-                                       @PathVariable Integer numberOfTimes,
-                                       @PathVariable Long integrationId,
-                                       @RequestBody Optional<String> requestBody) throws Exception {
+    public ResponseEntity<String> send(
+            @RequestBody Optional<String> requestBody,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "uri", required = false) String uri,
+            @RequestHeader(value = "stepId", required = false) String stepId,
+            @RequestHeader(value = "serviceid", required = false) String serviceId,
+            @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
+            @RequestHeader(value = "headerKeys", required = false) String headerKeys,
+            @PathVariable(value = "numberOfTimes") Integer numberOfTimes
+    ) throws Exception {
 
         String body = requestBody.orElse(" ");
 
@@ -82,33 +82,33 @@ public class MessageManagerRuntime {
                 integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
             }
 
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send","Sent successfully");
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send","Sent successfully");
         } catch (Exception e) {
             log.error("Send message to " + uri + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
 
     /**
-     * POST  /integration/{integrationId}/sendrequest : Send request messages to an step.
+     * POST  /integration/sendrequest : Send request messages to an step.
      *
-     * @param integrationId (gatewayId)
      * @return the reply message
      * @throws Exception Message send failure
      */
     @PostMapping(
-            path = "/integration/{integrationId}/sendrequest",
+            path = "/integration/sendrequest",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> sendRequest(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-                                       @RequestHeader(name = "uri", required = false) String uri,
-                                       @RequestHeader(name = "stepId", required = false) String stepId,
-                                       @RequestHeader(name = "serviceid", required = false) String serviceId,
-                                       @RequestHeader(name = "serviceKeys", required = false) String serviceKeys,
-                                       @RequestHeader(name = "headerKeys", required = false) String headerKeys,
-                                       @PathVariable Long integrationId,
-                                       @RequestBody Optional<String> requestBody) throws Exception {
+    public ResponseEntity<String> sendRequest(
+            @RequestBody Optional<String> requestBody,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "uri", required = false) String uri,
+            @RequestHeader(value = "stepId", required = false) String stepId,
+            @RequestHeader(value = "serviceid", required = false) String serviceId,
+            @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
+            @RequestHeader(value = "headerKeys", required = false) String headerKeys
+    ) throws Exception {
 
         String body = requestBody.orElse(" ");
         String result;
@@ -137,10 +137,10 @@ public class MessageManagerRuntime {
                 result = integration.sendRequestWithHeaders(uri, body, headerMap);
             }
 
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/send",result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send",result);
         } catch (Exception e) {
             log.error("Send reuqest message to " + uri + " failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/send",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send",e.getMessage());
         }
     }
 
@@ -148,12 +148,11 @@ public class MessageManagerRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	Long integrationId = 0L; // set integrationid to 0, as we may get a string value
     	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
     	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
     	String message = error.getMessage();
 
-    	return ResponseUtil.createFailureResponse(integrationId, mediaType,path,message);
+    	return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
     }
 
     private  TreeMap<String, Object> getMap(String message) throws JsonProcessingException {

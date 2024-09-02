@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
 	private String report;
 	private JSONObject json;
 	private JSONArray steps;

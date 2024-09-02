@@ -14,8 +14,6 @@ public class SetPatternProcessor implements Processor {
 				  exchange.setPattern(ExchangePattern.InOnly);
 			  }else if(pattern.equalsIgnoreCase("Inout") || pattern.equalsIgnoreCase("RequestReply")){
 				  exchange.setPattern(ExchangePattern.InOut);
-			  }else if(pattern.equalsIgnoreCase("InOptionalOut")){
-				  exchange.setPattern(ExchangePattern.InOptionalOut);
 			  }
 		  }
 

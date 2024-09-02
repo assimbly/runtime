@@ -252,6 +252,15 @@ public class ManagedBrokerRuntime {
         return result;
     }
 
+    public String countDelayedMessages(String brokerType, String endpointName) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.countDelayedMessages(endpointName);
+
+        return result;
+    }
+
+
     public String sendMessage(String brokerType, String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception{
         broker = getBroker(brokerType);
         return broker.sendMessage(endpointName, messageHeaders, messageBody);
@@ -298,10 +307,6 @@ public class ManagedBrokerRuntime {
         broker = getBroker(brokerType);
         return broker.moveMessages(sourceQueueName, targetQueueName);
     }
-
-
-
-
 
     //private methods
 	private Broker getBroker(String brokerType) throws Exception {
