@@ -286,6 +286,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("uuid-function", new UuidExtensionFunction());
 		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
+		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
 	}
 
@@ -307,6 +308,12 @@ public class CamelIntegration extends BaseIntegration {
 		System.setProperty("camel.threads.virtual.enabled","true");
 
 		context.setUseBreadcrumb(true);
+
+		// Enable Jackson JSON type converter for more types.
+		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
+		// Allow Jackson JSON to convert to pojo types also
+		// (by default, Jackson only converts to String and other simple types)
+		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
 
 	}
 
