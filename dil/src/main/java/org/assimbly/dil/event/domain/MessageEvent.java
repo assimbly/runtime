@@ -3,9 +3,7 @@ package org.assimbly.dil.event.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.assimbly.dil.event.collect.ExchangeCollector;
-//import org.eclipse.jetty.server.Request;
-//import org.eclipse.jetty.server.Response;
+import org.assimbly.dil.event.collect.StepCollector;
 import org.quartz.impl.StdScheduler;
 
 import java.io.IOException;
@@ -33,14 +31,16 @@ public class MessageEvent {
     private static final String UNIT_BYTES = "bytes";
 
     private static final Set<String> PROPERTIES_MILLISECONDS_UNIT_SET = Set.of(
-            ExchangeCollector.RESPONSE_TIME_PROPERTY
+            StepCollector.RESPONSE_TIME_PROPERTY
     );
     private static final Set<String> PROPERTIES_BYTES_UNIT_SET = Set.of(
-            ExchangeCollector.MESSAGE_BODY_SIZE_PROPERTY,
-            ExchangeCollector.MESSAGE_HEADERS_SIZE_PROPERTY
+            StepCollector.MESSAGE_BODY_SIZE_PROPERTY,
+            StepCollector.MESSAGE_HEADERS_SIZE_PROPERTY
     );
     private static final Set<String> PROPERTIES_NO_UNIT_SET = Set.of(
-            ExchangeCollector.TIMESTAMP_PROPERTY
+            StepCollector.TIMESTAMP_PROPERTY,
+            StepCollector.MESSAGE_BODY_TYPE_PROPERTY,
+            StepCollector.EXCHANGE_PATTERN_PROPERTY
     );
     private static final Set<String> PROPERTIES_FILTER_SET;
 
@@ -156,13 +156,11 @@ public class MessageEvent {
                 .stream()
                 .filter(header -> !header.getKey().startsWith(JMS_PREFIX))
                 .filter(header -> header.getValue() != null)
-                .filter(header -> !header.getKey().equals(ExchangeCollector.COMPONENT_INIT_TIME_HEADER))
+                .filter(header -> !header.getKey().equals(StepCollector.COMPONENT_INIT_TIME_HEADER))
                 .filter(header -> !(header.getValue() instanceof StdScheduler))
                 .filter(header -> !(header.getValue() instanceof ScheduledThreadPoolExecutor))
                 .filter(header -> !(header.getValue() instanceof org.eclipse.jetty.ee10.servlet.ServletApiRequest))
                 .filter(header -> !(header.getValue() instanceof org.eclipse.jetty.ee10.servlet.ServletApiResponse))
-                //.filter(header -> !(header.getValue() instanceof Response))
-                //.filter(header -> !(header.getValue() instanceof Request))
                 .map(entry -> {
                     if(entry.getKey().toLowerCase().contains("firetime")
                             && entry.getValue() instanceof Date) {
