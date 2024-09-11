@@ -35,6 +35,8 @@ public class StepCollector extends EventNotifierSupport {
 
     private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
+    public static final String FLOW_ID_HEADER = "flowId";
+    public static final String FLOW_VERSION_HEADER = "flowVersion";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
@@ -117,13 +119,21 @@ public class StepCollector extends EventNotifierSupport {
             message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
         }
 
+        // get previous flowId and flowVersion
+        String previousFlowId = exchange.getMessage().getHeader(FLOW_ID_HEADER, String.class);
+        String previousFlowVersion = exchange.getMessage().getHeader(FLOW_VERSION_HEADER, String.class);
+        // set flowId and flowVersion
+        exchange.getMessage().setHeader(FLOW_ID_HEADER, flowId);
+        exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
+
         //calculate times
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
         MessageEvent messageEvent = new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, stepId, headers, properties, bodyToStoreOnEvent, expiryDate
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                properties, bodyToStoreOnEvent, expiryDate
         );
         String json = messageEvent.toJson();
 
