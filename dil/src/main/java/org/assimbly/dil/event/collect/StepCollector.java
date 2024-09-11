@@ -39,8 +39,6 @@ public class StepCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
-    public static final String PREVIOUS_STEP_ID_PROPERTY = "PreviousStepId";
-    public static final String STEP_ID_PROPERTY = "StepId";
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
@@ -204,10 +202,6 @@ public class StepCollector extends EventNotifierSupport {
 
         // set ExchangePattern name
         exchange.setProperty(EXCHANGE_PATTERN_PROPERTY, exchange.getPattern().name());
-
-        // set step properties
-        exchange.setProperty(PREVIOUS_STEP_ID_PROPERTY, exchange.getProperty("StepId"));
-        exchange.setProperty(STEP_ID_PROPERTY, stepId);
 
     }
 
