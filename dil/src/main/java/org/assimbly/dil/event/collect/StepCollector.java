@@ -32,7 +32,7 @@ public class StepCollector extends EventNotifierSupport {
 
     private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
-
+    
     private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
     public static final String FLOW_ID_HEADER = "flowId";
@@ -44,7 +44,6 @@ public class StepCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
-
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
@@ -216,6 +215,7 @@ public class StepCollector extends EventNotifierSupport {
 
         // set ExchangePattern name
         exchange.setProperty(EXCHANGE_PATTERN_PROPERTY, exchange.getPattern().name());
+
     }
 
     private void setResponseTimeProperty(Exchange exchange, long stepTimestamp){
