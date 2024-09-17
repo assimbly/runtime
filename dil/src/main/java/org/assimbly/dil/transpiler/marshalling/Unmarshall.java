@@ -132,8 +132,10 @@ public class Unmarshall {
 				setUri(uri, stepId, type, i + 1);
 			}
 
+			System.out.println("1. Unmarshall");
 			if(routeTemplateList.contains(type)) {
 				setRouteTemplate(i + 1, stepId, type);
+				setBlocks(stepElement, stepId, type);
 			}else{
 				setBlocks(stepElement, stepId, type);
 			}
