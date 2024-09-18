@@ -67,6 +67,10 @@ public class SetOriginalMessageProcessor implements Processor {
 				exchange.removeVariable(CAMEL_GLOBAL_VARIABLE_PREFIX + variableId);
 				break;
 
+			default:
+				// do nothing
+				break;
+
 		}
 	}
 
