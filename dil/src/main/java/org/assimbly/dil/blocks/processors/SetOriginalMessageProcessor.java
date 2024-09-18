@@ -27,26 +27,28 @@ public class SetOriginalMessageProcessor implements Processor {
 
 		switch (originalHttpMessageMethod) {
 			case GET:
+				log.info(" > GET OriginalHttpMessage");
 				// load the original http message into the current exchange from the camel global variable
 
 				// load retry attempts
-				Object retryAttempts = exchange.getMessage().getHeader(DOVETAIL_RETRY_ATTEMPTS_HEADER);
-				int retryAttemptsInt = (Integer)retryAttempts + 1;
+				Integer retryAttempts = exchange.getMessage().getHeader(DOVETAIL_RETRY_ATTEMPTS_HEADER, Integer.class);
+				retryAttempts++;
 
 				// load original http message variable id
-				variableId = (String) exchange.getMessage().getHeader(DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER);
+				variableId = exchange.getMessage().getHeader(DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER, String.class);
 
 				// load original http message from global variable
-				Message originalHttpMessage = (Message) exchange.getVariable(CAMEL_GLOBAL_VARIABLE_PREFIX + variableId);
+				Message originalHttpMessage = exchange.getVariable(CAMEL_GLOBAL_VARIABLE_PREFIX + variableId, Message.class);
 
 				// set retry attempts
-				originalHttpMessage.setHeader(DOVETAIL_RETRY_ATTEMPTS_HEADER, retryAttemptsInt);
+				originalHttpMessage.setHeader(DOVETAIL_RETRY_ATTEMPTS_HEADER, retryAttempts);
 
 				// load original http message into exchange
 				exchange.setMessage(originalHttpMessage);
 				break;
 
 			case SET:
+				log.info(" > SET OriginalHttpMessage");
 				// set the current exchange message as the original http message in the camel global variable
 
 				// set retry attempts to 1
@@ -62,8 +64,9 @@ public class SetOriginalMessageProcessor implements Processor {
 				break;
 
 			case DEL:
+				log.info(" > DEL OriginalHttpMessage");
 				// delete the original http message from the camel global variables
-				variableId = (String) exchange.getMessage().getHeader(DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER);
+				variableId = exchange.getMessage().getHeader(DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER, String.class);
 				exchange.removeVariable(CAMEL_GLOBAL_VARIABLE_PREFIX + variableId);
 				break;
 
