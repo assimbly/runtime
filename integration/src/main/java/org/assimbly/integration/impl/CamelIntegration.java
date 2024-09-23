@@ -279,6 +279,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
+		registry.bind("SetOriginalMessageProcessor", new SetOriginalMessageProcessor());
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
