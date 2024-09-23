@@ -6,7 +6,7 @@ on:
       VERSION:
         description: 'Version to delete'
         required: true
-        default: '4.0.0'
+        default: '5.0.0'
       is_SNAPSHOT:
         description: 'Set to true to delete snapshots'
         required: true
