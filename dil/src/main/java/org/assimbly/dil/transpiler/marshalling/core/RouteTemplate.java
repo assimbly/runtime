@@ -296,8 +296,6 @@ public class RouteTemplate {
 
                     }else if(blockType.equalsIgnoreCase("routeConfiguration")){
 
-                        System.out.println("block routeConfiguration");
-
                         String routeConfigurationId = baseUri;
                         String timestamp = getTimestamp();
                         Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
