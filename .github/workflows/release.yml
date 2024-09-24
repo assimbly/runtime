@@ -12,6 +12,7 @@ on:
       milestone:
         description: 'Milestone to use as version'
         type: string
+        required: true
 
   workflow_call:
     inputs:
@@ -22,6 +23,7 @@ on:
       milestone:
         description: 'Milestone to use as version'
         type: string
+        required: true
 
 jobs:
   delete_old_snapshots:
