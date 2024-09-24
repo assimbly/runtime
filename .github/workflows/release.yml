@@ -1,17 +1,55 @@
-name: Release Jars
+name: Release
 
 on:
   workflow_dispatch:
+    #  schedule:
+    #    - cron: '0 1 * * *'
+    inputs:
+      branch:
+        description: 'Branch to use'
+        default: 'develop'
+        type: string
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
+
   workflow_call:
     inputs:
       branch:
         description: 'Branch to use'
         default: 'develop'
         type: string
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
 
 jobs:
-  release_jars:
+  delete_old_snapshots:
 
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+
+    steps:
+
+      - name: Delete older snapshots
+        uses: smartsquaregmbh/delete-old-packages@v0.8.1
+        with:
+          organization: assimbly
+          type: maven
+          keep: 0
+          version-pattern: "${{inputs.milestone}}"
+          names: |
+            org.assimbly.runtime
+            org.assimbly.dil
+            org.assimbly.broker
+            org.assimbly.broker-rest
+            org.assimbly.integration
+            org.assimbly.integration-rest
+
+  release-jars:
+    needs: delete_old_snapshots
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -73,3 +111,4 @@ jobs:
         run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+
