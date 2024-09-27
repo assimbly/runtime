@@ -3,13 +3,21 @@ name: Update Version Number
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to use'
+        type: string
+        default: 'develop'    
       milestone:
         description: 'Milestone to use as version'
         type: string
         required: true
 
   workflow_call:
-    inputs:
+    inputs:      
+      branch:
+        description: 'Branch to use'
+        type: string
+        default: 'develop'    
       milestone:
         description: 'Milestone to use as version'
         type: string
@@ -30,7 +38,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
-          ref: ${{ github.ref_name }}
+          ref: ${{ inputs.branch }}
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
 
