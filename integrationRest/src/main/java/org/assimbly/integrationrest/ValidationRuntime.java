@@ -46,13 +46,12 @@ public class ValidationRuntime {
     //validations
 
     @GetMapping(
-            path = "/validation/{integrationId}/cron",
+            path = "/validation/cron",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateCron(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String expression,
-            @PathVariable Long integrationId
+            @RequestParam(value = "expression") String expression,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -66,25 +65,24 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, cronResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/cron", out.toString(StandardCharsets.UTF_8), plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/cron", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
-                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+                return ResponseUtil.createNoContentResponse(1L, mediaType);
             }
 
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/cron", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/cron", e.getMessage(), plainResponse);
         }
     }
 
     @GetMapping(
-            path = "/validation/{integrationId}/certificate",
+            path = "/validation/certificate",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateCertificate(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String httpsUrl,
-            @PathVariable Long integrationId
+            @RequestParam(value = "httpsUrl") String httpsUrl,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -98,24 +96,23 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, certificateResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", out.toString(StandardCharsets.UTF_8), plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/certificate", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", "", plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/certificate", "", plainResponse);
             }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/certificate", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/certificate", e.getMessage(), plainResponse);
         }
     }
 
     @GetMapping(
-            path = "/validation/{integrationId}/url",
+            path = "/validation/url",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateUrl(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @Parameter String httpUrl,
-            @PathVariable Long integrationId
+            @RequestParam(value = "httpUrl") String httpUrl,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         plainResponse = true;
@@ -129,26 +126,26 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, urlResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/url", out.toString(StandardCharsets.UTF_8), plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/url", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
-                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+                return ResponseUtil.createNoContentResponse(1L, mediaType);
             }
         } catch (Exception e) {
             log.error("ErrorMessage",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/url", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/url", e.getMessage(), plainResponse);
         }
     }
 
 
     @PostMapping(
-            path = "/validation/{integrationId}/expression",
+            path = "/validation/expression",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateExpression(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @PathVariable Long integrationId, @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate
     ) throws Exception {
 
         plainResponse = true;
@@ -161,33 +158,33 @@ public class ValidationRuntime {
                 expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<Expression>>(){});
             }
 
-            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList);
+            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList, isPredicate);
 
             if(expressionResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, expressionResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
-                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+                return ResponseUtil.createNoContentResponse(1L, mediaType);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/expression", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/expression", e.getMessage(), plainResponse);
         }
 
     }
 
     @PostMapping(
-            path = "/validation/{integrationId}/ftp",
+            path = "/validation/ftp",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateFtp(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest",defaultValue = "false") boolean stopTest,
-            @PathVariable Long integrationId, @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -206,27 +203,27 @@ public class ValidationRuntime {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(out, ftpResp);
-                return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", out.toString(StandardCharsets.UTF_8), plainResponse);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/ftp", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
-                return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+                return ResponseUtil.createNoContentResponse(1L, mediaType);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/ftp", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/ftp", e.getMessage(), plainResponse);
         }
 
     }
 
     @PostMapping(
-            path = "/validation/{integrationId}/regex",
+            path = "/validation/regex",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateRegex(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @PathVariable Long integrationId, @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -243,32 +240,31 @@ public class ValidationRuntime {
 
             if(regexResp!=null) {
                 if ((Integer)regexResp.getKey() == -1) {
-                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue(), plainResponse);
+                    return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", (String)regexResp.getValue(), plainResponse);
                 } else {
                     // success - return group count
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/regex", (String)regexResp.getValue());
+                    return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/regex", (String)regexResp.getValue());
                 }
             } else {
-                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", "", plainResponse);
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", "", plainResponse);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/regex", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", e.getMessage(), plainResponse);
         }
 
     }
 
     @PostMapping(
-            path = "/validation/{integrationId}/script",
+            path = "/validation/script",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateScript(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @PathVariable Long integrationId,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         plainResponse = true;
@@ -288,45 +284,47 @@ public class ValidationRuntime {
                 final ObjectMapper mapper = new ObjectMapper();
                 if(scriptResp.getCode() == 1) {
                     mapper.writeValue(out, scriptResp);
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(StandardCharsets.UTF_8), plainResponse);
+                    return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 } else {
                     mapper.writeValue(out, new BadRequestResponse(scriptResp.getResult()));
-                    return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", out.toString(StandardCharsets.UTF_8), plainResponse);
+                    return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 }
             } else {
-                return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", "", plainResponse);
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/script", "", plainResponse);
             }
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/script", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/script", e.getMessage(), plainResponse);
         }
 
     }
 
     @GetMapping(
-            path = "/validation/{integrationId}/uri",
+            path = "/validation/uri",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> validateUri(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @RequestHeader("Uri") String uri, @PathVariable Long integrationId) throws Exception {
+    public ResponseEntity<String> validateUri(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "Uri") String uri
+    ) throws Exception {
         try {
             integration = integrationRuntime.getIntegration();
             String flowValidation = integration.validateFlow(uri);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/validation/{integrationId}/uri",flowValidation);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/uri",flowValidation);
         } catch (Exception e) {
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/validation/{integrationId}/urizx",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/urizx",e.getMessage());
         }
     }
 
-    @PostMapping(path = "/validation/{integrationId}/xslt",
+    @PostMapping(path = "/validation/xslt",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> validateXslt(
-            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest,
-            @PathVariable Long integrationId,
-            @RequestBody String body
+            @RequestBody String body,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) throws Exception {
 
         try {
@@ -348,32 +346,37 @@ public class ValidationRuntime {
                     final ByteArrayOutputStream out = new ByteArrayOutputStream();
                     final ObjectMapper mapper = new ObjectMapper();
                     mapper.writeValue(out, expressionResp);
-                    return ResponseUtil.createSuccessResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", out.toString(StandardCharsets.UTF_8), plainResponse);
+                    return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/xslt", out.toString(StandardCharsets.UTF_8), plainResponse);
                 }
 
             }
 
-            return ResponseUtil.createNoContentResponse(integrationId, mediaType);
+            return ResponseUtil.createNoContentResponse(1L, mediaType);
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType, "/validation/{integrationId}/xslt", e.getMessage(), plainResponse);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/xslt", e.getMessage(), plainResponse);
         }
 
     }
 
     @GetMapping(
-            path = "/validation/{integrationId}/connection/{host}/{port}/{timeout}",
+            path = "/validation/connection/{host}/{port}/{timeout}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> testConnection(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable Long integrationId, @PathVariable String host,@PathVariable int port, @PathVariable int timeout) throws Exception {
+    public ResponseEntity<String> testConnection(
+            @PathVariable(value = "host") String host,
+            @PathVariable(value = "port") int port,
+            @PathVariable(value = "timeout") int timeout,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
 
         try {
             String testConnectionResult = integration.testConnection(host, port, timeout);
-            return ResponseUtil.createSuccessResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",testConnectionResult);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",testConnectionResult);
         } catch (Exception e) {
             log.error("Test connection failed",e);
-            return ResponseUtil.createFailureResponse(integrationId, mediaType,"/integration/{integrationId}/testconnection/{host}/{port}/{timeout}",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",e.getMessage());
         }
 
     }

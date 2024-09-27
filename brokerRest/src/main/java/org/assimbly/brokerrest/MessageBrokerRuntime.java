@@ -40,7 +40,12 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}/{filter}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object listMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "filter", required = false) String filter)  throws Exception {
+    public Object listMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestParam(value = "filter", required = false) String filter
+    )  throws Exception {
 
         log.debug("REST request to list messages for queue : {}", endpointName);
 
@@ -59,14 +64,76 @@ public class MessageBrokerRuntime {
      * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
-     * @param endpointName, the name of the queue
+     * @param endpointNames, the name of the queue
+     * @return list of messages with status 200 (OK) or with status 404 (Not Found)
+     */
+    @PostMapping(
+            path = "/brokers/{brokerType}/messages/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object countMessagesFromList(
+            @PathVariable(value = "brokerType") String brokerType,
+            @RequestBody String endpointNames,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
+
+        log.debug("REST request to count messages for queue : {}", endpointNames);
+
+        try {
+            result = broker.countMessagesFromList(brokerType, endpointNames);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", result);
+        } catch (Exception e) {
+            log.error("Can't list messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", e.getMessage());
+        }
+
+    }
+
+    /**
+     * GET  /brokers/{brokerType}/flows/messages/count : get a list of number of messages for each flow.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @return list of flows with status 200 (OK) or with status 404 (Not Found)
+     */
+    @GetMapping(
+            path = "/brokers/{brokerType}/flows/message/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object getFlowsMessageCountList(
+            @PathVariable(value = "brokerType") String brokerType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestParam(value = "excludeEmptyQueues", required = false) boolean excludeEmptyQueues
+    )  throws Exception {
+
+        log.debug("REST request to list number of messages for each flow");
+
+        try {
+            result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues);
+
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result);
+        } catch (Exception e) {
+            log.error("Can't list messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", e.getMessage());
+        }
+
+    }
+
+    /**
+     * GET  /brokers/{brokerType}/messages/{endpointName}/count : count the number of messages on endpoint.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
             path = "/brokers/{brokerType}/messages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object countMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
+    public Object countMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
 
         log.debug("REST request to list messages for queue : {}", endpointName);
 
@@ -75,8 +142,39 @@ public class MessageBrokerRuntime {
             result = broker.countMessages(brokerType, endpointName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
-            log.error("Can't list messages", e);
+            log.error("Can't count messages", e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", e.getMessage());
+        }
+
+    }
+
+
+    /**
+     * GET  /brokers/{brokerType}/delayedmessages/{endpointName}/count : count the number of messages on endpoint.
+     *
+     * @param brokerType, the type of broker: classic or artemis
+     * @param endpointName, the name of the queue or topic
+     * @return list of messages with status 200 (OK) or with status 404 (Not Found)
+     */
+    @GetMapping(
+            path = "/brokers/{brokerType}/delayedmessages/{endpointName}/count",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public Object countDelayedMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
+
+        log.debug("REST request to list messages for queue : {}", endpointName);
+
+        try {
+            //brokermanager = brokerManagerResource.getBrokerManager();
+            result = broker.countDelayedMessages(brokerType, endpointName);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", result);
+        } catch (Exception e) {
+            log.error("Can't count delayed messages", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", e.getMessage());
         }
 
     }
@@ -93,7 +191,13 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object browseMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
+    public Object browseMessage(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @PathVariable(value = "messageId") String messageId,
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
+            @RequestParam(value = "excludeBody", required = false) boolean excludeBody
+    )  throws Exception {
 
         log.debug("REST request to browse message on: {}", endpointName);
 
@@ -119,7 +223,14 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}/browse",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object browseMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages, @RequestParam(value = "excludeBody", required = false) boolean excludeBody)  throws Exception {
+    public Object browseMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages,
+            @RequestParam(value = "excludeBody", required = false) boolean excludeBody
+    )  throws Exception {
 
         log.debug("REST request to browse messages on: {}", endpointName);
 
@@ -147,7 +258,13 @@ public class MessageBrokerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object sendMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @RequestParam(value = "messageHeaders", required = false) String messageHeaders, @RequestBody String messageBody) throws Exception {
+    public Object sendMessage(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @RequestBody String messageBody,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestParam(value = "messageHeaders", required = false) String messageHeaders
+    ) throws Exception {
 
         log.debug("REST request to send messages from queue : " + endpointName);
 
@@ -168,7 +285,7 @@ public class MessageBrokerRuntime {
 
 
     /**
-     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId : remove a message on a endpoint by Messageid.
+     * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId} : remove a message on a endpoint by Messageid.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue or topic
@@ -178,7 +295,12 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{endpointName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> removeMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName, @PathVariable String messageId)  throws Exception {
+    public ResponseEntity<String> removeMessage(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @PathVariable(value = "messageId") String messageId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
 
         log.debug("REST request to remove messages for queue : {}", endpointName);
 
@@ -203,7 +325,11 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object removeMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String endpointName)  throws Exception {
+    public Object removeMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "endpointName") String endpointName,
+            @Parameter(hidden = true) @RequestHeader("Accept") String mediaType
+    )  throws Exception {
 
         log.debug("REST request to remove messages for endpoint : {}", endpointName);
 
@@ -229,7 +355,13 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object moveMessage(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName, @PathVariable String messageId)  throws Exception {
+    public Object moveMessage(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "sourceQueueName") String sourceQueueName,
+            @PathVariable(value = "targetQueueName") String targetQueueName,
+            @PathVariable(value = "messageId") String messageId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
@@ -256,7 +388,12 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object moveMessages(@Parameter(hidden = true) @RequestHeader("Accept") String mediaType, @PathVariable String brokerType, @PathVariable String sourceQueueName, @PathVariable String targetQueueName)  throws Exception {
+    public Object moveMessages(
+            @PathVariable(value = "brokerType") String brokerType,
+            @PathVariable(value = "sourceQueueName") String sourceQueueName,
+            @PathVariable(value = "targetQueueName") String targetQueueName,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    )  throws Exception {
 
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 

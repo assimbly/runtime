@@ -1,0 +1,26 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setoriginalbody-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "setoriginalbody sink"
+    description: |-
+      Set body from header
+    type: object
+    properties:
+      path:
+          title: Path
+          description: Path
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setBody:
+              simple: "${originalBody}"

@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>4.0.4</version>
+    <version>5.0.0</version>
   </parent>
 
   <name>dil</name>
@@ -14,7 +14,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
   </properties>
 
@@ -27,6 +27,11 @@
     </distributionManagement>
 
   <dependencies>
+	  <dependency>
+		  <groupId>xalan</groupId>
+		  <artifactId>serializer</artifactId>
+		  <version>${xalan.version}</version>
+	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camel-base</artifactId>
@@ -52,6 +57,39 @@
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+	  <dependency>
+		  <groupId>net.lingala.zip4j</groupId>
+		  <artifactId>zip4j</artifactId>
+		  <version>${zip4j.version}</version>
+	  </dependency>
+      <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-pool</artifactId>
+          <version>${activemq.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>cookies</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>mail</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>multipart</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>xmltojson</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+
   </dependencies>
 
 	<build>
@@ -67,7 +105,7 @@
 						<configuration>
 							<toolchains>
 								<jdk>
-									<version>11</version>
+									<version>21</version>
 								</jdk>
 							</toolchains>
 						</configuration>

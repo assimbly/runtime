@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setoriginalbody-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setoriginalbody action"
+    description: |-
+      Set body from header
+    type: object
+    properties:
+      path:
+          title: Path
+          description: Path
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setBody:
+              simple: "${originalBody}"
+          - to:
+              uri: "kamelet:sink"

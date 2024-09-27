@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>4.0.4</version>
+    <version>5.0.0</version>
   </parent>
 
   <name>integration</name>
@@ -14,7 +14,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
   </properties>
 
@@ -48,11 +48,6 @@
 		  <artifactId>database-drivers</artifactId>
   		  <version>${assimbly.version}</version>
 	  </dependency>
-      <dependency>
-          <groupId>org.assimbly</groupId>
-          <artifactId>test-base</artifactId>
-          <version>${assimbly.version}</version>
-      </dependency>
 
   </dependencies>
 
@@ -69,7 +64,7 @@
 						<configuration>
 							<toolchains>
 								<jdk>
-									<version>11</version>
+									<version>21</version>
 								</jdk>
 							</toolchains>
 						</configuration>

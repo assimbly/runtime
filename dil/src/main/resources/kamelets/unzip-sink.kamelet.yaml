@@ -11,21 +11,12 @@ spec:
       Unzips a message
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
-      usingIterator:
-        title: Using Iterator
-        description: .
-        type: string
-        default: true
   dependencies:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "dataformat:checkedZipFileDataFormat:unmarshal?usingIterator={{usingIterator}}"
+          - process:
+              ref: "Unzip"

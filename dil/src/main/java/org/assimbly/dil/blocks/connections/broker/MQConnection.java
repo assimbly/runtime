@@ -1,7 +1,7 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ConnectionFailedException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.jasypt.properties.EncryptableProperties;
@@ -30,6 +30,8 @@ public class MQConnection {
     }
 
     public void start(String direction, Object stepId) throws Exception {
+
+        System.out.println("---> MQConnection Set up SJMS Connection");
 
         setFields();
 
@@ -86,12 +88,12 @@ public class MQConnection {
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         } else {
             context.removeComponent(componentName);
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         }
 
@@ -123,9 +125,6 @@ public class MQConnection {
             e.printStackTrace();
             throw new Exception("Cannot connect to ActiveMQ Broker. URL: " + url);
         }
-
-
-
 
     }
 

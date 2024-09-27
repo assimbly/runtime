@@ -1,27 +1,24 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.activemq.ActiveMQComponent;
-import org.apache.camel.component.activemq.ActiveMQConfiguration;
+//import org.apache.camel.component.activemq.ActiveMQComponent;
+//import org.apache.camel.component.activemq.ActiveMQConfiguration;
 import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
-
 
 public class ActiveMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-
     private CamelContext context;
     private EncryptableProperties properties;
     private String componentName;
     private String connectionId;
-
     private ActiveMQConnectionFactory activeMQConnectionFactory;
     private String url;
     private String username;
@@ -95,15 +92,15 @@ public class ActiveMQConnection {
             activeMQConnectionFactory = new ActiveMQConnectionFactory(username, password, url);
         }
 
-
         if (conType.equals("basic")) {
-            startBasicConnection();
+            //startBasicConnection();
         } else {
-            startPooledConnection();
+            //startPooledConnection();
         }
 
     }
 
+    /*
     private void startBasicConnection() throws JMSException {
 
         org.apache.activemq.ActiveMQConnection connection = (org.apache.activemq.ActiveMQConnection) activeMQConnectionFactory.createConnection();
@@ -122,12 +119,13 @@ public class ActiveMQConnection {
             pooledConnectionFactory.setMaxConnections(Integer.parseInt(maxConnections));
 
             ActiveMQConfiguration configuration = new ActiveMQConfiguration();
+
             configuration.setConnectionFactory(pooledConnectionFactory);
             configuration.setConcurrentConsumers(Integer.parseInt(concurentConsumers));
             configuration.setUsePooledConnection(true);
 
-            ActiveMQComponent component = new ActiveMQComponent(configuration);
-            context.addComponent(componentName, component);
+            //ActiveMQComponent component = new ActiveMQComponent(configuration);
+            //context.addComponent(componentName, component);
             log.info("Started pooled connection for ActiveMQ.");
             log.info("Maximum connections: " + maxConnections + " - concurentConsumers: " + concurentConsumers);
         } catch (Exception e) {
@@ -135,5 +133,6 @@ public class ActiveMQConnection {
         }
 
     }
+    */
 
 }

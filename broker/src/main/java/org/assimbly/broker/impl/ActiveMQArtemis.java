@@ -9,25 +9,19 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
-
 import static java.util.Arrays.stream;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
-import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.management.ActiveMQServerControl;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.commons.io.FileUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
@@ -39,10 +33,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.JMX;
-import javax.management.MBeanNotificationInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 
 public class ActiveMQArtemis implements Broker {
@@ -125,7 +116,7 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		
 		if(activeBroker!=null) {
-			SimpleString nodeID= activeBroker.getNodeID();
+			String nodeID= String.valueOf(activeBroker.getNodeID());
 			log.info("Broker with nodeId '" + nodeID + "' is stopping. Uptime=" + activeBroker.getUptime());
 			broker.stop();
 			log.info("Broker with nodeId '" + nodeID + "' is stopped.");
@@ -345,7 +336,7 @@ public class ActiveMQArtemis implements Broker {
 	public String clearQueue(String queueName) throws Exception {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
-		Queue queue = activeBroker.locateQueue(new SimpleString(queueName));
+		Queue queue = activeBroker.locateQueue(queueName);
 		if (queue != null) {
 			queue.deleteAllReferences();
 		}
@@ -360,7 +351,7 @@ public class ActiveMQArtemis implements Broker {
 		Queue queue;
 
 		for (String queueName : manageBroker.getQueueNames("ANYCAST")) {
-			queue = activeBroker.locateQueue(new SimpleString(queueName));
+			queue = activeBroker.locateQueue(queueName);
 			if (queue != null) {
 				queue.deleteAllReferences();
 			}
@@ -384,7 +375,7 @@ public class ActiveMQArtemis implements Broker {
 	public String clearTopic(String topicName) throws Exception {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
-		Queue queue = activeBroker.locateQueue(new SimpleString(topicName));
+		Queue queue = activeBroker.locateQueue(topicName);
 		if (queue != null) {
 			queue.deleteAllReferences();
 		}
@@ -399,7 +390,7 @@ public class ActiveMQArtemis implements Broker {
 		Queue queue;
 
 		for (String queueName : manageBroker.getQueueNames("MULTICAST")) {
-			queue = activeBroker.locateQueue(new SimpleString(queueName));
+			queue = activeBroker.locateQueue(queueName);
 			if (queue != null) {
 				queue.deleteAllReferences();
 			}
@@ -411,7 +402,7 @@ public class ActiveMQArtemis implements Broker {
 	public String getTopic(String endpointName) throws Exception {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
-		Queue queue = activeBroker.locateQueue(new SimpleString(endpointName));
+		Queue queue = activeBroker.locateQueue(endpointName);
 
 		JSONObject endpointInfo = new JSONObject();
 
@@ -473,13 +464,11 @@ public class ActiveMQArtemis implements Broker {
 	private boolean endpointExist(String endpointName) {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
-		Queue queue = activeBroker.locateQueue(new SimpleString(endpointName));
 
-		if (queue == null) {
-			return false;
-		}else{
-			return true;
-		}
+		Queue queue = activeBroker.locateQueue(endpointName);
+
+		return queue != null;
+
 	}
 
 	//Manage Messages
@@ -571,6 +560,26 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
+	public String countMessagesFromList(String endpointList) throws Exception {
+
+		Long numberOfMessages = 0L;
+		List<String> endpointNames= Arrays.asList(endpointList.split("\\s*,\\s*"));
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		for(String endpointName: endpointNames){
+
+			if(endpointExist(endpointName)){
+				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+				numberOfMessages = queueControl.getMessageCount();
+			}
+
+		}
+
+		return Long.toString(numberOfMessages);
+
+	}
+
+
 	public String countMessages(String endpointName) throws Exception {
 
 		checkIfEndpointExist(endpointName);
@@ -583,6 +592,28 @@ public class ActiveMQArtemis implements Broker {
 
 		return Long.toString(numberOfMessages);
 
+	}
+
+	public String countDelayedMessages(String endpointName) throws Exception {
+
+		checkIfEndpointExist(endpointName);
+
+		ActiveMQServer activeBroker = broker.getActiveMQServer();
+
+		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+
+		long numberOfMessages = queueControl.getScheduledCount();
+
+		return Long.toString(numberOfMessages);
+
+	}
+
+	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+
+		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.writeValueAsString(flowIdsMessageCountMap);
 	}
 
 
@@ -624,7 +655,7 @@ public class ActiveMQArtemis implements Broker {
 			Long countMessages = queueControl.countMessages();
 
 			if(countMessages > 10000){
-				throw new Exception("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
+				throw new RuntimeException("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
 			}else{
 				messages = queueControl.browse();
 			}
@@ -635,6 +666,44 @@ public class ActiveMQArtemis implements Broker {
 
 		return result;
 
+	}
+
+	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) throws MalformedObjectNameException {
+		Map<String, Long> destinationMessageCounts = new HashMap<>();
+
+		try {
+			ActiveMQServer activeBroker = broker.getActiveMQServer();
+			// Get all queues names
+			String[] queueNames = activeBroker.getActiveMQServerControl().getQueueNames();
+
+			for (String queueName : queueNames) {
+				if(!queueName.startsWith("ID_")) {
+					// discard queues without prefix ID_
+					continue;
+				}
+
+				// extract flowId
+				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
+				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(ResourceNames.QUEUE + queueName);
+
+				// Get the message count for the current queue
+				long messageCount = queueControl.getMessageCount();
+
+				if(destinationMessageCounts.containsKey(flowId)) {
+					messageCount += destinationMessageCounts.get(flowId);
+				}
+
+				if(messageCount > 0 || !excludeEmptyQueues) {
+					// Add queue name and message count to the map
+					destinationMessageCounts.put(flowId, messageCount);
+				}
+			}
+
+		} catch (Exception e) {
+			log.error("Error to get all destinations and messages counts", e);
+		}
+
+		return destinationMessageCounts;
 	}
 
 	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {

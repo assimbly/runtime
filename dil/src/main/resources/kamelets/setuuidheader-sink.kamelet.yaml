@@ -1,0 +1,33 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setuuid-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "setuuid sink"
+    description: |-
+      Set UUID as message header
+    type: object
+    properties:
+      path:
+        title: Path
+        description: Path
+        type: string
+        default: uuid
+      generator:
+        title: Generator
+        description: Type of UUID Generator
+        type: string
+        default: default
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setHeader:
+              name: "{{path}}"
+              constant: "${uuid({{generator}})}"

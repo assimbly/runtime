@@ -11,9 +11,6 @@ spec:
       Sends messages to RabbitMQ
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       path:
           title: Path
           description: Path
@@ -26,22 +23,21 @@ spec:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:
-          - set-property:
+          - setProperty:
               name: excludedHeader_breadcrumbId
               simple: "${header.breadcrumbId}"
-          - remove-header:
+          - removeHeader:
               name: "breadcrumbId"
-          - set-header:
+          - setHeader:
               name: CamelRabbitmqDeliveryMode
               constant: "2"
           - toD:
               uri: "rabbitmq:{{path}}?{{options}}"
-          - set-header:
+          - setHeader:
               name: breadcrumbId
               simple: "${exchangeProperty.excludedHeader_breadcrumbId}"
-          - remove-property:
+          - removeProperty:
               name: "excludedHeader_breadcrumbId"

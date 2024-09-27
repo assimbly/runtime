@@ -11,20 +11,27 @@ public class ExpressionsValidator {
 
     private static final ValidationErrorMessage EMPTY_EXPRESSION_ERROR = new ValidationErrorMessage("Empty expressions aren't allowed!");
 
+    List<ValidationErrorMessage> validationErrors = new ArrayList<>();
+
     private JsonPathValidator jsonPathValidator = new JsonPathValidator();
     private SimpleValidator simpleValidator = new SimpleValidator();
     private XPathValidator xpathValidator = new XPathValidator();
     private ConstantValidator constantValidator = new ConstantValidator();
     private GroovyValidator groovyValidator = new GroovyValidator();
 
-    public List<ValidationErrorMessage> validate(List<Expression> expressions) {
+    public List<ValidationErrorMessage> validate(List<Expression> expressions, boolean isPredicate) {
 
-        List<ValidationErrorMessage> validationErrors = new ArrayList<>();
+        isExpressionsEmpty(expressions);
 
-        if (expressions.isEmpty()) {
-            validationErrors.add(EMPTY_EXPRESSION_ERROR);
-            return validationErrors;
-        }
+        checkExpressions(expressions,isPredicate);
+
+        if (validationErrors.isEmpty())
+            return null;
+
+        return validationErrors;
+    }
+
+    private void checkExpressions(List<Expression> expressions, boolean isPredicate) {
 
         for (Expression expression : expressions) {
             ValidationErrorMessage error;
@@ -40,7 +47,11 @@ public class ExpressionsValidator {
                     error = jsonPathValidator.validate(expression);
                     break;
                 case "simple":
-                    error = simpleValidator.validate(expression);
+                    if(isPredicate){
+                        error = simpleValidator.validatePredicate(expression);
+                    }else{
+                        error = simpleValidator.validate(expression);
+                    }
                     break;
                 case "xpath":
                     error = xpathValidator.validate(expression);
@@ -54,9 +65,13 @@ public class ExpressionsValidator {
             }
         }
 
-        if (validationErrors.isEmpty())
-            return null;
-
-        return validationErrors;
     }
+
+    private void  isExpressionsEmpty(List<Expression> expressions) {
+        if (expressions.isEmpty()) {
+            validationErrors.add(EMPTY_EXPRESSION_ERROR);
+        }
+    }
+
+
 }

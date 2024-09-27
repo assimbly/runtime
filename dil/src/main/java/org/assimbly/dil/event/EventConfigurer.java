@@ -4,8 +4,9 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.dil.event.collect.MessageCollector;
+import org.assimbly.dil.event.collect.ExchangeCollector;
 import org.assimbly.dil.event.collect.LogCollector;
+import org.assimbly.dil.event.collect.RouteCollector;
 import org.assimbly.dil.event.collect.StepCollector;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.event.domain.Filter;
@@ -65,14 +66,18 @@ public class EventConfigurer {
 
         Object collector = context.getRegistry().lookupByName(collectorId);
 
-       if(collector instanceof MessageCollector){
-           ((MessageCollector) collector).shutdown();
+       if(collector instanceof ExchangeCollector){
+           ((ExchangeCollector) collector).shutdown();
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed message collector with id=" + collectorId);
        }else if(collector instanceof StepCollector){
            ((StepCollector) collector).shutdown();
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed step collector with id=" + collectorId);
+       }else if(collector instanceof RouteCollector){
+           ((RouteCollector) collector).shutdown();
+           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
+           log.info("Removed route collector with id=" + collectorId);
        }else if(collector instanceof LogCollector ){
             LogCollector logCollector = (LogCollector) collector;
             removeLogger(logCollector);
@@ -94,8 +99,8 @@ public class EventConfigurer {
 
         if(type==null){
             return "The type of collector is missing. Valid types are: message,log or step.";
-        }else if(!type.equals("log") && !type.equals("message") && !type.equals("step")){
-            return "Invalid event collector: " + type + ". Valid types are message,log or step.";
+        }else if(!type.equals("log") && !type.equals("exchange") && !type.equals("route") && !type.equals("step")){
+            return "Invalid event collector: " + type + ". Valid types are exchange, route, step or log.";
         }
 
         String id = configuration.getId();
@@ -117,11 +122,9 @@ public class EventConfigurer {
 
     public boolean isConfigured(){
         Object collector = context.getRegistry().lookupByName(collectorId);
-        if(collector==null){
-            return false;
-        }else{
-            return true;
-        }
+
+        return collector==null;
+
     }
 
     public String configureCollector(){
@@ -135,11 +138,14 @@ public class EventConfigurer {
             try {
 
                 switch (type) {
-                    case "message":
-                        configureMessageCollector();
+                    case "exchange":
+                        configureExchangeCollector();
                         break;
                     case "step":
                         configureStepCollector();
+                        break;
+                    case "route":
+                        configureRouteCollector();
                         break;
                     case "log":
                         configureLogCollector();
@@ -157,9 +163,9 @@ public class EventConfigurer {
 
     }
 
-    public void configureStepCollector() {
+    public void configureRouteCollector() {
 
-        log.info("Configure collection of step events");
+        log.info("Configure collection of route events");
         String id = configuration.getId();
         String flowId = configuration.getFlowId();
 
@@ -167,20 +173,21 @@ public class EventConfigurer {
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        StepCollector stepCollector = new StepCollector(id, flowId, events, filters, stores);
-        stepCollector.setIgnoreCamelContextEvents(true);
-        stepCollector.setIgnoreCamelContextInitEvents(true);
-        stepCollector.setIgnoreExchangeEvents(true);
-        stepCollector.setIgnoreServiceEvents(true);
-        stepCollector.setIgnoreStepEvents(true);
+        RouteCollector routeCollector = new RouteCollector(id, flowId, events, filters, stores);
+        routeCollector.setIgnoreCamelContextEvents(true);
+        routeCollector.setIgnoreCamelContextInitEvents(true);
+        routeCollector.setIgnoreExchangeEvents(true);
+        routeCollector.setIgnoreServiceEvents(true);
+        routeCollector.setIgnoreStepEvents(true);
+        routeCollector.setIgnoreRouteEvents(false);
 
-        context.getManagementStrategy().addEventNotifier(stepCollector);
-        context.getRegistry().bind(id, stepCollector);
+        context.getManagementStrategy().addEventNotifier(routeCollector);
+        context.getRegistry().bind(id, routeCollector);
     }
 
-    public void configureMessageCollector() {
+    public void configureExchangeCollector() {
 
-        log.info("Configure collection of message events");
+        log.info("Configure collection of exchange events");
 
         String id = configuration.getId();
         String flowId = configuration.getFlowId();
@@ -189,15 +196,41 @@ public class EventConfigurer {
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        MessageCollector messageCollector = new MessageCollector(id, flowId, flowVersion, events, filters, stores);
-        messageCollector.setIgnoreCamelContextEvents(true);
-        messageCollector.setIgnoreCamelContextInitEvents(true);
-        messageCollector.setIgnoreRouteEvents(true);
-        messageCollector.setIgnoreServiceEvents(true);
-        messageCollector.setIgnoreStepEvents(true);
+        ExchangeCollector exchangeCollector = new ExchangeCollector(id, flowId, flowVersion, events, filters, stores);
+        exchangeCollector.setIgnoreCamelContextEvents(true);
+        exchangeCollector.setIgnoreCamelContextInitEvents(true);
+        exchangeCollector.setIgnoreRouteEvents(true);
+        exchangeCollector.setIgnoreServiceEvents(true);
+        exchangeCollector.setIgnoreStepEvents(true);
+        exchangeCollector.setIgnoreExchangeEvents(false);
 
-        context.getManagementStrategy().addEventNotifier(messageCollector);
-        context.getRegistry().bind(id, messageCollector);
+        context.getManagementStrategy().addEventNotifier(exchangeCollector);
+        context.getRegistry().bind(id, exchangeCollector);
+
+    }
+
+
+    public void configureStepCollector() {
+
+        log.info("Configure collection of step events");
+
+        String id = configuration.getId();
+        String flowId = configuration.getFlowId();
+        String flowVersion = configuration.getFlowVersion();
+        ArrayList<String> events = configuration.getEvents();
+        ArrayList<Filter> filters = configuration.getFilters();
+        ArrayList<Store> stores = configuration.getStores();
+
+        StepCollector stepCollector = new StepCollector(id, flowId, flowVersion, events, filters, stores);
+        stepCollector.setIgnoreCamelContextEvents(true);
+        stepCollector.setIgnoreCamelContextInitEvents(true);
+        stepCollector.setIgnoreExchangeEvents(true);
+        stepCollector.setIgnoreRouteEvents(true);
+        stepCollector.setIgnoreServiceEvents(true);
+        stepCollector.setIgnoreStepEvents(false);
+
+        context.getManagementStrategy().addEventNotifier(stepCollector);
+        context.getRegistry().bind(id, stepCollector);
 
     }
 

@@ -1,0 +1,39 @@
+name: Release Daily Next Snapshot
+
+on:
+  #schedule:
+  #  - cron: '0 2 * * *'
+  
+  workflow_dispatch:
+
+jobs:
+  getversion:
+    runs-on: ubuntu-latest
+    outputs:
+      milestone: "${{ steps.maven-version.outputs.milestone }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Get Maven Project Version
+        id: maven-version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)         
+          echo "Maven version: $VERSION"
+          echo "milestone=$VERSION" >> $GITHUB_OUTPUT
+
+  call-release:
+    needs: getversion 
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      branch: 'next'
+      milestone: ${{needs.getversion.outputs.milestone}}

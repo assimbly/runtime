@@ -27,12 +27,10 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
-import org.apache.commons.lang3.time.StopWatch;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -95,11 +93,12 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
-		log.debug("Configuration File: " + xml);
+		log.info("Configuration File: " + xml);
 
 		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
-			dilXml = Transform.transformToDil(xml);
+			Transform transform = new Transform("transform-to-dil.xsl");
+			dilXml = transform.transformToDil(xml, flowId);
 		}
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -113,15 +112,28 @@ public class XMLFileConfiguration {
 
 		FileHandler fh = new FileHandler(conf);
 
-		fh.load(DocConverter.convertStringToStream(dilXml));
+		InputStream is = DocConverter.convertStringToStream(dilXml);
+
+		fh.load(is);
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		IntegrationUtil.printTreemap(properties);
+		//IntegrationUtil.printTreemap(properties);
 
 		return properties;
 
 	}
+
+	public String getRouteConfiguration(String flowId, String xml) throws Exception {
+
+		log.info("Configuration File: " + xml);
+
+		Transform transform = new Transform("transform-to-route.xsl");
+		return transform.transformToDil(xml, flowId);
+
+	}
+
+
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 
@@ -316,6 +328,7 @@ public class XMLFileConfiguration {
 		}
 
 	}
+
 
 }
 

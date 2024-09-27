@@ -1,5 +1,7 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
+import org.apache.camel.kamelets.catalog.KameletsCatalog;
+import org.apache.camel.v1.Kamelet;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
@@ -37,13 +39,13 @@ public class RouteTemplate {
     private String blockType;
     private Element parameter;
     private String transport;
-    private boolean predefinedStep;
     private String blockUri;
     private String baseUri;
     private String outList;
     private String outRulesList;
     private String updatedRouteConfigurationId;
 
+    private KameletsCatalog kameletCatalog = new KameletsCatalog();
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -66,7 +68,7 @@ public class RouteTemplate {
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
             contentRouteDoc = new DocumentImpl();
             createContentRouter(links, stepXPath, type, flowId, stepId);
-        }else if(!predefinedStep && baseUri.startsWith("block")){
+        }else if(baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
         }else{
             createStep(optionProperties, links, stepXPath, type, flowId, stepId);
@@ -294,8 +296,6 @@ public class RouteTemplate {
 
                     }else if(blockType.equalsIgnoreCase("routeConfiguration")){
 
-                        System.out.println("block routeConfiguration");
-
                         String routeConfigurationId = baseUri;
                         String timestamp = getTimestamp();
                         Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
@@ -328,16 +328,28 @@ public class RouteTemplate {
 
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
-        }else if(uri.startsWith("block")){
-            String componentName = uri.split(":")[1];
-            componentName = componentName.toLowerCase();
-            predefinedStep = DependencyUtil.PredefinedBlocks.hasBlock(componentName);
-            templateId = componentName + "-" + type;
         }else{
-            templateId = "generic-" + type;
+            String[] uriSplitted = uri.split(":");
+            String templateName = uriSplitted[0] + "-" + type;
+
+            if(templateExists(templateName)){
+                templateId = templateName;
+            }else if(uri.startsWith("block")){
+                String componentName = uriSplitted[1];
+                componentName = componentName.toLowerCase();
+                templateId = componentName + "-" + type;
+            }else{
+                templateId = "generic-" + type;
+            }
+
         }
 
     }
+
+    private boolean templateExists(String templateName){
+        return kameletCatalog.getKameletsName().contains(templateName);
+    }
+
 
     private void createTemplatedRoutes(){
         templatedRoutes = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoutes");
@@ -351,6 +363,9 @@ public class RouteTemplate {
 
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
+
+        Element parameter = createParameter(templateDoc,"routeId",routeId);
+        templatedRoute.appendChild(parameter);
 
         try {
             createUriValues();
@@ -367,7 +382,7 @@ public class RouteTemplate {
                 String name = optionProperty.split("options.")[1];
                 String value = conf.getProperty(optionProperty).toString();
 
-                Element parameter = createParameter(templateDoc,name,value);
+                parameter = createParameter(templateDoc,name,value);
                 templatedRoute.appendChild(parameter);
 
             }
@@ -380,7 +395,7 @@ public class RouteTemplate {
                         String name = option.split("=",2)[0];
                         String value = option.split("=",2)[1];
 
-                        Element parameter = createParameter(templateDoc,name,value);
+                        parameter = createParameter(templateDoc,name,value);
                         templatedRoute.appendChild(parameter);
                     }
                 }
@@ -389,7 +404,7 @@ public class RouteTemplate {
                     String name = options.split("=",2)[0];
                     String value = options.split("=",2)[1];
 
-                    Element parameter = createParameter(templateDoc,name,value);
+                    parameter = createParameter(templateDoc,name,value);
                     templatedRoute.appendChild(parameter);
                 }
             }
@@ -647,12 +662,6 @@ public class RouteTemplate {
                 } else {
                     options = options + "&exchangePattern=InOut";
                 }
-            } else if (pattern.equalsIgnoreCase("inoptionalout")) {
-                if (options == null) {
-                    options = "exchangePattern=InOptionalOut";
-                } else {
-                    options = options + "&exchangePattern=InOptionalOut";
-                }
             } else if (pattern.equalsIgnoreCase("inonly") || pattern.equalsIgnoreCase("oneway") || pattern.equalsIgnoreCase("event") || pattern.equalsIgnoreCase("fireandforget")) {
                 if (options == null) {
                     options = "exchangePattern=InOnly";
@@ -754,13 +763,19 @@ public class RouteTemplate {
             }
 
             if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
+
                 Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/headers");
                 if (node == null) {
                     node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/headers");
                 }
-                String headerKeysAsString = DocConverter.convertNodeToString(node);
-                parameter = createParameter(templateDoc, "headers", headerKeysAsString);
-                templatedRoute.appendChild(parameter);
+
+                if (node != null) {
+                    String headerKeysAsString = DocConverter.convertNodeToString(node);
+
+                    parameter = createParameter(templateDoc, "headers", headerKeysAsString);
+                    templatedRoute.appendChild(parameter);
+                }
+
             }
         }
     }

@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        type: string
+        default: 'develop'
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
+        required: true
+
+  workflow_call:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        type: string
+        default: 'develop'
+      milestone:
+        description: 'Milestone to use as version'
+        type: string
+        required: true
+
+jobs:
+  delete_old_snapshots:
+
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+
+    steps:
+
+      - name: Delete older snapshots
+        uses: smartsquaregmbh/delete-old-packages@v0.8.1
+        with:
+          organization: assimbly
+          type: maven
+          keep: 0
+          version-pattern: "${{inputs.milestone}}"
+          names: |
+            org.assimbly.runtime
+            org.assimbly.dil
+            org.assimbly.broker
+            org.assimbly.broker-rest
+            org.assimbly.integration
+            org.assimbly.integration-rest
+
+  release-jars:
+    needs: delete_old_snapshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Maven settings.xml
+        uses: whelk-io/maven-settings-xml-action@v22
+
+        with:
+
+          repositories: >
+            [
+                {
+                  "id": "maven",
+                  "name": "Maven Central",
+                  "url": "https://repo1.maven.org/maven2"
+                },
+                {
+                  "id": "github",
+                  "name": "Assimbly Base Repository",
+                  "url": "https://maven.pkg.github.com/assimbly/base",
+                  "snapshots": {
+                    "enabled": "true"
+                  }
+                },
+                {
+                    "id": "aurea",
+                    "name": "Aurea Sonic Repository",
+                    "url": "https://int-factory.aurea.com/nexus/content/repositories/sonic-releases/"
+                }
+            ]
+          servers: >
+            [
+                {
+                    "id": "github",
+                    "username": "assimbly",
+                    "password": "${{ secrets.MAVEN_TOKEN }}"
+                }
+            ]
+
+      - name: Publish package
+        run: mvn --batch-mode deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+

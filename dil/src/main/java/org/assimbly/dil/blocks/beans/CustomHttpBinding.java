@@ -11,7 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.assimbly.util.helper.XmlHelper;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.*;
 import java.util.Calendar;
@@ -28,6 +28,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
+
         Message target = exchange.hasOut() ? exchange.getMessage() : exchange.getIn();
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {
@@ -143,7 +144,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private void addResponseTimeHeader(Exchange exchange, Message message) {
-        Instant initInstant = Instant.ofEpochMilli(exchange.getCreated()); //created.toInstant();
+        Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated()); //created.toInstant();
         Instant nowInstant = Calendar.getInstance().toInstant();
         Duration duration = Duration.between(initInstant, nowInstant);
 

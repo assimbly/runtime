@@ -6,7 +6,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>4.0.4</version>
+    <version>5.0.0</version>
   </parent>
 
   <name>integration-rest</name>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
   </properties>
 
@@ -35,11 +35,6 @@
 		  <version>${assimbly.version}</version>
 	  </dependency>
 
-	  <dependency>
-		  <groupId>org.springframework.boot</groupId>
-		  <artifactId>spring-boot-starter-websocket</artifactId>
-		  <version>${spring-boot.version}</version>
-	  </dependency>
 	  <dependency>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-web</artifactId>
@@ -71,7 +66,6 @@
 		  <version>${camel-spring-junit5.version}</version>
 		  <scope>test</scope>
 	  </dependency>
-
 	  <dependency>
 		  <groupId>com.h2database</groupId>
 		  <artifactId>h2</artifactId>
@@ -81,10 +75,8 @@
 	  <dependency>
 		  <groupId>org.hamcrest</groupId>
 		  <artifactId>hamcrest</artifactId>
-		  <version>${hamcrest.version}</version>
-		  <scope>test</scope>
+		  <version>${hamcrest.version}</version><scope>test</scope>
 	  </dependency>
-
 	  <dependency>
 		  <groupId>org.apache.maven</groupId>
 		  <artifactId>maven-model</artifactId>
@@ -113,7 +105,7 @@
 						<configuration>
 							<toolchains>
 								<jdk>
-									<version>11</version>
+									<version>21</version>
 								</jdk>
 							</toolchains>
 						</configuration>

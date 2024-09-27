@@ -2,7 +2,7 @@
 <xsl:stylesheet version="2.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-    <xsl:output indent="yes"/>
+    <xsl:output omit-xml-declaration="yes" indent="yes"/>
 
     <xsl:variable name="timestamp">
         <xsl:value-of  select="format-dateTime(current-dateTime(),'[Y][M00][D00][H00][m00][s00][f000]')"/>
@@ -77,7 +77,7 @@
                                 <environmentName>PRODUCTION</environmentName>
                                 <stage>PRODUCTION</stage>
                                 <xsl:if test="//*:property[@key='frontend.engine']">
-                                <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
+                                    <xsl:variable name="frontend" select="//*:property[@key='frontend.engine']/@value"/>
                                     <frontend><xsl:value-of select="$frontend"/></frontend>
                                 </xsl:if>
                             </options>
@@ -215,7 +215,21 @@
                                             </xsl:choose>
                                         </xsl:attribute>
                                     </xsl:if>
-                                    <xsl:copy-of select="./*" copy-namespaces="no"/>
+                                    <xsl:copy-of select="*:onException" copy-namespaces="yes"/>
+                                    <xsl:copy-of select="*:from" copy-namespaces="yes"/>
+                                    <step>
+                                        <xsl:choose>
+                                            <xsl:when test="@id">
+                                                <xsl:attribute name="id" select="@id"/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+                                                <xsl:attribute name="id" select="generate-id(.)"/>
+                                            </xsl:otherwise>
+                                        </xsl:choose>
+                                        <xsl:for-each select="./*[not(local-name() = 'from' or local-name() = 'onException')]">
+                                            <xsl:copy-of select="." copy-namespaces="yes"/>
+                                        </xsl:for-each>
+                                    </step>
                                 </route>
                             </xsl:for-each>
                         </routes>
@@ -243,10 +257,15 @@
         </xsl:choose>
     </xsl:template>
 
-    <xsl:template match="node()|@*">
+    <xsl:template match="route[not(*:from)]">
         <xsl:copy>
             <xsl:apply-templates select="node()|@*"/>
         </xsl:copy>
+    </xsl:template>
+
+
+    <xsl:template match="route[not(*:from)]">
+        <xsl:copy-of select="."/>
     </xsl:template>
 
     <xsl:template match="integration[not(id)]">

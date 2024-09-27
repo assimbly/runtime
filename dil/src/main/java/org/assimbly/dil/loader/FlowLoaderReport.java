@@ -6,11 +6,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 
 public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
 	private String report;
 	private JSONObject json;
 	private JSONArray steps;
@@ -19,6 +20,8 @@ public class FlowLoaderReport {
 	private int loadedError;
 	private JSONObject flow;
 	private JSONObject stepsLoaded;
+	private long startTime;
+	private long endTime;
 
 
 	public void initReport(String flowId, String flowName, String event){
@@ -26,6 +29,7 @@ public class FlowLoaderReport {
 		String eventCapitalized = StringUtils.capitalize(event);
 		log.info(eventCapitalized + " flow | flowid=" + flowId);
 
+		startTime = System.currentTimeMillis();
 		json = new JSONObject();
 		flow = new JSONObject();
 		stepsLoaded = new JSONObject();
@@ -35,13 +39,16 @@ public class FlowLoaderReport {
 
 	public void finishReport(String flowId, String flowName, String event, String version, String environment, String message){
 
+		endTime = System.currentTimeMillis();
+		long time = endTime - startTime;
+
 		flow.put("id",flowId);
 		flow.put("name",flowName);
 		flow.put("event",event);
 		flow.put("message",message);
 		flow.put("version",version);
-		flow.put("environment",environment);
-
+		//flow.put("environment",environment);
+		flow.put("time",time + " milliseconds");
 
 		if(stepsLoaded!=null && loaded > 0){
 			stepsLoaded.put("total", loaded);

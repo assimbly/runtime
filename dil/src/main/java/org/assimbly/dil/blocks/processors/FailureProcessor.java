@@ -33,45 +33,6 @@ public class FailureProcessor implements Processor {
 
 	public void process(Exchange exchange) throws Exception {
 
-		//first set error headers
-		Message in = exchange.getIn();
-
-		String stepId = props.get("error.message.id");
-
-		if (stepId != null) {
-
-			Map<String, String> headers = props.entrySet()
-					.stream()
-					.filter(map -> map.getKey().startsWith("message." + stepId))
-					.collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
-
-			XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-
-			for (Map.Entry<String, String> entry : headers.entrySet()) {
-
-				String language = StringUtils.substringBetween(entry.getKey(), stepId + ".", ".");
-				String key = StringUtils.substringAfterLast(entry.getKey(), language + ".");
-				String value = entry.getValue();
-				String result;
-
-				if (language == null) {
-					continue;
-				} else if (language.equalsIgnoreCase("constant")) {
-					result = value;
-				} else if (language.equalsIgnoreCase("xpath")) {
-					result = XPathBuilder.xpath(value).factory(fac).evaluate(exchange, String.class);
-				} else {
-					Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
-					Expression expression = resolvedLanguage.createExpression(value);
-					result = expression.evaluate(exchange, String.class);
-				}
-
-				in.setHeader(key, result);
-
-			}
-
-		}
-
 		//Write alert to disk
 		Date date = new Date();
 		String today = new SimpleDateFormat("yyyyMMdd").format(date);

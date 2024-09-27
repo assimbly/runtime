@@ -7,18 +7,17 @@ import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class AggregateStrategy implements AggregationStrategy {
 
-    private AggregationStrategy aggregateStrategy;
-
     @Override
-    public Exchange aggregate(Exchange firstExchange, Exchange newExchange) {
-
+    public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         String aggregateType = newExchange.getProperty("Aggregate-Type", String.class);
-
-        if (firstExchange != null) {
-            aggregateType = firstExchange.getProperty("Aggregate-Type", String.class);
+        if (oldExchange != null) {
+            aggregateType = oldExchange.getProperty("Aggregate-Type", String.class);
         }
+
+        AggregationStrategy aggregateStrategy;
 
         switch(aggregateType) {
             case "xml":
@@ -32,8 +31,6 @@ public class AggregateStrategy implements AggregationStrategy {
             default:
                 throw new UnsupportedOperationException("Unknown aggregateType");
         }
-
-        return aggregateStrategy.aggregate(firstExchange, newExchange);
+        return aggregateStrategy.aggregate(oldExchange, newExchange);
     }
-
 }

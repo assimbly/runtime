@@ -1,19 +1,23 @@
 package org.assimbly.dil.event.util;
 
-import com.google.common.collect.FluentIterable;
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class EventUtil {
 
     public static boolean isFiltered(final List<Filter> filters, final String text){
         return filters.stream().anyMatch(o -> text.contains(o.getFilter()));
+    }
+
+    public static boolean isFilteredEquals(final List<Filter> filters, final String text){
+        return filters.stream().anyMatch(o -> text.equals(o.getFilter()));
     }
 
     public static String getTimestamp(){
@@ -22,6 +26,17 @@ public class EventUtil {
         ZonedDateTime now = ZonedDateTime.now(Clock.systemUTC());
 
         return formatter.format(now);
+
+    }
+
+    public static String getCreatedTimestamp(long time){
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+        Instant i = Instant.ofEpochMilli(time);
+        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(i, ZoneOffset.UTC);
+
+        return formatter.format(zonedDateTime);
 
     }
 
@@ -38,6 +53,21 @@ public class EventUtil {
 
         return formatter.format(now);
 
+    }
+
+    public static long calcMapLength(Map<String, Object> map) {
+        long totalLength = 0;
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            totalLength += key.length();
+            if (value != null) {
+                totalLength += value.toString().length();
+            }
+        }
+
+        return totalLength;
     }
 
 }

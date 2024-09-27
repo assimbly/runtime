@@ -11,16 +11,12 @@ spec:
       Set oAuth2token
     type: object
     properties:
-      routeconfiguration_id:
-        type: string
-        default: "0"
       options:
         type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
-      route-configuration-id: "{{routeconfiguration_id}}"
       from:
         uri: "kamelet:source"
         steps:

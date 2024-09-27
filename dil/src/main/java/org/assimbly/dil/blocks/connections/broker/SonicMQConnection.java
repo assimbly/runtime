@@ -7,8 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import progress.message.jclient.ConnectionFactory;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
+//to do in Jakarta/Camel4 migration (does SonicMQ support jakarta?)
 
 public class SonicMQConnection {
 
@@ -83,7 +84,7 @@ public class SonicMQConnection {
 
 
 
-    private void setConnection(String flowId, String connectId, String connectionIdValue) throws JMSException {
+    private void setConnection(String flowId, String connectId, String connectionIdValue) throws JMSException, javax.jms.JMSException {
 
         ConnectionFactory connection = new ConnectionFactory(url, username, password);
         connection.setConnectID("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
@@ -96,7 +97,7 @@ public class SonicMQConnection {
         log.info("Connecting to SonicMQ broker (connection time is set to 15 seconds)");
 
         SjmsComponent jms = new SjmsComponent();
-        jms.setConnectionFactory(connection);
+        jms.setConnectionFactory((jakarta.jms.ConnectionFactory) connection);
         //jms.setConnectionClientId("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
         jms.setCamelContext(context);
         jms.start();

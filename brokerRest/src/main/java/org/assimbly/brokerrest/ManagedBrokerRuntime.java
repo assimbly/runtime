@@ -15,13 +15,9 @@ import java.util.Map;
 public class ManagedBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
     private Broker broker;
-
     private Broker classic = new ActiveMQClassic();
-
 	private Broker artemis = new ActiveMQArtemis();
-
 	private String status;
     private String result;
 
@@ -232,6 +228,22 @@ public class ManagedBrokerRuntime {
         return result;
     }
 
+    public String countMessagesFromList(String brokerType, String endpointNames) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.countMessagesFromList(endpointNames);
+
+        return result;
+    }
+
+    public String getFlowMessageCountsList(String brokerType, boolean excludeEmptyQueues) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.getFlowMessageCountsList(excludeEmptyQueues);
+
+        return result;
+    }
+
     public String countMessages(String brokerType, String endpointName) throws Exception {
 
         broker = getBroker(brokerType);
@@ -239,6 +251,15 @@ public class ManagedBrokerRuntime {
 
         return result;
     }
+
+    public String countDelayedMessages(String brokerType, String endpointName) throws Exception {
+
+        broker = getBroker(brokerType);
+        result = broker.countDelayedMessages(endpointName);
+
+        return result;
+    }
+
 
     public String sendMessage(String brokerType, String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception{
         broker = getBroker(brokerType);
@@ -286,10 +307,6 @@ public class ManagedBrokerRuntime {
         broker = getBroker(brokerType);
         return broker.moveMessages(sourceQueueName, targetQueueName);
     }
-
-
-
-
 
     //private methods
 	private Broker getBroker(String brokerType) throws Exception {

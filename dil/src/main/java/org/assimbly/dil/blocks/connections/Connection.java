@@ -71,6 +71,7 @@ public class Connection {
                 properties.put(stepType + "." + stepId + ".uri", uri);						
                 break;
             case "MQ":
+                System.out.println("New MQ Connection");
                 new MQConnection(context, decryptedProperties, connectionId, "sjms").start(stepType, stepId);
                 break;
             case "AMQPS":
@@ -81,6 +82,9 @@ public class Connection {
                 break;
             case "IBMMQ":
                 new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start(stepType, stepId);
+                break;
+            case "RABBITMQ":
+                new RabbitMQConnection(context, decryptedProperties, connectionId, "rabbitmq").start();
                 break;
             case "JDBC":
                 new JDBCConnection(context, decryptedProperties, connectionId, "sql").start(stepType, stepId);

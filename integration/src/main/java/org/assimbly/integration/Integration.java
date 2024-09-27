@@ -284,7 +284,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getStatsByFlowIds(String flowIds, String mediaType) throws Exception;
+	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the metrics of an integration
@@ -564,7 +564,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String startFlow(String flowId) throws Exception;
+	public String startFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Restarts a flow
@@ -573,7 +573,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String restartFlow(String flowId) throws Exception;
+	public String restartFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Stops a flow
@@ -582,7 +582,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String stopFlow(String flowId) throws Exception;
+	public String stopFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Resumes a flow if paused
@@ -614,6 +614,18 @@ public interface Integration {
 	 */
 	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
 
+
+
+	/**
+	 * Configure and Starts a flow (for testing)
+	 *
+	 * @param  routeId the id of the flow
+	 * @param  route (the XML of the route)
+	 * @return returns a confirmation message
+	 * @throws Exception if flow doesn't start
+	 */
+	public String installRoute(String routeId, String route) throws Exception;
+
 	/**
 	* Configure and Starts a flow (for testing)
 	*
@@ -623,7 +635,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/	
-	public String installFlow(String flowId, String mediaType, String configuration) throws Exception;
+	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)
@@ -632,7 +644,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId) throws Exception;
+	public String uninstallFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory
@@ -796,14 +808,18 @@ public interface Integration {
 	public String getFlowEventsLog(String flowId, Integer numberOfEntries) throws Exception;	
 	
 	/**
-	* Gets the details stats of a flow
-	*
-	* @param  flowId the id of the flow
-	* @param  mediaType (xml or json)
-	* @throws Exception if flow doesn't start
-	* @return returns number of messages
-	*/
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeSteps, String mediaType) throws Exception;
+	 * Gets the details stats of a flow
+	 *
+	 * @param flowId    the id of the flow
+	 * @param mediaType (xml or json)
+	 * @param fullStats (include additional fields)
+	 * @param includeMetaData (includes information about the flow)
+	 * @param includeSteps (include stats for every step)
+	 * @param filter
+	 * @return returns number of messages
+	 * @throws Exception if flow doesn't start
+	 */
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
@@ -960,7 +976,7 @@ public interface Integration {
 	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions);
+	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
 
 	/**
 	 * Validates a ftp expression

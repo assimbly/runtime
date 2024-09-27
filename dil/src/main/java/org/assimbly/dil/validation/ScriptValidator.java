@@ -3,13 +3,18 @@ package org.assimbly.dil.validation;
 import org.apache.camel.Exchange;
 import org.apache.camel.language.groovy.GroovyExpression;
 //import org.apache.camel.language.js.JavaScriptExpression;
+import org.apache.camel.model.language.JavaScriptExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.dil.validation.beans.script.ExchangeDto;
 import org.assimbly.dil.validation.beans.script.ScriptDto;
 import org.assimbly.dil.validation.scripts.ExchangeMarshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScriptValidator {
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     public EvaluationResponse validate(EvaluationRequest evaluationRequest) {
 
@@ -36,6 +41,7 @@ public class ScriptValidator {
                     return createBadRequestResponse(evaluationRequest.getExchange(), "Unsupported scripting language");
             }
         } catch (Exception e) {
+            log.error("Invalid script: '", e);
             return createBadRequestResponse(evaluationRequest.getExchange(), "Invalid script: '" + e.getMessage() + "'");
         }
     }
@@ -48,26 +54,24 @@ public class ScriptValidator {
             ExchangeDto exchangeDtoResponse = ExchangeMarshaller.marshall(exchangeRequest);
             return createOKRequestResponse(exchangeDtoResponse, String.valueOf(response));
         } catch (Exception e) {
+            log.error("Invalid groovy script: '", e);
             return createBadRequestResponse(exchangeDto, "Invalid groovy script: '" + e.getMessage() + "'");
         }
     }
 
     private EvaluationResponse validateJavaScript(ExchangeDto exchangeDto, String script) {
 
-        return createBadRequestResponse(exchangeDto, "JavaScript not supported");
-
-        /*
         try {
-            JavaScriptExpression javaScriptEvaluator = new JavaScriptExpression(script, String.class);
+            JavaScriptExpression javaScriptEvaluator = new JavaScriptExpression(script);
             Exchange exchangeRequest = ExchangeMarshaller.unmarshall(exchangeDto);
             Object response = javaScriptEvaluator.evaluate(exchangeRequest, String.class);
             ExchangeDto exchangeDtoResponse = ExchangeMarshaller.marshall(exchangeRequest);
             return createOKRequestResponse(exchangeDtoResponse, String.valueOf(response));
         } catch (Exception e) {
+            log.error("Invalid javascript: '", e);
             return createBadRequestResponse(exchangeDto, "Invalid javascript: '" + e.getMessage() + "'");
         }
 
-         */
     }
 
     private EvaluationResponse createOKRequestResponse(ExchangeDto exchange, String message) {
