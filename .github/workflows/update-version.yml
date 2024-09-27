@@ -35,9 +35,9 @@ jobs:
     steps:
 
       - name: Checkout the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          repository: runtime
+          repository: assimbly/runtime
           ref: ${{ inputs.branch }}
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
@@ -61,6 +61,6 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.RELEASE_TOKEN }}
-          repository: runtime
+          repository: assimbly/runtime
           ref: ${{ inputs.branch }}
           force_with_lease: true
