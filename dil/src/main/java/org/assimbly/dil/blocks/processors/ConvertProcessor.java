@@ -18,7 +18,7 @@ public class ConvertProcessor implements Processor {
 
 	@ManagedOperation(description="Conversions")
 	public void process(Exchange exchange) throws Exception {
-		  
+
 		Message in = exchange.getIn();
 		Object convertFormatObject = in.getHeader("ConvertFormat");
 		Object convertTypeObject = in.getHeader("ConvertType");

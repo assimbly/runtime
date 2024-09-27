@@ -134,6 +134,7 @@ public class Unmarshall {
 
 			if(routeTemplateList.contains(type)) {
 				setRouteTemplate(i + 1, stepId, type);
+				setBlocks(stepElement, stepId, type);
 			}else{
 				setBlocks(stepElement, stepId, type);
 			}

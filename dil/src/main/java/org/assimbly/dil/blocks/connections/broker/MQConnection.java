@@ -31,6 +31,8 @@ public class MQConnection {
 
     public void start(String direction, Object stepId) throws Exception {
 
+        System.out.println("---> MQConnection Set up SJMS Connection");
+
         setFields();
 
         log.info("Setting up sjms client connection for " + jmsProvider);

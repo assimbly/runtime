@@ -279,6 +279,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
+		registry.bind("SetOriginalMessageProcessor", new SetOriginalMessageProcessor());
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
 		registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
 		registry.bind("SetPatternProcessor", new SetPatternProcessor());
@@ -287,6 +288,9 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
 		registry.bind("FlowLogger", new FlowLogger());
 		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
+
+		registry.bind("SetLogProcessor", new SetLogProcessor());
+		registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
 
 	}
 
@@ -329,6 +333,10 @@ public class CamelIntegration extends BaseIntegration {
 		for(String resourceName: resourceNames){
 
 			if(resourceName.equals("kamelets/resolve-pojo-schema-action.kamelet.yaml")){
+				continue;
+			}
+
+			if(resourceName.equals("kamelets/djl-image-to-text-action.kamelet.yaml")){
 				continue;
 			}
 

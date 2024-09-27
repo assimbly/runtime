@@ -32,15 +32,18 @@ public class StepCollector extends EventNotifierSupport {
 
     private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
-
+    
     private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
+    public static final String FLOW_ID_HEADER = "flowId";
+    public static final String FLOW_VERSION_HEADER = "flowVersion";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
     public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
-
+    public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
+    public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
@@ -96,9 +99,10 @@ public class StepCollector extends EventNotifierSupport {
         // read body only once
         byte[] body = exchange.getMessage().getBody(byte[].class);
         int bodyLength =  body != null ? body.length : 0;
+        String bodyType = body!=null ? body.getClass().getTypeName() : "";
 
         // set custom properties
-        setCustomProperties(exchange, bodyLength, stepId, stepTimestamp);
+        setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
 
         //set fields
         Message message = exchange.getMessage();
@@ -114,13 +118,21 @@ public class StepCollector extends EventNotifierSupport {
             message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
         }
 
+        // get previous flowId and flowVersion
+        String previousFlowId = exchange.getMessage().getHeader(FLOW_ID_HEADER, String.class);
+        String previousFlowVersion = exchange.getMessage().getHeader(FLOW_VERSION_HEADER, String.class);
+        // set flowId and flowVersion
+        exchange.getMessage().setHeader(FLOW_ID_HEADER, flowId);
+        exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
+
         //calculate times
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
         MessageEvent messageEvent = new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, stepId, headers, properties, bodyToStoreOnEvent, expiryDate
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                properties, bodyToStoreOnEvent, expiryDate
         );
         String json = messageEvent.toJson();
 
@@ -180,7 +192,7 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private void setCustomProperties(Exchange exchange, int bodyLength, String stepId, long stepTimestamp) {
+    private void setCustomProperties(Exchange exchange, String bodyType, int bodyLength, String stepId, long stepTimestamp) {
         if (EventUtil.isFilteredEquals(filters, stepId)) {
             // set response time property
             setResponseTimeProperty(exchange, stepTimestamp);
@@ -191,12 +203,19 @@ public class StepCollector extends EventNotifierSupport {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
         exchange.setProperty(TIMESTAMP_PROPERTY, sdf.format(calNow.getTime()));
 
+        // set BodyType property
+        exchange.setProperty(MESSAGE_BODY_TYPE_PROPERTY, bodyType);
+
         // set BodyLength property
         exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, bodyLength);
 
         // set HeadersLength property
         Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
         exchange.setProperty(MESSAGE_HEADERS_SIZE_PROPERTY, EventUtil.calcMapLength(headersMap));
+
+        // set ExchangePattern name
+        exchange.setProperty(EXCHANGE_PATTERN_PROPERTY, exchange.getPattern().name());
+
     }
 
     private void setResponseTimeProperty(Exchange exchange, long stepTimestamp){
