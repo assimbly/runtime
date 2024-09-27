@@ -336,6 +336,10 @@ public class CamelIntegration extends BaseIntegration {
 				continue;
 			}
 
+			if(resourceName.equals("kamelets/djl-image-to-text-action.kamelet.yaml")){
+				continue;
+			}
+
 			URL url;
 			if(resourceName.startsWith("file:")){
 				url = new URL(resourceName);
