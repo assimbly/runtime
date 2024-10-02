@@ -99,7 +99,7 @@ public class StepCollector extends EventNotifierSupport {
         // read body only once
         byte[] body = exchange.getMessage().getBody(byte[].class);
         int bodyLength =  body != null ? body.length : 0;
-        String bodyType = body!=null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
+        String bodyType = body!= null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
 
         // set custom properties
         setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
