@@ -4,6 +4,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
@@ -13,6 +14,7 @@ import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
@@ -96,48 +98,53 @@ public class StepCollector extends EventNotifierSupport {
 
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
 
-        // read body only once
-        byte[] body = exchange.getMessage().getBody(byte[].class);
-        int bodyLength =  body != null ? body.length : 0;
-        String bodyType = body!= null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
+        try {
+            // read body only once
+            InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
+            byte[] body = IOUtils.toByteArray(inputStream);
+            int bodyLength = body != null ? body.length : 0;
+            String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
 
-        // set custom properties
-        setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
+            // set custom properties
+            setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
 
-        //set fields
-        Message message = exchange.getMessage();
-        String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
-        Map<String, Object> headers = message.getHeaders();
-        Map<String, Object> properties = exchange.getProperties();
-        String transactionId = message.getMessageId();
+            //set fields
+            Message message = exchange.getMessage();
+            String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
+            Map<String, Object> headers = message.getHeaders();
+            Map<String, Object> properties = exchange.getProperties();
+            String transactionId = message.getMessageId();
 
-        //use breadcrumbId when available, otherwise set custom
-        transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
-        if(transactionId==null || transactionId.isEmpty()){
-            transactionId = message.getMessageId() + "_" +  stepId;
-            message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
+            //use breadcrumbId when available, otherwise set custom
+            transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
+            if (transactionId == null || transactionId.isEmpty()) {
+                transactionId = message.getMessageId() + "_" + stepId;
+                message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
+            }
+
+            // get previous flowId and flowVersion
+            String previousFlowId = exchange.getMessage().getHeader(FLOW_ID_HEADER, String.class);
+            String previousFlowVersion = exchange.getMessage().getHeader(FLOW_VERSION_HEADER, String.class);
+            // set flowId and flowVersion
+            exchange.getMessage().setHeader(FLOW_ID_HEADER, flowId);
+            exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
+
+            //calculate times
+            String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
+            String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
+
+            //create json
+            MessageEvent messageEvent = new MessageEvent(
+                    timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                    properties, bodyToStoreOnEvent, expiryDate
+            );
+            String json = messageEvent.toJson();
+
+            //store the event
+            storeManager.storeEvent(json);
+        } catch (Exception e) {
+            log.error("Error to process event", e);
         }
-
-        // get previous flowId and flowVersion
-        String previousFlowId = exchange.getMessage().getHeader(FLOW_ID_HEADER, String.class);
-        String previousFlowVersion = exchange.getMessage().getHeader(FLOW_VERSION_HEADER, String.class);
-        // set flowId and flowVersion
-        exchange.getMessage().setHeader(FLOW_ID_HEADER, flowId);
-        exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
-
-        //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
-        String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
-
-        //create json
-        MessageEvent messageEvent = new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
-                properties, bodyToStoreOnEvent, expiryDate
-        );
-        String json = messageEvent.toJson();
-
-        //store the event
-        storeManager.storeEvent(json);
     }
 
     public String getBodyToStoreOnEvent(Exchange exchange, byte[] body) {
