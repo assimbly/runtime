@@ -1069,7 +1069,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(1000); // Max connections in the pool
+		pooledConnectionFactory.setMaxConnections(5000); // Max connections in the pool
 		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
 
 		JmsComponent jmsComponent = new JmsComponent();
