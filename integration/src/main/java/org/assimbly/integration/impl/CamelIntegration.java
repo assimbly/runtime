@@ -289,8 +289,8 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("FlowLogger", new FlowLogger());
 		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
-		registry.bind("SetLogProcessor", new SetLogProcessor());
-		registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
+		//registry.bind("SetLogProcessor", new SetLogProcessor());
+		//registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
 
 	}
 
