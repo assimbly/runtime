@@ -2169,17 +2169,7 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				if(includeSteps){
-					JSONObject step = new JSONObject();;
-					if(fullStats){
-						step = getStepStats(routeId, fullStats);
-					}else{
-						String stepId = StringUtils.substringAfter(routeId,flowId + "-");
-						step.put("id", stepId);
-						step.put("total",route.getExchangesTotal());
-						step.put("completed",route.getExchangesCompleted());
-						step.put("failed",route.getExchangesFailed());
-						step.put("pending",route.getExchangesInflight());
-					}
+					JSONObject step = getStepStats(routeId, fullStats);
 					steps.put(step);
 				}
 
