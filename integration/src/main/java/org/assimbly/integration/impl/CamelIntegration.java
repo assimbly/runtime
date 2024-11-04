@@ -2162,7 +2162,7 @@ public class CamelIntegration extends BaseIntegration {
 				if(lastCompleted==null){
 					lastCompleted = route.getLastExchangeCompletedTimestamp();
 				}else{
-					Date completed = route.getLastExchangeFailureTimestamp();
+					Date completed = route.getLastExchangeCompletedTimestamp();
 					if(completed!=null && completed.after(lastCompleted)){
 						lastCompleted = completed;
 					}
