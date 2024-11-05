@@ -2174,9 +2174,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
-				cpuLoadLastMinute += Double.parseDouble(route.getLoad01());
-				cpuLoadLast5Minutes += Double.parseDouble(route.getLoad05());
-				cpuLoadLast15Minutes += Double.parseDouble(route.getLoad15());
+				cpuLoadLastMinute += ParseDouble(route.getLoad01());
+				cpuLoadLast5Minutes += ParseDouble(route.getLoad05());
+				cpuLoadLast15Minutes += ParseDouble(route.getLoad15());
 
 				if(includeSteps){
 					JSONObject step = getStepStats(routeId, fullStats);
@@ -3128,6 +3128,17 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return keystorePwd;
+	}
+
+	private double ParseDouble(String strNumber) {
+		if (strNumber != null && strNumber.length() > 0) {
+			try {
+				return Double.parseDouble(strNumber);
+			} catch(Exception e) {
+				return 0;
+			}
+		}
+		return 0;
 	}
 
 }
