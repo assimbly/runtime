@@ -2162,24 +2162,14 @@ public class CamelIntegration extends BaseIntegration {
 				if(lastCompleted==null){
 					lastCompleted = route.getLastExchangeCompletedTimestamp();
 				}else{
-					Date completed = route.getLastExchangeFailureTimestamp();
+					Date completed = route.getLastExchangeCompletedTimestamp();
 					if(completed!=null && completed.after(lastCompleted)){
 						lastCompleted = completed;
 					}
 				}
 
 				if(includeSteps){
-					JSONObject step = new JSONObject();;
-					if(fullStats){
-						step = getStepStats(routeId, fullStats);
-					}else{
-						String stepId = StringUtils.substringAfter(routeId,flowId + "-");
-						step.put("id", stepId);
-						step.put("total",route.getExchangesTotal());
-						step.put("completed",route.getExchangesCompleted());
-						step.put("failed",route.getExchangesFailed());
-						step.put("pending",route.getExchangesInflight());
-					}
+					JSONObject step = getStepStats(routeId, fullStats);
 					steps.put(step);
 				}
 
