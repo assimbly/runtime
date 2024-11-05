@@ -90,7 +90,7 @@ public class MessageEvent {
         return id;
     }
 
-    @JsonProperty("bundleId")
+    @JsonProperty("flowId")
     public String getFlowId() {
         return flowId;
     }
@@ -100,7 +100,7 @@ public class MessageEvent {
         return flowVersion;
     }
 
-    @JsonProperty("previousBundleId")
+    @JsonProperty("previousFlowId")
     public String getPreviousFlowId() {
         return previousFlowId;
     }
