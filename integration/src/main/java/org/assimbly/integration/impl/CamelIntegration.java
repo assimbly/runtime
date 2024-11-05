@@ -1056,12 +1056,8 @@ public class CamelIntegration extends BaseIntegration {
 			Component activemqComp = this.context.getComponent(activemqName);
 
 			if (activemqComp == null) {
-
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-
 				this.context.addComponent(activemqName, jmsComponent);
-
-
 			}
 
 		} catch (Exception e) {
@@ -1076,7 +1072,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(5000); // Max connections in the pool
+		pooledConnectionFactory.setMaxConnections(20); // Max connections in the pool
 		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
 
 		JmsComponent jmsComponent = new JmsComponent();
