@@ -88,6 +88,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -2119,9 +2120,9 @@ public class CamelIntegration extends BaseIntegration {
 		long completedMessages = 0;
 		long failedMessages = 0;
 		long pendingMessages = 0;
-		double cpuLoadLastMinute = 0.00;
-		double cpuLoadLast5Minutes = 0.00;
-		double cpuLoadLast15Minutes = 0.00;
+		BigDecimal cpuLoadLastMinute = new BigDecimal("0.00");
+		BigDecimal cpuLoadLast5Minutes = new BigDecimal("0.00");
+		BigDecimal cpuLoadLast15Minutes = new BigDecimal("0.00");
 		long uptimeMillis = 0;
 		String uptime = null;
 		Date lastFailed = null;
@@ -2174,9 +2175,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
-				cpuLoadLastMinute += parseDouble(route.getLoad01());
-				cpuLoadLast5Minutes += parseDouble(route.getLoad05());
-				cpuLoadLast15Minutes += parseDouble(route.getLoad15());
+				cpuLoadLastMinute = cpuLoadLastMinute.add(new BigDecimal(route.getLoad01()));
+				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(new BigDecimal(route.getLoad05()));
+				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(new BigDecimal(route.getLoad05()));
 
 				if(includeSteps){
 					JSONObject step = getStepStats(routeId, fullStats);
@@ -2280,9 +2281,9 @@ public class CamelIntegration extends BaseIntegration {
 				JSONObject load = new JSONObject();
 
 				//String throughput = route.getThroughput();
-				Double stepLoad01 = parseDouble(route.getLoad01());
-				Double stepLoad05 = parseDouble(route.getLoad05());
-				Double stepLoad15 = parseDouble(route.getLoad15());
+				String stepLoad01 = route.getLoad01();
+				String stepLoad05 = route.getLoad05();
+				String stepLoad15 = route.getLoad15();
 
 				//load.put("throughput", throughput);
 				load.put("cpuLoadLastMinute", stepLoad01);
@@ -2315,9 +2316,9 @@ public class CamelIntegration extends BaseIntegration {
 		json.put("uptime",managedCamelContext.getUptime());
 		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
 		json.put("startedRoutes",managedCamelContext.getStartedRoutes());
-		json.put("cpuLoadLastMinute",parseDouble(managedCamelContext.getLoad01()));
-		json.put("cpuLoadLast5Minutes",parseDouble(managedCamelContext.getLoad05()));
-		json.put("cpuLoadLast15Minutes",parseDouble(managedCamelContext.getLoad15()));
+		json.put("cpuLoadLastMinute",managedCamelContext.getLoad01());
+		json.put("cpuLoadLast5Minutes",managedCamelContext.getLoad05());
+		json.put("cpuLoadLast15Minutes",managedCamelContext.getLoad15());
 		json.put("memoryUsage",getMemoryUsage());
 		json.put("totalThreads",ManagementFactory.getThreadMXBean().getThreadCount());
 
@@ -3128,20 +3129,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return keystorePwd;
-	}
-
-	private double parseDouble(String strNumber) {
-		if (strNumber != null && strNumber.length() > 0) {
-			try {
-				Double doubleNumber =  Double.parseDouble(strNumber);
-				DecimalFormat df = new DecimalFormat("#.##");
-				doubleNumber = Double.valueOf(df.format(doubleNumber));
-				return doubleNumber;
-			} catch(Exception e) {
-				return 0;
-			}
-		}
-		return 0;
 	}
 
 }
