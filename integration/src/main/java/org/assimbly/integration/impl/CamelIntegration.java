@@ -3133,7 +3133,10 @@ public class CamelIntegration extends BaseIntegration {
 	private double ParseDouble(String strNumber) {
 		if (strNumber != null && strNumber.length() > 0) {
 			try {
-				return Double.parseDouble(strNumber);
+				Double doubleNumber =  Double.parseDouble(strNumber);
+				DecimalFormat df = new DecimalFormat("#.##");
+				doubleNumber = Double.valueOf(df.format(doubleNumber));
+				return doubleNumber;
 			} catch(Exception e) {
 				return 0;
 			}
