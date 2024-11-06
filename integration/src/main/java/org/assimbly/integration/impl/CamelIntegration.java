@@ -2174,9 +2174,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
-				cpuLoadLastMinute += ParseDouble(route.getLoad01());
-				cpuLoadLast5Minutes += ParseDouble(route.getLoad05());
-				cpuLoadLast15Minutes += ParseDouble(route.getLoad15());
+				cpuLoadLastMinute += parseDouble(route.getLoad01());
+				cpuLoadLast5Minutes += parseDouble(route.getLoad05());
+				cpuLoadLast15Minutes += parseDouble(route.getLoad15());
 
 				if(includeSteps){
 					JSONObject step = getStepStats(routeId, fullStats);
@@ -2280,9 +2280,9 @@ public class CamelIntegration extends BaseIntegration {
 				JSONObject load = new JSONObject();
 
 				//String throughput = route.getThroughput();
-				String stepLoad01 = route.getLoad01();
-				String stepLoad05 = route.getLoad05();
-				String stepLoad15 = route.getLoad15();
+				Double stepLoad01 = parseDouble(route.getLoad01());
+				Double stepLoad05 = parseDouble(route.getLoad05());
+				Double stepLoad15 = parseDouble(route.getLoad15());
 
 				//load.put("throughput", throughput);
 				load.put("cpuLoadLastMinute", stepLoad01);
@@ -2315,9 +2315,9 @@ public class CamelIntegration extends BaseIntegration {
 		json.put("uptime",managedCamelContext.getUptime());
 		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
 		json.put("startedRoutes",managedCamelContext.getStartedRoutes());
-		json.put("cpuLoadLastMinute",managedCamelContext.getLoad01());
-		json.put("cpuLoadLast5Minutes",managedCamelContext.getLoad05());
-		json.put("cpuLoadLast15Minutes",managedCamelContext.getLoad15());
+		json.put("cpuLoadLastMinute",parseDouble(managedCamelContext.getLoad01()));
+		json.put("cpuLoadLast5Minutes",parseDouble(managedCamelContext.getLoad05());
+		json.put("cpuLoadLast15Minutes",parseDouble(managedCamelContext.getLoad15());
 		json.put("memoryUsage",getMemoryUsage());
 		json.put("totalThreads",ManagementFactory.getThreadMXBean().getThreadCount());
 
@@ -2755,7 +2755,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
-		String version = catalog.getCatalogVersion();  //versionManager.getLoadedVersion(); //component.getString("version");
+		String version = catalog.getCatalogVersion();
 
 		String dependency = groupId + ":" + artifactId + ":" + version;
 		String result;
@@ -3130,7 +3130,7 @@ public class CamelIntegration extends BaseIntegration {
 		return keystorePwd;
 	}
 
-	private double ParseDouble(String strNumber) {
+	private double parseDouble(String strNumber) {
 		if (strNumber != null && strNumber.length() > 0) {
 			try {
 				Double doubleNumber =  Double.parseDouble(strNumber);
