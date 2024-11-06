@@ -2175,9 +2175,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
-				cpuLoadLastMinute = cpuLoadLastMinute.add(new BigDecimal(route.getLoad01()));
-				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(new BigDecimal(route.getLoad05()));
-				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(new BigDecimal(route.getLoad05()));
+				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
+				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
+				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
 
 				if(includeSteps){
 					JSONObject step = getStepStats(routeId, fullStats);
@@ -3129,6 +3129,13 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return keystorePwd;
+	}
+
+	public static BigDecimal parseBigDecimal(String value) {
+		if (value == null || value.isEmpty()) {
+			return BigDecimal.ZERO;  // or handle as needed
+		}
+		return new BigDecimal(value);
 	}
 
 }
