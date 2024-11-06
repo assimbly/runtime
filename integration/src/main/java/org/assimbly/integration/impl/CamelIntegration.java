@@ -2316,8 +2316,8 @@ public class CamelIntegration extends BaseIntegration {
 		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
 		json.put("startedRoutes",managedCamelContext.getStartedRoutes());
 		json.put("cpuLoadLastMinute",parseDouble(managedCamelContext.getLoad01()));
-		json.put("cpuLoadLast5Minutes",parseDouble(managedCamelContext.getLoad05());
-		json.put("cpuLoadLast15Minutes",parseDouble(managedCamelContext.getLoad15());
+		json.put("cpuLoadLast5Minutes",parseDouble(managedCamelContext.getLoad05()));
+		json.put("cpuLoadLast15Minutes",parseDouble(managedCamelContext.getLoad15()));
 		json.put("memoryUsage",getMemoryUsage());
 		json.put("totalThreads",ManagementFactory.getThreadMXBean().getThreadCount());
 
