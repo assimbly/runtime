@@ -27,6 +27,11 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
         elementNames = new ArrayList<>();
 
+        if (newExchange == null) {
+            // there’s no remote file to consume
+            return oldExchange;
+        }
+
         Message in = oldExchange.getIn();
         Message resource = newExchange.getIn();
 
