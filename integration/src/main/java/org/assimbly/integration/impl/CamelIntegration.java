@@ -1069,12 +1069,15 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(20); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
@@ -2175,6 +2178,8 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 
+				System.out.println("route.getLoad01(): " + route.getLoad01());
+
 				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
 				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
 				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
@@ -3136,6 +3141,18 @@ public class CamelIntegration extends BaseIntegration {
 			return BigDecimal.ZERO;  // or handle as needed
 		}
 		return new BigDecimal(value);
+	}
+
+	private static int getEnvironmentVarAsInteger(String envName, int defaultValue){
+		int value = defaultValue;
+		if (envName != null && !envName.isEmpty()) {
+			try {
+				value = Integer.parseInt(envName);
+			} catch (NumberFormatException e) {
+				System.err.println("Invalid value for " + envName + ": " + value);
+			}
+		}
+		return value;
 	}
 
 }
