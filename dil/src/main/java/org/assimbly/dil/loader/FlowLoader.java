@@ -4,6 +4,8 @@ import java.util.*;
 
 import org.apache.camel.*;
 import org.apache.camel.builder.*;
+import org.apache.camel.model.ModelCamelContext;
+import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesBuilderLoader;
 import org.apache.camel.spi.RoutesLoader;
@@ -127,6 +129,8 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setRouteConfigurations() throws Exception{
 
+		removeRouteConfiguration(flowId);
+
 		for(String prop : props.keySet()){
 			if(prop.endsWith("routeconfiguration")){
 
@@ -134,7 +138,6 @@ public class FlowLoader extends RouteBuilder {
 				String id = props.get(prop + ".id");
 
 				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
-					context.removeRoute(id);
 					loadStep(routeConfiguration, "routeconfiguration", id, null);
 				}
 			}
@@ -244,6 +247,25 @@ public class FlowLoader extends RouteBuilder {
 		context.getCamelContextExtension().setErrorHandlerFactory(updatedErrorHandler);
 
 		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
+
+	}
+
+	private void removeRouteConfiguration(String flowId) {
+
+		ModelCamelContext modelContext = (ModelCamelContext) context;
+
+		List<RouteConfigurationDefinition> routeConfigurationsToRemove = modelContext.getRouteConfigurationDefinitions().stream()
+				.filter(routeConfig -> routeConfig.getId().startsWith(flowId))
+				.toList(); // Collect into a new list to avoid modifying the original list during iteration
+
+		routeConfigurationsToRemove.forEach(routeConfig -> {
+			try {
+				modelContext.removeRouteConfiguration(routeConfig);
+				log.info("Removed routeConfiguration: " + routeConfig.getId());
+			} catch (Exception e) {
+				log.warn("Failed to remove route configuration: " + routeConfig.getId());
+			}
+		});
 
 	}
 

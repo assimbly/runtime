@@ -111,7 +111,7 @@ public class CamelIntegration extends BaseIntegration {
 	private boolean started;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-	private final static long stopTimeout = 1000;
+	private final static long stopTimeout = 500;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -1457,10 +1457,10 @@ public class CamelIntegration extends BaseIntegration {
 
 				log.info("Stopping step id: " + routeId);
 
-				if(route.getConfigurationId()!=null) {
-					log.info("Remove routeConfiguration step id= " + routeId);
-					removeRouteConfiguration(route.getConfigurationId());
-				}
+				//moved removal of routeConfiguration to the flowLoader
+				//if(route.getConfigurationId()!=null) {
+				//	removeRouteConfiguration(route.getConfigurationId());
+				//}
 
 				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
 				context.removeRoute(routeId);
@@ -1482,8 +1482,8 @@ public class CamelIntegration extends BaseIntegration {
 		ModelCamelContext modelContext = (ModelCamelContext) context;
 		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
 		if(routeConfigurationDefinition!=null){
-			log.info("Remove routeConfiguration=" + routeConfigurationDefinition.getId());
 			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
+			log.info("Removed routeConfiguration: " + routeConfigurationDefinition.getId());
 		}
 	}
 
@@ -2177,8 +2177,6 @@ public class CamelIntegration extends BaseIntegration {
 						lastCompleted = completed;
 					}
 				}
-
-				System.out.println("route.getLoad01(): " + route.getLoad01());
 
 				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
 				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
