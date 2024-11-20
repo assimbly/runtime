@@ -2315,10 +2315,16 @@ public class CamelIntegration extends BaseIntegration {
 		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
 
 		json.put("camelId",managedCamelContext.getCamelId());
+		json.put("camelVersion",managedCamelContext.getCamelVersion());
 		json.put("status",managedCamelContext.getState());
 		json.put("uptime",managedCamelContext.getUptime());
 		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
-		json.put("startedRoutes",managedCamelContext.getStartedRoutes());
+		json.put("startedFlows",countFlows("started", "text/plain"));
+		json.put("startedSteps",managedCamelContext.getStartedRoutes());
+		json.put("exchangesTotal",managedCamelContext.getExchangesTotal());
+		json.put("exchangesCompleted",managedCamelContext.getExchangesCompleted());
+		json.put("exchangesInflight",managedCamelContext.getExchangesInflight());
+		json.put("exchangesFailed",managedCamelContext.getExchangesFailed());
 		json.put("cpuLoadLastMinute",managedCamelContext.getLoad01());
 		json.put("cpuLoadLast5Minutes",managedCamelContext.getLoad05());
 		json.put("cpuLoadLast15Minutes",managedCamelContext.getLoad15());
