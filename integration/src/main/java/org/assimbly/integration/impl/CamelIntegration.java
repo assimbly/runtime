@@ -2337,6 +2337,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
+		
 	}
 
 	private double getMemoryUsage(){
