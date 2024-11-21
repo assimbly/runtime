@@ -1315,7 +1315,7 @@ public class CamelIntegration extends BaseIntegration {
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			stopFlow(id, timeout);
+			stopFlow(id, timeout, false);
 		}
 
 		boolean addFlow = false;
@@ -1346,13 +1346,12 @@ public class CamelIntegration extends BaseIntegration {
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
-					stopFlow(id, timeout);
+					stopFlow(id, timeout, false);
 					loadReport = startReport;
 				}else{
 					finishFlowActionReport(id, "error",result,"error");
 				}
 			}else if(result.equals("loaded")) {
-
 				List<Route> steps = getRoutesByFlowId(id);
 
 				log.info("Starting " + steps.size() + " steps");
@@ -1373,7 +1372,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		}catch (Exception e) {
 			if(context.isStarted()) {
-				stopFlow(id, stopTimeout);
+				stopFlow(id, stopTimeout, false);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
 				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
@@ -1426,14 +1425,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String restartFlow(String id, long timeout) {
 
 		try {
-
-			if(hasFlow(id)) {
-				stopFlow(id, timeout);
-				startFlow(id, timeout);
-			}else {
-				startFlow(id, timeout);
-			}
-
+			startFlow(id, timeout);
 		}catch (Exception e) {
 			log.error("Restart flow failed. | flowid=" + id,e);
 			finishFlowActionReport(id, "error", e.getMessage(),"error");
@@ -1444,8 +1436,14 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String stopFlow(String id, long timeout) {
+		return stopFlow(id, timeout, true);
+	}
 
-		initFlowActionReport(id, "stop");
+	public String stopFlow(String id, long timeout, boolean enableReport) {
+
+		if(enableReport) {
+			initFlowActionReport(id, "stop");
+		}
 
 		try {
 
@@ -1467,10 +1465,14 @@ public class CamelIntegration extends BaseIntegration {
 
 			}
 
-			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
+			if(enableReport) {
+				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
+			}
 
 		}catch (Exception e) {
-			finishFlowActionReport(id, "error","Stop flow failed | error=" + e.getMessage(),"error");
+			if(enableReport) {
+				finishFlowActionReport(id, "error", "Stop flow failed | error=" + e.getMessage(), "error");
+			}
 			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
@@ -2337,7 +2339,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
-		
+
 	}
 
 	private double getMemoryUsage(){
