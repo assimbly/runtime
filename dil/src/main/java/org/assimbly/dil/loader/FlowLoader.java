@@ -255,6 +255,7 @@ public class FlowLoader extends RouteBuilder {
 		ModelCamelContext modelContext = (ModelCamelContext) context;
 
 		List<RouteConfigurationDefinition> routeConfigurationsToRemove = modelContext.getRouteConfigurationDefinitions().stream()
+				.filter(Objects::nonNull) // Exclude null entries
 				.filter(routeConfig -> routeConfig.getId().startsWith(flowId))
 				.toList(); // Collect into a new list to avoid modifying the original list during iteration
 
