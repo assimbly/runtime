@@ -111,7 +111,7 @@ public class CamelIntegration extends BaseIntegration {
 	private boolean started;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-	private final static long stopTimeout = 1000;
+	private final static long stopTimeout = 500;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -1069,12 +1069,15 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(20); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
@@ -1312,7 +1315,7 @@ public class CamelIntegration extends BaseIntegration {
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			stopFlow(id, timeout);
+			stopFlow(id, timeout, false);
 		}
 
 		boolean addFlow = false;
@@ -1343,13 +1346,12 @@ public class CamelIntegration extends BaseIntegration {
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
-					stopFlow(id, timeout);
+					stopFlow(id, timeout, false);
 					loadReport = startReport;
 				}else{
 					finishFlowActionReport(id, "error",result,"error");
 				}
 			}else if(result.equals("loaded")) {
-
 				List<Route> steps = getRoutesByFlowId(id);
 
 				log.info("Starting " + steps.size() + " steps");
@@ -1370,7 +1372,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		}catch (Exception e) {
 			if(context.isStarted()) {
-				stopFlow(id, stopTimeout);
+				stopFlow(id, stopTimeout, false);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
 				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
@@ -1423,14 +1425,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String restartFlow(String id, long timeout) {
 
 		try {
-
-			if(hasFlow(id)) {
-				stopFlow(id, timeout);
-				startFlow(id, timeout);
-			}else {
-				startFlow(id, timeout);
-			}
-
+			startFlow(id, timeout);
 		}catch (Exception e) {
 			log.error("Restart flow failed. | flowid=" + id,e);
 			finishFlowActionReport(id, "error", e.getMessage(),"error");
@@ -1441,8 +1436,14 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String stopFlow(String id, long timeout) {
+		return stopFlow(id, timeout, true);
+	}
 
-		initFlowActionReport(id, "stop");
+	public String stopFlow(String id, long timeout, boolean enableReport) {
+
+		if(enableReport) {
+			initFlowActionReport(id, "stop");
+		}
 
 		try {
 
@@ -1454,20 +1455,24 @@ public class CamelIntegration extends BaseIntegration {
 
 				log.info("Stopping step id: " + routeId);
 
-				if(route.getConfigurationId()!=null) {
-					log.info("Remove routeConfiguration step id= " + routeId);
-					removeRouteConfiguration(route.getConfigurationId());
-				}
+				//moved removal of routeConfiguration to the flowLoader
+				//if(route.getConfigurationId()!=null) {
+				//	removeRouteConfiguration(route.getConfigurationId());
+				//}
 
 				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
 				context.removeRoute(routeId);
 
 			}
 
-			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
+			if(enableReport) {
+				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
+			}
 
 		}catch (Exception e) {
-			finishFlowActionReport(id, "error","Stop flow failed | error=" + e.getMessage(),"error");
+			if(enableReport) {
+				finishFlowActionReport(id, "error", "Stop flow failed | error=" + e.getMessage(), "error");
+			}
 			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
@@ -1479,8 +1484,8 @@ public class CamelIntegration extends BaseIntegration {
 		ModelCamelContext modelContext = (ModelCamelContext) context;
 		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
 		if(routeConfigurationDefinition!=null){
-			log.info("Remove routeConfiguration=" + routeConfigurationDefinition.getId());
 			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
+			log.info("Removed routeConfiguration: " + routeConfigurationDefinition.getId());
 		}
 	}
 
@@ -2312,10 +2317,16 @@ public class CamelIntegration extends BaseIntegration {
 		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
 
 		json.put("camelId",managedCamelContext.getCamelId());
+		json.put("camelVersion",managedCamelContext.getCamelVersion());
 		json.put("status",managedCamelContext.getState());
 		json.put("uptime",managedCamelContext.getUptime());
 		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
-		json.put("startedRoutes",managedCamelContext.getStartedRoutes());
+		json.put("startedFlows",countFlows("started", "text/plain"));
+		json.put("startedSteps",managedCamelContext.getStartedRoutes());
+		json.put("exchangesTotal",managedCamelContext.getExchangesTotal());
+		json.put("exchangesCompleted",managedCamelContext.getExchangesCompleted());
+		json.put("exchangesInflight",managedCamelContext.getExchangesInflight());
+		json.put("exchangesFailed",managedCamelContext.getExchangesFailed());
 		json.put("cpuLoadLastMinute",managedCamelContext.getLoad01());
 		json.put("cpuLoadLast5Minutes",managedCamelContext.getLoad05());
 		json.put("cpuLoadLast15Minutes",managedCamelContext.getLoad15());
@@ -2328,6 +2339,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
+
 	}
 
 	private double getMemoryUsage(){
@@ -3136,6 +3148,18 @@ public class CamelIntegration extends BaseIntegration {
 			return BigDecimal.ZERO;  // or handle as needed
 		}
 		return new BigDecimal(value);
+	}
+
+	private static int getEnvironmentVarAsInteger(String envName, int defaultValue){
+		int value = defaultValue;
+		if (envName != null && !envName.isEmpty()) {
+			try {
+				value = Integer.parseInt(envName);
+			} catch (NumberFormatException e) {
+				System.err.println("Invalid value for " + envName + ": " + value);
+			}
+		}
+		return value;
 	}
 
 }
