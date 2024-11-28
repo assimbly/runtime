@@ -124,7 +124,7 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> props;
 	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
-	private FlowLoaderReport flowLoaderReport;
+	private final Map<String, FlowLoaderReport> flowLoaderReportMap = new ConcurrentHashMap<>();
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final String SEP = "/";
@@ -954,7 +954,7 @@ public class CamelIntegration extends BaseIntegration {
 				addCertificateFromUrl(mutualSSLInfoMap.get(RESOURCE_PROP), mutualSSLInfoMap.get(AUTH_PASSWORD_PROP));
 			}
 
-			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
+			FlowLoader flow = new FlowLoader(props, getFlowLoaderReport(props.get("id")));
 
 			flow.addRoutesToCamelContext(context);
 
@@ -1279,7 +1279,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		try{
 
-			RouteLoader routeLoader = new RouteLoader(routeId,route,flowLoaderReport);
+			RouteLoader routeLoader = new RouteLoader(routeId,route,getFlowLoaderReport(routeId));
 
 			routeLoader.addRoutesToCamelContext(context);
 
@@ -1311,10 +1311,13 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String startFlow(String id, long timeout) {
+		String uuid = UUID.randomUUID().toString();
+		System.out.println(" >> startFlow > id: "+id+", uuid: "+uuid);
 
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
+			System.out.println("  > stopFlow > id: "+id+", uuid: "+uuid);
 			stopFlow(id, timeout, false);
 		}
 
@@ -1322,7 +1325,7 @@ public class CamelIntegration extends BaseIntegration {
 		String result = "unloaded";
 
 		try {
-
+			System.out.println("    inside try > id: "+id+", uuid: "+uuid);
 			List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 
 			for (int i = 0; i < allProps.size(); i++) {
@@ -1337,13 +1340,16 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			if(addFlow){
+				System.out.println("    1.1 > id: "+id+", uuid: "+uuid);
 				result = addFlow(props);
 			}else{
+				System.out.println("    1.2 > id: "+id+", uuid: "+uuid);
 				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
 				finishFlowActionReport(id, "error",errorMessage,"error");
 			}
 
 			if (!result.equals("loaded") && !result.equals("started")){
+				System.out.println("    2.1 > id: "+id+", uuid: "+uuid);
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
 					stopFlow(id, timeout, false);
@@ -1352,6 +1358,7 @@ public class CamelIntegration extends BaseIntegration {
 					finishFlowActionReport(id, "error",result,"error");
 				}
 			}else if(result.equals("loaded")) {
+				System.out.println("    2.2 > id: "+id+", uuid: "+uuid);
 				List<Route> steps = getRoutesByFlowId(id);
 
 				log.info("Starting " + steps.size() + " steps");
@@ -1367,6 +1374,7 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 			}else if(result.equals("started")) {
+				System.out.println("    2.3 > id: "+id+", uuid: "+uuid);
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
 
@@ -1602,7 +1610,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void initFlowActionReport(String id, String event) {
-		flowLoaderReport = new FlowLoaderReport();
+		FlowLoaderReport flowLoaderReport = getFlowLoaderReport(id);
 		flowLoaderReport.initReport(id, id, event);
 	}
 
@@ -1633,12 +1641,13 @@ public class CamelIntegration extends BaseIntegration {
 				environment =  "";
 			}
 
-			flowLoaderReport.finishReport(id,id,event,version,environment,message);
+			getFlowLoaderReport(id).finishReport(id,id,event,version,environment,message);
 
 		} catch (Exception e) {
-			flowLoaderReport.finishReport(id,id,event,"","",message);
+			getFlowLoaderReport(id).finishReport(id,id,event,"","",message);
 		}
-		loadReport = flowLoaderReport.getReport();
+		loadReport = getFlowLoaderReport(id).getReport();
+		clearFlowLoaderReport(id);
 	}
 
 	public boolean isFlowStarted(String id) {
@@ -1706,6 +1715,7 @@ public class CamelIntegration extends BaseIntegration {
 			try {
 				List<Route> routesList = getRoutesByFlowId(updatedId);
 				if(routesList.isEmpty()){
+					log.info(" >> routesList is empty for id {} / updatedId {} > set state as unconfigured");
 					flowStatus = "unconfigured";
 				}else{
 					String flowId = routesList.get(0).getId();
@@ -1719,6 +1729,7 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 		}else {
+			log.info(" >> id {} not found on context routes > set state as unconfigured", id);
 			flowStatus = "unconfigured";
 		}
 
@@ -3160,6 +3171,14 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 		return value;
+	}
+
+	public FlowLoaderReport getFlowLoaderReport(String id) {
+		return flowLoaderReportMap.computeIfAbsent(id, key -> new FlowLoaderReport());
+	}
+
+	public void clearFlowLoaderReport(String id) {
+		flowLoaderReportMap.remove(id);
 	}
 
 }
