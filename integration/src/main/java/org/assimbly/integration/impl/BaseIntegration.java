@@ -289,6 +289,10 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getStats(String mediaType) throws Exception;
 
+	public abstract String getFlowsStats(String mediaType) throws Exception;
+
+	public abstract String getStepsStats(String mediaType) throws Exception;
+
 	public abstract String getMessages(String mediaType) throws Exception;
 
 	public abstract String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;

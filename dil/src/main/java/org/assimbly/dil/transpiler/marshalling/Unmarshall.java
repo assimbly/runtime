@@ -17,7 +17,6 @@ import java.util.*;
 // This class unmarshalls an XML file into a Java treemap object
 // The XML file must be in DIL (Data Integration Language) format
 public class Unmarshall {
-
 	private Document doc;
 	private TreeMap<String, String> properties;
 	private XMLConfiguration conf;
@@ -97,17 +96,13 @@ public class Unmarshall {
 		}
 
 		String flowDependencies = null;
-		NodeList dependenciesList = dependencies.getChildNodes();
+		List<Element> dependenciesList = getElementChildren(dependencies);
 
-		for (int i = 0; i < dependenciesList.getLength(); i++) {
-			Node dependency = dependenciesList.item(i);
-			if (dependency instanceof Element) {
-				if(i == 0){
-					flowDependencies = dependency.getTextContent();
-				}else{
-					flowDependencies = flowDependencies + "," + dependency.getTextContent();
-				}
-
+		for(Element dependency: dependenciesList){
+			if(flowDependencies==null){
+				flowDependencies = dependency.getTextContent();
+			}else{
+				flowDependencies = flowDependencies + "," + dependency.getTextContent();
 			}
 		}
 
@@ -227,6 +222,20 @@ public class Unmarshall {
 	private String evaluateXpath(String xpath) throws TransformerException, XPathExpressionException {
 		XPathExpression xp = xf.newXPath().compile(xpath);
 		return xp.evaluate(doc);
+	}
+
+	List<Element> getElementChildren(Node parent) {
+		List<Element> elementChildren = new ArrayList<>();
+		NodeList childNodes = parent.getChildNodes();
+
+		for (int i = 0; i < childNodes.getLength(); i++) {
+			Node node = childNodes.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				elementChildren.add((Element) node);
+			}
+		}
+
+		return elementChildren;
 	}
 
 }
