@@ -39,6 +39,9 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
         byte[] resourceData = newExchange.getContext().getTypeConverter().convertTo(byte[].class, resource.getBody());
 
         String fileName = resource.getHeader(Exchange.FILE_NAME_CONSUMED, String.class);
+        if(fileName == null) {
+            fileName = resource.getHeader(Exchange.FILE_NAME, String.class);
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
