@@ -1,5 +1,10 @@
 package org.assimbly.integration.impl;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.JsonEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
@@ -36,7 +41,6 @@ import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
-import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -69,6 +73,7 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -296,6 +301,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		//registry.bind("SetLogProcessor", new SetLogProcessor());
 		//registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
+		//registry.bind("opentelemetry", new OpenTelemetryLogProcessor());
 
 	}
 
@@ -2337,7 +2343,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
-		
+
 	}
 
 	private double getMemoryUsage(){

@@ -144,6 +144,10 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
     }
 
     private void addHeaders(Exchange exchange) {
+
+        JSONObject headers2 = getJsonFromMap(filterHeaderAndProperties(exchange.getIn().getHeaders()));
+        json.put("Headers", headers2);
+
         if (showAll || showHeaders) {
             JSONObject headers = getJsonFromMap(filterHeaderAndProperties(exchange.getIn().getHeaders()));
             json.put("Headers", headers);
