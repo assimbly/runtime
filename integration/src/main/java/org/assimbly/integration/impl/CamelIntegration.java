@@ -1,5 +1,10 @@
 package org.assimbly.integration.impl;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.JsonEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
@@ -69,6 +74,7 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -85,7 +91,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -94,9 +103,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -107,7 +117,7 @@ public class CamelIntegration extends BaseIntegration {
 	private boolean started;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-	private final static long stopTimeout = 1000;
+	private final static long stopTimeout = 500;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -170,7 +180,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setDefaultThreadProfile(5,50,5000);
 
-		setThreadProfile("wiretapProfile", 0,5,2000);
+		setThreadProfile("wiretapProfile", 0,10,2500);
 
 		setCertificateStore(true);
 
@@ -184,7 +194,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		setHistoryMetrics(true);
 
-		setTracing(true,"backlog");
+		//setTracing(true,"backlog");
 
 	}
 
@@ -290,8 +300,9 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("FlowLogger", new FlowLogger());
 		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
-		registry.bind("SetLogProcessor", new SetLogProcessor());
-		registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
+		//registry.bind("SetLogProcessor", new SetLogProcessor());
+		//registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
+		//registry.bind("opentelemetry", new OpenTelemetryLogProcessor());
 
 	}
 
@@ -310,9 +321,12 @@ public class CamelIntegration extends BaseIntegration {
 	public void setGlobalOptions(){
 
 		//enable virtual threads
-		System.setProperty("camel.threads.virtual.enabled","true");
+		//System.setProperty("camel.threads.virtual.enabled","true");
 
 		context.setUseBreadcrumb(true);
+
+		//enable performance stats
+		context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
 
 		// Enable Jackson JSON type converter for more types.
 		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
@@ -1053,12 +1067,8 @@ public class CamelIntegration extends BaseIntegration {
 			Component activemqComp = this.context.getComponent(activemqName);
 
 			if (activemqComp == null) {
-
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-
 				this.context.addComponent(activemqName, jmsComponent);
-
-
 			}
 
 		} catch (Exception e) {
@@ -1069,12 +1079,15 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(1000); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(5000);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
@@ -1312,7 +1325,7 @@ public class CamelIntegration extends BaseIntegration {
 		initFlowActionReport(id, "Start");
 
 		if(hasFlow(id)) {
-			stopFlow(id, timeout);
+			stopFlow(id, timeout, false);
 		}
 
 		boolean addFlow = false;
@@ -1343,13 +1356,12 @@ public class CamelIntegration extends BaseIntegration {
 			if (!result.equals("loaded") && !result.equals("started")){
 				if(result.equalsIgnoreCase("error")){
 					String startReport = loadReport;
-					stopFlow(id, timeout);
+					stopFlow(id, timeout, false);
 					loadReport = startReport;
 				}else{
 					finishFlowActionReport(id, "error",result,"error");
 				}
 			}else if(result.equals("loaded")) {
-
 				List<Route> steps = getRoutesByFlowId(id);
 
 				log.info("Starting " + steps.size() + " steps");
@@ -1370,7 +1382,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		}catch (Exception e) {
 			if(context.isStarted()) {
-				stopFlow(id, stopTimeout);
+				stopFlow(id, stopTimeout, false);
 				finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
 				log.error("Start flow failed. | flowid=" + id,e);
 			}else{
@@ -1423,14 +1435,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String restartFlow(String id, long timeout) {
 
 		try {
-
-			if(hasFlow(id)) {
-				stopFlow(id, timeout);
-				startFlow(id, timeout);
-			}else {
-				startFlow(id, timeout);
-			}
-
+			startFlow(id, timeout);
 		}catch (Exception e) {
 			log.error("Restart flow failed. | flowid=" + id,e);
 			finishFlowActionReport(id, "error", e.getMessage(),"error");
@@ -1441,8 +1446,14 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String stopFlow(String id, long timeout) {
+		return stopFlow(id, timeout, true);
+	}
 
-		initFlowActionReport(id, "stop");
+	public String stopFlow(String id, long timeout, boolean enableReport) {
+
+		if(enableReport) {
+			initFlowActionReport(id, "stop");
+		}
 
 		try {
 
@@ -1454,20 +1465,24 @@ public class CamelIntegration extends BaseIntegration {
 
 				log.info("Stopping step id: " + routeId);
 
-				if(route.getConfigurationId()!=null) {
-					log.info("Remove routeConfiguration step id= " + routeId);
-					removeRouteConfiguration(route.getConfigurationId());
-				}
+				//moved removal of routeConfiguration to the flowLoader
+				//if(route.getConfigurationId()!=null) {
+				//	removeRouteConfiguration(route.getConfigurationId());
+				//}
 
 				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
 				context.removeRoute(routeId);
 
 			}
 
-			finishFlowActionReport(id, "stop","Stopped flow successfully","info");
+			if(enableReport) {
+				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
+			}
 
 		}catch (Exception e) {
-			finishFlowActionReport(id, "error","Stop flow failed | error=" + e.getMessage(),"error");
+			if(enableReport) {
+				finishFlowActionReport(id, "error", "Stop flow failed | error=" + e.getMessage(), "error");
+			}
 			log.error("Stop flow failed. | flowid=" + id,e);
 		}
 
@@ -1479,8 +1494,8 @@ public class CamelIntegration extends BaseIntegration {
 		ModelCamelContext modelContext = (ModelCamelContext) context;
 		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
 		if(routeConfigurationDefinition!=null){
-			log.info("Remove routeConfiguration=" + routeConfigurationDefinition.getId());
 			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
+			log.info("Removed routeConfiguration: " + routeConfigurationDefinition.getId());
 		}
 	}
 
@@ -2120,8 +2135,11 @@ public class CamelIntegration extends BaseIntegration {
 		long completedMessages = 0;
 		long failedMessages = 0;
 		long pendingMessages = 0;
-		String uptime = null;
+		BigDecimal cpuLoadLastMinute = new BigDecimal("0.00");
+		BigDecimal cpuLoadLast5Minutes = new BigDecimal("0.00");
+		BigDecimal cpuLoadLast15Minutes = new BigDecimal("0.00");
 		long uptimeMillis = 0;
+		String uptime = null;
 		Date lastFailed = null;
 		Date lastCompleted = null;
 
@@ -2166,27 +2184,20 @@ public class CamelIntegration extends BaseIntegration {
 				if(lastCompleted==null){
 					lastCompleted = route.getLastExchangeCompletedTimestamp();
 				}else{
-					Date completed = route.getLastExchangeFailureTimestamp();
+					Date completed = route.getLastExchangeCompletedTimestamp();
 					if(completed!=null && completed.after(lastCompleted)){
 						lastCompleted = completed;
 					}
 				}
 
+				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
+				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
+				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
+
 				if(includeSteps){
-					JSONObject step = new JSONObject();;
-					if(fullStats){
-						step = getStepStats(routeId, fullStats);
-					}else{
-						String stepId = StringUtils.substringAfter(routeId,flowId + "-");
-						step.put("id", stepId);
-						step.put("total",route.getExchangesTotal());
-						step.put("completed",route.getExchangesCompleted());
-						step.put("failed",route.getExchangesFailed());
-						step.put("pending",route.getExchangesInflight());
-					}
+					JSONObject step = getStepStats(routeId, fullStats);
 					steps.put(step);
 				}
-
 			}
 		}
 
@@ -2197,10 +2208,13 @@ public class CamelIntegration extends BaseIntegration {
 		flow.put("pending",pendingMessages);
 
 		if(fullStats){
+			flow.put("status",getFlowStatus(flowId));
 			flow.put("timeout",getTimeout(context));
 			flow.put("uptime",uptime);
 			flow.put("uptimeMillis",uptimeMillis);
-			flow.put("status",getFlowStatus(flowId));
+			flow.put("cpuLoadLastMinute",cpuLoadLastMinute);
+			flow.put("cpuLoadLast5Minutes",cpuLoadLast5Minutes);
+			flow.put("cpuLoadLast15Minutes",cpuLoadLast15Minutes);
 			flow.put("lastFailed",lastFailed != null ? lastFailed : "");
 			flow.put("lastCompleted",lastCompleted != null ? lastCompleted : "");
 		}
@@ -2245,36 +2259,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 	}
 
-	/*
-	public String getFlowStats(String id, boolean fullStats, String mediaType) throws Exception {
-
-		JSONObject json = new JSONObject();
-		JSONObject flow = new JSONObject();
-		JSONArray steps = new JSONArray();
-
-		List<Route> routes = getRoutesByFlowId(id);
-
-		for(Route route: routes){
-			JSONObject step = getStepStats(route.getId(), fullStats);
-			steps.put(step);
-		}
-
-		flow.put("id",id);
-		flow.put("steps",steps);
-		json.put("flow",flow);
-
-		String flowStats = json.toString(4);
-		if(mediaType.contains("xml")) {
-			flowStats = DocConverter.convertJsonToXml(flowStats);
-		}
-
-		return flowStats;
-
-	}
-	*/
-
-
-
 	public String getFlowStepStats(String flowId, String stepid, boolean fullStats, String mediaType) throws Exception {
 
 		String routeid = flowId + "-" + stepid;
@@ -2311,15 +2295,15 @@ public class CamelIntegration extends BaseIntegration {
 
 				JSONObject load = new JSONObject();
 
-				String throughput = "0"; //route.getThroughput();
+				//String throughput = route.getThroughput();
 				String stepLoad01 = route.getLoad01();
 				String stepLoad05 = route.getLoad05();
 				String stepLoad15 = route.getLoad15();
 
-				load.put("throughput", throughput);
-				load.put("load01", stepLoad01);
-				load.put("load05", stepLoad05);
-				load.put("load15", stepLoad15);
+				//load.put("throughput", throughput);
+				load.put("cpuLoadLastMinute", stepLoad01);
+				load.put("cpuLoadLast5Minutes", stepLoad05);
+				load.put("cpuLoadLast15Minutes", stepLoad15);
 
 				step.put("load", load);
 			}
@@ -2333,9 +2317,74 @@ public class CamelIntegration extends BaseIntegration {
 		json.put("step", step);
 
 		return json;
+
 	}
 
 	public String getStats(String mediaType) throws Exception {
+
+		JSONObject json = new JSONObject();
+
+		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
+
+		json.put("camelId",managedCamelContext.getCamelId());
+		json.put("camelVersion",managedCamelContext.getCamelVersion());
+		json.put("status",managedCamelContext.getState());
+		json.put("uptime",managedCamelContext.getUptime());
+		json.put("uptimeMillis",managedCamelContext.getUptimeMillis());
+		json.put("startedFlows",countFlows("started", "text/plain"));
+		json.put("startedSteps",managedCamelContext.getStartedRoutes());
+		json.put("exchangesTotal",managedCamelContext.getExchangesTotal());
+		json.put("exchangesCompleted",managedCamelContext.getExchangesCompleted());
+		json.put("exchangesInflight",managedCamelContext.getExchangesInflight());
+		json.put("exchangesFailed",managedCamelContext.getExchangesFailed());
+		json.put("cpuLoadLastMinute",managedCamelContext.getLoad01());
+		json.put("cpuLoadLast5Minutes",managedCamelContext.getLoad05());
+		json.put("cpuLoadLast15Minutes",managedCamelContext.getLoad15());
+		json.put("memoryUsage",getMemoryUsage());
+		json.put("totalThreads",ManagementFactory.getThreadMXBean().getThreadCount());
+
+		String stats = json.toString(4);
+		if(mediaType.contains("xml")) {
+			stats = DocConverter.convertJsonToXml(stats);
+		}
+
+		return stats;
+
+	}
+
+	private double getMemoryUsage(){
+
+		MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+		MemoryUsage heapMemoryUsage = memoryBean.getHeapMemoryUsage();
+
+		long maxMemory = heapMemoryUsage.getMax(); // Maximum available memory
+		long usedMemory = heapMemoryUsage.getUsed(); // Currently used memory
+
+		double memoryUsagePercentage = ((double) usedMemory / maxMemory) * 100;
+
+		DecimalFormat df = new DecimalFormat("#.##");
+		memoryUsagePercentage = Double.valueOf(df.format(memoryUsagePercentage));
+
+		return memoryUsagePercentage;
+
+	}
+
+	public String getStepsStats(String mediaType) throws Exception {
+
+		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
+
+		String result = managedCamelContext.dumpRoutesStatsAsXml(true,false);
+
+		if(mediaType.contains("json")) {
+			result = DocConverter.convertXmlToJson(result);
+		}
+
+		return result;
+
+	}
+
+
+	public String getFlowsStats(String mediaType) throws Exception {
 
 		Set<String> flowIds = new HashSet<String>();
 
@@ -2350,30 +2399,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		String result = getStatsFromList(flowIds, true, false, false);
-
-		if(mediaType.contains("xml")) {
-			result = DocConverter.convertJsonToXml(result);
-		}
-
-		return result;
-
-	}
-
-	public String getMessages(String mediaType) throws Exception {
-
-		Set<String> flowIds = new HashSet<String>();
-
-		List<Route> routes = context.getRoutes();
-
-		for(Route route: routes){
-			String routeId = route.getId();
-			String flowId = StringUtils.substringBefore(routeId,"-");
-			if(flowId!=null && !flowId.isEmpty()) {
-				flowIds.add(flowId);
-			}
-		}
-
-		String result = getStatsFromList(flowIds, false, false, false);
 
 		if(mediaType.contains("xml")) {
 			result = DocConverter.convertJsonToXml(result);
@@ -2418,7 +2443,29 @@ public class CamelIntegration extends BaseIntegration {
 		return result;
 	}
 
+	public String getMessages(String mediaType) throws Exception {
 
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		String result = getStatsFromList(flowIds, false, false, false);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
 
 	public String getMetrics(String mediaType) throws Exception {
 
@@ -2731,7 +2778,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		String groupId = component.getString("groupId");
 		String artifactId = component.getString("artifactId");
-		String version = catalog.getCatalogVersion();  //versionManager.getLoadedVersion(); //component.getString("version");
+		String version = catalog.getCatalogVersion();
 
 		String dependency = groupId + ":" + artifactId + ":" + version;
 		String result;
@@ -3104,6 +3151,25 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return keystorePwd;
+	}
+
+	public static BigDecimal parseBigDecimal(String value) {
+		if (value == null || value.isEmpty()) {
+			return BigDecimal.ZERO;  // or handle as needed
+		}
+		return new BigDecimal(value);
+	}
+
+	private static int getEnvironmentVarAsInteger(String envName, int defaultValue){
+		int value = defaultValue;
+		if (envName != null && !envName.isEmpty()) {
+			try {
+				value = Integer.parseInt(envName);
+			} catch (NumberFormatException e) {
+				System.err.println("Invalid value for " + envName + ": " + value);
+			}
+		}
+		return value;
 	}
 
 }

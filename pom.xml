@@ -20,14 +20,15 @@
 	</modules>
 
 	<properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <main.basedir>${project.basedir}</main.basedir>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <main.basedir>${project.basedir}</main.basedir>
 		<activemq.version>6.1.4</activemq.version>
-        <assimbly.version>5.0.2-SNAPSHOT</assimbly.version>
+    <assimbly.version>5.0.2-SNAPSHOT</assimbly.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<spring-boot.version>3.4.0</spring-boot.version>
+
 		<maven-api.version>3.9.9</maven-api.version>
 		<camel-spring-junit5.version>4.8.1</camel-spring-junit5.version>
 		<h2database.version>2.3.232</h2database.version>
