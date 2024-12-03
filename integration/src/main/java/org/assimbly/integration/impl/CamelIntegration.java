@@ -25,8 +25,14 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.health.HealthCheck;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.health.HealthCheckRegistry;
+import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.health.ConsumerHealthCheck;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.main.HealthConfigurationProperties;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.*;
@@ -186,6 +192,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setTracing(true,"backlog");
 
+		setHealthChecks(true);
+		
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -198,6 +206,24 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
+	
+	public void setHealthChecks(boolean enable) {
+
+		HealthCheckRepository routesHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "routes");
+		if(routesHealthCheckRepository!=null) {
+			routesHealthCheckRepository.setEnabled(enable);
+		}
+		HealthCheckRepository consumersHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "consumers");
+		if(consumersHealthCheckRepository!=null) {
+			consumersHealthCheckRepository.setEnabled(enable);
+		}
+
+		HealthCheckRepository producersHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "producers");
+		if(producersHealthCheckRepository!=null) {
+			producersHealthCheckRepository.setEnabled(enable);
+		}
+
+    }
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -2130,6 +2156,186 @@ public class CamelIntegration extends BaseIntegration {
 		for(Route r : routes){
 
 			String routeId = r.getId();
+
+			System.out.println("HealtCheck for route=" + routeId);
+
+			System.out.println("HealtCheck for ROUTE");
+
+			HealthCheck healthCheck = HealthCheckHelper.getHealthCheck(context, "route:" + routeId);
+
+			if(healthCheck!=null){
+				System.out.println("route = true");
+				System.out.println("Is liveness" + healthCheck.isLiveness());
+				System.out.println("Is readiness" + healthCheck.isReadiness());
+				System.out.println("Is enabled" + healthCheck.isEnabled());
+				System.out.println(" ");
+				System.out.println("liveness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("readiness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("metadata details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+
+				System.out.println(" ");
+				System.out.println("call details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				if(healthCheck.call().getMessage().isPresent()) {
+					System.out.println("message" + healthCheck.call().getMessage().get());
+				}
+				if(healthCheck.call().getState() != null) {
+					System.out.println("state" + healthCheck.call().getState());
+				}
+				if(healthCheck.call().getError().isPresent()) {
+					System.out.println("error" + healthCheck.call().getError().get().getMessage());
+				}
+
+				System.out.println("");
+
+			}else {
+				System.out.println("Route is not true");
+			}
+
+			System.out.println("HealtCheck for PRODUCER");
+
+
+			healthCheck = HealthCheckHelper.getHealthCheck(context, "producer:" + routeId);
+
+			if(healthCheck!=null){
+				System.out.println("Producer = true");
+				System.out.println("Is liveness" + healthCheck.isLiveness());
+				System.out.println("Is readiness" + healthCheck.isReadiness());
+				System.out.println("Is enabled" + healthCheck.isEnabled());
+				System.out.println(" ");
+				System.out.println("liveness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("readiness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("metadata details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+
+				System.out.println(" ");
+				System.out.println("call details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				if(healthCheck.call().getMessage().isPresent()) {
+					System.out.println("message" + healthCheck.call().getMessage().get());
+				}
+				if(healthCheck.call().getState() != null) {
+					System.out.println("state" + healthCheck.call().getState());
+				}
+				if(healthCheck.call().getError().isPresent()) {
+					System.out.println("error" + healthCheck.call().getError().get().getMessage());
+				}
+
+				System.out.println("");
+
+			}else {
+				System.out.println("Producer is not true");
+			}
+
+
+			System.out.println("HealtCheck for PRODUCER");
+
+
+			healthCheck = HealthCheckHelper.getHealthCheck(context, "consumer:" + routeId);
+
+			if(healthCheck!=null){
+				System.out.println("consumer = true");
+				System.out.println("Is liveness" + healthCheck.isLiveness());
+				System.out.println("Is readiness" + healthCheck.isReadiness());
+				System.out.println("Is enabled" + healthCheck.isEnabled());
+				System.out.println(" ");
+				System.out.println("liveness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("readiness details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				System.out.println(" ");
+				System.out.println("metadata details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+
+				System.out.println(" ");
+				System.out.println("call details ---> ");
+				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					System.out.println("Key: " + key + ", Value: " + value);
+				}
+
+				if(healthCheck.call().getMessage().isPresent()) {
+					System.out.println("message" + healthCheck.call().getMessage().get());
+				}
+				if(healthCheck.call().getState() != null) {
+					System.out.println("state" + healthCheck.call().getState());
+				}
+				if(healthCheck.call().getError().isPresent()) {
+					System.out.println("error" + healthCheck.call().getError().get().getMessage());
+				}
+
+				System.out.println("");
+
+			}else {
+				System.out.println("Consumer is not true");
+			}
+
 
 			if (!filter.isEmpty() && routeId.contains(filter)) {
 				continue;
