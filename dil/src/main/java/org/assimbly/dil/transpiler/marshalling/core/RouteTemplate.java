@@ -1,12 +1,10 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
-import org.apache.camel.kamelets.catalog.KameletsCatalog;
-import org.apache.camel.v1.Kamelet;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
+import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +42,7 @@ public class RouteTemplate {
     private String outList;
     private String outRulesList;
     private String updatedRouteConfigurationId;
-
-    private KameletsCatalog kameletCatalog = new KameletsCatalog();
+    //private KameletsCatalog kameletCatalog = new KameletsCatalog();
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -333,12 +330,15 @@ public class RouteTemplate {
             String templateName = uriSplitted[0] + "-" + type;
 
             if(templateExists(templateName)){
+                System.out.println("TemplateId exist name=" +templateName);
                 templateId = templateName;
             }else if(uri.startsWith("block")){
+                System.out.println("TemplateId is block=" +templateName);
                 String componentName = uriSplitted[1];
                 componentName = componentName.toLowerCase();
                 templateId = componentName + "-" + type;
             }else{
+                System.out.println("TemplateId is generic=" +templateName);
                 templateId = "generic-" + type;
             }
 
@@ -346,8 +346,9 @@ public class RouteTemplate {
 
     }
 
-    private boolean templateExists(String templateName){
-        return kameletCatalog.getKameletsName().contains(templateName);
+    private boolean templateExists(String templateName) {
+        String fullTemplateName = "kamelets/" + templateName + ".kamelet.yaml";
+        return CustomKameletCatalog.names.contains(fullTemplateName);
     }
 
 
