@@ -58,6 +58,7 @@ import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
+import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -343,6 +344,9 @@ public class CamelIntegration extends BaseIntegration {
 		RoutesLoader loader = PluginHelper.getRoutesLoader(context);
 
 		List<String> resourceNames = getKamelets();
+
+		//Set to use the list globally
+		CustomKameletCatalog.names.addAll(resourceNames);
 
 		for(String resourceName: resourceNames){
 

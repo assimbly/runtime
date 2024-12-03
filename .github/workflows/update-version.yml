@@ -13,11 +13,11 @@ on:
         required: true
 
   workflow_call:
-    inputs:      
+    inputs:
       branch:
         description: 'Branch to use'
         type: string
-        default: 'develop'    
+        default: 'develop'
       milestone:
         description: 'Milestone to use as version'
         type: string

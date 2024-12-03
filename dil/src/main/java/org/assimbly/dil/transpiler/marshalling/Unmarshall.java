@@ -1,9 +1,10 @@
 package org.assimbly.dil.transpiler.marshalling;
 
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.marshalling.core.*;
+import org.assimbly.dil.transpiler.marshalling.core.Message;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -11,6 +12,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.xpath.*;
 import java.util.*;
 
@@ -169,7 +171,6 @@ public class Unmarshall {
 		return options;
 	}
 
-
 	private void setBlocks(Element stepElement, String stepId, String type) throws Exception {
 
 		NodeList block = stepElement.getElementsByTagName("block");
@@ -203,39 +204,18 @@ public class Unmarshall {
 
 		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
 		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
-		String baseUri = evaluateXpath("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
+		String baseUri = conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 		String options = getOptions(optionProperties);
 
+		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
+
 		if(baseUri.startsWith("blocks") || baseUri.startsWith("component")){
-			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}else{
-			String scheme = StringUtils.substringBefore(baseUri,":");
-			//if(DependencyUtil.PredefinedBlocks.hasBlock(scheme)){
-			//	baseUri = "block:" + baseUri;
-			//};
-			properties =  new RouteTemplate(properties, conf).setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 		}
 
-	}
-
-	private String evaluateXpath(String xpath) throws TransformerException, XPathExpressionException {
-		XPathExpression xp = xf.newXPath().compile(xpath);
-		return xp.evaluate(doc);
-	}
-
-	List<Element> getElementChildren(Node parent) {
-		List<Element> elementChildren = new ArrayList<>();
-		NodeList childNodes = parent.getChildNodes();
-
-		for (int i = 0; i < childNodes.getLength(); i++) {
-			Node node = childNodes.item(i);
-			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				elementChildren.add((Element) node);
-			}
-		}
-
-		return elementChildren;
 	}
 
 }

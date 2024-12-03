@@ -88,9 +88,11 @@ public abstract class BaseIntegration implements Integration {
 			}else {
 	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 			}
-		
+
 			setFlowConfiguration(flowId, flowProperties);
+
 			putFlowConfigurationToMap(flowId, mediaType, configuration);
+
 		} catch (Exception e) {
 			log.error("Set flow configuration failed",e);
 		}

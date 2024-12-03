@@ -1,16 +1,21 @@
 package org.assimbly.dil.transpiler;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -122,6 +127,22 @@ public class XMLFileConfiguration {
 
 		return properties;
 
+	}
+
+	public static boolean validateXMLSchema(String xsdPath, String xml){
+
+		try {
+
+			SchemaFactory factory =
+					SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+			Schema schema = factory.newSchema(new File(xsdPath));
+			Validator validator = schema.newValidator();
+			validator.validate(new StreamSource(new StringReader(xml)));
+		} catch (Exception e) {
+			System.out.println("Exception: "+e.getMessage());
+			return false;
+		}
+		return true;
 	}
 
 	public String getRouteConfiguration(String flowId, String xml) throws Exception {
