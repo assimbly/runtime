@@ -12,14 +12,14 @@ import java.util.ArrayList;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
-public class RouteCollector extends EventNotifierSupport {
+public class FailureCollector extends EventNotifierSupport {
 
     private final String flowId;
     private final ArrayList<Filter> filters;
     private final ArrayList<String> events;
     private final StoreManager storeManager;
 
-    public RouteCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public FailureCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.flowId = flowId;
         this.events = events;
         this.filters = filters;
@@ -32,39 +32,33 @@ public class RouteCollector extends EventNotifierSupport {
 
         String type = event.getType().name();
 
-        if(event instanceof CamelEvent.RouteEvent && events!=null && events.contains(type)) {
+        if(event instanceof CamelEvent.FailureEvent) {
 
             //Cast to route event
-            CamelEvent.RouteEvent routeEvent = (CamelEvent.RouteEvent) event;
-
-            //Set stepId from route
-            String routeId = routeEvent.getRoute().getId();
-            String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+            CamelEvent.FailureEvent failureEvent = (CamelEvent.FailureEvent) event;
 
             //process and store the exchange
-            if(stepId!=null && filters==null){
-                processEvent(routeEvent, stepId);
-            }else if(stepId!=null && EventUtil.isFiltered(filters, stepId)){
-                processEvent(routeEvent, stepId);
+            if(failureEvent!=null && filters==null){
+                processEvent(failureEvent);
             }
 
         }
 
     }
 
-    private void processEvent(CamelEvent.RouteEvent routeEvent, String stepId){
+    private void processEvent(CamelEvent.FailureEvent failureEvent){
 
         //set fields
-        String timestamp = Long.toString(routeEvent.getTimestamp());
-        String routeEventType = routeEvent.getType().name().substring(5);
-
-        String logLevel = "INFO";
-        String message = "Step: " + stepId + " | Event: " + routeEventType;
-        String exception = "";
+        String timestamp = Long.toString(failureEvent.getTimestamp());
+        String logLevel = "ERROR";
+        String message = failureEvent.getClass().getName();
+        String exception = failureEvent.getCause().getMessage();
 
         //create json
-        LogEvent logEvent = new LogEvent(timestamp, flowId, logLevel, "FLOW", message, exception);
+        LogEvent logEvent = new LogEvent(timestamp, "", logLevel, "FAILURE", message, exception);
         String json = logEvent.toJson();
+
+        System.out.println("FailureCollector: " + json);
 
         //store event
         storeManager.storeEvent(json);

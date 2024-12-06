@@ -27,12 +27,9 @@ import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
-import org.apache.camel.health.HealthCheckRegistry;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.health.ConsumerHealthCheck;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.main.HealthConfigurationProperties;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.*;
@@ -345,6 +342,22 @@ public class CamelIntegration extends BaseIntegration {
 		// Allow Jackson JSON to convert to pojo types also
 		// (by default, Jackson only converts to String and other simple types)
 		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
+
+		for (Map.Entry<String, String> entry : context.getGlobalOptions().entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			System.out.println("GlobalOption --> Key: " + key + ", Value: " + value);
+		}
+
+		/*
+		String[] components = {"ftps", "kafka", "jetty", "netty"};
+
+		for(String component: components){
+			//context.getGlobalOptions().put("camel.component." + component + ".bridgeErrorHandler","true");
+		}
+		*/
+
+		//context.getGlobalOptions().put("camel.component.*.bridgeErrorHandler","true");
 
 	}
 
@@ -2157,186 +2170,6 @@ public class CamelIntegration extends BaseIntegration {
 
 			String routeId = r.getId();
 
-			System.out.println("HealtCheck for route=" + routeId);
-
-			System.out.println("HealtCheck for ROUTE");
-
-			HealthCheck healthCheck = HealthCheckHelper.getHealthCheck(context, "route:" + routeId);
-
-			if(healthCheck!=null){
-				System.out.println("route = true");
-				System.out.println("Is liveness" + healthCheck.isLiveness());
-				System.out.println("Is readiness" + healthCheck.isReadiness());
-				System.out.println("Is enabled" + healthCheck.isEnabled());
-				System.out.println(" ");
-				System.out.println("liveness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("readiness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("metadata details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-
-				System.out.println(" ");
-				System.out.println("call details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				if(healthCheck.call().getMessage().isPresent()) {
-					System.out.println("message" + healthCheck.call().getMessage().get());
-				}
-				if(healthCheck.call().getState() != null) {
-					System.out.println("state" + healthCheck.call().getState());
-				}
-				if(healthCheck.call().getError().isPresent()) {
-					System.out.println("error" + healthCheck.call().getError().get().getMessage());
-				}
-
-				System.out.println("");
-
-			}else {
-				System.out.println("Route is not true");
-			}
-
-			System.out.println("HealtCheck for PRODUCER");
-
-
-			healthCheck = HealthCheckHelper.getHealthCheck(context, "producer:" + routeId);
-
-			if(healthCheck!=null){
-				System.out.println("Producer = true");
-				System.out.println("Is liveness" + healthCheck.isLiveness());
-				System.out.println("Is readiness" + healthCheck.isReadiness());
-				System.out.println("Is enabled" + healthCheck.isEnabled());
-				System.out.println(" ");
-				System.out.println("liveness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("readiness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("metadata details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-
-				System.out.println(" ");
-				System.out.println("call details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				if(healthCheck.call().getMessage().isPresent()) {
-					System.out.println("message" + healthCheck.call().getMessage().get());
-				}
-				if(healthCheck.call().getState() != null) {
-					System.out.println("state" + healthCheck.call().getState());
-				}
-				if(healthCheck.call().getError().isPresent()) {
-					System.out.println("error" + healthCheck.call().getError().get().getMessage());
-				}
-
-				System.out.println("");
-
-			}else {
-				System.out.println("Producer is not true");
-			}
-
-
-			System.out.println("HealtCheck for PRODUCER");
-
-
-			healthCheck = HealthCheckHelper.getHealthCheck(context, "consumer:" + routeId);
-
-			if(healthCheck!=null){
-				System.out.println("consumer = true");
-				System.out.println("Is liveness" + healthCheck.isLiveness());
-				System.out.println("Is readiness" + healthCheck.isReadiness());
-				System.out.println("Is enabled" + healthCheck.isEnabled());
-				System.out.println(" ");
-				System.out.println("liveness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callLiveness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("readiness details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.callReadiness().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				System.out.println(" ");
-				System.out.println("metadata details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.getMetaData().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-
-				System.out.println(" ");
-				System.out.println("call details ---> ");
-				for (Map.Entry<String, Object> entry : healthCheck.call().getDetails().entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					System.out.println("Key: " + key + ", Value: " + value);
-				}
-
-				if(healthCheck.call().getMessage().isPresent()) {
-					System.out.println("message" + healthCheck.call().getMessage().get());
-				}
-				if(healthCheck.call().getState() != null) {
-					System.out.println("state" + healthCheck.call().getState());
-				}
-				if(healthCheck.call().getError().isPresent()) {
-					System.out.println("error" + healthCheck.call().getError().get().getMessage());
-				}
-
-				System.out.println("");
-
-			}else {
-				System.out.println("Consumer is not true");
-			}
-
-
 			if (!filter.isEmpty() && routeId.contains(filter)) {
 				continue;
 			}
@@ -2540,6 +2373,170 @@ public class CamelIntegration extends BaseIntegration {
 
 		return json;
 	}
+
+	@Override
+	public String getHealth(String type, String mediaType) throws Exception {
+
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		String result = getHealthFromList(flowIds, type);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+	}
+
+	@Override
+	public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception {
+
+		String[] values = flowIds.split(",");
+
+		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
+
+		String result = getHealthFromList(flowSet, type);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
+
+
+	private String getHealthFromList(Set<String> flowIds, String type) throws Exception {
+
+		JSONArray flows = new JSONArray();
+
+		for(String flowId: flowIds){
+			String flowHealth = getFlowHealth(flowId,type,false,false,false, "application/json");
+			JSONObject flow = new JSONObject(flowHealth);
+			flows.put(flow);
+		}
+
+		String result = flows.toString();
+
+		return result;
+
+	}
+
+	@Override
+	public String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+		JSONArray steps = new JSONArray();
+
+		String state = "UNKNOWN";
+
+		List<Route> routes = getRoutesByFlowId(flowId);
+
+		for(Route r : routes){
+
+			String routeId = r.getId();
+			String healthCheckId = type + ":" + routeId;
+			JSONObject step = getStepHealth(routeId,healthCheckId,includeError,includeDetails);
+
+			String stepState= step.getJSONObject("step").getString("state");
+			if(!state.equalsIgnoreCase("DOWN")){
+				state = stepState;
+			}
+			steps.put(step);
+
+		}
+
+		flow.put("id",flowId);
+		flow.put("state",state);
+
+		if(includeSteps) {
+			flow.put("steps", steps);
+		}
+		json.put("flow",flow);
+
+		String flowStats = json.toString(4);
+
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
+		}
+
+		return flowStats;
+
+	}
+
+	@Override
+	public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+
+		String routeid = flowId + "-" + stepId;
+		String healthCheckId = type + ":" + routeid;
+
+		JSONObject json = getStepHealth(routeid, healthCheckId, includeError, includeDetails);
+		String stepHealth = json.toString(4);
+		if(mediaType.contains("xml")) {
+			stepHealth = DocConverter.convertJsonToXml(stepHealth);
+		}
+
+		return stepHealth;
+	}
+
+	private JSONObject getStepHealth(String routeid, String healthCheckId, boolean includeError, boolean includeDetails) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject step = new JSONObject();
+
+		step.put("id", routeid);
+
+		HealthCheck healthCheck = HealthCheckHelper.getHealthCheck(context, healthCheckId);
+
+		if(healthCheck!=null && healthCheck.isReadiness()) {
+
+			HealthCheck.Result result = healthCheck.callReadiness();
+			step.put("state", result.getState().toString());
+
+			if(includeError){
+				JSONObject error = new JSONObject();
+				Optional<Throwable> errorResultOptional = result.getError();
+				if(errorResultOptional.isPresent()){
+					Throwable errorResult = errorResultOptional.get();
+					error.put("message",errorResult.getMessage());
+					error.put("class",errorResult.getClass().getName());
+				}
+				step.put("error", error);
+			}
+
+			if(includeDetails){
+				JSONObject details = new JSONObject();
+
+				for (Map.Entry<String, Object> entry : result.getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					details.put(key,value);
+				}
+
+				step.put("details", details);
+			}
+
+		}else{
+			step.put("state", "UNKNOWN");
+		}
+
+
+		json.put("step", step);
+
+		return json;
+	}
+
 
 	public String getStats(String mediaType) throws Exception {
 

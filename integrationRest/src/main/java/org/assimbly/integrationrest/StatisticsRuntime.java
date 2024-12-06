@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * Resource to return information about the stats of flows.
  */
 @ControllerAdvice
 @RestController
@@ -88,7 +88,7 @@ public class StatisticsRuntime {
         try {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flowIds",stats,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/statsbyflowids",stats,plainResponse);
         } catch (Exception e) {
             log.error("Get stats by flow ids failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/statsbyflowids",e.getMessage());

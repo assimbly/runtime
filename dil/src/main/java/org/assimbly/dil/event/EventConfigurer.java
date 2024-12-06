@@ -4,10 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.dil.event.collect.ExchangeCollector;
-import org.assimbly.dil.event.collect.LogCollector;
-import org.assimbly.dil.event.collect.RouteCollector;
-import org.assimbly.dil.event.collect.StepCollector;
+import org.assimbly.dil.event.collect.*;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
@@ -209,7 +206,6 @@ public class EventConfigurer {
 
     }
 
-
     public void configureStepCollector() {
 
         log.info("Configure collection of step events");
@@ -231,6 +227,30 @@ public class EventConfigurer {
 
         context.getManagementStrategy().addEventNotifier(stepCollector);
         context.getRegistry().bind(id, stepCollector);
+
+    }
+
+    public void configureFailureCollector() {
+
+        log.info("Configure collection of step events");
+
+        String id = configuration.getId();
+        String flowId = configuration.getFlowId();
+        String flowVersion = configuration.getFlowVersion();
+        ArrayList<String> events = configuration.getEvents();
+        ArrayList<Filter> filters = configuration.getFilters();
+        ArrayList<Store> stores = configuration.getStores();
+
+        FailureCollector failureCollector = new FailureCollector(id, flowId, events, filters, stores);
+        failureCollector.setIgnoreCamelContextEvents(false);
+        failureCollector.setIgnoreCamelContextInitEvents(false);
+        failureCollector.setIgnoreExchangeEvents(false);
+        failureCollector.setIgnoreRouteEvents(false);
+        failureCollector.setIgnoreServiceEvents(false);
+        failureCollector.setIgnoreStepEvents(false);
+
+        context.getManagementStrategy().addEventNotifier(failureCollector);
+        context.getRegistry().bind(id, failureCollector);
 
     }
 
