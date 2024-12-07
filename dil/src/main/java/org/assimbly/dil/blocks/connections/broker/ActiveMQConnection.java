@@ -73,10 +73,10 @@ public class ActiveMQConnection {
         } else if (conType.equals("pooled")) {
 
             if (maxConnections == null) {
-                maxConnections = "10";
+                maxConnections = "2";
             }
             if (concurentConsumers == null) {
-                concurentConsumers = "10";
+                concurentConsumers = "2";
             }
 
         }

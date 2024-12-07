@@ -6,7 +6,7 @@ on:
       branch:
         description: 'Branch to use'
         type: string
-        default: 'develop'
+        default: 'develop'    
       milestone:
         description: 'Milestone to use as version'
         type: string
@@ -37,7 +37,7 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
         with:
-          repository: assimbly/base
+          repository: assimbly/runtime
           ref: ${{ inputs.branch }}
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}

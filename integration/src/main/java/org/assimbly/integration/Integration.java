@@ -262,10 +262,29 @@ public interface Integration {
 	* Gets the stats of an integration
 	*
 	* @param  mediaType (xml or json)
-	* @throws Exception if flow doesn't start
-	* @return returns number of messages
+	* @throws Exception if stats can't be retrieved
+	* @return returns stats of integration (system)
+	*
 	*/
 	public String getStats(String mediaType) throws Exception;
+
+	/**
+	 * Gets the stats of all steps
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if stats can't be retrieved
+	 * @return returns stats of integration (system)
+	 */
+	public String getStepsStats(String mediaType) throws Exception;
+
+	/**
+	 * Gets the stats of all flows
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if stats can't be retrieved
+	 * @return returns stats of integration (system)
+	 */
+	public String getFlowsStats(String mediaType) throws Exception;
 
 	/**
 	 * Gets the stats of an integration

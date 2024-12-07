@@ -4,6 +4,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
@@ -13,6 +14,7 @@ import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
@@ -35,8 +37,8 @@ public class StepCollector extends EventNotifierSupport {
     
     private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
-    public static final String FLOW_ID_HEADER = "flowId";
-    public static final String FLOW_VERSION_HEADER = "flowVersion";
+    public static final String FLOW_ID_HEADER = "DOVETAIL_FlowId";
+    public static final String FLOW_VERSION_HEADER = "DOVETAIL_FlowVersion";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
@@ -97,9 +99,17 @@ public class StepCollector extends EventNotifierSupport {
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
 
         // read body only once
-        byte[] body = exchange.getMessage().getBody(byte[].class);
-        int bodyLength =  body != null ? body.length : 0;
-        String bodyType = body!=null ? body.getClass().getTypeName() : "";
+        InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
+
+        byte[] body = null;
+        if (inputStream != null) {
+            try {
+                body = IOUtils.toByteArray(inputStream);
+            } catch (Exception e) { }
+        }
+
+        int bodyLength = body != null ? body.length : 0;
+        String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
 
         // set custom properties
         setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
@@ -113,8 +123,8 @@ public class StepCollector extends EventNotifierSupport {
 
         //use breadcrumbId when available, otherwise set custom
         transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
-        if(transactionId==null || transactionId.isEmpty()){
-            transactionId = message.getMessageId() + "_" +  stepId;
+        if (transactionId == null || transactionId.isEmpty()) {
+            transactionId = message.getMessageId() + "_" + stepId;
             message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
         }
 

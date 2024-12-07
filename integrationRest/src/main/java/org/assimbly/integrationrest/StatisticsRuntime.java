@@ -54,6 +54,45 @@ public class StatisticsRuntime {
     }
 
     @GetMapping(
+            path = "/integration/stats/steps",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getRoutesStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
+
+        plainResponse = true;
+        integration = integrationRuntime.getIntegration();
+
+        try {
+            String stats = integration.getStepsStats(mediaType);
+            if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/stats/steps",stats,plainResponse);
+        } catch (Exception e) {
+            log.error("Get stats failed",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/stats/steps",e.getMessage());
+        }
+    }
+
+    @GetMapping(
+            path = "/integration/stats/flows",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowsStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
+
+        plainResponse = true;
+        integration = integrationRuntime.getIntegration();
+
+        try {
+            String stats = integration.getFlowsStats(mediaType);
+            if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/stats/flows",stats,plainResponse);
+        } catch (Exception e) {
+            log.error("Get stats failed",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/stats/flows",e.getMessage());
+        }
+    }
+
+
+    @GetMapping(
             path = "/integration/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
