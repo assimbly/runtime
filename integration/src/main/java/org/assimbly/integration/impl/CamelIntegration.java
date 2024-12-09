@@ -357,22 +357,6 @@ public class CamelIntegration extends BaseIntegration {
 		// (by default, Jackson only converts to String and other simple types)
 		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
 
-		for (Map.Entry<String, String> entry : context.getGlobalOptions().entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			System.out.println("GlobalOption --> Key: " + key + ", Value: " + value);
-		}
-
-		/*
-		String[] components = {"ftps", "kafka", "jetty", "netty"};
-
-		for(String component: components){
-			//context.getGlobalOptions().put("camel.component." + component + ".bridgeErrorHandler","true");
-		}
-		*/
-
-		//context.getGlobalOptions().put("camel.component.*.bridgeErrorHandler","true");
-
 	}
 
 	//loads templates in the template package

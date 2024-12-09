@@ -230,30 +230,6 @@ public class EventConfigurer {
 
     }
 
-    public void configureFailureCollector() {
-
-        log.info("Configure collection of step events");
-
-        String id = configuration.getId();
-        String flowId = configuration.getFlowId();
-        String flowVersion = configuration.getFlowVersion();
-        ArrayList<String> events = configuration.getEvents();
-        ArrayList<Filter> filters = configuration.getFilters();
-        ArrayList<Store> stores = configuration.getStores();
-
-        FailureCollector failureCollector = new FailureCollector(id, flowId, events, filters, stores);
-        failureCollector.setIgnoreCamelContextEvents(false);
-        failureCollector.setIgnoreCamelContextInitEvents(false);
-        failureCollector.setIgnoreExchangeEvents(false);
-        failureCollector.setIgnoreRouteEvents(false);
-        failureCollector.setIgnoreServiceEvents(false);
-        failureCollector.setIgnoreStepEvents(false);
-
-        context.getManagementStrategy().addEventNotifier(failureCollector);
-        context.getRegistry().bind(id, failureCollector);
-
-    }
-
     public void configureLogCollector() {
 
         log.info("Configure collection of log events");
