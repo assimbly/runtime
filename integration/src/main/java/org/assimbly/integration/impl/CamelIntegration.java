@@ -1,10 +1,5 @@
 package org.assimbly.integration.impl;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.JsonEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.ConsoleAppender;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
@@ -296,6 +291,7 @@ public class CamelIntegration extends BaseIntegration {
 		JettyHttpComponent12 jettyHttpComponent12 = new org.apache.camel.component.jetty12.JettyHttpComponent12();
 		jettyHttpComponent12.setRequestHeaderSize(80000);
 		jettyHttpComponent12.setResponseHeaderSize(80000);
+		jettyHttpComponent12.setBridgeErrorHandler(true);
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
 
@@ -357,6 +353,17 @@ public class CamelIntegration extends BaseIntegration {
 		// (by default, Jackson only converts to String and other simple types)
 		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
 
+		//Set bridgeErrorHandler globally
+		String[] componentNames = {"ftp", "ftps", "sftp", "file", "sql", "scheduler", "timer","quartz","smtp","pop3","imap","smtps","pop3s","imaps"};
+		for (String componentName : componentNames) {
+			Component component = context.getComponent(componentName);
+			if(component!=null) {
+				PropertyConfigurer propertyConfigurer = component.getComponentPropertyConfigurer();
+				if (propertyConfigurer != null) {
+					propertyConfigurer.configure(context, component, "bridgeErrorHandler", "true", true);
+				}
+			}
+		}
 	}
 
 	//loads templates in the template package
@@ -1131,7 +1138,7 @@ public class CamelIntegration extends BaseIntegration {
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
-					if(context.getComponent(scheme.toLowerCase()) == null) {
+					if(!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null) {
 						if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
 							log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
 							if(INetUtil.isHostAvailable("repo1.maven.org")){
@@ -2848,7 +2855,6 @@ public class CamelIntegration extends BaseIntegration {
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
 		return new Connection(context, props, key).start();
 	}
-
 
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
