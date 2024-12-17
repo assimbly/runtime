@@ -388,6 +388,14 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getFlowStepStats(String id, String stepid, boolean fullStats, String mediaType) throws Exception;
 
+	public abstract String getHealth(String type, String mediaType) throws Exception;
+
+	public abstract String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception;
+
+	public abstract String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
+
+	public abstract String getFlowStepHealth(String flowId, String stepId,  String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
+
 	public abstract String getListOfFlows(String filter, String mediaType) throws Exception;
 
 	public abstract String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
