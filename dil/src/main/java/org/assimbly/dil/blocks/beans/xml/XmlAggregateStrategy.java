@@ -48,7 +48,7 @@ public class XmlAggregateStrategy implements AggregationStrategy {
     private String buildAggregateBody(String newXml, String splitXml) {
         String result = "";
 
-        if(splitXml.indexOf("?>") != -1) {
+        if(containsXmlDeclaration(splitXml)) {
             // removes xml declaration from splitXml
             int declarationEndPos = splitXml.indexOf("?>");
             splitXml = splitXml.substring(declarationEndPos + 2);
@@ -60,6 +60,10 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             result = XML_DECLARATION_UTF_8 + AGGREGATE_INIT_TAG + splitXml + AGGREGATE_END_TAG;
         }
         return result;
+    }
+
+    private boolean containsXmlDeclaration(String xml) {
+        return xml.trim().startsWith("<?xml");
     }
 
     private String getBody(Exchange exchange) {
