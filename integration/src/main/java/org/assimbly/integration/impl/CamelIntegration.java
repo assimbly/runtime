@@ -17,6 +17,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
+import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -1098,6 +1099,8 @@ public class CamelIntegration extends BaseIntegration {
 
 			if (activemqComp == null) {
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
+				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+
 				this.context.addComponent(activemqName, jmsComponent);
 			}
 
@@ -1121,6 +1124,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 
 		return jmsComponent;
 	}
