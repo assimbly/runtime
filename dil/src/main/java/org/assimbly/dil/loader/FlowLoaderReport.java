@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
+	private String flowId;
+	private String flowName;
 	private String report;
 	private JSONObject json;
 	private JSONArray steps;
@@ -23,21 +25,19 @@ public class FlowLoaderReport {
 	private long startTime;
 	private long endTime;
 
+	public FlowLoaderReport(String flowId, String flowName) {
+		log.info("initialize flow report | flowid=" + flowId);
 
-	public void initReport(String flowId, String flowName, String event){
-
-		String eventCapitalized = StringUtils.capitalize(event);
-		log.info(eventCapitalized + " flow | flowid=" + flowId);
-
+		this.flowId = flowId;
+		this.flowName = flowName;
 		startTime = System.currentTimeMillis();
 		json = new JSONObject();
 		flow = new JSONObject();
 		stepsLoaded = new JSONObject();
 		steps = new JSONArray();
-
 	}
 
-	public void finishReport(String flowId, String flowName, String event, String version, String environment, String message){
+	public void finishReport(String event, String version, String message){
 
 		endTime = System.currentTimeMillis();
 		long time = endTime - startTime;
@@ -95,11 +95,15 @@ public class FlowLoaderReport {
 
 	}
 
+	public String getFlowId(){
+		return flowId;
+	}
+
 	public String getReport(){
 		return report;
 	}
 
-	public void logResult(String flowId, String flowName, String event){
+	public void logResult(String event){
 		//logging
 		if(loaded == loadedSuccess) {
 			if(loadedSuccess == 1){
