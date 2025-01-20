@@ -1315,7 +1315,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String installRoute(String routeId, String route) throws Exception {
 
-		initFlowActionReport(routeId, "Start");
+		initFlowActionReport(routeId);
 
 		if(!route.startsWith("<route")){
 			route = new XMLFileConfiguration().getRouteConfiguration(routeId,route);
@@ -1356,7 +1356,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id, long timeout) {
 
-		initFlowActionReport(id, "Start");
+		initFlowActionReport(id);
 
 		if(hasFlow(id)) {
 			stopFlow(id, timeout, false);
@@ -1486,7 +1486,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String stopFlow(String id, long timeout, boolean enableReport) {
 
 		if(enableReport) {
-			initFlowActionReport(id, "stop");
+			initFlowActionReport(id);
 		}
 
 		try {
@@ -1535,7 +1535,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String pauseFlow(String id) {
 
-		initFlowActionReport(id, "pause");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1592,7 +1592,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String resumeFlow(String id) throws Exception {
 
-		initFlowActionReport(id, "resume");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1645,9 +1645,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void initFlowActionReport(String id, String event) {
-		flowLoaderReport = new FlowLoaderReport();
-		flowLoaderReport.initReport(id, id, event);
+	private void initFlowActionReport(String id) {
+		flowLoaderReport = new FlowLoaderReport(id, id);
 	}
 
 	private void finishFlowActionReport(String id, String event, String message, String messageType) {
@@ -1677,10 +1676,10 @@ public class CamelIntegration extends BaseIntegration {
 				environment =  "";
 			}
 
-			flowLoaderReport.finishReport(id,id,event,version,environment,message);
+			flowLoaderReport.finishReport(event,version,message);
 
 		} catch (Exception e) {
-			flowLoaderReport.finishReport(id,id,event,"","",message);
+			flowLoaderReport.finishReport(event,"",message);
 		}
 		loadReport = flowLoaderReport.getReport();
 	}
