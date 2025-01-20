@@ -303,6 +303,8 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getHistoryMetrics(String mediaType) throws Exception;
 
+	public abstract String getThreads(String mediaType, String filter, int topEntries) throws Exception;
+
 	public abstract String getDocumentationVersion() throws Exception;
 
 	public abstract String getDocumentation(String componentType, String mediaType) throws Exception;
