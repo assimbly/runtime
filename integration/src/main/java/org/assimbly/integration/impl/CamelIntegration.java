@@ -2552,8 +2552,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
 
-		System.out.println("----> thread count=" + ManagementFactory.getThreadMXBean().getThreadCount());
-
 		List<JSONObject> jsonObjectList = new ArrayList<>();
 		ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
 
@@ -2615,776 +2613,776 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-public String getStepsStats(String mediaType) throws Exception {
+	public String getStepsStats(String mediaType) throws Exception {
 
-    ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
+		ManagedCamelContextMBean managedCamelContext = managed.getManagedCamelContext();
 
-    String result = managedCamelContext.dumpRoutesStatsAsXml(true,false);
+		String result = managedCamelContext.dumpRoutesStatsAsXml(true,false);
 
-    if(mediaType.contains("json")) {
-        result = DocConverter.convertXmlToJson(result);
-    }
+		if(mediaType.contains("json")) {
+			result = DocConverter.convertXmlToJson(result);
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
 
-public String getFlowsStats(String mediaType) throws Exception {
+	public String getFlowsStats(String mediaType) throws Exception {
 
-    Set<String> flowIds = new HashSet<String>();
+		Set<String> flowIds = new HashSet<String>();
 
-    List<Route> routes = context.getRoutes();
+		List<Route> routes = context.getRoutes();
 
-    for(Route route: routes){
-        String routeId = route.getId();
-        String flowId = StringUtils.substringBefore(routeId,"-");
-        if(flowId!=null && !flowId.isEmpty()) {
-            flowIds.add(flowId);
-        }
-    }
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
 
-    String result = getStatsFromList(flowIds, true, false, false);
+		String result = getStatsFromList(flowIds, true, false, false);
 
-    if(mediaType.contains("xml")) {
-        result = DocConverter.convertJsonToXml(result);
-    }
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
+	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
 
-    String[] values = flowIds.split(",");
+		String[] values = flowIds.split(",");
 
-    Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
+		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
 
-    String result = getStatsFromList(flowSet, filter, true, false,false);
+		String result = getStatsFromList(flowSet, filter, true, false,false);
 
-    if(mediaType.contains("xml")) {
-        result = DocConverter.convertJsonToXml(result);
-    }
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
-    return getStatsFromList(flowIds, "", fullStats, includeMetaData, includeSteps);
-}
+	private String getStatsFromList(Set<String> flowIds, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
+		return getStatsFromList(flowIds, "", fullStats, includeMetaData, includeSteps);
+	}
 
-private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
+	private String getStatsFromList(Set<String> flowIds, String filter, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
 
-    JSONArray flows = new JSONArray();
+		JSONArray flows = new JSONArray();
 
-    for(String flowId: flowIds){
-        String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, "application/json");
-        JSONObject flow = new JSONObject(flowStats);
-        flows.put(flow);
-    }
+		for(String flowId: flowIds){
+			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, "application/json");
+			JSONObject flow = new JSONObject(flowStats);
+			flows.put(flow);
+		}
 
-    String result = flows.toString();
+		String result = flows.toString();
 
-    return result;
-}
+		return result;
+	}
 
-public String getMessages(String mediaType) throws Exception {
+	public String getMessages(String mediaType) throws Exception {
 
-    Set<String> flowIds = new HashSet<String>();
+		Set<String> flowIds = new HashSet<String>();
 
-    List<Route> routes = context.getRoutes();
+		List<Route> routes = context.getRoutes();
 
-    for(Route route: routes){
-        String routeId = route.getId();
-        String flowId = StringUtils.substringBefore(routeId,"-");
-        if(flowId!=null && !flowId.isEmpty()) {
-            flowIds.add(flowId);
-        }
-    }
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
 
-    String result = getStatsFromList(flowIds, false, false, false);
+		String result = getStatsFromList(flowIds, false, false, false);
 
-    if(mediaType.contains("xml")) {
-        result = DocConverter.convertJsonToXml(result);
-    }
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-public String getMetrics(String mediaType) throws Exception {
+	public String getMetrics(String mediaType) throws Exception {
 
-    String integrationStats = "0";
-    MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
+		String integrationStats = "0";
+		MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
 
-    if(metricsService!=null) {
-        integrationStats = metricsService.dumpStatisticsAsJson();
-        if (mediaType.contains("xml")) {
-            integrationStats = DocConverter.convertJsonToXml(integrationStats);
-        }
-    }
+		if(metricsService!=null) {
+			integrationStats = metricsService.dumpStatisticsAsJson();
+			if (mediaType.contains("xml")) {
+				integrationStats = DocConverter.convertJsonToXml(integrationStats);
+			}
+		}
 
-    return integrationStats;
+		return integrationStats;
 
-}
+	}
 
 
-public String getHistoryMetrics(String mediaType) throws Exception {
+	public String getHistoryMetrics(String mediaType) throws Exception {
 
-    String integrationStats = "0";
+		String integrationStats = "0";
 
-    MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
+		MetricsMessageHistoryService historyService = context.hasService(MetricsMessageHistoryService.class);
 
-    if(historyService!=null) {
-        integrationStats = historyService.dumpStatisticsAsJson();
-        if(mediaType.contains("xml")) {
-            integrationStats = DocConverter.convertJsonToXml(integrationStats);
-        }
-    }
+		if(historyService!=null) {
+			integrationStats = historyService.dumpStatisticsAsJson();
+			if(mediaType.contains("xml")) {
+				integrationStats = DocConverter.convertJsonToXml(integrationStats);
+			}
+		}
 
-    return integrationStats;
+		return integrationStats;
 
-}
+	}
 
-public String info(String mediaType) throws Exception {
+	public String info(String mediaType) throws Exception {
 
-    JSONObject json = new JSONObject();
-    JSONObject info = new JSONObject();
+		JSONObject json = new JSONObject();
+		JSONObject info = new JSONObject();
 
-    info.put("name",context.getName());
-    info.put("version",context.getVersion());
-    info.put("startDate", CamelContextHelper.getStartDate(context));
-    info.put("startupType",context.getStartupSummaryLevel());
-    info.put("uptime",context.getUptime());
-    info.put("uptimeMiliseconds", context.getUptime().toMillis());
-    info.put("numberOfRunningSteps",context.getRoutesSize());
+		info.put("name",context.getName());
+		info.put("version",context.getVersion());
+		info.put("startDate", CamelContextHelper.getStartDate(context));
+		info.put("startupType",context.getStartupSummaryLevel());
+		info.put("uptime",context.getUptime());
+		info.put("uptimeMiliseconds", context.getUptime().toMillis());
+		info.put("numberOfRunningSteps",context.getRoutesSize());
 
-    json.put("info",info);
+		json.put("info",info);
 
-    String integrationInfo = json.toString(4);
-    if(mediaType.contains("xml")) {
-        integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
-    }
+		String integrationInfo = json.toString(4);
+		if(mediaType.contains("xml")) {
+			integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
+		}
 
-    return integrationInfo;
+		return integrationInfo;
 
-}
+	}
 
-private Set<String> getListOfFlowIds(String filter){
+	private Set<String> getListOfFlowIds(String filter){
 
-    //get all routes
-    List<Route> routes = context.getRoutes();
+		//get all routes
+		List<Route> routes = context.getRoutes();
 
-    Set<String> flowIds = new HashSet<String>();
+		Set<String> flowIds = new HashSet<String>();
 
-    //filter flows from routes
-    for(Route route: routes){
-        String routeId = route.getId();
-        String flowId = StringUtils.substringBefore(routeId,"-");
-        if(flowId!=null && !flowId.isEmpty()) {
-            if (filter != null && !filter.isEmpty()) {
-                String status = getFlowStatus(flowId);
-                if (status.equalsIgnoreCase(filter)) {
-                    flowIds.add(flowId);
-                }
-            }else{
-                flowIds.add(flowId);
-            }
-        }
-    }
+		//filter flows from routes
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				if (filter != null && !filter.isEmpty()) {
+					String status = getFlowStatus(flowId);
+					if (status.equalsIgnoreCase(filter)) {
+						flowIds.add(flowId);
+					}
+				}else{
+					flowIds.add(flowId);
+				}
+			}
+		}
 
-    return flowIds;
+		return flowIds;
 
-}
+	}
 
-public String getListOfFlows(String filter, String mediaType) throws Exception {
+	public String getListOfFlows(String filter, String mediaType) throws Exception {
 
-    Set<String> flowIds = getListOfFlowIds(filter);
+		Set<String> flowIds = getListOfFlowIds(filter);
 
-    JSONArray flowsArray = new JSONArray();
+		JSONArray flowsArray = new JSONArray();
 
-    for(String flowId: flowIds){
-        JSONObject flowObject = new JSONObject();
-        flowObject.put("id",flowId);
-        flowsArray.put(flowObject);
-    }
+		for(String flowId: flowIds){
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("id",flowId);
+			flowsArray.put(flowObject);
+		}
 
-    String result = flowsArray.toString();
+		String result = flowsArray.toString();
 
-    if(mediaType.contains("xml")) {
-        JSONObject flowsObject = new JSONObject();
-        JSONObject flowObject = new JSONObject();
-        flowObject.put("flow",flowsArray);
-        flowsObject.put("flows",flowObject);
-        result = DocConverter.convertJsonToXml(flowsObject.toString());
-    }
+		if(mediaType.contains("xml")) {
+			JSONObject flowsObject = new JSONObject();
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("flow",flowsArray);
+			flowsObject.put("flows",flowObject);
+			result = DocConverter.convertJsonToXml(flowsObject.toString());
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
+	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
 
-    Set<String> flowIds = getListOfFlowIds(filter);
+		Set<String> flowIds = getListOfFlowIds(filter);
 
-    JSONArray flowsArray = new JSONArray();
+		JSONArray flowsArray = new JSONArray();
 
-    for(String flowId: flowIds) {
-        JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json"));
-        flowsArray.put(flowObject);
-    }
+		for(String flowId: flowIds) {
+			JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json"));
+			flowsArray.put(flowObject);
+		}
 
-    String result = flowsArray.toString();
+		String result = flowsArray.toString();
 
-    if(mediaType.contains("xml")) {
-        JSONObject flowsObject = new JSONObject();
-        JSONObject flowObject = new JSONObject();
-        flowObject.put("flow",flowsArray);
-        flowsObject.put("flows",flowObject);
-        result = DocConverter.convertJsonToXml(flowsObject.toString());
-    }
+		if(mediaType.contains("xml")) {
+			JSONObject flowsObject = new JSONObject();
+			JSONObject flowObject = new JSONObject();
+			flowObject.put("flow",flowsArray);
+			flowsObject.put("flows",flowObject);
+			result = DocConverter.convertJsonToXml(flowsObject.toString());
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-public String getListOfSoapActions(String url, String mediaType) throws Exception {
+	public String getListOfSoapActions(String url, String mediaType) throws Exception {
 
-    String result;
+		String result;
 
-    Class<?> clazz;
-    try {
-        clazz = Class.forName("org.assimbly.soap.SoapActionsService");
-        Object soapActions =  clazz.getDeclaredConstructor().newInstance();
-        Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
-        result = (String) method.invoke(soapActions, url);
-    } catch (Exception e) {
-        log.error("SOAP Actions couldn't be retrieved.", e);
-        result = "[]";
-    }
+		Class<?> clazz;
+		try {
+			clazz = Class.forName("org.assimbly.soap.SoapActionsService");
+			Object soapActions =  clazz.getDeclaredConstructor().newInstance();
+			Method method = clazz.getDeclaredMethod("getSoapActions", String.class);
+			result = (String) method.invoke(soapActions, url);
+		} catch (Exception e) {
+			log.error("SOAP Actions couldn't be retrieved.", e);
+			result = "[]";
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
-public String countFlows(String filter, String mediaType) throws Exception {
+	public String countFlows(String filter, String mediaType) throws Exception {
 
-    Set<String> flowIds = getListOfFlowIds(filter);
+		Set<String> flowIds = getListOfFlowIds(filter);
 
-    return Integer.toString(flowIds.size());
+		return Integer.toString(flowIds.size());
 
-}
+	}
 
-public String countSteps(String filter, String mediaType) throws Exception {
+	public String countSteps(String filter, String mediaType) throws Exception {
 
-    List<Route> routes = context.getRoutes();
+		List<Route> routes = context.getRoutes();
 
-    Set<String> stepIds = new HashSet<String>();
+		Set<String> stepIds = new HashSet<String>();
 
-    for(Route route: routes){
-        String routeId = route.getId();
-        ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
+		for(Route route: routes){
+			String routeId = route.getId();
+			ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
-        if (filter != null && !filter.isEmpty()) {
-            String status = managedRoute.getState();
-            if (status.equalsIgnoreCase(filter)) {
-                stepIds.add(routeId);
-            }
-        }else{
-            stepIds.add(routeId);
-        }
-    }
+			if (filter != null && !filter.isEmpty()) {
+				String status = managedRoute.getState();
+				if (status.equalsIgnoreCase(filter)) {
+					stepIds.add(routeId);
+				}
+			}else{
+				stepIds.add(routeId);
+			}
+		}
 
-    String numberOfSteps = Integer.toString(stepIds.size());
+		String numberOfSteps = Integer.toString(stepIds.size());
 
-    return numberOfSteps;
+		return numberOfSteps;
 
-}
+	}
 
-//Other management tasks
+	//Other management tasks
 
-public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
-    return new Connection(context, props, key).start();
-}
+	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
+		return new Connection(context, props, key).start();
+	}
 
-public String getDocumentation(String componentType, String mediaType) throws Exception {
+	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    String doc = catalog.componentJSonSchema(componentType);
+		String doc = catalog.componentJSonSchema(componentType);
 
-    if(doc==null || doc.isEmpty()) {
-        doc = "Unknown component";
-    }
+		if(doc==null || doc.isEmpty()) {
+			doc = "Unknown component";
+		}
 
-    return doc;
-}
+		return doc;
+	}
 
-public String getDocumentationVersion() {
+	public String getDocumentationVersion() {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    return catalog.getCatalogVersion();
-}
+		return catalog.getCatalogVersion();
+	}
 
 
-public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception {
+	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    String components = catalog.listComponentsAsJson();
+		String components = catalog.listComponentsAsJson();
 
-    if(includeCustomComponents){
-        URL url = Resources.getResource("custom-steps.json");
-        String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
-        components = JsonHelper.mergeJsonArray(components,customComponent);
-    }
+		if(includeCustomComponents){
+			URL url = Resources.getResource("custom-steps.json");
+			String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
+			components = JsonHelper.mergeJsonArray(components,customComponent);
+		}
 
-    if(mediaType.contains("xml")) {
-        components = DocConverter.convertJsonToXml(components);
-    }
+		if(mediaType.contains("xml")) {
+			components = DocConverter.convertJsonToXml(components);
+		}
 
-    return components;
-}
+		return components;
+	}
 
-public String getComponentSchema(String componentType, String mediaType) throws Exception {
+	public String getComponentSchema(String componentType, String mediaType) throws Exception {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    String schema = catalog.componentJSonSchema(componentType);
+		String schema = catalog.componentJSonSchema(componentType);
 
-    if(schema==null || schema.isEmpty()) {
-        URL url = Resources.getResource("custom-steps-parameters.json");
-        String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
-        JSONArray jsonArray = new JSONArray(customSchemas);
-        for(int i=0;i<jsonArray.length();i++)
-        {
-            JSONObject components = jsonArray.getJSONObject(i);
-            JSONObject component = components.getJSONObject("component");
-            String name = component.getString("name");
-            if(name.equalsIgnoreCase(componentType)){
-                schema = components.toString();
-                break;
-            }
-        }
-    }
+		if(schema==null || schema.isEmpty()) {
+			URL url = Resources.getResource("custom-steps-parameters.json");
+			String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
+			JSONArray jsonArray = new JSONArray(customSchemas);
+			for(int i=0;i<jsonArray.length();i++)
+			{
+				JSONObject components = jsonArray.getJSONObject(i);
+				JSONObject component = components.getJSONObject("component");
+				String name = component.getString("name");
+				if(name.equalsIgnoreCase(componentType)){
+					schema = components.toString();
+					break;
+				}
+			}
+		}
 
-    if(schema==null || schema.isEmpty()) {
-        schema = "Unknown component";
-    }else if(mediaType.contains("xml")) {
-        schema = DocConverter.convertJsonToXml(schema);
-    }
+		if(schema==null || schema.isEmpty()) {
+			schema = "Unknown component";
+		}else if(mediaType.contains("xml")) {
+			schema = DocConverter.convertJsonToXml(schema);
+		}
 
-    return schema;
-}
+		return schema;
+	}
 
-@Override
-public String getComponentParameters(String componentType, String mediaType) throws Exception {
+	@Override
+	public String getComponentParameters(String componentType, String mediaType) throws Exception {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    String parameters = catalog.componentJSonSchema(componentType);
+		String parameters = catalog.componentJSonSchema(componentType);
 
-    if(parameters==null || parameters.isEmpty()) {
-        parameters = "Unknown component";
-    }else if(mediaType.contains("xml")) {
-        parameters = DocConverter.convertJsonToXml(parameters);
-    }
+		if(parameters==null || parameters.isEmpty()) {
+			parameters = "Unknown component";
+		}else if(mediaType.contains("xml")) {
+			parameters = DocConverter.convertJsonToXml(parameters);
+		}
 
-    return parameters;
-}
+		return parameters;
+	}
 
-public String validateFlow(String uri) {
+	public String validateFlow(String uri) {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    EndpointValidationResult valid = catalog.validateEndpointProperties(uri);
+		EndpointValidationResult valid = catalog.validateEndpointProperties(uri);
 
-    if(valid.hasErrors()){
-        return "invalid: " + valid.summaryErrorMessage(false);
-    }else {
-        return "valid";
-    }
+		if(valid.hasErrors()){
+			return "invalid: " + valid.summaryErrorMessage(false);
+		}else {
+			return "valid";
+		}
 
-}
+	}
 
-public String resolveDependency(String scheme) throws Exception {
+	public String resolveDependency(String scheme) throws Exception {
 
-    DefaultCamelCatalog catalog = new DefaultCamelCatalog();
-    String jsonString = catalog.componentJSonSchema(scheme);
+		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+		String jsonString = catalog.componentJSonSchema(scheme);
 
-    if(jsonString == null || jsonString.isEmpty()){
-        log.info("Unknown scheme: " + scheme);
-        return null;
-    }
-    JSONObject componentSchema = new JSONObject(jsonString);
-    JSONObject component = componentSchema.getJSONObject("component");
+		if(jsonString == null || jsonString.isEmpty()){
+			log.info("Unknown scheme: " + scheme);
+			return null;
+		}
+		JSONObject componentSchema = new JSONObject(jsonString);
+		JSONObject component = componentSchema.getJSONObject("component");
 
-    String groupId = component.getString("groupId");
-    String artifactId = component.getString("artifactId");
-    String version = catalog.getCatalogVersion();
+		String groupId = component.getString("groupId");
+		String artifactId = component.getString("artifactId");
+		String version = catalog.getCatalogVersion();
 
-    String dependency = groupId + ":" + artifactId + ":" + version;
-    String result;
+		String dependency = groupId + ":" + artifactId + ":" + version;
+		String result;
 
-    try {
-        List<Class> classes = resolveMavenDependency(groupId, artifactId, version);
-        Component camelComponent = getComponent(classes, scheme);
-        context.addComponent(scheme, camelComponent);
-        result = "Dependency " + dependency + " resolved";
-    } catch (Exception e) {
-        result = "Dependency " + dependency + " resolved failed. Error message: "  + e.getMessage();
-    }
+		try {
+			List<Class> classes = resolveMavenDependency(groupId, artifactId, version);
+			Component camelComponent = getComponent(classes, scheme);
+			context.addComponent(scheme, camelComponent);
+			result = "Dependency " + dependency + " resolved";
+		} catch (Exception e) {
+			result = "Dependency " + dependency + " resolved failed. Error message: "  + e.getMessage();
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
 
-public List<Class> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
+	public List<Class> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
 
-    DependencyUtil dependencyUtil = new DependencyUtil();
-    List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
-    List<Class> classes = dependencyUtil.loadDependency(paths);
+		DependencyUtil dependencyUtil = new DependencyUtil();
+		List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
+		List<Class> classes = dependencyUtil.loadDependency(paths);
 
-    return classes;
+		return classes;
 
-}
+	}
 
-public Component getComponent(List<Class> classes, String scheme) throws Exception {
+	public Component getComponent(List<Class> classes, String scheme) throws Exception {
 
-    Component component = null;
-    for(Class classToLoad: classes){
-        String className = classToLoad.getName().toLowerCase();
-        if(className.endsWith(scheme + "component")){
-            Object object =  classToLoad.newInstance();
-            component = (Component) object;
-        }
-    }
+		Component component = null;
+		for(Class classToLoad: classes){
+			String className = classToLoad.getName().toLowerCase();
+			if(className.endsWith(scheme + "component")){
+				Object object =  classToLoad.newInstance();
+				component = (Component) object;
+			}
+		}
 
-    return component;
-}
+		return component;
+	}
 
 
-public  CamelContext getContext() {
-    return context;
-}
+	public  CamelContext getContext() {
+		return context;
+	}
 
-public ProducerTemplate getProducerTemplate() {
-    return context.createProducerTemplate();
-}
+	public ProducerTemplate getProducerTemplate() {
+		return context.createProducerTemplate();
+	}
 
-public ConsumerTemplate getConsumerTemplate() {
-    return context.createConsumerTemplate();
-}
+	public ConsumerTemplate getConsumerTemplate() {
+		return context.createConsumerTemplate();
+	}
 
-public void send(Object messageBody, ProducerTemplate template) {
-    template.sendBody(messageBody);
-}
+	public void send(Object messageBody, ProducerTemplate template) {
+		template.sendBody(messageBody);
+	}
 
-public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
-    template.sendBodyAndHeaders(messageBody, messageHeaders);
-}
+	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template) {
+		template.sendBodyAndHeaders(messageBody, messageHeaders);
+	}
 
 
-public void send(String uri,Object messageBody, Integer numberOfTimes) {
+	public void send(String uri,Object messageBody, Integer numberOfTimes) {
 
-    ProducerTemplate template = context.createProducerTemplate();
+		ProducerTemplate template = context.createProducerTemplate();
 
-    if(numberOfTimes.equals(1)){
-        log.info("Sending " + numberOfTimes + " message to " + uri);
-        template.sendBody(uri, messageBody);
-    }else{
-        log.info("Sending " + numberOfTimes + " messages to " + uri);
-        IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
-    }
-}
+		if(numberOfTimes.equals(1)){
+			log.info("Sending " + numberOfTimes + " message to " + uri);
+			template.sendBody(uri, messageBody);
+		}else{
+			log.info("Sending " + numberOfTimes + " messages to " + uri);
+			IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+		}
+	}
 
-public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) {
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) {
 
-    ProducerTemplate template = context.createProducerTemplate();
+		ProducerTemplate template = context.createProducerTemplate();
 
-    Exchange exchange = new DefaultExchange(context);
-    exchange.getIn().setBody(messageBody);
-    exchange = setHeaders(exchange, messageHeaders);
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
 
-    if(numberOfTimes.equals(1)){
-        log.info("Sending " + numberOfTimes + " message to " + uri);
-        template.send(uri,exchange);
-    }else{
-        log.info("Sending " + numberOfTimes + " messages to " + uri);
-        Exchange finalExchange = exchange;
-        IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
-    }
+		if(numberOfTimes.equals(1)){
+			log.info("Sending " + numberOfTimes + " message to " + uri);
+			template.send(uri,exchange);
+		}else{
+			log.info("Sending " + numberOfTimes + " messages to " + uri);
+			Exchange finalExchange = exchange;
+			IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+		}
 
-}
+	}
 
-public String sendRequest(String uri,Object messageBody) {
+	public String sendRequest(String uri,Object messageBody) {
 
-    ProducerTemplate template = context.createProducerTemplate();
+		ProducerTemplate template = context.createProducerTemplate();
 
-    log.info("Sending request message to " + uri);
+		log.info("Sending request message to " + uri);
 
-    return template.requestBody(uri, messageBody,String.class);
-}
+		return template.requestBody(uri, messageBody,String.class);
+	}
 
-public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders) {
+	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders) {
 
-    ProducerTemplate template = context.createProducerTemplate();
+		ProducerTemplate template = context.createProducerTemplate();
 
-    Exchange exchange = new DefaultExchange(context);
-    exchange.getIn().setBody(messageBody);
-    exchange = setHeaders(exchange, messageHeaders);
-    exchange.setPattern(ExchangePattern.InOut);
+		Exchange exchange = new DefaultExchange(context);
+		exchange.getIn().setBody(messageBody);
+		exchange = setHeaders(exchange, messageHeaders);
+		exchange.setPattern(ExchangePattern.InOut);
 
-    log.info("Sending request message to " + uri);
-    Exchange result = template.send(uri,exchange);
+		log.info("Sending request message to " + uri);
+		Exchange result = template.send(uri,exchange);
 
-    return result.getMessage().getBody(String.class);
-}
+		return result.getMessage().getBody(String.class);
+	}
 
-public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
-    for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
+	public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
+		for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
 
-        String key = messageHeader.getKey();
-        String value = StringUtils.substringBetween(messageHeader.getValue().toString(),"(",")");
-        String language = StringUtils.substringBefore(messageHeader.getValue().toString(),"(");
-        String result;
+			String key = messageHeader.getKey();
+			String value = StringUtils.substringBetween(messageHeader.getValue().toString(),"(",")");
+			String language = StringUtils.substringBefore(messageHeader.getValue().toString(),"(");
+			String result;
 
-        if(value.startsWith("constant")) {
-            exchange.getIn().setHeader(key,value);
-        }else if(value.startsWith("xpath")){
-            XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-            result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
-            exchange.getIn().setHeader(key,result);
-        }else{
-            Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
-            Expression expression = resolvedLanguage.createExpression(value);
-            result = expression.evaluate(exchange, String.class);
-            exchange.getIn().setHeader(key,result);
-        }
+			if(value.startsWith("constant")) {
+				exchange.getIn().setHeader(key,value);
+			}else if(value.startsWith("xpath")){
+				XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+				result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}else{
+				Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
+				Expression expression = resolvedLanguage.createExpression(value);
+				result = expression.evaluate(exchange, String.class);
+				exchange.getIn().setHeader(key,result);
+			}
 
-    }
+		}
 
-    return exchange;
-}
+		return exchange;
+	}
 
 
-public Certificate[] getCertificates(String url) {
+	public Certificate[] getCertificates(String url) {
 
-    Certificate[] certificates = new Certificate[0];
+		Certificate[] certificates = new Certificate[0];
 
-    try {
-        CertificatesUtil util = new CertificatesUtil();
-        certificates = util.downloadCertificates(url);
-    } catch (Exception e) {
-        log.error("Start certificates for url " + url + " failed.",e);
-    }
-    return certificates;
-}
+		try {
+			CertificatesUtil util = new CertificatesUtil();
+			certificates = util.downloadCertificates(url);
+		} catch (Exception e) {
+			log.error("Start certificates for url " + url + " failed.",e);
+		}
+		return certificates;
+	}
 
-public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
-    String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-    CertificatesUtil util = new CertificatesUtil();
-    return util.getCertificate(keystorePath, keystorePassword, certificateName);
-}
+	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+		CertificatesUtil util = new CertificatesUtil();
+		return util.getCertificate(keystorePath, keystorePassword, certificateName);
+	}
 
-public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
+	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
 
-    try {
-        CertificatesUtil util = new CertificatesUtil();
-        Certificate[] certificates = util.downloadCertificates(url);
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-        util.importCertificates(keystorePath, keystorePassword, certificates);
-    } catch (Exception e) {
-        log.error("Set certificates for url " + url + " failed.",e);
-    }
-}
+		try {
+			CertificatesUtil util = new CertificatesUtil();
+			Certificate[] certificates = util.downloadCertificates(url);
+			String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+			util.importCertificates(keystorePath, keystorePassword, certificates);
+		} catch (Exception e) {
+			log.error("Set certificates for url " + url + " failed.",e);
+		}
+	}
 
-public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
+	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
 
-    CertificatesUtil util = new CertificatesUtil();
+		CertificatesUtil util = new CertificatesUtil();
 
-    String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
-    File file = new File(keystorePath);
+		File file = new File(keystorePath);
 
-    String result;
+		String result;
 
-    if(file.exists()) {
-        result = util.importCertificate(keystorePath, keystorePassword, certificateName,certificate);
-    }else{
-        result = "Keystore doesn't exist";
-    }
+		if(file.exists()) {
+			result = util.importCertificate(keystorePath, keystorePassword, certificateName,certificate);
+		}else{
+			result = "Keystore doesn't exist";
+		}
 
-    return result;
+		return result;
 
-}
+	}
 
 
-public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
 
-    CertificatesUtil util = new CertificatesUtil();
+		CertificatesUtil util = new CertificatesUtil();
 
-    String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
-    File file = new File(keystorePath);
+		File file = new File(keystorePath);
 
-    if(file.exists()) {
-        return util.importCertificates(keystorePath, keystorePassword, certificates);
-    }else{
-        throw new KeyStoreException("Keystore " + keystoreName + "doesn't exist");
-    }
+		if(file.exists()) {
+			return util.importCertificates(keystorePath, keystorePassword, certificates);
+		}else{
+			throw new KeyStoreException("Keystore " + keystoreName + "doesn't exist");
+		}
 
-}
+	}
 
-public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
+	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
 
-    CertificatesUtil util = new CertificatesUtil();
+		CertificatesUtil util = new CertificatesUtil();
 
-    String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-    return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+		return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
 
-}
+	}
 
-public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
+	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
 
-    String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
-    CertificatesUtil util = new CertificatesUtil();
-    util.deleteCertificate(keystorePath, keystorePassword, certificateName);
-}
+		CertificatesUtil util = new CertificatesUtil();
+		util.deleteCertificate(keystorePath, keystorePassword, certificateName);
+	}
 
-@Override
-public ValidationErrorMessage validateCron(String cronExpression) {
-    CronValidator cronValidator = new CronValidator();
-    return cronValidator.validate(cronExpression);
-}
+	@Override
+	public ValidationErrorMessage validateCron(String cronExpression) {
+		CronValidator cronValidator = new CronValidator();
+		return cronValidator.validate(cronExpression);
+	}
 
-@Override
-public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
-    HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
-    try {
-        List<String> urlList = new ArrayList<>();
-        urlList.add(httpsUrl);
-        httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
-    } catch (Exception e) {
-        log.error("Error to add certificate: " + e.getMessage());
-    }
-    return httpsCertificateValidator.validate(httpsUrl);
-}
+	@Override
+	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
+		HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
+		try {
+			List<String> urlList = new ArrayList<>();
+			urlList.add(httpsUrl);
+			httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
+		} catch (Exception e) {
+			log.error("Error to add certificate: " + e.getMessage());
+		}
+		return httpsCertificateValidator.validate(httpsUrl);
+	}
 
-@Override
-public ValidationErrorMessage validateUrl(String url) {
-    UrlValidator urlValidator = new UrlValidator();
-    return urlValidator.validate(url);
-}
+	@Override
+	public ValidationErrorMessage validateUrl(String url) {
+		UrlValidator urlValidator = new UrlValidator();
+		return urlValidator.validate(url);
+	}
 
-@Override
-public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
-    ExpressionsValidator expressionValidator = new ExpressionsValidator();
-    return expressionValidator.validate(expressions, isPredicate);
-}
+	@Override
+	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
+		ExpressionsValidator expressionValidator = new ExpressionsValidator();
+		return expressionValidator.validate(expressions, isPredicate);
+	}
 
-@Override
-public ValidationErrorMessage validateFtp(FtpSettings ftpSettings) {
-    FtpValidator ftpValidator = new FtpValidator();
-    return ftpValidator.validate(ftpSettings);
-}
+	@Override
+	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings) {
+		FtpValidator ftpValidator = new FtpValidator();
+		return ftpValidator.validate(ftpSettings);
+	}
 
-@Override
-public AbstractMap.SimpleEntry validateRegex(Regex regex) {
-    RegexValidator regexValidator = new RegexValidator();
-    return regexValidator.validate(regex);
-}
+	@Override
+	public AbstractMap.SimpleEntry validateRegex(Regex regex) {
+		RegexValidator regexValidator = new RegexValidator();
+		return regexValidator.validate(regex);
+	}
 
-@Override
-public EvaluationResponse validateScript(EvaluationRequest scriptRequest) {
-    ScriptValidator scriptValidator = new ScriptValidator();
-    return scriptValidator.validate(scriptRequest);
-}
+	@Override
+	public EvaluationResponse validateScript(EvaluationRequest scriptRequest) {
+		ScriptValidator scriptValidator = new ScriptValidator();
+		return scriptValidator.validate(scriptRequest);
+	}
 
-@Override
-public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
-    XsltValidator xsltValidator = new XsltValidator();
-    return xsltValidator.validate(url, xsltBody);
-}
+	@Override
+	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
+		XsltValidator xsltValidator = new XsltValidator();
+		return xsltValidator.validate(url, xsltBody);
+	}
 
-public void setEncryptionProperties(Properties encryptionProperties) {
-    this.encryptionProperties = encryptionProperties;
-    setEncryptedPropertiesComponent();
-}
+	public void setEncryptionProperties(Properties encryptionProperties) {
+		this.encryptionProperties = encryptionProperties;
+		setEncryptedPropertiesComponent();
+	}
 
-public EncryptionUtil getEncryptionUtil() {
-    return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
-}
+	public EncryptionUtil getEncryptionUtil() {
+		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
+	}
 
-private void setEncryptedPropertiesComponent() {
-    EncryptionUtil encryptionUtil = getEncryptionUtil();
-    EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
-    PropertiesComponent propertiesComponent = new PropertiesComponent();
-    propertiesComponent.setInitialProperties(initialProperties);
-    context.setPropertiesComponent(propertiesComponent);
-}
+	private void setEncryptedPropertiesComponent() {
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+		PropertiesComponent propertiesComponent = new PropertiesComponent();
+		propertiesComponent.setInitialProperties(initialProperties);
+		context.setPropertiesComponent(propertiesComponent);
+	}
 
-private void setSSLContext() throws Exception {
+	private void setSSLContext() throws Exception {
 
-    String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
+		String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
 
-    File securityPath = new File(baseDir + SEP + SECURITY_PATH + SEP);
+		File securityPath = new File(baseDir + SEP + SECURITY_PATH + SEP);
 
-    if (!securityPath.exists()) {
-        boolean securityPathCreated = securityPath.mkdirs();
-        if(!securityPathCreated){
-            throw new Exception("Directory: " + securityPath.getAbsolutePath() + " cannot be create to store keystore files");
-        }
-    }
+		if (!securityPath.exists()) {
+			boolean securityPathCreated = securityPath.mkdirs();
+			if(!securityPathCreated){
+				throw new Exception("Directory: " + securityPath.getAbsolutePath() + " cannot be create to store keystore files");
+			}
+		}
 
-    String keyStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
-    String trustStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
+		String keyStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
+		String trustStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
 
-    SSLConfiguration sslConfiguration = new SSLConfiguration();
+		SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-    SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
+		SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
 
-    SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), null, null);
+		SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(keyStorePath, getKeystorePassword(), null, null);
 
-    SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
+		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
 
-    registry.bind("default", sslContextParameters);
-    registry.bind("sslContext", sslContextParameters);
-    registry.bind("keystore", sslContextParametersKeystoreOnly);
-    registry.bind("truststore", sslContextParametersTruststoreOnly);
+		registry.bind("default", sslContextParameters);
+		registry.bind("sslContext", sslContextParameters);
+		registry.bind("keystore", sslContextParametersKeystoreOnly);
+		registry.bind("truststore", sslContextParametersTruststoreOnly);
 
 
-    // use default
-    //JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
+		// use default
+		//JettyHttpComponent jetty = context.getComponent("jetty", JettyHttpComponent.class);
 
-    //JettyHttpComponent12 jetty = context.getComponent("jetty", org.assimbly.jetty.JettyHttpComponent12.class);
-    //context.
-    //jetty.setSslContextParameters(sslContextParameters);
+		//JettyHttpComponent12 jetty = context.getComponent("jetty", org.assimbly.jetty.JettyHttpComponent12.class);
+		//context.
+		//jetty.setSslContextParameters(sslContextParameters);
 
-    try {
-        SSLContext sslContext = sslContextParameters.createSSLContext(context);
-        sslContext.createSSLEngine();
-    }catch (Exception e){
-        log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: " + e.getMessage());
-    }
+		try {
+			SSLContext sslContext = sslContextParameters.createSSLContext(context);
+			sslContext.createSSLEngine();
+		}catch (Exception e){
+			log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: " + e.getMessage());
+		}
 
-    String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
+		String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
 
-    sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
+		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-    //sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
+		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
 
-}
+	}
 
-/**
- * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.
- * @param id The flowID or routeID
- * @return A List of Routes
- */
+	/**
+	 * This method returns a List of all Routes of a flow given the flowID, or a single route (from or to) given a routeID.
+	 * @param id The flowID or routeID
+	 * @return A List of Routes
+	 */
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
