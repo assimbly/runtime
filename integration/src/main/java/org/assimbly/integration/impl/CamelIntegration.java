@@ -92,6 +92,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.lang.management.ThreadInfo;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -2516,7 +2517,6 @@ public class CamelIntegration extends BaseIntegration {
 		return json;
 	}
 
-
 	public String getStats(String mediaType) throws Exception {
 
 		JSONObject json = new JSONObject();
@@ -2546,6 +2546,52 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
+
+	}
+
+	public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+
+		List<JSONObject> jsonObjectList = new ArrayList<>();
+		ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
+
+		for(ThreadInfo threadInfo: threadInfoArray){
+			JSONObject thread = new JSONObject();
+			thread.put("id",threadInfo.getThreadId());
+			thread.put("name",threadInfo.getThreadName());
+			thread.put("status",threadInfo.getThreadState().name());
+			thread.put("cpuTime",ManagementFactory.getThreadMXBean().getThreadCpuTime(threadInfo.getThreadId()));
+			jsonObjectList.add(thread);
+		}
+
+		// Filter by name
+		if(!filter.isEmpty()){
+			List<JSONObject> filteredList = jsonObjectList.stream()
+					.filter(obj -> obj.getString("name").contains(filter))
+					.collect(Collectors.toList());
+
+			jsonObjectList = filteredList;
+		}
+
+		// Sort by cpuTime
+		jsonObjectList.sort(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed());
+
+		// Filter by top entries
+		if(topEntries >= 1){
+			if(topEntries > jsonObjectList.size()){
+				topEntries = jsonObjectList.size();
+			}
+			jsonObjectList = jsonObjectList.subList(0,topEntries);
+		}
+
+		// Rebuild the JSONArray from the sorted and filtered list
+		JSONArray jsonArray = new JSONArray(jsonObjectList);
+		String result = jsonArray.toString();
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
 
 	}
 
