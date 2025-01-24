@@ -62,11 +62,6 @@ public class FlowLoader extends RouteBuilder {
 		flowEnvironment = props.get("environment");
 		flowEvent = "start";
 
-		if(flowLoaderReport==null){
-			flowLoaderReport = new FlowLoaderReport();
-			flowLoaderReport.initReport(flowId, flowName, "start");
-		}
-
 		setExtendedcontext();
 
 	}
@@ -88,12 +83,12 @@ public class FlowLoader extends RouteBuilder {
 
 	private void finish() {
 
-		flowLoaderReport.logResult(flowId,flowName,flowEvent);
+		flowLoaderReport.logResult(flowEvent);
 
 		if (isFlowLoaded){
-			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Started flow successfully");
+			flowLoaderReport.finishReport(flowEvent, flowVersion, "Started flow successfully");
 		}else{
-			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Failed to load flow");
+			flowLoaderReport.finishReport(flowEvent, flowVersion, "Failed to load flow");
 		}
 	}
 

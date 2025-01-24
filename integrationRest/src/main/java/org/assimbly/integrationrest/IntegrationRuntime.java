@@ -339,6 +339,31 @@ public class IntegrationRuntime {
         }
     }
 
+    @GetMapping(
+            path = "/integration/threads",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getThreads(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "", value = "filter") String filter,
+            @RequestHeader(required = false, value = "topEntries") Integer topEntries
+    ) throws Exception {
+
+        try {
+
+            if (topEntries == null) {
+                topEntries = 0;
+            }
+
+            String threads = integration.getThreads(mediaType, filter, topEntries);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/threads",threads,true);
+        } catch (Exception e) {
+            log.error("Can't retrieve list of threads",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/threads",e.getMessage());
+        }
+
+    }
+
     /*
      * POST  /integration/collectors/add : Set configuration for multiple collectors
      *

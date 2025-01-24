@@ -852,6 +852,65 @@ public interface Integration {
 	public String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception;
 
 	/**
+	 * Gets the health of an integration
+	 *
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getHealth(String type, String mediaType) throws Exception;
+
+	/**
+	 * Gets the health of an integration
+	 *
+	 * @param  flowIds comma separated list of flow ids
+	 * @param  mediaType (xml or json)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception;
+
+	/**
+	 * Gets the details health of a flow
+	 *
+	 * @param flowId    the id of the flow
+	 * @param mediaType (xml or json)
+	 * @param type The type of healthcheck (route, consumer, producer)
+	 * @param includeSteps (includes health information of every step)
+	 * @param includeError (includes error information when available)
+	 * @param includeDetails (include healthcheck details)
+	 * @return returns number of messages
+	 * @throws Exception if flow doesn't start
+	 */
+	public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) throws Exception;
+
+
+	/**
+	 * Gets the details health of a flow step
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @param  mediaType (xml or json)
+	 * @param type The type of healthcheck (route, consumer, producer)
+	 * @param includeError (includes error information when available)
+	 * @param includeDetails (include healthcheck details)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of messages
+	 */
+	public String getFlowStepHealth(String flowId, String stepId,  String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
+
+	/**
+	 * Gets the details stats of a flow
+	 *
+	 * @param  mediaType (xml or json)
+	 * @param filter (filters list by thread name)
+	 * @param topEntries (returns top entries by CPU Time)
+	 * @return returns a list of threads
+	 * @throws Exception if threads cannot be retrieved
+	 */
+	public String getThreads(String mediaType, String filter, int topEntries) throws Exception;
+
+	/**
 	* Gets a running route as XML/JSON by id
 	*
 	* @param  flowId the id of the flow

@@ -2,6 +2,7 @@ package org.assimbly.dil.event.collect;
 
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.LogEvent;
 import org.assimbly.dil.event.store.StoreManager;
@@ -37,7 +38,8 @@ public class RouteCollector extends EventNotifierSupport {
             CamelEvent.RouteEvent routeEvent = (CamelEvent.RouteEvent) event;
 
             //Set stepId from route
-            String stepId = routeEvent.getRoute().getId();
+            String routeId = routeEvent.getRoute().getId();
+            String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
             //process and store the exchange
             if(stepId!=null && filters==null){
@@ -53,9 +55,11 @@ public class RouteCollector extends EventNotifierSupport {
     private void processEvent(CamelEvent.RouteEvent routeEvent, String stepId){
 
         //set fields
-        String timestamp = EventUtil.getTimestamp();
+        String timestamp = Long.toString(routeEvent.getTimestamp());
+        String routeEventType = routeEvent.getType().name().substring(5);
+
         String logLevel = "INFO";
-        String message = "Step " + stepId + " " + routeEvent.getType().name().substring(5);
+        String message = "Step: " + stepId + " | Event: " + routeEventType;
         String exception = "";
 
         //create json
@@ -64,6 +68,7 @@ public class RouteCollector extends EventNotifierSupport {
 
         //store event
         storeManager.storeEvent(json);
+
     }
 
 }

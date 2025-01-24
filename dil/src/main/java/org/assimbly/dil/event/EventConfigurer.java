@@ -4,10 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.dil.event.collect.ExchangeCollector;
-import org.assimbly.dil.event.collect.LogCollector;
-import org.assimbly.dil.event.collect.RouteCollector;
-import org.assimbly.dil.event.collect.StepCollector;
+import org.assimbly.dil.event.collect.*;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
@@ -208,7 +205,6 @@ public class EventConfigurer {
         context.getRegistry().bind(id, exchangeCollector);
 
     }
-
 
     public void configureStepCollector() {
 

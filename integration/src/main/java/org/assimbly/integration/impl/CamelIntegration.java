@@ -1,10 +1,5 @@
 package org.assimbly.integration.impl;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.JsonEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.ConsoleAppender;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
@@ -22,6 +17,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
+import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -30,6 +26,9 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.health.HealthCheck;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.model.ModelCamelContext;
@@ -58,6 +57,7 @@ import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
+import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -92,6 +92,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.lang.management.ThreadInfo;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -195,6 +196,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		//setTracing(true,"backlog");
 
+		setHealthChecks(true);
+		
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -207,6 +210,24 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
+	
+	public void setHealthChecks(boolean enable) {
+
+		HealthCheckRepository routesHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "routes");
+		if(routesHealthCheckRepository!=null) {
+			routesHealthCheckRepository.setEnabled(enable);
+		}
+		HealthCheckRepository consumersHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "consumers");
+		if(consumersHealthCheckRepository!=null) {
+			consumersHealthCheckRepository.setEnabled(enable);
+		}
+
+		HealthCheckRepository producersHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "producers");
+		if(producersHealthCheckRepository!=null) {
+			producersHealthCheckRepository.setEnabled(enable);
+		}
+
+    }
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -272,6 +293,7 @@ public class CamelIntegration extends BaseIntegration {
 		JettyHttpComponent12 jettyHttpComponent12 = new org.apache.camel.component.jetty12.JettyHttpComponent12();
 		jettyHttpComponent12.setRequestHeaderSize(80000);
 		jettyHttpComponent12.setResponseHeaderSize(80000);
+		jettyHttpComponent12.setBridgeErrorHandler(true);
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
 
@@ -333,6 +355,17 @@ public class CamelIntegration extends BaseIntegration {
 		// (by default, Jackson only converts to String and other simple types)
 		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
 
+		//Set bridgeErrorHandler globally
+		String[] componentNames = {"ftp", "ftps", "sftp", "file", "sql", "scheduler", "timer","quartz","smtp","pop3","imap","smtps","pop3s","imaps"};
+		for (String componentName : componentNames) {
+			Component component = context.getComponent(componentName);
+			if(component!=null) {
+				PropertyConfigurer propertyConfigurer = component.getComponentPropertyConfigurer();
+				if (propertyConfigurer != null) {
+					propertyConfigurer.configure(context, component, "bridgeErrorHandler", "true", true);
+				}
+			}
+		}
 	}
 
 	//loads templates in the template package
@@ -343,6 +376,9 @@ public class CamelIntegration extends BaseIntegration {
 		RoutesLoader loader = PluginHelper.getRoutesLoader(context);
 
 		List<String> resourceNames = getKamelets();
+
+		//Set to use the list globally
+		CustomKameletCatalog.names.addAll(resourceNames);
 
 		for(String resourceName: resourceNames){
 
@@ -1064,6 +1100,8 @@ public class CamelIntegration extends BaseIntegration {
 
 			if (activemqComp == null) {
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
+				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+
 				this.context.addComponent(activemqName, jmsComponent);
 			}
 
@@ -1087,6 +1125,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 
 		return jmsComponent;
 	}
@@ -1104,7 +1143,7 @@ public class CamelIntegration extends BaseIntegration {
 				String[] schemes = StringUtils.split(props.get(key), ",");
 
 				for (String scheme : schemes) {
-					if(context.getComponent(scheme.toLowerCase()) == null) {
+					if(!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null) {
 						if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
 							log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
 							if(INetUtil.isHostAvailable("repo1.maven.org")){
@@ -1277,7 +1316,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String installRoute(String routeId, String route) throws Exception {
 
-		initFlowActionReport(routeId, "Start");
+		initFlowActionReport(routeId);
 
 		if(!route.startsWith("<route")){
 			route = new XMLFileConfiguration().getRouteConfiguration(routeId,route);
@@ -1318,7 +1357,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id, long timeout) {
 
-		initFlowActionReport(id, "Start");
+		initFlowActionReport(id);
 
 		if(hasFlow(id)) {
 			stopFlow(id, timeout, false);
@@ -1448,7 +1487,7 @@ public class CamelIntegration extends BaseIntegration {
 	public String stopFlow(String id, long timeout, boolean enableReport) {
 
 		if(enableReport) {
-			initFlowActionReport(id, "stop");
+			initFlowActionReport(id);
 		}
 
 		try {
@@ -1497,7 +1536,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String pauseFlow(String id) {
 
-		initFlowActionReport(id, "pause");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1554,7 +1593,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String resumeFlow(String id) throws Exception {
 
-		initFlowActionReport(id, "resume");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1607,9 +1646,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void initFlowActionReport(String id, String event) {
-		flowLoaderReport = new FlowLoaderReport();
-		flowLoaderReport.initReport(id, id, event);
+	private void initFlowActionReport(String id) {
+		flowLoaderReport = new FlowLoaderReport(id, id);
 	}
 
 	private void finishFlowActionReport(String id, String event, String message, String messageType) {
@@ -1639,10 +1677,10 @@ public class CamelIntegration extends BaseIntegration {
 				environment =  "";
 			}
 
-			flowLoaderReport.finishReport(id,id,event,version,environment,message);
+			flowLoaderReport.finishReport(event,version,message);
 
 		} catch (Exception e) {
-			flowLoaderReport.finishReport(id,id,event,"","",message);
+			flowLoaderReport.finishReport(event,"",message);
 		}
 		loadReport = flowLoaderReport.getReport();
 	}
@@ -2316,6 +2354,169 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	@Override
+	public String getHealth(String type, String mediaType) throws Exception {
+
+		Set<String> flowIds = new HashSet<String>();
+
+		List<Route> routes = context.getRoutes();
+
+		for(Route route: routes){
+			String routeId = route.getId();
+			String flowId = StringUtils.substringBefore(routeId,"-");
+			if(flowId!=null && !flowId.isEmpty()) {
+				flowIds.add(flowId);
+			}
+		}
+
+		String result = getHealthFromList(flowIds, type);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+	}
+
+	@Override
+	public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception {
+
+		String[] values = flowIds.split(",");
+
+		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
+
+		String result = getHealthFromList(flowSet, type);
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
+
+	}
+
+
+	private String getHealthFromList(Set<String> flowIds, String type) throws Exception {
+
+		JSONArray flows = new JSONArray();
+
+		for(String flowId: flowIds){
+			String flowHealth = getFlowHealth(flowId,type,false,false,false, "application/json");
+			JSONObject flow = new JSONObject(flowHealth);
+			flows.put(flow);
+		}
+
+		String result = flows.toString();
+
+		return result;
+
+	}
+
+	@Override
+	public String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject flow = new JSONObject();
+		JSONArray steps = new JSONArray();
+
+		String state = "UNKNOWN";
+
+		List<Route> routes = getRoutesByFlowId(flowId);
+
+		for(Route r : routes){
+
+			String routeId = r.getId();
+			String healthCheckId = type + ":" + routeId;
+			JSONObject step = getStepHealth(routeId,healthCheckId,includeError,includeDetails);
+
+			String stepState= step.getJSONObject("step").getString("state");
+			if(!state.equalsIgnoreCase("DOWN")){
+				state = stepState;
+			}
+			steps.put(step);
+
+		}
+
+		flow.put("id",flowId);
+		flow.put("state",state);
+
+		if(includeSteps) {
+			flow.put("steps", steps);
+		}
+		json.put("flow",flow);
+
+		String flowStats = json.toString(4);
+
+		if(mediaType.contains("xml")) {
+			flowStats = DocConverter.convertJsonToXml(flowStats);
+		}
+
+		return flowStats;
+
+	}
+
+	@Override
+	public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+
+		String routeid = flowId + "-" + stepId;
+		String healthCheckId = type + ":" + routeid;
+
+		JSONObject json = getStepHealth(routeid, healthCheckId, includeError, includeDetails);
+		String stepHealth = json.toString(4);
+		if(mediaType.contains("xml")) {
+			stepHealth = DocConverter.convertJsonToXml(stepHealth);
+		}
+
+		return stepHealth;
+	}
+
+	private JSONObject getStepHealth(String routeid, String healthCheckId, boolean includeError, boolean includeDetails) throws Exception {
+
+		JSONObject json = new JSONObject();
+		JSONObject step = new JSONObject();
+
+		step.put("id", routeid);
+
+		HealthCheck healthCheck = HealthCheckHelper.getHealthCheck(context, healthCheckId);
+
+		if(healthCheck!=null && healthCheck.isReadiness()) {
+
+			HealthCheck.Result result = healthCheck.callReadiness();
+			step.put("state", result.getState().toString());
+
+			if(includeError){
+				JSONObject error = new JSONObject();
+				Optional<Throwable> errorResultOptional = result.getError();
+				if(errorResultOptional.isPresent()){
+					Throwable errorResult = errorResultOptional.get();
+					error.put("message",errorResult.getMessage());
+					error.put("class",errorResult.getClass().getName());
+				}
+				step.put("error", error);
+			}
+
+			if(includeDetails){
+				JSONObject details = new JSONObject();
+
+				for (Map.Entry<String, Object> entry : result.getDetails().entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					details.put(key,value);
+				}
+
+				step.put("details", details);
+			}
+
+		}else{
+			step.put("state", "UNKNOWN");
+		}
+
+
+		json.put("step", step);
+
+		return json;
+	}
+
 	public String getStats(String mediaType) throws Exception {
 
 		JSONObject json = new JSONObject();
@@ -2345,6 +2546,52 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
+
+	}
+
+	public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+
+		List<JSONObject> jsonObjectList = new ArrayList<>();
+		ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
+
+		for(ThreadInfo threadInfo: threadInfoArray){
+			JSONObject thread = new JSONObject();
+			thread.put("id",threadInfo.getThreadId());
+			thread.put("name",threadInfo.getThreadName());
+			thread.put("status",threadInfo.getThreadState().name());
+			thread.put("cpuTime",ManagementFactory.getThreadMXBean().getThreadCpuTime(threadInfo.getThreadId()));
+			jsonObjectList.add(thread);
+		}
+
+		// Filter by name
+		if(!filter.isEmpty()){
+			List<JSONObject> filteredList = jsonObjectList.stream()
+					.filter(obj -> obj.getString("name").contains(filter))
+					.collect(Collectors.toList());
+
+			jsonObjectList = filteredList;
+		}
+
+		// Sort by cpuTime
+		jsonObjectList.sort(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed());
+
+		// Filter by top entries
+		if(topEntries >= 1){
+			if(topEntries > jsonObjectList.size()){
+				topEntries = jsonObjectList.size();
+			}
+			jsonObjectList = jsonObjectList.subList(0,topEntries);
+		}
+
+		// Rebuild the JSONArray from the sorted and filtered list
+		JSONArray jsonArray = new JSONArray(jsonObjectList);
+		String result = jsonArray.toString();
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
 
 	}
 
@@ -2657,7 +2904,6 @@ public class CamelIntegration extends BaseIntegration {
 	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String key) throws Exception {
 		return new Connection(context, props, key).start();
 	}
-
 
 	public String getDocumentation(String componentType, String mediaType) throws Exception {
 
