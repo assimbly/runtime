@@ -178,13 +178,9 @@ public class Unmarshall {
 
 	private void setBlocks(Element stepElement, String stepId, String type) throws Exception {
 
-		System.out.println("----> type===" + type);
-
 		NodeList block = stepElement.getElementsByTagName("block");
 
 		for (int i = 0; i < block.getLength(); i++) {
-
-			System.out.println("----> block===");
 
 			Element blockElement = (Element) block.item(i);
 
@@ -192,18 +188,19 @@ public class Unmarshall {
 			Node blockType = blockElement.getElementsByTagName("type").item(0);
 
 			if(blockId!=null && blockType!=null){
+
 				String blockTypeValue = blockType.getTextContent();
-				System.out.println("----> blockType===" + blockTypeValue);
+
 				if(blockTypeValue.equalsIgnoreCase("message")){
 					properties =  new Message(properties, conf).setHeader(type, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
-					System.out.println("----> connection===" + blockId.getTextContent());
 					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("route")) {
 					properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("routeconfiguration")) {
 					properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, blockId.getTextContent());
 				}
+
 			}
 
 		}
