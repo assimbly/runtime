@@ -178,28 +178,33 @@ public class Unmarshall {
 
 	private void setBlocks(Element stepElement, String stepId, String type) throws Exception {
 
+		System.out.println("----> type===" + type);
+
 		NodeList block = stepElement.getElementsByTagName("block");
 
 		for (int i = 0; i < block.getLength(); i++) {
 
+			System.out.println("----> block===");
+
 			Element blockElement = (Element) block.item(i);
 
-			Node messageId = blockElement.getElementsByTagName("message_id").item(0);
-			Node connectionId = blockElement.getElementsByTagName("connection_id").item(0);
-			Node routeId = blockElement.getElementsByTagName("route_id").item(0);
-			Node routeconfigurationId = blockElement.getElementsByTagName("routeconfiguration_id").item(0);
+			Node blockId = blockElement.getElementsByTagName("id").item(0);
+			Node blockType = blockElement.getElementsByTagName("type").item(0);
 
-			if(messageId != null)
-				properties =  new Message(properties, conf).setHeader(type, stepId, messageId.getTextContent());
-
-			if(connectionId != null)
-				properties = new Connection(properties, conf).setConnection(type, stepId, connectionId.getTextContent());
-
-			if(routeId != null)
-				properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, routeId.getTextContent());
-
-			if(routeconfigurationId != null)
-				properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeconfigurationId.getTextContent());
+			if(blockId!=null && blockType!=null){
+				String blockTypeValue = blockType.getTextContent();
+				System.out.println("----> blockType===" + blockTypeValue);
+				if(blockTypeValue.equalsIgnoreCase("message")){
+					properties =  new Message(properties, conf).setHeader(type, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
+					System.out.println("----> connection===" + blockId.getTextContent());
+					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("route")) {
+					properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("routeconfiguration")) {
+					properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, blockId.getTextContent());
+				}
+			}
 
 		}
 
