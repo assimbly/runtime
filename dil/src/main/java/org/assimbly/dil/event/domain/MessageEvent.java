@@ -3,6 +3,7 @@ package org.assimbly.dil.event.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.assimbly.dil.event.collect.StepCollector;
 import org.quartz.impl.StdScheduler;
 
@@ -157,6 +158,8 @@ public class MessageEvent {
 
     public String toJson() {
         mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         try {
             return mapper.writeValueAsString(this);
