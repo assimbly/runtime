@@ -1101,6 +1101,7 @@ public class CamelIntegration extends BaseIntegration {
 			if (activemqComp == null) {
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
 				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+				jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
 				this.context.addComponent(activemqName, jmsComponent);
 			}
@@ -1126,6 +1127,7 @@ public class CamelIntegration extends BaseIntegration {
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
 		return jmsComponent;
 	}
