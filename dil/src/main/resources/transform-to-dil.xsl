@@ -139,18 +139,17 @@
                                                 <type>route</type>
                                                 <blocks>
                                                     <block>
-                                                        <options>
-                                                            <route_id>
-                                                                <xsl:choose>
-                                                                    <xsl:when test="@id">
-                                                                        <xsl:value-of select="@id"/>
-                                                                    </xsl:when>
-                                                                    <xsl:otherwise>
-                                                                        <xsl:value-of  select="generate-id(.)"/>
-                                                                    </xsl:otherwise>
-                                                                </xsl:choose>
-                                                            </route_id>
-                                                        </options>
+                                                        <id>
+                                                            <xsl:choose>
+                                                                <xsl:when test="@id">
+                                                                    <xsl:value-of select="@id"/>
+                                                                </xsl:when>
+                                                                <xsl:otherwise>
+                                                                    <xsl:value-of  select="generate-id(.)"/>
+                                                                </xsl:otherwise>
+                                                            </xsl:choose>
+                                                        </id>
+                                                        <type>route</type>
                                                     </block>
                                                 </blocks>
                                             </step>
@@ -170,18 +169,17 @@
                                                 <type>error</type>
                                                 <blocks>
                                                     <block>
-                                                        <options>
-                                                            <routeconfiguration_id>
-                                                                <xsl:choose>
-                                                                    <xsl:when test="//*:camelContext/@id">
-                                                                        <xsl:value-of select="concat(//*:camelContext/@id,'_',$timestamp)"/>
-                                                                    </xsl:when>
-                                                                    <xsl:otherwise>
-                                                                        <xsl:value-of  select="generate-id(.)"/>
-                                                                    </xsl:otherwise>
-                                                                </xsl:choose>
-                                                            </routeconfiguration_id>
-                                                        </options>
+                                                        <id>
+                                                            <xsl:choose>
+                                                                <xsl:when test="//*:camelContext/@id">
+                                                                    <xsl:value-of select="concat(//*:camelContext/@id,'_',$timestamp)"/>
+                                                                </xsl:when>
+                                                                <xsl:otherwise>
+                                                                    <xsl:value-of  select="generate-id(.)"/>
+                                                                </xsl:otherwise>
+                                                            </xsl:choose>
+                                                        </id>
+                                                        <type>routeconfiguration</type>
                                                     </block>
                                                 </blocks>
                                             </step>

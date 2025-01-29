@@ -26,6 +26,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
@@ -296,6 +297,7 @@ public class CamelIntegration extends BaseIntegration {
 		jettyHttpComponent12.setBridgeErrorHandler(true);
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
+		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
@@ -987,6 +989,9 @@ public class CamelIntegration extends BaseIntegration {
 			// add custom connections if needed
 			addCustomActiveMQConnection(props, "dovetail");
 
+			// add custom connections if needed
+			addCustomRabbitMQConnection(new TreeMap<>(props));
+
 			//create connections & install dependencies if needed
 			createConnections(props);
 
@@ -1112,6 +1117,50 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
+	private void addCustomRabbitMQConnection(TreeMap<String, String> properties) {
+
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			if(entry.getKey().startsWith("route") && entry.getValue().contains("rabbitmqConnectionFactory")) {
+
+				String connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory>","</rabbitmqConnectionFactory>");
+				Map<String, String> connectionMap = stringToMap(connection);
+				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port");
+
+				props.put("sink.1.connection.id",connectionId);
+				props.put("connection." + connectionId + ".type","rabbitmq");
+				props.put("connection." + connectionId + ".host",connectionMap.get("host"));
+				props.put("connection." + connectionId + ".vhost",connectionMap.get("vhost"));
+				props.put("connection." + connectionId + ".port",connectionMap.get("port"));
+				props.put("connection." + connectionId + ".username",connectionMap.get("username"));
+				props.put("connection." + connectionId + ".password",connectionMap.get("password"));
+				props.put(entry.getKey(),StringUtils.replace(entry.getValue(),"<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>",""));
+
+			}
+		}
+
+	}
+
+	private Map<String, String> stringToMap(String input){
+		Map<String, String> map = new LinkedHashMap<>();
+		String[] pairs = StringUtils.split(input, ',');
+
+		for (String pair : pairs) {
+			if (StringUtils.contains(pair, '=')) {
+				String key = StringUtils.substringBefore(pair, "=");
+				String value = StringUtils.substringAfter(pair, "=");
+				if(value.startsWith("RAW")){
+					value = StringUtils.substringBetween(value,"RAW(",")");
+				}
+				map.put(key, value);
+			}
+		}
+
+		return map;
+
+	}
+
+
+
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
 		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
@@ -1137,6 +1186,7 @@ public class CamelIntegration extends BaseIntegration {
 		for (String key : props.keySet()){
 
 			if (key.endsWith("connection.id")){
+				System.out.println("Creating connection === with id=" + key);
 				setConnection(props, key);
 			}
 
