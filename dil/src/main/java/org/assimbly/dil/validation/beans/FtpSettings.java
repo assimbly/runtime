@@ -7,6 +7,7 @@ public class FtpSettings {
     private String pwd;
     private int port;
     private String protocol;
+    private boolean explicitTLS;
     private String pkf;
     private String pkfd;
 
@@ -50,6 +51,14 @@ public class FtpSettings {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol;
+    }
+
+    public boolean getExplicitTLS() {
+        return explicitTLS;
+    }
+
+    public void setExplicitTLS(boolean explicitTLS) {
+        this.explicitTLS = explicitTLS;
     }
 
     public String getPkf() {
