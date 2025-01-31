@@ -1124,7 +1124,7 @@ public class CamelIntegration extends BaseIntegration {
 
 				String connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory>","</rabbitmqConnectionFactory>");
 				Map<String, String> connectionMap = stringToMap(connection);
-				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port");
+				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port") + "-" + connectionMap.get("username");
 
 				props.put("sink.1.connection.id",connectionId);
 				props.put("connection." + connectionId + ".type","rabbitmq");
