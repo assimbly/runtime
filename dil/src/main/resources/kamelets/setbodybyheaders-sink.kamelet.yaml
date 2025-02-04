@@ -1,0 +1,22 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setbodybyheaders-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "setbodybyheaders sink"
+    description: |-
+      Set body as key/value map (comma-separated) from all headers
+    type: object
+    properties:
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setBody:
+              groovy: "headers.collect { k, v -> \"$k=$v\" }.join(',')"

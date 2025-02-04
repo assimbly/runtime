@@ -1,0 +1,23 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: setbodybyheaders-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "setbodybyheaders action"
+    description: |-
+      Set body as key/value map (comma-separated) from all headers
+    type: object
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setBody:
+              simple: "${headers.entrySet().stream().map(e -> e.getKey() + \"=\" + e.getValue()).collect(java.util.stream.Collectors.joining(\",\"))}"
+          - to:
+              uri: "kamelet:sink"
