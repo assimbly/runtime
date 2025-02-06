@@ -32,8 +32,6 @@ import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.model.ModelCamelContext;
-import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultExchange;
@@ -1544,23 +1542,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		try {
 
-			List<Route> routeList = getRoutesByFlowId(id);
-
-			for (Route route : routeList) {
-
-				String routeId = route.getId();
-
-				log.info("Stopping step id: " + routeId);
-
-				//moved removal of routeConfiguration to the flowLoader
-				//if(route.getConfigurationId()!=null) {
-				//	removeRouteConfiguration(route.getConfigurationId());
-				//}
-
-				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
-				context.removeRoute(routeId);
-
-			}
+			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
+			context.getShutdownStrategy().shutdownForced(context,routeStartupOrders);
 
 			if(enableReport) {
 				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
@@ -1575,15 +1558,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		return loadReport;
 
-	}
-
-	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
-		ModelCamelContext modelContext = (ModelCamelContext) context;
-		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
-		if(routeConfigurationDefinition!=null){
-			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
-			log.info("Removed routeConfiguration: " + routeConfigurationDefinition.getId());
-		}
 	}
 
 	public String pauseFlow(String id) {
@@ -3436,6 +3410,12 @@ public class CamelIntegration extends BaseIntegration {
 	 */
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+	}
+
+	private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id){
+
+		List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();
+		return routeStartupOrder.stream().filter(r -> r.getRoute().getId().startsWith(id)).collect(Collectors.toList());
 	}
 
 	private String getKeystorePassword() {
