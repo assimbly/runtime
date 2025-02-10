@@ -116,7 +116,7 @@ public class CamelIntegration extends BaseIntegration {
 	private boolean started;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-	private final static long stopTimeout = 500;
+	private final static long stopTimeout = 300;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
