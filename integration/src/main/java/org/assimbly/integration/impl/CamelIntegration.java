@@ -1543,7 +1543,10 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 
 			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
-			context.getShutdownStrategy().shutdownForced(context,routeStartupOrders);
+			context.getShutdownStrategy().shutdown(context,routeStartupOrders,timeout,TimeUnit.MILLISECONDS);
+			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
+				context.removeRoute(routeStartupOrder.getRoute().getId());
+			}
 
 			if(enableReport) {
 				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
