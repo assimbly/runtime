@@ -139,10 +139,12 @@ public class StepCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
+        boolean isFromErrorRoute = exchange.getProperty(Exchange.EXCEPTION_CAUGHT) != null;
+
         //create json
         MessageEvent messageEvent = new MessageEvent(
                 timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
-                properties, bodyToStoreOnEvent, expiryDate
+                properties, bodyToStoreOnEvent, expiryDate, isFromErrorRoute
         );
         String json = messageEvent.toJson();
 
