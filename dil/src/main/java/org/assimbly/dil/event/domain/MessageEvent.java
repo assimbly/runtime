@@ -63,10 +63,12 @@ public class MessageEvent {
     private final Map<String, Object> headers;
     private final Map<String, Object> properties;
     private final String body;
+    private final boolean fromErrorRoute;
 
     public MessageEvent(
             String timestamp, String id, String flowId, String flowVersion, String previousFlowId, String previousFlowVersion,
-            String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate
+            String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
+            boolean fromErrorRoute
     ) {
         this.timestamp = timestamp;
         this.id = id;
@@ -79,6 +81,7 @@ public class MessageEvent {
         this.properties = properties;
         this.body = body;
         this.expiryDate = expiryDate;
+        this.fromErrorRoute = fromErrorRoute;
     }
 
     @JsonProperty("timestamp")
@@ -114,6 +117,11 @@ public class MessageEvent {
     @JsonProperty("component")
     public String getStep() {
         return stepId;
+    }
+
+    @JsonProperty("fromErrorRoute")
+    public boolean isFromErrorRoute() {
+        return fromErrorRoute;
     }
 
     /**
