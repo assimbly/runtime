@@ -63,12 +63,12 @@ public class MessageEvent {
     private final Map<String, Object> headers;
     private final Map<String, Object> properties;
     private final String body;
-    private final boolean fromErrorRoute;
+    private final boolean failedExchange;
 
     public MessageEvent(
             String timestamp, String id, String flowId, String flowVersion, String previousFlowId, String previousFlowVersion,
             String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
-            boolean fromErrorRoute
+            boolean failedExchange
     ) {
         this.timestamp = timestamp;
         this.id = id;
@@ -81,7 +81,7 @@ public class MessageEvent {
         this.properties = properties;
         this.body = body;
         this.expiryDate = expiryDate;
-        this.fromErrorRoute = fromErrorRoute;
+        this.failedExchange = failedExchange;
     }
 
     @JsonProperty("timestamp")
@@ -119,9 +119,9 @@ public class MessageEvent {
         return stepId;
     }
 
-    @JsonProperty("fromErrorRoute")
-    public boolean isFromErrorRoute() {
-        return fromErrorRoute;
+    @JsonProperty("failedExchange")
+    public boolean isFailedExchange() {
+        return failedExchange;
     }
 
     /**

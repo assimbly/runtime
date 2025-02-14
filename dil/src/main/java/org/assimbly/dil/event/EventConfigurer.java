@@ -214,10 +214,11 @@ public class EventConfigurer {
         String flowId = configuration.getFlowId();
         String flowVersion = configuration.getFlowVersion();
         ArrayList<String> events = configuration.getEvents();
+        ArrayList<String> failedEvents = configuration.getFailedEvents();
         ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        StepCollector stepCollector = new StepCollector(id, flowId, flowVersion, events, filters, stores);
+        StepCollector stepCollector = new StepCollector(id, flowId, flowVersion, events, failedEvents, filters, stores);
         stepCollector.setIgnoreCamelContextEvents(true);
         stepCollector.setIgnoreCamelContextInitEvents(true);
         stepCollector.setIgnoreExchangeEvents(true);

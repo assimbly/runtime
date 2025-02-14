@@ -15,6 +15,7 @@ public class Collection {
     private String flowId;
     private String flowVersion;
     private ArrayList<String> events;
+    private ArrayList<String> failedEvents;
     private ArrayList<Store> stores;
     private ArrayList<Filter> filters;
 
@@ -61,6 +62,15 @@ public class Collection {
 
     public void setEvents(ArrayList<String> events) {
         this.events = events;
+    }
+
+    @JsonProperty("failedEvents")
+    public ArrayList<String> getFailedEvents() {
+        return failedEvents;
+    }
+
+    public void setFailedEvents(ArrayList<String> failedEvents) {
+        this.failedEvents = failedEvents;
     }
 
     @JsonProperty("stores")
