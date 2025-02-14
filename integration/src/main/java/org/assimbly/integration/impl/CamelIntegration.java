@@ -1541,11 +1541,26 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		try {
-
+			// gracefully shutdown routes using startup order
 			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
-			context.getShutdownStrategy().shutdown(context,routeStartupOrders,timeout,TimeUnit.MILLISECONDS);
+			context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
 			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
 				context.removeRoute(routeStartupOrder.getRoute().getId());
+			}
+
+			// remove leftover routes
+			List<String> leftoverRoutes = getAllRoutesByFlowId(id);
+			if (!leftoverRoutes.isEmpty()) {
+				for (String routeId : leftoverRoutes) {
+					try {
+						if (context.getRoute(routeId) != null) {
+							context.getRouteController().stopRoute(routeId);
+							context.removeRoute(routeId);
+						}
+					} catch (Exception e) {
+						System.out.println("Error removing leftover route " + routeId + ": " + e.getMessage());
+					}
+				}
 			}
 
 			if(enableReport) {
@@ -3416,9 +3431,16 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id){
-
 		List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();
 		return routeStartupOrder.stream().filter(r -> r.getRoute().getId().startsWith(id)).collect(Collectors.toList());
+	}
+
+	private List<String> getAllRoutesByFlowId(String id) {
+		List<String> leftoverRouteIds = context.getRoutes().stream()
+				.map(Route::getId)
+				.filter(routeId -> routeId.startsWith(id))
+				.collect(Collectors.toList());
+		return leftoverRouteIds;
 	}
 
 	private String getKeystorePassword() {
