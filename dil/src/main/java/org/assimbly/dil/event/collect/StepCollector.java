@@ -77,10 +77,6 @@ public class StepCollector extends EventNotifierSupport {
         boolean isSuccessEvent = successEvents != null && successEvents.contains(event.getType().name());
         boolean isFailedEvent = failedEvents != null && failedEvents.contains(event.getType().name());
 
-        System.out.println(" > event.getType().name(): "+event.getType().name());
-        System.out.println(" > isSuccessEvent: "+isSuccessEvent);
-        System.out.println(" > isFailedEvent: "+isFailedEvent);
-
         //filter only the configured events
         if (isSuccessEvent || isFailedEvent) {
 
