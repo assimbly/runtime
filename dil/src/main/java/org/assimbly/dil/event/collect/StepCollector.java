@@ -27,7 +27,8 @@ public class StepCollector extends EventNotifierSupport {
     private final StoreManager storeManager;
     private final String expiryInHours;
     private final ArrayList<Filter> filters;
-    private final ArrayList<String> events;
+    private final ArrayList<String> successEvents;
+    private final ArrayList<String> failedEvents;
     private final String collectorId;
     private final String flowId;
     private final String flowVersion;
@@ -53,11 +54,12 @@ public class StepCollector extends EventNotifierSupport {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    public StepCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public StepCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> successEvents, ArrayList<String> failedEvents, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
         this.flowId = flowId;
         this.flowVersion = flowVersion;
-        this.events = events;
+        this.successEvents = successEvents;
+        this.failedEvents = failedEvents;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
         List<Store> elasticStores = stores.stream().filter(p -> p.getType().equals("elastic")).collect(Collectors.toList());
@@ -72,8 +74,15 @@ public class StepCollector extends EventNotifierSupport {
     @Override
     public void notify(CamelEvent event) throws Exception {
 
+        boolean isSuccessEvent = successEvents != null && successEvents.contains(event.getType().name());
+        boolean isFailedEvent = failedEvents != null && failedEvents.contains(event.getType().name());
+
+        System.out.println(" > event.getType().name(): "+event.getType().name());
+        System.out.println(" > isSuccessEvent: "+isSuccessEvent);
+        System.out.println(" > isFailedEvent: "+isFailedEvent);
+
         //filter only the configured events
-        if (events != null && events.contains(event.getType().name())) {
+        if (isSuccessEvent || isFailedEvent) {
 
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
@@ -86,37 +95,18 @@ public class StepCollector extends EventNotifierSupport {
             long stepTimestamp = stepEvent.getTimestamp();
 
             if(stepId!= null && !isBlackListed(stepId)){
-
                 if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
                     //process and store the exchange
-                    processEvent(exchange, stepId, stepTimestamp);
+                    processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
                 }
-
             }
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
-
-        // read body only once
-        InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
-
-        byte[] body = null;
-        if (inputStream != null) {
-            try {
-                body = IOUtils.toByteArray(inputStream);
-            } catch (Exception e) { }
-        }
-
-        int bodyLength = body != null ? body.length : 0;
-        String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
-
-        // set custom properties
-        setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
+    private void processEvent(Exchange exchange, String stepId, long stepTimestamp, boolean isSuccessEvent){
 
         //set fields
         Message message = exchange.getMessage();
-        String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
         Map<String, Object> headers = message.getHeaders();
         Map<String, Object> properties = exchange.getProperties();
         String transactionId = message.getMessageId();
@@ -139,17 +129,63 @@ public class StepCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
-        boolean isFromErrorRoute = exchange.getProperty(Exchange.EXCEPTION_CAUGHT) != null;
+        MessageEvent messageEvent = null;
 
-        //create json
-        MessageEvent messageEvent = new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
-                properties, bodyToStoreOnEvent, expiryDate, isFromErrorRoute
-        );
+        if(isSuccessEvent) {
+            // success
+            messageEvent = getSuccessMessageEvent(exchange, stepId, stepTimestamp, timestamp, transactionId, previousFlowId,
+                    previousFlowVersion, headers, properties, expiryDate);
+        } else {
+            // failed
+            messageEvent = getFailedMessageEvent(exchange, stepId, stepTimestamp, timestamp, transactionId, previousFlowId,
+                    previousFlowVersion, headers, properties, expiryDate);
+        }
+
         String json = messageEvent.toJson();
 
         //store the event
         storeManager.storeEvent(json);
+    }
+
+    private MessageEvent getSuccessMessageEvent(
+            Exchange exchange, String stepId, long stepTimestamp, String timestamp, String transactionId,
+            String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
+            Object> properties, String expiryDate
+    ) {
+        // read body only once
+        InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
+
+        byte[] body = null;
+        if (inputStream != null) {
+            try {
+                body = IOUtils.toByteArray(inputStream);
+            } catch (Exception e) { }
+        }
+
+        int bodyLength = body != null ? body.length : 0;
+        String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
+
+        // set custom properties
+        setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
+
+        // body to store
+        String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
+
+        return new MessageEvent(
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                properties, bodyToStoreOnEvent, expiryDate, false
+        );
+    }
+
+    private MessageEvent getFailedMessageEvent(
+            Exchange exchange, String stepId, long stepTimestamp, String timestamp, String transactionId,
+            String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
+            Object> properties, String expiryDate
+    ) {
+        return new MessageEvent(
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                properties, "", expiryDate, true
+        );
     }
 
     public String getBodyToStoreOnEvent(Exchange exchange, byte[] body) {
