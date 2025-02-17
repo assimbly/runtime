@@ -91,6 +91,7 @@ public class Transform {
         map.put("DovetailQueueName","AssimblyQueueName");
         map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
         map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");
+        map.put("DovetailAggregateNoExceptionOnNull","AssimblyAggregateNoExceptionOnNull");
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 
