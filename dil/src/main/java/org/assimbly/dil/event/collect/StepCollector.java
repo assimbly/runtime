@@ -152,7 +152,7 @@ public class StepCollector extends EventNotifierSupport {
         InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
 
         byte[] body = null;
-        if (inputStream != null) {
+        if (inputStream != null && exchange.getMessage().getBody() != null) {
             try {
                 body = IOUtils.toByteArray(inputStream);
             } catch (Exception e) { }
