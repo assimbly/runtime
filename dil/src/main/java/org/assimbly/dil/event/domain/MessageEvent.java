@@ -3,6 +3,7 @@ package org.assimbly.dil.event.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.assimbly.dil.event.collect.StepCollector;
 import org.quartz.impl.StdScheduler;
 
@@ -62,10 +63,12 @@ public class MessageEvent {
     private final Map<String, Object> headers;
     private final Map<String, Object> properties;
     private final String body;
+    private final boolean failedExchange;
 
     public MessageEvent(
             String timestamp, String id, String flowId, String flowVersion, String previousFlowId, String previousFlowVersion,
-            String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate
+            String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
+            boolean failedExchange
     ) {
         this.timestamp = timestamp;
         this.id = id;
@@ -78,6 +81,7 @@ public class MessageEvent {
         this.properties = properties;
         this.body = body;
         this.expiryDate = expiryDate;
+        this.failedExchange = failedExchange;
     }
 
     @JsonProperty("timestamp")
@@ -113,6 +117,11 @@ public class MessageEvent {
     @JsonProperty("component")
     public String getStep() {
         return stepId;
+    }
+
+    @JsonProperty("failedExchange")
+    public boolean isFailedExchange() {
+        return failedExchange;
     }
 
     /**
@@ -157,6 +166,8 @@ public class MessageEvent {
 
     public String toJson() {
         mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         try {
             return mapper.writeValueAsString(this);

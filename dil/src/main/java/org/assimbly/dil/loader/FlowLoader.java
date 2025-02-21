@@ -193,9 +193,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			Resource resource = IntegrationUtil.setResource(route);
-			RoutesBuilder builder = routesBuilderLoader.loadRoutesBuilder(resource);
-			context.addRoutes(builder);
+			loader.updateRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, type, "success", null);
 
@@ -214,7 +212,7 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n" + step);
 
-			loader.loadRoutes(IntegrationUtil.setResource(step));
+			loader.updateRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
