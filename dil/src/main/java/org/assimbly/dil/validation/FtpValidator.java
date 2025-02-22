@@ -30,9 +30,9 @@ public class FtpValidator {
     public ValidationErrorMessage validate(FtpSettings ftpSettings) {
 
         if (ftpSettings.getProtocol().equalsIgnoreCase("ftp"))
-            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), false);
+            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), false, false);
         else if (ftpSettings.getProtocol().equalsIgnoreCase("ftps"))
-            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), true);
+            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), true, !ftpSettings.getExplicitTLS());
         else
             return checkSFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), ftpSettings.getPkf(), ftpSettings.getPkfd());
     }
@@ -121,12 +121,12 @@ public class FtpValidator {
         }
     }
 
-    private ValidationErrorMessage checkFtpConnection(String userName, String password, String host, int port, boolean secure) {
+    private ValidationErrorMessage checkFtpConnection(String userName, String password, String host, int port, boolean secure, boolean implicitMode) {
         FTPClient ftp = null;
 
         try {
             if(secure) {
-                ftp = new FTPSClient();
+                ftp = new FTPSClient(implicitMode);
             } else {
                 ftp = new FTPClient();
             }

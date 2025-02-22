@@ -62,11 +62,6 @@ public class FlowLoader extends RouteBuilder {
 		flowEnvironment = props.get("environment");
 		flowEvent = "start";
 
-		if(flowLoaderReport==null){
-			flowLoaderReport = new FlowLoaderReport();
-			flowLoaderReport.initReport(flowId, flowName, "start");
-		}
-
 		setExtendedcontext();
 
 	}
@@ -88,12 +83,12 @@ public class FlowLoader extends RouteBuilder {
 
 	private void finish() {
 
-		flowLoaderReport.logResult(flowId,flowName,flowEvent);
+		flowLoaderReport.logResult(flowEvent);
 
 		if (isFlowLoaded){
-			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Started flow successfully");
+			flowLoaderReport.finishReport(flowEvent, flowVersion, "Started flow successfully");
 		}else{
-			flowLoaderReport.finishReport(flowId, flowName, flowEvent, flowVersion, flowEnvironment, "Failed to load flow");
+			flowLoaderReport.finishReport(flowEvent, flowVersion, "Failed to load flow");
 		}
 	}
 
@@ -198,9 +193,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			Resource resource = IntegrationUtil.setResource(route);
-			RoutesBuilder builder = routesBuilderLoader.loadRoutesBuilder(resource);
-			context.addRoutes(builder);
+			loader.updateRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, type, "success", null);
 
@@ -219,7 +212,7 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n" + step);
 
-			loader.loadRoutes(IntegrationUtil.setResource(step));
+			loader.updateRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 

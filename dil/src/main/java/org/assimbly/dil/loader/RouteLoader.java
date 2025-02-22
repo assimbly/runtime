@@ -42,11 +42,6 @@ public class RouteLoader extends RouteBuilder {
 
 	private void init() throws Exception {
 
-		if(flowLoaderReport==null){
-		  flowLoaderReport = new FlowLoaderReport();
-		  flowLoaderReport.initReport(routeId, routeId, "start");
-		}
-
 		setExtendedcontext();
 
 	}
@@ -72,12 +67,12 @@ public class RouteLoader extends RouteBuilder {
 
 	private void finish() {
 
-		flowLoaderReport.logResult(routeId,routeId,flowEvent);
+		flowLoaderReport.logResult(flowEvent);
 
 		if (isFlowLoaded){
-			flowLoaderReport.finishReport(routeId, routeId, flowEvent, "", "", "Route installed successfully");
+			flowLoaderReport.finishReport(flowEvent, "", "Route installed successfully");
 		}else{
-			flowLoaderReport.finishReport(routeId, routeId, flowEvent, "", "", "Route installed failed");
+			flowLoaderReport.finishReport(flowEvent, "","Route installed failed");
 		}
 	}
 

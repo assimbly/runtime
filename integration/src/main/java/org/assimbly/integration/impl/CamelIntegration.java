@@ -17,6 +17,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
+import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -25,13 +26,12 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.model.ModelCamelContext;
-import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultExchange;
@@ -91,6 +91,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.lang.management.ThreadInfo;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -115,7 +116,7 @@ public class CamelIntegration extends BaseIntegration {
 	private boolean started;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
-	private final static long stopTimeout = 500;
+	private final static long stopTimeout = 300;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -294,6 +295,7 @@ public class CamelIntegration extends BaseIntegration {
 		jettyHttpComponent12.setBridgeErrorHandler(true);
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
+		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
@@ -985,6 +987,9 @@ public class CamelIntegration extends BaseIntegration {
 			// add custom connections if needed
 			addCustomActiveMQConnection(props, "dovetail");
 
+			// add custom connections if needed
+			addCustomRabbitMQConnection(new TreeMap<>(props));
+
 			//create connections & install dependencies if needed
 			createConnections(props);
 
@@ -1098,6 +1103,9 @@ public class CamelIntegration extends BaseIntegration {
 
 			if (activemqComp == null) {
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
+				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+				jmsComponent.setIncludeCorrelationIDAsBytes(false);
+
 				this.context.addComponent(activemqName, jmsComponent);
 			}
 
@@ -1106,6 +1114,50 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
+
+	private void addCustomRabbitMQConnection(TreeMap<String, String> properties) {
+
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			if(entry.getKey().startsWith("route") && entry.getValue().contains("rabbitmqConnectionFactory")) {
+
+				String connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory>","</rabbitmqConnectionFactory>");
+				Map<String, String> connectionMap = stringToMap(connection);
+				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port") + "-" + connectionMap.get("username");
+
+				props.put("sink.1.connection.id",connectionId);
+				props.put("connection." + connectionId + ".type","rabbitmq");
+				props.put("connection." + connectionId + ".host",connectionMap.get("host"));
+				props.put("connection." + connectionId + ".vhost",connectionMap.get("vhost"));
+				props.put("connection." + connectionId + ".port",connectionMap.get("port"));
+				props.put("connection." + connectionId + ".username",connectionMap.get("username"));
+				props.put("connection." + connectionId + ".password",connectionMap.get("password"));
+				props.put(entry.getKey(),StringUtils.replace(entry.getValue(),"<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>",""));
+
+			}
+		}
+
+	}
+
+	private Map<String, String> stringToMap(String input){
+		Map<String, String> map = new LinkedHashMap<>();
+		String[] pairs = StringUtils.split(input, ',');
+
+		for (String pair : pairs) {
+			if (StringUtils.contains(pair, '=')) {
+				String key = StringUtils.substringBefore(pair, "=");
+				String value = StringUtils.substringAfter(pair, "=");
+				if(value.startsWith("RAW")){
+					value = StringUtils.substringBetween(value,"RAW(",")");
+				}
+				map.put(key, value);
+			}
+		}
+
+		return map;
+
+	}
+
+
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
@@ -1121,6 +1173,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
 		return jmsComponent;
 	}
@@ -1130,6 +1184,7 @@ public class CamelIntegration extends BaseIntegration {
 		for (String key : props.keySet()){
 
 			if (key.endsWith("connection.id")){
+				System.out.println("Creating connection === with id=" + key);
 				setConnection(props, key);
 			}
 
@@ -1311,7 +1366,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String installRoute(String routeId, String route) throws Exception {
 
-		initFlowActionReport(routeId, "Start");
+		initFlowActionReport(routeId);
 
 		if(!route.startsWith("<route")){
 			route = new XMLFileConfiguration().getRouteConfiguration(routeId,route);
@@ -1352,7 +1407,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String startFlow(String id, long timeout) {
 
-		initFlowActionReport(id, "Start");
+		initFlowActionReport(id);
 
 		if(hasFlow(id)) {
 			stopFlow(id, timeout, false);
@@ -1482,27 +1537,30 @@ public class CamelIntegration extends BaseIntegration {
 	public String stopFlow(String id, long timeout, boolean enableReport) {
 
 		if(enableReport) {
-			initFlowActionReport(id, "stop");
+			initFlowActionReport(id);
 		}
 
 		try {
+			// gracefully shutdown routes using startup order
+			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
+			context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
+			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
+				context.removeRoute(routeStartupOrder.getRoute().getId());
+			}
 
-			List<Route> routeList = getRoutesByFlowId(id);
-
-			for (Route route : routeList) {
-
-				String routeId = route.getId();
-
-				log.info("Stopping step id: " + routeId);
-
-				//moved removal of routeConfiguration to the flowLoader
-				//if(route.getConfigurationId()!=null) {
-				//	removeRouteConfiguration(route.getConfigurationId());
-				//}
-
-				context.getRouteController().stopRoute(routeId,timeout, TimeUnit.MILLISECONDS);
-				context.removeRoute(routeId);
-
+			// remove leftover routes
+			List<String> leftoverRoutes = getAllRoutesByFlowId(id);
+			if (!leftoverRoutes.isEmpty()) {
+				for (String routeId : leftoverRoutes) {
+					try {
+						if (context.getRoute(routeId) != null) {
+							context.getRouteController().stopRoute(routeId);
+							context.removeRoute(routeId);
+						}
+					} catch (Exception e) {
+						System.out.println("Error removing leftover route " + routeId + ": " + e.getMessage());
+					}
+				}
 			}
 
 			if(enableReport) {
@@ -1520,18 +1578,9 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void removeRouteConfiguration(String routeConfigurationId) throws Exception {
-		ModelCamelContext modelContext = (ModelCamelContext) context;
-		RouteConfigurationDefinition routeConfigurationDefinition = modelContext.getRouteConfigurationDefinition(routeConfigurationId);
-		if(routeConfigurationDefinition!=null){
-			modelContext.removeRouteConfiguration(routeConfigurationDefinition);
-			log.info("Removed routeConfiguration: " + routeConfigurationDefinition.getId());
-		}
-	}
-
 	public String pauseFlow(String id) {
 
-		initFlowActionReport(id, "pause");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1588,7 +1637,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String resumeFlow(String id) throws Exception {
 
-		initFlowActionReport(id, "resume");
+		initFlowActionReport(id);
 
 		try {
 
@@ -1641,9 +1690,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void initFlowActionReport(String id, String event) {
-		flowLoaderReport = new FlowLoaderReport();
-		flowLoaderReport.initReport(id, id, event);
+	private void initFlowActionReport(String id) {
+		flowLoaderReport = new FlowLoaderReport(id, id);
 	}
 
 	private void finishFlowActionReport(String id, String event, String message, String messageType) {
@@ -1673,10 +1721,10 @@ public class CamelIntegration extends BaseIntegration {
 				environment =  "";
 			}
 
-			flowLoaderReport.finishReport(id,id,event,version,environment,message);
+			flowLoaderReport.finishReport(event,version,message);
 
 		} catch (Exception e) {
-			flowLoaderReport.finishReport(id,id,event,"","",message);
+			flowLoaderReport.finishReport(event,"",message);
 		}
 		loadReport = flowLoaderReport.getReport();
 	}
@@ -2513,7 +2561,6 @@ public class CamelIntegration extends BaseIntegration {
 		return json;
 	}
 
-
 	public String getStats(String mediaType) throws Exception {
 
 		JSONObject json = new JSONObject();
@@ -2543,6 +2590,52 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return stats;
+
+	}
+
+	public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+
+		List<JSONObject> jsonObjectList = new ArrayList<>();
+		ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
+
+		for(ThreadInfo threadInfo: threadInfoArray){
+			JSONObject thread = new JSONObject();
+			thread.put("id",threadInfo.getThreadId());
+			thread.put("name",threadInfo.getThreadName());
+			thread.put("status",threadInfo.getThreadState().name());
+			thread.put("cpuTime",ManagementFactory.getThreadMXBean().getThreadCpuTime(threadInfo.getThreadId()));
+			jsonObjectList.add(thread);
+		}
+
+		// Filter by name
+		if(!filter.isEmpty()){
+			List<JSONObject> filteredList = jsonObjectList.stream()
+					.filter(obj -> obj.getString("name").contains(filter))
+					.collect(Collectors.toList());
+
+			jsonObjectList = filteredList;
+		}
+
+		// Sort by cpuTime
+		jsonObjectList.sort(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed());
+
+		// Filter by top entries
+		if(topEntries >= 1){
+			if(topEntries > jsonObjectList.size()){
+				topEntries = jsonObjectList.size();
+			}
+			jsonObjectList = jsonObjectList.subList(0,topEntries);
+		}
+
+		// Rebuild the JSONArray from the sorted and filtered list
+		JSONArray jsonArray = new JSONArray(jsonObjectList);
+		String result = jsonArray.toString();
+
+		if(mediaType.contains("xml")) {
+			result = DocConverter.convertJsonToXml(result);
+		}
+
+		return result;
 
 	}
 
@@ -3335,6 +3428,19 @@ public class CamelIntegration extends BaseIntegration {
 	 */
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+	}
+
+	private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id){
+		List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();
+		return routeStartupOrder.stream().filter(r -> r.getRoute().getId().startsWith(id)).collect(Collectors.toList());
+	}
+
+	private List<String> getAllRoutesByFlowId(String id) {
+		List<String> leftoverRouteIds = context.getRoutes().stream()
+				.map(Route::getId)
+				.filter(routeId -> routeId.startsWith(id))
+				.collect(Collectors.toList());
+		return leftoverRouteIds;
 	}
 
 	private String getKeystorePassword() {

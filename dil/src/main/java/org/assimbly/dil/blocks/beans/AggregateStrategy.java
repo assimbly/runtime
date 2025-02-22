@@ -22,6 +22,7 @@ public class AggregateStrategy implements AggregationStrategy {
         switch(aggregateType) {
             case "xml":
             case "text/xml":
+            case "application/xml":
                 aggregateStrategy = new XmlAggregateStrategy();
                 break;
             case "json":

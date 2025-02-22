@@ -184,22 +184,24 @@ public class Unmarshall {
 
 			Element blockElement = (Element) block.item(i);
 
-			Node messageId = blockElement.getElementsByTagName("message_id").item(0);
-			Node connectionId = blockElement.getElementsByTagName("connection_id").item(0);
-			Node routeId = blockElement.getElementsByTagName("route_id").item(0);
-			Node routeconfigurationId = blockElement.getElementsByTagName("routeconfiguration_id").item(0);
+			Node blockId = blockElement.getElementsByTagName("id").item(0);
+			Node blockType = blockElement.getElementsByTagName("type").item(0);
 
-			if(messageId != null)
-				properties =  new Message(properties, conf).setHeader(type, stepId, messageId.getTextContent());
+			if(blockId!=null && blockType!=null){
 
-			if(connectionId != null)
-				properties = new Connection(properties, conf).setConnection(type, stepId, connectionId.getTextContent());
+				String blockTypeValue = blockType.getTextContent();
 
-			if(routeId != null)
-				properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, routeId.getTextContent());
+				if(blockTypeValue.equalsIgnoreCase("message")){
+					properties =  new Message(properties, conf).setHeader(type, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
+					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("route")) {
+					properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
+				}else if (blockTypeValue.equalsIgnoreCase("routeconfiguration")) {
+					properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, blockId.getTextContent());
+				}
 
-			if(routeconfigurationId != null)
-				properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, routeconfigurationId.getTextContent());
+			}
 
 		}
 

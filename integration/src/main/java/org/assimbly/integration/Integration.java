@@ -900,6 +900,17 @@ public interface Integration {
 	public String getFlowStepHealth(String flowId, String stepId,  String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
 
 	/**
+	 * Gets the details stats of a flow
+	 *
+	 * @param  mediaType (xml or json)
+	 * @param filter (filters list by thread name)
+	 * @param topEntries (returns top entries by CPU Time)
+	 * @return returns a list of threads
+	 * @throws Exception if threads cannot be retrieved
+	 */
+	public String getThreads(String mediaType, String filter, int topEntries) throws Exception;
+
+	/**
 	* Gets a running route as XML/JSON by id
 	*
 	* @param  flowId the id of the flow
