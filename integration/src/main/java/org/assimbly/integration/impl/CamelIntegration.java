@@ -1001,7 +1001,13 @@ public class CamelIntegration extends BaseIntegration {
 
 			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
 
+			//context.addTemplatedRoutes(flow);
+			//context.addRoutes(flow);
+
+
 			flow.addRoutesToCamelContext(context);
+
+			//flow.addTemplatedRoutesToCamelContext(context);
 
 			loadReport = flow.getReport();
 

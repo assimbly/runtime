@@ -193,7 +193,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			loader.updateRoutes(IntegrationUtil.setResource(route));
+			loader.loadRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, type, "success", null);
 
@@ -212,7 +212,7 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n" + step);
 
-			loader.updateRoutes(IntegrationUtil.setResource(step));
+			loader.loadRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
@@ -224,6 +224,7 @@ public class FlowLoader extends RouteBuilder {
 			isFlowLoaded = false;
 		}
 	}
+
 
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 

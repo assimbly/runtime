@@ -40,9 +40,9 @@ public class Transform {
     public String transformToDil(String xml, String flowId) throws Exception {
 
         //convert camel2 to camel3
-        String camel3Xml = camel2ToCamel3(xml, flowId);
+        //String camel3Xml = camel2ToCamel3(xml, flowId);
 
-        String dilXml = transformXML(camel3Xml, transformer, processor);
+        String dilXml = transformXML(xml, transformer, processor);
 
         log.info("The DIL format:\n\n" + dilXml);
 
