@@ -52,7 +52,6 @@ public class FlowManagerRuntime {
 
         try {
 
-            System.out.println("1. start flowmanager");
             integration = integrationRuntime.getIntegration();
 
             status = integration.startFlow(flowId, timeout);

@@ -72,7 +72,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -1190,7 +1189,8 @@ public class CamelIntegration extends BaseIntegration {
 		for (String key : props.keySet()){
 
 			if (key.endsWith("connection.id")){
-				System.out.println("Creating connection === with id=" + key);
+
+				IntegrationUtil.printTreemap(props);
 				setConnection(props, key);
 			}
 

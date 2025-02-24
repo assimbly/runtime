@@ -1,6 +1,5 @@
 package org.assimbly.dil.transpiler.marshalling;
 
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.assimbly.dil.transpiler.marshalling.core.*;
@@ -10,9 +9,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.xpath.*;
 import java.util.*;
 

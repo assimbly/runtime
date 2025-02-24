@@ -4,6 +4,7 @@ import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
+import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,6 @@ public class MQConnection {
 
     public void start(String direction, Object stepId) throws Exception {
 
-        System.out.println("---> MQConnection Set up SJMS Connection");
-
         setFields();
 
         log.info("Setting up sjms client connection for " + jmsProvider);
@@ -49,6 +48,10 @@ public class MQConnection {
         url = properties.getProperty("connection." + connectionId + ".url");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");
         username = properties.getProperty("connection." + connectionId + ".username");
+        System.out.println("set Fields username=" + username);
+        System.out.println("Jasypt:" + System.getProperty("jasypt.encryptor.password"));
+        System.out.println("Property value: " + properties.getProperty("connection." + connectionId + ".password"));
+
         password = properties.getProperty("connection." + connectionId + ".password");
 
     }

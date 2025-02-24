@@ -5,6 +5,7 @@ import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.commons.collections4.MapUtils;
 import org.assimbly.dil.blocks.connections.broker.*;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
+import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
@@ -103,9 +104,40 @@ public class Connection {
 
         EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) context.getPropertiesComponent()).getInitialProperties();
 
-        for (Map.Entry<String,String> entry : properties.entrySet()) {
-            MapUtils.safeAddToMap(decryptedProperties,entry.getKey(), entry.getValue());
+        for (Map.Entry<Object,Object> entry : decryptedProperties.entrySet()) {
+            System.out.println("1. --> decrypted");
+            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
         }
+
+
+        for (Map.Entry<String,String> entry : properties.entrySet()) {
+            System.out.println("2 --> decrypted");
+            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
+
+            /*
+            if(entry.getKey().contains("password")) {
+                EncryptionUtil encryptor = new EncryptionUtil("Pl34s3_Ch4ng3!_Th1s_1s_N0t_V3ry_S3c4r3!", "PBEWithHMACSHA512AndAES_256");
+
+                String decrypted = encryptor.decrypt(entry.getValue());
+                System.out.println("Decrypted value: " + decrypted);
+            }
+
+             */
+
+            MapUtils.safeAddToMap(decryptedProperties, entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<Object,Object> entry : decryptedProperties.entrySet()) {
+            System.out.println("3. --> decrypted");
+            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
+        }
+
+        System.out.println("before");
+        System.out.println("result"+ decryptedProperties.getProperty("connection.8100.password"););
+
+        System.out.println("after");
+
+
 
         return decryptedProperties;
     }
