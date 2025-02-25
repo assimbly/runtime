@@ -24,7 +24,6 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFa
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
-import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
@@ -1564,7 +1563,7 @@ public class CamelIntegration extends BaseIntegration {
 							context.removeRoute(routeId);
 						}
 					} catch (Exception e) {
-						System.out.println("Error removing leftover route " + routeId + ": " + e.getMessage());
+						log.error("Error removing route: " + routeId + " Error message: " + e.getMessage());
 					}
 				}
 			}
@@ -3360,19 +3359,17 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
-		setEncryptedPropertiesComponent();
+		EncryptionUtil encryptionUtil = getEncryptionUtil();
+
+		EncryptableProperties encryptableProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
+
+		registry.bind("encryptableProperties", encryptableProperties);
+		registry.bind("encryptionUtil", EncryptionUtil.class, encryptionUtil);
+
 	}
 
 	public EncryptionUtil getEncryptionUtil() {
 		return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
-	}
-
-	private void setEncryptedPropertiesComponent() {
-		EncryptionUtil encryptionUtil = getEncryptionUtil();
-		EncryptableProperties initialProperties = new EncryptableProperties(encryptionUtil.getTextEncryptor());
-		PropertiesComponent propertiesComponent = new PropertiesComponent();
-		propertiesComponent.setInitialProperties(initialProperties);
-		context.setPropertiesComponent(propertiesComponent);
 	}
 
 	private void setSSLContext() throws Exception {

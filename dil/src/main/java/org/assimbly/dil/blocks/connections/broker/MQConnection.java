@@ -48,10 +48,6 @@ public class MQConnection {
         url = properties.getProperty("connection." + connectionId + ".url");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");
         username = properties.getProperty("connection." + connectionId + ".username");
-        System.out.println("set Fields username=" + username);
-        System.out.println("Jasypt:" + System.getProperty("jasypt.encryptor.password"));
-        System.out.println("Property value: " + properties.getProperty("connection." + connectionId + ".password"));
-
         password = properties.getProperty("connection." + connectionId + ".password");
 
     }

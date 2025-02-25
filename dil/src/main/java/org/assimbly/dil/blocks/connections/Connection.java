@@ -7,6 +7,8 @@ import org.assimbly.dil.blocks.connections.broker.*;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.iv.RandomIvGenerator;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,44 +104,25 @@ public class Connection {
 
     private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
 
-        EncryptableProperties decryptedProperties = (EncryptableProperties) ((PropertiesComponent) context.getPropertiesComponent()).getInitialProperties();
-
-        for (Map.Entry<Object,Object> entry : decryptedProperties.entrySet()) {
-            System.out.println("1. --> decrypted");
-            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
-        }
-
+        EncryptableProperties encryptableProperties = (EncryptableProperties) context.getRegistry().lookupByName("encryptableProperties");
+        EncryptionUtil encryptionUtil = (EncryptionUtil) context.getRegistry().lookupByName("encryptionUtil");
 
         for (Map.Entry<String,String> entry : properties.entrySet()) {
-            System.out.println("2 --> decrypted");
-            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
-
-            /*
-            if(entry.getKey().contains("password")) {
-                EncryptionUtil encryptor = new EncryptionUtil("Pl34s3_Ch4ng3!_Th1s_1s_N0t_V3ry_S3c4r3!", "PBEWithHMACSHA512AndAES_256");
-
-                String decrypted = encryptor.decrypt(entry.getValue());
-                System.out.println("Decrypted value: " + decrypted);
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if(isEncodedString(value)){
+                value = encryptionUtil.decrypt(value);
             }
 
-             */
-
-            MapUtils.safeAddToMap(decryptedProperties, entry.getKey(), entry.getValue());
+            MapUtils.safeAddToMap(encryptableProperties, key, value);
         }
 
-        for (Map.Entry<Object,Object> entry : decryptedProperties.entrySet()) {
-            System.out.println("3. --> decrypted");
-            System.out.println("key=" + entry.getKey() + ", value=" + entry.getValue());
-        }
+        return encryptableProperties;
 
-        System.out.println("before");
-        System.out.println("result"+ decryptedProperties.getProperty("connection.8100.password"););
+    }
 
-        System.out.println("after");
-
-
-
-        return decryptedProperties;
+    private boolean isEncodedString(String input) {
+        return input.startsWith("ENC(") && input.endsWith(")");
     }
 
 }
