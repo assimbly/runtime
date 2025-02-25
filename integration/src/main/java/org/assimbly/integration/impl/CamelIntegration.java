@@ -350,10 +350,10 @@ public class CamelIntegration extends BaseIntegration {
 		context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
 
 		// Enable Jackson JSON type converter for more types.
-		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
+//		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
 		// Allow Jackson JSON to convert to pojo types also
 		// (by default, Jackson only converts to String and other simple types)
-		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
+//		context.getGlobalOptions().put("CamelJacksonTypeConverterToPojo", "true");
 
 		//Set bridgeErrorHandler globally
 		String[] componentNames = {"ftp", "ftps", "sftp", "file", "sql", "scheduler", "timer","quartz","smtp","pop3","imap","smtps","pop3s","imaps"};
