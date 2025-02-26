@@ -4,17 +4,17 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.docconverter.DocConverter;
+import org.assimbly.dil.transpiler.JSONFileConfiguration;
+import org.assimbly.dil.transpiler.XMLFileConfiguration;
+import org.assimbly.dil.transpiler.YAMLFileConfiguration;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
-import org.assimbly.dil.transpiler.JSONFileConfiguration;
-import org.assimbly.dil.transpiler.XMLFileConfiguration;
-import org.assimbly.dil.transpiler.YAMLFileConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
@@ -31,10 +31,10 @@ public abstract class BaseIntegration implements Integration {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	//properties are (list of) key/value maps
-	private List<TreeMap<String, String>> properties = new ArrayList<>();
+	private final List<TreeMap<String, String>> properties = new ArrayList<>();
 	private TreeMap<String, String> flowProperties;
 
-	private TreeMap<String, String> configuredFlows = new TreeMap<>();
+	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
 
 	private String flowConfiguration;
 

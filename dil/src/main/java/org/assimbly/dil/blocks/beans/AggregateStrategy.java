@@ -4,8 +4,6 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class AggregateStrategy implements AggregationStrategy {

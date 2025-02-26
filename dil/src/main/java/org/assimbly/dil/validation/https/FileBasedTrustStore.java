@@ -6,9 +6,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,7 +38,10 @@ public class FileBasedTrustStore {
     public KeyStore loadTrustStore() throws KeyStoreException, IOException {
         try {
             KeyStore trustStore = KeyStore.getInstance(type);
-            trustStore.load(Files.newInputStream(Paths.get(path)), password.toCharArray());
+
+            try (InputStream inputStream = Files.newInputStream(Paths.get(path))) {
+                trustStore.load(inputStream, password.toCharArray());
+            }
 
             return trustStore;
         } catch (IOException e) {
@@ -70,8 +72,7 @@ public class FileBasedTrustStore {
         Certificate[] certs = conn.getServerCertificates();
 
         for (Certificate cert : certs) {
-            if (cert instanceof X509Certificate) {
-                X509Certificate x509 = ((X509Certificate) cert);
+            if (cert instanceof X509Certificate x509) {
                 this.addCertificateEntry(String.valueOf(x509.getSerialNumber()), x509);
             } else {
                 throw new Exception("unknown certificate type " + cert);

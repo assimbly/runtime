@@ -1,30 +1,26 @@
 package org.assimbly.dil.blocks.errorhandler;
 
-import org.apache.camel.*;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.processors.FailureProcessor;
 
 import java.util.TreeMap;
-import org.apache.commons.lang3.StringUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ErrorHandler {
 
-	protected Logger log = LoggerFactory.getLogger(getClass());
-
-	private DeadLetterChannelBuilder deadLetterChannelBuilder;
+	private final DeadLetterChannelBuilder deadLetterChannelBuilder;
 	
 	private int maximumRedeliveries;
 	private int redeliveryDelay;
 	private int maximumRedeliveryDelay;
 	private int backOffMultiplier;
 
-	private TreeMap<String, String> props;
+	private final TreeMap<String, String> props;
 
-	private String flowId;
+	private final String flowId;
 
 	public ErrorHandler(DeadLetterChannelBuilder deadLetterChannelBuilder, final TreeMap<String, String> props, String flowId){
 		this.deadLetterChannelBuilder = deadLetterChannelBuilder;
@@ -35,7 +31,7 @@ public class ErrorHandler {
 	
 	public DeadLetterChannelBuilder configure() throws Exception {
 
-		Processor failureProcessor = new FailureProcessor(props);
+		Processor failureProcessor = new FailureProcessor();
 		
 		if (props.containsKey("flow.maximumRedeliveries")){
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");

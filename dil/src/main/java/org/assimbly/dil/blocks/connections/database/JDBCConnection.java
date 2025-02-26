@@ -13,9 +13,9 @@ public class JDBCConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String connectionId;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String connectionId;
 
     private final String componentName;
     private String url;

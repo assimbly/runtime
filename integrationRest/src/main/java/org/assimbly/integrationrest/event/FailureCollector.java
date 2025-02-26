@@ -6,7 +6,6 @@ import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 // This class listens to failure events in camel exchanges (routes)
@@ -15,18 +14,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class FailureCollector extends EventNotifierSupport {
 
-   protected Logger log = LoggerFactory.getLogger(getClass());
-
    private String flowId;
 
     public boolean isEnabled(CamelEvent event) {
 
       //only notify on failures
-      if (event instanceof ExchangeFailureHandledEvent  || event instanceof ExchangeFailedEvent) {
-		     return true;
-	  }
-
-	  return false;
+        return event instanceof ExchangeFailureHandledEvent || event instanceof ExchangeFailedEvent;
 
     }
 
@@ -41,10 +34,9 @@ public class FailureCollector extends EventNotifierSupport {
 	@Override
 	public void notify(CamelEvent event) throws Exception {
 
-		if (event instanceof ExchangeFailureHandledEvent) {
+		if (event instanceof ExchangeFailureHandledEvent exchangeFailedEvent) {
 
-            ExchangeFailureHandledEvent exchangeFailedEvent = (ExchangeFailureHandledEvent) event;
-	        flowId = exchangeFailedEvent.getExchange().getFromRouteId();
+            flowId = exchangeFailedEvent.getExchange().getFromRouteId();
 
             int flowIdPart = flowId.indexOf('-'); //this finds the first occurrence of "."
 
@@ -53,10 +45,9 @@ public class FailureCollector extends EventNotifierSupport {
 				flowId= flowId.substring(0 , flowIdPart);
 			}
 
-  		}else if (event instanceof ExchangeFailedEvent) {
+  		}else if (event instanceof ExchangeFailedEvent exchangeFailedEvent) {
 
-            ExchangeFailedEvent exchangeFailedEvent = (ExchangeFailedEvent) event;
-	        flowId = exchangeFailedEvent.getExchange().getFromRouteId();
+            flowId = exchangeFailedEvent.getExchange().getFromRouteId();
 
             int flowIdPart = flowId.indexOf('-'); //this finds the first occurrence of "."
 

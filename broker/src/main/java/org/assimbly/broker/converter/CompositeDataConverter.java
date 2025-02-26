@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-import java.util.*;
+import java.util.Set;
 public class CompositeDataConverter {
 
         public static String convertToJSON(CompositeData[] messages, Integer numberOfMessages, boolean list, boolean excludeBody) {

@@ -1,9 +1,9 @@
 package org.assimbly.dil.transpiler;
 
+import org.assimbly.docconverter.DocConverter;
+
 import java.util.List;
 import java.util.TreeMap;
-
-import org.assimbly.docconverter.DocConverter;
 
 public class YAMLFileConfiguration {
 

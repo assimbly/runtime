@@ -1,16 +1,19 @@
 package org.assimbly.dil.event;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.dil.event.collect.*;
+import org.assimbly.dil.event.collect.ExchangeCollector;
+import org.assimbly.dil.event.collect.LogCollector;
+import org.assimbly.dil.event.collect.RouteCollector;
+import org.assimbly.dil.event.collect.StepCollector;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.LoggerContext;
 
 import java.util.ArrayList;
 
@@ -19,9 +22,9 @@ public class EventConfigurer {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private CamelContext context;
+    private final CamelContext context;
 
-    private String collectorId;
+    private final String collectorId;
 
     private Collection configuration;
     private String type;
@@ -75,9 +78,8 @@ public class EventConfigurer {
            ((RouteCollector) collector).shutdown();
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed route collector with id=" + collectorId);
-       }else if(collector instanceof LogCollector ){
-            LogCollector logCollector = (LogCollector) collector;
-            removeLogger(logCollector);
+       }else if(collector instanceof LogCollector logCollector){
+           removeLogger(logCollector);
             log.info("Removed log collector with id=" + collectorId);
         }else{
             log.warn("Collector with id=" + collectorId + " does not exist");
@@ -147,6 +149,8 @@ public class EventConfigurer {
                     case "log":
                         configureLogCollector();
                         break;
+                    default:
+                        log.warn("Unknown collector type: " + type);
                 }
 
             } catch (Exception e){

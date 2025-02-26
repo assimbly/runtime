@@ -4,7 +4,6 @@ import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
-import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +12,10 @@ import org.slf4j.LoggerFactory;
 public class MQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String componentName;
-    private String connectionId;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String componentName;
+    private final String connectionId;
     private String url;
     private String username;
     private String password;
@@ -87,12 +86,12 @@ public class MQConnection {
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            sjmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, sjmsComponent);
         } else {
             context.removeComponent(componentName);
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            sjmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, sjmsComponent);
         }
 

@@ -12,10 +12,10 @@ public class RabbitMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String componentName;
-    private String connectionId;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String componentName;
+    private final String connectionId;
     private CachingConnectionFactory rabbitMQConnectionFactory;
     private String uri;
     private String host;

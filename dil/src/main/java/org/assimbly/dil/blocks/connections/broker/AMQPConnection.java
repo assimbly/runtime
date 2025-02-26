@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.JMSException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.amqp.AMQPComponent;
 import org.apache.commons.lang3.StringUtils;
@@ -8,7 +9,6 @@ import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.JMSException;
 import java.util.Arrays;
 
 
@@ -16,12 +16,12 @@ public class AMQPConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String KEYSTORE_PWD = "KEYSTORE_PWD";
+    private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
 
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String componentName;
-    private String connectionId;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String componentName;
+    private final String connectionId;
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 

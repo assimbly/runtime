@@ -9,8 +9,8 @@ import java.util.TreeMap;
 
 public class Connection {
 
-    private TreeMap<String, String> properties;
-    private XMLConfiguration conf;
+    private final TreeMap<String, String> properties;
+    private final XMLConfiguration conf;
     private String connectionXPath;
     private String connectionId;
 

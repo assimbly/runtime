@@ -6,9 +6,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import javax.xml.transform.*;
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -19,8 +22,8 @@ public class Route {
 
     final static Logger log = LoggerFactory.getLogger(Route.class);
     private final Document doc;
-    private TreeMap<String, String> properties;
-    private XMLConfiguration conf;
+    private final TreeMap<String, String> properties;
+    private final XMLConfiguration conf;
     XPathFactory xf = new XPathFactoryImpl();
 
     public Route(TreeMap<String, String> properties, XMLConfiguration conf, Document doc) {
@@ -95,8 +98,7 @@ public class Route {
 
         for (int i = 0; i < flow.getLength(); i++) {
             Node node = flow.item(i);
-            if (node instanceof Element) {
-                Element element = (Element) node;
+            if (node instanceof Element element) {
                 String id = element.getAttribute("id");
 
                 if (routeId.equals(id)) {

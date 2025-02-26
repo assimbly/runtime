@@ -1,10 +1,7 @@
 package org.assimbly.dil.blocks.processors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
-import org.apache.camel.Message;
-import org.apache.camel.Processor;
 import org.apache.camel.spi.Language;
 
 

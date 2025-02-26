@@ -2,7 +2,6 @@ package org.assimbly.dil.event.collect;
 
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.LogEvent;
 import org.assimbly.dil.event.domain.Store;

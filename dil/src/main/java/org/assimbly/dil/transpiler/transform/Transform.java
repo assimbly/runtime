@@ -1,18 +1,14 @@
 package org.assimbly.dil.transpiler.transform;
 
-import net.sf.saxon.jaxp.TransformerImpl;
 import net.sf.saxon.s9api.*;
 import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.*;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.io.*;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,9 +16,9 @@ public class Transform {
 
     final static Logger log = LoggerFactory.getLogger(Transform.class);
 
-    private XsltTransformer transformer;
+    private final XsltTransformer transformer;
 
-    private Processor processor;
+    private final Processor processor;
 
     public Transform(String stylesheet) throws SaxonApiException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();

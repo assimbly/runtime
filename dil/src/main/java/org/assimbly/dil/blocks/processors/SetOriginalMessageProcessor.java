@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 
 public class SetOriginalMessageProcessor implements Processor {
 
-	private static String DOVETAIL_ORIGINAL_HTTP_MESSAGE_METHOD_PROP = "DOVETAIL_originalHttpMessageMethod";
+	private static final String DOVETAIL_ORIGINAL_HTTP_MESSAGE_METHOD_PROP = "DOVETAIL_originalHttpMessageMethod";
 
-	private static String DOVETAIL_RETRY_ATTEMPTS_HEADER = "DOVETAIL_RetryAttempts";
-	private static String DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER = "DOVETAIL_OriginalHttpMessageVariableId";
+	private static final String DOVETAIL_RETRY_ATTEMPTS_HEADER = "DOVETAIL_RetryAttempts";
+	private static final String DOVETAIL_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER = "DOVETAIL_OriginalHttpMessageVariableId";
 
-	private static String CAMEL_GLOBAL_VARIABLE_PREFIX = "global:";
+	private static final String CAMEL_GLOBAL_VARIABLE_PREFIX = "global:";
 
 	public enum HttpMethod {GET, SET, DEL}
 
@@ -78,9 +78,14 @@ public class SetOriginalMessageProcessor implements Processor {
 	}
 
 	private HttpMethod getHttpMethod(String methodStr) {
+		if (methodStr == null) {
+			log.error("HTTP method is null. Using default: " + HttpMethod.GET);
+			return HttpMethod.GET;
+		}
+
 		try {
 			return HttpMethod.valueOf(methodStr);
-		} catch (IllegalArgumentException | NullPointerException e) {
+		} catch (IllegalArgumentException e) {
 			log.error("Invalid HTTP method: " + methodStr + ". Using default: " + HttpMethod.GET);
 			return HttpMethod.GET;
 		}

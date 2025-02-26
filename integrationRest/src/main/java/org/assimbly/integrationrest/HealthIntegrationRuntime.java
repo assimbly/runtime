@@ -37,8 +37,6 @@ public class HealthIntegrationRuntime {
 
     private boolean plainResponse;
 
-    private String flowConfiguration;
-
     private Integration integration;
 
     @GetMapping(

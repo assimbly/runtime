@@ -2,9 +2,8 @@ package org.assimbly.dil.validation.expressions;
 
 import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
-import org.apache.camel.jsonpath.JsonPathLanguage;
-import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.Validator;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 public class JsonPathValidator implements Validator {

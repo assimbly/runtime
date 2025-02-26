@@ -23,9 +23,9 @@ public interface Broker {
     * @return broker configuration as XML 
 	* @throws IOException if configuration can't be retrieved
 	*/
-	public String getFileConfiguration() throws IOException;;
-	
-	/**
+    String getFileConfiguration() throws IOException;
+
+    /**
 	* Sets the broker configuration from a XML 
 	* A default configuration is return when brokerConfiguration param is an empty string.
 	*
@@ -33,7 +33,7 @@ public interface Broker {
 	* @return String (confirm when configuration is set) 
 	* @throws IOException if configuration can't be set
 	*/
-	public String setFileConfiguration(String brokerConfiguration) throws IOException;
+    String setFileConfiguration(String brokerConfiguration) throws IOException;
 	
 	
 	/**
@@ -42,7 +42,7 @@ public interface Broker {
 	* @param  baseDirectory (path) 
 	* @throws Exception if base directory can't be set is not available
 	*/
-	public void setBaseDirectory(String baseDirectory) throws Exception;
+    void setBaseDirectory(String baseDirectory) throws Exception;
 	
 	//manage broker
 	
@@ -52,7 +52,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be started
 	*/
-	public String start();
+    String start();
 
 	/**
 	* Starts an embedded broker on a localhost (use this for testing). 
@@ -60,7 +60,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be started	
 	*/
-	public String startEmbedded() throws Exception;
+    String startEmbedded() throws Exception;
 	
 	/**
 	* Stops the broker. 
@@ -68,7 +68,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be stopped
 	*/
-	public String stop() throws Exception;
+    String stop() throws Exception;
 	
 	/**
 	* Restarts the broker from a file configuration. 
@@ -76,7 +76,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be restarted
 	*/
-	public String restart() throws Exception; 
+    String restart() throws Exception;
 	
 	/**
 	* Restarts the embedded broker 
@@ -84,7 +84,7 @@ public interface Broker {
     * @return status of broker 
 	* @throws Exception if broker can't be started
 	*/
-	public String restartEmbedded() throws Exception;
+    String restartEmbedded() throws Exception;
 	
 	/**
 	* Status of the broker: "started" or "stopped"
@@ -92,7 +92,7 @@ public interface Broker {
     * @return status of broker
 	* @throws Exception if broker can't be started
 	*/
-	public String status() throws Exception;
+    String status() throws Exception;
 
 	/**
 	 * Stats of the broker
@@ -100,7 +100,7 @@ public interface Broker {
 	 * @return stats of broker
 	 * @throws Exception if broker can't be started
 	 */
-	public Map<String, Object> stats() throws Exception;
+    Map<String, Object> stats() throws Exception;
 
 	/**
 	* Info of the running broker. This is comma separated string 
@@ -108,7 +108,7 @@ public interface Broker {
     * @return info broker 
 	* @throws Exception if info can't get retrieved
 	*/
-	public String info() throws Exception;
+    String info() throws Exception;
 
 	/**
 	 * Get all consumers of the broker
@@ -116,7 +116,7 @@ public interface Broker {
 	 * @return list of broker consumers
 	 * @throws Exception if consumers can't be retrieved
 	 */
-	public String getConsumers() throws Exception;
+    String getConsumers() throws Exception;
 
 	/**
 	 * Get all connections of the broker
@@ -124,7 +124,7 @@ public interface Broker {
 	 * @return list of broker connections
 	 * @throws Exception if connections can't be retrieved
 	 */
-	public String getConnections() throws Exception;
+    String getConnections() throws Exception;
 
 	/**
 	 * Creates a new queue
@@ -133,7 +133,7 @@ public interface Broker {
 	 * @return String (confirmation when queue is created)
 	 * @throws Exception if queue can't be created
 	 */
-	public String createQueue(String queueName) throws Exception;
+    String createQueue(String queueName) throws Exception;
 
 	/**
 	 * Deletes a queue
@@ -142,7 +142,7 @@ public interface Broker {
 	 * @return String (confirmation when queue is deleted)
 	 * @throws Exception if queue can't be deleted
 	 */
-	public String deleteQueue(String queueName) throws Exception;
+    String deleteQueue(String queueName) throws Exception;
 
 
 	/**
@@ -155,7 +155,7 @@ public interface Broker {
 	 * @param  queueName Name of the queue
 	 * @throws Exception if queue information can't be retrieved
 	 */
-	public String getQueue(String queueName) throws Exception;
+    String getQueue(String queueName) throws Exception;
 
 	/**
 	 * gets information about the one or more queues. Information like:
@@ -166,7 +166,7 @@ public interface Broker {
 	 * @return String (list of queues with information on every queue)
 	 * @throws Exception if queue information can't be retrieved
 	 */
-	public String getQueues() throws Exception;
+    String getQueues() throws Exception;
 
 	/**
 	 * Clears the specified queue. The deletes/purge all messages on the queue
@@ -175,7 +175,7 @@ public interface Broker {
 	 * @return String (confirmation when queue is cleared)
 	 * @throws Exception if queue can't be cleared
 	 */
-	public String clearQueue(String queueName) throws Exception;
+    String clearQueue(String queueName) throws Exception;
 
 	/**
 	 * Clears all the queues. The deletes/purge all messages on the broker (use with care)
@@ -183,7 +183,7 @@ public interface Broker {
 	 * @return String (confirmation when broker (all queues) is cleared)
 	 * @throws Exception if queues can't be cleared
 	 */
-	public String clearQueues() throws Exception;
+    String clearQueues() throws Exception;
 
 	/**
 	 * Creates a new topic
@@ -192,7 +192,7 @@ public interface Broker {
 	 * @return String (confirmation when topic is created)
 	 * @throws Exception if topic can't be created
 	 */
-	public String createTopic(String topicName) throws Exception;
+    String createTopic(String topicName) throws Exception;
 
 	/**
 	 * Deletes a topic
@@ -201,7 +201,7 @@ public interface Broker {
 	 * @return String (confirmation when topic is deleted)
 	 * @throws Exception if topic can't be deleted
 	 */
-	public String deleteTopic(String topicName) throws Exception;
+    String deleteTopic(String topicName) throws Exception;
 
 
 	/**
@@ -211,7 +211,7 @@ public interface Broker {
 	 * @return String (confirmation when topic is cleared)
 	 * @throws Exception if topic can't be cleared
 	 */
-	public String clearTopic(String topicName) throws Exception;
+    String clearTopic(String topicName) throws Exception;
 
 	/**
 	 * Clears all the topics. The deletes/purge all messages on the broker (use with care)
@@ -219,7 +219,7 @@ public interface Broker {
 	 * @return String (confirmation when broker (all topics) is cleared)
 	 * @throws Exception if topics can't be cleared
 	 */
-	public String clearTopics() throws Exception;
+    String clearTopics() throws Exception;
 
 	/**
 	 * gets information about the specified queues. Information like:
@@ -231,7 +231,7 @@ public interface Broker {
 	 * @param  topicName Name of the topic
 	 * @throws Exception if topic information can't be retrieved
 	 */
-	public String getTopic(String topicName) throws Exception;
+    String getTopic(String topicName) throws Exception;
 
 	/**
 	 * gets information about the one or more topics. Information like:
@@ -242,7 +242,7 @@ public interface Broker {
 	 * @return String (list of topics with information on every queue)
 	 * @throws Exception if topic information can't be retrieved
 	 */
-	public String getTopics() throws Exception;
+    String getTopics() throws Exception;
 
 	/**
 	 * list all messages on the broker
@@ -252,7 +252,7 @@ public interface Broker {
 	 * @return List of all messages
 	 * @throws Exception if list can't be retrieved
 	 */
-	public String listMessages(String endpointName, String filter) throws Exception;
+    String listMessages(String endpointName, String filter) throws Exception;
 
 	/**
 	 * list all messages on the broker
@@ -261,7 +261,7 @@ public interface Broker {
 	 * @return List of all messages
 	 * @throws Exception if list can't be retrieved
 	 */
-	public String countMessagesFromList(String endpointNames) throws Exception;
+    String countMessagesFromList(String endpointNames) throws Exception;
 
 	/**
 	 * list of number of messages for each flow
@@ -270,7 +270,7 @@ public interface Broker {
 	 * @return list of flows and how many messages.
 	 * @throws Exception if list can't be retrieved
 	 */
-	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception;
+    String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception;
 
 	/**
 	 * count messages on specified endpoint
@@ -279,7 +279,7 @@ public interface Broker {
 	 * @return Number of messages
 	 * @throws Exception if number of messsages can't be retrieved
 	 */
-	public String countMessages(String endpointName) throws Exception;
+    String countMessages(String endpointName) throws Exception;
 
 
 	/**
@@ -289,7 +289,7 @@ public interface Broker {
 	 * @return Number of delayed messages
 	 * @throws Exception if number of messsages can't be retrieved
 	 */
-	public String countDelayedMessages(String endpointName) throws Exception;
+    String countDelayedMessages(String endpointName) throws Exception;
 
 	/**
 	 * removes a message on specified endpoint by messageId
@@ -298,7 +298,7 @@ public interface Broker {
 	 * @return confirmation if message is removed
 	 * @throws Exception if message can't be removed
 	 */
-	public String removeMessage(String endpointName, String messageId) throws Exception;
+    String removeMessage(String endpointName, String messageId) throws Exception;
 
 	/**
 	 * removes all message on the specified endpoint
@@ -307,7 +307,7 @@ public interface Broker {
 	 * @return confirmation if message is removed
 	 * @throws Exception if messages can't be removed
 	 */
-	public String removeMessages(String endpointName) throws Exception;
+    String removeMessages(String endpointName) throws Exception;
 
 	/**
 	 * moves a message on specified queueu by messageId to another queue
@@ -317,7 +317,7 @@ public interface Broker {
 	 * @return confirmation if message is moved
 	 * @throws Exception if message can't be moved
 	 */
-	public String moveMessage(String sourceQueueName, String targetQueueName, String message) throws Exception;
+    String moveMessage(String sourceQueueName, String targetQueueName, String message) throws Exception;
 
 	/**
 	 * moves all messages on specified queueu to another queue
@@ -327,7 +327,7 @@ public interface Broker {
 	 * @return confirmation if message is moved
 	 * @throws Exception if message can't be moved
 	 */
-	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception;
+    String moveMessages(String sourceQueueName, String targetQueueName) throws Exception;
 
 	/**
 	 * browse a message on specified endpoint by messageId
@@ -336,7 +336,7 @@ public interface Broker {
 	 * @return message with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception;
+    String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception;
 
 	/**
 	 * browse all message on specified endpoint
@@ -347,7 +347,7 @@ public interface Broker {
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception;
+    String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception;
 
 	/**
 	 * send a message to the specified endpoint
@@ -358,7 +358,7 @@ public interface Broker {
 	 * @return messages with headers and content
 	 * @throws Exception if message can't be retrieved
 	 */
-	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception;
+    String sendMessage(String endpointName, Map<String, Object> messageHeaders, String messageBody) throws Exception;
 
 
 	/**
@@ -368,5 +368,5 @@ public interface Broker {
 	* @return returns broker as object
 	* @throws Exception if broker can't be found
 	*/
-	public Object getBroker() throws Exception;
+    Object getBroker() throws Exception;
 }

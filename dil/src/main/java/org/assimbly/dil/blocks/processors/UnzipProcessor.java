@@ -5,7 +5,9 @@ import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;

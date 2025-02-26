@@ -13,11 +13,11 @@ public class ExpressionsValidator {
 
     List<ValidationErrorMessage> validationErrors = new ArrayList<>();
 
-    private JsonPathValidator jsonPathValidator = new JsonPathValidator();
-    private SimpleValidator simpleValidator = new SimpleValidator();
-    private XPathValidator xpathValidator = new XPathValidator();
-    private ConstantValidator constantValidator = new ConstantValidator();
-    private GroovyValidator groovyValidator = new GroovyValidator();
+    private final JsonPathValidator jsonPathValidator = new JsonPathValidator();
+    private final SimpleValidator simpleValidator = new SimpleValidator();
+    private final XPathValidator xpathValidator = new XPathValidator();
+    private final ConstantValidator constantValidator = new ConstantValidator();
+    private final GroovyValidator groovyValidator = new GroovyValidator();
 
     public List<ValidationErrorMessage> validate(List<Expression> expressions, boolean isPredicate) {
 

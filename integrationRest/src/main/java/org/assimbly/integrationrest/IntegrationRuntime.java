@@ -1,22 +1,19 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.util.rest.ResponseUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -32,7 +29,7 @@ public class IntegrationRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private Integration integration = new CamelIntegration(true);
+    private final Integration integration = new CamelIntegration(true);
 
     private boolean plainResponse;
 

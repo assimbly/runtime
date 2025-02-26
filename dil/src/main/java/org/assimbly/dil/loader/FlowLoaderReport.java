@@ -6,23 +6,21 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-
 
 public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-	private String flowId;
-	private String flowName;
+	private final String flowId;
+	private final String flowName;
 	private String report;
-	private JSONObject json;
-	private JSONArray steps;
+	private final JSONObject json;
+	private final JSONArray steps;
 	private int loaded;
 	private int loadedSuccess;
 	private int loadedError;
-	private JSONObject flow;
-	private JSONObject stepsLoaded;
-	private long startTime;
+	private final JSONObject flow;
+	private final JSONObject stepsLoaded;
+	private final long startTime;
 	private long endTime;
 
 	public FlowLoaderReport(String flowId, String flowName) {

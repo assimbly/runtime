@@ -11,9 +11,9 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private static String XML_DECLARATION_UTF_8 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-    private static String AGGREGATE_INIT_TAG = "<Aggregated>";
-    private static String AGGREGATE_END_TAG = "</Aggregated>";
+    private static final String XML_DECLARATION_UTF_8 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    private static final String AGGREGATE_INIT_TAG = "<Aggregated>";
+    private static final String AGGREGATE_END_TAG = "</Aggregated>";
 
     @Override
     public Exchange aggregate(Exchange newExchange, Exchange splitExchange) {

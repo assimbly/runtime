@@ -5,7 +5,7 @@ import java.util.List;
 
 public class CustomKameletCatalog {
 
-    public static List<String> names = new ArrayList<>();
+    public static final List<String> names = new ArrayList<>();
 
 }
 

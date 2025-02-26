@@ -3,8 +3,6 @@ package org.assimbly.dil.blocks.beans.enrich.override;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.assimbly.util.exception.EnrichException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 

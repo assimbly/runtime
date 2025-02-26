@@ -1,6 +1,8 @@
 package org.assimbly.dil.blocks.processors;
 
-import org.apache.camel.*;
+import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
+import org.apache.camel.Processor;
 
 //set headers for each step
 public class SetPatternProcessor implements Processor {

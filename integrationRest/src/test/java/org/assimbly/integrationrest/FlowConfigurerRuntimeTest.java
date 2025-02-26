@@ -26,7 +26,6 @@ import java.util.Properties;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(classes = FlowConfigurerRuntime.class)
 @ComponentScan(basePackageClasses = {

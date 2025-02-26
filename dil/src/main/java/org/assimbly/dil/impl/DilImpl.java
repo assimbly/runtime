@@ -16,7 +16,7 @@ public abstract class DilImpl implements Dil {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	private List<TreeMap<String, String>> properties = new ArrayList<>();
+	private final List<TreeMap<String, String>> properties = new ArrayList<>();
 	private TreeMap<String, String> flowProperties;
 
 	public void transpile(String flowId, String mediaType, String configuration) throws Exception {

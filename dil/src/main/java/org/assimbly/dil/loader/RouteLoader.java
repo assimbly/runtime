@@ -17,11 +17,11 @@ public class RouteLoader extends RouteBuilder {
 	private CamelContext context;
 	private RoutesLoader loader;
 	private RoutesBuilderLoader routesBuilderLoader;
-	private String routeId;
-	private String route;
+	private final String routeId;
+	private final String route;
 	private String flowEvent;
 	private boolean isFlowLoaded = true;
-	private FlowLoaderReport flowLoaderReport;
+	private final FlowLoaderReport flowLoaderReport;
 
 	public RouteLoader(String routeId, String route, FlowLoaderReport flowLoaderReport){
 		this.routeId = routeId;
@@ -66,8 +66,6 @@ public class RouteLoader extends RouteBuilder {
 	}
 
 	private void finish() {
-
-		flowLoaderReport.logResult(flowEvent);
 
 		if (isFlowLoaded){
 			flowLoaderReport.finishReport(flowEvent, "", "Route installed successfully");

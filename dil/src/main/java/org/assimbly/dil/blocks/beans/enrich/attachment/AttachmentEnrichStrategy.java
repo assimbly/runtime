@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.beans.enrich.attachment;
 
+import jakarta.activation.DataHandler;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -9,7 +10,6 @@ import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.activation.DataHandler;
 import java.io.IOException;
 import java.io.InputStream;
 

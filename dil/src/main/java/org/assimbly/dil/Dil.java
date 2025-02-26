@@ -15,6 +15,6 @@ public interface Dil {
 	 * @param configuration (DIL file in XML, JSON or YAML format)
 	 * @throws Exception if configuration can't be set
 	 */
-	public void transpile(String flowId, String mediaType, String configuration) throws Exception;
+    void transpile(String flowId, String mediaType, String configuration) throws Exception;
 
 }

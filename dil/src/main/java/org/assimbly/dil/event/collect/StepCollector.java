@@ -7,10 +7,10 @@ import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
+import org.assimbly.dil.event.domain.MessageEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
-import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +48,9 @@ public class StepCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
-    private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
+    private static final String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
-
-    protected Logger log = LoggerFactory.getLogger(getClass());
 
     public StepCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> successEvents, ArrayList<String> failedEvents, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;

@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +20,7 @@ public class UrlValidator {
         final HttpURLConnection httpUrlConn;
 
         try {
-            String decodedUrl = URLDecoder.decode(url, "UTF-8");
+            String decodedUrl = URLDecoder.decode(url, StandardCharsets.UTF_8);
 
             if(!validateURL(decodedUrl))
                 return INVALID_URL_ERROR;

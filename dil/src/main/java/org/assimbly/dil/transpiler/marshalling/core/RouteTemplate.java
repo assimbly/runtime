@@ -12,18 +12,21 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.*;
-import java.sql.Timestamp;
-import java.util.*;
 
-import static org.assimbly.util.IntegrationUtil.*;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Objects;
+import java.util.TreeMap;
+
+import static org.assimbly.util.IntegrationUtil.iterable;
 
 public class RouteTemplate {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-    private TreeMap<String, String> properties;
-    private XMLConfiguration conf;
+    private final TreeMap<String, String> properties;
+    private final XMLConfiguration conf;
     private String uri;
     private Document contentRouteDoc;
     private Document templateDoc;
@@ -241,16 +244,14 @@ public class RouteTemplate {
 
         if(node != null && node.hasChildNodes()){
 
-            if(node instanceof Element) {
-                Element nodeElement = (Element) node;
+            if(node instanceof Element nodeElement) {
 
                 NodeList blocks = nodeElement.getElementsByTagName("block");
 
                 for (int i = 0; i < blocks.getLength(); i++) {
                     Node block = blocks.item(i);
 
-                    if(block instanceof Element) {
-                        Element blockElement = (Element)block;
+                    if(block instanceof Element blockElement) {
 
                         Node nodeBlockType = blockElement.getElementsByTagName("type").item(0);
                         if(nodeBlockType!=null){

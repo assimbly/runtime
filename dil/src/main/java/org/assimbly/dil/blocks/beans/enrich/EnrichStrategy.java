@@ -7,8 +7,6 @@ import org.assimbly.dil.blocks.beans.enrich.json.JsonEnrichStrategy;
 import org.assimbly.dil.blocks.beans.enrich.override.OverrideEnrichStrategy;
 import org.assimbly.dil.blocks.beans.enrich.xml.XmlEnrichStrategy;
 import org.assimbly.dil.blocks.beans.enrich.zipfile.ZipFileEnrichStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class EnrichStrategy implements AggregationStrategy {
 
@@ -27,20 +25,20 @@ public class EnrichStrategy implements AggregationStrategy {
             case "xml":
             case "text/xml":
             case "application/xml":
-                enrichStrategy = (AggregationStrategy) new XmlEnrichStrategy();
+                enrichStrategy = new XmlEnrichStrategy();
                 break;
             case "json":
             case "application/json":
-                enrichStrategy = (AggregationStrategy) new JsonEnrichStrategy();
+                enrichStrategy = new JsonEnrichStrategy();
                 break;
             case "application/zip":
-                enrichStrategy = (AggregationStrategy) new ZipFileEnrichStrategy();
+                enrichStrategy = new ZipFileEnrichStrategy();
                 break;
             case "application/attachment":
-                enrichStrategy = (AggregationStrategy) new AttachmentEnrichStrategy();
+                enrichStrategy = new AttachmentEnrichStrategy();
                 break;
             case "application/override":
-                enrichStrategy = (AggregationStrategy) new OverrideEnrichStrategy();
+                enrichStrategy = new OverrideEnrichStrategy();
                 break;
             default:
                 throw new UnsupportedOperationException();

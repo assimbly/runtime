@@ -2,8 +2,8 @@ package org.assimbly.dil.validation.expressions;
 
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.LanguageValidationResult;
-import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.Validator;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 public class SimpleValidator implements Validator {

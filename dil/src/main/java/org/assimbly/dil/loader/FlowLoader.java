@@ -1,13 +1,10 @@
 package org.assimbly.dil.loader;
 
-import java.util.*;
-
-import org.apache.camel.*;
-import org.apache.camel.builder.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.builder.DeadLetterChannelBuilder;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.RoutesBuilderLoader;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -16,22 +13,24 @@ import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.TreeMap;
+
 
 public class FlowLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-	private TreeMap<String, String> props;
+	private final TreeMap<String, String> props;
 	private CamelContext context;
 	private RoutesLoader loader;
-	private RoutesBuilderLoader routesBuilderLoader;
 	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
-	private String flowName;
 	private String flowEvent;
 	private String flowVersion;
 	private String flowEnvironment;
 	private boolean isFlowLoaded = true;
-	private FlowLoaderReport flowLoaderReport;
+	private final FlowLoaderReport flowLoaderReport;
 
 	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
 		super();
@@ -40,7 +39,7 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 	public interface FailureProcessorListener {
-		public void onFailure();
+		void onFailure();
 	}
 
 	@Override
@@ -57,7 +56,6 @@ public class FlowLoader extends RouteBuilder {
 	private void init() throws Exception {
 
 		flowId = props.get("id");
-		flowName = props.get("flow.name");
 		flowVersion = props.get("flow.version");
 		flowEnvironment = props.get("environment");
 		flowEvent = "start";
@@ -95,7 +93,6 @@ public class FlowLoader extends RouteBuilder {
 	private void setExtendedcontext() throws Exception {
 		context = getContext();
 		loader = PluginHelper.getRoutesLoader(context);
-		routesBuilderLoader = loader.getRoutesLoader("xml");
 	}
 
 	private void setErrorHandlers() throws Exception{

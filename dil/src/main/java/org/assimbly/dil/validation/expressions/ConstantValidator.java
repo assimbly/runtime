@@ -1,8 +1,8 @@
 package org.assimbly.dil.validation.expressions;
 
 import org.apache.camel.language.constant.ConstantLanguage;
-import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.Validator;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 public class ConstantValidator implements Validator {

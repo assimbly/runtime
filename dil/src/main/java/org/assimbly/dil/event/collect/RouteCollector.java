@@ -32,10 +32,9 @@ public class RouteCollector extends EventNotifierSupport {
 
         String type = event.getType().name();
 
-        if(event instanceof CamelEvent.RouteEvent && events!=null && events.contains(type)) {
+        if(event instanceof CamelEvent.RouteEvent routeEvent && events!=null && events.contains(type)) {
 
             //Cast to route event
-            CamelEvent.RouteEvent routeEvent = (CamelEvent.RouteEvent) event;
 
             //Set stepId from route
             String routeId = routeEvent.getRoute().getId();

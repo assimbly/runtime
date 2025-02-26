@@ -13,7 +13,7 @@ import java.util.List;
 
 public class CompositeTrustManager implements X509TrustManager {
 
-    private List<X509TrustManager> trustManagers = new ArrayList<>();
+    private final List<X509TrustManager> trustManagers = new ArrayList<>();
 
     public void addTrustManagers(KeyStore trustStore) throws KeyStoreException {
         try {

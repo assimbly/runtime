@@ -34,16 +34,16 @@ public class JschConfig {
     }
 
     private static void setJschConfig(JSch jsch, String key, String additionalKeyValue) {
-        String keyValue = jsch.getConfig(key);
+        String keyValue = JSch.getConfig(key);
         boolean isKeyValueEmpty = keyValue.isEmpty();
         String additionalKeyValueMiddlePos = ","+additionalKeyValue+",";
         String additionalKeyValueEndPos = ","+additionalKeyValue;
 
         if(isKeyValueEmpty) {
-            jsch.setConfig(key, additionalKeyValue);
+            JSch.setConfig(key, additionalKeyValue);
         } else {
             if(!keyValue.equalsIgnoreCase(additionalKeyValue) && !keyValue.contains(additionalKeyValueMiddlePos) && !keyValue.endsWith(additionalKeyValueEndPos)) {
-                jsch.setConfig(key, keyValue + additionalKeyValueEndPos);
+                JSch.setConfig(key, keyValue + additionalKeyValueEndPos);
             }
         }
     }

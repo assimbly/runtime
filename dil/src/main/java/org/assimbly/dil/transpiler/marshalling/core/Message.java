@@ -9,8 +9,8 @@ import java.util.TreeMap;
 
 public class Message {
 
-    private TreeMap<String, String> properties;
-    private XMLConfiguration conf;
+    private final TreeMap<String, String> properties;
+    private final XMLConfiguration conf;
     private String headerXPath;
     private String messageId;
 

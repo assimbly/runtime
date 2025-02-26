@@ -1,9 +1,5 @@
 package org.assimbly.dil.blocks.processors;
 
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.Future;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Message;
@@ -18,6 +14,9 @@ import org.apache.camel.support.MessageHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * Default {@link ExchangeFormatter} that have fine grained options to configure what to include in the output.

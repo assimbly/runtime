@@ -6,7 +6,6 @@ import org.assimbly.broker.impl.ActiveMQClassic;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -16,8 +15,8 @@ public class ManagedBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
     private Broker broker;
-    private Broker classic = new ActiveMQClassic();
-	private Broker artemis = new ActiveMQArtemis();
+    private final Broker classic = new ActiveMQClassic();
+	private final Broker artemis = new ActiveMQArtemis();
 	private String status;
     private String result;
 

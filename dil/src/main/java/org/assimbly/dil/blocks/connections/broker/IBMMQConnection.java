@@ -14,10 +14,10 @@ public class IBMMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String componentName;
-    private String connectionId;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String componentName;
+    private final String connectionId;
 
     private String url;
     private String username;
@@ -163,11 +163,7 @@ public class IBMMQConnection {
             cf.setClientReconnectOptions(0);
         }
 
-        if(clientUserAuthenticationMQCSP!=null && clientUserAuthenticationMQCSP.equalsIgnoreCase("false")){
-            cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, false);
-        }else{
-            cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, true);
-        }
+        cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
 
         cf.setBooleanProperty(WMQConstants.WMQ_MQMD_WRITE_ENABLED, true);
 

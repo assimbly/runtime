@@ -103,42 +103,42 @@ import java.security.cert.Certificate;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
 public class CamelIntegration extends BaseIntegration {
 
-	private CamelContext context;
+	private final CamelContext context;
 	private boolean started;
-	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
-	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
+	private static final String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
+	private static final String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 	private final static long stopTimeout = 300;
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
-	private org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
+	private final org.apache.camel.support.SimpleRegistry registry = new org.apache.camel.support.SimpleRegistry();
 	private String flowInfo;
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 	private Properties encryptionProperties;
 	private boolean watchDeployDirectoryInitialized;
 	private TreeMap<String, String> props;
-	private TreeMap<String, String> confFiles = new TreeMap<String, String>();
+	private final TreeMap<String, String> confFiles = new TreeMap<String, String>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final String SEP = "/";
-	private final String SECURITY_PATH = "security";
-	private final String TRUSTSTORE_FILE = "truststore.jks";
-	private final String KEYSTORE_FILE = "keystore.jks";
-	private final String KEYSTORE_PWD = "KEYSTORE_PWD";
+	private static final String SECURITY_PATH = "security";
+	private static final String TRUSTSTORE_FILE = "truststore.jks";
+	private static final String KEYSTORE_FILE = "keystore.jks";
+	private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
 
-	private final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
-	private final String RESOURCE_PROP = "resource";
-	private final String AUTH_PASSWORD_PROP = "authPassword";
+	private static final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
+	private static final String RESOURCE_PROP = "resource";
+	private static final String AUTH_PASSWORD_PROP = "authPassword";
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -592,7 +592,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		ObjectMapper mapper = new ObjectMapper();
-		List<Collection> collections = Arrays.asList(mapper.readValue(configuration, Collection[].class));
+		Collection[] collections = mapper.readValue(configuration, Collection[].class);
 
 		for(Collection collection: collections){
 
@@ -668,7 +668,7 @@ public class CamelIntegration extends BaseIntegration {
 					try{
 						fileInstall(fPath);
 					} catch (Exception e) {
-						log.error("Check deploy directory "+ path.toString() + " + failed",e);
+						log.error("Check deploy directory "+ path + " + failed",e);
 					}
 				});
 	}
@@ -729,7 +729,7 @@ public class CamelIntegration extends BaseIntegration {
 											fileInstall(path);
 										}
 									} catch (Exception e) {
-										log.error("FileInstall for modified " + path.toString() + " failed",e);
+										log.error("FileInstall for modified " + path + " failed",e);
 									}
 								}
 
@@ -1084,10 +1084,9 @@ public class CamelIntegration extends BaseIntegration {
 			String expression = String.format("//setProperty[@name='%s']/constant/text()", propName);
 			return xpath.evaluate(expression, doc);
 		} catch (Exception e) {
-			// do nothing
+			return null;
 		}
 
-		return null;
 	}
 
 	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
@@ -1846,7 +1845,7 @@ public class CamelIntegration extends BaseIntegration {
 					sb.append("RouteID: ");
 					sb.append(routeId);
 					sb.append("Error: ");
-					sb.append(lastError.toString());
+					sb.append(lastError);
 					sb.append(";");
 				}
 			}
@@ -2102,17 +2101,18 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
 
-		String camelRouteConfiguration = "";
+		StringBuilder buf = new StringBuilder();
 
 		for (Route route : context.getRoutes()) {
 			if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
 				String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
 				xmlConfiguration = xmlConfiguration.replaceAll("\\<\\?xml(.+?)\\?\\>", "").trim();
-				camelRouteConfiguration = camelRouteConfiguration + xmlConfiguration;
+				buf.append(xmlConfiguration);
 			}
 		}
 
+		String camelRouteConfiguration = buf.toString();
 
 		if(camelRouteConfiguration.isEmpty()) {
 			camelRouteConfiguration = "0";
@@ -2655,7 +2655,7 @@ public class CamelIntegration extends BaseIntegration {
 		double memoryUsagePercentage = ((double) usedMemory / maxMemory) * 100;
 
 		DecimalFormat df = new DecimalFormat("#.##");
-		memoryUsagePercentage = Double.valueOf(df.format(memoryUsagePercentage));
+		memoryUsagePercentage = Double.parseDouble(df.format(memoryUsagePercentage));
 
 		return memoryUsagePercentage;
 

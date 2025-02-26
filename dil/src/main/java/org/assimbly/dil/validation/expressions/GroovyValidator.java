@@ -1,7 +1,7 @@
 package org.assimbly.dil.validation.expressions;
 
-import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.Validator;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.springframework.scripting.groovy.GroovyScriptEvaluator;
 import org.springframework.scripting.support.StaticScriptSource;

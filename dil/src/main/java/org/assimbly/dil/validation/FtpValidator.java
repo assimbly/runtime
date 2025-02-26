@@ -10,10 +10,11 @@ import org.apache.commons.net.ftp.FTPSClient;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.jsch.JschConfig;
 import org.assimbly.util.error.ValidationErrorMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -22,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class FtpValidator {
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private static final int TIMEOUT = 3000;
     private static final ValidationErrorMessage UNREACHABLE_ERROR =
@@ -84,8 +87,12 @@ public class FtpValidator {
                 channel.disconnect();
             if (session != null)
                 session.disconnect();
-            if (tempFile != null)
-                tempFile.delete();
+            if (tempFile != null) {
+                boolean result = tempFile.delete();
+                if(!result){
+                    log.warn("Unable to delete temp file: " + tempFile.getAbsolutePath());
+                }
+            }
         }
 
         return null;

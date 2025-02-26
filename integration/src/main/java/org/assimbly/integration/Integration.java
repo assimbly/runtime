@@ -35,19 +35,19 @@ public interface Integration {
 	/**
 	 * Gets the integration properties
 	 */
-	public Properties getEncryptionProperties();
+    Properties getEncryptionProperties();
 
 	/**
 	 * Sets the integration properties to pass application property variables from the application to the integration
 	 *
 	 * @param properties: set application properties
 	 */
-	public void setEncryptionProperties(Properties properties);
+    void setEncryptionProperties(Properties properties);
 
 	/**
 	 * @return encryption Utility
 	 */
-	public EncryptionUtil getEncryptionUtil();
+    EncryptionUtil getEncryptionUtil();
 
 	//configure flows
 	/**
@@ -57,7 +57,7 @@ public interface Integration {
 	* @param  configuration of a flow configuration
 	* @throws Exception if configuration can't be set
 	*/
-	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception;
+    void setFlowConfiguration(String flowId, TreeMap<String, String> configuration) throws Exception;
 
 	/**
 	* Sets the flow configuration from a string for a specific format (XML,JSON,YAML). This list
@@ -68,7 +68,7 @@ public interface Integration {
 	* @param  configuration (the XML, JSON or YAML file)
 	* @throws Exception if configuration can't be set
 	*/
-	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception;
+    void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception;
 	
 	/**
 	* gets the flow configuration for a specific if currently set
@@ -76,8 +76,8 @@ public interface Integration {
 	* @param  flowId the id of a flow
 	* @return flow configuration
 	* @throws Exception if configuration can't be retrieved or is not available
-	*/	
-	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
+	*/
+    TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
 	
 	/**
 	* gets the integration configuration currently set (in use). 
@@ -87,7 +87,7 @@ public interface Integration {
 	* @return list of flow configurations (String of mediaType)
 	* @throws Exception if configuration can't be retrieved or is not available
 	*/
-	public String getFlowConfiguration(String flowId, String mediaType) throws Exception;
+    String getFlowConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
 	 * Add configuration for multiple collectors from a JSON Configuration File.
@@ -96,7 +96,7 @@ public interface Integration {
 	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
 	 * @throws Exception if configuration can't be set
 	 */
-	public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+    String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
 
 
 	/**
@@ -107,7 +107,7 @@ public interface Integration {
 	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
 	 * @throws Exception if configuration can't be set
 	 */
-	public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
+    String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Sets the collector configuration from a string for a specific format (XML,JSON,YAML).
@@ -115,7 +115,7 @@ public interface Integration {
 	 * @param  collectorId Id of the collector (String)
 	 * @throws Exception if configuration can't be set
 	 */
-	public String removeCollectorConfiguration(String collectorId) throws Exception;
+    String removeCollectorConfiguration(String collectorId) throws Exception;
 
 	/**
 	 * gets the integration configuration currently set (in use).
@@ -125,7 +125,7 @@ public interface Integration {
 	 * @return properties of connection
 	 * @throws Exception if connection can't be set
 	 */
-	public TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
+    TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	/**
 	* sets the integration base directory. In this directory event are stored (like logs, alerts, events) 
@@ -133,14 +133,14 @@ public interface Integration {
 	* @param  baseDirectory (path) 
 	* @throws Exception if base directory can't be set is not available
 	*/
-	public void setBaseDirectory(String baseDirectory) throws Exception;
+    void setBaseDirectory(String baseDirectory) throws Exception;
 
 	/**
 	* gets the integration base directory. In this directory event are stored (like logs, alerts, events) 
 	*
 	* @throws Exception if base directory can't be retrieved
 	*/
-	public String getBaseDirectory() throws Exception;
+    String getBaseDirectory() throws Exception;
 	
 	/**
 	* sets the integration base directory. In this directory everything is stored (alert, events) 
@@ -150,7 +150,7 @@ public interface Integration {
 	* @param  timeOut in seconds
 	* @return Message "Connection successfully opened" or "Connection error"
 	*/
-	public String testConnection(String host, int port, int timeOut);
+    String testConnection(String host, int port, int timeOut);
 
 
 	//manage integration
@@ -161,85 +161,85 @@ public interface Integration {
 	 *
 	 * @throws Exception if integration doesn't start
 	 */
-	public void start() throws Exception;
+    void start() throws Exception;
 
 	/**
 	 * Stops an integration
 	 *
 	 * @throws Exception if integration doesn't start
 	 */
-	public void stop() throws Exception;
+    void stop() throws Exception;
 
 	/**
 	 * Info on an integration (state, uptime, numberofroutes etc)
 	 *
 	 * @throws Exception if integration doesn't start
 	 */
-	public String info(String mediaType) throws Exception;
+    String info(String mediaType) throws Exception;
 
 	/**
 	 * Checks if an integration is started
 	 *
 	 * @return returns true if integration is started
 	 */
-	public boolean isStarted();
+    boolean isStarted();
 
 	/**
 	 * Turn on/off tracing
 	 * @param tracing to turn on tracing, false to turn it off
 	 * @param type of tracing which can be default (log to default logging) or backlog (log to a backlog queue)
 	 */
-	public void setTracing(boolean tracing, String type);
+    void setTracing(boolean tracing, String type);
 
 	/**
 	 * Turn on/off debugging
 	 * @param debugging to turn on debugging, false to turn it off
 	 */
-	public void setDebugging(boolean debugging);
+    void setDebugging(boolean debugging);
 
 	/**
 	 * Turn on/off loading/starting flows (as file) from the deploy directory
 	 * @param deployOnStart if true then flows in the deploy directory are started on startup of Assimbly
 	 * @param deployOnChange if true then flows in the deploy directory are started on file change
 	 */
-	public void setDeployDirectory(boolean deployOnStart, boolean deployOnChange) throws Exception;
+    void setDeployDirectory(boolean deployOnStart, boolean deployOnChange) throws Exception;
 
 	/**
 	 * Turn on/off suppressLoggingOnTimeout
 	 * @param suppressLoggingOnTimeout to turn on debugging, false to turn it off
 	 */
-	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
+    void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
 
 	/**
 	 * Turn on/off streamCaching
 	 * @param streamCaching to turn on streamCaching, false to turn it off
 	 */
-	public void setStreamCaching(boolean streamCaching);
+    void setStreamCaching(boolean streamCaching);
 
 	/**
 	 * Turn on/off debugging
 	 * @param certificateStore to turn on certificateStore, false to turn it off
 	 */
-	public void setCertificateStore(boolean certificateStore) throws Exception;
+    void setCertificateStore(boolean certificateStore) throws Exception;
 
 	/**
 	 * Turn on/off metrics
 	 * @param metrics to turn on metrics, false to turn it off
 	 */
-	public void setMetrics(boolean metrics);
+    void setMetrics(boolean metrics);
 
 	/**
 	 * Turn on/off historyMetrics
 	 * @param historyMetrics to turn on historyMetrics, false to turn it off
 	 */
-	public void setHistoryMetrics(boolean historyMetrics);
+    void setHistoryMetrics(boolean historyMetrics);
 
 	/**
 	* Adds event notifier to notified about events
 	* @param  eventNotifier eventNotifier object
 	* @throws Exception if eventNotifier
 	*/
-	public void addEventNotifier(EventNotifier eventNotifier) throws Exception;
+    void addEventNotifier(EventNotifier eventNotifier) throws Exception;
 	
 	//manage flow
 	/**
@@ -248,7 +248,7 @@ public interface Integration {
 	* @param  flowId the id of a flow
 	* @return returns true if started.
 	*/
-	public boolean hasFlow(String flowId);
+    boolean hasFlow(String flowId);
 
 	/**
 	* Validates the uri + options
@@ -256,7 +256,7 @@ public interface Integration {
 	* @param  flowId the id of a flow
 	* @return returns true if valid.
 	*/
-	public String validateFlow(String flowId);
+    String validateFlow(String flowId);
 	
 	/**
 	* Gets the stats of an integration
@@ -266,7 +266,7 @@ public interface Integration {
 	* @return returns stats of integration (system)
 	*
 	*/
-	public String getStats(String mediaType) throws Exception;
+    String getStats(String mediaType) throws Exception;
 
 	/**
 	 * Gets the stats of all steps
@@ -275,7 +275,7 @@ public interface Integration {
 	 * @throws Exception if stats can't be retrieved
 	 * @return returns stats of integration (system)
 	 */
-	public String getStepsStats(String mediaType) throws Exception;
+    String getStepsStats(String mediaType) throws Exception;
 
 	/**
 	 * Gets the stats of all flows
@@ -284,7 +284,7 @@ public interface Integration {
 	 * @throws Exception if stats can't be retrieved
 	 * @return returns stats of integration (system)
 	 */
-	public String getFlowsStats(String mediaType) throws Exception;
+    String getFlowsStats(String mediaType) throws Exception;
 
 	/**
 	 * Gets the stats of an integration
@@ -293,7 +293,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getMessages(String mediaType) throws Exception;
+    String getMessages(String mediaType) throws Exception;
 
 	/**
 	 * Gets the stats of an integration
@@ -303,7 +303,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
+    String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the metrics of an integration
@@ -312,7 +312,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns metrics
 	 */
-	public String getMetrics(String mediaType) throws Exception;
+    String getMetrics(String mediaType) throws Exception;
 
 	/**
 	 * Gets the historical metrics of an integration
@@ -321,7 +321,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns historical metrics
 	 */
-	public String getHistoryMetrics(String mediaType) throws Exception;
+    String getHistoryMetrics(String mediaType) throws Exception;
 
 	/**
 	 * Gets the ids of (loaded) flows
@@ -331,7 +331,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String getListOfFlows(String filter, String mediaType) throws Exception;
+    String getListOfFlows(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details of (loaded) flows
@@ -341,7 +341,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id, name, status etc
 	 */
-	public String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
+    String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the soap actions for a SOAP service (WSDL)
@@ -350,7 +350,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of SOAP actions
 	 */
-	public String getListOfSoapActions(String url, String mediaType) throws Exception;
+    String getListOfSoapActions(String url, String mediaType) throws Exception;
 
 
 	/**
@@ -361,7 +361,7 @@ public interface Integration {
 	 * @throws Exception if step template isn't found
 	 * @return returns an array of flows with id
 	 */
-	public abstract String getStepTemplate(String mediaType, String stepName) throws Exception;
+    String getStepTemplate(String mediaType, String stepName) throws Exception;
 
 	/**
 	 * Gets list of step templates
@@ -369,7 +369,7 @@ public interface Integration {
 	 * @throws Exception if list failed to retreive
 	 * @return returns an array of flows with id
 	 */
-	public abstract String getListOfStepTemplates() throws Exception;
+    String getListOfStepTemplates() throws Exception;
 
 	/**
 	 * Count the number of (loaded) flows
@@ -379,7 +379,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String countFlows(String filter, String mediaType) throws Exception;
+    String countFlows(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Counts the number of (loaded) steps
@@ -389,7 +389,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns an array of flows with id
 	 */
-	public String countSteps(String filter, String mediaType) throws Exception;
+    String countSteps(String filter, String mediaType) throws Exception;
 
 	/**
 	* Gets the version of documentation/integration framework 
@@ -397,7 +397,7 @@ public interface Integration {
 	* @throws Exception if version couldn't retrieved
 	* @return returns documentation version
 	*/
-	public String getDocumentationVersion() throws Exception;	
+    String getDocumentationVersion() throws Exception;
 
 	/**
 	* Gets the documentation of a component
@@ -407,7 +407,7 @@ public interface Integration {
 	* @throws Exception if documenation couldn't get found
 	* @return returns documentation
 	*/
-	public String getDocumentation(String componentType, String mediaType) throws Exception;
+    String getDocumentation(String componentType, String mediaType) throws Exception;
 
 	/**
 	 * Gets the all information of the components
@@ -416,7 +416,7 @@ public interface Integration {
 	 * @throws Exception if components couldn't get found
 	 * @return returns list of components
 	 */
-	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
+    String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception;
 
 	/**
 	* Gets the documentation/schema of a component
@@ -426,7 +426,7 @@ public interface Integration {
 	* @throws Exception if documentation couldn't get found
 	* @return returns documenation
 	*/
-	public String getComponentSchema(String componentType, String mediaType) throws Exception;	
+    String getComponentSchema(String componentType, String mediaType) throws Exception;
 
 	/**
 	* Gets the parameters of a component
@@ -436,7 +436,7 @@ public interface Integration {
 	* @throws Exception if documentation couldn't get found
 	* @return returns list of options
 	*/
-	public String getComponentParameters(String componentType, String mediaType) throws Exception;		
+    String getComponentParameters(String componentType, String mediaType) throws Exception;
 	
 	/**
 	* Gets the last error of a integration
@@ -444,7 +444,7 @@ public interface Integration {
 	* @throws Exception if error couldn't be retrieved
 	* @return the last error or 0 if no error
 	*/
-	public String getLastError() throws Exception;	
+    String getLastError() throws Exception;
 
 	/**
 	* Gets TLS certificates for a url.
@@ -455,7 +455,7 @@ public interface Integration {
  	* @return returns a map with certificates for this url
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate[] getCertificates(String url) throws Exception;
+    Certificate[] getCertificates(String url) throws Exception;
 
 	/**
 	* Gets TLS certificates for a url.
@@ -467,7 +467,7 @@ public interface Integration {
 	* @return returns the Certificate object
 	* @throws Exception if certificates cannot be downloaded
 	*/
-	public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
+    Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception;
 
 	
 	/**
@@ -478,7 +478,7 @@ public interface Integration {
 	* @param url an https url
 	* @throws Exception if certificates cannot be imported
 	*/
-	public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
+    void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
 
 	
 	/**
@@ -492,7 +492,7 @@ public interface Integration {
  	* @return returns a confirmation message
 	* @throws Exception if certificates cannot be imported
 	*/
-	public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
+    String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) throws Exception;
 	
 	
 	/**
@@ -505,7 +505,7 @@ public interface Integration {
 	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
-	public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+    Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
 
 
 	/**
@@ -516,7 +516,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if certificates cannot be imported
 	 */
-	public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
+    Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception;
 
 		/**
 	* Delete certificate from key/truststore
@@ -524,7 +524,7 @@ public interface Integration {
 	* @param certificateName name of the certificate
 	* @throws Exception if certificates cannot be deleted
 	*/
-	public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
+        void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName)  throws Exception;
 
 
 	/**
@@ -534,47 +534,47 @@ public interface Integration {
 	* @return returns true if removed.
 	 * @throws Exception if flow cannot be removed
 	*/
-	public boolean removeFlow(String flowId) throws Exception;
+    boolean removeFlow(String flowId) throws Exception;
 	
 	/**
 	* Starts all configured flows
 	*
 	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't start
-	*/	
-	public String startAllFlows() throws Exception;
+	*/
+    String startAllFlows() throws Exception;
 
 	/**
 	* Restarts all configured flows
 	*
 	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't stop
-	*/	
-	public String restartAllFlows() throws Exception;
+	*/
+    String restartAllFlows() throws Exception;
 
 	/**
 	* Starts all configured flows
 	*
 	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't start
-	*/	
-	public String pauseAllFlows() throws Exception;
+	*/
+    String pauseAllFlows() throws Exception;
 
 	/**
 	* Resume all configured flows
 	*
 	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't resume
-	*/	
-	public String resumeAllFlows() throws Exception;
+	*/
+    String resumeAllFlows() throws Exception;
 
 	/**
 	* Stops all configured flows
 	* 
 	* @return returns a confirmation message
 	* @throws Exception if one of the flows doesn't stop
-	*/	
-	public String stopAllFlows() throws Exception;
+	*/
+    String stopAllFlows() throws Exception;
 	
 	/**
 	* Starts a flow
@@ -582,8 +582,8 @@ public interface Integration {
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
-	*/	
-	public String startFlow(String flowId, long timeout) throws Exception;
+	*/
+    String startFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Restarts a flow
@@ -592,7 +592,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String restartFlow(String flowId, long timeout) throws Exception;
+    String restartFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Stops a flow
@@ -601,7 +601,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String stopFlow(String flowId, long timeout) throws Exception;
+    String stopFlow(String flowId, long timeout) throws Exception;
 	
 	/**
 	* Resumes a flow if paused
@@ -610,7 +610,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String resumeFlow(String flowId) throws Exception;
+    String resumeFlow(String flowId) throws Exception;
 
 	/**
 	* Pauses a flow if started
@@ -619,7 +619,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-	public String pauseFlow(String flowId) throws Exception;
+    String pauseFlow(String flowId) throws Exception;
 
 
 	/**
@@ -631,7 +631,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
+    String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
 
 
 
@@ -643,7 +643,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String installRoute(String routeId, String route) throws Exception;
+    String installRoute(String routeId, String route) throws Exception;
 
 	/**
 	* Configure and Starts a flow (for testing)
@@ -653,8 +653,8 @@ public interface Integration {
 	* @param  configuration (the XML, JSON or YAML file)
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
-	*/	
-	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
+	*/
+    String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)
@@ -663,7 +663,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-	public String uninstallFlow(String flowId, long timeout) throws Exception;
+    String uninstallFlow(String flowId, long timeout) throws Exception;
 
 	/**
 	* Installs a flow by saving the configuration as a file in the deploy directory
@@ -672,8 +672,8 @@ public interface Integration {
 	* @param  configuration (the Camel routes XML)
 	* @return returns a confirmation message ("saved")
 	* @throws Exception if flow doesn't start
-	*/	
-	public String fileInstallFlow(String flowId, String configuration) throws Exception;
+	*/
+    String fileInstallFlow(String flowId, String configuration) throws Exception;
 
 
 	/**
@@ -682,8 +682,8 @@ public interface Integration {
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message ("deleted")
 	* @throws Exception if flow doesn't start
-	*/	
-	public String fileUninstallFlow(String flowId) throws Exception;
+	*/
+    String fileUninstallFlow(String flowId) throws Exception;
 
 	
 	/**
@@ -693,7 +693,7 @@ public interface Integration {
 	* @throws Exception if flow status cannot retrieved
 	* @return returns true if flow is started.
 	*/
-	public boolean isFlowStarted(String flowId) throws Exception;
+    boolean isFlowStarted(String flowId) throws Exception;
 
 	/**
 	 * Gets info of a flow
@@ -703,7 +703,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
 	 */
-	public String getFlowInfo(String flowId, String mediaType) throws Exception;
+    String getFlowInfo(String flowId, String mediaType) throws Exception;
 
 	/**
 	* Gets the status of a flow 
@@ -712,7 +712,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns true (stopped, started, paused).
 	*/
-	public String getFlowStatus(String flowId) throws Exception;
+    String getFlowStatus(String flowId) throws Exception;
 
 	/*
 	* Gets the status of a flow 
@@ -721,7 +721,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns data/time in human readable format
 	*/
-	public String getFlowUptime(String flowId) throws Exception;	
+    String getFlowUptime(String flowId) throws Exception;
 
 	/**
 	* Gets the number of messages a flow has prcessed
@@ -730,7 +730,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowLastError(String flowId) throws Exception;
+    String getFlowLastError(String flowId) throws Exception;
 
 	/**
 	 * Gets the processed messages of a flow
@@ -741,7 +741,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages (total, completed, failed, pending)
 	 */
-	public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception;
+    String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception;
 
 	/**
 	* Gets the total number of messages a flow has processed
@@ -750,7 +750,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowTotalMessages(String flowId) throws Exception;	
+    String getFlowTotalMessages(String flowId) throws Exception;
 
 	/**
 	* Gets the total number of completed messages a flow has processed
@@ -759,7 +759,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowCompletedMessages(String flowId) throws Exception;	
+    String getFlowCompletedMessages(String flowId) throws Exception;
 
 	/**
 	* Gets the total number of failed messages a flow has processed
@@ -768,7 +768,7 @@ public interface Integration {
 	* @throws Exception if flow doesn't start
 	* @return returns number of messages
 	*/
-	public String getFlowFailedMessages(String flowId) throws Exception;
+    String getFlowFailedMessages(String flowId) throws Exception;
 
 	/**
 	 * Gets the total number of pending messages a flow has processed
@@ -777,7 +777,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getFlowPendingMessages(String flowId) throws Exception;
+    String getFlowPendingMessages(String flowId) throws Exception;
 
 	/**
 	 * Gets the processed messaged of a step in a flow
@@ -787,7 +787,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages (total, completed, failed, pending)
 	 */
-	public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception;
+    String getStepMessages(String flowId, String stepId, String mediaType) throws Exception;
 
 	/**
 	* Gets the failure log for the specified flow
@@ -796,8 +796,8 @@ public interface Integration {
 	* @param  numberOfEntries (maximum number of entries to return)
 	* @throws Exception if log cannot be retrieved
 	* @return failure log events (comma separated)
-	*/	
-	public String getFlowAlertsLog(String flowId, Integer numberOfEntries) throws Exception;	
+	*/
+    String getFlowAlertsLog(String flowId, Integer numberOfEntries) throws Exception;
 
 	/**
 	* Gets number of entries in (todays) failed log of flow
@@ -805,16 +805,16 @@ public interface Integration {
 	* @param  flowId the id of the flow
 	* @throws Exception if log cannot be retrieved
 	* @return number of flow failures
-	*/	
-	public String getFlowAlertsCount(String flowId) throws Exception;	
+	*/
+    String getFlowAlertsCount(String flowId) throws Exception;
 
 	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows
 	*
 	* @throws Exception if log cannot be retrieved
 	* @return failure log events (comma separated)
-	*/	
-	public TreeMap<String, String> getIntegrationAlertsCount() throws Exception;
+	*/
+    TreeMap<String, String> getIntegrationAlertsCount() throws Exception;
 	
 	/**
 	* Gets the event log for the specified flow (start events,stop events and message failures)
@@ -823,8 +823,8 @@ public interface Integration {
 	* @param  numberOfEntries (maximum number of entries to return)
 	* @throws Exception if log cannot be retrieved
 	* @return flow log events (comma separated)
-	*/		
-	public String getFlowEventsLog(String flowId, Integer numberOfEntries) throws Exception;	
+	*/
+    String getFlowEventsLog(String flowId, Integer numberOfEntries) throws Exception;
 	
 	/**
 	 * Gets the details stats of a flow
@@ -838,7 +838,7 @@ public interface Integration {
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
+    String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
@@ -849,7 +849,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception;
+    String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception;
 
 	/**
 	 * Gets the health of an integration
@@ -858,7 +858,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getHealth(String type, String mediaType) throws Exception;
+    String getHealth(String type, String mediaType) throws Exception;
 
 	/**
 	 * Gets the health of an integration
@@ -868,7 +868,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception;
+    String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details health of a flow
@@ -882,7 +882,7 @@ public interface Integration {
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
-	public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) throws Exception;
+    String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) throws Exception;
 
 
 	/**
@@ -897,7 +897,7 @@ public interface Integration {
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-	public String getFlowStepHealth(String flowId, String stepId,  String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
+    String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow
@@ -908,7 +908,7 @@ public interface Integration {
 	 * @return returns a list of threads
 	 * @throws Exception if threads cannot be retrieved
 	 */
-	public String getThreads(String mediaType, String filter, int topEntries) throws Exception;
+    String getThreads(String mediaType, String filter, int topEntries) throws Exception;
 
 	/**
 	* Gets a running route as XML/JSON by id
@@ -918,7 +918,7 @@ public interface Integration {
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
 	*/
-	public String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;	
+    String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
 	* Gets all the running routes as XML/JSON/YAML by id
@@ -926,8 +926,8 @@ public interface Integration {
 	* @param  mediaType (xml, json, yaml)
 	* @throws Exception if configuration can't be retrieved
 	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
-	*/	
-	public String getAllCamelRoutesConfiguration(String mediaType) throws Exception;	
+	*/
+    String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
 	
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
@@ -935,7 +935,7 @@ public interface Integration {
 	* @param  scheme name of the scheme
 	* @return Message on succes or failure
 	*/
-	public String resolveDependency(String scheme) throws Exception;
+    String resolveDependency(String scheme) throws Exception;
 	
 	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
@@ -954,7 +954,7 @@ public interface Integration {
 	* @return returns context as object
 	* @throws Exception if context can't be found
 	*/
-	public CamelContext getContext() throws Exception;
+    CamelContext getContext() throws Exception;
 
 	/**
 	* Get a producertemplate for CamelIntegration
@@ -962,7 +962,7 @@ public interface Integration {
 	* @return returns ProducerTemplate
 	* @throws Exception if context can't be found
 	*/
-	public ProducerTemplate getProducerTemplate() throws Exception;
+    ProducerTemplate getProducerTemplate() throws Exception;
 
 	/**
 	* Get a consumer template for CamelIntegration
@@ -970,7 +970,7 @@ public interface Integration {
 	* @return returns ConsumerTemplate
 	* @throws Exception if context can't be found
 	*/
-	public ConsumerTemplate getConsumerTemplate() throws Exception;
+    ConsumerTemplate getConsumerTemplate() throws Exception;
 
 	/**
 	 * Send a message to (default producer)
@@ -978,7 +978,7 @@ public interface Integration {
 	 * @param messageBody Content of the body
 	 * @param template for the producer
 	 */
-	public void send(Object messageBody, ProducerTemplate template);
+    void send(Object messageBody, ProducerTemplate template);
 
 	/**
 	 * Send a message with headers to (default producer)
@@ -987,7 +987,7 @@ public interface Integration {
 	 * @param messageHeaders Treemap<String, Object> with one or more headers
 	 * @param template for the producer
 	 */
-	public void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
+    void sendWithHeaders(Object messageBody, TreeMap<String, Object> messageHeaders, ProducerTemplate template);
 
 	/**
 	 * Send a message with headers to an uri
@@ -996,7 +996,7 @@ public interface Integration {
 	 * @param messageBody Content of the body
 	 * @param numberOfTimes Number of times the message is sent
 	 */
-	public void send(String uri,Object messageBody, Integer numberOfTimes);
+    void send(String uri, Object messageBody, Integer numberOfTimes);
 
 	/**
 	 * Send a message with headers to an uri
@@ -1006,7 +1006,7 @@ public interface Integration {
 	 * @param messageHeaders Treemap<String, Object> with one or more headers
 	 * @param numberOfTimes Number of times the message is sent
 	 */
-	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
+    void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes);
 
 	/**
 	 * Send a message with headers to an uri
@@ -1014,7 +1014,7 @@ public interface Integration {
 	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 */
-	public String sendRequest(String uri,Object messageBody);
+    String sendRequest(String uri, Object messageBody);
 
 	/**
 	 * Send a message with headers to an uri
@@ -1023,7 +1023,7 @@ public interface Integration {
 	 * @param messageBody Content of the body
 	 * @param messageHeaders Treemap<String, Object> with one or more headers
 	 */
-	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
+    String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders);
 
 	/**
 	 * Validates a cron expression
@@ -1031,14 +1031,14 @@ public interface Integration {
 	 * @param  cronExpression the cron expression
 	 * @return result of validation
 	 */
-	public ValidationErrorMessage validateCron(String cronExpression);
+    ValidationErrorMessage validateCron(String cronExpression);
 
 	/**
 	 * Validates a certificate
 	 *
 	 * @param  httpsUrl
 	 * @return result of validation	 */
-	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
+    HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
 
 	/**
 	 * Validates a url expression
@@ -1046,7 +1046,7 @@ public interface Integration {
 	 * @param  url
 	 * @return result of validation
 	 */
-	public ValidationErrorMessage validateUrl(String url);
+    ValidationErrorMessage validateUrl(String url);
 
 	/**
 	 * Validates an expression
@@ -1054,7 +1054,7 @@ public interface Integration {
 	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-	public List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
+    List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
 
 	/**
 	 * Validates a ftp expression
@@ -1062,7 +1062,7 @@ public interface Integration {
 	 * @param  ftpSettings
 	 * @return result of validation
 	 */
-	public ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
+    ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
 
 	/**
 	 * Validates a regex expression
@@ -1070,7 +1070,7 @@ public interface Integration {
 	 * @param  regex the regex expression
 	 * @return result of validation
 	 */
-	public AbstractMap.SimpleEntry validateRegex(Regex regex);
+    AbstractMap.SimpleEntry validateRegex(Regex regex);
 
 	/**
 	 * Validates a script
@@ -1078,7 +1078,7 @@ public interface Integration {
 	 * @param  scriptRequest the script (for example Groovy)
 	 * @return result of validation
 	 */
-	public EvaluationResponse validateScript(EvaluationRequest scriptRequest);
+    EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 	/**
 	 * Validates a xslt
@@ -1087,6 +1087,6 @@ public interface Integration {
 	 * @param  xsltBody the body of the XSLT file
 	 * @return result of validation
 	 */
-	public List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
+    List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
 
 }

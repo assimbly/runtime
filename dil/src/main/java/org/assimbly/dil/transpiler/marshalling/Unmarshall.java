@@ -3,14 +3,16 @@ package org.assimbly.dil.transpiler.marshalling;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.assimbly.dil.transpiler.marshalling.core.*;
-import org.assimbly.dil.transpiler.marshalling.core.Message;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import javax.xml.xpath.*;
-import java.util.*;
+
+import javax.xml.xpath.XPathFactory;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeMap;
 
 // This class unmarshalls an XML file into a Java treemap object
 // The XML file must be in DIL (Data Integration Language) format
@@ -20,7 +22,6 @@ public class Unmarshall {
 	private TreeMap<String, String> properties;
 	private XMLConfiguration conf;
 	private String flowId;
-	XPathFactory xf = new XPathFactoryImpl();
 	List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
@@ -64,9 +65,8 @@ public class Unmarshall {
 
 		for (int i = 0; i < flow.getLength(); i++) {
 			Node node = flow.item(i);
-			if (node instanceof Element) {
-				Element element = (Element) node;
-				String id = element.getElementsByTagName("id").item(0).getFirstChild().getTextContent();
+			if (node instanceof Element element) {
+                String id = element.getElementsByTagName("id").item(0).getFirstChild().getTextContent();
 
 				if (flowId.equals(id)) {
 					return element;
@@ -213,11 +213,7 @@ public class Unmarshall {
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
-		if(baseUri.startsWith("blocks") || baseUri.startsWith("component")){
-			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}else{
-			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}
+		properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 
 	}
 

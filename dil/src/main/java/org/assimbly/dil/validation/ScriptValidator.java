@@ -2,7 +2,6 @@ package org.assimbly.dil.validation;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.language.groovy.GroovyExpression;
-//import org.apache.camel.language.js.JavaScriptExpression;
 import org.apache.camel.model.language.JavaScriptExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;

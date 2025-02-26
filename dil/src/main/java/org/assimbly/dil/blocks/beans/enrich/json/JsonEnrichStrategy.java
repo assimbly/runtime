@@ -4,9 +4,9 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConversionException;
 import org.apache.log4j.Logger;
+import org.assimbly.aggregate.json.JsonAggregateStrategy;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.assimbly.aggregate.json.JsonAggregateStrategy;
 
 public class JsonEnrichStrategy implements AggregationStrategy {
 
@@ -47,7 +47,7 @@ public class JsonEnrichStrategy implements AggregationStrategy {
     }
 
     private JSONArray wrapArray(JSONArray array, String json){
-        if(json.substring(0, 1).equals("[")) {
+        if(json.charAt(0) == '[') {
             return array.put(new JSONArray(json));
         } else {
             return array.put(new JSONObject(json));

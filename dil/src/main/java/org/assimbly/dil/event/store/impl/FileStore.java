@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -14,9 +15,9 @@ public class FileStore {
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
     private File file;
-    private Date date = new Date();
-    private String collectorId;
-    private org.assimbly.dil.event.domain.Store store;
+    private final Date date = new Date();
+    private final String collectorId;
+    private final org.assimbly.dil.event.domain.Store store;
 
     public FileStore(String collectorId, org.assimbly.dil.event.domain.Store store) {
         this.collectorId = collectorId;
@@ -29,7 +30,7 @@ public class FileStore {
     }
 
     public void store(String json) {
-        List<String> line = Arrays.asList(json);
+        List<String> line = Collections.singletonList(json);
         try {
             FileUtils.writeLines(file, line, true);
         } catch (IOException e) {

@@ -1,6 +1,9 @@
 package org.assimbly.dil.blocks.processors;
 
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+import org.apache.camel.Route;
 import org.apache.camel.spi.RouteController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

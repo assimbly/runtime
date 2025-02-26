@@ -1,6 +1,7 @@
 package org.assimbly.dil.transpiler.ssl;
 
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.SSLContextParametersAware;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;

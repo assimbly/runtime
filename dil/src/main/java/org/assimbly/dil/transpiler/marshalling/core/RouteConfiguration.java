@@ -10,8 +10,8 @@ import java.util.TreeMap;
 
 public class RouteConfiguration {
 
-    private TreeMap<String, String> properties;
-    private XMLConfiguration conf;
+    private final TreeMap<String, String> properties;
+    private final XMLConfiguration conf;
 
     public RouteConfiguration(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;

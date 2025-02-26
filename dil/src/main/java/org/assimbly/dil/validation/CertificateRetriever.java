@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface CertificateRetriever {
 
-    public void addHttpsCertificatesToTrustStore(List<String> urls) throws Exception;
+    void addHttpsCertificatesToTrustStore(List<String> urls) throws Exception;
 
 }

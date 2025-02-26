@@ -1,7 +1,6 @@
 package org.assimbly.dil.validation;
 
 import org.assimbly.dil.validation.beans.Regex;
-import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.util.AbstractMap;
 import java.util.regex.Matcher;

@@ -6,9 +6,11 @@ import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.Language;
-import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.util.IntegrationUtil;
-import org.w3c.dom.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import javax.xml.xpath.XPathFactory;
 
 //set headers for each step

@@ -6,12 +6,13 @@ import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
+import org.assimbly.dil.event.domain.MessageEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
-import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -20,6 +21,9 @@ import java.util.stream.Collectors;
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
 public class ExchangeCollector extends EventNotifierSupport {
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
+
     private final StoreManager storeManager;
     private final String expiryInHours;
     private final ArrayList<Filter> filters;
@@ -40,9 +44,7 @@ public class ExchangeCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
 
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
-    private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
-
-    protected Logger log = LoggerFactory.getLogger(getClass());
+    private static final String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
     public ExchangeCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
@@ -90,6 +92,8 @@ public class ExchangeCollector extends EventNotifierSupport {
 
     private void processEvent(Exchange exchange, String stepId){
 
+        log.warn("Exchange collector isn't implemented. Use step collector");
+        /*
         //set fields
         Message message = exchange.getMessage();
         String body = getBody(exchange);
@@ -105,13 +109,14 @@ public class ExchangeCollector extends EventNotifierSupport {
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json
-        //MessageEvent messageEvent = new MessageEvent(
-        //        timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
-        //);
-        //String json = messageEvent.toJson();
+        MessageEvent messageEvent = new MessageEvent(
+                timestamp, messageId, flowId, flowVersion, stepId, headers, properties, body, expiryDate
+        );
+        String json = messageEvent.toJson();
 
         //store the event
-        //storeManager.storeEvent(json);
+        storeManager.storeEvent(json);
+        */
     }
 
 

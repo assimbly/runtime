@@ -18,7 +18,7 @@ import java.util.List;
 
 public class TrustedClientConfigurer implements HttpClientConfigurer {
 
-    private static Logger logger = LoggerFactory.getLogger(TrustedClientConfigurer.class);
+    private static final Logger logger = LoggerFactory.getLogger(TrustedClientConfigurer.class);
 
     private List<FileBasedTrustStore> trustStores = new ArrayList<>();
 

@@ -2,11 +2,7 @@ package org.assimbly.dil.blocks.connections.broker;
 
 import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-//import org.apache.camel.component.activemq.ActiveMQComponent;
-//import org.apache.camel.component.activemq.ActiveMQConfiguration;
-import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +11,10 @@ import org.slf4j.LoggerFactory;
 public class ActiveMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-    private CamelContext context;
-    private EncryptableProperties properties;
-    private String componentName;
-    private String connectionId;
-    private ActiveMQConnectionFactory activeMQConnectionFactory;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
+    private final String componentName;
+    private final String connectionId;
     private String url;
     private String username;
     private String password;
@@ -87,9 +82,9 @@ public class ActiveMQConnection {
     private void setConnection() throws JMSException {
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-            activeMQConnectionFactory = new ActiveMQConnectionFactory(url);
+            new ActiveMQConnectionFactory(url);
         } else {
-            activeMQConnectionFactory = new ActiveMQConnectionFactory(username, password, url);
+            new ActiveMQConnectionFactory(username, password, url);
         }
 
         if (conType.equals("basic")) {

@@ -3,8 +3,8 @@ package org.assimbly.dil.validation.expressions;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
-import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.Validator;
+import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 public class XPathValidator implements Validator {

@@ -78,9 +78,7 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
             boolean useCustomHeader = Boolean.parseBoolean(String.valueOf(useCustomHeaderObj));
 
             // If useCustomHeader is true, do not filter the date header
-            if (useCustomHeader) {
-                return true;
-            }
+            return useCustomHeader;
         }
         return false;
     }

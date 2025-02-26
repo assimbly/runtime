@@ -1,14 +1,14 @@
 package org.assimbly.dil.blocks.processors;
 
-import java.io.File;
-import java.io.InputStream;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.assimbly.docconverter.DocConverter;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
+
+import java.io.File;
+import java.io.InputStream;
 
 
 @ManagedResource(description = "Type and DataFormat Conversion")

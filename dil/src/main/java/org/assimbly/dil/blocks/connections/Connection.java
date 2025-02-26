@@ -1,19 +1,17 @@
 package org.assimbly.dil.blocks.connections;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.commons.collections4.MapUtils;
 import org.assimbly.dil.blocks.connections.broker.*;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
 import org.assimbly.util.EncryptionUtil;
-import org.assimbly.util.IntegrationUtil;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.iv.RandomIvGenerator;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
 
 public class Connection {
 
@@ -23,9 +21,9 @@ public class Connection {
 	private String connectionId;
 	private String connectionIdValue;
 	private String flowId;
-	private TreeMap<String, String> properties;
-	private String key;
-	private CamelContext context;
+	private final TreeMap<String, String> properties;
+	private final String key;
+	private final CamelContext context;
 	private String stepType;
     private Object stepId;
     private String connectionType;

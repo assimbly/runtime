@@ -1,6 +1,5 @@
 package org.assimbly.dil.validation;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpHead;

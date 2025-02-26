@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.JMSException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.jasypt.properties.EncryptableProperties;
@@ -7,18 +8,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import progress.message.jclient.ConnectionFactory;
 
-import jakarta.jms.JMSException;
-
 //to do in Jakarta/Camel4 migration (does SonicMQ support jakarta?)
 
 public class SonicMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private CamelContext context;
-    private EncryptableProperties properties;
+    private final CamelContext context;
+    private final EncryptableProperties properties;
     private String componentName;
-    private String connectionId;
+    private final String connectionId;
     private String url;
     private String username;
     private String password;

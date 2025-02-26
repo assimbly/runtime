@@ -1,17 +1,5 @@
 package org.assimbly.broker.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Field;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-import java.util.stream.Collectors;
-import static java.util.Arrays.stream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
@@ -33,16 +21,31 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.*;
+import javax.management.MalformedObjectNameException;
 import javax.management.openmbean.CompositeData;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
 
 public class ActiveMQArtemis implements Broker {
 
 	final static Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-	private File brokerFile = new File(baseDir + "/broker/broker.xml");
-	private File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
+	private final File brokerFile = new File(baseDir + "/broker/broker.xml");
+	private final File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
 	private ActiveMQServerControlImpl manageBroker;
 	private boolean endpointExist;
 
@@ -563,7 +566,7 @@ public class ActiveMQArtemis implements Broker {
 	public String countMessagesFromList(String endpointList) throws Exception {
 
 		Long numberOfMessages = 0L;
-		List<String> endpointNames= Arrays.asList(endpointList.split("\\s*,\\s*"));
+		String[] endpointNames= endpointList.split("\\s*,\\s*");
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		for(String endpointName: endpointNames){

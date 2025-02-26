@@ -1,23 +1,12 @@
 package org.assimbly.broker.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.UrlEscapers;
-import org.apache.activemq.broker.*;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.Connection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.*;
-
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +22,17 @@ import org.slf4j.LoggerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static jakarta.jms.DeliveryMode.NON_PERSISTENT;
 import static jakarta.jms.DeliveryMode.PERSISTENT;
@@ -41,7 +41,7 @@ public class ActiveMQClassic implements Broker {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-    private File brokerFile = new File(baseDir + "/broker/activemq.xml");
+    private final File brokerFile = new File(baseDir + "/broker/activemq.xml");
     private BrokerService broker;
     private BrokerViewMBean brokerViewMBean;
     private QueueViewMBean queueViewMbean;
@@ -554,7 +554,7 @@ public class ActiveMQClassic implements Broker {
     public String countMessagesFromList(String endpointList) throws Exception {
 
         Long numberOfMessages = 0L;
-        List<String> endpointNames= Arrays.asList(endpointList.split("\\s*,\\s*"));
+        String[] endpointNames= endpointList.split("\\s*,\\s*");
 
         for(String endpointName: endpointNames){
 
@@ -610,9 +610,7 @@ public class ActiveMQClassic implements Broker {
                 }
             }
 
-            if(messageHeaders.containsKey("JMSTimestamp")) {
-                messageHeaders.remove("JMSTimestamp");
-            }
+            messageHeaders.remove("JMSTimestamp");
 
             destinationViewMBean.sendTextMessage(messageHeaders,messageBody);
 
