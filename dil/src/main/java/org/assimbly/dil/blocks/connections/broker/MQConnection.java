@@ -86,12 +86,12 @@ public class MQConnection {
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         } else {
             context.removeComponent(componentName);
             sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
+            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
             context.addComponent(componentName, sjmsComponent);
         }
 

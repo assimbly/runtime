@@ -33,6 +33,11 @@
           <artifactId>common-base</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
+      <dependency>
+          <groupId>org.assimbly</groupId>
+          <artifactId>database-drivers</artifactId>
+          <version>${assimbly.version}</version>
+      </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camel-components</artifactId>
@@ -43,11 +48,7 @@
           <artifactId>dil</artifactId>
           <version>${assimbly.version}</version>
       </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>database-drivers</artifactId>
-  		  <version>${assimbly.version}</version>
-	  </dependency>
+
 
   </dependencies>
 
