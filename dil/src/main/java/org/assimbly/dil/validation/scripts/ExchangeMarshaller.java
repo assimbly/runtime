@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ExchangeMarshaller {
+
+    private ExchangeMarshaller() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static Exchange unmarshall(ExchangeDto exchangeDto) {
         Exchange exchange = new DefaultExchange(new DefaultCamelContext());
 

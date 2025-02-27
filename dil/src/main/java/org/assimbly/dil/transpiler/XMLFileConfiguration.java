@@ -44,12 +44,10 @@ import java.util.*;
 
 public class XMLFileConfiguration {
 
-	final static Logger log = LoggerFactory.getLogger(XMLFileConfiguration.class);
+	protected static Logger log = LoggerFactory.getLogger(XMLFileConfiguration.class);
 
 	private TreeMap<String, String> properties;
 	private List<TreeMap<String, String>> propertiesList;
-
-	private String xmlFlowConfiguration;
 
 	private XMLConfiguration conf;
 
@@ -58,9 +56,9 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, String xml) throws Exception {
 
 		propertiesList = new ArrayList<>();
-		Document doc = DocConverter.convertStringToDoc(xml);
+		Document document = DocConverter.convertStringToDoc(xml);
 
-		List<String> flowIds = getFlowIds(integrationId,doc);
+		List<String> flowIds = getFlowIds(integrationId,document);
 
 		for(String flowId : flowIds){
 
@@ -78,9 +76,9 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, URI uri) throws Exception {
 
 		propertiesList = new ArrayList<>();
-		Document doc = DocConverter.convertUriToDoc(uri);
+		Document document = DocConverter.convertUriToDoc(uri);
 
-		List<String> flowIds = getFlowIds(integrationId,doc);
+		List<String> flowIds = getFlowIds(integrationId,document);
 
 		for(String flowId : flowIds){
 			TreeMap<String, String> flowConfiguration = getFlowConfiguration(flowId, uri);
@@ -101,7 +99,7 @@ public class XMLFileConfiguration {
 		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
 			Transform transform = new Transform("transform-to-dil.xsl");
-			dilXml = transform.transformToDil(xml, flowId);
+			dilXml = transform.transformToDil(xml);
 		}
 
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
@@ -137,7 +135,7 @@ public class XMLFileConfiguration {
 			Validator validator = schema.newValidator();
 			validator.validate(new StreamSource(new StringReader(xml)));
 		} catch (Exception e) {
-			System.out.println("Exception: "+e.getMessage());
+            log.error("Exception: {}", e.getMessage());
 			return false;
 		}
 		return true;
@@ -148,7 +146,7 @@ public class XMLFileConfiguration {
 		log.info("Configuration File: " + xml);
 
 		Transform transform = new Transform("transform-to-route.xsl");
-		return transform.transformToDil(xml, flowId);
+		return transform.transformToDil(xml);
 
 	}
 
@@ -227,9 +225,7 @@ public class XMLFileConfiguration {
 
 			doc = new Marshall().setProperties(doc,integrationId,configurations);
 
-			String xmlConfiguration = DocConverter.convertDocToString(doc);
-
-			return xmlConfiguration;
+            return DocConverter.convertDocToString(doc);
 
 		}
 
@@ -246,8 +242,9 @@ public class XMLFileConfiguration {
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		doc = docBuilder.newDocument();
 
-		doc = new Marshall().setProperties(doc,"live",configuration);
+		doc = new Marshall().setProperties(doc, configuration);
 
+		String xmlFlowConfiguration;
 		if(doc!=null) {
 			xmlFlowConfiguration = DocConverter.convertDocToString(doc);
 		}else {
@@ -316,9 +313,9 @@ public class XMLFileConfiguration {
 
 		public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
 
-			AbstractMap map = (AbstractMap) value;
+			AbstractMap<Object, Object> map = (AbstractMap<Object, Object>) value;
 			for (Object obj : map.entrySet()) {
-				Map.Entry entry = (Map.Entry) obj;
+				Map.Entry<Object, Object> entry = (Map.Entry) obj;
 				writer.startNode(entry.getKey().toString());
 				Object val = entry.getValue();
 				if ( null != val ) {
@@ -331,7 +328,7 @@ public class XMLFileConfiguration {
 
 		public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
 
-			Map<String, String> map = new HashMap<String, String>();
+			Map<String, String> map = new HashMap<>();
 
 			while(reader.hasMoreChildren()) {
 				reader.moveDown();

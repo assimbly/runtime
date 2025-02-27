@@ -22,13 +22,10 @@ public class EnrichStrategy implements AggregationStrategy {
         AggregationStrategy enrichStrategy;
 
         switch(enrichType) {
-            case "xml":
-            case "text/xml":
-            case "application/xml":
+            case "xml", "text/xml", "application/xml":
                 enrichStrategy = new XmlEnrichStrategy();
                 break;
-            case "json":
-            case "application/json":
+            case "json", "application/json":
                 enrichStrategy = new JsonEnrichStrategy();
                 break;
             case "application/zip":

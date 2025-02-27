@@ -49,7 +49,7 @@ public class IBMMQConnection {
     }
 
 
-    public void start(String stepType, Object stepId) throws Exception {
+    public void start() throws Exception {
 
         log.info("Setting up jms client connection for ActiveMQ.");
 

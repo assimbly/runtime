@@ -29,7 +29,7 @@ public class MQConnection {
         this.componentName = componentName;
     }
 
-    public void start(String direction, Object stepId) throws Exception {
+    public void start() throws Exception {
 
         setFields();
 

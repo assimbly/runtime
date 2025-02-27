@@ -4,6 +4,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.assimbly.docconverter.DocConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
@@ -13,8 +15,8 @@ import java.io.InputStream;
 
 @ManagedResource(description = "Type and DataFormat Conversion")
 public class ConvertProcessor implements Processor {
-	
-	private String convertedBody;
+
+	protected static Logger log = LoggerFactory.getLogger(ConvertProcessor.class);
 
 	@ManagedOperation(description="Conversions")
 	public void process(Exchange exchange) throws Exception {
@@ -27,8 +29,10 @@ public class ConvertProcessor implements Processor {
 			
 			String convertFormat = convertFormatObject.toString();
 			String body = in.getBody(String.class);
-			
-			switch(convertFormat) 
+
+			String convertedBody;
+
+			switch(convertFormat)
 	        { 
 	            case "XML2JSON": 
 	            	convertedBody = DocConverter.convertXmlToJson(body); 
@@ -92,6 +96,8 @@ public class ConvertProcessor implements Processor {
 	            case "Body2InputStream":
 	                in.setBody(in.getBody(), InputStream.class);
 	                break;
+				default:
+					log.warn("Unknown conversion type: " + convertTypeTo);
 	        }
 					
 		}

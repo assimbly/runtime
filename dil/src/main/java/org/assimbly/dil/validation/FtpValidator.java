@@ -30,7 +30,7 @@ public class FtpValidator {
     private static final ValidationErrorMessage UNREACHABLE_ERROR =
             new ValidationErrorMessage("Cannot login into FTP Server!");
 
-    public ValidationErrorMessage validate(FtpSettings ftpSettings) {
+    public ValidationErrorMessage validate(FtpSettings ftpSettings) throws IOException {
 
         if (ftpSettings.getProtocol().equalsIgnoreCase("ftp"))
             return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), false, false);
@@ -48,7 +48,7 @@ public class FtpValidator {
         return session;
     }
 
-    private ValidationErrorMessage checkSFtpConnection(String userName, String password, String host, int port, String privateKeyFilePath, String privateKeyFileData) {
+    private ValidationErrorMessage checkSFtpConnection(String userName, String password, String host, int port, String privateKeyFilePath, String privateKeyFileData) throws IOException {
         Session session = null;
         Channel channel = null;
         File tempFile = null;
@@ -88,10 +88,7 @@ public class FtpValidator {
             if (session != null)
                 session.disconnect();
             if (tempFile != null) {
-                boolean result = tempFile.delete();
-                if(!result){
-                    log.warn("Unable to delete temp file: " + tempFile.getAbsolutePath());
-                }
+                Files.delete(tempFile.toPath());
             }
         }
 

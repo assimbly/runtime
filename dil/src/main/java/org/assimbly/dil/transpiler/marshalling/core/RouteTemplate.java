@@ -45,7 +45,6 @@ public class RouteTemplate {
     private String outList;
     private String outRulesList;
     private String updatedRouteConfigurationId;
-    //private KameletsCatalog kameletCatalog = new KameletsCatalog();
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -67,7 +66,7 @@ public class RouteTemplate {
 
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
             contentRouteDoc = new DocumentImpl();
-            createContentRouter(links, stepXPath, type, flowId, stepId);
+            createContentRouter(links, stepXPath, type, stepId);
         }else if(baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
         }else{
@@ -78,7 +77,7 @@ public class RouteTemplate {
     }
 
 
-    private void createContentRouter(String[] links, String stepXPath, String type, String flowId, String stepId)  throws Exception {
+    private void createContentRouter(String[] links, String stepXPath, String type, String stepId)  throws Exception {
 
         createContentRoute(links, stepXPath);
 
@@ -134,9 +133,9 @@ public class RouteTemplate {
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
             options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+            String endpoint = createLinkEndpoint(transport, id);
 
-            if(bound!=null & bound.equalsIgnoreCase("in") ){
+            if(bound!=null && bound.equalsIgnoreCase("in") ){
                 fromEndpoint.setAttribute("uri", endpoint);
             }
 
@@ -166,7 +165,7 @@ public class RouteTemplate {
             String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
             options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+            String endpoint = createLinkEndpoint(transport, id);
 
             if(bound!=null && bound.equalsIgnoreCase("out") && rule != null && expression != null) {
 
@@ -208,7 +207,7 @@ public class RouteTemplate {
             String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
             options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(linkXPath, transport, id);
+            String endpoint = createLinkEndpoint(transport, id);
 
             if(bound!=null && bound.equalsIgnoreCase("out") && rule == null && expression == null) {
 
@@ -331,15 +330,12 @@ public class RouteTemplate {
             String templateName = uriSplitted[0] + "-" + type;
 
             if(templateExists(templateName)){
-                System.out.println("TemplateId exist name=" +templateName);
                 templateId = templateName;
             }else if(uri.startsWith("block")){
-                System.out.println("TemplateId is block=" +templateName);
                 String componentName = uriSplitted[1];
                 componentName = componentName.toLowerCase();
                 templateId = componentName + "-" + type;
             }else{
-                System.out.println("TemplateId is generic=" +templateName);
                 templateId = "generic-" + type;
             }
 
@@ -366,14 +362,12 @@ public class RouteTemplate {
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
-        Element parameter = createParameter(templateDoc,"routeId",routeId);
-        templatedRoute.appendChild(parameter);
+        Element param = createParameter(templateDoc,"routeId",routeId);
+        templatedRoute.appendChild(param);
 
         try {
             createUriValues();
-        } catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        } catch (TransformerException e) {
+        } catch (XPathExpressionException | TransformerException e) {
             throw new RuntimeException(e);
         }
 
@@ -433,18 +427,18 @@ public class RouteTemplate {
     }
 
     private void createTemplateParameter(String name, String value){
-        Element parameter = createParameter(templateDoc,name,value);
-        templatedRoute.appendChild(parameter);
+        Element param = createParameter(templateDoc,name,value);
+        templatedRoute.appendChild(param);
     }
 
 
     private Element createParameter(Document doc, String name, String value){
 
-        Element parameter = doc.createElementNS("http://camel.apache.org/schema/spring","parameter");
-        parameter.setAttribute("name", name);
-        parameter.setAttribute("value", value);
+        Element param = doc.createElementNS("http://camel.apache.org/schema/spring","parameter");
+        param.setAttribute("name", name);
+        param.setAttribute("value", value);
 
-        return parameter;
+        return param;
 
     }
 
@@ -557,13 +551,13 @@ public class RouteTemplate {
         }
 
         if(outList!=null){
-            Element parameter = createParameter(templateDoc,"out_list",outList);
-            templatedRoute.appendChild(parameter);
+            Element param = createParameter(templateDoc,"out_list",outList);
+            templatedRoute.appendChild(param);
         }
 
         if(outRulesList!=null){
-            Element parameter = createParameter(templateDoc,"out_rules_list",outRulesList);
-            templatedRoute.appendChild(parameter);
+            Element param = createParameter(templateDoc,"out_rules_list",outRulesList);
+            templatedRoute.appendChild(param);
         }
 
     }
@@ -578,12 +572,12 @@ public class RouteTemplate {
         String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
         String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
         options = createLinkOptions(linkXPath, bound, transport, pattern);
-        String endpoint = createLinkEndpoint(linkXPath, transport, id);
+        String endpoint = createLinkEndpoint(transport, id);
 
         //set values
         if (expression != null) {
-            Element parameter = createParameter(templateDoc, "expression", expression);
-            templatedRoute.appendChild(parameter);
+            Element param = createParameter(templateDoc, "expression", expression);
+            templatedRoute.appendChild(param);
         }
 
         if (type.equals("router")) {
@@ -607,7 +601,7 @@ public class RouteTemplate {
         } else {
             NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
 
-            Boolean parameterUpdated = false;
+            boolean parameterUpdated = false;
             for (Node oldParameter : iterable(oldParameters)) {
 
                 Node name = oldParameter.getAttributes().getNamedItem("name");
@@ -629,18 +623,12 @@ public class RouteTemplate {
     }
 
     public String createLinkTransport(String xpath){
-
-        String transport = Objects.toString(conf.getProperty(xpath + "transport"), "sync");
-
-        return transport;
-
+        return Objects.toString(conf.getProperty(xpath + "transport"), "sync");
     }
 
-    public String createLinkEndpoint(String xpath, String transport, String id){
+    public String createLinkEndpoint(String transport, String id){
 
         String endpoint;
-
-        //Objects.toString(conf.getProperty(xpath + "options"), null);
 
         if (options == null || options.isEmpty()) {
             endpoint = transport + ":" + id;
@@ -657,7 +645,7 @@ public class RouteTemplate {
         options = Objects.toString(conf.getProperty(xpath + "options"), null);
 
         if(bound!= null && transport!=null && pattern!=null) {
-            //if (bound.equalsIgnoreCase("in")){
+
             if (pattern.equalsIgnoreCase("inout") || pattern.equalsIgnoreCase("requestreply")) {
                 if (options == null) {
                     options = "exchangePattern=InOut";
@@ -724,8 +712,8 @@ public class RouteTemplate {
         String routeConfiguratinID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
 
         if(routeConfiguratinID!=null){
-            Element parameter = createParameter(templateDoc, "routeconfigurationid", updatedRouteConfigurationId);
-            templatedRoute.appendChild(parameter);
+            Element param = createParameter(templateDoc, "routeconfigurationid", updatedRouteConfigurationId);
+            templatedRoute.appendChild(param);
         }
     }
 
@@ -784,8 +772,8 @@ public class RouteTemplate {
 
     private String getTimestamp(){
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        long unix_timestamp = timestamp.getTime();
-        return Long.toString(unix_timestamp);
+        long unixTimestamp = timestamp.getTime();
+        return Long.toString(unixTimestamp);
     }
 
 }

@@ -8,6 +8,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,6 +17,7 @@ import java.security.KeyStoreException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 
 public class FileBasedTrustStore {
 
@@ -81,7 +83,8 @@ public class FileBasedTrustStore {
     }
 
     private HttpsURLConnection getUnsecuredConnection(String url) throws Exception {
-        URL destinationURL = new URL(url);
+        URI uri = URI.create(url);
+        URL destinationURL =uri.toURL();
         HttpsURLConnection conn = (HttpsURLConnection) destinationURL.openConnection();
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(null, new TrustManager[]{insecureTrustManager()}, new SecureRandom());
@@ -94,7 +97,7 @@ public class FileBasedTrustStore {
         return new X509TrustManager() {
             @Override
             public X509Certificate[] getAcceptedIssuers() {
-                return null;
+                return Collections.emptyList().toArray(new X509Certificate[0]);
             }
 
             @Override

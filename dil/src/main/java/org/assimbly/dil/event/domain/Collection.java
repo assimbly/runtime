@@ -93,10 +93,7 @@ public class Collection {
     }
 
     public Collection fromJson(String json) throws JsonProcessingException {
-
-        Collection myObject = mapper.readValue(json, Collection.class);
-
-        return myObject;
+        return mapper.readValue(json, Collection.class);
     }
 
     public String toJson() {

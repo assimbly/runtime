@@ -9,17 +9,12 @@ import org.assimbly.util.BaseDirectory;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 public class FailureProcessor implements Processor {
 	
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-	private String flowId;
-
-	public FailureProcessor(){
-	}
 
 	public void process(Exchange exchange) throws Exception {
 
@@ -29,6 +24,7 @@ public class FailureProcessor implements Processor {
 		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
 		FlowEvent flowEvent = new FlowEvent(exchange.getFromRouteId(), date, exchange.getException().getMessage());
 
+		String flowId;
 		if(flowEvent.getFlowId().indexOf("-") == -1){
 			flowId = flowEvent.getFlowId();
 		}else{

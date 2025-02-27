@@ -12,9 +12,8 @@ public class AssimblyCodec implements SensitiveDataCodec<String> {
       // Decode the mask into clear text password.
       EncryptionUtil encryptionUtil = new EncryptionUtil(EncryptionUtil.key, EncryptionUtil.algorithm);
 
-      String decrypted = encryptionUtil.decrypt(mask.toString());
+      return encryptionUtil.decrypt(mask.toString());
 
-      return decrypted;
    }
 
    @Override

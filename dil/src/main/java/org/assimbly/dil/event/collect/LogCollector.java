@@ -2,7 +2,6 @@ package org.assimbly.dil.event.collect;
 
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.LogEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
@@ -14,14 +13,10 @@ import java.util.ArrayList;
 public class LogCollector extends AppenderBase {
 
     private final StoreManager storeManager;
-    private final String collectorId;
     private final String flowId;
-    private final ArrayList<Filter> filters;
 
-    public LogCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<Store> stores) {
-        this.collectorId = collectorId;
+    public LogCollector(String collectorId, String flowId, ArrayList<Store> stores) {
         this.flowId = flowId;
-        this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
     }
 
@@ -32,13 +27,9 @@ public class LogCollector extends AppenderBase {
         if(event!=null){
 
             String message = event.getMessage();
-            String loggerName = event.getLoggerName();
+            event.getLoggerName();
 
-            if(filters==null){
-                processEvent(event, message);
-            }else if(EventUtil.isFiltered(filters, message + loggerName)){
-                processEvent(event, message);
-            }
+            processEvent(event, message);
 
         }
     }

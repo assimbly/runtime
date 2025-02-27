@@ -20,8 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.MalformedObjectNameException;
 import javax.management.openmbean.CompositeData;
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,13 +38,12 @@ import static java.util.Arrays.stream;
 
 public class ActiveMQArtemis implements Broker {
 
-	final static Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
+	static final Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final File brokerFile = new File(baseDir + "/broker/broker.xml");
 	private final File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
 	private ActiveMQServerControlImpl manageBroker;
-	private boolean endpointExist;
 
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -87,7 +83,7 @@ public class ActiveMQArtemis implements Broker {
 
 			return status();
 
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			log.error("Failed to start broker. Reason:", e.getMessage());
 			e.printStackTrace();
 			return "Failed to start broker. Reason: " + e.getMessage();
@@ -178,7 +174,7 @@ public class ActiveMQArtemis implements Broker {
 		if(status().equals("started")) {
 			ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-			String info = "uptime="+ activeBroker.getUptime() 
+			return "uptime="+ activeBroker.getUptime()
 					 + ",totalConnections=" + activeBroker.getTotalConnectionCount()
 					 + ",totalConsumers=" + activeBroker.getTotalConsumerCount()
 					 + ",totalMessages=" + activeBroker.getTotalMessageCount()
@@ -186,7 +182,6 @@ public class ActiveMQArtemis implements Broker {
 					 + ",state=" + activeBroker.getState()
 					 + ",version=" + activeBroker.getVersion().getFullVersion()
 					 + ",type=ActiveMQ Artemis";
-			return info;
 		}else {
 			return "no info. broker not running";
 		}
@@ -237,7 +232,7 @@ public class ActiveMQArtemis implements Broker {
 		return "configuration set";
 	}
 
-	public void setAIO() throws IOException, NoSuchFieldException, IllegalAccessException {
+	public void setAIO() throws IOException {
 
 		if(OSUtil.getOS().equals(OSUtil.OS.LINUX)){
 
@@ -265,7 +260,7 @@ public class ActiveMQArtemis implements Broker {
 		}
 	}
 
-	public static void addDir(String s) throws IOException {
+	public static void addDir(String s) {
 		try {
 			// This enables the java.library.path to be modified at runtime
 			// From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
@@ -445,9 +440,6 @@ public class ActiveMQArtemis implements Broker {
 
 		endpoint.put("name",endpointName);
 		endpoint.put("address",queueControl.getAddress());
-		//endpoint.put("routingType",queueControl.getRoutingType());
-		//endpoint.put("durable",queueControl.isDurable());
-		//endpoint.put("exclusive",queueControl.isExclusive());
 		endpoint.put("temporary",queueControl.isTemporary());
 		endpoint.put("numberOfMessages",queueControl.countMessages());
 		endpoint.put("numberOfConsumers",queueControl.getConsumerCount());
@@ -635,9 +627,7 @@ public class ActiveMQArtemis implements Broker {
 
 		messages = stream(messages).filter(compositeData -> compositeData.get("messageID").equals(messageId)).toArray(CompositeData[]::new);
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
-
-		return result;
+		return CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 	}
 
@@ -665,13 +655,11 @@ public class ActiveMQArtemis implements Broker {
 
 		}
 
-		String result = CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
-
-		return result;
+		return CompositeDataConverter.convertToJSON(messages, null,false, excludeBody);
 
 	}
 
-	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) throws MalformedObjectNameException {
+	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) {
 		Map<String, Long> destinationMessageCounts = new HashMap<>();
 
 		try {
@@ -724,9 +712,7 @@ public class ActiveMQArtemis implements Broker {
 
 		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
 
-		String result = queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
-
-		return result;
+		return queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
 
 	}
 

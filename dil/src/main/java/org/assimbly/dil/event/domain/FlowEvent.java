@@ -13,10 +13,6 @@ public class FlowEvent {
 		    this.timestamp = timestamp;
 		    this.error = error;
 		  }
-	  
-	public FlowEvent() {
-		// TODO Auto-generated constructor stub
-	}
 
 	public String getFlowId() {
 		return flowId;

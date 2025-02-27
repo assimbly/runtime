@@ -28,10 +28,6 @@ public class HealthRuntime {
 
     private boolean plainResponse;
 
-
-    public HealthRuntime() throws Exception {
-    }
-
     //healtchecks of flows and steps
 
     @GetMapping(
@@ -69,9 +65,11 @@ public class HealthRuntime {
         integration = integrationRuntime.getIntegration();
 
         try {
-            String Health = integration.getHealthByFlowIds(flowIds, type, mediaType);
-            if(Health.startsWith("Error")||Health.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/healthbyflowids",Health,plainResponse);
+            String health = integration.getHealthByFlowIds(flowIds, type, mediaType);
+            if(health.startsWith("Error") || health.startsWith("Warning")){
+                plainResponse = false;
+            }
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/healthbyflowids",health,plainResponse);
         } catch (Exception e) {
             log.error("Get Health by flow ids failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/healthbyflowids",e.getMessage());

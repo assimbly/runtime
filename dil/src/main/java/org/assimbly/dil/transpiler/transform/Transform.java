@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class Transform {
 
-    final static Logger log = LoggerFactory.getLogger(Transform.class);
+    static final Logger log = LoggerFactory.getLogger(Transform.class);
 
     private final XsltTransformer transformer;
 
@@ -29,14 +29,7 @@ public class Transform {
         transformer = executable.load();
     }
 
-    public String transformToRoute(String xml, String flowId) throws Exception {
-        return transformXML(xml, transformer, processor);
-    }
-
-    public String transformToDil(String xml, String flowId) throws Exception {
-
-        //convert camel2 to camel3
-        //String camel3Xml = camel2ToCamel3(xml, flowId);
+    public String transformToDil(String xml) throws Exception {
 
         String dilXml = transformXML(xml, transformer, processor);
 
@@ -45,64 +38,6 @@ public class Transform {
         return dilXml;
 
 	}
-			
-	private String camel2ToCamel3(String input, String flowId){
-
-        Map<String, String> map = new HashMap<>();
-
-        map.put("xmlns=\"http://camel.apache.org/schema/blueprint\"","");
-		map.put("consumer.bridgeErrorHandler","bridgeErrorHandler");
-        map.put("consumer.delay","delay");
-		map.put("headerName=","name=");
-        map.put("propertyName=","name=");
-        map.put("\"velocity:generate\"","\"velocity:generate?allowTemplateFromHeader=true\"");
-        map.put("xslt:","xslt-saxon:");
-        map.put("jetty:http:","jetty-nossl:http:");
-        map.put("log:nl.kabisa.flux//","log:org.assimbly.runtime." + flowId);
-        map.put("&amp;saxon=true","");
-        map.put("?saxon=true\"","");
-        map.put("?saxon=true&amp;","?");
-        map.put("xml2excel","xmltoexcel");
-        map.put("excel2xml","exceltoxml");
-        map.put("csv2xml","csvtoxml");
-        map.put("sandbox://javaScript","sandbox://js");
-        map.put("global-variables","tenantvariables");
-        map.put("tenant-variables","tenantvariables");
-        map.put("<custom ref=\"csv-","<customDataFormat ref=\"csv-");
-        map.put("strategyRef","aggregationStrategy");
-        map.put("executorServiceRef","executorService");
-        map.put("quartz2:","quartz:");
-        map.put("http4:","http:");
-        map.put("https4:","https:");		
-        map.put("sql-component:","sql-custom:");
-        map.put("pdf2txt:","pdftotext:");
-        map.put("form2xml:","formtoxml:");
-        map.put("google-drive:","googledrive:");
-        map.put("univocity-csv","univocityCsv");
-        map.put("<custom ref=\"zipFileDataFormat\"/>","<zipFile/>");
-        map.put("exchange.getIn().hasAttachments","exchange.getIn(org.apache.camel.attachment.AttachmentMessage.class).hasAttachments");
-        map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
-        map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
-        map.put("file://tenants","file:///data/.assimbly/tenants");
-        map.put("DovetailQueueName","AssimblyQueueName");
-        map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
-        map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");
-        map.put("DovetailAggregateNoExceptionOnNull","AssimblyAggregateNoExceptionOnNull");
-
-        String output = TransformUtil.replaceMultipleStrings(input, map, true);
-
-        output = replaceUnmarshalCheckedZipFileDataFormat(output);
-
-        return output;
-		
-	}
-
-    private String replaceUnmarshalCheckedZipFileDataFormat(String xml) {
-        return xml.replaceAll(
-                "<unmarshal>([\\r\\n\\t\\s]*)<custom ref=\"checkedZipFileDataFormat\"\\/>([\\r\\n\\t\\s]*)<\\/unmarshal>",
-                "<process ref=\"Unzip\"/>"
-        );
-    }
 
     public String transformXML(String xmlString, XsltTransformer transformer, Processor processor ) throws SaxonApiException {
 

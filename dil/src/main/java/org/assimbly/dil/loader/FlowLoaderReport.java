@@ -21,7 +21,6 @@ public class FlowLoaderReport {
 	private final JSONObject flow;
 	private final JSONObject stepsLoaded;
 	private final long startTime;
-	private long endTime;
 
 	public FlowLoaderReport(String flowId, String flowName) {
 		log.info("initialize flow report | flowid=" + flowId);
@@ -37,15 +36,13 @@ public class FlowLoaderReport {
 
 	public void finishReport(String event, String version, String message){
 
-		endTime = System.currentTimeMillis();
-		long time = endTime - startTime;
+		long time = System.currentTimeMillis() - startTime;
 
 		flow.put("id",flowId);
 		flow.put("name",flowName);
 		flow.put("event",event);
 		flow.put("message",message);
 		flow.put("version",version);
-		//flow.put("environment",environment);
 		flow.put("time",time + " milliseconds");
 
 		if(stepsLoaded!=null && loaded > 0){

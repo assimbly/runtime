@@ -49,7 +49,6 @@ public class TrustedClientConfigurer implements HttpClientConfigurer {
             logger.info("Setup SSL context for https4 scheme");
         } catch (Exception e) {
             logger.error("Failed to setup SSL context", e);
-            throw new RuntimeException(e);
         }
     }
 

@@ -1,6 +1,5 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.JMSException;
 import org.apache.camel.CamelContext;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ public class RabbitMQConnection {
     private final EncryptableProperties properties;
     private final String componentName;
     private final String connectionId;
-    private CachingConnectionFactory rabbitMQConnectionFactory;
     private String uri;
     private String host;
     private String port;
@@ -62,13 +60,13 @@ public class RabbitMQConnection {
 
     }
 
-    private void setConnection() throws JMSException {
+    private void setConnection() {
 
         if(context.getRegistry().lookupByName(connectionId) == null) {
 
             log.info("Create new rabbitMQ Connection with connection-id: " + connectionId);
 
-            rabbitMQConnectionFactory = new CachingConnectionFactory();
+            CachingConnectionFactory rabbitMQConnectionFactory = new CachingConnectionFactory();
 
             if (uri != null) {
                 rabbitMQConnectionFactory.setUri(uri);

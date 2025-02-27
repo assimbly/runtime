@@ -12,11 +12,6 @@ import java.util.TreeMap;
 public class ErrorHandler {
 
 	private final DeadLetterChannelBuilder deadLetterChannelBuilder;
-	
-	private int maximumRedeliveries;
-	private int redeliveryDelay;
-	private int maximumRedeliveryDelay;
-	private int backOffMultiplier;
 
 	private final TreeMap<String, String> props;
 
@@ -31,17 +26,19 @@ public class ErrorHandler {
 	
 	public DeadLetterChannelBuilder configure() throws Exception {
 
+		int backOffMultiplier = 0;
+		int maximumRedeliveries = 0;
+		int redeliveryDelay = 30000;
+		int maximumRedeliveryDelay = 60000;
+
 		Processor failureProcessor = new FailureProcessor();
-		
-		if (props.containsKey("flow.maximumRedeliveries")){
+
+
+		if (props.containsKey("flow.maximumRedeliveries")) {
 			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
-			if(StringUtils.isNumeric(maximumRedeliveriesAsString)) {
+			if (StringUtils.isNumeric(maximumRedeliveriesAsString)) {
 				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
-			}else {
-				maximumRedeliveries = 0;
 			}
-		}else {
-			maximumRedeliveries = 0;
 		}
 
 		if (props.containsKey("flowredeliveryDelay")){
@@ -49,24 +46,14 @@ public class ErrorHandler {
 			if(StringUtils.isNumeric(redeliveryDelayAsString)) {
 				redeliveryDelay = Integer.parseInt(redeliveryDelayAsString);
 				maximumRedeliveryDelay = redeliveryDelay * 10;
-			}else {
-				redeliveryDelay = 3000;
-				maximumRedeliveryDelay = 60000;
 			}
-		}else {
-			redeliveryDelay = 3000;
-			maximumRedeliveryDelay = 60000;
 		}
 
 		if (props.containsKey("flow.backOffMultiplier")){
 			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
 			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
 				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
-			}else {
-				backOffMultiplier = 0;
 			}
-		}else {
-			backOffMultiplier = 0;
 		}
 
 		deadLetterChannelBuilder.allowRedeliveryWhileStopping(false)

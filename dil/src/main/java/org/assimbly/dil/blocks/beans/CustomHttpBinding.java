@@ -29,7 +29,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
 
-        Message target = exchange.hasOut() ? exchange.getMessage() : exchange.getIn();
+        Message target = exchange.getIn();
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {
                 addResponseTimeHeader(exchange, target);
@@ -45,10 +45,9 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                 doWriteFaultResponse(target, response, exchange);
             }
         } else {
-            if (exchange.hasOut()) {
-                // just copy the protocol relates header if we do not have them
-                copyProtocolHeaders(exchange.getIn(), exchange.getMessage());
-            }
+            // just copy the protocol relates header if we do not have them
+            customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
+
             addResponseTimeHeader(exchange, target);
             doWriteResponse(target, response, exchange);
         }
@@ -133,7 +132,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
         return XmlHelper.prettyPrint(doc);
     }
 
-    private void copyProtocolHeaders(Message request, Message response) {
+    private void customCopyProtocolHeaders(Message request, Message response) {
         if (request.getHeader(Exchange.CONTENT_ENCODING) != null) {
             String contentEncoding = request.getHeader(Exchange.CONTENT_ENCODING, String.class);
             response.setHeader(Exchange.CONTENT_ENCODING, contentEncoding);
@@ -144,7 +143,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private void addResponseTimeHeader(Exchange exchange, Message message) {
-        Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated()); //created.toInstant();
+        Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated());
         Instant nowInstant = Calendar.getInstance().toInstant();
         Duration duration = Duration.between(initInstant, nowInstant);
 

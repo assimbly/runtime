@@ -1,7 +1,6 @@
 package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.config.IntegrationConfig;
-import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,7 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ComponentScan(basePackageClasses = {
         IntegrationConfig.class,
         IntegrationRuntime.class,
-        FailureCollector.class,
         SimpMessageSendingOperations.class
 })
 @AutoConfigureMockMvc

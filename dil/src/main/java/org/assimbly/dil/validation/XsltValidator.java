@@ -1,5 +1,7 @@
 package org.assimbly.dil.validation;
 
+import net.sf.saxon.lib.ErrorReporter;
+import net.sf.saxon.lib.StandardErrorReporter;
 import net.sf.saxon.lib.StandardURIResolver;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -28,7 +30,8 @@ public class XsltValidator {
     public List<ValidationErrorMessage> validate(String url, String xsltBody) {
         XsltCompiler xsltCompiler = saxonProcessor.newXsltCompiler();
         ValidationErrorListener errorListener = new ValidationErrorListener();
-        xsltCompiler.setErrorListener(errorListener);
+        ErrorReporter errorReporter = new StandardErrorReporter();
+        xsltCompiler.setErrorReporter(errorReporter);
 
         try {
             Source source = getXsltSource(url, xsltBody);

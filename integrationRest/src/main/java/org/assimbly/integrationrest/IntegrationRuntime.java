@@ -4,11 +4,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
-import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +33,9 @@ public class IntegrationRuntime {
 
     private boolean integrationIsStarting;
 
-    @Autowired
-    private FailureCollector failureCollector;
-
     public IntegrationRuntime() throws Exception {
     }
+
 
     //configure integration
 
@@ -64,7 +60,6 @@ public class IntegrationRuntime {
             if (integration.isStarted()) {
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/start", "Integration already running");
             } else {
-                integration.addEventNotifier(failureCollector);
                 integration.setTracing(false, "default");
                 integration.start();
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/start", "Integration started");
@@ -477,7 +472,7 @@ public class IntegrationRuntime {
         return integration;
     }
 
-    public void setIntegration(Properties encryptionProperties) throws Exception {
+    public void setIntegration(Properties encryptionProperties) {
         integration.setEncryptionProperties(encryptionProperties);
     }
 
@@ -487,7 +482,6 @@ public class IntegrationRuntime {
             try {
 
                 //add notifier before starting integration
-                integration.addEventNotifier(failureCollector);
                 integration.start();
                 integrationIsStarting = true;
 

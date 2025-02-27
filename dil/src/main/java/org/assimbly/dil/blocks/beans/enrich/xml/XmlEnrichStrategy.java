@@ -22,8 +22,8 @@ public class XmlEnrichStrategy implements AggregationStrategy {
                 throw new Exception("Something went wrong fetching the input data.");
             }
 
-            Document originalXml = getXml(original, "left"),
-                     resourceXml = getXml(resource, "bottom");
+            Document originalXml = getXml(original, "left");
+            Document resourceXml = getXml(resource, "bottom");
 
             if(originalXml == null && resourceXml == null) {
                 throw new Exception("Something went wrong parsing the XML inputs.");

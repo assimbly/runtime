@@ -17,11 +17,11 @@ public abstract class DilImpl implements Dil {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	private final List<TreeMap<String, String>> properties = new ArrayList<>();
-	private TreeMap<String, String> flowProperties;
 
 	public void transpile(String flowId, String mediaType, String configuration) throws Exception {
 
 		try {
+			TreeMap<String, String> flowProperties;
 			if(mediaType.toLowerCase().contains("xml")) {
 				flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
 			}else if(mediaType.toLowerCase().contains("json")) {
@@ -37,7 +37,7 @@ public abstract class DilImpl implements Dil {
 		}
 	}
 
-	public void setFlowConfiguration(TreeMap<String,String> configuration) throws Exception {
+	public void setFlowConfiguration(TreeMap<String,String> configuration) {
 
 		removeFlowConfigurationIfExist(configuration);
 
@@ -45,7 +45,7 @@ public abstract class DilImpl implements Dil {
 
 	}
 
-	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) throws Exception {
+	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) {
 
 		String newId = configuration.get("id");
 

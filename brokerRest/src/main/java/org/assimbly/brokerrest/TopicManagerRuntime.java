@@ -44,7 +44,6 @@ public class TopicManagerRuntime {
         log.debug("REST request to get create topic : {}", topicName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.createTopic(brokerType,topicName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
@@ -73,7 +72,6 @@ public class TopicManagerRuntime {
 
         log.debug("REST request to get delete topic : {}", topicName);
             try {
-                //brokermanager = brokerManagerResource.getBrokerManager();
                 result = broker.deleteTopic(brokerType,topicName);
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
@@ -103,7 +101,6 @@ public class TopicManagerRuntime {
         log.debug("REST request to get get topic : {}", topicName);
 
             try {
-                //brokermanager = brokerManagerResource.getBrokerManager();
                 result = broker.getTopic(brokerType,topicName, mediaType);
                 return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topic/{topicName}", result);
             } catch (Exception e) {
@@ -132,7 +129,6 @@ public class TopicManagerRuntime {
         log.debug("REST request to get get topics");
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.getTopics(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
@@ -155,14 +151,13 @@ public class TopicManagerRuntime {
     )
     public ResponseEntity<String> clearTopic(
             @PathVariable(value = "brokerType") String brokerType,
-            @PathVariable(value = "topicType") String topicName,
+            @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
         log.debug("REST request to clear topic : {}", topicName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearTopic(brokerType,topicName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", result);
         } catch (Exception e) {
@@ -190,7 +185,6 @@ public class TopicManagerRuntime {
         log.debug("REST request to clear topics : this removes all messages on the broker!");
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.clearTopics(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topics/clear", result);
         } catch (Exception e) {

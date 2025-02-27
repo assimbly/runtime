@@ -20,15 +20,13 @@ import java.util.TreeMap;
 
 public class Route {
 
-    final static Logger log = LoggerFactory.getLogger(Route.class);
+    static final Logger log = LoggerFactory.getLogger(Route.class);
     private final Document doc;
     private final TreeMap<String, String> properties;
-    private final XMLConfiguration conf;
     XPathFactory xf = new XPathFactoryImpl();
 
-    public Route(TreeMap<String, String> properties, XMLConfiguration conf, Document doc) {
+    public Route(TreeMap<String, String> properties, Document doc) {
         this.properties = properties;
-        this.conf = conf;
         this.doc = doc;
     }
 
@@ -45,7 +43,7 @@ public class Route {
 
     }
 
-    private String createRoute(String flowId, String routeId) throws Exception {
+    private String createRoute(String flowId, String routeId) {
 
         Node node = getRoute(routeId);
 

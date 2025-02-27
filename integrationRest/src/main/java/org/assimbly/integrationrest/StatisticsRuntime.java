@@ -28,10 +28,6 @@ public class StatisticsRuntime {
 
     private boolean plainResponse;
 
-
-    public StatisticsRuntime() throws Exception {
-    }
-
     //statistics of integrations, flows and steps
 
     @GetMapping(

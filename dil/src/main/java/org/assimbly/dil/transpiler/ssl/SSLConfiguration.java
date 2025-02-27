@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -26,14 +25,14 @@ public class SSLConfiguration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) throws Exception {
+	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) {
 		for (String sslComponent : sslComponentNames) {
 			setUseGlobalSslContextParameter(context, sslComponent);
 		}
 	}
 
 
-	public void setUseGlobalSslContextParameter(CamelContext context,String componentName) throws Exception {
+	public void setUseGlobalSslContextParameter(CamelContext context,String componentName) {
 		if(context.getComponent(componentName)!=null){
 			((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
 		}else{
@@ -41,7 +40,7 @@ public class SSLConfiguration {
 		}
 	}
 
-	public SSLContextParameters createSSLContextParameters(String keystorePath, String keystorePassword, String truststorePath, String truststorePassword) throws GeneralSecurityException, IOException {
+	public SSLContextParameters createSSLContextParameters(String keystorePath, String keystorePassword, String truststorePath, String truststorePassword)  {
 
 		SSLContextParameters sslContextParameters = new SSLContextParameters();
 
@@ -127,7 +126,7 @@ public class SSLConfiguration {
 
 			HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
 			httpsCertificateValidator.setCustomTrustStore(customKeyStore);
-			httpsCertificateValidator.setTrustStores(new ArrayList<FileBasedTrustStore>(Arrays.asList(customKeyStore, jreKeyStore)));
+			httpsCertificateValidator.setTrustStores(new ArrayList<>(Arrays.asList(customKeyStore, jreKeyStore)));
 		} catch (Exception e) {
 			log.error("Failed to init trust stores for HttpsCertificateValidator",e);
 		}

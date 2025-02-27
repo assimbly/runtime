@@ -75,10 +75,7 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
         // Check if the key is the date header
         if (headerName.equalsIgnoreCase(DATE_HEADER)) {
             Object useCustomHeaderObj = exchange.getProperty(USE_CUSTOM_DATE_HEADER);
-            boolean useCustomHeader = Boolean.parseBoolean(String.valueOf(useCustomHeaderObj));
-
-            // If useCustomHeader is true, do not filter the date header
-            return useCustomHeader;
+            return Boolean.parseBoolean(String.valueOf(useCustomHeaderObj));
         }
         return false;
     }

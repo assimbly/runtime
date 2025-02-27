@@ -29,8 +29,6 @@ public class FlowConfigurerRuntime {
 
     private boolean plainResponse;
 
-    private String flowConfiguration;
-
     private Integration integration;
 
     /**
@@ -82,7 +80,7 @@ public class FlowConfigurerRuntime {
 
     	try {
             integration = integrationRuntime.getIntegration();
-            flowConfiguration = integration.getFlowConfiguration(flowId, mediaType);
+			String flowConfiguration = integration.getFlowConfiguration(flowId, mediaType);
 			if(flowConfiguration.startsWith("Error")||flowConfiguration.startsWith("Warning")) {
 				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/configure",flowConfiguration);
 			}
@@ -134,7 +132,7 @@ public class FlowConfigurerRuntime {
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
     public ResponseEntity<String> getDocumentation(
-			@PathVariable(value = "flowId") String componenttype,
+			@PathVariable(value = "componenttype") String componenttype,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) throws Exception {
 
@@ -168,7 +166,7 @@ public class FlowConfigurerRuntime {
 		try {
 			integration = integrationRuntime.getIntegration();
 			String components = integration.getComponents(includeCustomComponents, mediaType);
-			//String components = integration.getComponents(includeCustomComponents, mediaType);
+
 			if(components.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/components",components);
 			}
@@ -248,23 +246,6 @@ public class FlowConfigurerRuntime {
 		}
     }
 
-    @GetMapping(
-			path = "/integration/flow/routes",
-			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
-	)
-    public ResponseEntity<String> getAllCamelRoutes(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
-
-		try {
-            integration = integrationRuntime.getIntegration();
-            String camelRoutes = integration.getAllCamelRoutesConfiguration(mediaType);
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/routes",camelRoutes,true);
-		} catch (Exception e) {
-			log.error("Get all Camel routes failed",e);
-			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/routes",e.getMessage());
-		}
-
-    }
-
 	@GetMapping(
 			path = "/integration/flow/step/{templatename}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -327,9 +308,11 @@ public class FlowConfigurerRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+		HttpServletRequest httpRequest = request.getNativeRequest(HttpServletRequest.class);
+
+		String mediaType = httpRequest != null ? httpRequest.getHeader("ACCEPT") : MediaType.APPLICATION_JSON_VALUE;
+		String path = httpRequest != null ? httpRequest.getRequestURI() : "/";
+		String message = error.getMessage();
 
     	return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
     }

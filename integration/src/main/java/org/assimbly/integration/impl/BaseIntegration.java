@@ -21,6 +21,7 @@ import org.assimbly.util.error.ValidationErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.security.cert.Certificate;
 import java.util.*;
@@ -433,9 +434,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract String getCamelRouteConfiguration(String id, String mediaType) throws Exception;
 
-	public abstract String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
-
-	public abstract TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
+	public abstract void setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	public abstract String resolveDependency(String schema)  throws Exception;
 
@@ -469,7 +468,7 @@ public abstract class BaseIntegration implements Integration {
 
 	public abstract List<ValidationErrorMessage> validateExpressions(List<Expression> expressions, boolean isPredicate);
 
-	public abstract ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
+	public abstract ValidationErrorMessage validateFtp(FtpSettings ftpSettings) throws IOException;
 
 	public abstract AbstractMap.SimpleEntry validateRegex(Regex regex);
 

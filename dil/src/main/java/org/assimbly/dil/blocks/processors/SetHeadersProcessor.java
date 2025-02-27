@@ -39,18 +39,7 @@ public class SetHeadersProcessor implements Processor {
 				  String headerLanguage = getElementValue(headerElem, "language");
 				  String headerType = getElementValue(headerElem, "type");
 
-				  String result;
-
-				  if (headerLanguage.equalsIgnoreCase("constant")) {
-					  result = headerValue;
-				  } else if (headerLanguage.equalsIgnoreCase("xpath")) {
-					  XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-					  result = XPathBuilder.xpath(headerValue).factory(fac).evaluate(exchange, String.class);
-				  } else {
-					  Language resolvedLanguage = exchange.getContext().resolveLanguage(headerLanguage);
-					  Expression expression = resolvedLanguage.createExpression(headerValue);
-					  result = expression.evaluate(exchange, String.class);
-				  }
+				  String result = evaluateExpression(exchange, headerValue, headerLanguage);
 
 				  if(headerType.equalsIgnoreCase("property")){
 					  exchange.setProperty(headerName, result);
@@ -68,6 +57,23 @@ public class SetHeadersProcessor implements Processor {
 
 	  }
 
+	}
+
+	private String evaluateExpression(Exchange exchange, String headerValue, String headerLanguage){
+		String result;
+
+		if (headerLanguage.equalsIgnoreCase("constant")) {
+			result = headerValue;
+		} else if (headerLanguage.equalsIgnoreCase("xpath")) {
+			XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
+			result = XPathBuilder.xpath(headerValue).factory(fac).evaluate(exchange, String.class);
+		} else {
+			Language resolvedLanguage = exchange.getContext().resolveLanguage(headerLanguage);
+			Expression expression = resolvedLanguage.createExpression(headerValue);
+			result = expression.evaluate(exchange, String.class);
+		}
+
+		return result;
 	}
 
 	private String getElementValue(Element element, String name){

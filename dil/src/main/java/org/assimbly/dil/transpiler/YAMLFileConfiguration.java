@@ -10,9 +10,6 @@ public class YAMLFileConfiguration {
 	private String xmlConfiguration;
 	private String yamlConfiguration;
 
-	private List<TreeMap<String, String>> gatewayProperties;
-	private TreeMap<String, String> flowproperties;
-    
 	public String createConfiguration(String integrationId, List<TreeMap<String, String>> configurations) throws Exception {
 
 		xmlConfiguration = new XMLFileConfiguration().createConfiguration(integrationId, configurations);
@@ -36,19 +33,15 @@ public class YAMLFileConfiguration {
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, String configuration) throws Exception {
 
 		xmlConfiguration = DocConverter.convertYamlToXml(configuration);
-		
-		gatewayProperties =  new XMLFileConfiguration().getFlowConfigurations(integrationId, xmlConfiguration);
-		
-		return gatewayProperties;
+
+        return new XMLFileConfiguration().getFlowConfigurations(integrationId, xmlConfiguration);
 	}
 	
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String configuration) throws Exception {
 
 		xmlConfiguration = DocConverter.convertYamlToXml(configuration);
-		
-		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
-		
-		return flowproperties;
+
+        return new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
 	}
 	
 }

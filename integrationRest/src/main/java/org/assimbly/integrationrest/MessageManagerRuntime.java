@@ -157,15 +157,13 @@ public class MessageManagerRuntime {
 
     private  TreeMap<String, Object> getMap(String message) throws JsonProcessingException {
 
-        TreeMap<String, Object> map = new ObjectMapper().readValue(message, new TypeReference<TreeMap<String, Object>>(){});
-
-        return map;
+        return new ObjectMapper().readValue(message, new TypeReference<TreeMap<String, Object>>(){});
 
     }
 
-    private  TreeMap<String, String> toStringTreeMap(TreeMap<String, Object> map) throws JsonProcessingException {
+    private  TreeMap<String, String> toStringTreeMap(TreeMap<String, Object> map) {
 
-        TreeMap<String,String> newMap =new TreeMap<String,String>();
+        TreeMap<String,String> newMap =new TreeMap<>();
 
         for(Map.Entry<String,Object> entry : map.entrySet()) {
             newMap.put(entry.getKey(), (String) entry.getValue());

@@ -13,6 +13,7 @@ import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.util.*;
 
@@ -125,7 +126,7 @@ public interface Integration {
 	 * @return properties of connection
 	 * @throws Exception if connection can't be set
 	 */
-    TreeMap<String, String> setConnection(TreeMap<String, String> props, String stepType) throws Exception;
+    void setConnection(TreeMap<String, String> props, String stepType) throws Exception;
 
 	/**
 	* sets the integration base directory. In this directory event are stored (like logs, alerts, events) 
@@ -921,32 +922,13 @@ public interface Integration {
     String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
-	* Gets all the running routes as XML/JSON/YAML by id
-	*
-	* @param  mediaType (xml, json, yaml)
-	* @throws Exception if configuration can't be retrieved
-	* @return returns the Camel Route Configuration. XML is the default Apache Camel format.
-	*/
-    String getAllCamelRoutesConfiguration(String mediaType) throws Exception;
-	
-	/**
 	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
 	*
 	* @param  scheme name of the scheme
 	* @return Message on succes or failure
 	*/
     String resolveDependency(String scheme) throws Exception;
-	
-	/**
-	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
-	*
-	* @param groupId  name of the (Maven) GroupID
-	* @param artifactId name of the (Maven) ArtifactID
-	* @param version (Maven) version number
-	* @return Message on succes or failure
-	*/
-	//public String resolveDependency(String groupId, String artifactId, String version);
-	
+
 	/**
 	* Get the context of integration (can be used to access extended methods by the implementation (Camel)
 	* Note: Calling this you're on your own :)
@@ -1062,7 +1044,7 @@ public interface Integration {
 	 * @param  ftpSettings
 	 * @return result of validation
 	 */
-    ValidationErrorMessage validateFtp(FtpSettings ftpSettings);
+    ValidationErrorMessage validateFtp(FtpSettings ftpSettings) throws IOException;
 
 	/**
 	 * Validates a regex expression

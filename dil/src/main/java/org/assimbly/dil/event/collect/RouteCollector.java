@@ -3,10 +3,8 @@ package org.assimbly.dil.event.collect;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.LogEvent;
 import org.assimbly.dil.event.store.StoreManager;
-import org.assimbly.dil.event.util.EventUtil;
 
 import java.util.ArrayList;
 
@@ -15,14 +13,12 @@ import java.util.ArrayList;
 public class RouteCollector extends EventNotifierSupport {
 
     private final String flowId;
-    private final ArrayList<Filter> filters;
     private final ArrayList<String> events;
     private final StoreManager storeManager;
 
-    public RouteCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
+    public RouteCollector(String collectorId, String flowId, ArrayList<String> events, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.flowId = flowId;
         this.events = events;
-        this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
 
     }
@@ -40,12 +36,7 @@ public class RouteCollector extends EventNotifierSupport {
             String routeId = routeEvent.getRoute().getId();
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
 
-            //process and store the exchange
-            if(stepId!=null && filters==null){
-                processEvent(routeEvent, stepId);
-            }else if(stepId!=null && EventUtil.isFiltered(filters, stepId)){
-                processEvent(routeEvent, stepId);
-            }
+            processEvent(routeEvent, stepId);
 
         }
 

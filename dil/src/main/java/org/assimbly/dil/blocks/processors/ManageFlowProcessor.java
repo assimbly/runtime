@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class ManageFlowProcessor implements Processor {
 
@@ -72,7 +71,7 @@ public class ManageFlowProcessor implements Processor {
 	}
 
 	private List<Route> getRoutesByFlowId(String id, CamelContext context){
-		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
+		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).toList();
 	}
 
 }

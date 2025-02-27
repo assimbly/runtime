@@ -21,8 +21,8 @@ public class CompositeTrustManager implements X509TrustManager {
             tmf.init(trustStore);
 
             for(TrustManager tm: tmf.getTrustManagers()) {
-                if(tm instanceof X509TrustManager) {
-                    addTrustManager((X509TrustManager) tm);
+                if(tm instanceof X509TrustManager trustManager) {
+                    addTrustManager(trustManager);
                 }
             }
         } catch (Exception e) {
@@ -47,8 +47,10 @@ public class CompositeTrustManager implements X509TrustManager {
             }
         }
 
-        if(!trusted) {
+        if(!trusted && latestException != null) {
             throw latestException;
+        }else if(!trusted) {
+            throw new CertificateException("No trust manager found");
         }
     }
 
@@ -65,9 +67,12 @@ public class CompositeTrustManager implements X509TrustManager {
             }
         }
 
-        if(!trusted) {
+        if(!trusted && latestException != null) {
             throw latestException;
+        }else if(!trusted) {
+            throw new CertificateException("No trust manager found");
         }
+
     }
 
     public X509Certificate[] getAcceptedIssuers() {

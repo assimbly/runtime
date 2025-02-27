@@ -613,7 +613,7 @@ public class FlowManagerRuntime {
                             flowId = id;
                             status = integration.getFlowStatus(flowId);
                             if(status.equals("started")) {
-                                String report = integration.pauseFlow(flowId);
+                                integration.pauseFlow(flowId);
                                 status = integration.getFlowStatus(flowId);
                                 if(status.equals("suspended") || status.equals("stopped")) {
                                 

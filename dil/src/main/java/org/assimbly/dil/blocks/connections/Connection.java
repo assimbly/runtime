@@ -35,7 +35,7 @@ public class Connection {
 		this.key = key;
 	}
 
-	public TreeMap<String, String> start() throws Exception{
+	public void start() throws Exception{
 
         connectionId = properties.get(key);
         connectionType = properties.get("connection." + connectionId + ".type" );
@@ -49,8 +49,6 @@ public class Connection {
         if(connectionIdValue!=null) {
             startConnection();        
         }
-
-		return properties;
 
 	}
 
@@ -76,7 +74,7 @@ public class Connection {
                 properties.put(stepType + "." + stepId + ".uri", uri);						
                 break;
             case "mq":
-                new MQConnection(context, decryptedProperties, connectionId, "sjms").start(stepType, stepId);
+                new MQConnection(context, decryptedProperties, connectionId, "sjms").start();
                 break;
             case "amqps":
                 new AMQPConnection(context, decryptedProperties, connectionId, "amqps").start(true);
@@ -85,13 +83,13 @@ public class Connection {
                 new AMQPConnection(context, decryptedProperties, connectionId, "amqp").start(false);
                 break;
             case "ibmq":
-                new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start(stepType, stepId);
+                new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start();
                 break;
             case "rabbitmq", "spring-rabbitmq":
                 new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
                 break;
             case "jdbc":
-                new JDBCConnection(context, decryptedProperties, connectionId, "sql").start(stepType, stepId);
+                new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
                 break;
             default:
                 log.error("Connection parameters for connection " + connectionType + " are not implemented");

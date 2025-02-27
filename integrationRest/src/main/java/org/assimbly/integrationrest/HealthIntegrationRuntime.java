@@ -37,8 +37,6 @@ public class HealthIntegrationRuntime {
 
     private boolean plainResponse;
 
-    private Integration integration;
-
     @GetMapping(
             path = "/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -47,7 +45,7 @@ public class HealthIntegrationRuntime {
 
         plainResponse = true;
         long connectorId = 1;
-        integration = integrationRuntime.getIntegration();
+        Integration integration = integrationRuntime.getIntegration();
 
         try {
             String stats = integration.getStats(mediaType);
@@ -79,7 +77,7 @@ public class HealthIntegrationRuntime {
             backendResponse.addMemory("current", convertSizeToKb(mem.getUsed()));
             backendResponse.addMemory("max", convertSizeToKb(mem.getMax()));
             backendResponse.addMemory("committed", convertSizeToKb(mem.getCommitted()));
-            backendResponse.addMemory("cached", convertSizeToKb(mem.getCommitted() - mem.getUsed()));
+            backendResponse.addMemory("cached", convertSizeToKb(((double) mem.getCommitted() - mem.getUsed())));
             backendResponse.addMemory("currentUsedPercentage", (mem.getUsed() * 100 / mem.getMax()));
 
             backendResponse.addThread("threadCount", threadMXBean.getThreadCount());
@@ -107,7 +105,9 @@ public class HealthIntegrationRuntime {
             if (unixOS.isInstance(operatingSystemMXBean))
                 return unixOS.getMethod(methodName).invoke(operatingSystemMXBean);
 
-        } catch (Throwable ignored) { }
+        } catch (Exception e) {
+            // ignored
+        }
 
         return "Unknown";
     }

@@ -97,7 +97,6 @@ public class SonicMQConnection {
 
         SjmsComponent jms = new SjmsComponent();
         jms.setConnectionFactory((jakarta.jms.ConnectionFactory) connection);
-        //jms.setConnectionClientId("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);
         jms.setCamelContext(context);
         jms.start();
 

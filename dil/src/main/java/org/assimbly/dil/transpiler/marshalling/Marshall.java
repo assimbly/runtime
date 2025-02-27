@@ -19,15 +19,12 @@ import java.util.stream.Collectors;
 public class Marshall {
 
 	private Document doc;
-	private Element rootElement;
 	private Element flows;
 	
 	private Element routes;
 	private Element routeConfigurations;
 	private Element connections;
 	private Element messages;
-	private Element flow;
-	private Element integration;
 
 	private List<String> routesList;
 	private List<String> connectionsList;
@@ -50,7 +47,7 @@ public class Marshall {
 	}
 
 
-	public Document setProperties(Document document, String type, TreeMap<String, String> configuration) throws Exception {
+	public Document setProperties(Document document, TreeMap<String, String> configuration) throws Exception {
 
 		doc = document;
 
@@ -66,10 +63,10 @@ public class Marshall {
 
 	private void setGeneralProperties(String integrationId) {
 
-		rootElement = doc.createElement("integrations");
+		Element rootElement = doc.createElement("integrations");
 		doc.appendChild(rootElement);
 
-		integration = doc.createElement("integration");
+		Element integration = doc.createElement("integration");
 		rootElement.appendChild(integration);
 
 		Element id = doc.createElement("id");
@@ -89,16 +86,16 @@ public class Marshall {
 		integration.appendChild(messages);
 
 		//List to ensure no double entries
-		routesList = new ArrayList<String>();
-		connectionsList = new ArrayList<String>();
-		messageList = new ArrayList<String>();
+		routesList = new ArrayList<>();
+		connectionsList = new ArrayList<>();
+		messageList = new ArrayList<>();
 
 	}
 
 
 	private void setFlowFromConfiguration(TreeMap<String, String> configuration) throws Exception {
 
-		flow = doc.createElement("flow");
+		Element flow = doc.createElement("flow");
 		flows.appendChild(flow);
 
 		addElement(configuration, flow, "id", "id");
@@ -106,8 +103,6 @@ public class Marshall {
 		addElement(configuration, flow, "name", "flow.name");
 
 		addElement(configuration, flow, "type", "flow.type");
-
-		//addElement(configuration, flow, "offloading", "flow.offloading");
 
 		addElement(configuration, flow, "version", "flow.version");
 
@@ -145,7 +140,7 @@ public class Marshall {
 
 	private void setFlowSteps(TreeMap<String, String> configuration) throws Exception {
 
-		List<String> confUriKeyList = configuration.keySet().stream().filter(k -> k.endsWith("uri")).collect(Collectors.toList());
+		List<String> confUriKeyList = configuration.keySet().stream().filter(k -> k.endsWith("uri")).toList();
 
 			for(String confUriKey : confUriKeyList){
 				String confUri = configuration.get(confUriKey);
@@ -350,9 +345,7 @@ public class Marshall {
 
         DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = dbFactory.newDocumentBuilder();
-        Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-
-        return document;
+        return builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 
     }
 }

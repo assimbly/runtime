@@ -11,8 +11,6 @@ public class FtpSettings {
     private String pkf;
     private String pkfd;
 
-    public FtpSettings() { }
-
     public String getUser() {
         return user;
     }

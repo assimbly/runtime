@@ -215,7 +215,7 @@ public class CertificateManagerRuntime {
 
             importCertificateInKeystore(keystoreName, keystorePassword, cn, cert);
 
-            Map<String,Certificate> certificateMap = new HashMap<String,Certificate>();
+            Map<String,Certificate> certificateMap = new HashMap<>();
             certificateMap.put("Self-Signed (" + cn + ")",cert);
 
             String result = certificatesAsJSon(certificateMap, null, keystoreName);
@@ -344,12 +344,11 @@ public class CertificateManagerRuntime {
     public Certificate[] getCertificates(String url) {
         try {
             CertificatesUtil util = new CertificatesUtil();
-            Certificate[] certificates = util.downloadCertificates(url);
-            return certificates;
+            return util.downloadCertificates(url);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
-        return null;
+        return new Certificate[0];
     }
 
     public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
@@ -381,7 +380,7 @@ public class CertificateManagerRuntime {
     }
 
 
-    public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+    public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) {
 
         CertificatesUtil util = new CertificatesUtil();
 

@@ -11,9 +11,8 @@ public class ExceptionAsJsonProcessor {
 
 		Language resolvedLanguage = exchange.getContext().resolveLanguage("simple");
 		Expression expression = resolvedLanguage.createExpression("${exception}");
-		String result = expression.evaluate(exchange, String.class);
 
-		return result;
+		return expression.evaluate(exchange, String.class);
 
 	}
 

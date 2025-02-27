@@ -1,7 +1,6 @@
 package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.config.IntegrationConfig;
-import org.assimbly.integrationrest.event.FailureCollector;
 import org.assimbly.integrationrest.utils.CamelContextUtil;
 import org.assimbly.integrationrest.utils.FlowUtil;
 import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
@@ -35,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         IntegrationRuntime.class,
         IntegrationConfig.class,
         FlowManagerRuntime.class,
-        FailureCollector.class,
         SimpMessageSendingOperations.class
 })
 @AutoConfigureMockMvc

@@ -11,15 +11,12 @@ import org.assimbly.dil.event.domain.MessageEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
@@ -29,14 +26,13 @@ public class StepCollector extends EventNotifierSupport {
     private final ArrayList<Filter> filters;
     private final ArrayList<String> successEvents;
     private final ArrayList<String> failedEvents;
-    private final String collectorId;
     private final String flowId;
     private final String flowVersion;
 
-    private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
-    private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
+    private static final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
+    private static final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
     
-    private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
+    private static final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
     public static final String FLOW_ID_HEADER = "DOVETAIL_FlowId";
     public static final String FLOW_VERSION_HEADER = "DOVETAIL_FlowVersion";
@@ -53,14 +49,13 @@ public class StepCollector extends EventNotifierSupport {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     public StepCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> successEvents, ArrayList<String> failedEvents, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
-        this.collectorId = collectorId;
         this.flowId = flowId;
         this.flowVersion = flowVersion;
         this.successEvents = successEvents;
         this.failedEvents = failedEvents;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
-        List<Store> elasticStores = stores.stream().filter(p -> p.getType().equals("elastic")).collect(Collectors.toList());
+        List<Store> elasticStores = stores.stream().filter(p -> p.getType().equals("elastic")).toList();
         if(elasticStores.size()==1){
             this.expiryInHours = elasticStores.get(0).getExpiryInHours();
         }else{
@@ -88,9 +83,7 @@ public class StepCollector extends EventNotifierSupport {
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
             long stepTimestamp = stepEvent.getTimestamp();
 
-            if(stepId!= null && !isBlackListed(stepId)){
-                if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
-                    //process and store the exchange
+            if(stepId!= null && !isBlackListed(stepId) && (filters == null || EventUtil.isFilteredEquals(filters, stepId))){ {
                     processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
                 }
             }
@@ -103,10 +96,9 @@ public class StepCollector extends EventNotifierSupport {
         Message message = exchange.getMessage();
         Map<String, Object> headers = message.getHeaders();
         Map<String, Object> properties = exchange.getProperties();
-        String transactionId = message.getMessageId();
 
         //use breadcrumbId when available, otherwise set custom
-        transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
+        String transactionId = message.getHeader(BREADCRUMB_ID_HEADER, String.class);
         if (transactionId == null || transactionId.isEmpty()) {
             transactionId = message.getMessageId() + "_" + stepId;
             message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
@@ -153,7 +145,9 @@ public class StepCollector extends EventNotifierSupport {
         if (inputStream != null && exchange.getMessage().getBody() != null) {
             try {
                 body = IOUtils.toByteArray(inputStream);
-            } catch (Exception e) { }
+            } catch (Exception e) {
+                // Ignoring exception intentionally
+            }
         }
 
         int bodyLength = body != null ? body.length : 0;

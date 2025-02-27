@@ -27,7 +27,7 @@ public class ManagedBrokerRuntime {
         return broker.getFileConfiguration();
     }
 
-    public String setConfiguration(String brokerType, String brokerConfigurationType, String brokerConfiguration) throws Exception {
+    public String setConfiguration(String brokerType, String brokerConfiguration) throws Exception {
         broker = getBroker(brokerType);
         return broker.setFileConfiguration(brokerConfiguration);
     }

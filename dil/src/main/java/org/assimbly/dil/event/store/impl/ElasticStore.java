@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 public class ElasticStore {
@@ -20,7 +21,7 @@ public class ElasticStore {
     private final org.assimbly.dil.event.domain.Store store;
     private String path;
 
-    public ElasticStore(String collectorId, org.assimbly.dil.event.domain.Store store) {
+    public ElasticStore(org.assimbly.dil.event.domain.Store store) {
 
         this.store = store;
 
@@ -57,8 +58,8 @@ public class ElasticStore {
 
     public void start() throws MalformedURLException {
 
-        String uri = store.getUri();
-        URL url = new URL(uri);
+        URI uri = URI.create(store.getUri());
+        URL url = uri.toURL();
         String protocol = url.getProtocol();
         String host = url.getHost();
         int port = url.getPort();
@@ -78,7 +79,7 @@ public class ElasticStore {
         restClient.close();
     }
 
-    public boolean isRunning() throws IOException {
+    public boolean isRunning() {
         return restClient.isRunning();
     }
 

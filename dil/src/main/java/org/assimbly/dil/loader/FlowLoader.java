@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -24,11 +25,9 @@ public class FlowLoader extends RouteBuilder {
 	private final TreeMap<String, String> props;
 	private CamelContext context;
 	private RoutesLoader loader;
-	private DeadLetterChannelBuilder routeErrorHandler;
 	private String flowId;
 	private String flowEvent;
 	private String flowVersion;
-	private String flowEnvironment;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
@@ -53,11 +52,10 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void init() throws Exception {
+	private void init() {
 
 		flowId = props.get("id");
 		flowVersion = props.get("flow.version");
-		flowEnvironment = props.get("environment");
 		flowEvent = "start";
 
 		setExtendedcontext();
@@ -90,7 +88,7 @@ public class FlowLoader extends RouteBuilder {
 		}
 	}
 
-	private void setExtendedcontext() throws Exception {
+	private void setExtendedcontext() {
 		context = getContext();
 		loader = PluginHelper.getRoutesLoader(context);
 	}
@@ -99,12 +97,12 @@ public class FlowLoader extends RouteBuilder {
 
 		String errorUri = "";
 		String id = "0";
-		Boolean useErrorHandler = true;
+		boolean useErrorHandler = true;
 
-		for(String prop : props.keySet()){
-			if(prop.startsWith("error") && prop.endsWith("uri")){
-				errorUri = props.get(prop);
-				id = StringUtils.substringBetween(prop,"error.",".uri");
+		for(Map.Entry<String, String> prop : props.entrySet()){
+			String key = prop.getKey();
+			if(key.startsWith("error") && key.endsWith("uri")){
+				id = StringUtils.substringBetween(key,"error.",".uri");
 				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
@@ -123,28 +121,25 @@ public class FlowLoader extends RouteBuilder {
 
 		removeRouteConfiguration(flowId);
 
-		for(String prop : props.keySet()){
-			if(prop.endsWith("routeconfiguration")){
-
-				String routeConfiguration = props.get(prop);
-				String id = props.get(prop + ".id");
-
-				if(routeConfiguration!=null && !routeConfiguration.isEmpty()){
-					loadStep(routeConfiguration, "routeconfiguration", id, null);
-				}
-			}
+		for(Map.Entry<String, String> prop : props.entrySet()){
+			String key = prop.getKey();
+			if(key.endsWith("routeconfiguration")){
+				String id = props.get(key + ".id");
+                loadStep(key, "routeconfiguration", id, null);
+            }
 		}
 	}
 
 	//this route defines a route template
 	private void defineRouteTemplates() throws Exception{
-		for(String prop : props.keySet()){
-			if(prop.endsWith("routetemplatedefinition")){
+		for(Map.Entry<String, String> prop : props.entrySet()){
+			String key = prop.getKey();
+			if(key.endsWith("routetemplatedefinition")){
 
-				String routeTemplate = props.get(prop);
-				String id = props.get(prop + ".id");
+				String routeTemplate = key;
+				String id = props.get(key + ".id");
 
-				if(routeTemplate!=null && !routeTemplate.isEmpty()){
+				if(!routeTemplate.isEmpty()){
 					loadStep(routeTemplate, "routeTemplate definition", id, null);
 				}
 
@@ -153,7 +148,7 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 	//this route create a route template (from a routetemplate definition)
-	private void setRouteTemplates() throws Exception{
+	private void setRouteTemplates() {
 
 		props.forEach((key, value) -> {
 			if (key.endsWith("routetemplate")) {
@@ -196,7 +191,7 @@ public class FlowLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
-			log.error("Failed loading step | stepid=" + id);
+            log.error("Failed loading step | stepid={}", id);
 			flowLoaderReport.setStep(id, null, type, "error", errorMessage);
 			flowEvent = "error";
 			isFlowLoaded = false;
@@ -225,6 +220,7 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
+		DeadLetterChannelBuilder routeErrorHandler;
 		if (errorUri!=null && !errorUri.isEmpty()) {
 			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
@@ -253,9 +249,9 @@ public class FlowLoader extends RouteBuilder {
 		routeConfigurationsToRemove.forEach(routeConfig -> {
 			try {
 				modelContext.removeRouteConfiguration(routeConfig);
-				log.info("Removed routeConfiguration: " + routeConfig.getId());
+                log.info("Removed routeConfiguration: {}", routeConfig.getId());
 			} catch (Exception e) {
-				log.warn("Failed to remove route configuration: " + routeConfig.getId());
+                log.warn("Failed to remove route configuration: {}", routeConfig.getId());
 			}
 		});
 

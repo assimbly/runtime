@@ -37,7 +37,7 @@ public class MessageBrokerRuntime {
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping(
-            path = "/brokers/{brokerType}/messages/{endpointName}/{filter}",
+            path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public Object listMessages(
@@ -50,7 +50,6 @@ public class MessageBrokerRuntime {
         log.debug("REST request to list messages for queue : {}", endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.listMessages(brokerType, endpointName, filter, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
         } catch (Exception e) {
@@ -102,7 +101,7 @@ public class MessageBrokerRuntime {
     public Object getFlowsMessageCountList(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestParam(value = "excludeEmptyQueues", required = false) boolean excludeEmptyQueues
+            @RequestParam(value = "excludeEmptyQueues", required = false) Boolean excludeEmptyQueues
     )  throws Exception {
 
         log.debug("REST request to list number of messages for each flow");
@@ -138,7 +137,6 @@ public class MessageBrokerRuntime {
         log.debug("REST request to list messages for queue : {}", endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.countMessages(brokerType, endpointName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
@@ -169,7 +167,6 @@ public class MessageBrokerRuntime {
         log.debug("REST request to list messages for queue : {}", endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.countDelayedMessages(brokerType, endpointName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", result);
         } catch (Exception e) {
@@ -196,13 +193,12 @@ public class MessageBrokerRuntime {
             @PathVariable(value = "endpointName") String endpointName,
             @PathVariable(value = "messageId") String messageId,
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestParam(value = "excludeBody", required = false) boolean excludeBody
+            @RequestParam(value = "excludeBody", required = false) Boolean excludeBody
     )  throws Exception {
 
         log.debug("REST request to browse message on: {}", endpointName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
@@ -229,7 +225,7 @@ public class MessageBrokerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages,
-            @RequestParam(value = "excludeBody", required = false) boolean excludeBody
+            @RequestParam(value = "excludeBody", required = false) Boolean excludeBody
     )  throws Exception {
 
         log.debug("REST request to browse messages on: {}", endpointName);
@@ -366,7 +362,6 @@ public class MessageBrokerRuntime {
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
         } catch (Exception e) {
@@ -398,7 +393,6 @@ public class MessageBrokerRuntime {
         log.debug("REST request to move messages from queue : " + sourceQueueName + " to " + targetQueueName);
 
         try {
-            //brokermanager = brokerManagerResource.getBrokerManager();
             result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
         } catch (Exception e) {

@@ -18,13 +18,10 @@ public class AggregateStrategy implements AggregationStrategy {
         AggregationStrategy aggregateStrategy;
 
         switch(aggregateType) {
-            case "xml":
-            case "text/xml":
-            case "application/xml":
+            case "xml", "text/xml", "application/xml":
                 aggregateStrategy = new XmlAggregateStrategy();
                 break;
-            case "json":
-            case "application/json":
+            case "json", "application/json":
                 aggregateStrategy = new JsonAggregateStrategy();
                 break;
             default:

@@ -44,9 +44,7 @@ public class EventConfigurer {
             return e.getMessage();
         }
 
-        String result = configureCollector();
-
-        return result;
+        return configureCollector();
 
     }
 
@@ -54,9 +52,7 @@ public class EventConfigurer {
 
         this.configuration = configuration;
 
-        String result = configureCollector();
-
-        return result;
+        return configureCollector();
 
     }
 
@@ -171,10 +167,9 @@ public class EventConfigurer {
         String flowId = configuration.getFlowId();
 
         ArrayList<String> events = configuration.getEvents();
-        ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
-        RouteCollector routeCollector = new RouteCollector(id, flowId, events, filters, stores);
+        RouteCollector routeCollector = new RouteCollector(id, flowId, events, stores);
         routeCollector.setIgnoreCamelContextEvents(true);
         routeCollector.setIgnoreCamelContextInitEvents(true);
         routeCollector.setIgnoreExchangeEvents(true);
@@ -241,22 +236,20 @@ public class EventConfigurer {
 
         String id = configuration.getId();
         String flowId = configuration.getFlowId();
-        ArrayList<String> events = configuration.getEvents();
-        ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        LogCollector logCollector = new LogCollector(id, flowId, events, filters, stores);
+        LogCollector logCollector = new LogCollector(id, flowId, stores);
         logCollector.setContext(loggerContext);
         logCollector.setName(collectorId);
         logCollector.start();
 
         ArrayList<String> packageNames = configuration.getEvents();
 
-        if(packageNames.size() > 0) {
+        if(!packageNames.isEmpty()) {
             for (String packageName : packageNames) {
-                log.info("Add log event: " + packageName);
+                log.info("Add log event: {}", packageName);
                 addLogger(logCollector, packageName, "info");
             }
         }else{

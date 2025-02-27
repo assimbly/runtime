@@ -7,6 +7,10 @@ import javax.management.openmbean.TabularData;
 import java.util.Set;
 public class CompositeDataConverter {
 
+    private CompositeDataConverter() {
+        throw new IllegalStateException("Utility class");
+    }
+
         public static String convertToJSON(CompositeData[] messages, Integer numberOfMessages, boolean list, boolean excludeBody) {
 
             if (messages == null) {
@@ -92,12 +96,12 @@ public class CompositeDataConverter {
             if (!(value instanceof TabularData)) {
 
                 if(key.equals("PropertiesText")){
-                    Object propertiesText = compositeData.get("PropertiesText");
-                    if(propertiesText instanceof String){
+                    Object propertiesTextObject = compositeData.get("PropertiesText");
+                    if(propertiesTextObject instanceof String propertiesText){
 
-                        propertiesText = ((String) propertiesText).substring( 1, ((String)propertiesText).length() - 1);
+                        propertiesText = propertiesText.substring( 1, propertiesText.length() - 1);
 
-                        String[] properties = ((String) propertiesText).split(", ");
+                        String[] properties = propertiesText.split(", ");
                         for(String property: properties){
 
                             String headerKey;

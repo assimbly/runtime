@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Filter{
     private String id;
-    private String filter;
+    private String filterExpression;
 
     @JsonProperty("id")
     public String getId() {
@@ -17,11 +17,11 @@ public class Filter{
 
     @JsonProperty("filter")
     public String getFilter() {
-        return this.filter;
+        return this.filterExpression;
     }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
+    public void setFilter(String filterExpression) {
+        this.filterExpression = filterExpression;
     }
 
 }

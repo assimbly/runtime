@@ -2,10 +2,7 @@ package org.assimbly.dil.validation;
 
 import org.assimbly.util.error.ValidationErrorMessage;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,7 +22,9 @@ public class UrlValidator {
             if(!validateURL(decodedUrl))
                 return INVALID_URL_ERROR;
 
-            httpUrlConn = (HttpURLConnection) new URL(decodedUrl).openConnection();
+            URI uri = URI.create(decodedUrl);
+            URL url2 = uri.toURL();
+            httpUrlConn = (HttpURLConnection) url2.openConnection();
 
             httpUrlConn.setRequestMethod("HEAD");
 

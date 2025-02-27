@@ -5,6 +5,7 @@ import org.assimbly.dil.validation.expressions.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ExpressionsValidator {
@@ -26,7 +27,7 @@ public class ExpressionsValidator {
         checkExpressions(expressions,isPredicate);
 
         if (validationErrors.isEmpty())
-            return null;
+            return Collections.emptyList();
 
         return validationErrors;
     }

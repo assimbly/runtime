@@ -1,6 +1,5 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.JMSException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.amqp.AMQPComponent;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +59,7 @@ public class AMQPConnection {
 
 
 
-    private void setConnection(boolean sslEnabled) throws JMSException {
+    private void setConnection(boolean sslEnabled) {
 
         AMQPComponent amqpComponent;
 
@@ -139,15 +138,15 @@ public class AMQPConnection {
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
 
-            if (!Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)) {
+            if (!Arrays.stream(optionsSplitted).noneMatch("transport.verifyHost"::startsWith)) {
                 sslUrl = url + "&transport.verifyHost=false";
             }
 
-            if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
+            if (!Arrays.stream(optionsSplitted).noneMatch("transport.trustStoreLocation"::startsWith)) {
                 sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
             }
 
-            if (!Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
+            if (!Arrays.stream(optionsSplitted).noneMatch("transport.trustStorePassword"::startsWith)) {
                 sslUrl = url + "&transport.trustStorePassword=" + getKeystorePassword();
             }
 

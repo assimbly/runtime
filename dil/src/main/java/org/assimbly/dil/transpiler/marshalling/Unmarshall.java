@@ -29,7 +29,7 @@ public class Unmarshall {
 		this.flowId = flowId;
 		doc = configuration.getDocument();
 		conf = configuration;
-		properties = new TreeMap<String, String>();
+		properties = new TreeMap<>();
 
 		setFlow();
 
@@ -192,7 +192,7 @@ public class Unmarshall {
 				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
 					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("route")) {
-					properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
+					properties = new Route(properties, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("routeconfiguration")) {
 					properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, blockId.getTextContent());
 				}

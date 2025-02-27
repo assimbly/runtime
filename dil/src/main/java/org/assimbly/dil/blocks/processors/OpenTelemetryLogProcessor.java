@@ -48,9 +48,8 @@ public class OpenTelemetryLogProcessor implements Processor {
 		map.put("attributes",exchangeMap);
 
 		ObjectMapper mapper = new ObjectMapper();
-		String jsonString = mapper.writeValueAsString(map);
+		return  mapper.writeValueAsString(map);
 
-		return jsonString;
 	}
 
 }

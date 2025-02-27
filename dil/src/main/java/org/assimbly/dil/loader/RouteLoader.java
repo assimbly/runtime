@@ -15,7 +15,6 @@ public class RouteLoader extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private CamelContext context;
-	private RoutesLoader loader;
 	private RoutesBuilderLoader routesBuilderLoader;
 	private final String routeId;
 	private final String route;
@@ -72,11 +71,12 @@ public class RouteLoader extends RouteBuilder {
 		}else{
 			flowLoaderReport.finishReport(flowEvent, "","Route installed failed");
 		}
+
 	}
 
 	private void setExtendedcontext() throws Exception {
 		context = getContext();
-		loader = PluginHelper.getRoutesLoader(context);
+		RoutesLoader loader = PluginHelper.getRoutesLoader(context);
 		routesBuilderLoader = loader.getRoutesLoader("xml");
 	}
 

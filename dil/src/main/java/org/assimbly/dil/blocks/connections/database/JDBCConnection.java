@@ -17,17 +17,15 @@ public class JDBCConnection {
     private final EncryptableProperties properties;
     private final String connectionId;
 
-    private final String componentName;
     private String url;
     private String username;
     private String password;
     private String driver;
 
-    public JDBCConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
+    public JDBCConnection(CamelContext context, EncryptableProperties properties, String connectionId) {
         this.context = context;
         this.properties = properties;
         this.connectionId = connectionId;
-        this.componentName = componentName;
     }
 
     public void start(String direction, Object stepId) throws Exception {

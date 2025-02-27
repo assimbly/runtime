@@ -4,13 +4,12 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConversionException;
 import org.apache.log4j.Logger;
-import org.assimbly.aggregate.json.JsonAggregateStrategy;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class JsonEnrichStrategy implements AggregationStrategy {
 
-    final static Logger logger = Logger.getLogger(JsonAggregateStrategy.class);
+    static final Logger logger = Logger.getLogger(JsonEnrichStrategy.class);
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {

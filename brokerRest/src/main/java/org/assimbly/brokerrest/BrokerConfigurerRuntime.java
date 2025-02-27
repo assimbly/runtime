@@ -60,7 +60,7 @@ public class BrokerConfigurerRuntime {
         log.debug("REST request to set configuration of Broker : {}", id);
 
        	try {
-       		String result = broker.setConfiguration(brokerType,brokerConfigurationType, brokerConfiguration);
+       		String result = broker.setConfiguration(brokerType, brokerConfiguration);
             if(result.equals("configuration set")) {
             	return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "setConfiguration", result);
             }else {
