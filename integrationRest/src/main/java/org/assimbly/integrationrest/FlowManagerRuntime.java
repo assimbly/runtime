@@ -626,6 +626,7 @@ public class FlowManagerRuntime {
 
                 } catch (Exception e) {
                     log.error("Set maintenance failed",e);
+                    Thread.currentThread().interrupt();
                 }
             });
 

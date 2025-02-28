@@ -1,7 +1,6 @@
 package org.assimbly.dil.transpiler.transform;
 
 import net.sf.saxon.s9api.*;
-import org.assimbly.util.TransformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,8 +8,6 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Transform {
 

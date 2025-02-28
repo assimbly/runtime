@@ -1,6 +1,5 @@
 package org.assimbly.dil.transpiler.marshalling;
 
-import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.IntegrationUtil;
@@ -9,7 +8,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.xpath.XPathFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;

@@ -1,7 +1,6 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
 import net.sf.saxon.xpath.XPathFactoryImpl;
-import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;

@@ -34,6 +34,7 @@ public class IntegrationRuntime {
     private boolean integrationIsStarting;
 
     public IntegrationRuntime() throws Exception {
+        // Empty constructor needed because of Exception.
     }
 
 

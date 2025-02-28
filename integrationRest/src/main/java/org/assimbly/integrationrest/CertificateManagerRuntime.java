@@ -253,7 +253,7 @@ public class CertificateManagerRuntime {
         log.debug("REST request to delete certificate : {}", certificateName);
 
         try {
-            deleteCertificateInKeystore(keystoreName, keystorePassword, certificateName);
+            deleteCertificateInKeystore(keystoreName, keystorePassword);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, "text/plain", "/certificates/{certificateName}", "success");
         }catch (Exception e) {
             log.debug("Remove url to Whitelist failed: {}", e.getMessage());
@@ -399,12 +399,12 @@ public class CertificateManagerRuntime {
 
     }
 
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
+    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword) {
 
         String keystorePath = baseDir + "/security/" + keystoreName;
 
         CertificatesUtil util = new CertificatesUtil();
-        util.deleteCertificate(keystorePath, keystorePassword, certificateName);
+        util.deleteCertificate(keystorePath, keystorePassword);
     }
 
 }
