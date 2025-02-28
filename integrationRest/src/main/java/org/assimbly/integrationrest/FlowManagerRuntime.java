@@ -646,8 +646,9 @@ public class FlowManagerRuntime {
 
         log.error("IntegrationErrorHandler", error);
 
-        String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-        String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
+        HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
+        String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
+        String path = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
         String message = error.getMessage();
 
         return ResponseUtil.createFailureResponse(1L, mediaType,path,message);

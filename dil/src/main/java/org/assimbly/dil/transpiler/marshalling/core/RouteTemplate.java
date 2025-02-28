@@ -123,17 +123,17 @@ public class RouteTemplate {
 
         int index = 1;
 
-        for(String link : links) {
+        for(int i = 0; i < links.length; i++) {
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
             //get values from configuration
             String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-            String transport = createLinkTransport(linkXPath);
+            String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-            options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(transport, id);
+            options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+            String endpoint = createLinkEndpoint(linkTransport, id);
 
             if(bound!=null && bound.equalsIgnoreCase("in") ){
                 fromEndpoint.setAttribute("uri", endpoint);
@@ -151,7 +151,7 @@ public class RouteTemplate {
 
         int index = 1;
 
-        for(String link : links) {
+        for(int i = 0; i < links.length; i++) {
 
             Element when = contentRouteDoc.createElement("when");
 
@@ -159,13 +159,13 @@ public class RouteTemplate {
 
             //get values from configuration
             String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-            String transport = createLinkTransport(linkXPath);
+            String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
             String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
-            options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(transport, id);
+            options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+            String endpoint = createLinkEndpoint(linkTransport, id);
 
             if(bound!=null && bound.equalsIgnoreCase("out") && rule != null && expression != null) {
 
@@ -191,9 +191,7 @@ public class RouteTemplate {
 
     public Element createOtherwise(String[] links, String stepXPath, Element choice) {
 
-        int index = 1;
-
-        for(String link : links) {
+        for(int index = 1; index < links.length; index++) {
 
             Element otherwise = contentRouteDoc.createElement("otherwise");
 
@@ -201,13 +199,13 @@ public class RouteTemplate {
 
             //get values from configuration
             String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-            String transport = createLinkTransport(linkXPath);
+            String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
             String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
-            options = createLinkOptions(linkXPath, bound, transport, pattern);
-            String endpoint = createLinkEndpoint(transport, id);
+            options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+            String endpoint = createLinkEndpoint(linkTransport, id);
 
             if(bound!=null && bound.equalsIgnoreCase("out") && rule == null && expression == null) {
 
@@ -218,8 +216,6 @@ public class RouteTemplate {
                 choice.appendChild(otherwise);
 
             }
-
-            index++;
 
         }
 
@@ -252,20 +248,8 @@ public class RouteTemplate {
 
                     if(block instanceof Element blockElement) {
 
-                        Node nodeBlockType = blockElement.getElementsByTagName("type").item(0);
-                        if(nodeBlockType!=null){
-                            blockType = nodeBlockType.getTextContent();
-                        }else{
-                            blockType = "routeTemplate";
-                        }
-
-                        Node nodeBlockUri = blockElement.getElementsByTagName("uri").item(0);
-                        if(nodeBlockUri!=null){
-                            blockUri = nodeBlockUri.getTextContent();
-                            baseUri = blockUri;
-                        }else{
-                            blockUri = "";
-                        }
+                        blockType = getBlockType(blockElement);
+                        blockUri = getBlockUri(blockElement);
 
                         if(blockUri.contains(":")) {
                             String[] splittedBlockUri = blockUri.split(":");
@@ -275,40 +259,7 @@ public class RouteTemplate {
 
                     }
 
-                    if(blockType.equalsIgnoreCase("routeTemplate")){
-                        defineRouteTemplate(templateId, type, stepId);
-                        createStep(optionProperties, links, stepXPath, type, flowId, stepId);
-                    }else if(blockType.equalsIgnoreCase("message") && blockUri.contains(":")){
-                        String[] splittedBlockUri = blockUri.split(":");
-                        baseUri = splittedBlockUri[0] + ":message:" + splittedBlockUri[1];
-                        createStep(optionProperties, links, stepXPath, type, flowId, stepId);
-                    }else if(blockType.equalsIgnoreCase("route")){
-
-                        String routeId = baseUri;
-                        Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
-                        String route = DocConverter.convertNodeToString(routeNode);
-
-                        properties.put(type + "." + stepId + ".route.id", routeId);
-                        properties.put(type + "." + stepId + ".route", route);
-
-                    }else if(blockType.equalsIgnoreCase("routeConfiguration")){
-
-                        String routeConfigurationId = baseUri;
-                        String timestamp = getTimestamp();
-                        Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
-                        String routeConfiguration = DocConverter.convertNodeToString(routeNode);
-
-
-                        updatedRouteConfigurationId = baseUri + "_" + timestamp;
-                        String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
-
-                        if (updatedRouteConfiguration.contains("<dataFormats>")){
-                            updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.|\\n)*)<\\/dataFormats>", "");
-                        }
-
-                        properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
-                        properties.put(type + "." + stepId + ".routeconfiguration", updatedRouteConfiguration);
-                    }
+                    createStepByType(type, stepId, flowId, stepXPath, optionProperties, links);
 
                 }
 
@@ -318,8 +269,68 @@ public class RouteTemplate {
             log.info("Creating default log block");
         }
 
+    }
+
+    private String getBlockType(Element blockElement){
+        Node nodeBlockType = blockElement.getElementsByTagName("type").item(0);
+        if(nodeBlockType!=null){
+            return nodeBlockType.getTextContent();
+        }else{
+            return "routeTemplate";
+        }
+    }
+
+    private String getBlockUri(Element blockElement){
+
+        String stringBlockUri = "";
+        Node nodeBlockUri = blockElement.getElementsByTagName("uri").item(0);
+
+        if(nodeBlockUri!=null){
+            stringBlockUri = nodeBlockUri.getTextContent();
+            baseUri = stringBlockUri;
+        }
+
+        return stringBlockUri;
 
     }
+
+    public void createStepByType(String type, String stepId, String flowId, String stepXPath, List<String> optionProperties, String[] links) throws Exception {
+        if(blockType.equalsIgnoreCase("routeTemplate")){
+            defineRouteTemplate(templateId, type, stepId);
+            createStep(optionProperties, links, stepXPath, type, flowId, stepId);
+        }else if(blockType.equalsIgnoreCase("message") && blockUri.contains(":")){
+            String[] splittedBlockUri = blockUri.split(":");
+            baseUri = splittedBlockUri[0] + ":message:" + splittedBlockUri[1];
+            createStep(optionProperties, links, stepXPath, type, flowId, stepId);
+        }else if(blockType.equalsIgnoreCase("route")){
+
+            routeId = baseUri;
+            Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
+            String route = DocConverter.convertNodeToString(routeNode);
+
+            properties.put(type + "." + stepId + ".route.id", routeId);
+            properties.put(type + "." + stepId + ".route", route);
+
+        }else if(blockType.equalsIgnoreCase("routeConfiguration")){
+
+            String routeConfigurationId = baseUri;
+            String timestamp = getTimestamp();
+            Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
+            String routeConfiguration = DocConverter.convertNodeToString(routeNode);
+
+
+            updatedRouteConfigurationId = baseUri + "_" + timestamp;
+            String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
+
+            if (updatedRouteConfiguration.contains("<dataFormats>")){
+                updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.\\n)*)<\\/dataFormats>", "");
+            }
+
+            properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
+            properties.put(type + "." + stepId + ".routeconfiguration", updatedRouteConfiguration);
+        }
+    }
+
 
     private void createTemplateId(String uri,String type){
 
@@ -540,7 +551,7 @@ public class RouteTemplate {
 
         int index = 1;
 
-        for(String link : links) {
+        for(int i = 0; i < links.length; i++) {
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
@@ -566,13 +577,13 @@ public class RouteTemplate {
 
         //get values from configuration
         String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
-        String transport = createLinkTransport(linkXPath);
+        String linkTransport = createLinkTransport(linkXPath);
         String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
         String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
         String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
         String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
-        options = createLinkOptions(linkXPath, bound, transport, pattern);
-        String endpoint = createLinkEndpoint(transport, id);
+        options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+        String endpoint = createLinkEndpoint(linkTransport, id);
 
         //set values
         if (expression != null) {
@@ -626,14 +637,14 @@ public class RouteTemplate {
         return Objects.toString(conf.getProperty(xpath + "transport"), "sync");
     }
 
-    public String createLinkEndpoint(String transport, String id){
+    public String createLinkEndpoint(String linkTransport, String id){
 
         String endpoint;
 
         if (options == null || options.isEmpty()) {
-            endpoint = transport + ":" + id;
+            endpoint = linkTransport + ":" + id;
         } else {
-            endpoint = transport + ":" + id + "?" + options;
+            endpoint = linkTransport + ":" + id + "?" + options;
         }
 
         return endpoint;

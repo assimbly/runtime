@@ -996,7 +996,7 @@ public interface Integration {
 	 * @param uri Step uri
 	 * @param messageBody Content of the body
 	 */
-    String sendRequest(String uri, Object messageBody) throws IOException;
+    String sendRequest(String uri, Object messageBody);
 
 	/**
 	 * Send a message with headers to an uri

@@ -1,5 +1,6 @@
 package org.assimbly.dil.event.collect;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import org.assimbly.dil.event.domain.LogEvent;
@@ -10,7 +11,7 @@ import org.assimbly.dil.event.util.EventUtil;
 import java.util.ArrayList;
 
 
-public class LogCollector extends AppenderBase {
+public class LogCollector extends AppenderBase<ILoggingEvent> {
 
     private final StoreManager storeManager;
     private final String flowId;
@@ -21,9 +22,8 @@ public class LogCollector extends AppenderBase {
     }
 
     @Override
-    protected void append(Object o) {
+    protected void append(ILoggingEvent event) {
 
-        LoggingEvent event = (LoggingEvent) o;
         if(event!=null){
 
             String message = event.getMessage();
@@ -34,7 +34,7 @@ public class LogCollector extends AppenderBase {
         }
     }
 
-    private void processEvent(LoggingEvent event, String message){
+    private void processEvent(ILoggingEvent event, String message){
 
         //set fields
         String timestamp = EventUtil.getTimestamp();

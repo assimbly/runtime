@@ -119,8 +119,6 @@ public class XMLFileConfiguration {
 
 		properties = new Unmarshall().getProperties(conf,flowId);
 
-		//IntegrationUtil.printTreemap(properties);
-
 		return properties;
 
 	}
@@ -314,10 +312,9 @@ public class XMLFileConfiguration {
 		public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
 
 			AbstractMap<Object, Object> map = (AbstractMap<Object, Object>) value;
-			for (Object obj : map.entrySet()) {
-				Map.Entry<Object, Object> entry = (Map.Entry) obj;
-				writer.startNode(entry.getKey().toString());
-				Object val = entry.getValue();
+			for (Map.Entry<Object, Object> obj : map.entrySet()) {
+                writer.startNode(obj.getKey().toString());
+				Object val = obj.getValue();
 				if ( null != val ) {
 					writer.setValue(val.toString());
 				}

@@ -236,14 +236,14 @@ public class ValidationRuntime {
                 regex = new ObjectMapper().readValue(body, Regex.class);
             }
 
-            AbstractMap.SimpleEntry regexResp = integration.validateRegex(regex);
+            AbstractMap.SimpleEntry<Integer, String> regexResp = integration.validateRegex(regex);
 
             if(regexResp!=null) {
-                if ((Integer)regexResp.getKey() == -1) {
-                    return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", (String)regexResp.getValue(), plainResponse);
+                if (regexResp.getKey() == -1) {
+                    return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", regexResp.getValue(), plainResponse);
                 } else {
                     // success - return group count
-                    return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/regex", (String)regexResp.getValue());
+                    return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/regex", regexResp.getValue());
                 }
             } else {
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/regex", "", plainResponse);

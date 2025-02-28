@@ -152,21 +152,19 @@ public class Marshall {
 				String confmessageid = configuration.get(confType + "." + confStepId + ".message.id");
 				String confRouteId = configuration.get(confType + "." + confStepId + ".route.id");
 
-				setStepFromConfiguration(confType, confUri, confStepId, confConnectionId, confmessageid, confRouteId, confRouteId, configuration);
+				Element step = doc.createElement("step");
+
+				setStepFromConfiguration(confType, confUri, confStepId, step);
+				setStepIds(confConnectionId, confmessageid, confRouteId, confRouteId, step, configuration);
 			}
 	}
 
-	private void setStepFromConfiguration(String confType, String confUri, String confstepId, String confConnectionId, String confmessageid, String confResponseId,String confRouteId, TreeMap<String, String> configuration) throws Exception {
+	private void setStepFromConfiguration(String confType, String confUri, String confstepId, Element step) throws Exception {
 
-		Element step = doc.createElement("step");
 		Element uri = doc.createElement("uri");
 		Element type = doc.createElement("type");
 		Element stepId = doc.createElement("id");
 		Element options = doc.createElement("options");
-		Element connectionid = doc.createElement("connection_id");
-		Element messageid = doc.createElement("message_id");
-		Element responseId = doc.createElement("response_id");
-		Element routeId = doc.createElement("route_id");
 
 		steps.appendChild(step);
 
@@ -213,6 +211,13 @@ public class Marshall {
 				}
 			}
 		}
+	}
+
+	private void setStepIds(String confConnectionId, String confmessageid, String confRouteId, String confResponseId, Element step, TreeMap<String, String> configuration) throws Exception {
+		Element connectionid = doc.createElement("connection_id");
+		Element messageid = doc.createElement("message_id");
+		Element responseId = doc.createElement("response_id");
+		Element routeId = doc.createElement("route_id");
 
 		if(confResponseId != null) {
 			responseId.setTextContent(confResponseId);

@@ -92,8 +92,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -107,6 +109,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public class CamelIntegration extends BaseIntegration {
@@ -365,7 +368,7 @@ public class CamelIntegration extends BaseIntegration {
 
 			URL url;
 			if(resourceName.startsWith("file:")){
-				url = new URL(resourceName);
+				url= URI.create(resourceName).toURL();
 			}else{
 				url = Resources.getResource(resourceName);
 			}
@@ -408,9 +411,13 @@ public class CamelIntegration extends BaseIntegration {
 			FileUtils.forceMkdir(kameletDir);
 		}else{
 
-			Files.walk(Paths.get(baseDir + "/kamelets"))
-					.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
-					.forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\","/")));
+			try (Stream<Path> paths = Files.walk(Paths.get(baseDir + "/kamelets"))) {
+				paths.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
+						.forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\", "/")));
+			} catch (IOException e) {
+				// Handle exception appropriately
+				e.printStackTrace();
+			}
 
 			kamelets.addAll(filepathNames);
 
@@ -422,26 +429,28 @@ public class CamelIntegration extends BaseIntegration {
 
 	private Resource convertKameletToStep(String resourceName, String resourceAsString){
 
-		String properties = "    properties:\n" +
-				"      in:\n" +
-				"          title: Source endpoint\n" +
-				"          description: The Camel uri of the source endpoint.\n" +
-				"          type: string\n" +
-				"          default: kamelet:source\n" +
-				"      out:\n" +
-				"          title: Sink endpoint\n" +
-				"          description: The Camel uri of the sink endpoint.\n" +
-				"          type: string\n" +
-				"          default: kamelet:sink\n" +
-				"      routeId:\n" +
-				"          title: Route ID\n" +
-				"          description: The Camel route ID.\n" +
-				"          type: string\n" +
-				"      routeConfigurationId:\n" +
-				"          title: RouteConfiguration ID\n" +
-				"          description: The Camel routeconfiguration ID.\n" +
-				"          type: string\n" +
-				"          default: 0";
+	String properties = """
+    properties:
+      in:
+          title: Source endpoint
+          description: The Camel uri of the source endpoint.
+          type: string
+          default: kamelet:source
+      out:
+          title: Sink endpoint
+          description: The Camel uri of the sink endpoint.
+          type: string
+          default: kamelet:sink
+      routeId:
+          title: Route ID
+          description: The Camel route ID.
+          type: string
+      routeConfigurationId:
+          title: RouteConfiguration ID
+          description: The Camel routeconfiguration ID.
+          type: string
+          default: 0
+""";
 
 		//replace values
 		if(resourceName.contains("action") && !resourceAsString.contains("kamelet:sink") ){
@@ -456,11 +465,13 @@ public class CamelIntegration extends BaseIntegration {
 
 		}
 
-		resourceAsString = StringUtils.replaceOnce(resourceAsString,"  template:\n" +
-				"    from:","  template:\n" +
-				"    route:\n" +
-				"      routeConfigurationId: \"{{routeConfigurationId}}\"\n" +
-				"    from:");
+		resourceAsString = StringUtils.replaceOnce(resourceAsString, """
+  template:
+    from:""", """
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+    from:""");
 
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
 		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
@@ -584,16 +595,22 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void checkDeployDirectory(Path path) throws Exception {
-		Files.walk(path)
-				.filter(fPath -> fPath.toString().endsWith(".xml") || fPath.toString().endsWith(".json")  || fPath.toString().endsWith(".yaml"))
-				.forEach(fPath -> {
-					try{
-						fileInstall(fPath);
-					} catch (Exception e) {
-						log.error("Check deploy directory "+ path + " + failed",e);
-					}
-				});
+	private void checkDeployDirectory(Path path) {
+		try (Stream<Path> paths = Files.walk(path)) {
+			paths.filter(fPath -> fPath.toString().endsWith(".xml")
+							|| fPath.toString().endsWith(".json")
+							|| fPath.toString().endsWith(".yaml"))
+					.forEach(fPath -> {
+						try {
+							fileInstall(fPath);
+						} catch (Exception e) {
+							log.error("Check deploy directory " + path + " failed", e);
+						}
+					});
+		} catch (IOException e) {
+			log.error("Error while walking the file tree for path: " + path, e);
+		}
+
 	}
 
 	private void watchDeployDirectory(Path path) throws Exception {
@@ -906,7 +923,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		try{
 			// add custom connections if needed
-			addCustomActiveMQConnection(props, "dovetail");
+			addCustomActiveMQConnection();
 
 			// add custom connections if needed
 			addCustomRabbitMQConnection(new TreeMap<>(props));
@@ -943,7 +960,9 @@ public class CamelIntegration extends BaseIntegration {
 	private void addCertificateFromUrl(String url, String authPassword) {
 		try {
 			byte[] fileContent;
-			try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(new URL(url)))) {
+
+			URL urlObject = URI.create(url).toURL();
+			try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(urlObject))) {
 				fileContent = IOUtils.toByteArray(byteArrayInputStream);
 			}
 			String encodedResourceContent = Base64.getEncoder().encodeToString(fileContent);
@@ -1003,7 +1022,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private void addCustomActiveMQConnection(TreeMap<String, String> props, String frontendEngine) {
+	private void addCustomActiveMQConnection() {
 
 		try {
 
@@ -1120,15 +1139,16 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void createConnection(String scheme) throws Exception {
-		if(!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null) {
-			if(!DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
-				log.warn("Component " + scheme + " is not supported by Assimbly. Try to resolve dependency dynamically.");
-				if(INetUtil.isHostAvailable("repo1.maven.org")){
-					log.info(resolveDependency(scheme));
-				}else{
-                    log.error("Failed to resolve {}. No available internet is found. Cannot reach http://repo1.maven.org/maven2/", scheme);
-				}
+		if(!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null && !DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
+
+            log.warn("Component {} is not supported by Assimbly. Try to resolve dependency dynamically.", scheme);
+
+			if(INetUtil.isHostAvailable("repo1.maven.org")){
+				log.info(resolveDependency(scheme));
+			}else{
+				log.error("Failed to resolve {}. No available internet is found. Cannot reach http://repo1.maven.org/maven2/", scheme);
 			}
+
 		}
 	}
 
@@ -1995,67 +2015,169 @@ public class CamelIntegration extends BaseIntegration {
 		return camelRouteConfiguration;
 	}
 
-	private String createKamelet(String name, List<String> parameters) {
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception {
+		JSONObject json = new JSONObject();
+		JSONObject flow = createBasicFlowJson(flowId);
 
-		String baseName = StringUtils.substringBefore(name, "-");
-		String type = StringUtils.substringAfter(name, "-");
+		List<Route> routes = getRoutesByFlowId(flowId);
+		List<Route> filteredRoutes = filterRoutes(routes, filter);
 
-		StringBuilder parametersString = new StringBuilder();
-		for(String parameter: parameters){
+		// Calculate basic statistics
+		FlowStatistics stats = calculateFlowStatistics(filteredRoutes, fullStats);
 
-			if(parameter.contains(", ")){
+		// Populate basic stats
+		populateBasicStats(flow, stats);
 
-				String[] splittedParameter = parameter.split("\", \"");
+		// Add additional stats if requested
+		if (fullStats) {
+			populateDetailedStats(flow, stats);
+		}
 
-				parametersString.append("      ").append(splittedParameter[0]).append(":\n").append("          title: .\n").append("          description: .\n").append("          type: string\n").append("          default: ").append(splittedParameter[1]).append("\n");
+		// Add metadata if requested
+		if (includeMetaData) {
+			populateMetadata(flow, flowId);
+		}
 
-			}else if(parameter.contains(",")){
+		// Add steps if requested
+		JSONArray steps = new JSONArray();
+		if (includeSteps && fullStats) {
+			steps = collectStepStatistics(filteredRoutes);
+		}
 
-				String[] splittedParameter = parameter.split("\",\"");
+		// Build final response
+		json.put("flow", flow);
+		if (includeSteps && fullStats) {
+			json.put("steps", steps);
+		}
 
-				parametersString.append("      ").append(splittedParameter[0]).append(":\n").append("          title: .\n").append("          description: .\n").append("          type: string\n").append("          default: ").append(splittedParameter[1]).append("\n");
+		return json.toString();
+	}
 
-			}else{
-				parametersString.append("      ").append(parameter).append(":\n").append("          title: \n").append("          description: .\n").append("          type: string\n");
+	private JSONObject createBasicFlowJson(String flowId) {
+		JSONObject flow = new JSONObject();
+		flow.put("id", flowId);
+		return flow;
+	}
+
+	private List<Route> filterRoutes(List<Route> routes, String filter) {
+		if (filter.isEmpty()) {
+			return routes;
+		}
+
+		return routes.stream()
+				.filter(r -> !r.getId().contains(filter))
+				.toList();
+	}
+
+	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
+		FlowStatistics stats = new FlowStatistics();
+
+		for (Route r : routes) {
+			String routeId = r.getId();
+			ManagedRouteMBean route = managed.getManagedRoute(routeId);
+
+			// Accumulate basic stats
+			stats.totalMessages += route.getExchangesTotal();
+			stats.completedMessages += route.getExchangesCompleted();
+			stats.failedMessages += route.getExchangesFailed();
+			stats.pendingMessages += route.getExchangesInflight();
+
+			if (fullStats) {
+				collectDetailedStatistics(stats, route);
 			}
 		}
 
-		return "apiVersion: camel.apache.org/v1alpha1\n" +
-				"kind: Kamelet\n" +
-				"metadata:\n" +
-				"  name: " + name + "\n" +
-				"  labels:\n" +
-				"    camel.apache.org/kamelet.type: \"" + type + "\"\n" +
-				"spec:\n" +
-				"  definition:\n" +
-				"    title: \"" + baseName + " " + type + "\"\n" +
-				"    description: |-\n" +
-				"      to do\n" +
-				"    type: object\n" +
-				"    properties:\n" +
-				"      routeconfiguration_id:\n" +
-				"        type: string\n" +
-				"        default: \"0\"\n" +
-				parametersString +
-				"  dependencies:\n" +
-				"    - \"camel:kamelet\"\n" +
-				"  template:\n" +
-				"    route-configuration-id: \"{{routeconfiguration_id}}\"\n" +
-				"    from:\n" +
-				"      uri: \"kamelet:source\"\n" +
-				"      steps:\n" +
-				"      - to:\n" +
-				"        uri: \"kamelet.sink\"";
-
+		return stats;
 	}
 
+	private void collectDetailedStatistics(FlowStatistics stats, ManagedRouteMBean route) {
+		// Update uptime if not set
+		if (stats.uptime == null) {
+			stats.uptime = route.getUptime();
+		}
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception  {
+		// Update uptimeMillis if not set
+		if (stats.uptimeMillis == 0) {
+			stats.uptimeMillis = route.getUptimeMillis();
+		}
 
-		JSONObject json = new JSONObject();
-		JSONObject flow = new JSONObject();
+		// Track last failed timestamp
+		updateLastFailedTimestamp(stats, route);
+
+		// Track last completed timestamp
+		updateLastCompletedTimestamp(stats, route);
+
+		// Accumulate CPU load metrics
+		stats.cpuLoadLastMinute = stats.cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
+		stats.cpuLoadLast5Minutes = stats.cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
+		stats.cpuLoadLast15Minutes = stats.cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
+	}
+
+	private void updateLastFailedTimestamp(FlowStatistics stats, ManagedRouteMBean route) {
+		Date failure = route.getLastExchangeFailureTimestamp();
+		if (failure == null) {
+			return;
+		}
+
+		if (stats.lastFailed == null || failure.after(stats.lastFailed)) {
+			stats.lastFailed = failure;
+		}
+	}
+
+	private void updateLastCompletedTimestamp(FlowStatistics stats, ManagedRouteMBean route) {
+		Date completed = route.getLastExchangeCompletedTimestamp();
+		if (completed == null) {
+			return;
+		}
+
+		if (stats.lastCompleted == null || completed.after(stats.lastCompleted)) {
+			stats.lastCompleted = completed;
+		}
+	}
+
+	private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
+		flow.put("total", stats.totalMessages);
+		flow.put("completed", stats.completedMessages);
+		flow.put("failed", stats.failedMessages);
+		flow.put("pending", stats.pendingMessages);
+	}
+
+	private void populateDetailedStats(JSONObject flow, FlowStatistics stats) throws MalformedObjectNameException {
+		flow.put("status", getFlowStatus(flow.getString("id")));
+		flow.put("timeout", getTimeout(context));
+		flow.put("uptime", stats.uptime);
+		flow.put("uptimeMillis", stats.uptimeMillis);
+		flow.put("cpuLoadLastMinute", stats.cpuLoadLastMinute);
+		flow.put("cpuLoadLast5Minutes", stats.cpuLoadLast5Minutes);
+		flow.put("cpuLoadLast15Minutes", stats.cpuLoadLast15Minutes);
+		flow.put("lastFailed", stats.lastFailed != null ? stats.lastFailed : "");
+		flow.put("lastCompleted", stats.lastCompleted != null ? stats.lastCompleted : "");
+	}
+
+	private void populateMetadata(JSONObject flow, String flowId) throws Exception {
+		TreeMap<String, String> flowProps = getFlowConfiguration(flowId);
+		if (flowProps != null) {
+			for (var flowProp : flowProps.entrySet()) {
+				if (flowProp.getKey().startsWith("flow") && !flowProp.getKey().endsWith("id")) {
+					String key = StringUtils.substringAfter(flowProp.getKey(), "flow.");
+					flow.put(key, flowProp.getValue());
+				}
+			}
+		}
+	}
+
+	private JSONArray collectStepStatistics(List<Route> routes) throws Exception {
 		JSONArray steps = new JSONArray();
+		for (Route r : routes) {
+			String routeId = r.getId();
+			JSONObject step = getStepStats(routeId, true);
+			steps.put(step);
+		}
+		return steps;
+	}
 
+	// Helper class to store statistics
+	private static class FlowStatistics {
 		long totalMessages = 0;
 		long completedMessages = 0;
 		long failedMessages = 0;
@@ -2067,107 +2189,6 @@ public class CamelIntegration extends BaseIntegration {
 		String uptime = null;
 		Date lastFailed = null;
 		Date lastCompleted = null;
-
-		List<Route> routes = getRoutesByFlowId(flowId);
-
-		for(Route r : routes){
-
-			String routeId = r.getId();
-
-			if (!filter.isEmpty() && routeId.contains(filter)) {
-				continue;
-			}
-
-			ManagedRouteMBean route = managed.getManagedRoute(routeId);
-
-			totalMessages += route.getExchangesTotal();
-			completedMessages += route.getExchangesCompleted();
-			failedMessages += route.getExchangesFailed();
-			pendingMessages += route.getExchangesInflight();
-
-			if(fullStats){
-
-				if(uptime==null){
-					uptime = route.getUptime();
-				}
-
-				if(uptimeMillis==0){
-					uptimeMillis = route.getUptimeMillis();
-				}
-
-				if(lastFailed==null){
-					lastFailed = route.getLastExchangeFailureTimestamp();
-				}else{
-					Date failure = route.getLastExchangeFailureTimestamp();
-					if(failure!=null && failure.after(lastFailed)){
-						lastFailed = failure;
-					}
-				}
-
-				if(lastCompleted==null){
-					lastCompleted = route.getLastExchangeCompletedTimestamp();
-				}else{
-					Date completed = route.getLastExchangeCompletedTimestamp();
-					if(completed!=null && completed.after(lastCompleted)){
-						lastCompleted = completed;
-					}
-				}
-
-				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
-				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
-				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
-
-				if(includeSteps){
-					JSONObject step = getStepStats(routeId, true);
-					steps.put(step);
-				}
-			}
-		}
-
-		flow.put("id",flowId);
-		flow.put("total",totalMessages);
-		flow.put("completed",completedMessages);
-		flow.put("failed",failedMessages);
-		flow.put("pending",pendingMessages);
-
-		if(fullStats){
-			flow.put("status",getFlowStatus(flowId));
-			flow.put("timeout",getTimeout(context));
-			flow.put("uptime",uptime);
-			flow.put("uptimeMillis",uptimeMillis);
-			flow.put("cpuLoadLastMinute",cpuLoadLastMinute);
-			flow.put("cpuLoadLast5Minutes",cpuLoadLast5Minutes);
-			flow.put("cpuLoadLast15Minutes",cpuLoadLast15Minutes);
-			flow.put("lastFailed",lastFailed != null ? lastFailed : "");
-			flow.put("lastCompleted",lastCompleted != null ? lastCompleted : "");
-		}
-
-		if(includeMetaData){
-			TreeMap<String, String> flowProps = getFlowConfiguration(flowId);
-			if(flowProps!=null) {
-				for (var flowProp : flowProps.entrySet()) {
-					if (flowProp.getKey().startsWith("flow") && !flowProp.getKey().endsWith("id")) {
-						String key = StringUtils.substringAfter(flowProp.getKey(), "flow.");
-						flow.put(key, flowProp.getValue());
-					}
-				}
-			}
-
-		}
-
-		if(includeSteps){
-			flow.put("steps",steps);
-		}
-		json.put("flow",flow);
-
-		String flowStats = json.toString(4);
-
-		if(mediaType.contains("xml")) {
-			flowStats = DocConverter.convertJsonToXml(flowStats);
-		}
-
-		return flowStats;
-
 	}
 
 	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
@@ -2667,8 +2688,8 @@ public class CamelIntegration extends BaseIntegration {
 			String flowId = StringUtils.substringBefore(routeId,"-");
 			if(flowId!=null && !flowId.isEmpty()) {
 				if (filter != null && !filter.isEmpty()) {
-					String status = getFlowStatus(flowId);
-					if (status.equalsIgnoreCase(filter)) {
+					String serviceStatus = getFlowStatus(flowId);
+					if (serviceStatus.equalsIgnoreCase(filter)) {
 						flowIds.add(flowId);
 					}
 				}else{
@@ -2770,8 +2791,8 @@ public class CamelIntegration extends BaseIntegration {
 			ManagedRouteMBean managedRoute = managed.getManagedRoute(routeId);
 
 			if (filter != null && !filter.isEmpty()) {
-				String status = managedRoute.getState();
-				if (status.equalsIgnoreCase(filter)) {
+				String serviceStatus = managedRoute.getState();
+				if (serviceStatus.equalsIgnoreCase(filter)) {
 					stepIds.add(routeId);
 				}
 			}else{
@@ -2915,7 +2936,7 @@ public class CamelIntegration extends BaseIntegration {
 		String result;
 
 		try {
-			List<Class> classes = resolveMavenDependency(groupId, artifactId, version);
+			List<Class<?>> classes = resolveMavenDependency(groupId, artifactId, version);
 			Component camelComponent = getComponent(classes, scheme);
 			context.addComponent(scheme, camelComponent);
 			result = "Dependency " + dependency + " resolved";
@@ -2928,7 +2949,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public List<Class> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
+	public List<Class<?>> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
 
 		DependencyUtil dependencyUtil = new DependencyUtil();
 		List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
@@ -2936,14 +2957,19 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public Component getComponent(List<Class> classes, String scheme) throws Exception {
+	public Component getComponent(List<Class<?>> classes, String scheme) throws Exception {
 
 		Component component = null;
-		for(Class classToLoad: classes){
+		for (Class<?> classToLoad : classes) {
 			String className = classToLoad.getName().toLowerCase();
-			if(className.endsWith(scheme + "component")){
-				Object object =  classToLoad.newInstance();
-				component = (Component) object;
+			if (className.endsWith(scheme + "component")) {
+				try {
+					component = (Component) classToLoad.getDeclaredConstructor().newInstance();
+					break; // Exit loop once a match is found
+				} catch (InstantiationException | IllegalAccessException |
+						 InvocationTargetException | NoSuchMethodException e) {
+					throw new RuntimeException("Failed to instantiate component: " + className, e);
+				}
 			}
 		}
 
@@ -2972,61 +2998,68 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public void send(String uri,Object messageBody, Integer numberOfTimes) {
+	public void send(String uri,Object messageBody, Integer numberOfTimes) throws IOException {
 
-		ProducerTemplate template = context.createProducerTemplate();
+		try(ProducerTemplate template = context.createProducerTemplate()) {
 
-		if(numberOfTimes.equals(1)){
-			log.info("Sending " + numberOfTimes + " message to " + uri);
-			template.sendBody(uri, messageBody);
-		}else{
-			log.info("Sending " + numberOfTimes + " messages to " + uri);
-			IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+			if (numberOfTimes.equals(1)) {
+				log.info("Sending " + numberOfTimes + " message to " + uri);
+				template.sendBody(uri, messageBody);
+			} else {
+				log.info("Sending " + numberOfTimes + " messages to " + uri);
+				IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+			}
 		}
 	}
 
-	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) {
+	public void sendWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders, Integer numberOfTimes) throws IOException {
 
-		ProducerTemplate template = context.createProducerTemplate();
+		try(ProducerTemplate template = context.createProducerTemplate()) {
 
-		Exchange exchange = new DefaultExchange(context);
-		exchange.getIn().setBody(messageBody);
-		exchange = setHeaders(exchange, messageHeaders);
+			Exchange exchange = new DefaultExchange(context);
+			exchange.getIn().setBody(messageBody);
+			exchange = setHeaders(exchange, messageHeaders);
 
-		if(numberOfTimes.equals(1)){
-			log.info("Sending " + numberOfTimes + " message to " + uri);
-			template.send(uri,exchange);
-		}else{
-			log.info("Sending " + numberOfTimes + " messages to " + uri);
-			Exchange finalExchange = exchange;
-			IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+			if (numberOfTimes.equals(1)) {
+				log.info("Sending " + numberOfTimes + " message to " + uri);
+				template.send(uri, exchange);
+			} else {
+				log.info("Sending " + numberOfTimes + " messages to " + uri);
+				Exchange finalExchange = exchange;
+				IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+			}
 		}
 
 	}
 
-	public String sendRequest(String uri,Object messageBody) {
+	public String sendRequest(String uri,Object messageBody) throws IOException {
 
-		ProducerTemplate template = context.createProducerTemplate();
+		try(ProducerTemplate template = context.createProducerTemplate()) {
 
-		log.info("Sending request message to " + uri);
+			log.info("Sending request message to " + uri);
 
-		return template.requestBody(uri, messageBody,String.class);
+			return template.requestBody(uri, messageBody, String.class);
+		}
 	}
 
 	public String sendRequestWithHeaders(String uri, Object messageBody, TreeMap<String, Object> messageHeaders) {
 
-		ProducerTemplate template = context.createProducerTemplate();
+		try(ProducerTemplate template = context.createProducerTemplate()){
+			Exchange exchange = new DefaultExchange(context);
+			exchange.getIn().setBody(messageBody);
+			exchange = setHeaders(exchange, messageHeaders);
+			exchange.setPattern(ExchangePattern.InOut);
 
-		Exchange exchange = new DefaultExchange(context);
-		exchange.getIn().setBody(messageBody);
-		exchange = setHeaders(exchange, messageHeaders);
-		exchange.setPattern(ExchangePattern.InOut);
+			log.info("Sending request message to " + uri);
+			Exchange result = template.send(uri,exchange);
 
-		log.info("Sending request message to " + uri);
-		Exchange result = template.send(uri,exchange);
+			return result.getMessage().getBody(String.class);
+		} catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-		return result.getMessage().getBody(String.class);
-	}
+
+    }
 
 	public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
 		for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
@@ -3137,7 +3170,7 @@ public class CamelIntegration extends BaseIntegration {
 		String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
 
 		CertificatesUtil util = new CertificatesUtil();
-		util.deleteCertificate(keystorePath, keystorePassword, certificateName);
+		util.deleteCertificate(keystorePath, keystorePassword);
 	}
 
 	@Override

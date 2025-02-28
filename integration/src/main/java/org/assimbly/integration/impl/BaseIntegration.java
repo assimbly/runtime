@@ -33,7 +33,6 @@ public abstract class BaseIntegration implements Integration {
 
 	//properties are (list of) key/value maps
 	private final List<TreeMap<String, String>> properties = new ArrayList<>();
-	private TreeMap<String, String> flowProperties;
 
 	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
 
@@ -49,7 +48,7 @@ public abstract class BaseIntegration implements Integration {
 		return encryptionProperties;
 	}
 
-	public List<TreeMap<String,String>> getFlowConfigurations() throws Exception {
+	public List<TreeMap<String,String>> getFlowConfigurations() {
 		return this.properties;
 	}
 
@@ -61,7 +60,7 @@ public abstract class BaseIntegration implements Integration {
 		
 	}	
 
-	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) throws Exception {
+	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) {
 
 		String newId = configuration.get("id");
 
@@ -82,6 +81,7 @@ public abstract class BaseIntegration implements Integration {
 
 		try {
 
+			TreeMap<String, String> flowProperties;
 			if(mediaType.toLowerCase().contains("xml")) {
 	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
 			}else if(mediaType.toLowerCase().contains("json")) {
@@ -100,14 +100,14 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {
-		TreeMap<String,String> flowConfiguration = null;
+		TreeMap<String,String> flowConf = null;
 		for (TreeMap<String, String> props : getFlowConfigurations()) {
 			if (props.get("id").equals(flowId)) {
-				flowConfiguration = props;
+				flowConf = props;
 			}
 		}
 		
-		return flowConfiguration;
+		return flowConf;
 	}	
 
 	public String getFlowConfiguration(String flowId, String mediaType) throws Exception {
@@ -138,7 +138,7 @@ public abstract class BaseIntegration implements Integration {
 
 	private String getFlowConfigurationFromMap(String flowId, String mediaType) throws Exception {
 
-		String flowConfiguration = configuredFlows.get(flowId);
+		flowConfiguration = configuredFlows.get(flowId);
 
 		if(flowConfiguration==null){
 			flowConfiguration = "<dil></dil>";
@@ -168,14 +168,6 @@ public abstract class BaseIntegration implements Integration {
 		return error;
 	}
 	
-	//--> convert methods (XML)
-	/*
-	public String convertConfigurationToXML(String integrationid, List<TreeMap<String, String>> configuration) throws Exception {
-        return new XMLFileConfiguration().createConfiguration(integrationid, configuration);
-	}
-
-	 */
-
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String integrationid, String configuration) throws Exception {
 		return new XMLFileConfiguration().getFlowConfigurations(integrationid, configuration);
 	}
@@ -188,45 +180,15 @@ public abstract class BaseIntegration implements Integration {
 		return new XMLFileConfiguration().getFlowConfiguration(integrationId, configuration);
 	}
 
-	/*
-	public TreeMap<String, String> convertXMLToFlowConfiguration(String flowId, URI configurationUri) throws Exception {
-		return new XMLFileConfiguration().getFlowConfiguration(flowId, configurationUri);
-	}	
-	
-	public String convertFlowConfigurationToXML(TreeMap<String, String> configuration) throws Exception {
-		return new XMLFileConfiguration().createFlowConfiguration(configuration);
-	}
-
-	 */
-	
 	//--> convert methods (JSON)
 
-	/*
-	public String convertConfigurationToJSON(String integrationid, List<TreeMap<String, String>> configuration) throws Exception {
-        return new JSONFileConfiguration().createConfiguration(integrationid, configuration);
-	}*/
-	
 	public List<TreeMap<String, String>> convertJSONToConfiguration(String integrationid, String configuration) throws Exception {
 		return new JSONFileConfiguration().getFlowConfigurations(integrationid, configuration);
-	}	
-
-
+	}
 	public TreeMap<String, String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception {
 		return new JSONFileConfiguration().getFlowConfiguration(flowId, configuration);
 	}	
 
-		/*
-	public String convertFlowConfigurationToJSON(TreeMap<String, String> configuration) throws Exception {
-		return new JSONFileConfiguration().createFlowConfiguration(configuration);
-	}*/
-	
-	//--> convert methods (YAML)	
-
-	/*
-	public String convertConfigurationToYAML(String integrationid, List<TreeMap<String, String>> configuration) throws Exception {
-        return new YAMLFileConfiguration().createConfiguration(integrationid, configuration);
-	}*/
-	
 	public List<TreeMap<String, String>> convertYAMLToConfiguration(String integrationid, String configuration) throws Exception {
 		return new YAMLFileConfiguration().getFlowConfigurations(integrationid, configuration);
 	}	
@@ -235,11 +197,6 @@ public abstract class BaseIntegration implements Integration {
 	public TreeMap<String, String> convertYAMLToFlowConfiguration(String flowId, String configuration) throws Exception {
 		return new YAMLFileConfiguration().getFlowConfiguration(flowId, configuration);
 	}	
-
-	/*
-	public String convertFlowConfigurationToYAML(TreeMap<String, String> configuration) throws Exception {
-		return new YAMLFileConfiguration().createFlowConfiguration(configuration);
-	}*/
 
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -257,7 +214,7 @@ public abstract class BaseIntegration implements Integration {
 
 
 	// Integration
-
+	/*
 	public abstract void start() throws Exception;
 
 	public abstract void stop() throws Exception;
@@ -475,5 +432,8 @@ public abstract class BaseIntegration implements Integration {
 	public abstract EvaluationResponse validateScript(EvaluationRequest scriptRequest);
 
 	public abstract List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
+
+
+	 */
 
 }

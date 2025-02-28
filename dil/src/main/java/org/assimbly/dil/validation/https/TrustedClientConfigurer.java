@@ -18,7 +18,7 @@ import java.util.List;
 
 public class TrustedClientConfigurer implements HttpClientConfigurer {
 
-    private static final Logger logger = LoggerFactory.getLogger(TrustedClientConfigurer.class);
+    private static final Logger log = LoggerFactory.getLogger(TrustedClientConfigurer.class);
 
     private List<FileBasedTrustStore> trustStores = new ArrayList<>();
 
@@ -46,9 +46,9 @@ public class TrustedClientConfigurer implements HttpClientConfigurer {
             PoolingHttpClientConnectionManager ccm = new PoolingHttpClientConnectionManager(registry);
             clientBuilder.setConnectionManager(ccm);
 
-            logger.info("Setup SSL context for https4 scheme");
+            log.info("Setup SSL context for https4 scheme");
         } catch (Exception e) {
-            logger.error("Failed to setup SSL context", e);
+            log.error("Failed to setup SSL context", e);
         }
     }
 
@@ -58,6 +58,6 @@ public class TrustedClientConfigurer implements HttpClientConfigurer {
 
     @Override
     public void configureHttpClient(org.apache.hc.client5.http.impl.classic.HttpClientBuilder clientBuilder) {
-        //todo
+        log.warn("configureHttpClient Not implemented");
     }
 }

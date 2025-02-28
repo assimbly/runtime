@@ -9,22 +9,22 @@ import java.util.regex.PatternSyntaxException;
 
 public class RegexValidator {
 
-    public AbstractMap.SimpleEntry validate(Regex expression) {
+    public AbstractMap.SimpleEntry<Integer, String> validate(Regex expression) {
 
         AbstractMap.SimpleEntry<Integer, String> response;
         String regex = expression.getExpression();
 
         if (regex.isEmpty()) {
-            return new AbstractMap.SimpleEntry(-1, "Regex cannot be empty");
+            return new AbstractMap.SimpleEntry<>(-1, "Regex cannot be empty");
         }
 
         try {
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher("");
-            response = new AbstractMap.SimpleEntry(1, String.valueOf(matcher.groupCount()));
+            response = new AbstractMap.SimpleEntry<>(1, String.valueOf(matcher.groupCount()));
 
         } catch (PatternSyntaxException e) {
-            response = new AbstractMap.SimpleEntry(-1, e.getMessage());
+            response = new AbstractMap.SimpleEntry<>(-1, e.getMessage());
         }
 
         return response;

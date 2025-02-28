@@ -5,7 +5,6 @@ import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
-import org.assimbly.dil.event.collect.ExchangeCollector;
 import org.assimbly.dil.event.collect.LogCollector;
 import org.assimbly.dil.event.collect.RouteCollector;
 import org.assimbly.dil.event.collect.StepCollector;
@@ -62,11 +61,7 @@ public class EventConfigurer {
 
         Object collector = context.getRegistry().lookupByName(collectorId);
 
-       if(collector instanceof ExchangeCollector){
-           ((ExchangeCollector) collector).shutdown();
-           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
-           log.info("Removed message collector with id=" + collectorId);
-       }else if(collector instanceof StepCollector){
+       if(collector instanceof StepCollector){
            ((StepCollector) collector).shutdown();
            context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
            log.info("Removed step collector with id=" + collectorId);
@@ -133,9 +128,6 @@ public class EventConfigurer {
             try {
 
                 switch (type) {
-                    case "exchange":
-                        configureExchangeCollector();
-                        break;
                     case "step":
                         configureStepCollector();
                         break;
@@ -179,30 +171,6 @@ public class EventConfigurer {
 
         context.getManagementStrategy().addEventNotifier(routeCollector);
         context.getRegistry().bind(id, routeCollector);
-    }
-
-    public void configureExchangeCollector() {
-
-        log.info("Configure collection of exchange events");
-
-        String id = configuration.getId();
-        String flowId = configuration.getFlowId();
-        String flowVersion = configuration.getFlowVersion();
-        ArrayList<String> events = configuration.getEvents();
-        ArrayList<Filter> filters = configuration.getFilters();
-        ArrayList<Store> stores = configuration.getStores();
-
-        ExchangeCollector exchangeCollector = new ExchangeCollector(id, flowId, flowVersion, events, filters, stores);
-        exchangeCollector.setIgnoreCamelContextEvents(true);
-        exchangeCollector.setIgnoreCamelContextInitEvents(true);
-        exchangeCollector.setIgnoreRouteEvents(true);
-        exchangeCollector.setIgnoreServiceEvents(true);
-        exchangeCollector.setIgnoreStepEvents(true);
-        exchangeCollector.setIgnoreExchangeEvents(false);
-
-        context.getManagementStrategy().addEventNotifier(exchangeCollector);
-        context.getRegistry().bind(id, exchangeCollector);
-
     }
 
     public void configureStepCollector() {
