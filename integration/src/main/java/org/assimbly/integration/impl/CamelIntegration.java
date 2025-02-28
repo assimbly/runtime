@@ -613,14 +613,17 @@ public class CamelIntegration extends BaseIntegration {
 					private Path pathCreated;
 
 					public void onEvent(DirectoryWatcher.Event event, Path path) {
+
+						long diff;
+
 						switch (event) {
 							case ENTRY_CREATE:
 								log.info("Deploy folder | File created: " + path);
-								long diff;
+
 								try {
 									pathCreated = path;
 									timeCreated = System.currentTimeMillis();
-									Long lastModified = FileUtils.lastModifiedFileTime(path.toFile()).toMillis();
+									long lastModified = FileUtils.lastModifiedFileTime(path.toFile()).toMillis();
 
 									diff = timeCreated - lastModified;
 
@@ -635,7 +638,7 @@ public class CamelIntegration extends BaseIntegration {
 								}
 								break;
 							case ENTRY_MODIFY:
-								Long timeModified = System.currentTimeMillis();
+								long timeModified = System.currentTimeMillis();
 								String pathAsString = path.toString();
 								String fileName = FilenameUtils.getBaseName(pathAsString);
 
@@ -693,7 +696,7 @@ public class CamelIntegration extends BaseIntegration {
 				configuration = DocConverter.convertYamlToXml(configuration);
 			}else{
 
-				String xmlRoute = "";
+				StringBuilder xmlRoute = new StringBuilder();
 				Yaml yaml = new Yaml();
 
 				if (configuration.startsWith("- from:") || configuration.contains("kind: Integration") || configuration.contains("kind: Kamelet")) {
@@ -727,7 +730,7 @@ public class CamelIntegration extends BaseIntegration {
 						}
 
 						//put yaml route into xml route
-						xmlRoute = xmlRoute + "<route id=\"" + id + "\"><yamldsl><![CDATA[" + route + "]]></yamldsl></route>";
+						xmlRoute.append("<route id=\"").append(id).append("\"><yamldsl><![CDATA[").append(route).append("]]></yamldsl></route>");
 
 					}
 
@@ -744,7 +747,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(flowId!=null){
 			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			String loadReport = installFlow(flowId, STOP_TIMEOUT, mediaType, configuration);
+			loadReport = installFlow(flowId, STOP_TIMEOUT, mediaType, configuration);
 
 			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
 				log.error(loadReport);
@@ -1292,7 +1295,7 @@ public class CamelIntegration extends BaseIntegration {
 		initFlowActionReport(routeId);
 
 		if(!route.startsWith("<route")){
-			route = new XMLFileConfiguration().getRouteConfiguration(routeId,route);
+			route = new XMLFileConfiguration().getRouteConfiguration(route);
 		}
 
 		try{
@@ -1382,7 +1385,7 @@ public class CamelIntegration extends BaseIntegration {
 					finishFlowActionReport(id, "error","Failed starting flow","error");
 				}
 
-			}else if(result.equals("started")) {
+			}else {
 				finishFlowActionReport(id, "start","Started flow successfully","info");
 			}
 
@@ -1415,15 +1418,6 @@ public class CamelIntegration extends BaseIntegration {
 				log.info("Starting step | stepid=" + routeId);
 
 				routeController.startRoute(routeId);
-
-				int count = 1;
-
-				do {
-					if(status.isStarted()) {break;}
-					Thread.sleep(10);
-					count++;
-
-				} while (status.isStarting() || count < 3000);
 
 			} catch (Exception e) {
 				log.error("Failed starting step | stepid=" + routeId);
@@ -1523,25 +1517,8 @@ public class CamelIntegration extends BaseIntegration {
 				}
 
 				for(Route route : routeList){
-
-
 					String routeId = route.getId();
-
 					routeController.suspendRoute(routeId);
-
-					int count = 1;
-
-					do {
-						status = routeController.getRouteStatus(routeId);
-						if(status.isSuspended() || status.isStopped()) {
-                            log.info("Paused (suspend/stopped) flow | flowid={}| stepid={}", id, routeId);
-							break;
-						}
-
-						Thread.sleep(10);
-						count++;
-
-					} while (status.isSuspending() || count < 6000);
 				}
 				finishFlowActionReport(id, "pause","Paused flow successfully","info");
 			}else {
@@ -1565,40 +1542,22 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 
 			if(hasFlow(id)) {
-				boolean resumed = true;
+
 				List<Route> routeList = getRoutesByFlowId(id);
 				for(Route route : routeList){
 					String routeId = route.getId();
 					status = routeController.getRouteStatus(routeId);
+
 					if(status.isSuspended()){
 						routeController.resumeRoute(routeId);
-
-						int count = 1;
-
-						do {
-							status = routeController.getRouteStatus(routeId);
-							if(status.isStarted()) {break;}
-							Thread.sleep(10);
-							count++;
-
-						} while (status.isStarting() || count < 3000);
-
-						resumed = true;
 						log.info("Resumed flow  | flowid=" + id + " | stepid=" + routeId);
-
-					}
-					else if (status.isStopped()){
-
+					}else if (status.isStopped()){
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
 						startFlow(routeId, STOP_TIMEOUT);
-						resumed = true;
-					}
+                    }
+
 				}
-				if(resumed){
-					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
-				}else {
-					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
-				}
+				finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 			}else {
 				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
 				finishFlowActionReport(id, "error",errorMessage,"error");
@@ -1630,7 +1589,7 @@ public class CamelIntegration extends BaseIntegration {
 			log.info(message + " | flowid=" + id);
 		}
 
-		TreeMap<String, String> flowProps = null;
+		TreeMap<String, String> flowProps;
 		try {
 			flowProps = getFlowConfiguration(id);
 			String version = flowProps.get("flow.version");
@@ -1660,7 +1619,7 @@ public class CamelIntegration extends BaseIntegration {
 					return false;
 				}
 			}
-			return serviceStatus != null && serviceStatus.isStarted();
+			return serviceStatus != null;
 		}else {
 			return false;
 		}
@@ -1715,8 +1674,8 @@ public class CamelIntegration extends BaseIntegration {
 					flowStatus = "unconfigured";
 				}else{
 					String flowId = routesList.get(0).getId();
-					ServiceStatus status = routeController.getRouteStatus(flowId);
-					flowStatus = status.toString().toLowerCase();
+					ServiceStatus serviceStatus = routeController.getRouteStatus(flowId);
+					flowStatus = serviceStatus.toString().toLowerCase();
 				}
 			}catch (Exception e) {
 				log.error("Get status flow " + id + " failed.",e);
@@ -2036,42 +1995,28 @@ public class CamelIntegration extends BaseIntegration {
 		return camelRouteConfiguration;
 	}
 
-	private String createKamelet(String name, List<String> parameters) throws IOException {
+	private String createKamelet(String name, List<String> parameters) {
 
 		String baseName = StringUtils.substringBefore(name, "-");
 		String type = StringUtils.substringAfter(name, "-");
 
-		String parametersString = "";
+		StringBuilder parametersString = new StringBuilder();
 		for(String parameter: parameters){
 
 			if(parameter.contains(", ")){
 
 				String[] splittedParameter = parameter.split("\", \"");
 
-				parametersString = parametersString +
-						"      " + splittedParameter[0] + ":\n" +
-						"          title: .\n" +
-						"          description: .\n" +
-						"          type: string\n" +
-						"          default: " + splittedParameter[1] + "\n";
+				parametersString.append("      ").append(splittedParameter[0]).append(":\n").append("          title: .\n").append("          description: .\n").append("          type: string\n").append("          default: ").append(splittedParameter[1]).append("\n");
 
 			}else if(parameter.contains(",")){
 
 				String[] splittedParameter = parameter.split("\",\"");
 
-				parametersString = parametersString +
-						"      " + splittedParameter[0] + ":\n" +
-						"          title: .\n" +
-						"          description: .\n" +
-						"          type: string\n" +
-						"          default: " + splittedParameter[1] + "\n";
+				parametersString.append("      ").append(splittedParameter[0]).append(":\n").append("          title: .\n").append("          description: .\n").append("          type: string\n").append("          default: ").append(splittedParameter[1]).append("\n");
 
 			}else{
-				parametersString = parametersString +
-						"      " + parameter + ":\n" +
-						"          title: \n" +
-						"          description: .\n" +
-						"          type: string\n";
+				parametersString.append("      ").append(parameter).append(":\n").append("          title: \n").append("          description: .\n").append("          type: string\n");
 			}
 		}
 
@@ -2173,7 +2118,7 @@ public class CamelIntegration extends BaseIntegration {
 				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
 
 				if(includeSteps){
-					JSONObject step = getStepStats(routeId, fullStats);
+					JSONObject step = getStepStats(routeId, true);
 					steps.put(step);
 				}
 			}
@@ -2505,15 +2450,12 @@ public class CamelIntegration extends BaseIntegration {
 
 		// Filter by name
 		if(!filter.isEmpty()){
-			List<JSONObject> filteredList = jsonObjectList.stream()
-					.filter(obj -> obj.getString("name").contains(filter))
-					.toList();
 
-			jsonObjectList = filteredList;
+            jsonObjectList = jsonObjectList.stream()
+                    .filter(obj -> obj.getString("name").contains(filter))
+                    .toList();
 		}
 
-		// Sort by cpuTime
-		jsonObjectList.sort(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed());
 
 		// Filter by top entries
 		if(topEntries >= 1){
@@ -2523,8 +2465,13 @@ public class CamelIntegration extends BaseIntegration {
 			jsonObjectList = jsonObjectList.subList(0,topEntries);
 		}
 
+		// Sort by cpuTime
+		List<JSONObject> sortedList = jsonObjectList.stream()
+				.sorted(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed())
+				.toList();
+
 		// Rebuild the JSONArray from the sorted and filtered list
-		JSONArray jsonArray = new JSONArray(jsonObjectList);
+		JSONArray jsonArray = new JSONArray(sortedList);
 		String result = jsonArray.toString();
 
 		if(mediaType.contains("xml")) {

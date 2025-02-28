@@ -373,7 +373,7 @@ public class RouteTemplate {
 
         createTemplateParameters();
 
-        if(optionProperties.isEmpty()){
+        if(!optionProperties.isEmpty()){
             for (String optionProperty : optionProperties) {
                 String name = optionProperty.split("options.")[1];
                 String value = conf.getProperty(optionProperty).toString();
@@ -509,8 +509,8 @@ public class RouteTemplate {
 
         if(StringUtils.isNumeric(stepIndex)) {
 
-            Integer previousStepIndex = Integer.parseInt(stepIndex) - 1;
-            Integer nextStepIndex = Integer.parseInt(stepIndex) + 1;
+            int previousStepIndex = Integer.parseInt(stepIndex) - 1;
+            int nextStepIndex = Integer.parseInt(stepIndex) + 1;
 
             String previousStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + previousStepIndex + "]");
 

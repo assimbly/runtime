@@ -331,7 +331,7 @@ public class ValidationRuntime {
 
             plainResponse = true;
 
-            HashMap<String,String> paramList = null;
+            HashMap<String,String> paramList;
 
             if(body!=null){
                 paramList = new ObjectMapper().readValue(body, new TypeReference<HashMap<String,String>>(){});

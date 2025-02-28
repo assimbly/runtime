@@ -136,14 +136,11 @@ public class FlowLoader extends RouteBuilder {
 			String key = prop.getKey();
 			if(key.endsWith("routetemplatedefinition")){
 
-				String routeTemplate = key;
-				String id = props.get(key + ".id");
+                String id = props.get(key + ".id");
 
-				if(!routeTemplate.isEmpty()){
-					loadStep(routeTemplate, "routeTemplate definition", id, null);
-				}
+                loadStep(key, "routeTemplate definition", id, null);
 
-			}
+            }
 		}
 	}
 

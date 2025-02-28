@@ -43,7 +43,7 @@ public class FtpValidator {
     private Session setupDefaultSession(JSch jsch, String userName, String host, int port) throws JSchException {
         Session session = jsch.getSession(userName, host, port);
         session.setConfig("StrictHostKeyChecking", "no");
-        JschConfig.enableExtraConfigOnJsch(jsch);
+        JschConfig.enableExtraConfigOnJsch();
 
         return session;
     }

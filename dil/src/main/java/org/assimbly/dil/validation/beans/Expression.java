@@ -7,15 +7,15 @@ public class Expression {
     private String id;
 
     private String name;
-    private String expression;
+    private String expressionValue;
     private String expressionType;
     private String nextNode;
 
     public Expression() { }
 
-    public Expression(String name, String expression, String expressionType, String nextNode) {
+    public Expression(String name, String expressionValue, String expressionType, String nextNode) {
         this.name = name;
-        this.expression = expression;
+        this.expressionValue = expressionValue;
         this.expressionType = expressionType;
         this.nextNode = nextNode;
     }
@@ -29,12 +29,11 @@ public class Expression {
     }
 
     public String getExpression() {
-        return expression;
+        return expressionValue;
     }
 
-    public void setExpression(String expression) {
-        this.expression = expression;
-    }
+    public void setExpression(String expressionValue) {
+        this.expressionValue = expressionValue;}
 
     public String getNextNode() {
         return nextNode;

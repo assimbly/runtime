@@ -11,7 +11,7 @@ public class RegexValidator {
 
     public AbstractMap.SimpleEntry validate(Regex expression) {
 
-        AbstractMap.SimpleEntry<Integer, String> response = null;
+        AbstractMap.SimpleEntry<Integer, String> response;
         String regex = expression.getExpression();
 
         if (regex.isEmpty()) {

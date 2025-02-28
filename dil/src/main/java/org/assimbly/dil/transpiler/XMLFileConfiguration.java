@@ -141,7 +141,7 @@ public class XMLFileConfiguration {
 		return true;
 	}
 
-	public String getRouteConfiguration(String flowId, String xml) throws Exception {
+	public String getRouteConfiguration(String xml) throws Exception {
 
 		log.info("Configuration File: " + xml);
 

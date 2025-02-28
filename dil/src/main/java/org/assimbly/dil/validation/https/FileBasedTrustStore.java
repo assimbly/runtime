@@ -8,6 +8,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -59,7 +60,9 @@ public class FileBasedTrustStore {
 
         try {
             synchronized (this) {
-                trustStore.store(Files.newOutputStream(Paths.get(path)), password.toCharArray());
+                try (OutputStream out = Files.newOutputStream(Paths.get(path))) {
+                    trustStore.store(out, password.toCharArray());
+                }
             }
         } catch (IOException e) {
             throw e;
@@ -102,10 +105,12 @@ public class FileBasedTrustStore {
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                // not usd
             }
 
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                // not used
             }
         };
     }

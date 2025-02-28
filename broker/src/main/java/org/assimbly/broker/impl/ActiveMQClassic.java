@@ -91,8 +91,7 @@ public class ActiveMQClassic implements Broker {
 
             return status();
         }catch (Exception e) {
-            log.error("Failed to start broker. Reason: ", e.getMessage());
-            e.printStackTrace();
+            log.error("Failed to start broker. Reason: {}", e.getMessage());
             return "Failed to start broker. Reason: " + e.getMessage();
         }
 
@@ -164,6 +163,7 @@ public class ActiveMQClassic implements Broker {
             try {
                 FileUtils.touch(brokerFile);
                 InputStream is = classloader.getResourceAsStream("activemq.xml");
+                assert is != null;
                 Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 is.close();
 
@@ -194,6 +194,7 @@ public class ActiveMQClassic implements Broker {
             FileUtils.touch(brokerFile);
             InputStream inputStream = classloader.getResourceAsStream("activemq.xml");
 
+            assert inputStream != null;
             brokerConfiguration = DocConverter.convertStreamToString(inputStream);
 
             inputStream.close();
@@ -487,7 +488,7 @@ public class ActiveMQClassic implements Broker {
         checkIfEndpointExist(endpointName);
 
         queueViewMbean = getQueueViewMBean(endpointType, endpointName);
-        Long queueSize = queueViewMbean.getQueueSize();
+        long queueSize = queueViewMbean.getQueueSize();
         queueViewMbean.purge();
 
         return Long.toString(queueSize);
@@ -539,7 +540,7 @@ public class ActiveMQClassic implements Broker {
 
         checkIfEndpointExist(endpointName);
 
-        Long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
+        long queueSize = getDestinationViewMBean(endpointType,endpointName).getQueueSize();
 
         return Long.toString(queueSize);
 
@@ -547,7 +548,7 @@ public class ActiveMQClassic implements Broker {
 
     public String countMessagesFromList(String endpointList) throws Exception {
 
-        Long numberOfMessages = 0L;
+        long numberOfMessages = 0L;
         String[] endpointNames= endpointList.split("\\s*,\\s*");
 
         for(String endpointName: endpointNames){
@@ -645,33 +646,28 @@ public class ActiveMQClassic implements Broker {
 
         List<CompositeData> list = Arrays.asList(messages);
 
+        int startIndex;
+        int endIndex;
         if(page == 1){
 
-            Integer startIndex = 0;
-            Integer endIndex = numberOfMessages;
-
-            if(list.size() < endIndex){
-                endIndex = list.size();
-            }
-
-            list = list.subList(startIndex, endIndex);
+            startIndex = 0;
+            endIndex = numberOfMessages;
 
 
         }else{
 
-            Integer startIndex = (page -1) * numberOfMessages;
-            Integer endIndex = (page) * numberOfMessages;
+            startIndex = (page - 1) * numberOfMessages;
+            endIndex = (page) * numberOfMessages;
 
             if(list.size() < startIndex){
                 startIndex = list.size();
             }
 
-            if(list.size() < endIndex){
-                endIndex = list.size();
-            }
-
-            list = list.subList(startIndex, endIndex);
         }
+        if(list.size() < endIndex){
+            endIndex = list.size();
+        }
+        list = list.subList(startIndex, endIndex);
 
         return list.toArray(new CompositeData[0]);
 

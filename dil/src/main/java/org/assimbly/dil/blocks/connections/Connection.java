@@ -104,13 +104,13 @@ public class Connection {
         EncryptionUtil encryptionUtil = (EncryptionUtil) context.getRegistry().lookupByName("encryptionUtil");
 
         for (Map.Entry<String,String> entry : properties.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if(isEncodedString(value)){
-                value = encryptionUtil.decrypt(value);
+            String propertyKey = entry.getKey();
+            String propertyValue = entry.getValue();
+            if(isEncodedString(propertyValue)){
+                propertyValue = encryptionUtil.decrypt(propertyValue);
             }
 
-            MapUtils.safeAddToMap(encryptableProperties, key, value);
+            MapUtils.safeAddToMap(encryptableProperties, propertyKey, propertyValue);
         }
 
         return encryptableProperties;

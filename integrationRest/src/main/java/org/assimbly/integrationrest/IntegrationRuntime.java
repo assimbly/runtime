@@ -129,8 +129,8 @@ public class IntegrationRuntime {
     public ResponseEntity<String> isStarted(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
         try {
-            Boolean started = integration.isStarted();
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/isstarted",started.toString());
+            boolean started = integration.isStarted();
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/isstarted", Boolean.toString(started));
         } catch (Exception e) {
             log.error("Check if integration is started failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/isstarted",e.getMessage());
@@ -483,16 +483,6 @@ public class IntegrationRuntime {
 
                 //add notifier before starting integration
                 integration.start();
-                integrationIsStarting = true;
-
-                int count = 1;
-
-                while (!integration.isStarted() && count < 300) {
-                    Thread.sleep(100);
-                    count++;
-                }
-
-                integrationIsStarting = false;
 
             } catch (Exception e) {
                 log.error("Init integration failed",e);

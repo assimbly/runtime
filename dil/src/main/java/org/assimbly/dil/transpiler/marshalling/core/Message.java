@@ -1,7 +1,6 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.assimbly.util.IntegrationUtil;
 
 import java.util.List;
@@ -19,7 +18,7 @@ public class Message {
         this.conf = conf;
     }
 
-    public TreeMap<String, String> setHeader(String type, String stepId, String messageId) throws ConfigurationException {
+    public TreeMap<String, String> setHeader(String type, String stepId, String messageId) {
 
         this.messageId = messageId;
 

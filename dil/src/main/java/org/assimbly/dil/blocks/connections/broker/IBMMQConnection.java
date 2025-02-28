@@ -9,6 +9,8 @@ import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.JMSException;
+
 
 public class IBMMQConnection {
 
@@ -40,7 +42,6 @@ public class IBMMQConnection {
     private String clientUserAuthenticationMQCSP;
 
 
-
     public IBMMQConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
         this.context = context;
         this.properties = properties;
@@ -65,7 +66,7 @@ public class IBMMQConnection {
         }
     }
 
-    private void setFields(){
+    private void setFields() {
 
 
         //required properties
@@ -119,76 +120,122 @@ public class IBMMQConnection {
 
         MQConnectionFactory cf = new MQConnectionFactory();
 
-        //Required parameters
+        checkRequiredParameters();
+
+        cf.setConnectionNameList(url); //tcp url
+        cf.setChannel(channel); //communications link
+        cf.setQueueManager(queueManager); //service provider
+
+        cf = setOptionalParameter(cf);
+
+        return createConnection(cf);
+
+    }
+
+    private void checkRequiredParameters() throws Exception {
+
         if (url == null) {
             log.error("IBMMQ connection required parameter 'url' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
+
         if (channel == null) {
             log.error("IBMMQ connection required parameter 'channel' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
+
         if (queueManager == null) {
             log.error("IBMMQ connection required parameter 'queuemanager' isn't set");
             throw new Exception("IBMMQ connection parameters are invalid or missing.\n");
         }
 
-        cf.setConnectionNameList(url);
-        cf.setChannel(channel);//communications link
-        cf.setQueueManager(queueManager);//service provider
+    }
 
-        //Optional parameters
+    //public static final int 	WMQ_CM_BINDINGS 				0
+    //public static final int 	WMQ_CM_CLIENT 					1
+    //public static final int   WMQ_CLIENT_NONJMS_MQ            1
+    //public static final int 	WMQ_CM_DIRECT_TCPIP 			2
+    //public static final int 	WMQ_CM_DIRECT_HTTP 				4
+    //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
+    private MQConnectionFactory setOptionalParameter(MQConnectionFactory cf) throws JMSException {
 
-        //public static final int 	WMQ_CM_BINDINGS 				0
-        //public static final int 	WMQ_CM_CLIENT 					1
-        //public static final int   WMQ_CLIENT_NONJMS_MQ            1
-        //public static final int 	WMQ_CM_DIRECT_TCPIP 			2
-        //public static final int 	WMQ_CM_DIRECT_HTTP 				4
-        //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
         if (transportTypeAsString != null) {
             cf.setTransportType(Integer.parseInt(transportTypeAsString));
-        }else{
+        } else {
             cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         }
 
-        if(clientReconnectTimeOutAsString!=null){
+        if (clientReconnectTimeOutAsString != null) {
             cf.setClientReconnectTimeout(Integer.parseInt(clientReconnectTimeOutAsString));
-        }else{
+        } else {
             cf.setClientReconnectTimeout(2);
         }
 
-        if(clientReconnectTimeOutAsString!=null){
+        if (clientReconnectTimeOutAsString != null) {
             cf.setClientReconnectOptions(Integer.parseInt(clientReconnectOptionsAsString));
-        }else{
+        } else {
             cf.setClientReconnectOptions(0);
         }
 
-        cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
+        cf.setBooleanProperty(com.ibm.msg.client.wmq.common.CommonConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
 
         cf.setBooleanProperty(WMQConstants.WMQ_MQMD_WRITE_ENABLED, true);
 
-        if(channelReceiveExit!=null){cf.setReceiveExit(channelReceiveExit);}
-        if(channelReceiveExitUserData!=null){cf.setReceiveExitInit(channelReceiveExitUserData);}
-        if(channelSendExit!=null){cf.setSendExit(channelSendExit);}
-        if(channelSendExitUserData!=null){cf.setSendExitInit(channelSendExitUserData);}
-        if(channelSecurityExit!=null){cf.setSecurityExit(channelSecurityExit);}
-        if(channelSecurityExitUserData!=null){cf.setSecurityExitInit(channelSecurityExitUserData);}
-        if(appName!=null){cf.setAppName(appName);}
-        if(clientId!=null){cf.setClientID(clientId);}
-        if(pollingIntervalAsString!=null){cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));}
-        if(maxBufferSizeAsString!=null){cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));}
-
-        if(username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
-            cf.createConnection(username, password);
-        }else if(username != null && !username.isEmpty()) {
-            cf.setStringProperty(WMQConstants.USERID, username);
-            cf.createConnection();
-        }else{
-            cf.createConnection();
+        if (channelReceiveExit != null) {
+            cf.setReceiveExit(channelReceiveExit);
+        }
+        if (channelReceiveExitUserData != null) {
+            cf.setReceiveExitInit(channelReceiveExitUserData);
+        }
+        if (channelSendExit != null) {
+            cf.setSendExit(channelSendExit);
+        }
+        if (channelSendExitUserData != null) {
+            cf.setSendExitInit(channelSendExitUserData);
+        }
+        if (channelSecurityExit != null) {
+            cf.setSecurityExit(channelSecurityExit);
+        }
+        if (channelSecurityExitUserData != null) {
+            cf.setSecurityExitInit(channelSecurityExitUserData);
+        }
+        if (appName != null) {
+            cf.setAppName(appName);
+        }
+        if (clientId != null) {
+            cf.setClientID(clientId);
+        }
+        if (pollingIntervalAsString != null) {
+            cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));
+        }
+        if (maxBufferSizeAsString != null) {
+            cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));
         }
 
         return cf;
+    }
 
+    private MQConnectionFactory createConnection(MQConnectionFactory cf) throws JMSException {
+
+        if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+            try (var connection = cf.createConnection(username, password)) {
+                connection.start();
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
+        } else
+
+            if (username != null && !username.isEmpty()) {
+                cf.setStringProperty(WMQConstants.USERID, username);
+            }
+
+            try (var connection = cf.createConnection()) {
+                connection.start();
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
+
+        return cf;
     }
 
 }

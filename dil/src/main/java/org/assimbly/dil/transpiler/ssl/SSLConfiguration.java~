@@ -89,8 +89,7 @@ public class SSLConfiguration {
 				if(newFile){
 					ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 					InputStream is = classloader.getResourceAsStream("keystore.jks");
-                    assert is != null;
-                    Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 					is.close();
 				}
 

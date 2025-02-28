@@ -12,10 +12,10 @@ public class JschConfig {
     private static final String JSCH_PUBKEY_ACCEPTED_ALGORITHMS_ENV_VAR = "JSCH_PUBKEY_ACCEPTED_ALGORITHMS";
     private static final String JSCH_KEX_ENV_VAR = "JSCH_KEX";
 
-    public static void enableExtraConfigOnJsch(JSch jsch) {
-        setExtraConfigFromEnvironmentVar(jsch, SERVER_HOST_KEY, JSCH_SERVER_HOST_KEY_ENV_VAR);
-        setExtraConfigFromEnvironmentVar(jsch, PUBKEY_ACCEPTED_ALGORITHMS, JSCH_PUBKEY_ACCEPTED_ALGORITHMS_ENV_VAR);
-        setExtraConfigFromEnvironmentVar(jsch, KEX, JSCH_KEX_ENV_VAR);
+    public static void enableExtraConfigOnJsch() {
+        setExtraConfigFromEnvironmentVar(SERVER_HOST_KEY, JSCH_SERVER_HOST_KEY_ENV_VAR);
+        setExtraConfigFromEnvironmentVar(PUBKEY_ACCEPTED_ALGORITHMS, JSCH_PUBKEY_ACCEPTED_ALGORITHMS_ENV_VAR);
+        setExtraConfigFromEnvironmentVar(KEX, JSCH_KEX_ENV_VAR);
     }
 
     private static String[] getExtraConfigFromEnvironmentVar(String envVar) {
@@ -26,14 +26,14 @@ public class JschConfig {
         return new String[0];
     }
 
-    private static void setExtraConfigFromEnvironmentVar(JSch jsch, String key, String envVar) {
+    private static void setExtraConfigFromEnvironmentVar(String key, String envVar) {
         String[] extraConfArr = getExtraConfigFromEnvironmentVar(envVar);
         for (String extraConf: extraConfArr) {
-            setJschConfig(jsch, key, extraConf);
+            setJschConfig(key, extraConf);
         }
     }
 
-    private static void setJschConfig(JSch jsch, String key, String additionalKeyValue) {
+    private static void setJschConfig(String key, String additionalKeyValue) {
         String keyValue = JSch.getConfig(key);
         boolean isKeyValueEmpty = keyValue.isEmpty();
         String additionalKeyValueMiddlePos = ","+additionalKeyValue+",";

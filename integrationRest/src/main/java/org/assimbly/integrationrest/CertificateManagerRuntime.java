@@ -157,7 +157,7 @@ public class CertificateManagerRuntime {
 
 
         } catch (Exception e) {
-            log.debug("Uploaded certificate failed: ", e.getMessage());
+            log.debug("Uploaded certificate failed: {}", e.getMessage());
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/upload", e.getMessage());
         }
 
@@ -188,7 +188,7 @@ public class CertificateManagerRuntime {
 
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/securities/uploadcertificate",result);
         } catch (Exception e) {
-            log.debug("Uploaded certificate failed: ", e.getMessage());
+            log.debug("Uploaded certificate failed: {}", e.getMessage());
             return ResponseUtil.createFailureResponse(1L, mediaType,"/securities/uploadcertificate",e.getMessage());
         }
 
@@ -226,7 +226,7 @@ public class CertificateManagerRuntime {
 
 
         } catch (Exception e) {
-            log.debug("Generate self-signed certificate failed: ", e.getMessage());
+            log.debug("Generate self-signed certificate failed: {}", e.getMessage());
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/generate", e.getMessage());
         }
 
@@ -256,7 +256,7 @@ public class CertificateManagerRuntime {
             deleteCertificateInKeystore(keystoreName, keystorePassword, certificateName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, "text/plain", "/certificates/{certificateName}", "success");
         }catch (Exception e) {
-            log.debug("Remove url to Whitelist failed: ", e.getMessage());
+            log.debug("Remove url to Whitelist failed: {}", e.getMessage());
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, "text/plain", "/certificates/{certificateName}", e.getMessage());
         }
     }
@@ -274,7 +274,7 @@ public class CertificateManagerRuntime {
             @RequestHeader(value = "keystorePassword") String keystorePassword,
             @RequestParam(value = "url") String url
     ) throws Exception {
-        log.debug("REST request to updates certificates in truststore for url ", url);
+        log.debug("REST request to updates certificates in truststore for url {}", url);
 
         if(certificates.isEmpty()) {
             return ResponseEntity.ok().body("no certificates found");

@@ -1,6 +1,5 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.JMSException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.jasypt.properties.EncryptableProperties;
@@ -8,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import progress.message.jclient.ConnectionFactory;
 
-//to do in Jakarta/Camel4 migration (does SonicMQ support jakarta?)
 
 public class SonicMQConnection {
 
@@ -57,12 +55,12 @@ public class SonicMQConnection {
 
         if (properties.getProperty("connection." + connectionId + ".faultTolerant") != null) {
             try {
-                Boolean.parseBoolean(properties.getProperty("connection." + connectionId + ".faultTolerant"));
+                faultTolerant =Boolean.parseBoolean(properties.getProperty("connection." + connectionId + ".faultTolerant"));
             } catch (Exception e) {
-                faultTolerant = true;
+                faultTolerant = false;
             }
         } else {
-            faultTolerant = true;
+            faultTolerant = false;
         }
 
         if (url == null || username == null || password == null) {
@@ -83,7 +81,7 @@ public class SonicMQConnection {
 
 
 
-    private void setConnection(String flowId, String connectId, String connectionIdValue) throws JMSException, javax.jms.JMSException {
+    private void setConnection(String flowId, String connectId, String connectionIdValue) throws javax.jms.JMSException {
 
         ConnectionFactory connection = new ConnectionFactory(url, username, password);
         connection.setConnectID("Assimbly/Gateway/" + connectionIdValue + "/Flow/" + flowId + "/" + connectId);

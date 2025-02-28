@@ -33,7 +33,7 @@ public class Transform {
 
         String dilXml = transformXML(xml, transformer, processor);
 
-        log.info("The DIL format:\n\n" + dilXml);
+        log.info("DIL format:\n\n{}", dilXml);
 
         return dilXml;
 

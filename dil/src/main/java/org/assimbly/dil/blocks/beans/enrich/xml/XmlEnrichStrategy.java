@@ -29,14 +29,14 @@ public class XmlEnrichStrategy implements AggregationStrategy {
                 throw new Exception("Something went wrong parsing the XML inputs.");
             }
 
-            if (originalXml == null) {
-                enriched = XmlHelper.mergeIn(enriched, resourceXml);
+            if (originalXml == null && resource != null) {
+                XmlHelper.mergeIn(enriched, resourceXml);
                 resource.getIn().setBody(XmlHelper.prettyPrint(enriched));
                 return resource;
             }
 
             if (resourceXml == null) {
-                enriched = XmlHelper.mergeIn(enriched, originalXml);
+                XmlHelper.mergeIn(enriched, originalXml);
                 original.getIn().setBody(XmlHelper.prettyPrint(enriched));
                 return original;
             }
@@ -51,12 +51,12 @@ public class XmlEnrichStrategy implements AggregationStrategy {
                     </Enriched>
                 </Enriched>
              */
-            if(originalXml.getDocumentElement().getTagName().equals("Enriched")){
+            if(originalXml != null && originalXml.getDocumentElement().getTagName().equals("Enriched")){
                 enriched = originalXml;
-                enriched = XmlHelper.mergeIn(enriched, resourceXml);
-            }else{
-                enriched = XmlHelper.mergeIn(enriched, originalXml);
-                enriched = XmlHelper.mergeIn(enriched, resourceXml);
+                XmlHelper.mergeIn(enriched, resourceXml);
+            }else if(originalXml!=null){
+                XmlHelper.mergeIn(enriched, originalXml);
+                XmlHelper.mergeIn(enriched, resourceXml);
             }
 
             original.getIn().setBody(XmlHelper.prettyPrint(enriched));

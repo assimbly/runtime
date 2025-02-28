@@ -102,8 +102,8 @@ public class FlowConfigurerRuntime {
 
 		try {
 			integration = integrationRuntime.getIntegration();
-			Boolean hasFlow = integration.hasFlow(flowId);
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow",hasFlow.toString());
+			boolean hasFlow = integration.hasFlow(flowId);
+			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow", Boolean.toString(hasFlow));
 		} catch (Exception e) {
 			log.error("Check if integration has flow with id=" + flowId + " failed",e);
 			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow",e.getMessage());
@@ -295,8 +295,8 @@ public class FlowConfigurerRuntime {
 
         try {
             integration = integrationRuntime.getIntegration();
-            Boolean removedFlow = integration.removeFlow(flowId);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/remove",removedFlow.toString());
+            boolean removedFlow = integration.removeFlow(flowId);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/remove", Boolean.toString(removedFlow));
         } catch (Exception e) {
 			log.error("Remove flow " + flowId +" failed",e);
 			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/remove",e.getMessage());

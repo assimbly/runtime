@@ -21,7 +21,7 @@ public class FailureProcessor implements Processor {
 		//Write alert to disk
 		Date date = new Date();
 		String today = new SimpleDateFormat("yyyyMMdd").format(date);
-		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS Z").format(date);
+		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").format(date);
 		FlowEvent flowEvent = new FlowEvent(exchange.getFromRouteId(), date, exchange.getException().getMessage());
 
 		String flowId;

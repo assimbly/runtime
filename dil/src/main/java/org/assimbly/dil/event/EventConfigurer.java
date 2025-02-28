@@ -262,7 +262,7 @@ public class EventConfigurer {
 
     private void addLogger(LogCollector logCollector, String packageName, String logLevel){
 
-        ch.qos.logback.classic.Logger logbackLogger = null;
+        ch.qos.logback.classic.Logger logbackLogger;
 
         if(packageName.equalsIgnoreCase("all") || packageName.equalsIgnoreCase("root")){
             logbackLogger = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);

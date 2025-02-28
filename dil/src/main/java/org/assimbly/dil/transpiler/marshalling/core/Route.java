@@ -47,7 +47,7 @@ public class Route {
 
         Node node = getRoute(routeId);
 
-
+        assert node != null;
         String routeAsString = DocConverter.convertNodeToString(node);
 
         routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
@@ -61,7 +61,7 @@ public class Route {
 
     private String createDataFormat(String route) throws Exception {
 
-        String dataFormatAsString = null;
+        String dataFormatAsString;
         if (route.contains("<customDataFormat ref=\"csv")){
 
             String ref = StringUtils.substringBetween(route, "<customDataFormat ref=\"", "\"/>");

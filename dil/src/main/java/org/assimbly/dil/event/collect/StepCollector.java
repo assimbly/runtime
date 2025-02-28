@@ -115,7 +115,7 @@ public class StepCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
-        MessageEvent messageEvent = null;
+        MessageEvent messageEvent;
 
         if(isSuccessEvent) {
             // success
@@ -123,7 +123,7 @@ public class StepCollector extends EventNotifierSupport {
                     previousFlowVersion, headers, properties, expiryDate);
         } else {
             // failed
-            messageEvent = getFailedMessageEvent(exchange, stepId, stepTimestamp, timestamp, transactionId, previousFlowId,
+            messageEvent = getFailedMessageEvent(stepId, timestamp, transactionId, previousFlowId,
                     previousFlowVersion, headers, properties, expiryDate);
         }
 
@@ -166,7 +166,7 @@ public class StepCollector extends EventNotifierSupport {
     }
 
     private MessageEvent getFailedMessageEvent(
-            Exchange exchange, String stepId, long stepTimestamp, String timestamp, String transactionId,
+            String stepId, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
             Object> properties, String expiryDate
     ) {
@@ -199,7 +199,7 @@ public class StepCollector extends EventNotifierSupport {
 
         } catch (Exception e) {
             String typeName = exchange.getMessage().getBody().getClass().getTypeName();
-            if(typeName!= null && !typeName.isEmpty()){
+            if(!typeName.isEmpty()){
                 return "<" + typeName + ">";
             }else{
                 return "<unable to convert>";

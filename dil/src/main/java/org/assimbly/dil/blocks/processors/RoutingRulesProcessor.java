@@ -51,7 +51,7 @@ public class RoutingRulesProcessor implements Processor {
 	public String evaluateRule(String rule, Exchange exchange) throws SaxonApiException {
 
 		String[] routingRuleSplitted = rule.split("#;#");
-		if (routingRuleSplitted != null && routingRuleSplitted.length == 3) {
+		if (routingRuleSplitted.length == 3) {
 			String language = routingRuleSplitted[0];
 			String expression = routingRuleSplitted[1];
 			String endpoint = routingRuleSplitted[2];

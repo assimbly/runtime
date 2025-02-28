@@ -112,7 +112,7 @@ public class HealthIntegrationRuntime {
         return "Unknown";
     }
 
-    private class BackendResponse {
+    private static class BackendResponse {
 
         private Map<String, Object> jvm = new HashMap<>();
         private Map<String, Long> memory = new HashMap<>();

@@ -43,7 +43,8 @@ public class Unmarshall {
 
 		Element flowElement = getFlowElement();
 
-		addProperty(flowElement, "name","flow.");
+        assert flowElement != null;
+        addProperty(flowElement, "name","flow.");
 		addProperty(flowElement, "type","flow.");
 		addProperty(flowElement, "version","flow.");
 
@@ -94,22 +95,23 @@ public class Unmarshall {
 			return;
 		}
 
-		String flowDependencies = null;
+		StringBuilder flowDependencies = null;
 		NodeList dependenciesList = dependencies.getChildNodes();
 
 		for (int i = 0; i < dependenciesList.getLength(); i++) {
 			Node dependency = dependenciesList.item(i);
 			if (dependency instanceof Element) {
 				if(i == 0){
-					flowDependencies = dependency.getTextContent();
+					flowDependencies = new StringBuilder(dependency.getTextContent());
 				}else{
-					flowDependencies = flowDependencies + "," + dependency.getTextContent();
+                    assert flowDependencies != null;
+                    flowDependencies.append(",").append(dependency.getTextContent());
 				}
 
 			}
 		}
 
-		properties.put("flow.dependencies",flowDependencies);
+		properties.put("flow.dependencies", flowDependencies.toString());
 
 	}
 
@@ -141,12 +143,12 @@ public class Unmarshall {
 
 	}
 
-	private void setUri(String uri, String stepId, String type, int index) throws Exception {
+	private void setUri(String uri, String stepId, String type, int index) {
 
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 		String options = getOptions(optionProperties);
 
-		if (options != null && !options.isEmpty()) {
+		if (!options.isEmpty()) {
 			uri = uri + "?" + options;
 		}
 
@@ -156,20 +158,20 @@ public class Unmarshall {
 
 	private String getOptions(List<String> optionProperties){
 
-		String options = "";
+		StringBuilder options = new StringBuilder();
 
 		for (String optionProperty : optionProperties) {
 			String name = optionProperty.split("options.")[1];
 			String value = conf.getProperty(optionProperty).toString();
 
-			options += name + "=" + value + "&";
+			options.append(name).append("=").append(value).append("&");
 		}
 
 		if(!options.isEmpty()){
-			options = options.substring(0,options.length() -1);
+			options = new StringBuilder(options.substring(0, options.length() - 1));
 		}
 
-		return options;
+		return options.toString();
 	}
 
 	private void setBlocks(Element stepElement, String stepId, String type) throws Exception {

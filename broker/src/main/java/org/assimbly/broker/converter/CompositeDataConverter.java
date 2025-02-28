@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import java.util.Set;
-public class CompositeDataConverter {
+public final class CompositeDataConverter {
 
     private CompositeDataConverter() {
         throw new IllegalStateException("Utility class");
@@ -58,16 +58,10 @@ public class CompositeDataConverter {
 
                 if (!(value instanceof TabularData)) {
 
-                    switch (key) {
-                        case "JMSMessageID":
+                    if (key.equalsIgnoreCase("JMSMessageID") || key.equalsIgnoreCase("messageID")) {
                             message.put("messageid",value);
-                            break;
-                        case "messageID":
-                            message.put("messageid",value);
-                            break;
-                        case "JMSTimestamp":
-                            message.put("timestamp",value);
-                            break;
+                    }else if(key.equalsIgnoreCase("\"JMSTimestamp\"")){
+                        message.put("timestamp",value);
                     }
 
                     if(key.startsWith("JMS")){

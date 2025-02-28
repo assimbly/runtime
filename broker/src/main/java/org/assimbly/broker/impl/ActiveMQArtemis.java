@@ -84,8 +84,7 @@ public class ActiveMQArtemis implements Broker {
 			return status();
 
 		} catch (Exception e) {
-			log.error("Failed to start broker. Reason:", e.getMessage());
-			e.printStackTrace();
+            log.error("Failed to start broker. Reason:{}", e.getMessage());
 			return "Failed to start broker. Reason: " + e.getMessage();
 		}
 
@@ -198,7 +197,8 @@ public class ActiveMQArtemis implements Broker {
     		try {
     			FileUtils.touch(brokerFile);
     			InputStream is = classloader.getResourceAsStream("broker.xml");
-    			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                assert is != null;
+                Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         		is.close();
 				
 			} catch (IOException e) {
@@ -225,7 +225,8 @@ public class ActiveMQArtemis implements Broker {
 		}else {
 			FileUtils.touch(brokerFile);
 			InputStream is = classloader.getResourceAsStream("broker.xml");
-			Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            assert is != null;
+            Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			is.close();
 		}
 
@@ -557,7 +558,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String countMessagesFromList(String endpointList) throws Exception {
 
-		Long numberOfMessages = 0L;
+		long numberOfMessages = 0L;
 		String[] endpointNames= endpointList.split("\\s*,\\s*");
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
@@ -645,7 +646,7 @@ public class ActiveMQArtemis implements Broker {
 			messages = queueControl.browse(page,numberOfMessages);
 		}else{
 
-			Long countMessages = queueControl.countMessages();
+			long countMessages = queueControl.countMessages();
 
 			if(countMessages > 10000){
 				throw new RuntimeException("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");

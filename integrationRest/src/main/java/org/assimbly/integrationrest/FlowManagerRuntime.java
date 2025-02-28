@@ -537,10 +537,10 @@ public class FlowManagerRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            String log = integration.getFlowAlertsLog(flowId,100);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts",log,log,flowId);
+            String alertsLog = integration.getFlowAlertsLog(flowId,100);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts",alertsLog,alertsLog,flowId);
         } catch (Exception e) {
-            log.error("Get alerts for flow " + flowId + " failed",e);
+            log.error("Get alerts for flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts",e.getMessage(),"unable to get failed log of flow" + flowId,flowId);
         }
     }
@@ -576,8 +576,8 @@ public class FlowManagerRuntime {
 
         try {
             integration = integrationRuntime.getIntegration();
-            String log = integration.getFlowEventsLog(flowId,100);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/events",log,log,flowId);
+            String eventsLog = integration.getFlowEventsLog(flowId,100);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/events",eventsLog,eventsLog,flowId);
         } catch (Exception e) {
             log.error("Get events log for flow " + flowId + " failed",e);
 
@@ -591,7 +591,7 @@ public class FlowManagerRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> setMaintenance(
-            @PathVariable(value = "flowId") Long time,
+            @PathVariable(value = "time") Long time,
             @RequestBody List<String> ids,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
@@ -602,43 +602,30 @@ public class FlowManagerRuntime {
 
             integration = integrationRuntime.getIntegration();
 
-            Thread thread = new Thread(new Runnable()
-            {
+            Thread thread = new Thread(() -> {
 
-                public void run()
-                {
-
-                    try {
-                        for(String id : ids) {
-                            flowId = id;
-                            status = integration.getFlowStatus(flowId);
-                            if(status.equals("started")) {
-                                integration.pauseFlow(flowId);
-                                status = integration.getFlowStatus(flowId);
-                                if(status.equals("suspended") || status.equals("stopped")) {
-                                
-                                }else {
-                                    throw new Exception(status);
-                                }
-                            }
+                try {
+                    for(String id : ids) {
+                        flowId = id;
+                        status = integration.getFlowStatus(flowId);
+                        if(status.equals("started")) {
+                            integration.pauseFlow(flowId);
                         }
-
-                        Thread.sleep(time);
-
-                        for(String id : ids) {
-
-                            flowId = id;
-                            status = integration.getFlowStatus(flowId);
-                            if(status.equals("suspended")) {
-
-                                String report = integration.startFlow(flowId, timeout);
-
-                            }
-                        }
-
-                    } catch (Exception e) {
-                        log.error("Set maintenance failed",e);
                     }
+
+                    Thread.sleep(time);
+
+                    for(String id : ids) {
+
+                        flowId = id;
+                        status = integration.getFlowStatus(flowId);
+                        if(status.equals("suspended")) {
+                            integration.startFlow(flowId, timeout);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    log.error("Set maintenance failed",e);
                 }
             });
 

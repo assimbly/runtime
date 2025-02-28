@@ -148,11 +148,12 @@ public class MessageManagerRuntime {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
 
-    	String mediaType = request.getNativeRequest(HttpServletRequest.class).getHeader("ACCEPT");
-    	String path = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
-    	String message = error.getMessage();
+        HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
+        String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
+        String path = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
+        String message = error.getMessage();
 
-    	return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
+        return ResponseUtil.createFailureResponse(1L, mediaType, path, message);
     }
 
     private  TreeMap<String, Object> getMap(String message) throws JsonProcessingException {

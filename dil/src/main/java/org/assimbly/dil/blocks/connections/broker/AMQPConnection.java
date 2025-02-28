@@ -85,12 +85,12 @@ public class AMQPConnection {
 
     private String createSSLEnabledUrl(String url) {
 
-        String modifiedUrl = "";
+        StringBuilder modifiedUrl = new StringBuilder();
         String multipleUrls;
 
         if (url.indexOf(',') == -1) {
             log.info("SSLEnabled Normal Url: ");
-            modifiedUrl = addSSLParameterToUrl(url);
+            modifiedUrl = new StringBuilder(addSSLParameterToUrl(url));
         }else{
             log.info("SSLEnabled Failover Url: ");
 
@@ -102,27 +102,26 @@ public class AMQPConnection {
 
             String[] failoverUrlSplitted = multipleUrls.split(",");
 
-            Integer j = Integer.valueOf(0);
-            for (Integer i = 0; i < failoverUrlSplitted.length; i++) {
-                if(i.intValue() == j.intValue()){
-                    modifiedUrl = addSSLParameterToUrl(failoverUrlSplitted[i]);
+            for (int i = 0; i < failoverUrlSplitted.length; i++) {
+                if(i == 0){
+                    modifiedUrl = new StringBuilder(addSSLParameterToUrl(failoverUrlSplitted[i]));
                 }else{
-                    modifiedUrl = modifiedUrl + "," + addSSLParameterToUrl(failoverUrlSplitted[i]);
+                    modifiedUrl.append(",").append(addSSLParameterToUrl(failoverUrlSplitted[i]));
                 }
             }
 
             if (url.indexOf('(') != -1) {
-                modifiedUrl = "failover:(" + modifiedUrl + ")";
+                modifiedUrl = new StringBuilder("failover:(" + modifiedUrl + ")");
             }
 
         }
 
-        if(modifiedUrl.isEmpty()){
+        if(modifiedUrl.length() == 0){
             log.info("SSLEnabled Url: " + url);
             return url;
         }else{
             log.info("SSLEnabled Url: " + modifiedUrl);
-            return modifiedUrl;
+            return modifiedUrl.toString();
         }
 
     }

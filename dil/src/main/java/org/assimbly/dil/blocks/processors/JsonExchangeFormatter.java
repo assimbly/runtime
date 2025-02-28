@@ -134,12 +134,11 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
     }
 
     private void addVariables(Exchange exchange) {
-        if (showAll || showVariables) {
-            if (exchange.hasVariables()) {
+        if ((showAll || showVariables) && exchange.hasVariables()) {
                 JSONObject variables = getJsonFromMap(filterHeaderAndProperties(exchange.getVariables()));
                 json.put("Variables", variables);
             }
-        }
+
     }
 
     private void addHeaders(Exchange exchange) {
@@ -167,6 +166,7 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
     }
 
     private void addExceptionInfo(Exchange exchange) {
+
         if (showAll || showException || showCaughtException) {
             Exception exception = exchange.getException();
             boolean caught = false;
@@ -177,21 +177,25 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
             }
 
             if (exception != null) {
-                String exceptionType = exception.getClass().getCanonicalName();
-                String exceptionMessage = exception.getMessage();
-
-                if (caught) {
-                    json.put("CaughtExceptionType", exceptionType);
-                    json.put("CaughtExceptionMessage", exceptionMessage);
-                } else {
-                    json.put("ExceptionType", exceptionType);
-                    json.put("ExceptionMessage", exceptionMessage);
-                }
-
-                if (showAll || showStackTrace) {
-                    json.put("StackTrace", ExceptionHelper.stackTraceToString(exception));
-                }
+                setException(exception, caught);
             }
+        }
+    }
+
+    private void setException(Exception exception, boolean caught) {
+        String exceptionType = exception.getClass().getCanonicalName();
+        String exceptionMessage = exception.getMessage();
+
+        if (caught) {
+            json.put("CaughtExceptionType", exceptionType);
+            json.put("CaughtExceptionMessage", exceptionMessage);
+        } else {
+            json.put("ExceptionType", exceptionType);
+            json.put("ExceptionMessage", exceptionMessage);
+        }
+
+        if (showAll || showStackTrace) {
+            json.put("StackTrace", ExceptionHelper.stackTraceToString(exception));
         }
     }
 
@@ -431,25 +435,24 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
     // Implementation methods
     //-------------------------------------------------------------------------
     protected String getBodyAsString(Message message) {
-        if (message.getBody() instanceof Future) {
-            if (!isShowFuture()) {
+        if (message.getBody() instanceof Future && !isShowFuture()) {
                 // just use to string of the future object
                 return message.getBody().toString();
             }
-        }
+
 
         return MessageHelper.extractBodyForLogging(message, null, isShowCachedStreams(), isShowStreams(), isShowFiles(), getMaxChars(message));
     }
 
     private int getMaxChars(Message message) {
-        int maxChars = getMaxChars();
+        int maximumChars = getMaxChars();
         if (message.getExchange() != null) {
             String globalOption = message.getExchange().getContext().getGlobalOption(Exchange.LOG_DEBUG_BODY_MAX_CHARS);
             if (globalOption != null) {
-                maxChars = message.getExchange().getContext().getTypeConverter().convertTo(Integer.class, globalOption);
+                maximumChars = message.getExchange().getContext().getTypeConverter().convertTo(Integer.class, globalOption);
             }
         }
-        return maxChars;
+        return maximumChars;
     }
 
     protected String getBodyTypeAsString(Message message) {
@@ -462,13 +465,14 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
 
     private JSONObject getJsonFromMap(Map<String, Object> map) throws JSONException {
         JSONObject jsonData = new JSONObject();
-        for (String key : map.keySet()) {
-            Object value = map.get(key);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object value = entry.getValue();
             if (value instanceof Map<?, ?>) {
                 value = getJsonFromMap((Map<String, Object>) value);
             }
-            jsonData.put(key, value);
+            jsonData.put(entry.getKey(), value);
         }
+
         return jsonData;
     }
 

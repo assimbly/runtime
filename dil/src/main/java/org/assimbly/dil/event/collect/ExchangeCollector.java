@@ -6,13 +6,12 @@ import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.domain.Filter;
-import org.assimbly.dil.event.domain.MessageEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
+import org.assimbly.dil.event.domain.MessageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -21,9 +20,6 @@ import java.util.stream.Collectors;
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
 public class ExchangeCollector extends EventNotifierSupport {
-
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     private final StoreManager storeManager;
     private final String expiryInHours;
     private final ArrayList<Filter> filters;
@@ -32,10 +28,10 @@ public class ExchangeCollector extends EventNotifierSupport {
     private final String flowId;
     private final String flowVersion;
 
-    private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
+    private static final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
 
-    private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
+    private static final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
 
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
@@ -44,7 +40,9 @@ public class ExchangeCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
 
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
-    private static final String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
+    private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     public ExchangeCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.collectorId = collectorId;
@@ -92,8 +90,6 @@ public class ExchangeCollector extends EventNotifierSupport {
 
     private void processEvent(Exchange exchange, String stepId){
 
-        log.warn("Exchange collector isn't implemented. Use step collector");
-        /*
         //set fields
         Message message = exchange.getMessage();
         String body = getBody(exchange);
@@ -116,7 +112,6 @@ public class ExchangeCollector extends EventNotifierSupport {
 
         //store the event
         storeManager.storeEvent(json);
-        */
     }
 
 

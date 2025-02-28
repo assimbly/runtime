@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
+import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
@@ -70,19 +71,14 @@ public class MQConnection {
 
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url);
-            cf.setConnectionTTL(-1);
-            cf.setReconnectAttempts(-1);
-            cf.setRetryInterval(1000);
-            cf.setRetryIntervalMultiplier(2.0);
-            cf.setMaxRetryInterval(3600000);
         } else {
             cf = new org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory(url, username, password);
-            cf.setConnectionTTL(-1);
-            cf.setReconnectAttempts(-1);
-            cf.setRetryInterval(1000);
-            cf.setRetryIntervalMultiplier(2.0);
-            cf.setMaxRetryInterval(3600000);
         }
+        cf.setConnectionTTL(-1);
+        cf.setReconnectAttempts(-1);
+        cf.setRetryInterval(1000);
+        cf.setRetryIntervalMultiplier(2.0);
+        cf.setMaxRetryInterval(3600000);
 
         if (context.hasComponent(componentName) == null) {
             sjmsComponent = new SjmsComponent();
@@ -117,11 +113,10 @@ public class MQConnection {
             sjmsComponent.setConnectionFactory(cf);
         }
 
-        try {
-            cf.createConnection();
-        }catch(Exception e){
-            e.printStackTrace();
-            throw new Exception("Cannot connect to ActiveMQ Broker. URL: " + url);
+        try (Connection connection = cf.createConnection()) {
+            log.info("MQ Connection created successfully");
+        } catch (Exception e) {
+            throw new Exception("Cannot connect to ActiveMQ Broker. URL: " + url, e);
         }
 
     }
