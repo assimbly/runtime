@@ -187,11 +187,13 @@ public class FlowLoader extends RouteBuilder {
 			flowLoaderReport.setStep(id, null, type, "success", null);
 
 		}catch (Exception e) {
-			String errorMessage = e.getMessage();
-            log.error("Failed loading step | stepid={}", id);
-			flowLoaderReport.setStep(id, null, type, "error", errorMessage);
+
 			flowEvent = "error";
 			isFlowLoaded = false;
+
+			log.error("Failed loading step | stepid={}", id);
+			flowLoaderReport.setStep(id, null, type, "error", e.getMessage());
+
 		}
 	}
 
@@ -206,11 +208,13 @@ public class FlowLoader extends RouteBuilder {
 			flowLoaderReport.setStep(id, uri, type, "success", null);
 
 		}catch (Exception e) {
-			String errorMessage = e.getMessage();
-			log.error("Failed loading step | stepid=" + id);
-			flowLoaderReport.setStep(id, uri, type, "error", errorMessage);
+
 			flowEvent = "error";
 			isFlowLoaded = false;
+
+			log.error("Failed loading step | stepid=" + id);
+			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage());
+
 		}
 	}
 

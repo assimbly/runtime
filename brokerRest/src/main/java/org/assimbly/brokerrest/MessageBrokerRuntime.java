@@ -199,6 +199,7 @@ public class MessageBrokerRuntime {
         log.debug("REST request to browse message on: {}", endpointName);
 
         try {
+            if(excludeBody == null) excludeBody = false;
             result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {

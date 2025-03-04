@@ -24,5 +24,3 @@ spec:
         steps:
           - to:
               uri: "sandbox://groovy?script=RAW({{path}})"
-          - to:
-              uri: "kamelet:sink"

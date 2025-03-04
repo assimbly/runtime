@@ -1121,8 +1121,6 @@ public class CamelIntegration extends BaseIntegration {
 			String key = entry.getKey();
 
 			if (key.endsWith("connection.id")){
-
-				IntegrationUtil.printTreemap(props);
 				setConnection(props, key);
 			}
 
@@ -1348,77 +1346,41 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String startFlow(String id, long timeout) {
+	public String startFlow(String flowId, long timeout) {
 
-		initFlowActionReport(id);
+		initFlowActionReport(flowId);
 
-		if(hasFlow(id)) {
-			stopFlow(id, timeout, false);
+		if(hasFlow(flowId)) {
+			stopFlow(flowId, timeout, false);
 		}
 
 		try {
 
-			TreeMap<String, String> properties = super.getFlowConfigurations().getFirst();
-			String result = loadFlow(properties);
+			String result = loadFlow(getProperties(flowId));
 
 			if (result.equals("started")){
-				finishFlowActionReport(id, "start","Started flow successfully","info");
-			}else if(result.equals("loaded")) {
-
-				List<Route> steps = getRoutesByFlowId(id);
-
-				for (Route step : steps) {
-					status = startStep(step);
-				}
-
-				if (status!= null && status.isStarted()) {
-					finishFlowActionReport(id, "start","Started flow successfully","info");
-				}else{
-					finishFlowActionReport(id, "error","Failed starting flow","error");
-				}
-
+				finishFlowActionReport(flowId, "start","Started flow successfully","info");
 			}else {
-				stopFlow(id, timeout, false);
-				finishFlowActionReport(id, "error",result,"error");
+				stopFlow(flowId, timeout, false);
+				finishFlowActionReport(flowId, "error",result,"error");
 			}
 
 		}catch (Exception e) {
-			stopFlow(id, STOP_TIMEOUT, false);
-			finishFlowActionReport(id, "error","Start flow failed | error=" + e.getMessage(),"error");
-            log.error("Start flow failed. | flowid={}", id, e);
+			stopFlow(flowId, STOP_TIMEOUT, false);
+			finishFlowActionReport(flowId, "error","Start flow failed | error=" + e.getMessage(),"error");
+            log.error("Start flow failed. | flowid={}", flowId, e);
 		}
 
 		return loadReport;
 
 	}
 
-	private ServiceStatus startStep(Route route){
-
-		String routeId = route.getId();
-
-		status = routeController.getRouteStatus(routeId);
-
-		if(status.isStarted()) {
-			log.info("Started step | stepid=" + routeId);
-		} else {
-			try {
-
-				log.info("Starting step | stepid=" + routeId);
-
-				routeController.startRoute(routeId);
-
-			} catch (Exception e) {
-				log.error("Failed starting step | stepid=" + routeId);
-				return status;
-			}
-
-			log.info("Started step | stepid=" + routeId);
-
-		}
-
-		return status;
+	private TreeMap<String, String> getProperties(String flowId) {
+		return super.getFlowConfigurations().stream()
+				.filter(properties -> flowId.equals(properties.get("id")))
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("Flow not found"));
 	}
-
 
 	public String restartFlow(String id, long timeout) {
 
