@@ -93,14 +93,14 @@ public class Unmarshall {
 			return;
 		}
 
-		StringBuilder flowDependencies = null;
+		StringBuilder flowDependencies = new StringBuilder();
 		NodeList dependenciesList = dependencies.getChildNodes();
 
 		for (int i = 0; i < dependenciesList.getLength(); i++) {
 			Node dependency = dependenciesList.item(i);
 			if (dependency instanceof Element) {
 				if(i == 0){
-					flowDependencies = new StringBuilder(dependency.getTextContent());
+					flowDependencies.append(dependency.getTextContent());
 				}else{
                     assert flowDependencies != null;
                     flowDependencies.append(",").append(dependency.getTextContent());
