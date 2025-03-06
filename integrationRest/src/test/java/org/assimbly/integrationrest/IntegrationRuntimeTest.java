@@ -7,9 +7,7 @@ import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
 import java.net.http.HttpResponse;
@@ -20,11 +18,18 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class IntegrationRuntimeTest {
 
     private Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
     private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private Properties collectorProp = TestApplicationContext.buildCollectorExample();
+
+    private static String flowIdStep;
+    private static String flowIdRoute;
+    private static String flowIdLog;
 
     @BeforeEach
     void setUp(TestInfo testInfo) {
@@ -48,6 +53,7 @@ public class IntegrationRuntimeTest {
     // collector
 
     @Test
+    @Order(1)
     void shouldAddCollector() {
         try {
             // url
@@ -60,7 +66,12 @@ public class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String body = TestApplicationContext.buildCollectorExample();
+            String body = (String)collectorProp.get(TestApplicationContext.CollectorField.collector.name());
+
+            // set ids to be used on other unit tests
+            flowIdStep = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdStep.name());
+            flowIdRoute = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdRoute.name());
+            flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdLog.name());
 
             // endpoint call - install flow
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
@@ -70,6 +81,99 @@ public class IntegrationRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collectors/add\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"configured\",\"status\":200}");
+            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(2)
+    void shouldRemoveStepCollector() {
+        try {
+            // check for necessary data before continue
+            assumeTrue(flowIdStep != null, "Skipping shouldRemoveStepCollector test because shouldAddCollector test did not run.");
+
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdStep);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
+            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(3)
+    void shouldRemoveRouteCollector() {
+        try {
+            // check for necessary data before continue
+            assumeTrue(flowIdRoute != null, "Skipping shouldRemoveRouteCollector test because shouldAddCollector test did not run.");
+
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdRoute);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
+            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(4)
+    void shouldRemoveLogCollector() {
+        try {
+            // check for necessary data before continue
+            assumeTrue(flowIdLog != null, "Skipping shouldRemoveLogCollector test because shouldAddCollector test did not run.");
+
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdLog);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
             assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
 
         } catch (Exception e) {
