@@ -28,16 +28,15 @@ public class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
+            // endpoint call - check if backend is started
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
+            // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/isstarted\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"true\",\"status\":200}");
-
-            assertThatJson(response.body())
-                    .whenIgnoringPaths("timestamp")
-                    .isEqualTo(expectedBodyJson);
+            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
