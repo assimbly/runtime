@@ -1,12 +1,14 @@
 package org.assimbly.integrationrest.utils;
 
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HttpUtil {
@@ -54,6 +56,22 @@ public class HttpUtil {
                 : "";
 
         return queryString;
+    }
+
+    public static String extractSecret(String url) throws Exception {
+        URI uri = new URI(url);
+        String query = uri.getQuery();
+
+        String[] queryArr = query.split("\\?", 2);
+        query = queryArr[1];
+
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            params.put(keyValue[0], keyValue[1]);
+        }
+        return params.get("secret");
     }
 
 }
