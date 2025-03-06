@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.Constants;
+import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.integrationrest.utils.GoogleTOTPUtil;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
@@ -39,7 +39,7 @@ public class AuthenticationRuntimeTest {
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", Constants.DB);
+            headers.put("db", TestApplicationContext.DB);
 
             // body
             String body = "{\"username\": \"admin\", \"password\": \"admin\", \"rememberMe\": \"false\"}";
@@ -61,7 +61,7 @@ public class AuthenticationRuntimeTest {
     void shouldAuthenticateAndGenerateDBToken() {
         try {
             // create user on mongodb
-            MongoUtil.createUser(Constants.FIRST_NAME_USER, Constants.LAST_NAME_USER, Constants.EMAIL_USER, Constants.PASSWORD_USER);
+            MongoUtil.createUser(TestApplicationContext.FIRST_NAME_USER, TestApplicationContext.LAST_NAME_USER, TestApplicationContext.EMAIL_USER, TestApplicationContext.PASSWORD_USER);
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
@@ -69,10 +69,10 @@ public class AuthenticationRuntimeTest {
 
             // headers
             HashMap<String, String> headers = new HashMap();
-            String data = Constants.EMAIL_USER + ":" + Constants.PASSWORD_USER;
+            String data = TestApplicationContext.EMAIL_USER + ":" + TestApplicationContext.PASSWORD_USER;
             String auth = Base64.getEncoder().encodeToString(data.getBytes());
             headers.put("Authorization", auth);
-            headers.put("db", Constants.DB);
+            headers.put("db", TestApplicationContext.DB);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
@@ -102,8 +102,8 @@ public class AuthenticationRuntimeTest {
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", Constants.DB);
-            headers.put("domainName", Constants.DOMAIN_NAME);
+            headers.put("db", TestApplicationContext.DB);
+            headers.put("domainName", TestApplicationContext.DOMAIN_NAME);
             headers.put("Authorization", authToken);
 
             // endpoint call
@@ -140,7 +140,7 @@ public class AuthenticationRuntimeTest {
 
             // body
             Document bodyDoc = new Document();
-            bodyDoc.append("email", Constants.EMAIL_USER);
+            bodyDoc.append("email", TestApplicationContext.EMAIL_USER);
             bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
 
             // endpoint call
