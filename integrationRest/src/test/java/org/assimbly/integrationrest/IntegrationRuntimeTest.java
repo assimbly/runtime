@@ -46,7 +46,36 @@ public class IntegrationRuntimeTest {
 
     //////////////////////////////////////////
     // collector
-    // TODO
+
+    @Test
+    void shouldAddCollector() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/collectors/add", baseUrl);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            String body = TestApplicationContext.buildCollectorExample();
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collectors/add\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"configured\",\"status\":200}");
+            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
 
     //////////////////////////////////////////
     // flow interaction
