@@ -34,6 +34,8 @@
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 		<testcontainers.version>1.20.4</testcontainers.version>
+		<mongo.version>4.7.2</mongo.version>
+		<googleauth.version>1.5.0</googleauth.version>
 		<assertj.version>3.27.3</assertj.version>
 		<json-unit-assertj.version>4.1.0</json-unit-assertj.version>
 		<junit.version>4.13.2</junit.version>
