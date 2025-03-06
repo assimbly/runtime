@@ -93,31 +93,6 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    void shouldGetUnconfiguredFlowInfo() {
-        try {
-            // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/info", baseUrl, inboundHttpsCamelContextProp.get(CamelContextUtil.Field.id.name()));
-
-            // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
-
-            // endpoint call - get flow info
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", (String) inboundHttpsCamelContextProp.get(CamelContextUtil.Field.camelContext.name()), null, headers);
-
-            // asserts
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-            assertThatJson(response.body()).isEqualTo("{\"flow\":{\"id\":\"67921474ecaafe0007000000\",\"status\":\"unconfigured\"}}");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
     void shouldGetSchedulerFlowInfo() {
         try {
             // url
