@@ -31,13 +31,18 @@ public class TestApplicationContext {
         camelContext
     }
 
+    public enum CollectorField {
+        flowIdLog,
+        flowIdStep,
+        flowIdRoute,
+        collector
+    }
+
     public static Properties buildInboundHttpsExample() {
         Properties props = new Properties();
 
-        String camelContext = "";
-
         try {
-            camelContext = readFileFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = readFileFromResources("InboundHttpsCamelContext.xml");
 
             props.setProperty(CamelContextField.id.name(), "67921474ecaafe0007000000");
             props.setProperty(CamelContextField.routeId1.name(), "3d01e43c-6e86-4c9e-9972-7c872ecc37f6");
@@ -54,10 +59,8 @@ public class TestApplicationContext {
     public static Properties buildSchedulerExample() {
         Properties props = new Properties();
 
-        String camelContext = "";
-
         try {
-            camelContext = readFileFromResources("SchedulerCamelContext.xml");
+            String camelContext = readFileFromResources("SchedulerCamelContext.xml");
 
             props.setProperty(CamelContextField.id.name(), "67c740bc349ced00070004a9");
             props.setProperty(CamelContextField.routeId1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
@@ -71,13 +74,20 @@ public class TestApplicationContext {
         return props;
     }
 
-    public static String buildCollectorExample() {
+    public static Properties buildCollectorExample() {
+        Properties props = new Properties();
+
         try {
-            return readFileFromResources("CollectorExample.json");
+            String collector = readFileFromResources("CollectorExample.json");
+
+            props.setProperty(CollectorField.flowIdLog.name(), "67c740bc349ced00070004a9_log");
+            props.setProperty(CollectorField.flowIdRoute.name(), "67c740bc349ced00070004a9_route");
+            props.setProperty(CollectorField.flowIdStep.name(), "67c740bc349ced00070004a9_step");
+            props.setProperty(CollectorField.collector.name(), collector);
         } catch (Exception e) {
             log.error("Error to load collector example file", e);
-            return null;
         }
+        return props;
     }
 
     private static String readFileFromResources(String fileName) throws IOException {
