@@ -31,8 +31,10 @@ public class ValidationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
+            // endpoint call - validate cron expression
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
 
+            // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
             assertThat(response.body()).isEmpty();
 
@@ -56,13 +58,14 @@ public class ValidationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
+            // endpoint call - validate cron expression
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
 
+            // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode expectedBodyJson = objectMapper.readTree("{\"error\":\"Cron Validation error: Unexpected end of expression.\"}");
-
             assertThatJson(response.body()).isEqualTo(expectedBodyJson);
 
         } catch (Exception e) {
