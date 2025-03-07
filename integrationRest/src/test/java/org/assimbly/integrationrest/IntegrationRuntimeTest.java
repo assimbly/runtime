@@ -33,7 +33,7 @@ public class IntegrationRuntimeTest {
 
     @BeforeEach
     void setUp(TestInfo testInfo) {
-        if (testInfo.getTestMethod().get().getName().contains("SchedulerFlow")) {
+        if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled")) {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
@@ -209,6 +209,7 @@ public class IntegrationRuntimeTest {
     }
 
     @Test
+    @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetSchedulerFlowInfo() {
         try {
             // url
