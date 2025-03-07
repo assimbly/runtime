@@ -1,14 +1,12 @@
 package org.assimbly.integrationrest.testcontainers;
 
+import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 public class AssimblyGatewayHeadlessContainer {
-
-    public static String ASSIMBLY_ENV = "ASSIMBLY_ENV";
-    public static String MONGO_SECRET_KEY = "c3RlbXNldmVyeXRoaW5ncmVhbHdoaWNoZWZmb3J0b2ZmaWNlc3RpZmZjYWtlZ2VuZXJhbGVsZWN0cmljbWFpbA==";
 
     private static final GenericContainer<?> gatewayContainer;
     private static final Network network = Network.newNetwork();
@@ -28,8 +26,8 @@ public class AssimblyGatewayHeadlessContainer {
         gatewayContainer = new GenericContainer<>("assimbly/gateway-headless:development")
                 .withExposedPorts(8088)
                 .withNetwork(network)
-                .withEnv("ASSIMBLY_ENV", ASSIMBLY_ENV)
-                .withEnv("MONGO_SECRET_KEY",MONGO_SECRET_KEY)
+                .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
+                .withEnv("MONGO_SECRET_KEY",TestApplicationContext.MONGO_SECRET_KEY)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort());
         gatewayContainer.start();
