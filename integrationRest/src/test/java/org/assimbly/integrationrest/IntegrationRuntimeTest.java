@@ -265,6 +265,48 @@ public class IntegrationRuntimeTest {
         }
     }
 
+    @Test
+    void shouldGetStats() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/stats", baseUrl);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - get stats
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("uptimeMillis").asInt()).isGreaterThan(0);
+            assertThat(responseJson.get("startedSteps").isInt()).isTrue();
+            assertThat(responseJson.get("memoryUsage").isDouble()).isTrue();
+            assertThat(responseJson.get("exchangesInflight").isInt()).isTrue();
+            assertThat(responseJson.get("camelVersion")).isNotNull();
+            assertThat(responseJson.get("exchangesCompleted").isInt()).isTrue();
+            assertThat(responseJson.get("camelId")).isNotNull();
+            assertThat(responseJson.get("uptime")).isNotNull();
+            assertThat(responseJson.get("startedFlows")).isNotNull();
+            assertThat(responseJson.get("totalThreads").isInt()).isTrue();
+            assertThat(responseJson.get("cpuLoadLastMinute")).isNotNull();
+            assertThat(responseJson.get("cpuLoadLast15Minutes")).isNotNull();
+            assertThat(responseJson.get("exchangesTotal").isInt()).isTrue();
+            assertThat(responseJson.get("exchangesFailed").isInt()).isTrue();
+            assertThat(responseJson.get("cpuLoadLast5Minutes")).isNotNull();
+            assertThat(responseJson.get("status").asText()).isEqualTo("Started");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
     //////////////////////////////////////////
     // others
 
