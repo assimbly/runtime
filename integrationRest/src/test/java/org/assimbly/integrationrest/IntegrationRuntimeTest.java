@@ -294,4 +294,41 @@ public class IntegrationRuntimeTest {
         }
     }
 
+    @Test
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldCountFlows() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = baseUrl + "/api/integration/count/flows";
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - check if backend is started
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThatJson(responseJson)
+                    .whenIgnoringPaths("timestamp", "message")
+                    .isEqualTo(objectMapper.readTree("{\"path\":\"/integration/count/flows\",\"details\":\"successful\",\"id\":\"1\",\"status\":200}"));
+
+            JsonNode messageNode = responseJson.get("message");
+            assertThat(messageNode).isNotNull();
+            assertThat(messageNode.isTextual()).isTrue();
+
+            int messageValue = Integer.parseInt(messageNode.asText());
+            assertThat(messageValue).isGreaterThan(0);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
 }
