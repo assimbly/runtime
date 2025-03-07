@@ -223,7 +223,7 @@ public class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - get flow info
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -254,7 +254,7 @@ public class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -277,7 +277,7 @@ public class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
