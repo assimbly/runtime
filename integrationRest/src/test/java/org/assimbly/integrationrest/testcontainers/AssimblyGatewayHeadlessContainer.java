@@ -8,7 +8,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class AssimblyGatewayHeadlessContainer {
 
-    private static final GenericContainer<?> gatewayContainer;
+    private static final GenericContainer<?> gatewayHeadlessContainer;
     private static final Network network = Network.newNetwork();
     private static MongoDBContainer mongoContainer;
     private static String tokenId;
@@ -23,19 +23,19 @@ public class AssimblyGatewayHeadlessContainer {
         mongoContainer.start();
 
         // initialize assimbly gateway container
-        gatewayContainer = new GenericContainer<>("assimbly/gateway-headless:development")
+        gatewayHeadlessContainer = new GenericContainer<>("assimbly/gateway-headless:development")
                 .withExposedPorts(8088)
                 .withNetwork(network)
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.MONGO_SECRET_KEY)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort());
-        gatewayContainer.start();
+        gatewayHeadlessContainer.start();
     }
 
     public static String getBaseUrl() {
-        String host = gatewayContainer.getHost();
-        Integer port = gatewayContainer.getMappedPort(8088);
+        String host = gatewayHeadlessContainer.getHost();
+        Integer port = gatewayHeadlessContainer.getMappedPort(8088);
         return "http://" + host + ":" + port;
     }
 
