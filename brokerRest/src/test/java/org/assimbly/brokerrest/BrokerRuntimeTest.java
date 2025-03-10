@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class BrokerRuntimeTest {
 
     @Test
-    void shouldCountFlows() {
+    void shouldGetEngineDataInfo() {
         try {
             // url
             String baseUrl = AssimblyGatewayBrokerContainer.getBaseUrl();
