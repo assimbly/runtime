@@ -308,6 +308,51 @@ public class IntegrationRuntimeTest {
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
+    void shouldGetStatsFlows() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/stats/flows", baseUrl);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - get stats
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.size()).isGreaterThanOrEqualTo(0);
+
+            JsonNode flowJson = responseJson.get(0).get("flow");
+
+            assertThat(flowJson.get("uptimeMillis").asInt()).isGreaterThan(0);
+            assertThat(flowJson.get("pending").isInt()).isTrue();
+            assertThat(flowJson.get("completed").isInt()).isTrue();
+            assertThat(flowJson.get("failed").isInt()).isTrue();
+            assertThat(flowJson.get("lastFailed")).isNotNull();
+            assertThat(flowJson.get("timeout").isInt()).isTrue();
+            assertThat(flowJson.get("uptime")).isNotNull();
+            assertThat(flowJson.get("total").isInt()).isTrue();
+            assertThat(flowJson.get("cpuLoadLastMinute").isInt()).isTrue();
+            assertThat(flowJson.get("cpuLoadLast15Minutes").isInt()).isTrue();
+            assertThat(flowJson.get("lastCompleted")).isNotNull();
+            assertThat(flowJson.get("cpuLoadLast5Minutes").isInt()).isTrue();
+            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("status").asText()).isEqualTo("started");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStatsByFlowIds() {
         try {
             // url
