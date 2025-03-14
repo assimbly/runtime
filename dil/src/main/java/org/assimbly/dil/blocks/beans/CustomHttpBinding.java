@@ -1,16 +1,17 @@
 package org.assimbly.dil.blocks.beans;
 
-import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.http.common.DefaultHttpBinding;
-import org.assimbly.util.helper.XmlHelper;
-import org.json.JSONObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.assimbly.util.helper.XmlHelper;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -29,7 +30,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
 
-        Message target = exchange.getIn();
+        Message target = exchange.getMessage();
         if (exchange.isFailed()) {
             if (exchange.getException() != null) {
                 addResponseTimeHeader(exchange, target);
@@ -38,66 +39,57 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                 } catch (Exception e) {
                     log.error("Cannot write response: " + e.getMessage());
                 }
+                
             } else {
                 addResponseTimeHeader(exchange, target);
                 // it must be a fault, no need to check for the fault flag on the message
                 doWriteFaultResponse(target, response, exchange);
             }
         } else {
-            customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
-
+            if (exchange.getMessage() != null) {
+                // just copy the protocol relates header if we do not have them
+                customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
+            }
             addResponseTimeHeader(exchange, target);
             doWriteResponse(target, response, exchange);
         }
     }
 
     private void doWriteExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
-
         String accept = target.getHeader("Accept", String.class);
 
         if (exception instanceof TimeoutException) {
             response.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
             response.setContentType("text/plain");
             response.getWriter().write("Timeout error");
-        } else {
-            generateExceptionResponse(target, exception, response, accept);
-        }
-    }
-
-    private void generateExceptionResponse(Message target, Throwable exception, HttpServletResponse response, String accept) throws Exception {
-
-        String infoMessage;
-        String message = null;
-
-        if(target.getBody() == null) {
-            infoMessage = EMPTY_BODY_MESSAGE;
-        } else {
-            infoMessage = DEFAULT_ERROR_MESSAGE;
-        }
-
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-        if(accept != null){
-            if(accept.contains("application/xml") || accept.contains("text/xml")){
-                message = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
-
-                response.setContentType("text/xml");
+        }else {
+                generateExceptionResponse(target, exception, response, accept);
             }
-
-            if(accept.contains("application/json")){
+        }
+        private void generateExceptionResponse(Message target, Throwable exception, HttpServletResponse response, String accept) throws Exception {
+            String infoMessage;
+            String message = null;
+            if(target.getBody() == null) {
+                infoMessage = EMPTY_BODY_MESSAGE;
+            } else {
+                infoMessage = DEFAULT_ERROR_MESSAGE;
+            }
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            if(accept != null){
+                if(accept.contains("application/xml") || accept.contains("text/xml")){
+                    message = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
+                    response.setContentType("text/xml");
+                }
+                if(accept.contains("application/json")){
+                    message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
+                    response.setContentType("application/json");
+                }
+            }
+            if(message == null) {
                 message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
-
-                response.setContentType("application/json");
             }
+            response.getWriter().write(message);
         }
-
-        if(message == null) {
-            message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
-        }
-
-        response.getWriter().write(message);
-
-    }
 
     private String generateJsonResponse(int code, String info, String error) throws Exception {
         
@@ -146,12 +138,11 @@ public class CustomHttpBinding extends DefaultHttpBinding {
             response.setHeader(Exchange.TRANSFER_ENCODING, "chunked");
         }
     }
-
     private void addResponseTimeHeader(Exchange exchange, Message message) {
         Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated());
         Instant nowInstant = Calendar.getInstance().toInstant();
         Duration duration = Duration.between(initInstant, nowInstant);
-
         message.setHeader(HTTP_RESPONSE_TIME, String.valueOf(duration.toMillis()));
     }
+
 }
