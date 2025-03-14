@@ -204,11 +204,12 @@ public class EventConfigurer {
 
         String id = configuration.getId();
         String flowId = configuration.getFlowId();
+        ArrayList<Filter> filters = configuration.getFilters();
         ArrayList<Store> stores = configuration.getStores();
 
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        LogCollector logCollector = new LogCollector(id, flowId, stores);
+        LogCollector logCollector = new LogCollector(id, flowId, filters, stores);
         logCollector.setContext(loggerContext);
         logCollector.setName(collectorId);
         logCollector.start();
