@@ -182,7 +182,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			loader.loadRoutes(IntegrationUtil.setResource(route));
+			loader.updateRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, type, "success", null);
 
