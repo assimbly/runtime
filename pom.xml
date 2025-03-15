@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-
 	<name>runtime</name>
 	<url>https://github.com/assimbly/runtime</url>
 	<packaging>pom</packaging>
-
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
 	<version>5.1.0</version>
-
+	
 	<modules>
 		<module>broker</module>
 		<module>brokerRest</module>
@@ -18,14 +18,14 @@
 		<module>integration</module>
 		<module>integrationRest</module>
 	</modules>
-
+	
 	<properties>
-	    <maven.compiler.source>21</maven.compiler.source>
-    	<maven.compiler.target>21</maven.compiler.target>
-    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<main.basedir>${project.basedir}</main.basedir>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<main.basedir>${project.basedir}</main.basedir>
 		<activemq.version>6.1.6</activemq.version>
-    	<assimbly.version>5.1.0</assimbly.version>
+		<assimbly.version>5.1.0</assimbly.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<spring-boot.version>3.4.3</spring-boot.version>
 		<maven-api.version>3.9.9</maven-api.version>
@@ -35,36 +35,37 @@
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 	</properties>
-
-	<distributionManagement> 
-        <repository>
-            <id>github</id> 
-            <name>Temporary Staging Repository</name> 
-            <url>https://maven.pkg.github.com/assimbly/runtime</url>
-        </repository> 
-    </distributionManagement>
-
+	
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>Temporary Staging Repository</name>
+			<url>https://maven.pkg.github.com/assimbly/runtime</url>
+		</repository>
+	</distributionManagement>
+	
 	<reporting>
-	  <plugins>
-	    <plugin>
-	      <groupId>org.codehaus.mojo</groupId>
-	      <artifactId>versions-maven-plugin</artifactId>
-	      <version>2.16.2</version>
-	      <reportSets>
-	        <reportSet>
-	          <reports>
-	            <report>dependency-updates-report</report>
-	            <report>plugin-updates-report</report>
-	            <report>property-updates-report</report>
-	          </reports>
-	        </reportSet>
-	      </reportSets>
-	    </plugin>
-	  </plugins>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.16.2</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>dependency-updates-report</report>
+							<report>plugin-updates-report</report>
+							<report>property-updates-report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
 	</reporting>
- 
+	
 	<build>
-		<pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+		<pluginManagement>
+			<!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
 			<plugins>
 				<!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
 				<plugin>
@@ -125,15 +126,15 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                </configuration>
-            </plugin>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>21</source>
+					<target>21</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
@@ -143,6 +144,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-    </build>
+	</build>
 	
 </project>
