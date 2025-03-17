@@ -77,7 +77,7 @@ public class IntegrationRuntimeTest {
             flowIdRoute = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdRoute.name());
             flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdLog.name());
 
-            // endpoint call - install flow
+            // endpoint call - add collector
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
 
             // asserts
@@ -108,7 +108,7 @@ public class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call - remove step collector
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -139,7 +139,7 @@ public class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call - remove route collector
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -170,7 +170,7 @@ public class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call - remove log collector
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -255,7 +255,7 @@ public class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow info
+            // endpoint call - get list of flows
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -353,7 +353,7 @@ public class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get stats
+            // endpoint call - get stats flows
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -401,7 +401,7 @@ public class IntegrationRuntimeTest {
             // body
             String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name());
 
-            // endpoint call - get stats
+            // endpoint call - get stats by flows ids
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
 
             // asserts
@@ -472,7 +472,7 @@ public class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call - count flows
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -512,7 +512,7 @@ public class IntegrationRuntimeTest {
             JSONObject body = new JSONObject();
             body.put("url", "http://www.dneonline.com/calculator.asmx?wsdl");
 
-            // endpoint call - check if backend is started
+            // endpoint call - list soap actions
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
 
             // asserts
