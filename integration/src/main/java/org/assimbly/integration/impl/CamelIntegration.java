@@ -339,10 +339,14 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setGlobalOptions(){
 
+		//enable breadcrumb for tracing
 		context.setUseBreadcrumb(true);
 
 		//enable performance stats
 		context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
+
+		//enable timestamp in the eventNotifier (log, route and step collectors)
+		context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
 
 		String[] componentNames = {"ftp", "ftps", "sftp", "file", "sql", "scheduler", "timer","quartz","smtp","pop3","imap","smtps","pop3s","imaps"};
 		for (String componentName : componentNames) {
@@ -1147,13 +1151,6 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 		}
-	}
-
-
-
-	public void addEventNotifier(EventNotifier eventNotifier) throws Exception {
-		context.getManagementStrategy().addEventNotifier(eventNotifier);
-		context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
 	}
 
 	public boolean removeFlow(String id) throws Exception {

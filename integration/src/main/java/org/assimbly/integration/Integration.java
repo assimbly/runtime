@@ -235,13 +235,6 @@ public interface Integration {
 	 */
     void setHistoryMetrics(boolean historyMetrics);
 
-	/**
-	* Adds event notifier to notified about events
-	* @param  eventNotifier eventNotifier object
-	* @throws Exception if eventNotifier
-	*/
-    void addEventNotifier(EventNotifier eventNotifier) throws Exception;
-	
 	//manage flow
 	/**
 	* Checks if a flow is a part of integration

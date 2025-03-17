@@ -194,6 +194,7 @@ public class EventConfigurer {
         stepCollector.setIgnoreStepEvents(false);
 
         context.getManagementStrategy().addEventNotifier(stepCollector);
+        context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
         context.getRegistry().bind(id, stepCollector);
 
     }

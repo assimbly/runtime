@@ -83,10 +83,10 @@ public class StepCollector extends EventNotifierSupport {
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
             long stepTimestamp = stepEvent.getTimestamp();
 
-            if(stepId!= null && !isBlackListed(stepId) && (filters == null || EventUtil.isFilteredEquals(filters, stepId))){ {
-                    processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
-                }
+            if(stepId!= null && !isBlackListed(stepId) && (filters == null || EventUtil.isFilteredEquals(filters, stepId))){
+                processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
             }
+
         }
     }
 
