@@ -32,6 +32,7 @@ public class IntegrationRuntimeTest {
     private static String flowIdLog;
 
     private static boolean schedulerFlowInstalled = false;
+    private static boolean inboundHttpsFlowInstalled = false;
 
     @BeforeEach
     void setUp(TestInfo testInfo) {
@@ -189,6 +190,7 @@ public class IntegrationRuntimeTest {
     // flow interaction
 
     @Test
+    @Order(10)
     void shouldInstallFlow() {
         try {
             // url
@@ -207,6 +209,44 @@ public class IntegrationRuntimeTest {
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
+            inboundHttpsFlowInstalled = true;
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(11)
+    void shouldPauseFlow() {
+        try {
+            assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldPauseFlow test because shouldInstallFlow test did not run.");
+
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/flow/%s/pause", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - pause flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode flowJson = responseJson.get("flow");
+
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
+            assertThat(flowJson.get("event").asText()).isEqualTo("pause");
+            assertThat(flowJson.get("message").asText()).isEqualTo("Paused flow successfully");
+            assertThat(flowJson.get("version").asText()).matches("\\d+");
+
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
@@ -214,7 +254,7 @@ public class IntegrationRuntimeTest {
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
-    @Order(10)
+    @Order(20)
     void shouldGetSchedulerFlowInfo() {
         try {
             // url
@@ -244,7 +284,7 @@ public class IntegrationRuntimeTest {
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
-    @Order(11)
+    @Order(21)
     void shouldGetListOfFlows() {
         try {
             // url
