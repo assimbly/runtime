@@ -6,6 +6,7 @@ import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContai
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
@@ -484,6 +485,47 @@ public class IntegrationRuntimeTest {
 
             int messageValue = Integer.parseInt(messageNode.asText());
             assertThat(messageValue).isGreaterThan(0);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldListSoapActions() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = baseUrl + "/api/integration/list/soap/action";
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            JSONObject body = new JSONObject();
+            body.put("url", "http://www.dneonline.com/calculator.asmx?wsdl");
+
+            // endpoint call - check if backend is started
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.size()).isEqualTo(4);
+
+            assertThat(responseJson).allMatch(element -> {
+                boolean hasValidName = element.has("name") && (
+                        element.get("name").asText().equals("Add") ||
+                        element.get("name").asText().equals("Subtract") ||
+                        element.get("name").asText().equals("Multiply") ||
+                        element.get("name").asText().equals("Divide")
+                );
+                boolean hasEmptyHeaders = element.has("headers") && element.get("headers").isArray() && element.get("headers").isEmpty();
+                return hasValidName && hasEmptyHeaders;
+            });
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
