@@ -28,7 +28,9 @@ public class HttpUtil {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create(fullUrl));
 
             // add headers
-            headers.forEach(requestBuilder::header);
+            if(headers != null) {
+                headers.forEach(requestBuilder::header);
+            }
 
             // set method and body dynamically
             switch (method.toUpperCase()) {
@@ -49,12 +51,12 @@ public class HttpUtil {
     }
 
     private static String buildQueryString(HashMap<String,String> params) {
-        String queryString = params != null && !params.isEmpty()
-                ? "?" + params.entrySet().stream()
-                .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
-                .collect(Collectors.joining("&"))
-                : "";
-
+        String queryString = "";
+        if(params != null && !params.isEmpty()) {
+            queryString = "?" + params.entrySet().stream()
+                    .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+                    .collect(Collectors.joining("&"));
+        }
         return queryString;
     }
 
