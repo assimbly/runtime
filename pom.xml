@@ -9,7 +9,7 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
-	<version>5.0.3</version>
+	<version>5.0.4</version>
 
 	<modules>
 		<module>broker</module>
@@ -21,15 +21,15 @@
 
 	<properties>
 	    <maven.compiler.source>21</maven.compiler.source>
-    	<maven.compiler.target>21</maven.compiler.target>
-    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<main.basedir>${project.basedir}</main.basedir>
-		<activemq.version>6.1.5</activemq.version>
-    	<assimbly.version>5.0.3</assimbly.version>
-		<hamcrest.version>3.0</hamcrest.version>
+    	    <maven.compiler.target>21</maven.compiler.target>
+    	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	    <main.basedir>${project.basedir}</main.basedir>
+	    <activemq.version>6.1.6</activemq.version>
+    	    <assimbly.version>5.0.4</assimbly.version>
+	    <hamcrest.version>3.0</hamcrest.version>
 		<spring-boot.version>3.4.2</spring-boot.version>
 		<maven-api.version>3.9.9</maven-api.version>
-		<camel-spring-junit5.version>4.10.0</camel-spring-junit5.version>
+		<camel-spring-junit5.version>4.10.2</camel-spring-junit5.version>
 		<h2database.version>2.3.232</h2database.version>
 		<xalan.version>2.7.3</xalan.version>
 		<zip4j.version>2.11.5</zip4j.version>
@@ -143,6 +143,15 @@
 				</configuration>
 			</plugin>
 		</plugins>
+
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.extensions</groupId>
+				<artifactId>maven-build-cache-extension</artifactId>
+				<version>1.2.0</version>
+			</extension>
+		</extensions>
+
     </build>
 	
 </project>
