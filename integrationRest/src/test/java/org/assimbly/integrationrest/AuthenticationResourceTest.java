@@ -7,10 +7,7 @@ import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
 import org.bson.Document;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
 import java.net.URLDecoder;
@@ -18,47 +15,18 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 import java.util.HashMap;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AuthenticationRuntimeTest {
+public class AuthenticationResourceTest {
 
     private static String authToken;
     private static String totpSecret;
 
-    @Test
-    void shouldAuthenticateAndGetToken() {
-        try {
-            // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/authenticate", baseUrl);
-
-            // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", TestApplicationContext.DB);
-
-            // body
-            String body = "{\"username\": \"admin\", \"password\": \"admin\", \"rememberMe\": \"false\"}";
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
-
-            // assertions
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-            assertThatJson(response.body()).inPath("id_token");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Order(1)
-    void shouldAuthenticateAndGenerateDBToken() {
+    @BeforeAll
+    public static void generateAuthToken() {
         try {
             // create user on mongodb
             MongoUtil.createUser(TestApplicationContext.FIRST_NAME_USER, TestApplicationContext.LAST_NAME_USER, TestApplicationContext.EMAIL_USER, TestApplicationContext.PASSWORD_USER);
@@ -169,9 +137,6 @@ public class AuthenticationRuntimeTest {
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-
-            // body
-            Document bodyDoc = new Document();
             headers.put("Authorization", authToken);
 
             // endpoint call

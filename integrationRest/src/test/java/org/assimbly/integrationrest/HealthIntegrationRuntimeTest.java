@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class HealthRuntimeTest {
+public class HealthIntegrationRuntimeTest {
 
     @Test
     void shouldGetBackendHealthInfo() {
