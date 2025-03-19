@@ -76,7 +76,37 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    @Order(2)
+    @Order(10)
+    void checkIfFlowIsStarted() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/flow/%s/isstarted", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("true");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(10)
     void shouldGetFlowAlerts() {
         try {
             // url
@@ -106,7 +136,7 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    @Order(3)
+    @Order(10)
     void shouldCountFlowAlerts() {
         try {
             // url
@@ -136,7 +166,7 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(10)
     void shouldGetFlowEvents() {
         try {
             // url
