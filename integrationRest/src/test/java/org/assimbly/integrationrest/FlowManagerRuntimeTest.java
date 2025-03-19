@@ -107,7 +107,7 @@ public class FlowManagerRuntimeTest {
 
     @Test
     @Order(10)
-    void checkFlowLastError() {
+    void shouldGetFlowLastError() {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
