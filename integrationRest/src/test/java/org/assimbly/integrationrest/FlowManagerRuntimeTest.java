@@ -77,6 +77,96 @@ public class FlowManagerRuntimeTest {
 
     @Test
     @Order(2)
+    void shouldGetFlowAlerts() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/flow/%s/alerts", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("0");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(3)
+    void shouldCountFlowAlerts() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/flow/%s/alerts/count", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("0");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(4)
+    void shouldGetFlowEvents() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/flow/%s/events", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - install flow
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("0");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Order(20)
     void shouldPauseFlow() {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldPauseFlow test because shouldInstallFlow test did not run.");
@@ -112,7 +202,7 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    @Order(3)
+    @Order(21)
     void shouldResumeFlow() {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldResumeFlow test because shouldInstallFlow test did not run.");
@@ -148,7 +238,7 @@ public class FlowManagerRuntimeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(22)
     void shouldUninstallFlow() {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldUninstallFlow test because shouldInstallFlow test did not run.");
@@ -185,7 +275,7 @@ public class FlowManagerRuntimeTest {
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
-    @Order(5)
+    @Order(23)
     void shouldGetSchedulerFlowInfo() {
         try {
             // url
