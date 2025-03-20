@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -15,11 +17,24 @@ import java.util.HashMap;
 
 class ValidationRuntimeTest {
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldValidateCronWithSuccess() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/validation/cron";
 
             // params
@@ -46,7 +61,7 @@ class ValidationRuntimeTest {
     void shouldValidateCronWithError() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/validation/cron";
 
             // params

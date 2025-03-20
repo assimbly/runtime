@@ -25,11 +25,24 @@ class StatisticsRuntimeTest {
 
     private static boolean schedulerFlowInstalled = false;
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -49,7 +62,7 @@ class StatisticsRuntimeTest {
     void shouldGetEmptyFlowStats() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/stats", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -83,7 +96,7 @@ class StatisticsRuntimeTest {
     void shouldGetStats() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/stats", baseUrl);
 
             // headers
@@ -126,7 +139,7 @@ class StatisticsRuntimeTest {
     void shouldGetStatsFlows() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/stats/flows", baseUrl);
 
             // headers
@@ -171,7 +184,7 @@ class StatisticsRuntimeTest {
     void shouldGetStatsByFlowIds() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/statsbyflowids", baseUrl);
 
             // headers

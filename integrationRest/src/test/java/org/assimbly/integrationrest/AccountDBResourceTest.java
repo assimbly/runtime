@@ -5,9 +5,7 @@ import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 
 import java.net.http.HttpResponse;
 import java.util.Base64;
@@ -19,14 +17,27 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AccountDBResourceTest {
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldAuthenticateAndGenerateDBToken() {
         try {
             // create user on mongodb
-            MongoUtil.createUser(TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
+            MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/db/authenticate", baseUrl);
 
             // headers

@@ -25,14 +25,31 @@ public class AuthenticationResourceTest {
     private static String authToken;
     private static String totpSecret;
 
+    private static AssimblyGatewayHeadlessContainer container;
+
     @BeforeAll
+    static void setUp() {
+        initializeContainers();
+        generateAuthToken();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
+    static void initializeContainers() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
     public static void generateAuthToken() {
         try {
             // create user on mongodb
-            MongoUtil.createUser(TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
+            MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/db/authenticate", baseUrl);
 
             // headers
@@ -64,7 +81,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/authentication/register", baseUrl);
 
             // headers
@@ -99,7 +116,7 @@ public class AuthenticationResourceTest {
             assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/authentication/validate", baseUrl);
 
             // headers
@@ -131,7 +148,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/authentication/remove", baseUrl);
 
             // headers

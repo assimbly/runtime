@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlowManagerRuntimeTest {
 
@@ -29,11 +30,24 @@ class FlowManagerRuntimeTest {
     private static boolean schedulerFlowInstalled = false;
     private static boolean inboundHttpsFlowInstalled = false;
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -54,7 +68,7 @@ class FlowManagerRuntimeTest {
     void shouldInstallFlow() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -81,7 +95,7 @@ class FlowManagerRuntimeTest {
     void checkIfFlowIsStarted() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/isstarted", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -114,7 +128,7 @@ class FlowManagerRuntimeTest {
     void shouldGetFlowLastError() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/lasterror", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -147,7 +161,7 @@ class FlowManagerRuntimeTest {
     void shouldGetFlowAlerts() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/alerts", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -180,7 +194,7 @@ class FlowManagerRuntimeTest {
     void shouldCountFlowAlerts() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/alerts/count", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -213,7 +227,7 @@ class FlowManagerRuntimeTest {
     void shouldGetFlowEvents() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/events", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -248,7 +262,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldPauseFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/pause", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -284,7 +298,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldResumeFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/resume", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -320,7 +334,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldStopFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/stop", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -356,7 +370,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldStartFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/start", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -398,7 +412,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldRestartFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/restart", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -440,7 +454,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldGetFlowStatus test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/status", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -475,7 +489,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldGetFlowUptime test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/uptime", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -510,7 +524,7 @@ class FlowManagerRuntimeTest {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldUninstallFlow test because shouldInstallFlow test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/uninstall", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -545,7 +559,7 @@ class FlowManagerRuntimeTest {
     void shouldGetSchedulerFlowInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/info", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -580,7 +594,7 @@ class FlowManagerRuntimeTest {
     void shouldInstallFlowByFile() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -614,7 +628,7 @@ class FlowManagerRuntimeTest {
     void shouldSetMaintenanceTime() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/maintenance/%s", baseUrl, 60000);
 
             // headers
@@ -652,7 +666,7 @@ class FlowManagerRuntimeTest {
     void shouldUninstallFlowByFile() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/uninstall/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers

@@ -18,11 +18,24 @@ import static org.assertj.core.api.Assertions.fail;
 
 class UserJWTControllerTest {
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldAuthenticateAndGetToken() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/authenticate", baseUrl);
 
             // headers

@@ -21,7 +21,9 @@ public class Utils {
     private static String normalizeMilliseconds(String dateStr, String format) {
         // only modify if the format expects milliseconds
         if (format.contains("SSS")) {
-            // if exactly 2-digit milliseconds, add a trailing zero
+            // 1-digit milliseconds -> add two trailing zeros
+            dateStr = dateStr.replaceAll("(\\.\\d)(?!\\d)", "$100");
+            // 2-digit milliseconds -> add a trailing zero
             dateStr = dateStr.replaceAll("(\\.\\d{2})(?!\\d)", "$10");
         }
         return dateStr;

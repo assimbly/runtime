@@ -17,11 +17,24 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HealthIntegrationRuntimeTest {
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldGetBackendHealthInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/health/backend/jvm", baseUrl);
 
             // headers
@@ -59,7 +72,7 @@ class HealthIntegrationRuntimeTest {
     void shouldGetBackendFlowsInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/health/backend/flows", baseUrl);
 
             // headers

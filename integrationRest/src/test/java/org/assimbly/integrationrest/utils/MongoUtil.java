@@ -38,8 +38,8 @@ public class MongoUtil {
                 )));
     }
 
-    public static void createUser(String firstName, String lastName, String email, String password) {
-        MongoClient mongoClient = MongoClients.create(AssimblyGatewayHeadlessContainer.getMongoContainer().getReplicaSetUrl());
+    public static void createUser(String url, String firstName, String lastName, String email, String password) {
+        MongoClient mongoClient = MongoClients.create(url);
         MongoDatabase database = mongoClient.getDatabase("base");
         MongoCollection<Document> collection = database.getCollection(usersCol);
 

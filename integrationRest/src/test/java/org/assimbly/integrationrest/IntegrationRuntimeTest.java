@@ -32,11 +32,24 @@ class IntegrationRuntimeTest {
 
     private static boolean schedulerFlowInstalled = false;
 
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
@@ -57,7 +70,7 @@ class IntegrationRuntimeTest {
     void shouldAddCollector() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/collectors/add", baseUrl);
 
             // headers
@@ -102,7 +115,7 @@ class IntegrationRuntimeTest {
             assumeTrue(flowIdStep != null, "Skipping shouldRemoveStepCollector test because shouldAddCollector test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdStep);
 
             // headers
@@ -139,7 +152,7 @@ class IntegrationRuntimeTest {
             assumeTrue(flowIdRoute != null, "Skipping shouldRemoveRouteCollector test because shouldAddCollector test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdRoute);
 
             // headers
@@ -176,7 +189,7 @@ class IntegrationRuntimeTest {
             assumeTrue(flowIdLog != null, "Skipping shouldRemoveLogCollector test because shouldAddCollector test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdLog);
 
             // headers
@@ -211,7 +224,7 @@ class IntegrationRuntimeTest {
     void shouldGetListOfFlows() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/list/flows", baseUrl);
 
             // headers
@@ -239,7 +252,7 @@ class IntegrationRuntimeTest {
     void shouldCountSteps() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/count/steps", baseUrl);
 
             // headers
@@ -272,7 +285,7 @@ class IntegrationRuntimeTest {
     void shouldGetInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/info", baseUrl);
 
             // headers
@@ -309,7 +322,7 @@ class IntegrationRuntimeTest {
     void shouldGetLastError() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/lasterror", baseUrl);
 
             // headers
@@ -333,7 +346,7 @@ class IntegrationRuntimeTest {
     void shouldGetFlowsDetails() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/list/flows/details", baseUrl);
 
             // headers
@@ -368,7 +381,7 @@ class IntegrationRuntimeTest {
     void shouldGetNumberOfAlerts() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = String.format("%s/api/integration/numberofalerts", baseUrl);
 
             // headers
@@ -400,7 +413,7 @@ class IntegrationRuntimeTest {
     void shouldBeStarted() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/integration/isstarted";
 
             // headers
@@ -433,7 +446,7 @@ class IntegrationRuntimeTest {
     void shouldCountFlows() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/integration/count/flows";
 
             // headers
@@ -465,7 +478,7 @@ class IntegrationRuntimeTest {
     void shouldListSoapActions() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/integration/list/soap/action";
 
             // headers
@@ -506,7 +519,7 @@ class IntegrationRuntimeTest {
     void shouldGetBaseDirectory() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/integration/basedirectory";
 
             // headers
@@ -529,7 +542,7 @@ class IntegrationRuntimeTest {
     void shouldSetBaseDirectory() {
         try {
             // url
-            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String baseUrl = container.getBaseUrl();
             String url = baseUrl + "/api/integration/basedirectory";
 
             // headers
