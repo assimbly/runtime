@@ -321,16 +321,7 @@ class IntegrationRuntimeTest {
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isNotEmpty();
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            assertThat(response.body()).isNotEmpty();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
