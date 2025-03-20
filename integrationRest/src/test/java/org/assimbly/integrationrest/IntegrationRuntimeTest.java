@@ -305,6 +305,7 @@ class IntegrationRuntimeTest {
     }
 
     @Test
+    @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetLastError() {
         try {
             // url
@@ -330,6 +331,41 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
             boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
             assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldGetFlowsDetails() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/list/flows/details", baseUrl);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - get list of flows
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.isArray()).isTrue();
+
+            JsonNode flowJson = responseJson.get(0).get("flow");
+
+            assertThat(flowJson.get("isRunning").asBoolean()).isTrue();
+            assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("status").asText()).isEqualTo("started");
+            assertThat(flowJson.get("uptime").asText()).matches("\\d+s");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
