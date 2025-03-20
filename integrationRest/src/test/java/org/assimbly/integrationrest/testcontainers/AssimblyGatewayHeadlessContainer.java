@@ -10,8 +10,7 @@ public class AssimblyGatewayHeadlessContainer {
 
     private static final GenericContainer<?> gatewayHeadlessContainer;
     private static final Network network = Network.newNetwork();
-    private static MongoDBContainer mongoContainer;
-    private static String tokenId;
+    private static final MongoDBContainer mongoContainer;
 
     static {
         // initialize mongodb container
@@ -26,8 +25,8 @@ public class AssimblyGatewayHeadlessContainer {
         gatewayHeadlessContainer = new GenericContainer<>("assimbly/gateway-headless:development")
                 .withExposedPorts(8088)
                 .withNetwork(network)
-                .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
-                .withEnv("MONGO_SECRET_KEY",TestApplicationContext.MONGO_SECRET_KEY)
+                .withEnv("ASSIMBLY_ENV", TestApplicationContext.assimblyEnv)
+                .withEnv("MONGO_SECRET_KEY",TestApplicationContext.mongoSecretKey)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort());
         gatewayHeadlessContainer.start();

@@ -1,7 +1,6 @@
 package org.assimbly.integrationrest.utils;
 
 import java.net.URI;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,9 +40,7 @@ public class HttpUtil {
                 default -> requestBuilder.method(method, body != null ? HttpRequest.BodyPublishers.ofString(body) : HttpRequest.BodyPublishers.noBody());
             }
 
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-
-            return response;
+            return client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
         } catch (Exception e) {
             return null;

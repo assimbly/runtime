@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 
-public class UserJWTControllerTest {
+class UserJWTControllerTest {
 
     @Test
     void shouldAuthenticateAndGetToken() {
@@ -27,7 +27,7 @@ public class UserJWTControllerTest {
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", TestApplicationContext.DB);
+            headers.put("db", TestApplicationContext.db);
 
             // body
             String body = "{\"username\": \"admin\", \"password\": \"admin\", \"rememberMe\": \"false\"}";

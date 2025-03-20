@@ -12,19 +12,19 @@ import java.util.Arrays;
 
 public class MongoUtil {
 
-    private static String TENANT_VARIABLES_COL = "tenant_variables";
-    private static String USERS_COL = "users";
+    private static String tenantVariablesCol = "tenant_variables";
+    private static String usersCol = "users";
 
-    private static String TENANT_VARIABLE_TYPE = "TenantVariable";
+    private static String tenantVariableType = "TenantVariable";
 
     public static void createTenantVariable(MongoDatabase database, String environment, String name, String value) {
-        MongoCollection<Document> collection = database.getCollection(TENANT_VARIABLES_COL);
+        MongoCollection<Document> collection = database.getCollection(tenantVariablesCol);
 
         ObjectId tenantVariableId = new ObjectId();
         ObjectId valueId = new ObjectId();
 
         collection.insertOne(new Document("_id", tenantVariableId)
-                .append("_type", TENANT_VARIABLE_TYPE)
+                .append("_type", tenantVariableType)
                 .append("name", name)
                 .append("createdAt", System.currentTimeMillis())
                 .append("createdBy", "System")
@@ -41,12 +41,12 @@ public class MongoUtil {
     public static void createUser(String firstName, String lastName, String email, String password) {
         MongoClient mongoClient = MongoClients.create(AssimblyGatewayHeadlessContainer.getMongoContainer().getReplicaSetUrl());
         MongoDatabase database = mongoClient.getDatabase("base");
-        MongoCollection<Document> collection = database.getCollection(USERS_COL);
+        MongoCollection<Document> collection = database.getCollection(usersCol);
 
         ObjectId userId = new ObjectId();
 
         collection.insertOne(new Document("_id", userId)
-                .append("_type", TENANT_VARIABLE_TYPE)
+                .append("_type", tenantVariableType)
                 .append("status", "active")
                 .append("role", "user")
                 .append("first_name", firstName)

@@ -7,7 +7,6 @@ import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class FlowManagerRuntimeTest {
+class FlowManagerRuntimeTest {
 
     private Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
     private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
@@ -35,7 +34,7 @@ public class FlowManagerRuntimeTest {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -44,7 +43,7 @@ public class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install scheduler flow
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -56,7 +55,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -65,7 +64,7 @@ public class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install flow
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -83,7 +82,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/isstarted", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/isstarted", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -113,7 +112,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/lasterror", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/lasterror", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -143,7 +142,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/alerts", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/alerts", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -173,7 +172,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/alerts/count", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/alerts/count", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -203,7 +202,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/events", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/events", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -235,7 +234,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/pause", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/pause", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -251,8 +250,8 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("pause");
             assertThat(flowJson.get("message").asText()).isEqualTo("Paused flow successfully");
@@ -271,7 +270,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/resume", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/resume", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -287,8 +286,8 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("resume");
             assertThat(flowJson.get("message").asText()).isEqualTo("Resumed flow successfully");
@@ -307,7 +306,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/stop", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/stop", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -323,8 +322,8 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("stop");
             assertThat(flowJson.get("message").asText()).isEqualTo("Stopped flow successfully");
@@ -343,7 +342,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/start", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/start", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -362,11 +361,11 @@ public class FlowManagerRuntimeTest {
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
             assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("failed").asInt()).isEqualTo(0);
+            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
 
             assertThat(flowJson.get("steps").size()).isEqualTo(5);
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("start");
             assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
@@ -385,7 +384,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/restart", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/restart", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -404,11 +403,11 @@ public class FlowManagerRuntimeTest {
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
             assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("failed").asInt()).isEqualTo(0);
+            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
 
             assertThat(flowJson.get("steps").size()).isEqualTo(5);
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("start");
             assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
@@ -427,7 +426,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/status", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/status", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -459,7 +458,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uptime", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/uptime", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -491,7 +490,7 @@ public class FlowManagerRuntimeTest {
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uninstall", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/uninstall", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -507,8 +506,8 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("event").asText()).isEqualTo("stop");
             assertThat(flowJson.get("message").asText()).isEqualTo("Stopped flow successfully");
@@ -526,7 +525,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/info", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/info", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -556,7 +555,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/install/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -564,7 +563,7 @@ public class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install flow
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -573,7 +572,7 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name())));
+            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
@@ -596,7 +595,7 @@ public class FlowManagerRuntimeTest {
 
             // body
             JSONArray jsonArray = new JSONArray();
-            jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // endpoint call - install flow
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", jsonArray.toString() , null, headers);
@@ -622,7 +621,7 @@ public class FlowManagerRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uninstall/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/uninstall/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -638,7 +637,7 @@ public class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name())));
+            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {

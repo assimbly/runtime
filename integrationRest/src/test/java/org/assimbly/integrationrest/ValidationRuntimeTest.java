@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
-public class ValidationRuntimeTest {
+class ValidationRuntimeTest {
 
     @Test
     void shouldValidateCronWithSuccess() {

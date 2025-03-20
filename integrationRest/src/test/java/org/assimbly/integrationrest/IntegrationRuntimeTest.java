@@ -21,7 +21,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class IntegrationRuntimeTest {
+class IntegrationRuntimeTest {
 
     private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
     private Properties collectorProp = TestApplicationContext.buildCollectorExample();
@@ -37,7 +37,7 @@ public class IntegrationRuntimeTest {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -46,7 +46,7 @@ public class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install scheduler flow
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -66,12 +66,12 @@ public class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String body = (String)collectorProp.get(TestApplicationContext.CollectorField.collector.name());
+            String body = (String)collectorProp.get(TestApplicationContext.CollectorField.COLLECTOR.name());
 
             // set ids to be used on other unit tests
-            flowIdStep = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdStep.name());
-            flowIdRoute = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdRoute.name());
-            flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.flowIdLog.name());
+            flowIdStep = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_STEP.name());
+            flowIdRoute = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_ROUTE.name());
+            flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_LOG.name());
 
             // endpoint call - add collector
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
@@ -188,7 +188,7 @@ public class IntegrationRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/list/flows", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/list/flows", baseUrl);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -203,7 +203,7 @@ public class IntegrationRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             assertThat(responseJson.get(0).size()).isEqualTo(1);
-            assertThat(responseJson.get(0).get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(responseJson.get(0).get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -266,7 +266,7 @@ public class IntegrationRuntimeTest {
             assertThat(messageNode.isTextual()).isTrue();
 
             int messageValue = Integer.parseInt(messageNode.asText());
-            assertThat(messageValue).isGreaterThan(0);
+            assertThat(messageValue).isPositive();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

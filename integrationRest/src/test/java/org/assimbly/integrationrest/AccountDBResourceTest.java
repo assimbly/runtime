@@ -17,13 +17,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AccountDBResourceTest {
+class AccountDBResourceTest {
 
     @Test
     void shouldAuthenticateAndGenerateDBToken() {
         try {
             // create user on mongodb
-            MongoUtil.createUser(TestApplicationContext.FIRST_NAME_USER, TestApplicationContext.LAST_NAME_USER, TestApplicationContext.EMAIL_USER, TestApplicationContext.PASSWORD_USER);
+            MongoUtil.createUser(TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
@@ -31,10 +31,10 @@ public class AccountDBResourceTest {
 
             // headers
             HashMap<String, String> headers = new HashMap();
-            String data = TestApplicationContext.EMAIL_USER + ":" + TestApplicationContext.PASSWORD_USER;
+            String data = TestApplicationContext.emailUser + ":" + TestApplicationContext.passwordUser;
             String auth = Base64.getEncoder().encodeToString(data.getBytes());
             headers.put("Authorization", auth);
-            headers.put("db", TestApplicationContext.DB);
+            headers.put("db", TestApplicationContext.db);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);

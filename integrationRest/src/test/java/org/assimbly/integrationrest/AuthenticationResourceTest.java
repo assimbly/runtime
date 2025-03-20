@@ -29,7 +29,7 @@ public class AuthenticationResourceTest {
     public static void generateAuthToken() {
         try {
             // create user on mongodb
-            MongoUtil.createUser(TestApplicationContext.FIRST_NAME_USER, TestApplicationContext.LAST_NAME_USER, TestApplicationContext.EMAIL_USER, TestApplicationContext.PASSWORD_USER);
+            MongoUtil.createUser(TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
@@ -37,10 +37,10 @@ public class AuthenticationResourceTest {
 
             // headers
             HashMap<String, String> headers = new HashMap();
-            String data = TestApplicationContext.EMAIL_USER + ":" + TestApplicationContext.PASSWORD_USER;
+            String data = TestApplicationContext.emailUser + ":" + TestApplicationContext.passwordUser;
             String auth = Base64.getEncoder().encodeToString(data.getBytes());
             headers.put("Authorization", auth);
-            headers.put("db", TestApplicationContext.DB);
+            headers.put("db", TestApplicationContext.db);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
@@ -70,8 +70,8 @@ public class AuthenticationResourceTest {
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", TestApplicationContext.DB);
-            headers.put("domainName", TestApplicationContext.DOMAIN_NAME);
+            headers.put("db", TestApplicationContext.db);
+            headers.put("domainName", TestApplicationContext.domainName);
             headers.put("Authorization", authToken);
 
             // endpoint call
@@ -108,7 +108,7 @@ public class AuthenticationResourceTest {
 
             // body
             Document bodyDoc = new Document();
-            bodyDoc.append("email", TestApplicationContext.EMAIL_USER);
+            bodyDoc.append("email", TestApplicationContext.emailUser);
             bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
 
             // endpoint call

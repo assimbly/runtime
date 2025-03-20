@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class HealthIntegrationRuntimeTest {
+class HealthIntegrationRuntimeTest {
 
     @Test
     void shouldGetBackendHealthInfo() {
@@ -40,15 +40,15 @@ public class HealthIntegrationRuntimeTest {
             JsonNode memoryJson = responseJson.get("memory");
             JsonNode threadsJson = responseJson.get("threads");
 
-            assertThat(jvmJson.get("openFileDescriptors").asInt()).isGreaterThan(0);
-            assertThat(jvmJson.get("maxFileDescriptors").asInt()).isGreaterThan(0);
-            assertThat(memoryJson.get("current").asInt()).isGreaterThan(0);
-            assertThat(memoryJson.get("committed").asInt()).isGreaterThan(0);
-            assertThat(memoryJson.get("max").asInt()).isGreaterThan(0);
-            assertThat(memoryJson.get("cached").asInt()).isGreaterThan(0);
+            assertThat(jvmJson.get("openFileDescriptors").asInt()).isPositive();
+            assertThat(jvmJson.get("maxFileDescriptors").asInt()).isPositive();
+            assertThat(memoryJson.get("current").asInt()).isPositive();
+            assertThat(memoryJson.get("committed").asInt()).isPositive();
+            assertThat(memoryJson.get("max").asInt()).isPositive();
+            assertThat(memoryJson.get("cached").asInt()).isPositive();
             assertThat(memoryJson.get("currentUsedPercentage").asInt()).isBetween(0, 100);
-            assertThat(threadsJson.get("threadCount").asInt()).isGreaterThan(0);
-            assertThat(threadsJson.get("peakThreadCount").asInt()).isGreaterThan(0);
+            assertThat(threadsJson.get("threadCount").asInt()).isPositive();
+            assertThat(threadsJson.get("peakThreadCount").asInt()).isPositive();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -75,20 +75,20 @@ public class HealthIntegrationRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("uptimeMillis").asInt()).isGreaterThan(0);
-            assertThat(responseJson.get("startedSteps").asInt()).isGreaterThanOrEqualTo(0);
-            assertThat(responseJson.get("memoryUsage").asDouble()).isGreaterThan(0);
-            assertThat(responseJson.get("exchangesInflight").asInt()).isGreaterThanOrEqualTo(0);
+            assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
+            assertThat(responseJson.get("startedSteps").asInt()).isNotNegative();
+            assertThat(responseJson.get("memoryUsage").asDouble()).isPositive();
+            assertThat(responseJson.get("exchangesInflight").asInt()).isNotNegative();
             assertThat(responseJson.get("camelVersion").asText()).isNotEmpty();
-            assertThat(responseJson.get("exchangesCompleted").asInt()).isGreaterThanOrEqualTo(0);
+            assertThat(responseJson.get("exchangesCompleted").asInt()).isNotNegative();
             assertThat(responseJson.get("camelId").asText()).isNotEmpty();
             assertThat(responseJson.get("uptime").asText()).isNotEmpty();
             assertThat(responseJson.get("startedFlows").asText()).isNotEmpty();
-            assertThat(responseJson.get("totalThreads").asInt()).isGreaterThan(0);
+            assertThat(responseJson.get("totalThreads").asInt()).isPositive();
             assertThat(responseJson.get("cpuLoadLastMinute").asText()).isNotEmpty();
             assertThat(responseJson.get("cpuLoadLast15Minutes").asText()).isNotEmpty();
-            assertThat(responseJson.get("exchangesTotal").asInt()).isGreaterThanOrEqualTo(0);
-            assertThat(responseJson.get("exchangesFailed").asInt()).isGreaterThanOrEqualTo(0);
+            assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
+            assertThat(responseJson.get("exchangesFailed").asInt()).isNotNegative();
             assertThat(responseJson.get("cpuLoadLast5Minutes").asText()).isNotEmpty();
             assertThat(responseJson.get("status").asText()).isEqualTo("Started");
 

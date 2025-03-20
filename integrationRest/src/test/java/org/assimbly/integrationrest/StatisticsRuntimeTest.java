@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class StatisticsRuntimeTest {
+class StatisticsRuntimeTest {
 
     private Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
     private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
@@ -31,7 +31,7 @@ public class StatisticsRuntimeTest {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -40,7 +40,7 @@ public class StatisticsRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install scheduler flow
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.camelContext.name()), null, headers);
+            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -51,7 +51,7 @@ public class StatisticsRuntimeTest {
         try {
             // url
             String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/stats", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            String url = String.format("%s/api/integration/flow/%s/stats", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -91,7 +91,7 @@ public class StatisticsRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("uptimeMillis").asInt()).isGreaterThan(0);
+            assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(responseJson.get("startedSteps").isInt()).isTrue();
             assertThat(responseJson.get("memoryUsage").isDouble()).isTrue();
             assertThat(responseJson.get("exchangesInflight").isInt()).isTrue();
@@ -134,11 +134,11 @@ public class StatisticsRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.size()).isGreaterThanOrEqualTo(0);
+            assertThat(responseJson.size()).isNotNegative();
 
             JsonNode flowJson = responseJson.get(0).get("flow");
 
-            assertThat(flowJson.get("uptimeMillis").asInt()).isGreaterThan(0);
+            assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(flowJson.get("pending").isInt()).isTrue();
             assertThat(flowJson.get("completed").isInt()).isTrue();
             assertThat(flowJson.get("failed").isInt()).isTrue();
@@ -171,7 +171,7 @@ public class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name());
+            String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name());
 
             // endpoint call - get stats by flows ids
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
@@ -183,7 +183,7 @@ public class StatisticsRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get(0).get("flow");
 
-            assertThat(flowJson.get("uptimeMillis").asInt()).isGreaterThan(0);
+            assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(flowJson.get("pending").isInt()).isTrue();
             assertThat(flowJson.get("completed").isInt()).isTrue();
             assertThat(flowJson.get("failed").isInt()).isTrue();
@@ -195,7 +195,7 @@ public class StatisticsRuntimeTest {
             assertThat(flowJson.get("cpuLoadLast15Minutes").isInt()).isTrue();
             assertThat(flowJson.get("lastCompleted")).isNotNull();
             assertThat(flowJson.get("cpuLoadLast5Minutes").isInt()).isTrue();
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.id.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("status").asText()).isEqualTo("started");
 
         } catch (Exception e) {
