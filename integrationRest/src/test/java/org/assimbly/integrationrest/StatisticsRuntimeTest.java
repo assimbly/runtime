@@ -64,7 +64,16 @@ class StatisticsRuntimeTest {
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-            assertThatJson(response.body()).isEqualTo("{\"flow\":{\"total\":0,\"pending\":0,\"id\":\"67921474ecaafe0007000000\",\"completed\":0,\"failed\":0}}");
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode flowJson = responseJson.get("flow");
+
+            assertThat(flowJson.get("total").asInt()).isZero();
+            assertThat(flowJson.get("pending").asInt()).isZero();
+            assertThat(flowJson.get("id").asText()).isEqualTo("67921474ecaafe0007000000");
+            assertThat(flowJson.get("completed").asInt()).isZero();
+            assertThat(flowJson.get("failed").asInt()).isZero();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

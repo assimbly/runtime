@@ -4,6 +4,7 @@ import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContai
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
@@ -30,10 +31,13 @@ class UserJWTControllerTest {
             headers.put("db", TestApplicationContext.db);
 
             // body
-            String body = "{\"username\": \"admin\", \"password\": \"admin\", \"rememberMe\": \"false\"}";
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("username", "admin");
+            bodyJson.put("password", "admin");
+            bodyJson.put("rememberMe", "false");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
 
             // assertions
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);

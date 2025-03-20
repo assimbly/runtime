@@ -540,8 +540,13 @@ class FlowManagerRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"flow\":{\"isRunning\":true,\"name\":\"67c740bc349ced00070004a9\",\"id\":\"67c740bc349ced00070004a9\",\"status\":\"started\"}}");
-            assertThatJson(response.body()).whenIgnoringPaths("flow.uptime").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode flowJson = responseJson.get("flow");
+
+            assertThat(flowJson.get("isRunning").asText()).isEqualTo("true");
+            assertThat(flowJson.get("name").asText()).isEqualTo("67c740bc349ced00070004a9");
+            assertThat(flowJson.get("id").asText()).isEqualTo("67c740bc349ced00070004a9");
+            assertThat(flowJson.get("status").asText()).isEqualTo("started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

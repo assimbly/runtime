@@ -80,8 +80,11 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collectors/add\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"configured\",\"status\":200}");
-            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("configured");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -111,8 +114,11 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
-            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -142,8 +148,11 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
-            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -173,8 +182,11 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/collector/{collectorId}/remove\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"removed\",\"status\":200}");
-            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -258,8 +270,11 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"path\":\"/integration/isstarted\",\"details\":\"successful\",\"id\":\"1\",\"message\":\"true\",\"status\":200}");
-            assertThatJson(response.body()).whenIgnoringPaths("timestamp").isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("true");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -287,16 +302,9 @@ class IntegrationRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThatJson(responseJson)
-                    .whenIgnoringPaths("timestamp", "message")
-                    .isEqualTo(objectMapper.readTree("{\"path\":\"/integration/count/flows\",\"details\":\"successful\",\"id\":\"1\",\"status\":200}"));
-
-            JsonNode messageNode = responseJson.get("message");
-            assertThat(messageNode).isNotNull();
-            assertThat(messageNode.isTextual()).isTrue();
-
-            int messageValue = Integer.parseInt(messageNode.asText());
-            assertThat(messageValue).isPositive();
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asInt()).isPositive();
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

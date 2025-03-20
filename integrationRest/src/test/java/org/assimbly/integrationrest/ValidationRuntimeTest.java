@@ -65,8 +65,8 @@ class ValidationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode expectedBodyJson = objectMapper.readTree("{\"error\":\"Cron Validation error: Unexpected end of expression.\"}");
-            assertThatJson(response.body()).isEqualTo(expectedBodyJson);
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.get("error").asText()).isEqualTo("Cron Validation error: Unexpected end of expression.");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
