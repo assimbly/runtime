@@ -314,4 +314,51 @@ class IntegrationRuntimeTest {
         }
     }
 
+    @Test
+    void shouldGetBaseDirectory() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = baseUrl + "/api/integration/basedirectory";
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - check if backend is started
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+            assertThat(response.body()).isEqualTo("/data//.assimbly");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldSetBaseDirectory() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = baseUrl + "/api/integration/basedirectory";
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
+
+            // endpoint call - check if backend is started
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", "/data/.assimbly", null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+            assertThat(response.body()).isEqualTo("success");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
 }
