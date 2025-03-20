@@ -85,6 +85,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("configured");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -119,6 +122,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("removed");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -153,6 +159,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("removed");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -187,6 +196,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("removed");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -246,6 +258,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("3");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -279,8 +294,8 @@ class IntegrationRuntimeTest {
             assertThat(infoJson.get("uptimeMiliseconds").asInt()).isPositive();
             assertThat(infoJson.get("name").asText()).isNotEmpty();
             assertThat(infoJson.get("version").asText()).isNotEmpty();
-            assertThat(infoJson.get("startDate").asText()).isNotEmpty();
             assertThat(infoJson.get("uptime").asText()).isNotEmpty();
+            assertThat(infoJson.get("startDate").asText()).isNotEmpty();
             boolean isValid = Utils.isValidDate(infoJson.get("startDate").asText(), "EEE MMM dd HH:mm:ss zzz yyyy");
             assertThat(isValid).as("Check if startDate is a valid date").isTrue();
 
@@ -312,6 +327,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("true");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -342,6 +360,9 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asInt()).isPositive();
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

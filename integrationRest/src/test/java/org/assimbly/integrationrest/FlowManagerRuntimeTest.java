@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
+import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.junit.jupiter.api.*;
@@ -99,6 +100,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("true");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -129,6 +133,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("0");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -159,6 +166,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("0");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -189,6 +199,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("0");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -219,6 +232,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("0");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -443,6 +459,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("started");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -475,6 +494,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).matches("\\d+s");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -578,6 +600,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).matches(String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -613,6 +638,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).matches("Set flows into maintenance mode for 60000 miliseconds");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -643,6 +671,9 @@ class FlowManagerRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).matches(String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
