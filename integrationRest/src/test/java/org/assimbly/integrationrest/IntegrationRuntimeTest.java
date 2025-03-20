@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.jupiter.api.*;
@@ -245,6 +246,43 @@ class IntegrationRuntimeTest {
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("3");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldGetInfo() {
+        try {
+            // url
+            String baseUrl = AssimblyGatewayHeadlessContainer.getBaseUrl();
+            String url = String.format("%s/api/integration/info", baseUrl);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call - get list of flows
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode infoJson = responseJson.get("info");
+
+            assertThat(infoJson.get("numberOfRunningSteps").asInt()).isPositive();
+            assertThat(infoJson.get("startupType").asText()).isEqualTo("Default");
+            assertThat(infoJson.get("uptimeMiliseconds").asInt()).isPositive();
+            assertThat(infoJson.get("name").asText()).isNotEmpty();
+            assertThat(infoJson.get("version").asText()).isNotEmpty();
+            assertThat(infoJson.get("startDate").asText()).isNotEmpty();
+            assertThat(infoJson.get("uptime").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(infoJson.get("startDate").asText(), "EEE MMM dd HH:mm:ss zzz yyyy");
+            assertThat(isValid).as("Check if startDate is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
