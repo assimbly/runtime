@@ -44,7 +44,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = readFileFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67921474ecaafe0007000000");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "3d01e43c-6e86-4c9e-9972-7c872ecc37f6");
@@ -62,7 +62,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = readFileFromResources("SchedulerCamelContext.xml");
+            String camelContext = readFileAsStringFromResources("SchedulerCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67c740bc349ced00070004a9");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
@@ -80,7 +80,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String collector = readFileFromResources("CollectorExample.json");
+            String collector = readFileAsStringFromResources("CollectorExample.json");
 
             props.setProperty(CollectorField.FLOW_ID_LOG.name(), "67c740bc349ced00070004a9_log");
             props.setProperty(CollectorField.FLOW_ID_ROUTE.name(), "67c740bc349ced00070004a9_route");
@@ -92,11 +92,22 @@ public class TestApplicationContext {
         return props;
     }
 
-    private static String readFileFromResources(String fileName) throws IOException {
+    public static String readFileAsStringFromResources(String fileName) throws IOException {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
             return Files.readString(path, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error(String.format("Error to load %s file from resources", fileName), e);
+            return null;
+        }
+    }
+
+    public static byte[] readFileAsBytesFromResources(String fileName) throws IOException {
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
+            return Files.readAllBytes(path);
         } catch (Exception e) {
             log.error(String.format("Error to load %s file from resources", fileName), e);
             return null;

@@ -1,5 +1,7 @@
 package org.assimbly.integrationrest.utils;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -27,5 +29,9 @@ public class Utils {
             dateStr = dateStr.replaceAll("(\\.\\d{2})(?!\\d)", "$10");
         }
         return dateStr;
+    }
+
+    public static String getNowDate(String format) {
+        return Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(format));
     }
 }
