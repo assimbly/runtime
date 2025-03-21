@@ -33,7 +33,8 @@ public class AssimblyGatewayHeadlessContainer {
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.assimblyEnv)
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.mongoSecretKey)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
-                .waitingFor(Wait.forListeningPort());
+                .waitingFor(Wait.forListeningPort())
+                .withFileSystemBind("/tmp/jeka", "/data/.jeka"); // bind a writable directory to prevent AccessDeniedException on /data/.jeka
         gatewayHeadlessContainer.start();
     }
 
