@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Disabled
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlowManagerRuntimeTest {
 
