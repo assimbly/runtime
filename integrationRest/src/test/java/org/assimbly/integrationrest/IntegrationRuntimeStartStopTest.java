@@ -58,7 +58,7 @@ class IntegrationRuntimeStartStopTest {
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - install scheduler flow
+            // endpoint call
             HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
@@ -78,7 +78,7 @@ class IntegrationRuntimeStartStopTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -112,7 +112,7 @@ class IntegrationRuntimeStartStopTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -146,7 +146,7 @@ class IntegrationRuntimeStartStopTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts

@@ -41,7 +41,7 @@ class HealthIntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -79,7 +79,7 @@ class HealthIntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts

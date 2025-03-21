@@ -58,7 +58,7 @@ class IntegrationRuntimeTest {
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - install scheduler flow
+            // endpoint call
             HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
@@ -86,7 +86,7 @@ class IntegrationRuntimeTest {
             flowIdRoute = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_ROUTE.name());
             flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_LOG.name());
 
-            // endpoint call - add collector
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
 
             // asserts
@@ -123,7 +123,7 @@ class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - remove step collector
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -160,7 +160,7 @@ class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - remove route collector
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -197,7 +197,7 @@ class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - remove log collector
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -231,7 +231,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -259,7 +259,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -292,7 +292,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -329,7 +329,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -353,7 +353,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -388,7 +388,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get list of flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -420,7 +420,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -453,7 +453,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - count flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -489,7 +489,7 @@ class IntegrationRuntimeTest {
             JSONObject body = new JSONObject();
             body.put("url", "http://www.dneonline.com/calculator.asmx?wsdl");
 
-            // endpoint call - list soap actions
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
 
             // asserts
@@ -526,7 +526,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -550,7 +550,7 @@ class IntegrationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call - check if backend is started
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", "/data/.assimbly", null, headers);
 
             // asserts

@@ -103,7 +103,7 @@ class StatisticsRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get stats
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -146,7 +146,7 @@ class StatisticsRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get stats flows
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -194,7 +194,7 @@ class StatisticsRuntimeTest {
             // body
             String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name());
 
-            // endpoint call - get stats by flows ids
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
 
             // asserts

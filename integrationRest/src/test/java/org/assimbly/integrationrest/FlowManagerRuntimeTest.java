@@ -56,7 +56,7 @@ class FlowManagerRuntimeTest {
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - install scheduler flow
+            // endpoint call
             HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
@@ -77,7 +77,7 @@ class FlowManagerRuntimeTest {
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             // asserts
@@ -102,7 +102,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -135,7 +135,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -168,7 +168,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -201,7 +201,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -234,7 +234,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -269,7 +269,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - pause flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -305,7 +305,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -341,7 +341,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -377,7 +377,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -419,7 +419,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -461,7 +461,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -496,7 +496,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -531,7 +531,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - resume flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
@@ -568,7 +568,7 @@ class FlowManagerRuntimeTest {
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - get flow info
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
 
             // asserts
@@ -602,7 +602,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             // asserts
@@ -640,7 +640,7 @@ class FlowManagerRuntimeTest {
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", jsonArray.toString() , null, headers);
 
             // asserts
@@ -673,7 +673,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - install flow
+            // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
 
             // asserts
