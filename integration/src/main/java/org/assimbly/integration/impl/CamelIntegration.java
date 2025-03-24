@@ -206,7 +206,7 @@ public class CamelIntegration extends BaseIntegration {
 		setHistoryMetrics(true);
 
 		setHealthChecks(true);
-		
+
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -219,7 +219,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
-	
+
 	public void setHealthChecks(boolean enable) {
 
 		HealthCheckRepository routesHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "routes");
@@ -236,7 +236,7 @@ public class CamelIntegration extends BaseIntegration {
 			producersHealthCheckRepository.setEnabled(enable);
 		}
 
-    }
+	}
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -441,7 +441,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private Resource convertKameletToStep(String resourceName, String resourceAsString){
 
-	String properties = """
+		String properties = """
     properties:
       in:
           title: Source endpoint
@@ -631,7 +631,7 @@ public class CamelIntegration extends BaseIntegration {
 			return;
 		}
 
-        log.info("Deploy folder | Init watching for changes: {}", path);
+		log.info("Deploy folder | Init watching for changes: {}", path);
 		watchDeployDirectoryInitialized = true;
 
 		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
@@ -639,18 +639,18 @@ public class CamelIntegration extends BaseIntegration {
 				.setPreExistingAsCreated(true)
 				.build((event, path1) -> {
 
-                    switch (event) {
-                        case ENTRY_CREATE:
-                            createDeployDirectory(path1);
-                            break;
-                        case ENTRY_MODIFY:
-                            modifyDeployDirectory(path1);
-                            break;
-                        case ENTRY_DELETE:
-                            deleteDeployDirectory(path1);
-                            break;
-                    }
-                });
+					switch (event) {
+						case ENTRY_CREATE:
+							createDeployDirectory(path1);
+							break;
+						case ENTRY_MODIFY:
+							modifyDeployDirectory(path1);
+							break;
+						case ENTRY_DELETE:
+							deleteDeployDirectory(path1);
+							break;
+					}
+				});
 
 		watcher.start();
 
@@ -660,7 +660,7 @@ public class CamelIntegration extends BaseIntegration {
 		log.info("Deploy folder | File created: " + path);
 
 		try {
-            timeCreated = System.currentTimeMillis();
+			timeCreated = System.currentTimeMillis();
 			long lastModified = FileUtils.lastModifiedFileTime(path.toFile()).toMillis();
 			long diff = timeCreated - lastModified;
 
@@ -673,7 +673,7 @@ public class CamelIntegration extends BaseIntegration {
 			pathCreated = path;
 
 		} catch (Exception e) {
-            log.error("FileInstall for created {} failed", path.toString(), e);
+			log.error("FileInstall for created {} failed", path.toString(), e);
 		}
 	}
 
@@ -695,7 +695,7 @@ public class CamelIntegration extends BaseIntegration {
 					fileInstall(path);
 				}
 			} catch (Exception e) {
-                log.error("FileInstall for modified {} failed", path, e);
+				log.error("FileInstall for modified {} failed", path, e);
 			}
 		}
 	}
@@ -727,7 +727,7 @@ public class CamelIntegration extends BaseIntegration {
 				configuration = DocConverter.convertYamlToXml(configuration);
 			}else{
 				configuration = convertDefaultYAMLToConfiguration(fileName, configuration);
-							}
+			}
 
 			mediaType = "xml";
 		}
@@ -987,7 +987,7 @@ public class CamelIntegration extends BaseIntegration {
 				// skip prop if it's not an xml
 				continue;
 			}
-            return getMutualSSLInfoFromXml(xml);
+			return getMutualSSLInfoFromXml(xml);
 		}
 		return Collections.emptyMap();
 	}
@@ -1142,7 +1142,7 @@ public class CamelIntegration extends BaseIntegration {
 	private void createConnection(String scheme) throws Exception {
 		if(!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null && !DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
 
-            log.warn("Component {} is not supported by Assimbly. Try to resolve dependency dynamically.", scheme);
+			log.warn("Component {} is not supported by Assimbly. Try to resolve dependency dynamically.", scheme);
 
 			if(INetUtil.isHostAvailable("repo1.maven.org")){
 				log.info(resolveDependency(scheme));
@@ -1365,7 +1365,7 @@ public class CamelIntegration extends BaseIntegration {
 		}catch (Exception e) {
 			stopFlow(flowId, STOP_TIMEOUT, false);
 			finishFlowActionReport(flowId, "error","Start flow failed | error=" + e.getMessage(),"error");
-            log.error("Start flow failed. | flowid={}", flowId, e);
+			log.error("Start flow failed. | flowid={}", flowId, e);
 		}
 
 		return loadReport;
@@ -1501,7 +1501,7 @@ public class CamelIntegration extends BaseIntegration {
 					}else if (status.isStopped()){
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
 						startFlow(routeId, STOP_TIMEOUT);
-                    }
+					}
 
 				}
 				finishFlowActionReport(id, "resume","Resumed flow successfully","info");
@@ -2399,9 +2399,9 @@ public class CamelIntegration extends BaseIntegration {
 		// Filter by name
 		if(!filter.isEmpty()){
 
-            jsonObjectList = jsonObjectList.stream()
-                    .filter(obj -> obj.getString("name").contains(filter))
-                    .toList();
+			jsonObjectList = jsonObjectList.stream()
+					.filter(obj -> obj.getString("name").contains(filter))
+					.toList();
 		}
 
 
@@ -2982,11 +2982,11 @@ public class CamelIntegration extends BaseIntegration {
 
 			return result.getMessage().getBody(String.class);
 		} catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+			throw new RuntimeException(e);
+		}
 
 
-    }
+	}
 
 	public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders){
 		for(Map.Entry<String,Object> messageHeader : messageHeaders.entrySet()) {
@@ -3156,7 +3156,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-    public void setEncryptionProperties(Properties encryptionProperties) {
+	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
 		EncryptionUtil encryptionUtil = getEncryptionUtil();
 
@@ -3256,7 +3256,7 @@ public class CamelIntegration extends BaseIntegration {
 			try {
 				value = Integer.parseInt(envName);
 			} catch (NumberFormatException e) {
-                log.error("Invalid value for {}: {}", envName, value);
+				log.error("Invalid value for {}: {}", envName, value);
 			}
 		}
 		return value;

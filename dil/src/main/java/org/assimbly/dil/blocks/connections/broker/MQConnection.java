@@ -1,10 +1,11 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.sjms.SjmsComponent;
+import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
+import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ public class MQConnection {
     private String username;
     private String password;
     private String jmsProvider;
-    private SjmsComponent sjmsComponent;
 
     public MQConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
         this.context = context;
@@ -57,15 +57,15 @@ public class MQConnection {
 
         if(jmsProvider.equalsIgnoreCase("AMQ") || jmsProvider.equalsIgnoreCase("ActiveMQ Artemis")){
             startActiveMQArtemisConnection();
-        }else if (jmsProvider.equalsIgnoreCase("ActiveMQ Classic")){
+        }else if (jmsProvider.equalsIgnoreCase("ActiveMQ Classic") || jmsProvider.equalsIgnoreCase("AmazonMQ")){
             startActiveMQClassicConnection();
         }else{
-            throw new Exception("Unknown jms provider (valid are ActiveMQ Classic, ActiveMQ Artemis, AMQ).\n");
+            throw new Exception("Unknown jms provider (valid are ActiveMQ Classic, AmazonMQ ActiveMQ Artemis, AMQ).\n");
         }
 
     }
 
-    private void startActiveMQArtemisConnection(){
+    private void startActiveMQArtemisConnection() {
 
         org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory cf;
 
@@ -80,20 +80,11 @@ public class MQConnection {
         cf.setRetryIntervalMultiplier(2.0);
         cf.setMaxRetryInterval(3600000);
 
-        if (context.hasComponent(componentName) == null) {
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
-            context.addComponent(componentName, sjmsComponent);
-        } else {
-            context.removeComponent(componentName);
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory((ConnectionFactory) cf);
-            context.addComponent(componentName, sjmsComponent);
-        }
+        createJmsComponent((ConnectionFactory) cf);
 
     }
 
-    private void startActiveMQClassicConnection() throws Exception {
+    private void startActiveMQClassicConnection() {
 
         ActiveMQConnectionFactory cf;
 
@@ -103,21 +94,39 @@ public class MQConnection {
             cf = new ActiveMQConnectionFactory(username, password, url);
         }
 
-        if (context.hasComponent(componentName) == null) {
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
-            context.addComponent(componentName, sjmsComponent);
-        } else {
+        createJmsComponent(cf);
+
+    }
+
+    private void createJmsComponent(ConnectionFactory connectionFactory) {
+
+        if (context.hasComponent(componentName) != null) {
             context.removeComponent(componentName);
-            sjmsComponent = new SjmsComponent();
-            sjmsComponent.setConnectionFactory(cf);
         }
 
-        try (Connection connection = cf.createConnection()) {
-            log.info("MQ Connection created successfully");
-        } catch (Exception e) {
-            throw new Exception("Cannot connect to ActiveMQ Broker. URL: " + url, e);
-        }
+        PooledConnectionFactory pooledConnectionFactory = createPooledConnectionFactory(connectionFactory);
+
+        JmsComponent jmsComponent = new JmsComponent();
+        jmsComponent.setConnectionFactory(pooledConnectionFactory);
+        jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+        jmsComponent.setIncludeCorrelationIDAsBytes(false);
+        jmsComponent.setConcurrentConsumers(10);
+        jmsComponent.setArtemisStreamingEnabled(true);
+
+        this.context.addComponent(componentName, jmsComponent);
+
+    }
+
+    private PooledConnectionFactory createPooledConnectionFactory(ConnectionFactory connectionFactory) {
+
+        PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
+        pooledConnectionFactory.setConnectionFactory(connectionFactory);
+        pooledConnectionFactory.setCreateConnectionOnStartup(true);
+        pooledConnectionFactory.setMaxConnections(500);
+        pooledConnectionFactory.setMaximumActiveSessionPerConnection(100);
+        pooledConnectionFactory.setIdleTimeout(30000);
+
+        return pooledConnectionFactory;
 
     }
 
