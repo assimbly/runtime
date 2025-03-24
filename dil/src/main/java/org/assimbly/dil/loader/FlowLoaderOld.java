@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 
-public class FlowLoader extends RouteBuilder {
+public class FlowLoaderOld extends RouteBuilder {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private final TreeMap<String, String> props;
@@ -31,7 +31,7 @@ public class FlowLoader extends RouteBuilder {
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
-	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
+	public FlowLoaderOld(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
 		super();
 		this.props = props;
 		this.flowLoaderReport = flowLoaderReport;
@@ -124,13 +124,9 @@ public class FlowLoader extends RouteBuilder {
 		for(Map.Entry<String, String> prop : props.entrySet()){
 			String key = prop.getKey();
 			if(key.endsWith("routeconfiguration")){
-
 				String id = props.get(key + ".id");
-				String routeConfiguration = prop.getValue();
-
-				loadStep(routeConfiguration, "routeconfiguration", id, null);
-
-			}
+                loadStep(key, "routeconfiguration", id, null);
+            }
 		}
 	}
 
@@ -140,11 +136,11 @@ public class FlowLoader extends RouteBuilder {
 			String key = prop.getKey();
 			if(key.endsWith("routetemplatedefinition")){
 
-				String id = props.get(key + ".id");
+                String id = props.get(key + ".id");
 
-				loadStep(key, "routeTemplate definition", id, null);
+                loadStep(key, "routeTemplate definition", id, null);
 
-			}
+            }
 		}
 	}
 
@@ -154,11 +150,12 @@ public class FlowLoader extends RouteBuilder {
 		props.forEach((key, value) -> {
 			if (key.endsWith("routetemplate")) {
 				try {
-                    String basePath = StringUtils.substringBefore(key,"routetemplate");
+					String routeTemplate = value;
+					String basePath = StringUtils.substringBefore(key,"routetemplate");
 					String id = props.get(basePath + "routetemplate.id");
 					String uri = props.get(basePath + "uri");
 
-					loadStep(value, "routeTemplate", id, uri);
+					loadStep(routeTemplate, "routeTemplate", id, uri);
 
 				} catch (Exception e) {
 					throw new RuntimeException(e);
@@ -174,20 +171,20 @@ public class FlowLoader extends RouteBuilder {
 			if(key.endsWith("route")){
 				String route = props.get(key);
 				String id = props.get(key + ".id");
-				loadRoute(route, id);
+				loadRoute(route, "route",id);
 			}
 		}
 
 	}
 
 
-	private void loadRoute(String route, String id) throws Exception {
+	private void loadRoute(String route, String type, String id) throws Exception {
 
 		try {
 
 			loader.updateRoutes(IntegrationUtil.setResource(route));
 
-			flowLoaderReport.setStep(id, null, "route", "success", null);
+			flowLoaderReport.setStep(id, null, type, "success", null);
 
 		}catch (Exception e) {
 
@@ -195,7 +192,7 @@ public class FlowLoader extends RouteBuilder {
 			isFlowLoaded = false;
 
 			log.error("Failed loading step | stepid={}", id);
-			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage());
+			flowLoaderReport.setStep(id, null, type, "error", e.getMessage());
 
 		}
 	}
@@ -253,9 +250,9 @@ public class FlowLoader extends RouteBuilder {
 		routeConfigurationsToRemove.forEach(routeConfig -> {
 			try {
 				modelContext.removeRouteConfiguration(routeConfig);
-				log.info("Removed routeConfiguration: {}", routeConfig.getId());
+                log.info("Removed routeConfiguration: {}", routeConfig.getId());
 			} catch (Exception e) {
-				log.warn("Failed to remove route configuration: {}", routeConfig.getId());
+                log.warn("Failed to remove route configuration: {}", routeConfig.getId());
 			}
 		});
 
