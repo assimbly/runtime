@@ -133,7 +133,7 @@ public class FlowConfigurerRuntime {
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
     public ResponseEntity<String> getDocumentation(
-			@PathVariable(value = "flowId") String componenttype,
+			@PathVariable(value = "componenttype") String componenttype,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) throws Exception {
 
