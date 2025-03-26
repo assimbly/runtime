@@ -28,7 +28,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = readFileFromResources("SchedulerHttpRetryCamelContext.xml");
+            String camelContext = readFileAsStringFromResources("SchedulerHttpRetryCamelContext.xml");
 
             props.setProperty(CamelContextField.id.name(), "67c740bc349ced00070004a9");
             props.setProperty(CamelContextField.httpRetryQueue.name(), "67c740bc349ced00070004a9_test_5258ee10-4e8d-4b15-a86f-de6bcc16263b_http_retry");
@@ -40,7 +40,7 @@ public class TestApplicationContext {
         return props;
     }
 
-    private static String readFileFromResources(String fileName) throws IOException {
+    public static String readFileAsStringFromResources(String fileName) throws IOException {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
