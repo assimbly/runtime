@@ -16,7 +16,7 @@
     </route>
     <route id="0e2208f0-3a58-4a9f-a0ae-41a66f184282">
         <from uri="direct:67921474ecaafe0007000000_test_3d01e43c-6e86-4c9e-9972-7c872ecc37f6" />
-        <setHeader headerName="test">
+        <setHeader name="test">
             <constant>test header content</constant>
         </setHeader>
         <to uri="direct:67921474ecaafe0007000000_test_0e2208f0-3a58-4a9f-a0ae-41a66f184282" />
