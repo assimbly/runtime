@@ -16,7 +16,6 @@ public class AssimblyGatewayBrokerContainer {
 
     private final Network network;
     private GenericContainer<?> gatewayBrokerContainer;
-    private GenericContainer<?> gatewayHeadlessContainer;
 
     public AssimblyGatewayBrokerContainer() {
         this.network = Network.newNetwork();
@@ -24,7 +23,7 @@ public class AssimblyGatewayBrokerContainer {
 
     public void init() {
         // initialize assimbly gateway broker container
-        gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:development")
+        gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:latest")
                 .withExposedPorts(8088)
                 .withNetwork(network)
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
@@ -34,24 +33,11 @@ public class AssimblyGatewayBrokerContainer {
                 .waitingFor(Wait.forListeningPort())
                 .withFileSystemBind(getResourcePath(), "/data/.assimbly/");
         gatewayBrokerContainer.start();
-
-        // initialize assimbly gateway headless container
-        gatewayHeadlessContainer = new GenericContainer<>("assimbly/gateway-headless:development")
-                .withExposedPorts(8088)
-                .withNetwork(network)
-                .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
-                .withEnv("MONGO_SECRET_KEY",TestApplicationContext.MONGO_SECRET_KEY)
-                .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
-                .waitingFor(Wait.forListeningPort());
-        gatewayHeadlessContainer.start();
     }
 
     public void stop() {
         if (gatewayBrokerContainer != null) {
             gatewayBrokerContainer.stop();
-        }
-        if (gatewayHeadlessContainer != null) {
-            gatewayHeadlessContainer.stop();
         }
     }
 
@@ -70,13 +56,6 @@ public class AssimblyGatewayBrokerContainer {
             throw new IllegalStateException("Container has not been initialized. Call init() first.");
         }
         return "http://" + gatewayBrokerContainer.getHost() + ":" + gatewayBrokerContainer.getMappedPort(8088);
-    }
-
-    public String getHeadlessBaseUrl() {
-        if (gatewayHeadlessContainer == null) {
-            throw new IllegalStateException("Container has not been initialized. Call init() first.");
-        }
-        return "http://" + gatewayHeadlessContainer.getHost() + ":" + gatewayHeadlessContainer.getMappedPort(8088);
     }
 
 }
