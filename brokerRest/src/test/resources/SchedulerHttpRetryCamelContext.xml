@@ -52,16 +52,16 @@
                 <process ref="SetOriginalMessageProcessor"/>
             </when>
         </choice>
-        <setHeader headerName="CamelHttpMethod">
+        <setHeader name="CamelHttpMethod">
             <constant>GET</constant>
         </setHeader>
-        <setHeader headerName="user-agent">
+        <setHeader name="user-agent">
             <constant>Dovetail/4.17.4</constant>
         </setHeader>
-        <setProperty propertyName="useCustomDateHeader">
+        <setProperty name="useCustomDateHeader">
             <constant>false</constant>
         </setProperty>
-        <to uri="https4://dovetail.free.beeceptor.com/?transferException=true&amp;cookieStore=#flowCookieStore&amp;headerFilterStrategy=#CustomHttpHeaderFilterStrategy&amp;throwExceptionOnFailure=false&amp;maxTotalConnections=50&amp;connectionsPerRoute=10&amp;connectTimeout=180000&amp;soTimeout=180000&amp;lazyStartProducer=true&amp;followRedirects=true"/>
+        <to uri="https://dovetail.free.beeceptor.com/?transferException=true&amp;cookieStore=#flowCookieStore&amp;headerFilterStrategy=#CustomHttpHeaderFilterStrategy&amp;throwExceptionOnFailure=false&amp;maxTotalConnections=50&amp;connectionsPerRoute=10&amp;connectTimeout=180000&amp;soTimeout=180000&amp;lazyStartProducer=true&amp;followRedirects=true"/>
         <removeHeaders pattern="CamelHttpMethod" excludePattern="breadcrumbId"/>
         <removeHeaders pattern="user-agent" excludePattern="breadcrumbId"/>
         <choice>
@@ -70,7 +70,7 @@
                 <choice>
                     <when>
                         <simple>false == "false"</simple>
-                        <setHeader headerName="DOVETAIL_RetryError">
+                        <setHeader name="DOVETAIL_RetryError">
                             <constant>Maximum attempts reached</constant>
                         </setHeader>
                         <log message="HTTP Retry: Maximum attempts reached | Flow: 67c740bc349ced00070004a9 | API Endpoint: https://dovetail.free.beeceptor.com | Retry in 1000 milliseconds | Attempt ${header.DOVETAIL_RetryAttempts} | Body: ${body} | ResponseText: ${header.CamelHttpResponseText}" logName="org.assimbly.errorhandler.67c740bc349ced00070004a9" loggingLevel="WARN"/>
@@ -89,7 +89,7 @@
                     <constant>GET</constant>
                 </setProperty>
                 <process ref="SetOriginalMessageProcessor"/>
-                <setHeader headerName="AMQ_SCHEDULED_DELAY">
+                <setHeader name="AMQ_SCHEDULED_DELAY">
                     <constant>1000</constant>
                 </setHeader>
                 <removeHeaders pattern="CamelHttp*" excludePattern="breadcrumbId"/>
@@ -124,16 +124,16 @@
                 <process ref="SetOriginalMessageProcessor"/>
             </when>
         </choice>
-        <setHeader headerName="CamelHttpMethod">
+        <setHeader name="CamelHttpMethod">
             <constant>GET</constant>
         </setHeader>
-        <setHeader headerName="user-agent">
+        <setHeader name="user-agent">
             <constant>Dovetail/4.17.4</constant>
         </setHeader>
-        <setProperty propertyName="useCustomDateHeader">
+        <setProperty name="useCustomDateHeader">
             <constant>false</constant>
         </setProperty>
-        <to uri="http4://www.google.com?transferException=true&amp;cookieStore=#flowCookieStore&amp;headerFilterStrategy=#CustomHttpHeaderFilterStrategy&amp;throwExceptionOnFailure=false&amp;maxTotalConnections=50&amp;connectionsPerRoute=10&amp;connectTimeout=180000&amp;soTimeout=180000&amp;lazyStartProducer=true&amp;followRedirects=true"/>
+        <to uri="https://dovetail.free.beeceptor.com/?transferException=true&amp;cookieStore=#flowCookieStore&amp;headerFilterStrategy=#CustomHttpHeaderFilterStrategy&amp;throwExceptionOnFailure=false&amp;maxTotalConnections=50&amp;connectionsPerRoute=10&amp;connectTimeout=180000&amp;soTimeout=180000&amp;lazyStartProducer=true&amp;followRedirects=true"/>
         <removeHeaders pattern="CamelHttpMethod" excludePattern="breadcrumbId"/>
         <removeHeaders pattern="user-agent" excludePattern="breadcrumbId"/>
         <choice>
@@ -142,7 +142,7 @@
                 <choice>
                     <when>
                         <simple>false == "false"</simple>
-                        <setHeader headerName="DOVETAIL_RetryError">
+                        <setHeader name="DOVETAIL_RetryError">
                             <constant>Maximum attempts reached</constant>
                         </setHeader>
                         <log message="HTTP Retry: Maximum attempts reached | Flow: 67c740bc349ced00070004a9 | API Endpoint: https://dovetail.free.beeceptor.com | Retry in 1000 milliseconds | Attempt ${header.DOVETAIL_RetryAttempts} | Body: ${body} | ResponseText: ${header.CamelHttpResponseText}" logName="org.assimbly.errorhandler.67c740bc349ced00070004a9" loggingLevel="WARN"/>
@@ -161,7 +161,7 @@
                     <constant>GET</constant>
                 </setProperty>
                 <process ref="SetOriginalMessageProcessor"/>
-                <setHeader headerName="AMQ_SCHEDULED_DELAY">
+                <setHeader name="AMQ_SCHEDULED_DELAY">
                     <constant>1000</constant>
                 </setHeader>
                 <removeHeaders pattern="CamelHttp*" excludePattern="breadcrumbId"/>
