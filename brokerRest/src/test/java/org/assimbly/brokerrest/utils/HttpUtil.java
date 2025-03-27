@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class HttpUtil {
 
     public static HttpResponse<String> makeHttpCall(
-            String url, String method, String body, HashMap<String,String> params, HashMap<String,String> headers
+            String url, String method, Object body, HashMap<String,String> params, HashMap<String,String> headers
     ) {
 
         try {
@@ -27,20 +27,29 @@ public class HttpUtil {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create(fullUrl));
 
             // add headers
-            headers.forEach(requestBuilder::header);
+            if(headers != null) {
+                headers.forEach(requestBuilder::header);
+            }
+
+            HttpRequest.BodyPublisher bodyPublisher;
+            if (body instanceof String) {
+                bodyPublisher = HttpRequest.BodyPublishers.ofString((String) body);
+            } else if (body instanceof byte[]) {
+                bodyPublisher = HttpRequest.BodyPublishers.ofByteArray((byte[]) body);
+            } else {
+                bodyPublisher = HttpRequest.BodyPublishers.noBody();
+            }
 
             // set method and body dynamically
             switch (method.toUpperCase()) {
                 case "GET" -> requestBuilder.GET();
-                case "POST" -> requestBuilder.POST(HttpRequest.BodyPublishers.ofString(body));
-                case "PUT" -> requestBuilder.PUT(HttpRequest.BodyPublishers.ofString(body));
+                case "POST" -> requestBuilder.POST(bodyPublisher);
+                case "PUT" -> requestBuilder.PUT(bodyPublisher);
                 case "DELETE" -> requestBuilder.DELETE();
-                default -> requestBuilder.method(method, body != null ? HttpRequest.BodyPublishers.ofString(body) : HttpRequest.BodyPublishers.noBody());
+                default -> requestBuilder.method(method, bodyPublisher);
             }
 
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-
-            return response;
+            return client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
         } catch (Exception e) {
             return null;
