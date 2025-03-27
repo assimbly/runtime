@@ -23,7 +23,7 @@ public class AssimblyGatewayBrokerContainer {
 
     public void init() {
         // initialize assimbly gateway broker container
-        gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:latest")
+        gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:development")
                 .withExposedPorts(8088)
                 .withNetwork(network)
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
