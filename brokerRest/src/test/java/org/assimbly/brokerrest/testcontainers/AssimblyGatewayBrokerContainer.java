@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.net.URL;
@@ -15,11 +14,15 @@ public class AssimblyGatewayBrokerContainer {
 
     private static final Logger log = LoggerFactory.getLogger(AssimblyGatewayBrokerContainer.class);
 
-    private static final GenericContainer<?> gatewayBrokerContainer;
-    private static final GenericContainer<?> gatewayHeadlessContainer;
-    private static final Network network = Network.newNetwork();
+    private final Network network;
+    private GenericContainer<?> gatewayBrokerContainer;
+    private GenericContainer<?> gatewayHeadlessContainer;
 
-    static {
+    public AssimblyGatewayBrokerContainer() {
+        this.network = Network.newNetwork();
+    }
+
+    public void init() {
         // initialize assimbly gateway broker container
         gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:development")
                 .withExposedPorts(8088)
@@ -30,7 +33,6 @@ public class AssimblyGatewayBrokerContainer {
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort())
                 .withFileSystemBind(getResourcePath(), "/data/.assimbly/");
-//                .withLogConsumer(new Slf4jLogConsumer(log));
         gatewayBrokerContainer.start();
 
         // initialize assimbly gateway headless container
@@ -41,8 +43,16 @@ public class AssimblyGatewayBrokerContainer {
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.MONGO_SECRET_KEY)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort());
-//                .withLogConsumer(new Slf4jLogConsumer(log));
         gatewayHeadlessContainer.start();
+    }
+
+    public void stop() {
+        if (gatewayBrokerContainer != null) {
+            gatewayBrokerContainer.stop();
+        }
+        if (gatewayHeadlessContainer != null) {
+            gatewayHeadlessContainer.stop();
+        }
     }
 
     private static String getResourcePath() {
@@ -55,19 +65,18 @@ public class AssimblyGatewayBrokerContainer {
         }
     }
 
-    public static String getBrokerBaseUrl() {
-        String host = gatewayBrokerContainer.getHost();
-        Integer port = gatewayBrokerContainer.getMappedPort(8088);
-        return "http://" + host + ":" + port;
+    public String getBrokerBaseUrl() {
+        if (gatewayBrokerContainer == null) {
+            throw new IllegalStateException("Container has not been initialized. Call init() first.");
+        }
+        return "http://" + gatewayBrokerContainer.getHost() + ":" + gatewayBrokerContainer.getMappedPort(8088);
     }
 
-    public static String getHeadlessBaseUrl() {
-        String host = gatewayHeadlessContainer.getHost();
-        Integer port = gatewayHeadlessContainer.getMappedPort(8088);
-        return "http://" + host + ":" + port;
+    public String getHeadlessBaseUrl() {
+        if (gatewayHeadlessContainer == null) {
+            throw new IllegalStateException("Container has not been initialized. Call init() first.");
+        }
+        return "http://" + gatewayHeadlessContainer.getHost() + ":" + gatewayHeadlessContainer.getMappedPort(8088);
     }
 
-    public static void waitFor(String expLog, int numTimes) {
-        gatewayHeadlessContainer.waitingFor(Wait.forLogMessage(expLog, numTimes));
-    }
 }

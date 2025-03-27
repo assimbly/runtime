@@ -16,11 +16,24 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class HealthBrokerResourceTest {
 
+    private static AssimblyGatewayBrokerContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayBrokerContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldGetEngineDataInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
             String url = baseUrl + "/health/broker/engine";
 
             // headers
@@ -54,7 +67,7 @@ public class HealthBrokerResourceTest {
     void shouldGetJvmBrokerInfo() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
             String url = baseUrl + "/health/broker/jvm";
 
             // headers

@@ -4,6 +4,8 @@ import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.brokerrest.utils.HttpUtil;
 import org.assimbly.brokerrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -15,11 +17,24 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class BrokerConfigureRuntimeTest {
 
+    private static AssimblyGatewayBrokerContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayBrokerContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
+
     @Test
     void shouldGetBrokerConfiguration() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
             String url = String.format("%s/api/brokers/%s/configure", baseUrl, "1");
 
             // params
@@ -46,7 +61,7 @@ public class BrokerConfigureRuntimeTest {
     void shouldSetBrokerConfiguration() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
             String url = String.format("%s/api/brokers/%s/configure", baseUrl, "1");
 
             // params

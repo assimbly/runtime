@@ -19,22 +19,31 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MessageBrokerRuntimeTest {
 
-    private static final String brokerType = "classic";
+    private static final String BROKER_TYPE = "classic";
 
     private static final String QUEUE_TEST_1 = "queue_test_1";
     private static final String QUEUE_TEST_2 = "queue_test_2";
 
-    private static final String body = "Hello world!";
+    private static final String BODY = "Hello world!";
 
     private static boolean messageSentOnQueue1 = false;
     private static boolean messageMovedFromQueue1 = false;
 
     private static String messageIdOnQueue1;
 
+    private static AssimblyGatewayBrokerContainer container;
+
     @BeforeAll
     static void init() {
+        container = new AssimblyGatewayBrokerContainer();
+        container.init();
         createQueue(QUEUE_TEST_1);
         createQueue(QUEUE_TEST_2);
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
     }
 
     @BeforeEach
@@ -43,8 +52,8 @@ class MessageBrokerRuntimeTest {
 
             if (testInfo.getTags().contains("NeedsMessageOnQueueTest1") && (!messageSentOnQueue1 || messageMovedFromQueue1)) {
                 // url
-                String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-                String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, brokerType, QUEUE_TEST_1);
+                String baseUrl = container.getBrokerBaseUrl();
+                String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
 
                 // params
                 HashMap<String, String> params = new HashMap();
@@ -56,7 +65,7 @@ class MessageBrokerRuntimeTest {
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
                 // endpoint call
-                HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, params, headers);
+                HttpUtil.makeHttpCall(url, "POST", BODY, params, headers);
 
                 // get messageId from queue
                 messageIdOnQueue1 = getMessageIdFromQueueName(QUEUE_TEST_1);
@@ -71,8 +80,8 @@ class MessageBrokerRuntimeTest {
 
     private static void createQueue(String queueName) {
         // url
-        String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-        String url = String.format("%s/api/brokers/%s/queue/%s", baseUrl, brokerType, queueName);
+        String baseUrl = container.getBrokerBaseUrl();
+        String url = String.format("%s/api/brokers/%s/queue/%s", baseUrl, BROKER_TYPE, queueName);
 
         // headers
         HashMap<String, String> headers = new HashMap();
@@ -85,8 +94,8 @@ class MessageBrokerRuntimeTest {
     private static String getMessageIdFromQueueName(String queueName) {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, brokerType, queueName);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, BROKER_TYPE, queueName);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -117,8 +126,8 @@ class MessageBrokerRuntimeTest {
     void shouldSendMessageToEndpoint() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, brokerType, QUEUE_TEST_1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
 
             // params
             HashMap<String, String> params = new HashMap();
@@ -130,7 +139,7 @@ class MessageBrokerRuntimeTest {
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, params, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", BODY, params, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -160,8 +169,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/delayedmessages/%s/count", baseUrl, brokerType, QUEUE_TEST_1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/delayedmessages/%s/count", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -196,8 +205,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetFlowsMessageCount test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/flows/message/count", baseUrl, brokerType);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/flows/message/count", baseUrl, BROKER_TYPE);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -232,8 +241,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCountByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/count", baseUrl, brokerType, QUEUE_TEST_1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/messages/%s/count", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -268,8 +277,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldBrowseMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, brokerType, QUEUE_TEST_1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -292,7 +301,7 @@ class MessageBrokerRuntimeTest {
             assertThat(messageJson.get("headers")).isNotNull();
             assertThat(messageJson.get("jmsHeaders")).isNotNull();
             assertThat(messageJson.get("messageid").asText()).isNotNull();
-            assertThat(messageJson.get("body").asText()).isEqualTo(body);
+            assertThat(messageJson.get("body").asText()).isEqualTo(BODY);
             assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
             boolean isValid = Utils.isValidDate(messageJson.get("timestamp").asText(), "E MMM dd HH:mm:ss z yyyy");
             assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
@@ -312,9 +321,9 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldFilterMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
 
-            String url = String.format("%s/api/brokers/%s/messages/%s/filter", baseUrl, brokerType, QUEUE_TEST_1);
+            String url = String.format("%s/api/brokers/%s/messages/%s/filter", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -352,18 +361,15 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/count", baseUrl, brokerType);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/messages/count", baseUrl, BROKER_TYPE);
 
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // body
-            String body = "queue_test_1";
-
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", QUEUE_TEST_1, null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -392,8 +398,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/browse/%s", baseUrl, brokerType, QUEUE_TEST_1, messageIdOnQueue1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/message/%s/browse/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, messageIdOnQueue1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -416,7 +422,7 @@ class MessageBrokerRuntimeTest {
             assertThat(messageJson.get("headers")).isNotNull();
             assertThat(messageJson.get("jmsHeaders")).isNotNull();
             assertThat(messageJson.get("messageid").asText()).isNotNull();
-            assertThat(messageJson.get("body").asText()).isEqualTo(body);
+            assertThat(messageJson.get("body").asText()).isEqualTo(BODY);
             assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
             boolean isValid = Utils.isValidDate(messageJson.get("timestamp").asText(), "E MMM dd HH:mm:ss z yyyy");
             assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
@@ -435,8 +441,8 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/%s", baseUrl, brokerType, QUEUE_TEST_1, messageIdOnQueue1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/message/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, messageIdOnQueue1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -474,9 +480,9 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
+            String baseUrl = container.getBrokerBaseUrl();
 
-            String url = String.format("%s/api/brokers/%s/messages/%s", baseUrl, brokerType, QUEUE_TEST_1);
+            String url = String.format("%s/api/brokers/%s/messages/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -510,8 +516,8 @@ class MessageBrokerRuntimeTest {
     void shouldMoveMessageFromQueue1ToQueue2() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/%s/%s", baseUrl, brokerType, QUEUE_TEST_1, QUEUE_TEST_2, messageIdOnQueue1);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/message/%s/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, QUEUE_TEST_2, messageIdOnQueue1);
 
             // headers
             HashMap<String, String> headers = new HashMap();
@@ -546,8 +552,8 @@ class MessageBrokerRuntimeTest {
     void shouldMoveMessagesFromQueue1ToQueue2() {
         try {
             // url
-            String baseUrl = AssimblyGatewayBrokerContainer.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/%s", baseUrl, brokerType, QUEUE_TEST_1, QUEUE_TEST_2);
+            String baseUrl = container.getBrokerBaseUrl();
+            String url = String.format("%s/api/brokers/%s/messages/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, QUEUE_TEST_2);
 
             // headers
             HashMap<String, String> headers = new HashMap();
