@@ -1,11 +1,21 @@
 package org.assimbly.integrationrest.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 
 public class Utils {
+
+    private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
     public static boolean isValidDate(String dateStr, String format) {
         try {
@@ -33,5 +43,27 @@ public class Utils {
 
     public static String getNowDate(String format) {
         return Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(format));
+    }
+
+    public static String readFileAsStringFromResources(String fileName) throws IOException {
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
+            return Files.readString(path, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error(String.format("Error to load %s file from resources", fileName), e);
+            return null;
+        }
+    }
+
+    public static byte[] readFileAsBytesFromResources(String fileName) throws IOException {
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
+            return Files.readAllBytes(path);
+        } catch (Exception e) {
+            log.error(String.format("Error to load %s file from resources", fileName), e);
+            return null;
+        }
     }
 }

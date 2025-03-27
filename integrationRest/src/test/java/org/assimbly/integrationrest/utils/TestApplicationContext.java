@@ -3,11 +3,6 @@ package org.assimbly.integrationrest.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Properties;
 
 public class TestApplicationContext {
@@ -44,7 +39,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67921474ecaafe0007000000");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "3d01e43c-6e86-4c9e-9972-7c872ecc37f6");
@@ -62,7 +57,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = readFileAsStringFromResources("SchedulerCamelContext.xml");
+            String camelContext = Utils.readFileAsStringFromResources("SchedulerCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67c740bc349ced00070004a9");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
@@ -80,7 +75,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String collector = readFileAsStringFromResources("CollectorExample.json");
+            String collector = Utils.readFileAsStringFromResources("CollectorExample.json");
 
             props.setProperty(CollectorField.FLOW_ID_LOG.name(), "67c740bc349ced00070004a9_log");
             props.setProperty(CollectorField.FLOW_ID_ROUTE.name(), "67c740bc349ced00070004a9_route");
@@ -90,28 +85,6 @@ public class TestApplicationContext {
             log.error("Error to load collector example file", e);
         }
         return props;
-    }
-
-    public static String readFileAsStringFromResources(String fileName) throws IOException {
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
-            return Files.readString(path, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            log.error(String.format("Error to load %s file from resources", fileName), e);
-            return null;
-        }
-    }
-
-    public static byte[] readFileAsBytesFromResources(String fileName) throws IOException {
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
-            return Files.readAllBytes(path);
-        } catch (Exception e) {
-            log.error(String.format("Error to load %s file from resources", fileName), e);
-            return null;
-        }
     }
 
 }
