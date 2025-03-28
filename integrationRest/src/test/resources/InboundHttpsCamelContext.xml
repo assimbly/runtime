@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<camelContext xmlns="http://camel.apache.org/schema/blueprint" id="67921474ecaafe0007000000" useMDCLogging="true" streamCache="true">
+<camelContext id="67921474ecaafe0007000000" useMDCLogging="true" streamCache="true">
     <jmxAgent id="agent" loadStatisticsEnabled="true" />
     <streamCaching id="streamCacheConfig" spoolThreshold="0" spoolDirectory="tmp/camelcontext-#camelId#" spoolUsedHeapMemoryThreshold="70" />
     <threadPoolProfile id="wiretapProfile" defaultProfile="false" poolSize="0" maxPoolSize="5" maxQueueSize="2000" rejectedPolicy="DiscardOldest" keepAliveTime="10" />
