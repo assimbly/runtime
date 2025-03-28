@@ -77,7 +77,7 @@ class FlowConfigurerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // body
-            String camelContext = TestApplicationContext.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", camelContext, null, headers);

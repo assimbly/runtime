@@ -88,7 +88,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "changeit");
 
             // body
-            String certificate = TestApplicationContext.readFileAsStringFromResources("certificates/certificate.pem");
+            String certificate = Utils.readFileAsStringFromResources("certificates/certificate.pem");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", certificate, null, headers);
@@ -129,7 +129,7 @@ class CertificateManagerRuntimeTest {
             headers.put("password", "changeit");
 
             // body
-            byte[] certificateBytes = TestApplicationContext.readFileAsBytesFromResources("certificates/keystore.p12");
+            byte[] certificateBytes = Utils.readFileAsBytesFromResources("certificates/keystore.p12");
             String base64Encoded = Base64.getEncoder().encodeToString(certificateBytes);
 
             // endpoint call
@@ -247,7 +247,7 @@ class CertificateManagerRuntimeTest {
             // body
             JSONObject certificate = new JSONObject();
             certificate.put("certificateName", "example.com");
-            certificate.put("certificateFile", TestApplicationContext.readFileAsStringFromResources("certificates/certificate.pem"));
+            certificate.put("certificateFile", Utils.readFileAsStringFromResources("certificates/certificate.pem"));
             certificate.put("certificateExpiry", "2000-12-31T12:00:00.123Z");
             JSONArray certificateArray = new JSONArray();
             certificateArray.put(certificate);
