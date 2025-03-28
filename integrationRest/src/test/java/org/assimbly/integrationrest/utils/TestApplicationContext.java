@@ -25,6 +25,7 @@ public class TestApplicationContext {
         ROUTE_ID_1,
         ROUTE_ID_2,
         ROUTE_ID_3,
+        ROUTE_1,
         CAMEL_CONTEXT
     }
 
@@ -63,6 +64,7 @@ public class TestApplicationContext {
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
             props.setProperty(CamelContextField.ROUTE_ID_2.name(), "9aa3aff8-e37c-4059-b9fd-4321454fd9ab");
             props.setProperty(CamelContextField.ROUTE_ID_3.name(), "979912f6-f6a1-43c8-9aa9-f8b480d31237");
+            props.setProperty(CamelContextField.ROUTE_1.name(), Utils.extractRouteFromXmlByRouteId(camelContext, "0df9d084-4783-492b-a9d4-488f2ee298a5"));
             props.setProperty(CamelContextField.CAMEL_CONTEXT.name(), camelContext);
         } catch (Exception e) {
             log.error("Error to build scheduler camel context example", e);
