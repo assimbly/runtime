@@ -588,6 +588,56 @@ class FlowManagerRuntimeTest {
         }
     }
 
+    @Test
+    @Tag("NeedsSchedulerFlowInstalled")
+    @Order(31)
+    void shouldInstallRoute() {
+        try {
+            // url
+            String baseUrl = container.getBaseUrl();
+            String url = String.format("%s/api/integration/route/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_1.name()), null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode flowJson = responseJson.get("flow");
+
+            JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+            assertThat(stepsLoadedJson.get("total").asInt()).isPositive();
+            assertThat(stepsLoadedJson.get("successfully").asInt()).isPositive();
+            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
+
+            assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
+            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
+            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
+            assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
+            assertThat(flowJson.get("event").asText()).isEqualTo("start");
+            assertThat(flowJson.get("version").asText()).isEqualTo("");
+
+            JsonNode stepsJson = flowJson.get("steps");
+            assertThat(stepsJson.isArray()).isTrue();
+            assertThat(stepsJson.size()).isPositive();
+
+            JsonNode stepJson = stepsJson.get(0);
+            assertThat(stepJson.get("id").asText()).isNotNull();
+            assertThat(stepJson.get("type").asText()).isEqualTo("route");
+            assertThat(stepJson.get("status").asText()).isEqualTo("success");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
     @Disabled
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
