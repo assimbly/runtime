@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>5.0.2-SNAPSHOT</version>
+    <version>5.0.5-SNAPSHOT</version>
   </parent>
 
   <name>integration</name>
