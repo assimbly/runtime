@@ -5,15 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
-import static org.assertj.core.api.Assertions.*;
-
 import java.net.http.HttpResponse;
 import java.util.HashMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class ValidationRuntimeTest {
 
@@ -86,4 +88,38 @@ class ValidationRuntimeTest {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
     }
+
+    @Test
+    void shouldValidateXsltWithSuccess() {
+        try {
+            // URL
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/xslt";
+
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("StopTest", "false");
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("xsltUrl", "https://www.w3schools.com/xml/cdcatalog_client.xsl");
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.isArray()).isTrue();
+            assertThat(responseJson.size()).isZero();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
 }
