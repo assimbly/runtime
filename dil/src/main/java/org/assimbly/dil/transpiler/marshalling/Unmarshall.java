@@ -1,6 +1,7 @@
 package org.assimbly.dil.transpiler.marshalling;
 
 import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
@@ -131,8 +132,8 @@ public class Unmarshall {
 			}
 
 			if(routeTemplateList.contains(type)) {
-				setRouteTemplate(i + 1, stepId, type);
 				setBlocks(stepElement, stepId, type);
+				setRouteTemplate(i + 1, stepId, type);
 			}else{
 				setBlocks(stepElement, stepId, type);
 			}
@@ -210,10 +211,39 @@ public class Unmarshall {
 		String baseUri = conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 		String options = getOptions(optionProperties);
+		options = addConnectionFactoryOption(baseUri, options, stepId, type);
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
 		properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+
+	}
+
+	private String addConnectionFactoryOption(String baseUri, String options, String stepId, String type) {
+
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
+		String componentType = baseUri.split(":")[0];
+
+		String[] connectionTypes = {
+				"activemq", "amazonmq", "jms", "sjms", "sjms2",
+				"amqp", "amqps", "rabbitmq", "spring-rabbitmq"
+		};
+		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(componentType);
+
+
+		if(connectionId != null && !options.contains("connectionFactory") && hasConnectionFactory){
+
+			String option = "connectionFactory=#bean:" + connectionId;
+
+			if(options.isEmpty()){
+				options = option;
+			}else{
+				options = options + "&" + option;
+			}
+
+		}
+
+		return options;
 
 	}
 

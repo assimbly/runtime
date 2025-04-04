@@ -28,6 +28,8 @@ public class AMQPConnection {
     private String username;
     private String password;
 
+    private boolean sslEnabled = false;
+
     public AMQPConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
         this.context = context;
         this.properties = properties;
@@ -36,7 +38,7 @@ public class AMQPConnection {
     }
 
 
-    public void start(boolean sslEnabled) throws Exception {
+    public void start() throws Exception {
 
         log.info("Setting AMQP client connection.");
 
@@ -54,6 +56,10 @@ public class AMQPConnection {
         url = properties.getProperty("connection." + connectionId + ".url");
         username = properties.getProperty("connection." + connectionId + ".username");
         password = properties.getProperty("connection." + connectionId + ".password");
+
+        if(componentName.equals("amqps")){
+            sslEnabled = true;
+        }
 
     }
 

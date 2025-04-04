@@ -158,8 +158,10 @@ public class FlowConfigurerRuntime {
 	)
 	public ResponseEntity<String> getComponents(
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-			@RequestHeader(value = "IncludeCustomComponents") Boolean includeCustomComponents
+			@RequestHeader(value = "IncludeCustomComponents") boolean includeCustomComponents
 	) throws Exception {
+
+		log.info("Get components");
 
 		plainResponse = true;
 

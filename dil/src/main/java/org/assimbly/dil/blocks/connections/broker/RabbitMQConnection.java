@@ -1,6 +1,7 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,22 +32,15 @@ public class RabbitMQConnection {
 
     public void start() throws Exception {
 
-        log.info("Setting up AMQP client connection for RabbitMQ.");
-
         setFields();
 
-        if (context.hasComponent(componentName) == null) {
-            if (uri != null) {
-                setConnection();
-            }else if(host!=null && port!=null){
-                setConnection();
-            }else{
-                throw new Exception("RabbitMQ connection parameters are invalid. Broker uri or host/port are required");
-            }
-        } else {
-            log.error("RabbitMQ connection parameters are invalid.");
-            throw new Exception("RabbitMQ connection parameters are invalid.\n");
+        if(checkConnection()){
+            log.info("Creating new AMQP client connection for RabbitMQ.");
+            setConnection();
+        }else{
+            log.info("Reuse AMQP client connection for RabbitMQ.");
         }
+
     }
 
     private void setFields(){
@@ -60,41 +54,54 @@ public class RabbitMQConnection {
 
     }
 
+    private boolean checkConnection() throws Exception {
+
+        Object isRegistered = context.getRegistry().lookupByName(connectionId);
+
+        if(isRegistered != null){
+            return false;
+        }
+
+        if (context.hasComponent(componentName) == null) {
+            throw new Exception(componentName + " isn't available on the claspath");
+        }
+
+        if (uri == null && (host == null && port == null)) {
+            throw new Exception(componentName + " connection parameters are invalid. Broker uri or host/port are required");
+        }
+
+        return true;
+
+    }
+
+
     private void setConnection() {
 
-        if(context.getRegistry().lookupByName(connectionId) == null) {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 
-            log.info("Create new rabbitMQ Connection with connection-id: " + connectionId);
-
-            CachingConnectionFactory rabbitMQConnectionFactory = new CachingConnectionFactory();
-
-            if (uri != null) {
-                rabbitMQConnectionFactory.setUri(uri);
-            } else if (host != null && port != null) {
-                rabbitMQConnectionFactory.setHost(host);
-                rabbitMQConnectionFactory.setPort(Integer.parseInt(port));
-            } else {
-                rabbitMQConnectionFactory.setHost("localhost");
-                rabbitMQConnectionFactory.setPort(5672);
-            }
-
-            if (virtualHost != null) {
-                rabbitMQConnectionFactory.setVirtualHost(virtualHost);
-            } else {
-                rabbitMQConnectionFactory.setVirtualHost("/");
-            }
-
-            if (username != null && password != null) {
-                rabbitMQConnectionFactory.setUsername(username);
-                rabbitMQConnectionFactory.setPassword(password);
-            }
-
-            rabbitMQConnectionFactory.start();
-
-            context.getRegistry().bind(connectionId, rabbitMQConnectionFactory);
-        }else{
-            log.info("Reuse RabbitMQ Connection with connection-id: " + connectionId);
+        if (uri != null) {
+            connectionFactory.setUri(uri);
+        } else if (host != null && port != null) {
+            connectionFactory.setHost(host);
+            connectionFactory.setPort(Integer.parseInt(port));
+        } else {
+            connectionFactory.setHost("localhost");
+            connectionFactory.setPort(5672);
         }
+
+        if (virtualHost != null) {
+            connectionFactory.setVirtualHost(virtualHost);
+        } else {
+            connectionFactory.setVirtualHost("/");
+        }
+
+        if (username != null && password != null) {
+            connectionFactory.setUsername(username);
+            connectionFactory.setPassword(password);
+        }
+
+        connectionFactory.start();
+        context.getRegistry().bind(connectionId, connectionFactory);
 
     }
 

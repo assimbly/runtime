@@ -58,42 +58,36 @@ public class Connection {
 
         if(connectionType==null){
             connectionType = "unconfigured";
+        }else{
+            connectionType = connectionType.toLowerCase();
         }
 
-        switch (connectionType.toLowerCase()) {
-            case "activemq":
-                new ActiveMQConnection(context, decryptedProperties, connectionId, "activeMQ").start();
-                break;
-            case "amazonmq":
-                new ActiveMQConnection(context, decryptedProperties, connectionId, "amazonmq").start();
-                break;
-            case "sonicmq":
+        switch (connectionType) {
+
+            case "activemq", "amazonmq", "jms", "sjms", "sjms2" ->
+                    new JMSConnection(context, decryptedProperties, connectionId, connectionType).start();
+
+            case "amqp", "amqps" ->
+                    new AMQPConnection(context, decryptedProperties, connectionId, connectionType).start();
+
+            case "rabbitmq", "spring-rabbitmq" ->
+                    new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
+
+            case "ibmq" ->
+                    new IBMMQConnection(context, decryptedProperties, connectionId, connectionType).start();
+
+            case "sonicmq" -> {
                 String connectId = stepType + connectionIdValue + RANDOM.nextInt(1000000);
-                new SonicMQConnection(context, decryptedProperties, connectionId, "sonicmq").start(flowId, connectId, connectionIdValue);
+                new SonicMQConnection(context, decryptedProperties, connectionId, connectionType).start(flowId, connectId, connectionIdValue);
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-                properties.put(stepType + "." + stepId + ".uri", uri);						
-                break;
-            case "mq":
-                new MQConnection(context, decryptedProperties, connectionId, "sjms").start();
-                break;
-            case "amqps":
-                new AMQPConnection(context, decryptedProperties, connectionId, "amqps").start(true);
-                break;
-            case "amqp":
-                new AMQPConnection(context, decryptedProperties, connectionId, "amqp").start(false);
-                break;
-            case "ibmq":
-                new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start();
-                break;
-            case "rabbitmq", "spring-rabbitmq":
-                new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
-                break;
-            case "jdbc":
-                new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
-                break;
-            default:
-                log.error("Connection parameters for connection " + connectionType + " are not implemented");
-                throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
+                properties.put(stepType + "." + stepId + ".uri", uri);
+            }
+
+            case "jdbc" ->
+                    new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
+
+            default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
+
         }
 
 	}

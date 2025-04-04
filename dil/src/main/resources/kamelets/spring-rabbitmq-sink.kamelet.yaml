@@ -1,24 +1,24 @@
 apiVersion: camel.apache.org/v1alpha1
 kind: Kamelet
 metadata:
-  name: rabbitmq-action
+  name: spring-rabbitmq-sink
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "rabbitmq action"
+    title: "rabbitmq sink"
     description: |-
       Sends messages to RabbitMQ
     type: object
     properties:
       path:
-        title: Path
-        description: Path
-        type: string
+          title: Path
+          description: Path
+          type: string
       options:
-        title: Options
-        description: Options
-        type: string
+          title: Options
+          description: Options
+          type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -41,5 +41,3 @@ spec:
               simple: "${exchangeProperty.excludedHeader_breadcrumbId}"
           - removeProperty:
               name: "excludedHeader_breadcrumbId"
-          - to:
-              uri: "kamelet:sink"

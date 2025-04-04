@@ -20,13 +20,13 @@ import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
-import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
@@ -374,7 +374,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		for(String resourceName: resourceNames){
 
-			if(resourceName.equals("kamelets/resolve-pojo-schema-action.kamelet.yaml") || resourceName.equals("kamelets/djl-image-to-text-action.kamelet.yaml")){
+			if(resourceName.equals("kamelets/resolve-pojo-schema-action.kamelet.yaml")
+					|| resourceName.equals("kamelets/djl-image-to-text-action.kamelet.yaml")){
 				continue;
 			}
 
@@ -922,25 +923,32 @@ public class CamelIntegration extends BaseIntegration {
 
 	//Manage flows
 
-	public String loadFlow(TreeMap<String, String> props)  {
+	public String loadFlow(TreeMap<String, String> properties)  {
+
+		this.props = properties;
 
 		try{
-			// add custom connections if needed
-			addCustomActiveMQConnection();
 
-			// add custom connections if needed
-			addCustomRabbitMQConnection(new TreeMap<>(props));
+			if(properties.containsKey("frontend") && properties.get("frontend").equals("dovetail")) {
+
+				// add custom connections if needed
+				addCustomActiveMQConnection();
+
+				// add custom connections if needed
+				addCustomRabbitMQConnection(new TreeMap<>(properties));
+
+			}
 
 			//create connections & install dependencies if needed
-			createConnections(props);
+			createConnections(properties);
 
-			Map<String, String> mutualSSLInfoMap = getMutualSSLInfoFromProps(props);
+			Map<String, String> mutualSSLInfoMap = getMutualSSLInfoFromProps(properties);
 			if(mutualSSLInfoMap!=null && !mutualSSLInfoMap.isEmpty()) {
 				// add certificate on keystore
 				addCertificateFromUrl(mutualSSLInfoMap.get(RESOURCE_PROP), mutualSSLInfoMap.get(AUTH_PASSWORD_PROP));
 			}
 
-			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
+			FlowLoader flow = new FlowLoader(properties, flowLoaderReport);
 
 			flow.addRoutesToCamelContext(context);
 
@@ -1029,27 +1037,22 @@ public class CamelIntegration extends BaseIntegration {
 
 		try {
 
-			String activemqName = "activemq";
-			String brokerHost = System.getenv(BROKER_HOST);
-			String brokerPort = System.getenv(BROKER_PORT);
-			String activemqUrl = (
-					brokerHost!=null && brokerPort!=null ?
-							String.format("tcp://%s:%s", brokerHost, brokerPort) :
-							"tcp://localhost:61616"
-			);
-
-			Component activemqComp = this.context.getComponent(activemqName);
+			Component activemqComp = this.context.getComponent("activemq");
 
 			if (activemqComp == null) {
-				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-				jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
-				this.context.addComponent(activemqName, jmsComponent);
+				String brokerHost = getEnvironmentVariable(BROKER_HOST,"localhost");
+				int brokerPort = getEnvironmentVariableAsInteger(BROKER_PORT,61616);
+				String activemqUrl = String.format("tcp://%s:%s", brokerHost, brokerPort);
+
+				log.info("Adding custom ActiveMQ connection. URL: " + activemqUrl);
+
+				this.context.addComponent("activemq", getJmsComponent(activemqUrl));
+
 			}
 
 		} catch (Exception e) {
-			log.error("Error to add custom activeMQ connection", e);
+			log.error("Error to add custom ActiveMQ connection", e);
 		}
 
 	}
@@ -1098,45 +1101,45 @@ public class CamelIntegration extends BaseIntegration {
 
 
 
-	private static JmsComponent getJmsComponent(String activemqUrl) {
+	private static SjmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+		int maxConnections = getEnvironmentVariableAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
+		int idleTimeout = getEnvironmentVariableAsInteger("AMQ_IDLE_TIMEOUT",5000);
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections);
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);
 
-		JmsComponent jmsComponent = new JmsComponent();
-		jmsComponent.setConnectionFactory(pooledConnectionFactory);
-		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-		jmsComponent.setIncludeCorrelationIDAsBytes(false);
+		SjmsComponent sjmsComponent = new SjmsComponent();
+		sjmsComponent.setConnectionFactory(pooledConnectionFactory);
+		sjmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 
-		return jmsComponent;
+		return sjmsComponent;
 	}
 
-	public void createConnections(TreeMap<String, String> props) throws Exception {
+	public void createConnections(TreeMap<String, String> properties) throws Exception {
 
-		for (Map.Entry<String, String> entry : props.entrySet()){
+		for (Map.Entry<String, String> entry : properties.entrySet()){
 
 			String key = entry.getKey();
 
 			if (key.endsWith("connection.id")){
-				setConnection(props, key);
+				setConnection(properties, key);
 			}
 
-			if (key.equals("flow.dependencies") && props.get(key) != null){
+			if (key.equals("flow.dependencies") && properties.get(key) != null){
 
-				String[] schemes = StringUtils.split(props.get(key), ",");
+				String[] schemes = StringUtils.split(properties.get(key), ",");
 
 				for (String scheme : schemes) {
 					createConnection(scheme);
 				}
 			}
 		}
+
 	}
 
 	private void createConnection(String scheme) throws Exception {
@@ -2750,18 +2753,12 @@ public class CamelIntegration extends BaseIntegration {
 		return doc;
 	}
 
-	@Override
-	public String getComponents(Boolean includeCustomComponents, String mediaType) throws Exception {
-		return "";
-	}
-
 	public String getDocumentationVersion() {
 
 		DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
 		return catalog.getCatalogVersion();
 	}
-
 
 	public String getComponents(boolean includeCustomComponents, String mediaType) throws Exception {
 
@@ -3250,11 +3247,21 @@ public class CamelIntegration extends BaseIntegration {
 		return new BigDecimal(value);
 	}
 
-	private static int getEnvironmentVarAsInteger(String envName, int defaultValue){
+	private static String getEnvironmentVariable(String envName, String defaultValue){
+		String environmentVariable = System.getenv(envName);
+		String value = defaultValue;
+		if (environmentVariable != null && !environmentVariable.isEmpty()) {
+			value = environmentVariable;
+		}
+		return value;
+	}
+
+	private static int getEnvironmentVariableAsInteger(String envName, int defaultValue){
+		String environmentVariable = System.getenv(envName);
 		int value = defaultValue;
-		if (envName != null && !envName.isEmpty()) {
+		if (environmentVariable != null && !environmentVariable.isEmpty()) {
 			try {
-				value = Integer.parseInt(envName);
+				value = Integer.parseInt(environmentVariable);
 			} catch (NumberFormatException e) {
 				log.error("Invalid value for {}: {}", envName, value);
 			}

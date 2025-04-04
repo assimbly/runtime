@@ -1,7 +1,7 @@
 apiVersion: camel.apache.org/v1alpha1
 kind: Kamelet
 metadata:
-  name: rabbitmq-source
+  name: spring-rabbitmq-source
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
