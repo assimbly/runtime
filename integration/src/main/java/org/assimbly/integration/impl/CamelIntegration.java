@@ -72,7 +72,6 @@ import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -3417,7 +3416,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 
-		//sslConfiguration.initTrustStoresForHttpsCertificateValidator(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
+		sslConfiguration.initTrustStores(keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword());
 
 	}
 
