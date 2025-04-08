@@ -264,6 +264,37 @@ class ValidationRuntimeTest {
         }
     }
 
+    @Test
+    void shouldValidateFtpWithSuccess() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/ftp";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            //body (i use a test rebex - https://ftptest.net/)
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("host", "test.rebex.net");
+            bodyJson.put("port", 21);
+            bodyJson.put("user", "demo");
+            bodyJson.put("pwd", "password");
+            bodyJson.put("protocol", "ftp");
+            bodyJson.put("explicitTLS", false);
+
+            //endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            //asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
 
 
 }
