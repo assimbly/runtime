@@ -1,13 +1,20 @@
 package org.assimbly.integrationrest.testcontainers;
 
 import org.assimbly.integrationrest.utils.TestApplicationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import java.net.URL;
+import java.nio.file.Paths;
+
 
 public class AssimblyGatewayHeadlessContainer {
+
+    private static final Logger log = LoggerFactory.getLogger(AssimblyGatewayHeadlessContainer.class);
 
     private final Network network;
     private GenericContainer<?> gatewayHeadlessContainer;
@@ -34,6 +41,7 @@ public class AssimblyGatewayHeadlessContainer {
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.mongoSecretKey)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort())
+                .withFileSystemBind(getResourceSecurityPath(), "/data/.assimbly/security/")
                 .withFileSystemBind("/tmp/jeka", "/data/.jeka"); // bind a writable directory to prevent AccessDeniedException on /data/.jeka
         gatewayHeadlessContainer.start();
     }
@@ -44,6 +52,16 @@ public class AssimblyGatewayHeadlessContainer {
         }
         if (mongoContainer != null) {
             mongoContainer.stop();
+        }
+    }
+
+    private static String getResourceSecurityPath() {
+        URL resource = AssimblyGatewayHeadlessContainer.class.getClassLoader().getResource("security");
+        try {
+            return Paths.get(resource.toURI()).toString();
+        } catch (Exception e) {
+            log.error("Error to copy files to container", e);
+            return null;
         }
     }
 
