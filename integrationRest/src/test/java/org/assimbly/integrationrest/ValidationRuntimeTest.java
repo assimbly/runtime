@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
@@ -114,6 +115,38 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo("VALID");
             assertThat(responseJson.get("message").asText()).isEqualTo("null");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateConnection() {
+        try {
+            // url
+            String baseUrl = container.getBaseUrl();
+            String url = String.format("%s/api/validation/connection/%s/%d/%d", baseUrl, "google.com", 443, 5000);
+
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("Connection successful");
+            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
+            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
+            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
