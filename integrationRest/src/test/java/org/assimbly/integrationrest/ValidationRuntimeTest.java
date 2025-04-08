@@ -170,5 +170,36 @@ class ValidationRuntimeTest {
         }
     }
 
+    @Test
+    void shouldValidateRegexWithSuccess() {
+        try {
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/regex";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("expression", "^[a-zA-Z0-9]+$");
+
+            //send to API
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            //read and replied
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
 
 }
