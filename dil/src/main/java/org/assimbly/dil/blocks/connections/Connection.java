@@ -57,36 +57,39 @@ public class Connection {
 
         EncryptableProperties decryptedProperties = decryptProperties(properties);
 
-        switch (connectionType) {
-            case "ActiveMQ":
+        if(connectionType==null){
+            connectionType = "unconfigured";
+        }
+
+        switch (connectionType.toLowerCase()) {
+            case "activemq":
                 new ActiveMQConnection(context, decryptedProperties, connectionId, "activeMQ").start();
                 break;
-            case "AmazonMQ":
+            case "amazonmq":
                 new ActiveMQConnection(context, decryptedProperties, connectionId, "amazonmq").start();
                 break;
-            case "SonicMQ":
+            case "sonicmq":
                 String connectId = stepType + connectionIdValue + RANDOM.nextInt(1000000);
                 new SonicMQConnection(context, decryptedProperties, connectionId, "sonicmq").start(flowId, connectId, connectionIdValue);
                 uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
                 properties.put(stepType + "." + stepId + ".uri", uri);						
                 break;
-            case "MQ":
-                System.out.println("New MQ Connection");
+            case "mq":
                 new MQConnection(context, decryptedProperties, connectionId, "sjms").start(stepType, stepId);
                 break;
-            case "AMQPS":
+            case "amqps":
                 new AMQPConnection(context, decryptedProperties, connectionId, "amqps").start(true);
                 break;
-            case "AMQP":
+            case "amqp":
                 new AMQPConnection(context, decryptedProperties, connectionId, "amqp").start(false);
                 break;
-            case "IBMMQ":
+            case "ibmq":
                 new IBMMQConnection(context, decryptedProperties, connectionId, "ibmmq").start(stepType, stepId);
                 break;
-            case "RABBITMQ":
-                new RabbitMQConnection(context, decryptedProperties, connectionId, "rabbitmq").start();
+            case "rabbitmq", "spring-rabbitmq":
+                new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
                 break;
-            case "JDBC":
+            case "jdbc":
                 new JDBCConnection(context, decryptedProperties, connectionId, "sql").start(stepType, stepId);
                 break;
             default:

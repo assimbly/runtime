@@ -17,7 +17,9 @@ public class RabbitMQConnection {
     private String componentName;
     private String connectionId;
     private CachingConnectionFactory rabbitMQConnectionFactory;
-    private String url;
+    private String uri;
+    private String host;
+    private String port;
     private String username;
     private String password;
     private String virtualHost;
@@ -36,10 +38,12 @@ public class RabbitMQConnection {
         setFields();
 
         if (context.hasComponent(componentName) == null) {
-            if (url != null) {
+            if (uri != null) {
+                setConnection();
+            }else if(host!=null && port!=null){
                 setConnection();
             }else{
-                throw new Exception("Unknown url. Broker url is required");
+                throw new Exception("RabbitMQ connection parameters are invalid. Broker uri or host/port are required");
             }
         } else {
             log.error("RabbitMQ connection parameters are invalid.");
@@ -49,28 +53,50 @@ public class RabbitMQConnection {
 
     private void setFields(){
 
-        url = properties.getProperty("connection." + connectionId + ".url");
+        uri = properties.getProperty("connection." + connectionId + ".uri");
+        host = properties.getProperty("connection." + connectionId + ".host");
+        port = properties.getProperty("connection." + connectionId + ".port");
         virtualHost = properties.getProperty("connection." + connectionId + ".vhost");
         username = properties.getProperty("connection." + connectionId + ".username");
         password = properties.getProperty("connection." + connectionId + ".password");
 
     }
 
-
-
     private void setConnection() throws JMSException {
 
-        rabbitMQConnectionFactory.setUri(url);
-        rabbitMQConnectionFactory.setVirtualHost(virtualHost);
-        if(username!=null && password != null) {
-            rabbitMQConnectionFactory.setUsername(username);
-            rabbitMQConnectionFactory.setPassword(password);
+        if(context.getRegistry().lookupByName(connectionId) == null) {
+
+            log.info("Create new rabbitMQ Connection with connection-id: " + connectionId);
+
+            rabbitMQConnectionFactory = new CachingConnectionFactory();
+
+            if (uri != null) {
+                rabbitMQConnectionFactory.setUri(uri);
+            } else if (host != null && port != null) {
+                rabbitMQConnectionFactory.setHost(host);
+                rabbitMQConnectionFactory.setPort(Integer.parseInt(port));
+            } else {
+                rabbitMQConnectionFactory.setHost("localhost");
+                rabbitMQConnectionFactory.setPort(5672);
+            }
+
+            if (virtualHost != null) {
+                rabbitMQConnectionFactory.setVirtualHost(virtualHost);
+            } else {
+                rabbitMQConnectionFactory.setVirtualHost("/");
+            }
+
+            if (username != null && password != null) {
+                rabbitMQConnectionFactory.setUsername(username);
+                rabbitMQConnectionFactory.setPassword(password);
+            }
+
+            rabbitMQConnectionFactory.start();
+
+            context.getRegistry().bind(connectionId, rabbitMQConnectionFactory);
+        }else{
+            log.info("Reuse RabbitMQ Connection with connection-id: " + connectionId);
         }
-
-        //Connection connection = rabbitMQConnectionFactory.createConnection();
-        rabbitMQConnectionFactory.start();
-
-        context.getRegistry().bind(connectionId,rabbitMQConnectionFactory);
 
     }
 

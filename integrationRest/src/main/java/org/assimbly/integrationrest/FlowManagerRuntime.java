@@ -592,7 +592,7 @@ public class FlowManagerRuntime {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> setMaintenance(
-            @PathVariable(value = "flowId") Long time,
+            @PathVariable(value = "time") Long time,
             @RequestBody List<String> ids,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout

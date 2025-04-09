@@ -88,10 +88,10 @@ public class Transform {
         map.put("<simple>${exchange.getIn().hasAttachments}</simple>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\" method=\"hasAttachments\"/>");
         map.put("<ref>splitAttachmentsExpression</ref>","<method beanType=\"org.assimbly.mail.component.mail.SplitAttachmentsExpression\"/>");
         map.put("file://tenants","file:///data/.assimbly/tenants");
-        map.put("rabbitmq:","spring-rabbitmq:");
         map.put("DovetailQueueName","AssimblyQueueName");
         map.put("DovetailQueueHasMessages","AssimblyQueueHasMessages");
         map.put("DovetailPendingMessagesCount","AssimblyPendingMessagesCount");
+        map.put("DovetailAggregateNoExceptionOnNull","AssimblyAggregateNoExceptionOnNull");
 
         String output = TransformUtil.replaceMultipleStrings(input, map, true);
 

@@ -22,10 +22,10 @@ public class OverrideEnrichStrategy implements AggregationStrategy {
             boolean ignoreNullResource = original.getProperty("AssimblyAggregateNoExceptionOnNull", boolean.class);
 
             if (errorRoute && !ignoreNullResource) {
-                throw new EnrichException("Can't override body - nothing in the bottom route");
+                throw new EnrichException("Can't override body");
             }
 
-            original.getIn().setBody(null);
+            original.getIn().setBody(null,String.class);
             result = original;
         } else {
             original.getIn().setBody(resource.getIn().getBody());
