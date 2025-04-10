@@ -109,7 +109,7 @@ public class SSLConfiguration {
 		return keystoreParameters;
 	}
 
-	public void initTrustStoresForHttpsCertificateValidator(
+	public void initTrustStores(
 			String keyStorePath, String keyStorePassword,
 			String trustStorePath, String trustStorePassword){
 
@@ -129,7 +129,7 @@ public class SSLConfiguration {
 			httpsCertificateValidator.setCustomTrustStore(customKeyStore);
 			httpsCertificateValidator.setTrustStores(new ArrayList<>(Arrays.asList(customKeyStore, jreKeyStore)));
 		} catch (Exception e) {
-			log.error("Failed to init trust stores for HttpsCertificateValidator",e);
+			log.error("Failed to init trust stores",e);
 		}
 
 	}

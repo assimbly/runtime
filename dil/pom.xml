@@ -28,11 +28,6 @@
 
   <dependencies>
 	  <dependency>
-		  <groupId>xalan</groupId>
-		  <artifactId>serializer</artifactId>
-		  <version>${xalan.version}</version>
-	  </dependency>
-	  <dependency>
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camel-base</artifactId>
 		  <version>${assimbly.version}</version>

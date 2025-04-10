@@ -62,12 +62,8 @@ public class RabbitMQConnection {
             return false;
         }
 
-        if (context.hasComponent(componentName) == null) {
-            throw new Exception(componentName + " isn't available on the claspath");
-        }
-
         if (uri == null && (host == null && port == null)) {
-            throw new Exception(componentName + " connection parameters are invalid. Broker uri or host/port are required");
+            throw new IllegalArgumentException(componentName + " connection parameters are invalid. Broker uri or host/port are required");
         }
 
         return true;

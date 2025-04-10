@@ -64,16 +64,12 @@ public class JMSConnection {
             return false;
         }
 
-        if (context.hasComponent(componentName) == null) {
-            throw new Exception(componentName + " isn't available on the claspath");
-        }
-
         if (url == null) {
-            throw new Exception(componentName + " connection parameters are invalid. Broker url is required");
+            throw new IllegalArgumentException(componentName + " connection parameters are invalid. Broker url is required");
         }
 
         if (jmsProvider == null) {
-            throw new Exception(componentName + " connection parameters are invalid. JMS Provider is required");
+            throw new IllegalArgumentException(componentName + " connection parameters are invalid. JMS Provider is required");
         }
 
         return true;

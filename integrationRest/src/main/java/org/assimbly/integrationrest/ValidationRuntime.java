@@ -372,6 +372,7 @@ public class ValidationRuntime {
     ) throws Exception {
 
         try {
+            integration = integrationRuntime.getIntegration();
             String testConnectionResult = integration.testConnection(host, port, timeout);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",testConnectionResult);
         } catch (Exception e) {
