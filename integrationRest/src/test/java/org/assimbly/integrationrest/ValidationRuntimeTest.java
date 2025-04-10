@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.json.JSONArray;
 
 import java.net.http.HttpResponse;
 import java.util.HashMap;
@@ -295,6 +296,41 @@ class ValidationRuntimeTest {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
     }
+
+    @Test
+    void shouldValidateExpressionWithSuccess() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/expression";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("IsPredicate", "false"); // ou "true" se quiseres testar como predicado
+
+            //body (expression array)
+            JSONObject expression = new JSONObject();
+            expression.put("name", "CheckInvoice");
+            expression.put("expression", "1 + 1");
+            expression.put("expressionType", "groovy"); // <-- importante!
+            expression.put("nextNode", "nextStep");
+
+            JSONArray expressions = new JSONArray();
+            expressions.put(expression);
+
+            //call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", expressions.toString(), null, headers);
+
+            //assert
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
 
 
 }
