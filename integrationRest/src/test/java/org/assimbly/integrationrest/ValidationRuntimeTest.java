@@ -385,5 +385,63 @@ class ValidationRuntimeTest {
         }
     }
 
+    @Test
+    void shouldValidateUriWithSuccess() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/uri";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Uri", "direct:teste"); //exemplo de URI válida no Camel
+
+            //call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            //asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode body = mapper.readTree(response.body());
+
+            assertThat(body.get("message").asText().toLowerCase()).contains("valid");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateUriWithError() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/uri";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Uri", "::::uri-invalida::::");
+
+            //call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            //asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode body = mapper.readTree(response.body());
+
+            assertThat(body.get("message").asText().toLowerCase()).contains("invalid");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
+
 
 }
