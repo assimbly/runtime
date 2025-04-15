@@ -248,6 +248,45 @@ class ValidationRuntimeTest {
     }
 
     @Test
+    void shouldValidateXsltError() {
+        try {
+            // url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/xslt";
+
+            // body
+            JSONObject body = new JSONObject();
+            body.put("xsltUrl", "http://url-invalid-nonexistent.com/fake.xsl");
+
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // call endpoint
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
+
+            // asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            assertThat(responseJson.isArray()).isTrue();
+            assertThat(responseJson.size()).isGreaterThan(0);
+
+            for (JsonNode errorNode : responseJson) {
+                assertThat(errorNode.get("error").asText().toLowerCase())
+                        .contains("i/o error");
+            }
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Test
     void shouldValidateScriptWithSuccess() {
         try {
             String baseUrl = container.getBaseUrl();
