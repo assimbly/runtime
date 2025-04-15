@@ -187,6 +187,34 @@ class ValidationRuntimeTest {
     }
 
     @Test
+    void shouldValidateConnectionError() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = String.format("%s/api/validation/connection/192.0.2.1/666/2000", baseUrl);
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            //endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            assertThat(responseJson.get("message").asText()).isEqualTo("Connection error: IOException");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Test
     void shouldValidateXsltWithSuccess() {
         try {
             // URL
