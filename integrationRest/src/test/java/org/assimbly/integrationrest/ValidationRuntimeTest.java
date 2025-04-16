@@ -394,12 +394,45 @@ class ValidationRuntimeTest {
             //send to API
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
 
+            System.out.println(response.body());
+
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             //read and replied
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateRegexWithError() {
+        try {
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/regex";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("expression", "(a-z");
+
+            //send to API
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            String actual = response.body();
+            String expected = "Unclosed group near index 4\n" +
+                    "(a-z";
+
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
+
+            assertThat(actual).isEqualTo(expected);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
