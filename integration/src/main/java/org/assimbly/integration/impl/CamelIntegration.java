@@ -1062,7 +1062,17 @@ public class CamelIntegration extends BaseIntegration {
 		for (Map.Entry<String, String> entry : properties.entrySet()) {
 			if(entry.getKey().startsWith("route") && entry.getValue().contains("rabbitmqConnectionFactory")) {
 
+				System.out.println(entry.getKey() + ": " + entry.getValue());
+
 				String connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory>","</rabbitmqConnectionFactory>");
+				String rabbitMQElement = "<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>";
+
+				if(connection == null) {
+					connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory xmlns=\"http://camel.apache.org/schema/blueprint\">","</rabbitmqConnectionFactory>");
+					rabbitMQElement = "<rabbitmqConnectionFactory xmlns=\"http://camel.apache.org/schema/blueprint\">" + connection + "</rabbitmqConnectionFactory>";
+				}
+
+				System.out.println("connection: " + connection);
 				Map<String, String> connectionMap = stringToMap(connection);
 				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port") + "-" + connectionMap.get("username");
 
@@ -1073,7 +1083,7 @@ public class CamelIntegration extends BaseIntegration {
 				props.put("connection." + connectionId + ".port",connectionMap.get("port"));
 				props.put("connection." + connectionId + ".username",connectionMap.get("username"));
 				props.put("connection." + connectionId + ".password",connectionMap.get("password"));
-				props.put(entry.getKey(),StringUtils.replace(entry.getValue(),"<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>",""));
+				props.put(entry.getKey(),StringUtils.replace(entry.getValue(),rabbitMQElement,""));
 
 			}
 		}
@@ -1084,7 +1094,9 @@ public class CamelIntegration extends BaseIntegration {
 		Map<String, String> map = new LinkedHashMap<>();
 		String[] pairs = StringUtils.split(input, ',');
 
+		System.out.println("pairs length: " + pairs.length);
 		for (String pair : pairs) {
+			System.out.println("pair=" + pair);
 			if (StringUtils.contains(pair, '=')) {
 				String key = StringUtils.substringBefore(pair, "=");
 				String value = StringUtils.substringAfter(pair, "=");
@@ -1329,20 +1341,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return loadReport;
-
-	}
-
-	public String routesFlow(String flowId, String mediaType, String configuration) throws Exception {
-
-		TreeMap<String, String> properties = new TreeMap<>();
-		properties.put("id",flowId);
-		properties.put("flow.name",flowId);
-		properties.put("flow.type","esb");
-		properties.put("route.1.route", configuration);
-
-		loadFlow(properties);
-
-		return startFlow(flowId, STOP_TIMEOUT);
 
 	}
 

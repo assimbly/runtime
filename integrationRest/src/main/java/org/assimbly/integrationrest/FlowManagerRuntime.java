@@ -213,33 +213,6 @@ public class FlowManagerRuntime {
     }
 
     @PostMapping(
-            path = "/integration/flow/{flowId}/routes",
-            consumes = {MediaType.APPLICATION_XML_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> flowRoutes(
-            @PathVariable(value = "flowId") String flowId,
-            @RequestBody String configuration,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
-
-        try {
-            integration = integrationRuntime.getIntegration();
-
-            status = integration.routesFlow(flowId, mediaType, configuration);
-            if (status.equals("started")) {
-                return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/routes", "started flow " + flowId, "started flow " + flowId, flowId);
-            } else {
-                throw new Exception(status);
-            }
-        } catch (Exception e) {
-            log.error("Get routes status for flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/routes", e.getMessage(), "unable to start flow " + flowId, flowId);
-        }
-
-    }
-
-    @PostMapping(
             path = "/integration/route/{routeId}/install",
             consumes =  {MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -347,10 +320,10 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
-                log.info("Uninstalled flow " + flowId + " successfully. Report: " + status);
+                log.info("Uninstalled flow {} successfully. Report: {}", flowId, status);
                 return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/uninstall",status,plainResponse);
             } else {
-                log.error("FlowManager Report:\n\n" + status);
+                log.error("FlowManager Report:\n\n{}", status);
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/uninstall", status, plainResponse);
             }
         } catch (Exception e) {

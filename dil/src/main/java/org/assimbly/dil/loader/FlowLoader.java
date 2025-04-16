@@ -8,11 +8,11 @@ import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -187,7 +187,7 @@ public class FlowLoader extends RouteBuilder {
 
 			loader.updateRoutes(IntegrationUtil.setResource(route));
 
-			flowLoaderReport.setStep(id, null, "route", "success", null);
+			flowLoaderReport.setStep(id, null, "route", "success", null, null);
 
 		}catch (Exception e) {
 
@@ -195,7 +195,7 @@ public class FlowLoader extends RouteBuilder {
 			isFlowLoaded = false;
 
 			log.error("Failed loading step | stepid={}", id);
-			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage());
+			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
 	}
@@ -208,7 +208,7 @@ public class FlowLoader extends RouteBuilder {
 
 			loader.loadRoutes(IntegrationUtil.setResource(step));
 
-			flowLoaderReport.setStep(id, uri, type, "success", null);
+			flowLoaderReport.setStep(id, uri, type, "success", null, null);
 
 		}catch (Exception e) {
 
@@ -216,7 +216,7 @@ public class FlowLoader extends RouteBuilder {
 			isFlowLoaded = false;
 
 			log.error("Failed loading step | stepid=" + id);
-			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage());
+			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
 	}
@@ -237,7 +237,7 @@ public class FlowLoader extends RouteBuilder {
 
 		context.getCamelContextExtension().setErrorHandlerFactory(updatedErrorHandler);
 
-		flowLoaderReport.setStep(id, errorUri, "error", "success", null);
+		flowLoaderReport.setStep(id, errorUri, "error", "success", null, null);
 
 	}
 

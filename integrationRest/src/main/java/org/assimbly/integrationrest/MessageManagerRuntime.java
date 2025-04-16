@@ -137,10 +137,10 @@ public class MessageManagerRuntime {
                 result = integration.sendRequestWithHeaders(uri, body, headerMap);
             }
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send",result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/sendrequest",result);
         } catch (Exception e) {
             log.error("Send reuqest message to " + uri + " failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/sendrequest",e.getMessage());
         }
     }
 

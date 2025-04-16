@@ -58,9 +58,15 @@ public class FlowLoaderReport {
 
 		report = json.toString(4);
 
+		if(loaded == loadedSuccess){
+			log.info("Flow loaded successfully | flowid=" + flowId + " | time=" + time + " milliseconds\n\n" + report);
+		}else{
+			log.error("Flow failed to load | flowid=" + flowId + " | time=" + time + " milliseconds\n\n" + report);
+		}
+
 	}
 
-	public void setStep(String stepId, String stepUri, String stepType, String stepStatus, String message){
+	public void setStep(String stepId, String stepUri, String stepType, String stepStatus, String message, String trace){
 
 		loaded += 1;
 
@@ -81,6 +87,9 @@ public class FlowLoaderReport {
 		if(stepStatus.equalsIgnoreCase("error")){
 			step.put("status", "error");
 			step.put("errorMessage", message);
+			if(trace!=null){
+				step.put("trace", trace);
+			}
 			loadedError = loadedError + 1;
 		}else{
 			step.put("status", stepStatus);

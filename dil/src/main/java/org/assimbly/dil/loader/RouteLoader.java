@@ -7,6 +7,7 @@ import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesBuilderLoader;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ public class RouteLoader extends RouteBuilder {
 	private RoutesBuilderLoader routesBuilderLoader;
 	private final String routeId;
 	private final String route;
-	private String flowEvent;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
@@ -53,12 +53,12 @@ public class RouteLoader extends RouteBuilder {
 			RoutesBuilder builder = routesBuilderLoader.loadRoutesBuilder(resource);
 			context.addRoutes(builder);
 
-			flowLoaderReport.setStep(routeId, null, "route", "success", null);
+			flowLoaderReport.setStep(routeId, null, "route", "success", null, null);
 
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
 			log.error("Failed loading route id=" + routeId);
-			flowLoaderReport.setStep(routeId, null, "route", "error", errorMessage);
+			flowLoaderReport.setStep(routeId, null, "route", "error", errorMessage, ExceptionUtils.getStackTrace(e));
 			isFlowLoaded = false;
 		}
 
@@ -67,9 +67,9 @@ public class RouteLoader extends RouteBuilder {
 	private void finish() {
 
 		if (isFlowLoaded){
-			flowLoaderReport.finishReport(flowEvent, "", "Route installed successfully");
+			flowLoaderReport.finishReport("start", "", "Route installed successfully");
 		}else{
-			flowLoaderReport.finishReport(flowEvent, "","Route installed failed");
+			flowLoaderReport.finishReport("error", "","Route installed failed");
 		}
 
 	}

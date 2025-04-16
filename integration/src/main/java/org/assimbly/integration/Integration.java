@@ -615,20 +615,6 @@ public interface Integration {
 	*/
     String pauseFlow(String flowId) throws Exception;
 
-
-	/**
-	 * Configure and Starts a flow from a routes xml
-	 *
-	 * @param  flowId the id of the flow
-	 * @param  mediaType (XML,JSON,YAML)
-	 * @param  configuration (the Camel routes XML)
-	 * @return returns a confirmation message
-	 * @throws Exception if flow doesn't start
-	 */
-    String routesFlow(String flowId, String mediaType, String configuration) throws Exception;
-
-
-
 	/**
 	 * Configure and Starts a flow (for testing)
 	 *
