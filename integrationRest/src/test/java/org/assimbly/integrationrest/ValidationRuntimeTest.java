@@ -335,6 +335,48 @@ class ValidationRuntimeTest {
     }
 
     @Test
+    void shouldValidateScriptWithError() {
+        try {
+            // url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/script";
+
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // invalid script
+            JSONObject scriptJson = new JSONObject();
+            scriptJson.put("language", "groovy");
+            scriptJson.put("script", "return 1 + ;");
+
+            // Exchange
+            JSONObject exchangeJson = new JSONObject();
+            exchangeJson.put("body", "");
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("script", scriptJson);
+            bodyJson.put("exchange", exchangeJson);
+
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            String msg = responseJson.get("message").asText().toLowerCase();
+            assertThat(msg).contains("invalid groovy script");
+            assertThat(msg).contains("startup failed");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
     void shouldValidateRegexWithSuccess() {
         try {
             String baseUrl = container.getBaseUrl();
