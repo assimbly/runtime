@@ -155,7 +155,7 @@ public class TopicManagerRuntime {
     )
     public ResponseEntity<String> clearTopic(
             @PathVariable(value = "brokerType") String brokerType,
-            @PathVariable(value = "topicType") String topicName,
+            @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
