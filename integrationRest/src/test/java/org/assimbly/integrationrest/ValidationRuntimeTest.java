@@ -472,6 +472,38 @@ class ValidationRuntimeTest {
     }
 
     @Test
+    void shouldValidateFtpWithError() {
+        try {
+            //url
+            String baseUrl = container.getBaseUrl();
+            String url = baseUrl + "/api/validation/ftp";
+
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            //body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("host", "invalid.ftp.test.server"); // invalid host
+            bodyJson.put("port", 9999); // invalid port
+            bodyJson.put("user", "error"); // invalid user
+            bodyJson.put("pwd", "testerror"); // invalid password
+            bodyJson.put("protocol", "ftp");
+            bodyJson.put("explicitTLS", false);
+
+            //endpoint call
+            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+
+            //asserts
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
     void shouldValidateExpressionWithSuccess() {
         try {
             //url
