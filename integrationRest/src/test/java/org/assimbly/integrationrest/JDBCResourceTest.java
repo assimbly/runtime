@@ -14,7 +14,6 @@ import java.util.HashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class JDBCResourceTest {
 
