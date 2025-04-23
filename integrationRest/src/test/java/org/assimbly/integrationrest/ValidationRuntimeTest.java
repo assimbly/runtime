@@ -498,6 +498,10 @@ class ValidationRuntimeTest {
             //asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            assertThat(responseJson.get("error").asText().toLowerCase()).contains("host name could not be resolved");
+
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
