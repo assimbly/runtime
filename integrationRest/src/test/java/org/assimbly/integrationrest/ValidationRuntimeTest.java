@@ -681,7 +681,7 @@ class ValidationRuntimeTest {
             //headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Uri", "::::uri-invalida::::"); // invalid uri
+            headers.put("Uri", "::::uri-invalid::::"); // invalid uri
 
             //call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
