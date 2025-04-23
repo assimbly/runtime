@@ -649,7 +649,7 @@ class ValidationRuntimeTest {
             //headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Uri", "direct:teste"); //exemplo de URI válida no Camel
+            headers.put("Uri", "direct:teste"); // uri valid on Camel
 
             //call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
@@ -677,7 +677,7 @@ class ValidationRuntimeTest {
             //headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Uri", "::::uri-invalida::::");
+            headers.put("Uri", "::::uri-invalida::::"); // invalid uri
 
             //call
             HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
