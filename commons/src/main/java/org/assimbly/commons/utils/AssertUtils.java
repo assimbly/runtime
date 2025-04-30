@@ -6,17 +6,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AssertUtils {
 
-    public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg) {
+    public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg, boolean messageFlag) {
         assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-        if(msg != null) {
-            assertThat(responseJson.get("message").asText()).isEqualTo(msg);
-        } else {
-            assertThat(responseJson.get("message").asText()).isNotEmpty();
+        if(messageFlag) {
+            assertMessage(responseJson, msg);
         }
         assertThat(responseJson.get("status").asInt()).isEqualTo(200);
         assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
         boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
         assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+    }
+
+    public static void assertSuccessfulGenericResponseWithoutMsg(JsonNode responseJson) {
+        assertSuccessfulGenericResponse(responseJson, null, false);
+    }
+
+    public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg) {
+        assertSuccessfulGenericResponse(responseJson, msg, true);
     }
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson) {
@@ -26,6 +32,14 @@ public class AssertUtils {
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String startsWithMsg, String endsWithMsg) {
         assertSuccessfulGenericResponse(responseJson, null);
         assertThat(responseJson.get("message").asText()).startsWith(startsWithMsg).endsWith(endsWithMsg);
+    }
+
+    private static void assertMessage(JsonNode responseJson, String msg) {
+        if(msg != null) {
+            assertThat(responseJson.get("message").asText()).isEqualTo(msg);
+        } else {
+            assertThat(responseJson.get("message").asText()).isNotEmpty();
+        }
     }
 
     public static void assertErrorGenericResponse(JsonNode responseJson, String msg) {

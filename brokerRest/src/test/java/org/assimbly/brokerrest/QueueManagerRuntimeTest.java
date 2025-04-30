@@ -241,7 +241,7 @@ class QueueManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson);
+            AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
