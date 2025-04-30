@@ -1,8 +1,8 @@
 package org.assimbly.brokerrest;
 
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.brokerrest.utils.HttpUtil;
-import org.assimbly.brokerrest.utils.Utils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,23 +33,21 @@ class BrokerConfigureRuntimeTest {
     @Test
     void shouldGetBrokerConfiguration() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/configure", baseUrl, "1");
-
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("brokerType", "classic");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo(Utils.readFileAsStringFromResources("container/broker/activemq.xml"));
 
         } catch (Exception e) {
@@ -60,10 +58,6 @@ class BrokerConfigureRuntimeTest {
     @Test
     void shouldSetBrokerConfiguration() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/configure", baseUrl, "1");
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", "classic");
@@ -76,11 +70,13 @@ class BrokerConfigureRuntimeTest {
             // body
             String brokerConfig = Utils.readFileAsStringFromResources("container/broker/activemq.xml");
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", brokerConfig, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), brokerConfig, params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("configuration set");
 
         } catch (Exception e) {

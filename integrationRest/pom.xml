@@ -41,11 +41,17 @@
 		  <version>${spring-boot.version}</version>
 	  </dependency>
 
-	  <!-- tests -->
 	  <dependency>
 		  <groupId>org.json</groupId>
 		  <artifactId>json</artifactId>
 		  <version>${json.version}</version>
+	  </dependency>
+
+	  <!-- tests -->
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>commons</artifactId>
+		  <version>${assimbly.version}</version>
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>

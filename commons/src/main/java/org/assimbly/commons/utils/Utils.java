@@ -1,4 +1,4 @@
-package org.assimbly.integrationrest.utils;
+package org.assimbly.commons.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.util.Objects;
 
 public class Utils {
@@ -131,4 +132,10 @@ public class Utils {
         transformer.transform(new DOMSource(node), new StreamResult(writer));
         return writer.toString();
     }
+
+    public static String buildAuth(String email, String pwd) {
+        String data = email + ":" + pwd;
+        return Base64.getEncoder().encodeToString(data.getBytes());
+    }
+
 }

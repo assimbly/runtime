@@ -2,10 +2,11 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
-import org.assimbly.integrationrest.utils.HttpUtil;
-import org.assimbly.integrationrest.utils.Utils;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.jupiter.api.*;
@@ -48,10 +49,6 @@ class IntegrationRuntimeTest {
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -59,7 +56,7 @@ class IntegrationRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -69,10 +66,6 @@ class IntegrationRuntimeTest {
     @Order(1)
     void shouldAddCollector() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/collectors/add", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -87,20 +80,16 @@ class IntegrationRuntimeTest {
             flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_LOG.name());
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/collectors/add"), body, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("configured");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "configured");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -114,30 +103,22 @@ class IntegrationRuntimeTest {
             // check for necessary data before continue
             assumeTrue(flowIdStep != null, "Skipping shouldRemoveStepCollector test because shouldAddCollector test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdStep);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/collector/"+flowIdStep+"/remove"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "removed");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -151,30 +132,22 @@ class IntegrationRuntimeTest {
             // check for necessary data before continue
             assumeTrue(flowIdRoute != null, "Skipping shouldRemoveRouteCollector test because shouldAddCollector test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdRoute);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/collector/"+flowIdRoute+"/remove"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "removed");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -188,30 +161,22 @@ class IntegrationRuntimeTest {
             // check for necessary data before continue
             assumeTrue(flowIdLog != null, "Skipping shouldRemoveLogCollector test because shouldAddCollector test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/collector/%s/remove", baseUrl, flowIdLog);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/collector/"+flowIdLog+"/remove"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("removed");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "removed");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -223,22 +188,20 @@ class IntegrationRuntimeTest {
     @Order(5)
     void shouldGetListOfFlows() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/list/flows", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/list/flows"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get(0).size()).isEqualTo(1);
             assertThat(responseJson.get(0).get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
@@ -251,29 +214,21 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldCountSteps() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/count/steps", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/count/steps"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("3");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "3");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -284,24 +239,21 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetInfo() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/info", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/info"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode infoJson = responseJson.get("info");
 
+            // asserts contents
             assertThat(infoJson.get("numberOfRunningSteps").asInt()).isPositive();
             assertThat(infoJson.get("startupType").asText()).isEqualTo("Default");
             assertThat(infoJson.get("uptimeMiliseconds").asInt()).isPositive();
@@ -321,19 +273,17 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetLastError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/lasterror", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/lasterror"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isNotEmpty();
 
         } catch (Exception e) {
@@ -345,26 +295,22 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowsDetails() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/list/flows/details", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/list/flows/details"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson.isArray()).isTrue();
-
             JsonNode flowJson = responseJson.get(0).get("flow");
 
+            // asserts contents
+            assertThat(responseJson.isArray()).isTrue();
             assertThat(flowJson.get("isRunning").asBoolean()).isTrue();
             assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -380,29 +326,21 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetNumberOfAlerts() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/numberofalerts", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/numberofalerts"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("{67c740bc349ced00070004a9=0}");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "{67c740bc349ced00070004a9=0}");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -412,29 +350,21 @@ class IntegrationRuntimeTest {
     @Test
     void shouldBeStarted() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/isstarted";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/isstarted"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -445,29 +375,21 @@ class IntegrationRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldCountFlows() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/count/flows";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/count/flows"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asInt()).isPositive();
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -477,10 +399,6 @@ class IntegrationRuntimeTest {
     @Test
     void shouldListSoapActions() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/list/soap/action";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -490,15 +408,16 @@ class IntegrationRuntimeTest {
             body.put("url", "http://www.dneonline.com/calculator.asmx?wsdl");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/list/soap/action"), body.toString(), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // asserts contents
             JsonNode responseJson = objectMapper.readTree(response.body());
             assertThat(responseJson.size()).isEqualTo(4);
-
             assertThat(responseJson).allMatch(element -> {
                 boolean hasValidName = element.has("name") && (
                         element.get("name").asText().equals("Add") ||
@@ -518,19 +437,17 @@ class IntegrationRuntimeTest {
     @Test
     void shouldGetBaseDirectory() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/basedirectory";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/basedirectory"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("/data//.assimbly");
 
         } catch (Exception e) {
@@ -541,20 +458,18 @@ class IntegrationRuntimeTest {
     @Test
     void shouldSetBaseDirectory() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/basedirectory";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", "/data/.assimbly", null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/basedirectory"), "/data/.assimbly", null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("success");
 
         } catch (Exception e) {
@@ -565,26 +480,23 @@ class IntegrationRuntimeTest {
     @Test
     void shouldGetThreads() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/integration/threads";
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/threads"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode threadJson = responseJson.get(0);
+
+            // asserts contents
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isPositive();
-
-            JsonNode threadJson = responseJson.get(0);
             assertThat(threadJson.get("cpuTime").asLong()).isPositive();
             assertThat(threadJson.get("name").asText()).isNotEmpty();
             assertThat(threadJson.get("id").asInt()).isPositive();
@@ -598,31 +510,21 @@ class IntegrationRuntimeTest {
     @Test
     void shouldResolveDependencyByScheme() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/resolvedependencybyscheme/%s", baseUrl, "xslt");
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", "", null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/resolvedependencybyscheme/xslt"), "", null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("message").asText())
-                    .startsWith("Dependency org.apache.camel:camel-xslt:")
-                    .endsWith(" resolved");
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Dependency org.apache.camel:camel-xslt:", " resolved");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

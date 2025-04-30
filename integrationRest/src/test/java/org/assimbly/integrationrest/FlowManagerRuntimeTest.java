@@ -2,10 +2,10 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
-import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.junit.jupiter.api.*;
@@ -46,10 +46,6 @@ class FlowManagerRuntimeTest {
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -57,7 +53,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -67,10 +63,6 @@ class FlowManagerRuntimeTest {
     @Order(1)
     void shouldInstallFlow() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -78,9 +70,9 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             inboundHttpsFlowInstalled = true;
@@ -94,29 +86,21 @@ class FlowManagerRuntimeTest {
     @Order(10)
     void checkIfFlowIsStarted() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/isstarted", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/isstarted"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -127,29 +111,21 @@ class FlowManagerRuntimeTest {
     @Order(10)
     void shouldGetFlowLastError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/lasterror", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/lasterror"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -160,29 +136,21 @@ class FlowManagerRuntimeTest {
     @Order(10)
     void shouldGetFlowAlerts() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/alerts", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/alerts"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -193,29 +161,21 @@ class FlowManagerRuntimeTest {
     @Order(10)
     void shouldCountFlowAlerts() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/alerts/count", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/alerts/count"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -226,29 +186,21 @@ class FlowManagerRuntimeTest {
     @Order(10)
     void shouldGetFlowEvents() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/events", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/events"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -261,30 +213,22 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldPauseFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/pause", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/pause"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("pause");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Paused flow successfully");
-            assertThat(flowJson.get("version").asText()).matches("\\d+");
+            // asserts contents
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "pause", "Paused flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -297,30 +241,22 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldResumeFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/resume", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/resume"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("resume");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Resumed flow successfully");
-            assertThat(flowJson.get("version").asText()).matches("\\d+");
+            // asserts contents
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "resume", "Resumed flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -333,30 +269,22 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldStopFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/stop", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/stop"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("stop");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Stopped flow successfully");
-            assertThat(flowJson.get("version").asText()).matches("\\d+");
+            // asserts contents
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "stop", "Stopped flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -369,29 +297,25 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldStartFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/start", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/start"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
-
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+
+            // asserts contents
             assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-
             assertThat(flowJson.get("steps").size()).isEqualTo(5);
             assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -411,29 +335,25 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldRestartFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/restart", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/restart"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
-
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+
+            // asserts contents
             assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
             assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-
             assertThat(flowJson.get("steps").size()).isEqualTo(5);
             assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
             assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -453,29 +373,21 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldGetFlowStatus test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/status", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/status"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("started");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -488,29 +400,21 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldGetFlowUptime test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uptime", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uptime"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches("\\d+s");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -523,30 +427,22 @@ class FlowManagerRuntimeTest {
         try {
             assumeTrue(inboundHttpsFlowInstalled, "Skipping shouldUninstallFlow test because shouldInstallFlow test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uninstall", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uninstall"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("stop");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Stopped flow successfully");
-            assertThat(flowJson.get("version").asText()).matches("\\d+");
+            // asserts contents
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "stop", "Stopped flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -558,10 +454,6 @@ class FlowManagerRuntimeTest {
     @Order(30)
     void shouldGetSchedulerFlowInfo() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/info", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -569,15 +461,16 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/info"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
+            // asserts contents
             assertThat(flowJson.get("isRunning").asText()).isEqualTo("true");
             assertThat(flowJson.get("name").asText()).isEqualTo("67c740bc349ced00070004a9");
             assertThat(flowJson.get("id").asText()).isEqualTo("67c740bc349ced00070004a9");
@@ -593,42 +486,36 @@ class FlowManagerRuntimeTest {
     @Order(31)
     void shouldInstallRoute() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/route/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_1.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/route/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/install"), (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_1.name()), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
-
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+            JsonNode stepsJson = flowJson.get("steps");
+            JsonNode stepJson = stepsJson.get(0);
+
+            // asserts contents
             assertThat(stepsLoadedJson.get("total").asInt()).isPositive();
             assertThat(stepsLoadedJson.get("successfully").asInt()).isPositive();
             assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-
             assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
             assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
             assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
             assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
             assertThat(flowJson.get("event").asText()).isEqualTo("start");
             assertThat(flowJson.get("version").asText()).isEqualTo("");
-
-            JsonNode stepsJson = flowJson.get("steps");
             assertThat(stepsJson.isArray()).isTrue();
             assertThat(stepsJson.size()).isPositive();
-
-            JsonNode stepJson = stepsJson.get(0);
             assertThat(stepJson.get("id").asText()).isNotNull();
             assertThat(stepJson.get("type").asText()).isEqualTo("route");
             assertThat(stepJson.get("status").asText()).isEqualTo("success");
@@ -642,30 +529,22 @@ class FlowManagerRuntimeTest {
     @Order(40)
     void shouldInstallFlowByFile() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install/file"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -676,10 +555,6 @@ class FlowManagerRuntimeTest {
     @Order(41)
     void shouldSetMaintenanceTime() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/maintenance/%s", baseUrl, 60000);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -690,20 +565,16 @@ class FlowManagerRuntimeTest {
             jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", jsonArray.toString() , null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/maintenance/60000"), jsonArray.toString() , null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches("Set flows into maintenance mode for 60000 miliseconds");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Set flows into maintenance mode for 60000 miliseconds");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -714,29 +585,21 @@ class FlowManagerRuntimeTest {
     @Order(42)
     void shouldUninstallFlowByFile() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/uninstall/file", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uninstall/file"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).matches(String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

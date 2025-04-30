@@ -58,4 +58,11 @@ public class AssimblyGatewayBrokerContainer {
         return "http://" + gatewayBrokerContainer.getHost() + ":" + gatewayBrokerContainer.getMappedPort(8088);
     }
 
+    public String buildBrokerApiPath(String path) {
+        if (gatewayBrokerContainer == null) {
+            throw new IllegalStateException("Container has not been initialized. Call init() first.");
+        }
+        return "http://" + gatewayBrokerContainer.getHost() + ":" + gatewayBrokerContainer.getMappedPort(8088) + path;
+    }
+
 }

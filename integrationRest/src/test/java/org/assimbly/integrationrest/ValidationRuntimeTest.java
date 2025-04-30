@@ -2,9 +2,10 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
-import org.assimbly.integrationrest.utils.Utils;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
@@ -37,10 +38,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateCronWithSuccess() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/cron";
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("expression", "0 0/5 * * * ?");
@@ -50,10 +47,12 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+            // asserts contents
             assertThat(response.body()).isEmpty();
 
         } catch (Exception e) {
@@ -64,10 +63,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateCronWithError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/cron";
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("expression", "0 0/5 * * *");
@@ -77,13 +72,15 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("error").asText()).isEqualTo("Cron Validation error: Unexpected end of expression.");
 
         } catch (Exception e) {
@@ -94,10 +91,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateCertificate() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/certificate";
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("httpsUrl", "https://authenticationtest.com/HTTPAuth/");
@@ -107,13 +100,15 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo("VALID");
             assertThat(responseJson.get("message").asText()).isEqualTo("null");
 
@@ -125,27 +120,24 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateCertificateError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/certificate";
-
-            //params
+            // params
             HashMap<String, String> params = new HashMap<>();
             params.put("httpsUrl", "https://expired.badssl.com/");
 
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            //call endpoint
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // call endpoint
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
 
-            //asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode responseJson = mapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo("INVALID");
             assertThat(responseJson.get("message").asText().toLowerCase()).contains("certification path");
 
@@ -157,29 +149,21 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateConnection() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/validation/connection/%s/%d/%d", baseUrl, "google.com", 443, 5000);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/google.com/443/5000"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("Connection successful");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Connection successful");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -189,22 +173,20 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateConnectionError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/validation/connection/192.0.2.1/666/2000", baseUrl);
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            //endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/192.0.2.1/666/2000"), null, headers);
 
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode responseJson = mapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("Connection error: IOException");
 
@@ -217,10 +199,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateXsltWithSuccess() {
         try {
-            // URL
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/xslt";
-
             // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -232,13 +210,15 @@ class ValidationRuntimeTest {
             bodyJson.put("xsltUrl", "https://www.w3schools.com/xml/cdcatalog_client.xsl");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isZero();
 
@@ -250,10 +230,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateXsltError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/xslt";
-
             // body
             JSONObject body = new JSONObject();
             body.put("xsltUrl", "http://url-invalid-nonexistent.com/fake.xsl");
@@ -263,18 +239,18 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-            // call endpoint
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), body.toString(), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode responseJson = mapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isGreaterThan(0);
-
             for (JsonNode errorNode : responseJson) {
                 assertThat(errorNode.get("error").asText().toLowerCase())
                         .contains("i/o error");
@@ -289,9 +265,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateScriptWithSuccess() {
         try {
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/script";
-
             // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -302,7 +275,7 @@ class ValidationRuntimeTest {
             scriptJson.put("language", "groovy");
             scriptJson.put("script", "return 1 + 1;");
 
-            // Exchange
+            // exchange
             JSONObject exchangeJson = new JSONObject();
             exchangeJson.put("body", "");
 
@@ -310,7 +283,7 @@ class ValidationRuntimeTest {
             JSONObject headersJson = new JSONObject();
             exchangeJson.put("headers", headersJson);
 
-            //properties
+            // properties
             JSONObject propertiesJson = new JSONObject();
             exchangeJson.put("properties", propertiesJson);
 
@@ -319,13 +292,16 @@ class ValidationRuntimeTest {
             bodyJson.put("script", scriptJson);
             bodyJson.put("exchange", exchangeJson);
 
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
 
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("code").asInt()).isEqualTo(1);
             assertThat(responseJson.get("result").asText()).isEqualTo("2");
 
@@ -337,10 +313,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateScriptWithError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/script";
-
             // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -351,7 +323,7 @@ class ValidationRuntimeTest {
             scriptJson.put("language", "groovy");
             scriptJson.put("script", "return 1 + ;");
 
-            // Exchange
+            // exchange
             JSONObject exchangeJson = new JSONObject();
             exchangeJson.put("body", "");
 
@@ -360,14 +332,17 @@ class ValidationRuntimeTest {
             bodyJson.put("script", scriptJson);
             bodyJson.put("exchange", exchangeJson);
 
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
 
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             String msg = responseJson.get("message").asText().toLowerCase();
+
+            // asserts contents
             assertThat(msg).contains("invalid groovy script");
             assertThat(msg).contains("startup failed");
 
@@ -379,9 +354,6 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateRegexWithSuccess() {
         try {
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/regex";
-
             //headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -391,16 +363,16 @@ class ValidationRuntimeTest {
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("expression", "^[a-zA-Z0-9]+$");
 
-            //send to API
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
 
-            System.out.println(response.body());
-
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            //read and replied
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
 
         } catch (Exception e) {
@@ -411,10 +383,7 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateRegexWithError() {
         try {
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/regex";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
@@ -423,15 +392,17 @@ class ValidationRuntimeTest {
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("expression", "(a-z");
 
-            //send to API
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
 
             String actual = response.body();
             String expected = "Unclosed group near index 4\n" +
                     "(a-z";
 
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
-
+            // asserts contents
             assertThat(actual).isEqualTo(expected);
 
         } catch (Exception e) {
@@ -442,16 +413,12 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateFtpWithSuccess() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/ftp";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-            //body (i use a test rebex - https://ftptest.net/)
+            // body
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("host", "test.rebex.net");
             bodyJson.put("port", 21);
@@ -460,10 +427,10 @@ class ValidationRuntimeTest {
             bodyJson.put("protocol", "ftp");
             bodyJson.put("explicitTLS", false);
 
-            //endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
-            //asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
 
         } catch (Exception e) {
@@ -474,16 +441,12 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateFtpWithError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/ftp";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-            //body
+            // body
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("host", "invalid.ftp.test.server"); // invalid host
             bodyJson.put("port", 9999); // invalid port
@@ -492,14 +455,16 @@ class ValidationRuntimeTest {
             bodyJson.put("protocol", "ftp");
             bodyJson.put("explicitTLS", false);
 
-            //endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
-            //asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("error").asText().toLowerCase()).contains("host name could not be resolved");
 
         } catch (Exception e) {
@@ -510,17 +475,13 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateExpressionWithSuccess() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/expression";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("IsPredicate", "false");
 
-            //body (expression array)
+            // body
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + 1");
@@ -530,10 +491,10 @@ class ValidationRuntimeTest {
             JSONArray expressions = new JSONArray();
             expressions.put(expression);
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", expressions.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
-            //assert
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
 
         } catch (Exception e) {
@@ -544,17 +505,13 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateExpressionWithError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/expression";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("IsPredicate", "false");
 
-            //body (expression array)
+            // body
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + "); // error
@@ -564,20 +521,18 @@ class ValidationRuntimeTest {
             JSONArray expressions = new JSONArray();
             expressions.put(expression);
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", expressions.toString(), null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
-            //assert
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode json = mapper.readTree(response.body());
 
-            // error array
+            // asserts contents
             assertThat(json.isArray()).isTrue();
             assertThat(json.size()).isGreaterThan(0);
-
-            // msg error
             for (JsonNode error : json) {
                 assertThat(error.get("error").asText().toLowerCase())
                         .contains("could not compile")
@@ -592,21 +547,18 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateUrlWithSuccess() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/url";
-
-            //params
+            // params
             HashMap<String, String> params = new HashMap<>();
             params.put("httpUrl", "https://www.google.com"); // Uma URL válida
 
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
 
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
 
         } catch (Exception e) {
@@ -617,25 +569,24 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateUrlWithError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/url";
-
-            //param
+            // params
             HashMap<String, String> params = new HashMap<>();
             params.put("httpUrl", "http://url-error-test.com");
 
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
 
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("error").asText()).isEqualTo("Url is not reachable from the server!");
 
         } catch (Exception e) {
@@ -646,24 +597,21 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateUriWithSuccess() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/uri";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Uri", "direct:teste"); // uri valid on Camel
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
 
-            //asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode body = mapper.readTree(response.body());
 
+            // asserts contents
             assertThat(body.get("message").asText().toLowerCase()).contains("valid");
 
         } catch (Exception e) {
@@ -674,24 +622,21 @@ class ValidationRuntimeTest {
     @Test
     void shouldValidateUriWithError() {
         try {
-            //url
-            String baseUrl = container.getBaseUrl();
-            String url = baseUrl + "/api/validation/uri";
-
-            //headers
+            // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Uri", "::::uri-invalid::::"); // invalid uri
 
-            //call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
 
-            //asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode body = mapper.readTree(response.body());
 
+            // asserts contents
             assertThat(body.get("message").asText().toLowerCase()).contains("invalid");
 
         } catch (Exception e) {

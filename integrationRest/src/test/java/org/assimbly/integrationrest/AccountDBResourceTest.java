@@ -1,14 +1,14 @@
 package org.assimbly.integrationrest;
 
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 
 import java.net.http.HttpResponse;
-import java.util.Base64;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,22 +36,18 @@ class AccountDBResourceTest {
             // create user on mongodb
             MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/db/authenticate", baseUrl);
-
             // headers
-            HashMap<String, String> headers = new HashMap();
-            String data = TestApplicationContext.emailUser + ":" + TestApplicationContext.passwordUser;
-            String auth = Base64.getEncoder().encodeToString(data.getBytes());
-            headers.put("Authorization", auth);
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Authorization", Utils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
             headers.put("db", TestApplicationContext.db);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/db/authenticate"), null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isNotEmpty();
 
         } catch (Exception e) {

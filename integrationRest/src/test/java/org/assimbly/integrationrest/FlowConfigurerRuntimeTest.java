@@ -2,10 +2,11 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
-import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -45,10 +46,6 @@ class FlowConfigurerRuntimeTest {
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -56,7 +53,7 @@ class FlowConfigurerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -67,10 +64,6 @@ class FlowConfigurerRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldSetFlowConfiguration() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/configure", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -80,20 +73,16 @@ class FlowConfigurerRuntimeTest {
             String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", camelContext, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), camelContext, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("Flow configuration set");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Flow configuration set");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -105,29 +94,21 @@ class FlowConfigurerRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void checkIfFlowIsConfigured() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/isconfigured", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/isconfigured"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -138,19 +119,17 @@ class FlowConfigurerRuntimeTest {
     @Order(3)
     void shouldGetFlowConfiguration() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/configure", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isNotEmpty();
 
         } catch (Exception e) {
@@ -163,30 +142,26 @@ class FlowConfigurerRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowRoutesByFlowId() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/route", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/route"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode routesJson = responseJson.get("routes");
+            JsonNode routeJson = routesJson.get("route").get(0);
 
+            // asserts contents
             assertThat(routesJson).isNotNull();
             assertThat(routesJson.get("route")).isNotNull();
             assertThat(routesJson.get("route").isArray()).isTrue();
             assertThat(routesJson.get("route").size()).isPositive();
-
-            JsonNode routeJson = routesJson.get("route").get(0);
             assertThat(routeJson.get("id").asText()).isNotNull();
             assertThat(routeJson.get("routeConfigurationId").asText()).isNotNull();
             assertThat(routeJson.get("from")).isNotNull();
@@ -201,31 +176,28 @@ class FlowConfigurerRuntimeTest {
     @Order(5)
     void shouldGetComponents() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/components", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("IncludeCustomComponents", "false");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/components"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode componentJson = responseJson.get(0);
+            List<String> fieldNames = StreamSupport.stream(
+                            Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false)
+                    .collect(Collectors.toList());
+
+            // asserts contents
             assertThat(responseJson).isNotNull();
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isPositive();
-
-            JsonNode componentJson = responseJson.get(0);
-            List<String> fieldNames = StreamSupport.stream(
-                    Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
             assertThat(fieldNames).contains(
                     "scheme", "producerOnly", "kind", "deprecated", "groupId",
                     "description", "browsable", "label", "supportLevel", "title",
@@ -244,29 +216,21 @@ class FlowConfigurerRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldRemoveFlowConfiguration() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/remove", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/remove"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -276,27 +240,24 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowDocumentationByComponentType() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/documentation/%s", baseUrl, "xslt");
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/documentation/xslt"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson).isNotNull();
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
+            assertThat(responseJson).isNotNull();
             assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
 
         } catch (Exception e) {
@@ -307,19 +268,17 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetDocumentationVersion() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/documentation/version", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/documentation/version"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isNotNull();
 
         } catch (Exception e) {
@@ -330,22 +289,20 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowSteps() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/list/steps", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/list/steps"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson).isNotNull();
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isPositive();
@@ -358,27 +315,24 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowOptionsByComponentType() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/options/%s", baseUrl, "xslt");
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/options/xslt"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson).isNotNull();
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
+            assertThat(responseJson).isNotNull();
             assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
 
         } catch (Exception e) {
@@ -389,19 +343,17 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowRoutes() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/routes", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/routes"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("{not available yet}");
 
         } catch (Exception e) {
@@ -412,27 +364,24 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowSchemaByComponentType() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/schema/%s", baseUrl, "xslt");
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/schema/xslt"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson).isNotNull();
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
+            assertThat(responseJson).isNotNull();
             assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
 
         } catch (Exception e) {
@@ -443,27 +392,24 @@ class FlowConfigurerRuntimeTest {
     @Test
     void shouldGetFlowStepByTemplateName() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/step/%s", baseUrl, "xslt-action");
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/step/xslt-action"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson).isNotNull();
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
+            assertThat(responseJson).isNotNull();
             assertThat(fieldNames).contains("apiVersion", "kind", "metadata", "spec");
 
         } catch (Exception e) {

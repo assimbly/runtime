@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONObject;
@@ -34,10 +34,6 @@ class UserJWTControllerTest {
     @Test
     void shouldAuthenticateAndGetToken() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/authenticate", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
@@ -50,10 +46,12 @@ class UserJWTControllerTest {
             bodyJson.put("rememberMe", "false");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/authenticate"), bodyJson.toString(), null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThatJson(response.body()).inPath("id_token");
 
         } catch (Exception e) {

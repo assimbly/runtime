@@ -3,8 +3,8 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.brokerrest.utils.HttpUtil;
-import org.assimbly.brokerrest.utils.Utils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -44,10 +44,6 @@ class TopicManagerRuntimeTest {
         try {
 
             if (testInfo.getTags().contains("NeedsMessageOnTopic") && !messageSentToTopic) {
-                // url
-                String baseUrl = container.getBrokerBaseUrl();
-                String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, BROKER_TYPE, TOPIC_TEST);
-
                 // params
                 HashMap<String, String> params = new HashMap();
                 params.put("messageHeaders", "{\"test\":\"1234\"}");
@@ -58,7 +54,7 @@ class TopicManagerRuntimeTest {
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
                 // endpoint call
-                HttpUtil.makeHttpCall(url, "POST", "Hello World!", params, headers);
+                HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+TOPIC_TEST+"/send"), "Hello World!", params, headers);
 
                 messageSentToTopic = true;
             }
@@ -72,23 +68,20 @@ class TopicManagerRuntimeTest {
     @Order(1)
     void shouldCreateTopic() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topic/%s", baseUrl, BROKER_TYPE, TOPIC_TEST);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topic/"+TOPIC_TEST), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("success");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
@@ -110,23 +103,20 @@ class TopicManagerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(topicCreated, "Skipping shouldGetTopic test because shouldCreateTopic test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topic/%s", baseUrl, BROKER_TYPE, TOPIC_TEST);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topic/"+TOPIC_TEST), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             JsonNode topicJson = responseJson.get("topic");
             assertThat(topicJson.get("temporary").asText()).isEqualTo("false");
             assertThat(topicJson.get("address").asText()).isEqualTo(TOPIC_TEST);
@@ -146,28 +136,24 @@ class TopicManagerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(topicCreated, "Skipping shouldGetTopics test because shouldCreateTopic test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topics", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topics"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             JsonNode topicsJson = responseJson.get("topics").get("topic");
+            JsonNode topicJson = topicsJson.get(0);
+
+            // asserts contents
             assertThat(topicsJson.isArray()).isTrue();
             assertThat(topicsJson.size()).isPositive();
-
-            JsonNode topicJson = topicsJson.get(0);
             assertThat(topicJson.get("temporary").asText()).isEqualTo("false");
             assertThat(topicJson.get("address").asText()).isNotNull();
             assertThat(topicJson.get("numberOfConsumers").asInt()).isZero();
@@ -186,23 +172,20 @@ class TopicManagerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(topicCreated, "Skipping shouldClearTopic test because shouldCreateTopic test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topic/%s/clear", baseUrl, BROKER_TYPE, TOPIC_TEST);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topic/"+TOPIC_TEST+"/clear"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("success");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
@@ -222,23 +205,20 @@ class TopicManagerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(topicCreated, "Skipping shouldClearTopics test because shouldCreateTopic test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topics/clear", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topics/clear"), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("message").asText()).isEqualTo("success");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
@@ -258,23 +238,20 @@ class TopicManagerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(topicCreated, "Skipping shouldDeleteTopic test because shouldCreateTopic test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/topic/%s", baseUrl, BROKER_TYPE, TOPIC_TEST);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/topic/"+TOPIC_TEST), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("details").asText()).isEqualTo("successful");
             assertThat(responseJson.get("status").asInt()).isEqualTo(200);
             assertThat(responseJson.get("timestamp").asText()).isNotEmpty();

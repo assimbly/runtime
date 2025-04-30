@@ -3,8 +3,9 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.brokerrest.utils.HttpUtil;
-import org.assimbly.brokerrest.utils.Utils;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -51,10 +52,6 @@ class MessageBrokerRuntimeTest {
         try {
 
             if (testInfo.getTags().contains("NeedsMessageOnQueueTest1") && (!messageSentOnQueue1 || messageMovedFromQueue1)) {
-                // url
-                String baseUrl = container.getBrokerBaseUrl();
-                String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
-
                 // params
                 HashMap<String, String> params = new HashMap();
                 params.put("messageHeaders", "{\"test\":\"1234\"}");
@@ -65,7 +62,7 @@ class MessageBrokerRuntimeTest {
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
                 // endpoint call
-                HttpUtil.makeHttpCall(url, "POST", BODY, params, headers);
+                HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/send"), BODY, params, headers);
 
                 // get messageId from queue
                 messageIdOnQueue1 = getMessageIdFromQueueName(QUEUE_TEST_1);
@@ -79,30 +76,22 @@ class MessageBrokerRuntimeTest {
     }
 
     private static void createQueue(String queueName) {
-        // url
-        String baseUrl = container.getBrokerBaseUrl();
-        String url = String.format("%s/api/brokers/%s/queue/%s", baseUrl, BROKER_TYPE, queueName);
-
         // headers
         HashMap<String, String> headers = new HashMap();
         headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
         // endpoint call
-        HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+        HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+queueName), null, null, headers);
     }
 
     private static String getMessageIdFromQueueName(String queueName) {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, BROKER_TYPE, queueName);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+queueName+"/browse"), null, headers);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
@@ -125,10 +114,6 @@ class MessageBrokerRuntimeTest {
     @Order(1)
     void shouldSendMessageToEndpoint() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/send", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("messageHeaders", "{\"test\":\"1234\"}");
@@ -139,20 +124,16 @@ class MessageBrokerRuntimeTest {
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", BODY, params, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/send"), BODY, params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("success");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "success");
 
             setMessageFlags(true, false);
 
@@ -168,29 +149,21 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/delayedmessages/%s/count", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/delayedmessages/"+QUEUE_TEST_1+"/count"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -204,29 +177,21 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetFlowsMessageCount test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/flows/message/count", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/flows/message/count"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("{}");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "{}");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -240,29 +205,21 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCountByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/count", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/count"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("1");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "1");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -276,28 +233,24 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldBrowseMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/browse", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/browse"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             JsonNode messagesJson = responseJson.get("messages").get("message");
+            JsonNode messageJson = messagesJson.get(0);
+
+            // asserts contents
             assertThat(messagesJson.isArray()).isTrue();
             assertThat(messagesJson.size()).isPositive();
-
-            JsonNode messageJson = messagesJson.get(0);
             assertThat(messageJson.get("headers")).isNotNull();
             assertThat(messageJson.get("jmsHeaders")).isNotNull();
             assertThat(messageJson.get("messageid").asText()).isNotNull();
@@ -320,28 +273,24 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldFilterMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-
-            String url = String.format("%s/api/brokers/%s/messages/%s/filter", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/filter"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             JsonNode messagesJson = responseJson.get("messages").get("message");
+            JsonNode messageJson = messagesJson.get(0);
+
+            // asserts contents
             assertThat(messagesJson.isArray()).isTrue();
             assertThat(messagesJson.size()).isPositive();
-
-            JsonNode messageJson = messagesJson.get(0);
             assertThat(messageJson.get("jmsHeaders")).isNotNull();
             assertThat(messageJson.get("messageid").asText()).isNotNull();
             assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
@@ -360,29 +309,21 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/count", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", QUEUE_TEST_1, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/count"), QUEUE_TEST_1, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("1");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "1");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -397,28 +338,24 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/browse/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, messageIdOnQueue1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/browse/"+messageIdOnQueue1), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             JsonNode messagesJson = responseJson.get("messages").get("message");
+            JsonNode messageJson = messagesJson.get(0);
+
+            // asserts contents
             assertThat(messagesJson.isArray()).isTrue();
             assertThat(messagesJson.size()).isPositive();
-
-            JsonNode messageJson = messagesJson.get(0);
             assertThat(messageJson.get("headers")).isNotNull();
             assertThat(messageJson.get("jmsHeaders")).isNotNull();
             assertThat(messageJson.get("messageid").asText()).isNotNull();
@@ -440,29 +377,21 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, messageIdOnQueue1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/"+messageIdOnQueue1), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
             setMessageFlags(false, false);
 
@@ -479,29 +408,21 @@ class MessageBrokerRuntimeTest {
             // check for necessary data before continue
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-
-            String url = String.format("%s/api/brokers/%s/messages/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1);
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("1");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "1");
 
             setMessageFlags(false, false);
 
@@ -515,29 +436,21 @@ class MessageBrokerRuntimeTest {
     @Order(20)
     void shouldMoveMessageFromQueue1ToQueue2() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/message/%s/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, QUEUE_TEST_2, messageIdOnQueue1);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/"+QUEUE_TEST_2+"/"+messageIdOnQueue1), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("true");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
             setMessageFlags(false, true);
 
@@ -551,29 +464,21 @@ class MessageBrokerRuntimeTest {
     @Order(21)
     void shouldMoveMessagesFromQueue1ToQueue2() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/messages/%s/%s", baseUrl, BROKER_TYPE, QUEUE_TEST_1, QUEUE_TEST_2);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/"+QUEUE_TEST_2), null, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asInt()).isPositive();
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson);
 
             setMessageFlags(false, true);
 

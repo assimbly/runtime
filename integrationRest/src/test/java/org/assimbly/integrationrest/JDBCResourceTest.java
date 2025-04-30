@@ -3,7 +3,7 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -33,10 +33,6 @@ class JDBCResourceTest {
     @Test
     void shouldValidateJdbcConnection() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/validation/jdbc", baseUrl);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("type", "MYSQL");
@@ -56,10 +52,12 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEmpty();
 
         } catch (Exception e) {
@@ -70,10 +68,6 @@ class JDBCResourceTest {
     @Test
     void shouldValidateJdbcConnectionWithError() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/validation/jdbc", baseUrl);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("type", "MYSQL");
@@ -93,13 +87,15 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
             assertThat(responseJson.get("error").asText()).isEqualTo("Access denied for user 'rfamro'@'143.244.42.147' (using password: YES)");
 
         } catch (Exception e) {

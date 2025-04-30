@@ -1,5 +1,6 @@
 package org.assimbly.integrationrest.utils;
 
+import org.assimbly.commons.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

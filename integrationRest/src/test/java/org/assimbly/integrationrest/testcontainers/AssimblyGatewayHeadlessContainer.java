@@ -65,11 +65,11 @@ public class AssimblyGatewayHeadlessContainer {
         }
     }
 
-    public String getBaseUrl() {
+    public String buildBrokerApiPath(String path) {
         if (gatewayHeadlessContainer == null) {
             throw new IllegalStateException("Container has not been initialized. Call init() first.");
         }
-        return "http://" + gatewayHeadlessContainer.getHost() + ":" + gatewayHeadlessContainer.getMappedPort(8088);
+        return "http://" + gatewayHeadlessContainer.getHost() + ":" + gatewayHeadlessContainer.getMappedPort(8088) + path;
     }
 
     public MongoDBContainer getMongoContainer() {

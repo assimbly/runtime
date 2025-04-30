@@ -3,7 +3,7 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.brokerrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -40,15 +40,16 @@ public class HealthBrokerResourceTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/engine"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("totalNumberOfQueues").isInt()).isTrue();
             assertThat(responseJson.get("openConnections").isInt()).isTrue();
             assertThat(responseJson.get("averageMessageSize").isInt()).isTrue();
@@ -71,13 +72,13 @@ public class HealthBrokerResourceTest {
             String url = baseUrl + "/health/broker/jvm";
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/jvm"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -86,6 +87,7 @@ public class HealthBrokerResourceTest {
             JsonNode memoryJson = responseJson.get("memory");
             JsonNode threadsJson = responseJson.get("threads");
 
+            // asserts contents
             assertThat(jvmJson.get("openFileDescriptors").asInt()).isGreaterThan(0);
             assertThat(jvmJson.get("maxFileDescriptors").asInt()).isGreaterThan(0);
             assertThat(memoryJson.get("current").asInt()).isGreaterThan(0);

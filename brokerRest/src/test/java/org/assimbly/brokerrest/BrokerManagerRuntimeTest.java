@@ -3,7 +3,7 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.brokerrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -40,23 +40,20 @@ class BrokerManagerRuntimeTest {
     @Order(1)
     void shouldGetBrokerConnections() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/connections", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/connections"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("connections")).isNotNull();
 
         } catch (Exception e) {
@@ -68,19 +65,17 @@ class BrokerManagerRuntimeTest {
     @Order(1)
     void shouldGetBrokerConsumers() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/consumers", baseUrl, BROKER_TYPE);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/consumers"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("n/a");
 
         } catch (Exception e) {
@@ -92,10 +87,6 @@ class BrokerManagerRuntimeTest {
     @Order(1)
     void shouldGetBrokerInfo() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/info", baseUrl, 1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", BROKER_TYPE);
@@ -104,10 +95,10 @@ class BrokerManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/info"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             assertThat(response.body()).isNotNull();
@@ -119,6 +110,7 @@ class BrokerManagerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.valueToTree(outputMap);
 
+            // asserts contents
             assertThat(responseJson.get("uptime").asText().trim()).matches("\\d+(\\.\\d+)? seconds");
             assertThat(responseJson.get("totalConnections").asInt()).isZero();
             assertThat(responseJson.get("currentConnections").asInt()).isZero();
@@ -138,10 +130,6 @@ class BrokerManagerRuntimeTest {
     @Order(1)
     void shouldGetBrokerStatus() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/status", baseUrl, 1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", BROKER_TYPE);
@@ -150,11 +138,13 @@ class BrokerManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/status"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("started");
 
         } catch (Exception e) {
@@ -166,10 +156,6 @@ class BrokerManagerRuntimeTest {
     @Order(2)
     void shouldStopBroker() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/stop", baseUrl, 1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", BROKER_TYPE);
@@ -178,11 +164,13 @@ class BrokerManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/stop"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("stopped");
 
         } catch (Exception e) {
@@ -194,10 +182,6 @@ class BrokerManagerRuntimeTest {
     @Order(3)
     void shouldStartBroker() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/start", baseUrl, 1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", BROKER_TYPE);
@@ -207,11 +191,13 @@ class BrokerManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/start"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("started");
 
         } catch (Exception e) {
@@ -223,10 +209,6 @@ class BrokerManagerRuntimeTest {
     @Order(4)
     void shouldRestartBroker() {
         try {
-            // url
-            String baseUrl = container.getBrokerBaseUrl();
-            String url = String.format("%s/api/brokers/%s/restart", baseUrl, 1);
-
             // params
             HashMap<String, String> params = new HashMap();
             params.put("brokerType", BROKER_TYPE);
@@ -236,11 +218,13 @@ class BrokerManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - check if backend is started
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, params, headers);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/restart"), params, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("started");
 
         } catch (Exception e) {

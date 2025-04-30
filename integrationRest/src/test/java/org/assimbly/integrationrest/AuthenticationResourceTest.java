@@ -1,10 +1,11 @@
 package org.assimbly.integrationrest;
 
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.integrationrest.utils.GoogleTOTPUtil;
-import org.assimbly.integrationrest.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
+import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.bson.Document;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
@@ -12,12 +13,11 @@ import org.springframework.http.MediaType;
 
 import java.net.URLDecoder;
 import java.net.http.HttpResponse;
-import java.util.Base64;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AuthenticationResourceTest {
@@ -48,21 +48,15 @@ public class AuthenticationResourceTest {
             // create user on mongodb
             MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/db/authenticate", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
-            String data = TestApplicationContext.emailUser + ":" + TestApplicationContext.passwordUser;
-            String auth = Base64.getEncoder().encodeToString(data.getBytes());
-            headers.put("Authorization", auth);
+            headers.put("Authorization", Utils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
             headers.put("db", TestApplicationContext.db);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/db/authenticate"), null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             // authToken to be used on other unit tests
@@ -80,10 +74,6 @@ public class AuthenticationResourceTest {
             // check for necessary data before continue
             assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/authentication/register", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
@@ -92,10 +82,12 @@ public class AuthenticationResourceTest {
             headers.put("Authorization", authToken);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath( "/api/authentication/register"), null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.headers().map()).containsKey("location");
 
             // totpSecret to be used on other unit tests
@@ -115,10 +107,6 @@ public class AuthenticationResourceTest {
             // check for necessary data before continue
             assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/authentication/validate", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
@@ -129,10 +117,12 @@ public class AuthenticationResourceTest {
             bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", bodyDoc.toJson(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/authentication/validate"), bodyDoc.toJson(), null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
             assertThat(response.body()).isEqualTo("true");
 
         } catch (Exception e) {
@@ -147,19 +137,15 @@ public class AuthenticationResourceTest {
             // check for necessary data before continue
             assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/authentication/remove", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Authorization", authToken);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "DELETE", null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/authentication/remove"), null, null, headers);
 
-            // assertions
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
         } catch (Exception e) {

@@ -3,7 +3,7 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -33,18 +33,14 @@ class HealthIntegrationRuntimeTest {
     @Test
     void shouldGetBackendHealthInfo() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/health/backend/jvm", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/backend/jvm"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -53,6 +49,7 @@ class HealthIntegrationRuntimeTest {
             JsonNode memoryJson = responseJson.get("memory");
             JsonNode threadsJson = responseJson.get("threads");
 
+            // asserts contents
             assertThat(jvmJson.get("openFileDescriptors").asInt()).isPositive();
             assertThat(jvmJson.get("maxFileDescriptors").asInt()).isPositive();
             assertThat(memoryJson.get("current").asInt()).isPositive();
@@ -71,23 +68,20 @@ class HealthIntegrationRuntimeTest {
     @Test
     void shouldGetBackendFlowsInfo() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/health/backend/flows", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/backend/flows"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(responseJson.get("startedSteps").asInt()).isNotNegative();
             assertThat(responseJson.get("memoryUsage").asDouble()).isPositive();

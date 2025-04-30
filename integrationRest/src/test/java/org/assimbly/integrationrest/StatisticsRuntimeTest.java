@@ -2,10 +2,11 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
-import org.assimbly.integrationrest.utils.HttpUtil;
+import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
-import org.assimbly.integrationrest.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -46,10 +47,6 @@ class StatisticsRuntimeTest {
     @BeforeEach
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/install", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -57,7 +54,7 @@ class StatisticsRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - install scheduler flow
-            HttpUtil.makeHttpCall(url, "POST", (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -67,24 +64,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/messages", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
+            // asserts contents
             assertThat(flowJson.get("total").asInt()).isZero();
             assertThat(flowJson.get("pending").asInt()).isZero();
             assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -100,29 +94,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetCompleteFlowMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/messages/completed", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/completed"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -133,29 +119,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFailedFlowMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/messages/failed", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/failed"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -166,29 +144,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetPendingFlowMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/messages/pending", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/pending"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -199,29 +169,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetTotalFlowMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/messages/total", baseUrl, schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/total"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("0");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -232,28 +194,21 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowMessagesByStepId() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/step/%s/messages",
-                    baseUrl,
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
-            );
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/messages"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode stepJson = responseJson.get("step");
 
+            // asserts contents
             assertThat(stepJson.get("total").asInt()).isZero();
             assertThat(stepJson.get("pending").asInt()).isZero();
             assertThat(stepJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -269,36 +224,28 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowStatsByStepId() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/step/%s/stats",
-                    baseUrl,
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
-            );
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/stats"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             JsonNode stepJson = responseJson.get("step");
+            JsonNode statsJson = stepJson.get("stats");
+
+            // asserts contents
             assertThat(stepJson.get("id").asText()).isEqualTo(String.format("%s-%s",
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
                     )
             );
             assertThat(stepJson.get("status").asText()).isEqualTo("started");
-
-            JsonNode statsJson = stepJson.get("stats");
             assertThat(statsJson.get("externalRedeliveries").asInt()).isZero();
             assertThat(statsJson.get("idleSince").asInt()).isNegative();
             assertThat(statsJson.get("maxProcessingTime").asInt()).isZero();
@@ -321,26 +268,23 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetHistoryMetrics() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/historymetrics", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/historymetrics"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
             assertThat(fieldNames).contains("version", "gauges", "counters", "histograms", "meters", "timers");
 
         } catch (Exception e) {
@@ -352,27 +296,23 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetMessages() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/messages", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/messages"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode flowJson = responseJson.get(0).get("flow");
 
+            // asserts contents
             assertThat(responseJson).isNotNull();
             assertThat(responseJson.isArray()).isTrue();
-
-            JsonNode flowJson = responseJson.get(0).get("flow");
             assertThat(flowJson.get("total").asInt()).isZero();
             assertThat(flowJson.get("pending").asInt()).isZero();
             assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -388,26 +328,23 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetMetrics() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/metrics", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/metrics"), null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
             assertThat(fieldNames).contains("version", "gauges", "counters", "histograms", "meters", "timers");
 
         } catch (Exception e) {
@@ -419,27 +356,24 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStepsStats() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/stats/steps", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats/steps"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode camelContextStatJson = responseJson.get("camelContextStat");
-
             List<String> fieldNames = StreamSupport.stream(
                             Spliterators.spliteratorUnknownSize(camelContextStatJson.fieldNames(), 0), false)
                     .collect(Collectors.toList());
+
+            // asserts contents
             assertThat(fieldNames).contains("id", "state", "exchangesInflight", "exchangesCompleted", "exchangesFailed",
                     "failuresHandled", "redeliveries", "externalRedeliveries", "minProcessingTime", "maxProcessingTime",
                     "totalProcessingTime", "lastProcessingTime", "deltaProcessingTime", "meanProcessingTime", "idleSince",
@@ -457,10 +391,6 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetEmptyFlowStats() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/flow/%s/stats", baseUrl, inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -468,15 +398,16 @@ class StatisticsRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/stats"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
+            // asserts contents
             assertThat(flowJson.get("total").asInt()).isZero();
             assertThat(flowJson.get("pending").asInt()).isZero();
             assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
@@ -491,23 +422,20 @@ class StatisticsRuntimeTest {
     @Test
     void shouldGetStats() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/stats", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
 
+            // asserts contents
             assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(responseJson.get("startedSteps").isInt()).isTrue();
             assertThat(responseJson.get("memoryUsage").isDouble()).isTrue();
@@ -534,27 +462,22 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStatsFlows() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/stats/flows", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "GET", null, null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats/flows"), null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-
-            assertThat(responseJson.size()).isNotNegative();
-
             JsonNode flowJson = responseJson.get(0).get("flow");
 
+            // asserts contents
+            assertThat(responseJson.size()).isNotNegative();
             assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(flowJson.get("pending").isInt()).isTrue();
             assertThat(flowJson.get("completed").isInt()).isTrue();
@@ -579,10 +502,6 @@ class StatisticsRuntimeTest {
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStatsByFlowIds() {
         try {
-            // url
-            String baseUrl = container.getBaseUrl();
-            String url = String.format("%s/api/integration/statsbyflowids", baseUrl);
-
             // headers
             HashMap<String, String> headers = new HashMap();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -591,15 +510,16 @@ class StatisticsRuntimeTest {
             String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name());
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.makeHttpCall(url, "POST", body, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/statsbyflowids"), body, null, headers);
 
-            // asserts
+            // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get(0).get("flow");
 
+            // asserts contents
             assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
             assertThat(flowJson.get("pending").isInt()).isTrue();
             assertThat(flowJson.get("completed").isInt()).isTrue();
