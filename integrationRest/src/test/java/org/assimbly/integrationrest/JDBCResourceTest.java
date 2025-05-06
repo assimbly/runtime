@@ -96,7 +96,9 @@ class JDBCResourceTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText()).isEqualTo("Access denied for user 'rfamro'@'143.244.42.147' (using password: YES)");
+            assertThat(responseJson.get("error").asText())
+                    .startsWith("Access denied for user 'rfamro'@")
+                    .endsWith("(using password: YES)");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
