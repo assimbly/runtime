@@ -30,7 +30,7 @@
 		<hamcrest.version>3.0</hamcrest.version>
 		<h2database.version>2.3.232</h2database.version>
 		<maven-api.version>3.9.9</maven-api.version>
-		<spring-boot.version>3.4.4</spring-boot.version>
+		<spring-boot.version>3.4.5</spring-boot.version>
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 	</properties>
