@@ -3,6 +3,7 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
+import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.commons.utils.Utils;
 import org.eclipse.jetty.http.HttpStatus;
@@ -82,12 +83,7 @@ class TopicManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("success");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "success");
 
             topicCreated = true;
 
@@ -115,9 +111,9 @@ class TopicManagerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode topicJson = responseJson.get("topic");
 
             // asserts contents
-            JsonNode topicJson = responseJson.get("topic");
             assertThat(topicJson.get("temporary").asText()).isEqualTo("false");
             assertThat(topicJson.get("address").asText()).isEqualTo(TOPIC_TEST);
             assertThat(topicJson.get("numberOfConsumers").asInt()).isZero();
@@ -186,12 +182,7 @@ class TopicManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("success");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "success");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -219,12 +210,7 @@ class TopicManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("success");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "success");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -252,11 +238,7 @@ class TopicManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("status").asInt()).isEqualTo(200);
-            assertThat(responseJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(responseJson.get("timestamp").asText(), "yyyy-MM-dd HH:mm:ss.SSS");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
