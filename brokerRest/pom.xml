@@ -73,6 +73,12 @@
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>
+		  <groupId>org.junit.jupiter</groupId>
+		  <artifactId>junit-jupiter-engine</artifactId>
+		  <version>${junit-jupiter.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
 		  <groupId>org.eclipse.jetty</groupId>
 		  <artifactId>jetty-http</artifactId>
 		  <version>${jetty.version}</version>
