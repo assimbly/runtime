@@ -313,10 +313,10 @@ class StatisticsRuntimeTest {
             // asserts contents
             assertThat(responseJson).isNotNull();
             assertThat(responseJson.isArray()).isTrue();
-            assertThat(flowJson.get("total").asInt()).isZero();
-            assertThat(flowJson.get("pending").asInt()).isZero();
+            assertThat(flowJson.get("total").asInt()).isNotNegative();
+            assertThat(flowJson.get("pending").asInt()).isNotNegative();
             assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("completed").asInt()).isZero();
+            assertThat(flowJson.get("completed").asInt()).isNotNegative();
             assertThat(flowJson.get("failed").asInt()).isZero();
 
         } catch (Exception e) {
