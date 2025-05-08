@@ -14,6 +14,7 @@
 	<modules>
 		<module>broker</module>
 		<module>brokerRest</module>
+		<module>commons</module>
 		<module>dil</module>
 		<module>integration</module>
 		<module>integrationRest</module>
@@ -33,6 +34,18 @@
 		<spring-boot.version>3.4.5</spring-boot.version>
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
+
+		<!-- test versions -->
+		<assertj.version>3.27.3</assertj.version>
+		<googleauth.version>1.5.0</googleauth.version>
+		<jackson.version>2.18.2</jackson.version>
+		<jetty.version>12.0.15</jetty.version>
+		<json.version>20250107</json.version>
+		<json-unit-assertj.version>4.1.0</json-unit-assertj.version>
+		<junit.version>4.13.2</junit.version>
+		<junit-jupiter.version>5.11.3</junit-jupiter.version>
+		<mongo.version>4.7.2</mongo.version>
+		<testcontainers.version>1.20.4</testcontainers.version>
 	</properties>
 	
 	<distributionManagement>

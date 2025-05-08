@@ -1,328 +1,389 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.integrationrest.config.IntegrationConfig;
-import org.assimbly.integrationrest.utils.CamelContextUtil;
-import org.assimbly.integrationrest.utils.FlowUtil;
-import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpHeaders;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
+import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
+import org.assimbly.integrationrest.utils.TestApplicationContext;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 
-import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
-@SpringBootTest(classes = FlowConfigurerRuntime.class)
-@ComponentScan(basePackageClasses = {
-        IntegrationRuntime.class,
-        IntegrationConfig.class,
-        FlowConfigurerRuntime.class,
-        SimpMessageSendingOperations.class
-})
-@AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlowConfigurerRuntimeTest {
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    @Autowired
-    private MockMvc mockMvc;
+    private static boolean schedulerFlowInstalled = false;
 
-    private Properties camelContextProp = CamelContextUtil.buildExample();
+    private static AssimblyGatewayHeadlessContainer container;
+
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        container.stop();
+    }
 
     @BeforeEach
-    void beforeEach() throws Exception{
-        integrationRuntime.getIntegration().getContext().init();
-        integrationRuntime.getIntegration().getContext().start();
-    }
+    void setUp(TestInfo testInfo) {
+        if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
+            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-    @AfterEach
-    void afterEach() throws Exception{
-        integrationRuntime.getIntegration().getContext().stop();
-    }
+            // endpoint call
+            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
 
-    @Test
-    void shouldSetFlowConfiguration() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/%s/configure", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_XML_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
-                null,
-                MediaType.APPLICATION_XML_VALUE,
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
-
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(header().string(
-                        HttpHeaders.CONTENT_TYPE,
-                        String.format("%s;charset=%s", MediaType.APPLICATION_XML_VALUE, StandardCharsets.ISO_8859_1.displayName())))
-                .andExpect(xpath("//response/details").string("successful"))
-                .andExpect(xpath("//response/message").string("Flow configuration set"))
-        ;
+            schedulerFlowInstalled = true;
+        }
     }
 
     @Test
-    void shouldGetFlowConfiguration() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    @Order(1)
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldSetFlowConfiguration() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/%s/configure", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_XML_VALUE, "charset", StandardCharsets.ISO_8859_1.displayName()),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // body
+            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(header().string(
-                        HttpHeaders.CONTENT_TYPE,
-                        String.format("%s;charset=%s", MediaType.APPLICATION_XML_VALUE, StandardCharsets.ISO_8859_1.displayName())))
-                .andExpect(xpath("//camelContext/@id").string((String)camelContextProp.get(CamelContextUtil.Field.id.name())))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), camelContext, null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Flow configuration set");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldCheckFlow() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    @Order(2)
+    @Tag("NeedsSchedulerFlowInstalled")
+    void checkIfFlowIsConfigured() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/%s/isconfigured", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/isconfigured"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("details").value("successful"))
-                .andExpect(jsonPath("message").value("true"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetDocumentationVersion() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    @Order(3)
+    void shouldGetFlowConfiguration() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/documentation/version", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("details").value("successful"))
-                .andExpect(jsonPath("message").isNotEmpty())
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
+            assertThat(response.body()).isNotEmpty();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetDocumentation() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/documentation/%s", 1, "velocity"),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+    @Order(4)
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldGetFlowRoutesByFlowId() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("component").isNotEmpty())
-                .andExpect(jsonPath("component.kind").value("component"))
-                .andExpect(jsonPath("component.name").value("velocity"))
-                .andExpect(jsonPath("component.label").value("transformation"))
-                .andExpect(jsonPath("componentProperties").isNotEmpty())
-                .andExpect(jsonPath("headers").isNotEmpty())
-                .andExpect(jsonPath("properties").isNotEmpty())
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/route"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode routesJson = responseJson.get("routes");
+            JsonNode routeJson = routesJson.get("route").get(0);
+
+            // asserts contents
+            AssertUtils.assertFlowRoutesResponse(routesJson);
+            AssertUtils.assertFlowRouteResponse(routeJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetComponents() throws Exception {
+    @Order(5)
+    void shouldGetComponents() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("IncludeCustomComponents", "false");
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/components", 1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE, "includeCustomComponents", "false"),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/components"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$[?(@.name == 'velocity')].kind").value("component"))
-                .andExpect(jsonPath("$[?(@.name == 'velocity')].label").value("transformation"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode componentJson = responseJson.get(0);
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false).toList();
+
+            // asserts contents
+            AssertUtils.assertComponentFieldsResponse(fieldNames);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetCustomComponents() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/components", 1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE, "includeCustomComponents", "true"),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+    @Order(6)
+    @Tag("NeedsSchedulerFlowInstalled")
+    void shouldRemoveFlowConfiguration() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$[?(@.name == 'xmltojson')].kind").value("component"))
-                .andExpect(jsonPath("$[?(@.name == 'xmltojson')].firstVersion").value("3.18.0"))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/remove"), null, null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetComponentSchema() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/schema/%s", 1, "velocity"),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+    void shouldGetFlowDocumentationByComponentType() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("component").isNotEmpty())
-                .andExpect(jsonPath("component.kind").value("component"))
-                .andExpect(jsonPath("component.name").value("velocity"))
-                .andExpect(jsonPath("component.label").value("transformation"))
-                .andExpect(jsonPath("componentProperties").isNotEmpty())
-                .andExpect(jsonPath("headers").isNotEmpty())
-                .andExpect(jsonPath("properties").isNotEmpty())
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/documentation/xslt"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+
+            // asserts contents
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetComponentOptions() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/options/%s", 1, "velocity"),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+    void shouldGetDocumentationVersion() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("component").isNotEmpty())
-                .andExpect(jsonPath("component.kind").value("component"))
-                .andExpect(jsonPath("component.name").value("velocity"))
-                .andExpect(jsonPath("component.label").value("transformation"))
-                .andExpect(jsonPath("componentProperties").isNotEmpty())
-                .andExpect(jsonPath("headers").isNotEmpty())
-                .andExpect(jsonPath("properties").isNotEmpty())
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/documentation/version"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
+            assertThat(response.body()).isNotNull();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetCamelRoute() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    void shouldGetFlowSteps() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/%s/route", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/list/steps"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("routes").isNotEmpty())
-                .andExpect(jsonPath("routes.route[*].id", hasItem(
-                        String.format("%s-%s",
-                                camelContextProp.get(CamelContextUtil.Field.id.name()),
-                                camelContextProp.get(CamelContextUtil.Field.routeId1.name())))))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.isArray()).isTrue();
+            assertThat(responseJson.size()).isPositive();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldGetAllCamelRoutes() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    void shouldGetFlowOptionsByComponentType() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/routes", 1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/options/xslt"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("routes").isNotEmpty())
-                .andExpect(jsonPath("routes.route[*].id", hasItem(
-                        String.format("%s-%s",
-                                camelContextProp.get(CamelContextUtil.Field.id.name()),
-                                camelContextProp.get(CamelContextUtil.Field.routeId1.name())))))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+
+            // asserts contents
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldRemoveFlow() throws Exception {
-        FlowUtil.installFlow(
-                this.mockMvc,
-                (String)camelContextProp.get(CamelContextUtil.Field.id.name()),
-                (String)camelContextProp.get(CamelContextUtil.Field.camelContext.name())
-        );
+    void shouldGetFlowRoutes() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildDeleteMockHttpServletRequestBuilder(
-                String.format("/api/integration/%d/flow/%s/remove", 1, camelContextProp.get(CamelContextUtil.Field.id.name())),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null
-        );
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/routes"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("details").value("successful"))
-                .andExpect(jsonPath("message").value("true"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            // asserts contents
+            assertThat(response.body()).isEqualTo("{not available yet}");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
+    @Test
+    void shouldGetFlowSchemaByComponentType() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/schema/xslt"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+
+            // asserts contents
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldGetFlowStepByTemplateName() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/step/xslt-action"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+
+            // asserts contents
+            AssertUtils.assertFlowStepFieldsResponse(fieldNames);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
 
 }
