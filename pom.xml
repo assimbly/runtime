@@ -21,20 +21,26 @@
 	</modules>
 
 	<properties>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<main.basedir>${project.basedir}</main.basedir>
-		<activemq.version>6.1.6</activemq.version>
-		<assimbly.version>5.0.6-SNAPSHOT</assimbly.version>
-		<hamcrest.version>3.0</hamcrest.version>
-		<spring-boot.version>3.4.2</spring-boot.version>
+	  
+    <!-- build properties -->
+    <maven.compiler.source>21</maven.compiler.source>
+ 	  <maven.compiler.target>21</maven.compiler.target>
+ 	  <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+ 	  <main.basedir>${project.basedir}</main.basedir>
+
+    <!-- versions -->
+    <activemq.version>6.1.6</activemq.version>
+ 	  <assimbly.version>5.0.6-SNAPSHOT</assimbly.version>
+	  <hamcrest.version>3.0</hamcrest.version>
+		<spring-boot.version>3.4.5</spring-boot.version>
 		<maven-api.version>3.9.9</maven-api.version>
-		<camel-spring-junit5.version>4.10.3</camel-spring-junit5.version>
+		<camel-spring-junit5.version>4.10.4</camel-spring-junit5.version>
 		<h2database.version>2.3.232</h2database.version>
 		<xalan.version>2.7.3</xalan.version>
 		<zip4j.version>2.11.5</zip4j.version>
-		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
+		
+    <!-- test versions -->
 		<testcontainers.version>1.20.4</testcontainers.version>
 		<mongo.version>4.7.2</mongo.version>
 		<googleauth.version>1.5.0</googleauth.version>
@@ -45,6 +51,7 @@
 		<junit-jupiter.version>5.11.3</junit-jupiter.version>
 		<jackson.version>2.18.2</jackson.version>
 		<jetty.version>12.0.15</jetty.version>
+    
 	</properties>
 
 	<distributionManagement> 
@@ -154,14 +161,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.extensions</groupId>
-				<artifactId>maven-build-cache-extension</artifactId>
-				<version>1.2.0</version>
-			</extension>
-		</extensions>
 
     </build>
 	
