@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<route id="route1">
+    <from uri="timer://route1_timer?fixedRate=true&amp;period=10000&amp;repeatCount=1" />
+    <to uri="mock:route2" />
+</route>

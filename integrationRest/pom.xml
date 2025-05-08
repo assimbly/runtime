@@ -41,7 +41,68 @@
 		  <version>${spring-boot.version}</version>
 	  </dependency>
 
+	  <dependency>
+		  <groupId>org.json</groupId>
+		  <artifactId>json</artifactId>
+		  <version>${json.version}</version>
+	  </dependency>
+
 	  <!-- tests -->
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>commons</artifactId>
+		  <version>${assimbly.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.testcontainers</groupId>
+		  <artifactId>testcontainers</artifactId>
+		  <version>${testcontainers.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.testcontainers</groupId>
+		  <artifactId>mongodb</artifactId>
+		  <version>${testcontainers.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.mongodb</groupId>
+		  <artifactId>mongodb-driver-sync</artifactId>
+		  <version>${mongo.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.mongodb</groupId>
+		  <artifactId>mongodb-driver-core</artifactId>
+		  <version>${mongo.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>com.warrenstrange</groupId>
+		  <artifactId>googleauth</artifactId>
+		  <version>${googleauth.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.assertj</groupId>
+		  <artifactId>assertj-core</artifactId>
+		  <version>${assertj.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>net.javacrumbs.json-unit</groupId>
+		  <artifactId>json-unit-assertj</artifactId>
+		  <version>${json-unit-assertj.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>junit</groupId>
+		  <artifactId>junit</artifactId>
+		  <version>${junit.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+
 	  <dependency>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-test</artifactId>
@@ -58,12 +119,6 @@
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-starter-data-jpa</artifactId>
 		  <version>${spring-boot.version}</version>
-		  <scope>test</scope>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.apache.camel</groupId>
-		  <artifactId>camel-test-spring-junit5</artifactId>
-		  <version>${camel-spring-junit5.version}</version>
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>
