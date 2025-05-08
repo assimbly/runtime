@@ -37,7 +37,7 @@ class CertificateManagerRuntimeTest {
 
     @Test
     @Order(1)
-    @Disabled
+    @Disabled("to be tested on future releases")
     void shouldGenerateCertificate() {
         try {
             // headers

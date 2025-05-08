@@ -3,6 +3,7 @@ package org.assimbly.integrationrest.testcontainers;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Network;
@@ -25,13 +26,17 @@ public class AssimblyGatewayHeadlessContainer {
     }
 
     public void init() {
-        // initialize mongodb container
-        mongoContainer = new MongoDBContainer("mongo:3.3.8")
-                .withExposedPorts(27017)
-                .withNetwork(network)
-                .withNetworkAliases("flux-mongo")
-                .waitingFor(Wait.forListeningPort());
-        mongoContainer.start();
+
+        // to prevent the "Prematurely reached end of stream" error on the mongo container, it will be started only once
+        if(mongoContainer == null) {
+            // initialize mongodb container
+            mongoContainer = new MongoDBContainer("mongo:3.3.8")
+                    .withExposedPorts(27017)
+                    .withNetwork(network)
+                    .withNetworkAliases("flux-mongo")
+                    .waitingFor(Wait.forListeningPort());
+            mongoContainer.start();
+        }
 
         // initialize assimbly gateway container
         gatewayHeadlessContainer = new GenericContainer<>("assimbly/gateway-headless:development")
@@ -41,17 +46,14 @@ public class AssimblyGatewayHeadlessContainer {
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.mongoSecretKey)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort())
-                .withFileSystemBind(getResourceSecurityPath(), "/data/.assimbly/security/")
-                .withFileSystemBind("/tmp/jeka", "/data/.jeka"); // bind a writable directory to prevent AccessDeniedException on /data/.jeka
+                .withFileSystemBind(getResourceSecurityPath(), "/data/.assimbly/security/", BindMode.READ_WRITE)
+                .withFileSystemBind("/tmp/jeka", "/data/.jeka", BindMode.READ_WRITE); // bind a writable directory to prevent AccessDeniedException on /data/.jeka
         gatewayHeadlessContainer.start();
     }
 
     public void stop() {
         if (gatewayHeadlessContainer != null) {
             gatewayHeadlessContainer.stop();
-        }
-        if (mongoContainer != null) {
-            mongoContainer.stop();
         }
     }
 

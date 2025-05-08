@@ -3,9 +3,8 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.Utils;
-import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
@@ -17,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,8 +24,8 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StatisticsRuntimeTest {
 
-    private Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
     private static boolean schedulerFlowInstalled = false;
 
@@ -79,11 +77,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            assertThat(flowJson.get("total").asInt()).isZero();
-            assertThat(flowJson.get("pending").asInt()).isZero();
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("completed").asInt()).isZero();
-            assertThat(flowJson.get("failed").asInt()).isZero();
+            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -108,7 +102,7 @@ class StatisticsRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
+            AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -209,11 +203,7 @@ class StatisticsRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
 
             // asserts contents
-            assertThat(stepJson.get("total").asInt()).isZero();
-            assertThat(stepJson.get("pending").asInt()).isZero();
-            assertThat(stepJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(stepJson.get("completed").asInt()).isZero();
-            assertThat(stepJson.get("failed").asInt()).isZero();
+            AssertUtils.assertEmptyFlowStatsResponse(stepJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -238,26 +228,13 @@ class StatisticsRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode stepJson = responseJson.get("step");
             JsonNode statsJson = stepJson.get("stats");
-
-            // asserts contents
-            assertThat(stepJson.get("id").asText()).isEqualTo(String.format("%s-%s",
+            String id = String.format("%s-%s",
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
-                    )
             );
-            assertThat(stepJson.get("status").asText()).isEqualTo("started");
-            assertThat(statsJson.get("externalRedeliveries").asInt()).isZero();
-            assertThat(statsJson.get("idleSince").asInt()).isNegative();
-            assertThat(statsJson.get("maxProcessingTime").asInt()).isZero();
-            assertThat(statsJson.get("exchangesFailed").asInt()).isZero();
-            assertThat(statsJson.get("redeliveries").asInt()).isZero();
-            assertThat(statsJson.get("minProcessingTime").asInt()).isZero();
-            assertThat(statsJson.get("lastProcessingTime").asInt()).isNegative();
-            assertThat(statsJson.get("meanProcessingTime").asInt()).isNegative();
-            assertThat(statsJson.get("failuresHandled").asInt()).isZero();
-            assertThat(statsJson.get("totalProcessingTime").asInt()).isZero();
-            assertThat(statsJson.get("exchangesCompleted").asInt()).isZero();
-            assertThat(statsJson.get("deltaProcessingTime").asInt()).isZero();
+
+            // asserts contents
+            AssertUtils.assertStepStatsResponse(stepJson, statsJson, id, "started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -280,12 +257,10 @@ class StatisticsRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(fieldNames).contains("version", "gauges", "counters", "histograms", "meters", "timers");
+            AssertUtils.assertHistoryMetricStatFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -311,13 +286,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(flowJson.get("total").asInt()).isNotNegative();
-            assertThat(flowJson.get("pending").asInt()).isNotNegative();
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("completed").asInt()).isNotNegative();
-            assertThat(flowJson.get("failed").asInt()).isZero();
+            AssertUtils.assertMessageStatFieldsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -340,12 +309,10 @@ class StatisticsRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(fieldNames).contains("version", "gauges", "counters", "histograms", "meters", "timers");
+            AssertUtils.assertMetricStatFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -369,19 +336,10 @@ class StatisticsRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode camelContextStatJson = responseJson.get("camelContextStat");
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(camelContextStatJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = List.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(camelContextStatJson.fieldNames(), 0), false).toList());
 
             // asserts contents
-            assertThat(fieldNames).contains("id", "state", "exchangesInflight", "exchangesCompleted", "exchangesFailed",
-                    "failuresHandled", "redeliveries", "externalRedeliveries", "minProcessingTime", "maxProcessingTime",
-                    "totalProcessingTime", "lastProcessingTime", "deltaProcessingTime", "meanProcessingTime", "idleSince",
-                    "startTimestamp", "resetTimestamp", "firstExchangeCompletedTimestamp", "firstExchangeCompletedExchangeId",
-                    "firstExchangeFailureTimestamp", "firstExchangeFailureExchangeId", "lastExchangeCreatedTimestamp",
-                    "lastExchangeCompletedTimestamp", "lastExchangeCompletedExchangeId", "lastExchangeFailureTimestamp",
-                    "lastExchangeFailureExchangeId", "routeStats"
-            );
+            AssertUtils.assertStepStatFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -408,11 +366,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            assertThat(flowJson.get("total").asInt()).isZero();
-            assertThat(flowJson.get("pending").asInt()).isZero();
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("completed").asInt()).isZero();
-            assertThat(flowJson.get("failed").asInt()).isZero();
+            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -436,22 +390,7 @@ class StatisticsRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
-            assertThat(responseJson.get("startedSteps").isInt()).isTrue();
-            assertThat(responseJson.get("memoryUsage").isDouble()).isTrue();
-            assertThat(responseJson.get("exchangesInflight").isInt()).isTrue();
-            assertThat(responseJson.get("camelVersion")).isNotNull();
-            assertThat(responseJson.get("exchangesCompleted").isInt()).isTrue();
-            assertThat(responseJson.get("camelId")).isNotNull();
-            assertThat(responseJson.get("uptime")).isNotNull();
-            assertThat(responseJson.get("startedFlows")).isNotNull();
-            assertThat(responseJson.get("totalThreads").isInt()).isTrue();
-            assertThat(responseJson.get("cpuLoadLastMinute")).isNotNull();
-            assertThat(responseJson.get("cpuLoadLast15Minutes")).isNotNull();
-            assertThat(responseJson.get("exchangesTotal").isInt()).isTrue();
-            assertThat(responseJson.get("exchangesFailed").isInt()).isTrue();
-            assertThat(responseJson.get("cpuLoadLast5Minutes")).isNotNull();
-            assertThat(responseJson.get("status").asText()).isEqualTo("Started");
+            AssertUtils.assertStatsResponse(responseJson, "Started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -477,21 +416,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(responseJson.size()).isNotNegative();
-            assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
-            assertThat(flowJson.get("pending").isInt()).isTrue();
-            assertThat(flowJson.get("completed").isInt()).isTrue();
-            assertThat(flowJson.get("failed").isInt()).isTrue();
-            assertThat(flowJson.get("lastFailed")).isNotNull();
-            assertThat(flowJson.get("timeout").isInt()).isTrue();
-            assertThat(flowJson.get("uptime")).isNotNull();
-            assertThat(flowJson.get("total").isInt()).isTrue();
-            assertThat(flowJson.get("cpuLoadLastMinute").isInt()).isTrue();
-            assertThat(flowJson.get("cpuLoadLast15Minutes").isInt()).isTrue();
-            assertThat(flowJson.get("lastCompleted")).isNotNull();
-            assertThat(flowJson.get("cpuLoadLast5Minutes").isInt()).isTrue();
-            assertThat(flowJson.get("id")).isNotNull();
-            assertThat(flowJson.get("status").asText()).isEqualTo("started");
+            AssertUtils.assertFlowsStatsResponse(flowJson, "started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -520,20 +445,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(flowJson.get("uptimeMillis").asInt()).isPositive();
-            assertThat(flowJson.get("pending").isInt()).isTrue();
-            assertThat(flowJson.get("completed").isInt()).isTrue();
-            assertThat(flowJson.get("failed").isInt()).isTrue();
-            assertThat(flowJson.get("lastFailed")).isNotNull();
-            assertThat(flowJson.get("timeout").isInt()).isTrue();
-            assertThat(flowJson.get("uptime")).isNotNull();
-            assertThat(flowJson.get("total").isInt()).isTrue();
-            assertThat(flowJson.get("cpuLoadLastMinute").isInt()).isTrue();
-            assertThat(flowJson.get("cpuLoadLast15Minutes").isInt()).isTrue();
-            assertThat(flowJson.get("lastCompleted")).isNotNull();
-            assertThat(flowJson.get("cpuLoadLast5Minutes").isInt()).isTrue();
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("status").asText()).isEqualTo("started");
+            AssertUtils.assertFlowsStatsResponse(flowJson, "started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlowManagerRuntimeTest {
 
-    private Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
     private static boolean schedulerFlowInstalled = false;
     private static boolean inboundHttpsFlowInstalled = false;
@@ -313,16 +313,8 @@ class FlowManagerRuntimeTest {
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
 
             // asserts contents
-            assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-            assertThat(flowJson.get("steps").size()).isEqualTo(5);
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("start");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
-            assertThat(flowJson.get("steps").size()).isEqualTo(5);
+            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -351,16 +343,8 @@ class FlowManagerRuntimeTest {
             JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
 
             // asserts contents
-            assertThat(stepsLoadedJson.get("total").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(5);
-            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-            assertThat(flowJson.get("steps").size()).isEqualTo(5);
-            assertThat(flowJson.get("name").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("event").asText()).isEqualTo("start");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
-            assertThat(flowJson.get("steps").size()).isEqualTo(5);
+            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -471,10 +455,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            assertThat(flowJson.get("isRunning").asText()).isEqualTo("true");
-            assertThat(flowJson.get("name").asText()).isEqualTo("67c740bc349ced00070004a9");
-            assertThat(flowJson.get("id").asText()).isEqualTo("67c740bc349ced00070004a9");
-            assertThat(flowJson.get("status").asText()).isEqualTo("started");
+            AssertUtils.assertFlowInfoResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "started", "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -505,20 +486,9 @@ class FlowManagerRuntimeTest {
             JsonNode stepJson = stepsJson.get(0);
 
             // asserts contents
-            assertThat(stepsLoadedJson.get("total").asInt()).isPositive();
-            assertThat(stepsLoadedJson.get("successfully").asInt()).isPositive();
-            assertThat(stepsLoadedJson.get("failed").asInt()).isZero();
-            assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()));
-            assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-            assertThat(flowJson.get("message").asText()).isEqualTo("Started flow successfully");
-            assertThat(flowJson.get("event").asText()).isEqualTo("start");
-            assertThat(flowJson.get("version").asText()).isEqualTo("");
-            assertThat(stepsJson.isArray()).isTrue();
-            assertThat(stepsJson.size()).isPositive();
-            assertThat(stepJson.get("id").asText()).isNotNull();
-            assertThat(stepJson.get("type").asText()).isEqualTo("route");
-            assertThat(stepJson.get("status").asText()).isEqualTo("success");
+            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson);
+            AssertUtils.assertSuccessfulEventResponseWithoutVersion(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()), "start", "Started flow successfully");
+            AssertUtils.assertStepResponse(stepJson, "route", "success");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

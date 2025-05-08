@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HealthRuntimeTest {
 
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
     private static boolean schedulerFlowInstalled = false;
 
@@ -125,8 +125,6 @@ class HealthRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(responseJson.size()).isPositive();
             AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {
@@ -153,8 +151,6 @@ class HealthRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(responseJson.size()).isPositive();
             AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
 
         } catch (Exception e) {

@@ -3,6 +3,7 @@ package org.assimbly.brokerrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
+import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
@@ -101,25 +102,8 @@ class BrokerManagerRuntimeTest {
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            assertThat(response.body()).isNotNull();
-
-            Map<String, String> outputMap = Arrays.stream(response.body().split(","))
-                    .map(s -> s.split("=", 2))
-                    .collect(Collectors.toMap(arr -> arr[0], arr -> arr[1]));
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.valueToTree(outputMap);
-
             // asserts contents
-            assertThat(responseJson.get("uptime").asText().trim()).matches("\\d+(\\.\\d+)? seconds");
-            assertThat(responseJson.get("totalConnections").asInt()).isZero();
-            assertThat(responseJson.get("currentConnections").asInt()).isZero();
-            assertThat(responseJson.get("totalConsumers").asInt()).isZero();
-            assertThat(responseJson.get("totalMessages").asInt()).isZero();
-            assertThat(responseJson.get("nodeId").asText()).isNotNull();
-            assertThat(responseJson.get("state").asBoolean()).isTrue();
-            assertThat(responseJson.get("version").asText()).isNotNull();
-            assertThat(responseJson.get("type").asText()).isEqualTo("ActiveMQ Classic");
+            AssertUtils.assertBrokerInfoResponse(response.body(), "ActiveMQ Classic");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

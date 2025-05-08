@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +25,7 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class FlowConfigurerRuntimeTest {
 
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
     private static boolean schedulerFlowInstalled = false;
 
@@ -158,14 +157,8 @@ class FlowConfigurerRuntimeTest {
             JsonNode routeJson = routesJson.get("route").get(0);
 
             // asserts contents
-            assertThat(routesJson).isNotNull();
-            assertThat(routesJson.get("route")).isNotNull();
-            assertThat(routesJson.get("route").isArray()).isTrue();
-            assertThat(routesJson.get("route").size()).isPositive();
-            assertThat(routeJson.get("id").asText()).isNotNull();
-            assertThat(routeJson.get("routeConfigurationId").asText()).isNotNull();
-            assertThat(routeJson.get("from")).isNotNull();
-            assertThat(routeJson.get("step")).isNotNull();
+            AssertUtils.assertFlowRoutesResponse(routesJson);
+            AssertUtils.assertFlowRouteResponse(routeJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -190,21 +183,10 @@ class FlowConfigurerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode componentJson = responseJson.get(0);
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(responseJson.size()).isPositive();
-            assertThat(fieldNames).contains(
-                    "scheme", "producerOnly", "kind", "deprecated", "groupId",
-                    "description", "browsable", "label", "supportLevel", "title",
-                    "remote", "version", "javaType", "async", "firstVersion",
-                    "lenientProperties", "name", "syntax", "artifactId", "api",
-                    "consumerOnly", "extendsScheme"
-            );
+            AssertUtils.assertComponentFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -252,13 +234,10 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -303,7 +282,6 @@ class FlowConfigurerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
             assertThat(responseJson.isArray()).isTrue();
             assertThat(responseJson.size()).isPositive();
 
@@ -327,13 +305,10 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -376,13 +351,10 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(fieldNames).contains("component", "componentProperties", "headers", "properties");
+            AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -404,13 +376,10 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(
-                            Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false)
-                    .collect(Collectors.toList());
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
 
             // asserts contents
-            assertThat(responseJson).isNotNull();
-            assertThat(fieldNames).contains("apiVersion", "kind", "metadata", "spec");
+            AssertUtils.assertFlowStepFieldsResponse(fieldNames);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

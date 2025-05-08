@@ -114,11 +114,7 @@ class TopicManagerRuntimeTest {
             JsonNode topicJson = responseJson.get("topic");
 
             // asserts contents
-            assertThat(topicJson.get("temporary").asText()).isEqualTo("false");
-            assertThat(topicJson.get("address").asText()).isEqualTo(TOPIC_TEST);
-            assertThat(topicJson.get("numberOfConsumers").asInt()).isZero();
-            assertThat(topicJson.get("name").asText()).isEqualTo(TOPIC_TEST);
-            assertThat(topicJson.get("numberOfMessages").asInt()).isZero();
+            AssertUtils.assertBrokerQueueResponse(topicJson, "false", TOPIC_TEST, TOPIC_TEST);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -148,13 +144,7 @@ class TopicManagerRuntimeTest {
             JsonNode topicJson = topicsJson.get(0);
 
             // asserts contents
-            assertThat(topicsJson.isArray()).isTrue();
-            assertThat(topicsJson.size()).isPositive();
-            assertThat(topicJson.get("temporary").asText()).isEqualTo("false");
-            assertThat(topicJson.get("address").asText()).isNotNull();
-            assertThat(topicJson.get("numberOfConsumers").asInt()).isZero();
-            assertThat(topicJson.get("name").asText()).isNotNull();
-            assertThat(topicJson.get("numberOfMessages").asInt()).isZero();
+            AssertUtils.assertBrokerQueueResponse(topicJson, "false");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

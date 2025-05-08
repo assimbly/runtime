@@ -109,8 +109,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo("VALID");
-            assertThat(responseJson.get("message").asText()).isEqualTo("null");
+            AssertUtils.assertCertificateResponseWithoutMessage(responseJson, "VALID");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -138,8 +137,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo("INVALID");
-            assertThat(responseJson.get("message").asText().toLowerCase()).contains("certification path");
+            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "certification path");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -187,8 +185,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
-            assertThat(responseJson.get("message").asText()).isEqualTo("Connection error: IOException");
+            AssertUtils.assertConnectionResponse(responseJson, "successful", "Connection error: IOException");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -249,12 +246,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(responseJson.size()).isGreaterThan(0);
-            for (JsonNode errorNode : responseJson) {
-                assertThat(errorNode.get("error").asText().toLowerCase())
-                        .contains("i/o error");
-            }
+            AssertUtils.assertXsltErrorResponse(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -302,8 +294,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("code").asInt()).isEqualTo(1);
-            assertThat(responseJson.get("result").asText()).isEqualTo("2");
+            AssertUtils.assertScriptResponse(responseJson, 1, "2");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -343,8 +334,7 @@ class ValidationRuntimeTest {
             String msg = responseJson.get("message").asText().toLowerCase();
 
             // asserts contents
-            assertThat(msg).contains("invalid groovy script");
-            assertThat(msg).contains("startup failed");
+            AssertUtils.assertScriptErrorResponse(msg);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -373,7 +363,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("details").asText()).isEqualTo("successful");
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -531,13 +521,7 @@ class ValidationRuntimeTest {
             JsonNode json = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(json.isArray()).isTrue();
-            assertThat(json.size()).isGreaterThan(0);
-            for (JsonNode error : json) {
-                assertThat(error.get("error").asText().toLowerCase())
-                        .contains("could not compile")
-                        .contains("checkinvoice");
-            }
+            AssertUtils.assertExpressionErrorResponse(json);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -643,8 +627,5 @@ class ValidationRuntimeTest {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
     }
-
-
-
 
 }

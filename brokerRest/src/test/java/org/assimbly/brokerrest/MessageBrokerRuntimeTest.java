@@ -135,6 +135,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertSuccessfulGenericResponse(responseJson, "success");
 
+            // set message flags
             setMessageFlags(true, false);
 
         } catch (Exception e) {
@@ -249,15 +250,7 @@ class MessageBrokerRuntimeTest {
             JsonNode messageJson = messagesJson.get(0);
 
             // asserts contents
-            assertThat(messagesJson.isArray()).isTrue();
-            assertThat(messagesJson.size()).isPositive();
-            assertThat(messageJson.get("headers")).isNotNull();
-            assertThat(messageJson.get("jmsHeaders")).isNotNull();
-            assertThat(messageJson.get("messageid").asText()).isNotNull();
-            assertThat(messageJson.get("body").asText()).isEqualTo(BODY);
-            assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(messageJson.get("timestamp").asText(), "E MMM dd HH:mm:ss z yyyy");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertBrokerMessagesResponse(messageJson, BODY);
 
             messageIdOnQueue1 = messageJson.get("messageid").asText();
 
@@ -289,13 +282,7 @@ class MessageBrokerRuntimeTest {
             JsonNode messageJson = messagesJson.get(0);
 
             // asserts contents
-            assertThat(messagesJson.isArray()).isTrue();
-            assertThat(messagesJson.size()).isPositive();
-            assertThat(messageJson.get("jmsHeaders")).isNotNull();
-            assertThat(messageJson.get("messageid").asText()).isNotNull();
-            assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(messageJson.get("timestamp").asText(), "E MMM dd HH:mm:ss z yyyy");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertBrokerMessagesResponse(messageJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -354,15 +341,7 @@ class MessageBrokerRuntimeTest {
             JsonNode messageJson = messagesJson.get(0);
 
             // asserts contents
-            assertThat(messagesJson.isArray()).isTrue();
-            assertThat(messagesJson.size()).isPositive();
-            assertThat(messageJson.get("headers")).isNotNull();
-            assertThat(messageJson.get("jmsHeaders")).isNotNull();
-            assertThat(messageJson.get("messageid").asText()).isNotNull();
-            assertThat(messageJson.get("body").asText()).isEqualTo(BODY);
-            assertThat(messageJson.get("timestamp").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(messageJson.get("timestamp").asText(), "E MMM dd HH:mm:ss z yyyy");
-            assertThat(isValid).as("Check if timestamp is a valid date").isTrue();
+            AssertUtils.assertBrokerMessagesResponse(messageJson, BODY);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -393,6 +372,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
+            // set message flags
             setMessageFlags(false, false);
 
         } catch (Exception e) {
@@ -424,6 +404,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertSuccessfulGenericResponse(responseJson, "1");
 
+            // set message flags
             setMessageFlags(false, false);
 
         } catch (Exception e) {
@@ -452,6 +433,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertSuccessfulGenericResponse(responseJson, "true");
 
+            // set message flags
             setMessageFlags(false, true);
 
         } catch (Exception e) {
@@ -480,6 +462,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertSuccessfulGenericResponse(responseJson);
 
+            // set message flags
             setMessageFlags(false, true);
 
         } catch (Exception e) {

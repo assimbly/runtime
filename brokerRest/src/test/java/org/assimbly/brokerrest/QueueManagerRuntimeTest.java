@@ -111,14 +111,10 @@ class QueueManagerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode queueJson = responseJson.get("queue");
 
             // asserts contents
-            JsonNode queueJson = responseJson.get("queue");
-            assertThat(queueJson.get("temporary").asText()).isEqualTo("false");
-            assertThat(queueJson.get("address").asText()).isEqualTo(QUEUE_TEST);
-            assertThat(queueJson.get("numberOfConsumers").asInt()).isZero();
-            assertThat(queueJson.get("name").asText()).isEqualTo(QUEUE_TEST);
-            assertThat(queueJson.get("numberOfMessages").asInt()).isPositive();
+            AssertUtils.assertBrokerQueueResponse(queueJson, "false", QUEUE_TEST, QUEUE_TEST);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -149,13 +145,7 @@ class QueueManagerRuntimeTest {
             JsonNode queueJson = queuesJson.get(0);
 
             // asserts contents
-            assertThat(queuesJson.isArray()).isTrue();
-            assertThat(queuesJson.size()).isPositive();
-            assertThat(queueJson.get("temporary").asText()).isEqualTo("false");
-            assertThat(queueJson.get("address").asText()).isNotNull();
-            assertThat(queueJson.get("numberOfConsumers").asInt()).isZero();
-            assertThat(queueJson.get("name").asText()).isNotNull();
-            assertThat(queueJson.get("numberOfMessages").asInt()).isZero();
+            AssertUtils.assertBrokerQueueResponse(queueJson, "false");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

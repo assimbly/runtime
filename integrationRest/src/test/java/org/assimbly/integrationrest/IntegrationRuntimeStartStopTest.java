@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.fail;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IntegrationRuntimeStartStopTest {
 
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
     private static boolean schedulerFlowInstalled = false;
 

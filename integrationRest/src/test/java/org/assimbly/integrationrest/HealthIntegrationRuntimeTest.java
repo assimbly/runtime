@@ -2,6 +2,7 @@ package org.assimbly.integrationrest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.commons.utils.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
@@ -50,15 +51,9 @@ class HealthIntegrationRuntimeTest {
             JsonNode threadsJson = responseJson.get("threads");
 
             // asserts contents
-            assertThat(jvmJson.get("openFileDescriptors").asInt()).isPositive();
-            assertThat(jvmJson.get("maxFileDescriptors").asInt()).isPositive();
-            assertThat(memoryJson.get("current").asInt()).isPositive();
-            assertThat(memoryJson.get("committed").asInt()).isPositive();
-            assertThat(memoryJson.get("max").asInt()).isPositive();
-            assertThat(memoryJson.get("cached").asInt()).isPositive();
-            assertThat(memoryJson.get("currentUsedPercentage").asInt()).isBetween(0, 100);
-            assertThat(threadsJson.get("threadCount").asInt()).isPositive();
-            assertThat(threadsJson.get("peakThreadCount").asInt()).isPositive();
+            AssertUtils.assertJvmHealthResponse(jvmJson);
+            AssertUtils.assertMemoryHealthResponse(memoryJson);
+            AssertUtils.assertThreadsHealthResponse(threadsJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -82,22 +77,7 @@ class HealthIntegrationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("uptimeMillis").asInt()).isPositive();
-            assertThat(responseJson.get("startedSteps").asInt()).isNotNegative();
-            assertThat(responseJson.get("memoryUsage").asDouble()).isPositive();
-            assertThat(responseJson.get("exchangesInflight").asInt()).isNotNegative();
-            assertThat(responseJson.get("camelVersion").asText()).isNotEmpty();
-            assertThat(responseJson.get("exchangesCompleted").asInt()).isNotNegative();
-            assertThat(responseJson.get("camelId").asText()).isNotEmpty();
-            assertThat(responseJson.get("uptime").asText()).isNotEmpty();
-            assertThat(responseJson.get("startedFlows").asText()).isNotEmpty();
-            assertThat(responseJson.get("totalThreads").asInt()).isPositive();
-            assertThat(responseJson.get("cpuLoadLastMinute").asText()).isNotEmpty();
-            assertThat(responseJson.get("cpuLoadLast15Minutes").asText()).isNotEmpty();
-            assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
-            assertThat(responseJson.get("exchangesFailed").asInt()).isNotNegative();
-            assertThat(responseJson.get("cpuLoadLast5Minutes").asText()).isNotEmpty();
-            assertThat(responseJson.get("status").asText()).isEqualTo("Started");
+            AssertUtils.assertHealthResponse(responseJson, "Started");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

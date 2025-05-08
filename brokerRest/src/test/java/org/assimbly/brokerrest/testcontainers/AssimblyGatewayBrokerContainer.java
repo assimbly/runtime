@@ -3,6 +3,7 @@ package org.assimbly.brokerrest.testcontainers;
 import org.assimbly.brokerrest.utils.TestApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -31,7 +32,7 @@ public class AssimblyGatewayBrokerContainer {
                 .withEnv("ASSIMBLY_BROKER_JMX_PORT", TestApplicationContext.ASSIMBLY_BROKER_JMX_PORT)
                 .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
                 .waitingFor(Wait.forListeningPort())
-                .withFileSystemBind(getResourcePath(), "/data/.assimbly/");
+                .withFileSystemBind(getResourcePath(), "/data/.assimbly/", BindMode.READ_WRITE);
         gatewayBrokerContainer.start();
     }
 

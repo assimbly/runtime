@@ -3,7 +3,6 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.assimbly.commons.utils.HttpUtil;
@@ -24,8 +23,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IntegrationRuntimeTest {
 
-    private Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
-    private Properties collectorProp = TestApplicationContext.buildCollectorExample();
+    private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
+    private final Properties collectorProp = TestApplicationContext.buildCollectorExample();
 
     private static String flowIdStep;
     private static String flowIdRoute;
@@ -254,15 +253,7 @@ class IntegrationRuntimeTest {
             JsonNode infoJson = responseJson.get("info");
 
             // asserts contents
-            assertThat(infoJson.get("numberOfRunningSteps").asInt()).isPositive();
-            assertThat(infoJson.get("startupType").asText()).isEqualTo("Default");
-            assertThat(infoJson.get("uptimeMiliseconds").asInt()).isPositive();
-            assertThat(infoJson.get("name").asText()).isNotEmpty();
-            assertThat(infoJson.get("version").asText()).isNotEmpty();
-            assertThat(infoJson.get("uptime").asText()).isNotEmpty();
-            assertThat(infoJson.get("startDate").asText()).isNotEmpty();
-            boolean isValid = Utils.isValidDate(infoJson.get("startDate").asText(), "EEE MMM dd HH:mm:ss zzz yyyy");
-            assertThat(isValid).as("Check if startDate is a valid date").isTrue();
+            AssertUtils.assertIntegrationInfoResponse(infoJson, "Default");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -310,12 +301,7 @@ class IntegrationRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(flowJson.get("isRunning").asBoolean()).isTrue();
-            assertThat(flowJson.get("name").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("id").asText()).isEqualTo(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
-            assertThat(flowJson.get("status").asText()).isEqualTo("started");
-            assertThat(flowJson.get("uptime").asText()).matches("\\d+s");
+            AssertUtils.assertFlowsDetailsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "started", "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -414,20 +400,10 @@ class IntegrationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            assertThat(responseJson.size()).isEqualTo(4);
-            assertThat(responseJson).allMatch(element -> {
-                boolean hasValidName = element.has("name") && (
-                        element.get("name").asText().equals("Add") ||
-                        element.get("name").asText().equals("Subtract") ||
-                        element.get("name").asText().equals("Multiply") ||
-                        element.get("name").asText().equals("Divide")
-                );
-                boolean hasEmptyHeaders = element.has("headers") && element.get("headers").isArray() && element.get("headers").isEmpty();
-                return hasValidName && hasEmptyHeaders;
-            });
+            AssertUtils.assertSoapListResponse(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -495,12 +471,7 @@ class IntegrationRuntimeTest {
             JsonNode threadJson = responseJson.get(0);
 
             // asserts contents
-            assertThat(responseJson.isArray()).isTrue();
-            assertThat(responseJson.size()).isPositive();
-            assertThat(threadJson.get("cpuTime").asLong()).isPositive();
-            assertThat(threadJson.get("name").asText()).isNotEmpty();
-            assertThat(threadJson.get("id").asInt()).isPositive();
-            assertThat(threadJson.get("status").asText()).isNotEmpty();
+            AssertUtils.assertThreadsResponse(threadJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
