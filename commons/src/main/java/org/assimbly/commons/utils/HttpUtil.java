@@ -1,6 +1,7 @@
 package org.assimbly.commons.utils;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,20 +13,24 @@ import java.util.stream.Collectors;
 
 public class HttpUtil {
 
-    public static HttpResponse<String> getRequest(String path, HashMap<String,String> params, HashMap<String,String> headers) {
+    private HttpUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
+    public static HttpResponse<String> getRequest(String path, Map<String,String> params, Map<String,String> headers) {
         return makeHttpCall(path, "GET", null, params, headers);
     }
 
-    public static HttpResponse<String> postRequest(String path, String body, HashMap<String,String> params, HashMap<String,String> headers) {
+    public static HttpResponse<String> postRequest(String path, String body, Map<String,String> params, Map<String,String> headers) {
         return makeHttpCall(path, "POST", body, params, headers);
     }
 
-    public static HttpResponse<String> deleteRequest(String path, String body, HashMap<String,String> params, HashMap<String,String> headers) {
+    public static HttpResponse<String> deleteRequest(String path, String body, Map<String,String> params, Map<String,String> headers) {
         return makeHttpCall(path, "DELETE", body, params, headers);
     }
 
     private static HttpResponse<String> makeHttpCall(
-            String url, String method, Object body, HashMap<String,String> params, HashMap<String,String> headers
+            String url, String method, Object body, Map<String,String> params, Map<String,String> headers
     ) {
 
         try {
@@ -44,10 +49,10 @@ public class HttpUtil {
             }
 
             HttpRequest.BodyPublisher bodyPublisher;
-            if (body instanceof String) {
-                bodyPublisher = HttpRequest.BodyPublishers.ofString((String) body);
-            } else if (body instanceof byte[]) {
-                bodyPublisher = HttpRequest.BodyPublishers.ofByteArray((byte[]) body);
+            if (body instanceof String bodyString) {
+                bodyPublisher = HttpRequest.BodyPublishers.ofString(bodyString);
+            } else if (body instanceof byte[] bodyByteArr) {
+                bodyPublisher = HttpRequest.BodyPublishers.ofByteArray(bodyByteArr);
             } else {
                 bodyPublisher = HttpRequest.BodyPublishers.noBody();
             }
@@ -68,7 +73,7 @@ public class HttpUtil {
         }
     }
 
-    private static String buildQueryString(HashMap<String,String> params) {
+    private static String buildQueryString(Map<String,String> params) {
         String queryString = "";
         if(params != null && !params.isEmpty()) {
             queryString = "?" + params.entrySet().stream()
@@ -78,20 +83,24 @@ public class HttpUtil {
         return queryString;
     }
 
-    public static String extractSecret(String url) throws Exception {
-        URI uri = new URI(url);
-        String query = uri.getQuery();
+    public static String extractSecret(String url) throws URISyntaxException {
+        try {
+            URI uri = new URI(url);
+            String query = uri.getQuery();
 
-        String[] queryArr = query.split("\\?", 2);
-        query = queryArr[1];
+            String[] queryArr = query.split("\\?", 2);
+            query = queryArr[1];
 
-        Map<String, String> params = new HashMap<>();
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
-            String[] keyValue = pair.split("=");
-            params.put(keyValue[0], keyValue[1]);
+            Map<String, String> params = new HashMap<>();
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=");
+                params.put(keyValue[0], keyValue[1]);
+            }
+            return params.get("secret");
+        } catch (Exception e) {
+            throw new URISyntaxException(url, "Cannot extract secret");
         }
-        return params.get("secret");
     }
 
 }

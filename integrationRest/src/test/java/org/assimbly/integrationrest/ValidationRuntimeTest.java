@@ -3,16 +3,15 @@ package org.assimbly.integrationrest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.Utils;
-import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.json.JSONArray;
 
 import java.net.http.HttpResponse;
 import java.util.HashMap;

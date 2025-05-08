@@ -39,7 +39,7 @@ public final class AssertUtils {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    // generic asserts
+    // generic
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg, boolean messageFlag) {
         assertThat(responseJson.get(DETAILS).asText()).isEqualTo("successful");
@@ -50,10 +50,6 @@ public final class AssertUtils {
         assertThat(responseJson.get(TIMESTAMP).asText()).isNotEmpty();
         boolean isValid = Utils.isValidDate(responseJson.get(TIMESTAMP).asText(), "yyyy-MM-dd HH:mm:ss.SSS");
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
-    }
-
-    public static void assertSuccessfulGenericResponseWithoutMsg(JsonNode responseJson) {
-        assertSuccessfulGenericResponse(responseJson, null, false);
     }
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg) {
@@ -67,6 +63,10 @@ public final class AssertUtils {
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String startsWithMsg, String endsWithMsg) {
         assertSuccessfulGenericResponse(responseJson, null);
         assertThat(responseJson.get(MESSAGE).asText()).startsWith(startsWithMsg).endsWith(endsWithMsg);
+    }
+
+    public static void assertSuccessfulGenericResponseWithoutMsg(JsonNode responseJson) {
+        assertSuccessfulGenericResponse(responseJson, null, false);
     }
 
     private static void assertMessage(JsonNode responseJson, String msg) {
@@ -94,25 +94,7 @@ public final class AssertUtils {
         assertErrorGenericResponse(responseJson, null);
     }
 
-    public static void assertSuccessfulEventResponseWithoutVersion(JsonNode flowJson, String id, String event, String message) {
-        assertThat(flowJson.get("name").asText()).isEqualTo(id);
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
-        assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-        assertThat(flowJson.get("event").asText()).isEqualTo(event);
-        assertThat(flowJson.get(MESSAGE).asText()).isEqualTo(message);
-    }
-
-    public static void assertSuccessfulEventResponse(JsonNode flowJson, String id, String event, String message) {
-        assertSuccessfulEventResponseWithoutVersion(flowJson, id, event, message);
-        assertThat(flowJson.get(VERSION).asText()).matches("\\d+");
-    }
-
-    // asserts for health
-
-    public static void assertSuccessfulHealthResponse(JsonNode flowJson, int steps, String id, String event, String message) {
-        assertThat(flowJson.get("steps").size()).isEqualTo(steps);
-        assertSuccessfulEventResponse(flowJson, id, event, message);
-    }
+    // health
 
     public static void assertSuccessfulHealthResponse(JsonNode flowJson, String id) {
         assertThat(flowJson.get("id").asText()).isEqualTo(id);
@@ -156,7 +138,27 @@ public final class AssertUtils {
         assertThat(responseJson.get(STATUS).asText()).isEqualTo(status);
     }
 
-    // asserts for flow configurer
+    // flow manager
+
+    public static void assertSuccessfulHealthResponse(JsonNode flowJson, int steps, String id, String event, String message) {
+        assertThat(flowJson.get("steps").size()).isEqualTo(steps);
+        assertSuccessfulEventResponse(flowJson, id, event, message);
+    }
+
+    public static void assertSuccessfulEventResponseWithoutVersion(JsonNode flowJson, String id, String event, String message) {
+        assertThat(flowJson.get("name").asText()).isEqualTo(id);
+        assertThat(flowJson.get("id").asText()).isEqualTo(id);
+        assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
+        assertThat(flowJson.get("event").asText()).isEqualTo(event);
+        assertThat(flowJson.get(MESSAGE).asText()).isEqualTo(message);
+    }
+
+    public static void assertSuccessfulEventResponse(JsonNode flowJson, String id, String event, String message) {
+        assertSuccessfulEventResponseWithoutVersion(flowJson, id, event, message);
+        assertThat(flowJson.get(VERSION).asText()).matches("\\d+");
+    }
+
+    // flow configurer
 
     public static void assertFlowRouteResponse(JsonNode routeJson) {
         assertThat(routeJson.get("id").asText()).isNotNull();
@@ -186,7 +188,7 @@ public final class AssertUtils {
         assertThat(fieldNames).contains("apiVersion", "kind", "metadata", "spec");
     }
 
-    // asserts for statistics
+    // statistics
 
     public static void assertStepStatsResponse(JsonNode stepJson, JsonNode statsJson, String id, String status) {
         assertThat(stepJson.get("id").asText()).isEqualTo(id);
@@ -278,7 +280,8 @@ public final class AssertUtils {
         assertThat(fieldNames).contains(VERSION, "gauges", "counters", "histograms", "meters", "timers");
     }
 
-    // asserts for flow manager
+    // flow manager
+
     public static void assertFlowInfoResponse(JsonNode flowJson, String id, String status, String isRunning) {
         assertThat(flowJson.get("isRunning").asText()).isEqualTo(isRunning);
         assertThat(flowJson.get("name").asText()).isEqualTo(id);
@@ -304,7 +307,7 @@ public final class AssertUtils {
         assertThat(stepJson.get(STATUS).asText()).isEqualTo(status);
     }
 
-    // asserts for integration
+    // integration
 
     public static void assertIntegrationInfoResponse(JsonNode infoJson, String startupType) {
         assertThat(infoJson.get("numberOfRunningSteps").asInt()).isPositive();
@@ -344,7 +347,7 @@ public final class AssertUtils {
         });
     }
 
-    // asserts for validations
+    // validations
 
     public static void assertCertificateResponse(JsonNode responseJson, String status, String containsMsg) {
         assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo(status);

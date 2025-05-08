@@ -34,6 +34,10 @@ public class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
+    private Utils() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     public static boolean isValidDate(String dateStr, String format) {
         try {
             // adjust milliseconds dynamically if needed
