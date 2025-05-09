@@ -54,7 +54,7 @@ public class ScriptValidator {
             return createOKRequestResponse(exchangeDtoResponse, String.valueOf(response));
         } catch (Exception e) {
             log.error("Invalid groovy script: '", e);
-            return createBadRequestResponse(exchangeDto, "Invalid groovy script: '" + e.getMessage() + "'");
+            return createBadRequestResponse(exchangeDto, e.getMessage());
         }
     }
 
@@ -68,7 +68,7 @@ public class ScriptValidator {
             return createOKRequestResponse(exchangeDtoResponse, String.valueOf(response));
         } catch (Exception e) {
             log.error("Invalid javascript: '", e);
-            return createBadRequestResponse(exchangeDto, "Invalid javascript: '" + e.getMessage() + "'");
+            return createBadRequestResponse(exchangeDto, e.getMessage());
         }
 
     }
