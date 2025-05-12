@@ -35,6 +35,7 @@ public class ExpressionsValidator {
     private void checkExpressions(List<Expression> expressions, boolean isPredicate) {
 
         for (Expression expression : expressions) {
+
             ValidationErrorMessage error;
 
             switch(expression.getExpressionType()) {
@@ -64,6 +65,7 @@ public class ExpressionsValidator {
             if (error != null) {
                 validationErrors.add(error);
             }
+
         }
 
     }

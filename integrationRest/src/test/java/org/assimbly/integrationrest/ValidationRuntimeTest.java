@@ -91,11 +91,11 @@ class ValidationRuntimeTest {
     void shouldValidateCertificate() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("httpsUrl", "https://authenticationtest.com/HTTPAuth/");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -484,7 +484,7 @@ class ValidationRuntimeTest {
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
             // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

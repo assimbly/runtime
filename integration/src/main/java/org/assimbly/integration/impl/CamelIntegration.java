@@ -108,8 +108,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -2844,9 +2847,10 @@ public class CamelIntegration extends BaseIntegration {
 		String jsonString = catalog.componentJSonSchema(scheme);
 
 		if(jsonString == null || jsonString.isEmpty()){
-			log.info("Unknown scheme: " + scheme);
-			return null;
+			log.info("Unknown scheme: " + scheme + ". Error: Could not found scheme in catalog.");
+			return "Unknown scheme: " + scheme + ". Error: Could not found scheme in catalog.";
 		}
+
 		JSONObject componentSchema = new JSONObject(jsonString);
 		JSONObject component = componentSchema.getJSONObject("component");
 
@@ -2863,6 +2867,7 @@ public class CamelIntegration extends BaseIntegration {
 			context.addComponent(scheme, camelComponent);
 			result = "Dependency " + dependency + " resolved";
 		} catch (Exception e) {
+            log.error("Dependency {} resolved failed.", dependency, e);
 			result = "Dependency " + dependency + " resolved failed. Error message: "  + e.getMessage();
 		}
 
@@ -2872,7 +2877,6 @@ public class CamelIntegration extends BaseIntegration {
 
 
 	public List<Class<?>> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
-
 		DependencyUtil dependencyUtil = new DependencyUtil();
 		List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
 		return dependencyUtil.loadDependency(paths);
@@ -2897,7 +2901,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		return component;
 	}
-
 
 	public  CamelContext getContext() {
 		return context;
@@ -3104,13 +3107,6 @@ public class CamelIntegration extends BaseIntegration {
 	@Override
 	public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
 		HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
-		try {
-			List<String> urlList = new ArrayList<>();
-			urlList.add(httpsUrl);
-			httpsCertificateValidator.addHttpsCertificatesToTrustStore(urlList);
-		} catch (Exception e) {
-			log.error("Error to add certificate: " + e.getMessage());
-		}
 		return httpsCertificateValidator.validate(httpsUrl);
 	}
 

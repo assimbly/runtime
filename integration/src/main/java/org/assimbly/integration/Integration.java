@@ -14,7 +14,11 @@ import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.*;
 
 /**
@@ -999,7 +1003,7 @@ public interface Integration {
 	 *
 	 * @param  httpsUrl
 	 * @return result of validation	 */
-    HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl);
+    HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, CertificateException, IOException;
 
 	/**
 	 * Validates a url expression

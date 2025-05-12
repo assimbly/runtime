@@ -160,14 +160,11 @@ public class ValidationRuntime {
 
             List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList, isPredicate);
 
-            if(expressionResp!=null) {
-                final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, expressionResp);
-                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
-            } else {
-                return ResponseUtil.createNoContentResponse(1L, mediaType);
-            }
+            final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            final ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(out, expressionResp);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
 
         } catch (Exception e) {
             log.error("Error",e);

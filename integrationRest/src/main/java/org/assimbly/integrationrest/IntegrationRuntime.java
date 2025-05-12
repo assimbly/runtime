@@ -167,6 +167,11 @@ public class IntegrationRuntime {
 
         try {
             String result = integration.resolveDependency(scheme);
+            log.info("resolveDepedencyByScheme Result: " + result);
+            if(result.contains("Error")){
+                log.info("Returns an error");
+                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/resolvedependency/{groupId}/{artifactId}/{version}",result);
+            }
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/resolvedependency/{groupId}/{artifactId}/{version}",result);
         } catch (Exception e) {
             log.error("Resolve dependency for scheme=" + scheme + " failed",e);

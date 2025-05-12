@@ -252,7 +252,6 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/step/{templatename}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-
 	public ResponseEntity<String> getStepTemplate(
 			@PathVariable(value = "templatename") String templatename,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
@@ -261,10 +260,10 @@ public class FlowConfigurerRuntime {
 		try {
 			integration = integrationRuntime.getIntegration();
 			String stepTemplate = integration.getStepTemplate(mediaType, templatename);
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/routes",stepTemplate,true);
+			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/step/{templatename}",stepTemplate,true);
 		} catch (Exception e) {
 			log.error("Get step template failed",e);
-			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/routes",e.getMessage());
+			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/step/{templatename}",e.getMessage());
 		}
 
 	}

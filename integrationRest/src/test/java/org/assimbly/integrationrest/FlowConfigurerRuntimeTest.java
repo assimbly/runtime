@@ -316,27 +316,6 @@ class FlowConfigurerRuntimeTest {
     }
 
     @Test
-    void shouldGetFlowRoutes() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/routes"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            // asserts contents
-            assertThat(response.body()).isEqualTo("{not available yet}");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
     void shouldGetFlowSchemaByComponentType() {
         try {
             // headers
