@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * REST controller for managing Broker.
@@ -29,7 +30,7 @@ public class MessageBrokerRuntime {
     private static final long ID = 0L;
 
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
+     * GET  /brokers/{brokerType}/messages/{endpointName}: get list of messages on endpoint.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the queue
@@ -51,16 +52,16 @@ public class MessageBrokerRuntime {
 
         try {
             result = broker.listMessages(brokerType, endpointName, filter, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/{filter}", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}", result);
         } catch (Exception e) {
             log.error("Can't list messages", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/{filter}", e.getMessage());
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", e.getMessage());
         }
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/{endpointName}/{filter} : get list of messages on endpoint.
+     * GET  /brokers/{brokerType}/messages/count : count number of messages.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointNames, the name of the queue
@@ -101,13 +102,13 @@ public class MessageBrokerRuntime {
     public Object getFlowsMessageCountList(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestParam(value = "excludeEmptyQueues", required = false) Boolean excludeEmptyQueues
+            @RequestParam(value = "excludeEmptyQueues", required = false) Optional<Boolean> excludeEmptyQueues
     )  throws Exception {
 
         log.debug("REST request to list number of messages for each flow");
 
         try {
-            result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues);
+            result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues.orElse(false));
 
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result);
         } catch (Exception e) {
@@ -193,14 +194,13 @@ public class MessageBrokerRuntime {
             @PathVariable(value = "endpointName") String endpointName,
             @PathVariable(value = "messageId") String messageId,
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestParam(value = "excludeBody", required = false) Boolean excludeBody
+            @RequestParam(value = "excludeBody", required = false) Optional<Boolean> excludeBody
     )  throws Exception {
 
         log.debug("REST request to browse message on: {}", endpointName);
 
         try {
-            if(excludeBody == null) excludeBody = false;
-            result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody);
+            result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody.orElse(false));
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("Can't browse message", e);
@@ -226,13 +226,13 @@ public class MessageBrokerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages,
-            @RequestParam(value = "excludeBody", required = false) Boolean excludeBody
+            @RequestParam(value = "excludeBody", required = false) Optional<Boolean> excludeBody
     )  throws Exception {
 
         log.debug("REST request to browse messages on: {}", endpointName);
 
         try {
-            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody);
+            result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody.orElse(false));
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
         } catch (Exception e) {
             log.error("Can't browse messages", e);

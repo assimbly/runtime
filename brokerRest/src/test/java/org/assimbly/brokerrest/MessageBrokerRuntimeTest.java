@@ -52,16 +52,16 @@ class MessageBrokerRuntimeTest {
 
             if (testInfo.getTags().contains("NeedsMessageOnQueueTest1") && (!messageSentOnQueue1 || messageMovedFromQueue1)) {
                 // params
-                HashMap<String, String> params = new HashMap();
+                HashMap<String, String> params = new HashMap<>();
                 params.put("messageHeaders", "{\"test\":\"1234\"}");
 
                 // headers
-                HashMap<String, String> headers = new HashMap();
+                HashMap<String, String> headers = new HashMap<>();
                 headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
                 // endpoint call
-                HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/send"), BODY, params, headers);
+                HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/message/" + QUEUE_TEST_1 + "/send"), BODY, params, headers);
 
                 // get messageId from queue
                 messageIdOnQueue1 = getMessageIdFromQueueName(QUEUE_TEST_1);
@@ -80,17 +80,17 @@ class MessageBrokerRuntimeTest {
         headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
         // endpoint call
-        HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+queueName), null, null, headers);
+        HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/queue/" + queueName), null, null, headers);
     }
 
     private static String getMessageIdFromQueueName(String queueName) {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+queueName+"/browse"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + queueName + "/browse"), null, headers);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
@@ -114,16 +114,16 @@ class MessageBrokerRuntimeTest {
     void shouldSendMessageToEndpoint() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("messageHeaders", "{\"test\":\"1234\"}");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/send"), BODY, params, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/message/" + QUEUE_TEST_1 + "/send"), BODY, params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -150,11 +150,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/delayedmessages/"+QUEUE_TEST_1+"/count"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/delayedmessages/" + QUEUE_TEST_1 + "/count"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -178,11 +178,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetFlowsMessageCount test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/flows/message/count"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/flows/message/count"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -206,11 +206,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCountByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/count"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + QUEUE_TEST_1 + "/count"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -234,11 +234,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldBrowseMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/browse"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + QUEUE_TEST_1 + "/browse"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -266,11 +266,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldFilterMessagesByEndpoint test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/filter"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + QUEUE_TEST_1), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -296,11 +296,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/count"), QUEUE_TEST_1, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/count"), QUEUE_TEST_1, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -325,11 +325,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/browse/"+messageIdOnQueue1), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/message/" + QUEUE_TEST_1 + "/browse/" + messageIdOnQueue1), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -356,11 +356,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageIdOnQueue1 != null, "Skipping shouldBrowseMessageByEndpointAndMessageId test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/"+messageIdOnQueue1), null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/message/" + QUEUE_TEST_1 + "/"+messageIdOnQueue1), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -388,11 +388,11 @@ class MessageBrokerRuntimeTest {
             assumeTrue(messageSentOnQueue1, "Skipping shouldGetDelayedMessagesCount test because shouldSendMessageToEndpoint test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1), null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + QUEUE_TEST_1), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -416,12 +416,13 @@ class MessageBrokerRuntimeTest {
     @Order(20)
     void shouldMoveMessageFromQueue1ToQueue2() {
         try {
+
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/message/"+QUEUE_TEST_1+"/"+QUEUE_TEST_2+"/"+messageIdOnQueue1), null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/message/" + QUEUE_TEST_1 + "/" + QUEUE_TEST_2 + "/" + messageIdOnQueue1), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -446,11 +447,11 @@ class MessageBrokerRuntimeTest {
     void shouldMoveMessagesFromQueue1ToQueue2() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/messages/"+QUEUE_TEST_1+"/"+QUEUE_TEST_2), null, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/" + BROKER_TYPE + "/messages/" + QUEUE_TEST_1 + "/" + QUEUE_TEST_2), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
