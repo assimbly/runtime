@@ -60,7 +60,7 @@ public final class CompositeDataConverter {
 
                     if (key.equalsIgnoreCase("JMSMessageID") || key.equalsIgnoreCase("messageID")) {
                             message.put("messageid",value);
-                    }else if(key.equalsIgnoreCase("\"JMSTimestamp\"")){
+                    }else if(key.equalsIgnoreCase("JMSTimestamp")){
                         message.put("timestamp",value);
                     }
 
