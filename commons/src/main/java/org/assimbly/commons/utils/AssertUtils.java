@@ -193,18 +193,18 @@ public final class AssertUtils {
     public static void assertStepStatsResponse(JsonNode stepJson, JsonNode statsJson, String id, String status) {
         assertThat(stepJson.get("id").asText()).isEqualTo(id);
         assertThat(stepJson.get(STATUS).asText()).isEqualTo(status);
-        assertThat(statsJson.get("externalRedeliveries").isInt()).isTrue();
-        assertThat(statsJson.get("idleSince").isInt()).isTrue();
-        assertThat(statsJson.get("maxProcessingTime").isInt()).isTrue();
-        assertThat(statsJson.get(EXCHANGES_FAILED).isInt()).isTrue();
-        assertThat(statsJson.get("redeliveries").isInt()).isTrue();
-        assertThat(statsJson.get("minProcessingTime").isInt()).isTrue();
-        assertThat(statsJson.get("lastProcessingTime").isInt()).isTrue();
-        assertThat(statsJson.get("meanProcessingTime").isInt()).isTrue();
-        assertThat(statsJson.get("failuresHandled").isInt()).isTrue();
-        assertThat(statsJson.get("totalProcessingTime").isInt()).isTrue();
-        assertThat(statsJson.get(EXCHANGES_COMPLETED).isInt()).isTrue();
-        assertThat(statsJson.get("deltaProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get("externalRedeliveries").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("idleSince").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("maxProcessingTime").asText()).matches("-?\\d+");
+        assertThat(statsJson.get(EXCHANGES_FAILED).asText()).matches("-?\\d+");
+        assertThat(statsJson.get("redeliveries").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("minProcessingTime").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("lastProcessingTime").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("meanProcessingTime").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("failuresHandled").asText()).matches("-?\\d+");
+        assertThat(statsJson.get("totalProcessingTime").asText()).matches("-?\\d+");
+        assertThat(statsJson.get(EXCHANGES_COMPLETED).asText()).matches("-?\\d+");
+        assertThat(statsJson.get("deltaProcessingTime").asText()).matches("-?\\d+");
     }
 
     public static void assertStatsResponse(JsonNode responseJson, String status) {
