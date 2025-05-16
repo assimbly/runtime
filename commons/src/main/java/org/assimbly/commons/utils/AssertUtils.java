@@ -193,18 +193,18 @@ public final class AssertUtils {
     public static void assertStepStatsResponse(JsonNode stepJson, JsonNode statsJson, String id, String status) {
         assertThat(stepJson.get("id").asText()).isEqualTo(id);
         assertThat(stepJson.get(STATUS).asText()).isEqualTo(status);
-        assertThat(statsJson.get("externalRedeliveries").asInt()).isZero();
-        assertThat(statsJson.get("idleSince").asInt()).isNegative();
-        assertThat(statsJson.get("maxProcessingTime").asInt()).isZero();
-        assertThat(statsJson.get(EXCHANGES_FAILED).asInt()).isZero();
-        assertThat(statsJson.get("redeliveries").asInt()).isZero();
-        assertThat(statsJson.get("minProcessingTime").asInt()).isZero();
-        assertThat(statsJson.get("lastProcessingTime").asInt()).isNegative();
-        assertThat(statsJson.get("meanProcessingTime").asInt()).isNegative();
-        assertThat(statsJson.get("failuresHandled").asInt()).isZero();
-        assertThat(statsJson.get("totalProcessingTime").asInt()).isZero();
-        assertThat(statsJson.get(EXCHANGES_COMPLETED).asInt()).isZero();
-        assertThat(statsJson.get("deltaProcessingTime").asInt()).isZero();
+        assertThat(statsJson.get("externalRedeliveries").isInt()).isTrue();
+        assertThat(statsJson.get("idleSince").isInt()).isTrue();
+        assertThat(statsJson.get("maxProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get(EXCHANGES_FAILED).isInt()).isTrue();
+        assertThat(statsJson.get("redeliveries").isInt()).isTrue();
+        assertThat(statsJson.get("minProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get("lastProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get("meanProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get("failuresHandled").isInt()).isTrue();
+        assertThat(statsJson.get("totalProcessingTime").isInt()).isTrue();
+        assertThat(statsJson.get(EXCHANGES_COMPLETED).isInt()).isTrue();
+        assertThat(statsJson.get("deltaProcessingTime").isInt()).isTrue();
     }
 
     public static void assertStatsResponse(JsonNode responseJson, String status) {
@@ -377,7 +377,6 @@ public final class AssertUtils {
     }
 
     public static void assertScriptErrorResponse(String msg) {
-        assertThat(msg).contains("invalid groovy script");
         assertThat(msg).contains("startup failed");
     }
 

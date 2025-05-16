@@ -46,7 +46,7 @@ class StatisticsRuntimeTest {
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -63,7 +63,7 @@ class StatisticsRuntimeTest {
     void shouldGetFlowMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -89,7 +89,7 @@ class StatisticsRuntimeTest {
     void shouldGetCompleteFlowMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -114,7 +114,7 @@ class StatisticsRuntimeTest {
     void shouldGetFailedFlowMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -139,7 +139,7 @@ class StatisticsRuntimeTest {
     void shouldGetPendingFlowMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -164,7 +164,7 @@ class StatisticsRuntimeTest {
     void shouldGetTotalFlowMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -189,7 +189,7 @@ class StatisticsRuntimeTest {
     void shouldGetFlowMessagesByStepId() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -215,11 +215,11 @@ class StatisticsRuntimeTest {
     void shouldGetFlowStatsByStepId() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/stats"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()) + "/step/" + schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()) + "/stats"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -246,7 +246,7 @@ class StatisticsRuntimeTest {
     void shouldGetHistoryMetrics() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -272,7 +272,7 @@ class StatisticsRuntimeTest {
     void shouldGetMessages() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -298,7 +298,7 @@ class StatisticsRuntimeTest {
     void shouldGetMetrics() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -324,7 +324,7 @@ class StatisticsRuntimeTest {
     void shouldGetStepsStats() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
@@ -350,7 +350,7 @@ class StatisticsRuntimeTest {
     void shouldGetEmptyFlowStats() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -377,7 +377,7 @@ class StatisticsRuntimeTest {
     void shouldGetStats() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -402,7 +402,7 @@ class StatisticsRuntimeTest {
     void shouldGetStatsFlows() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -428,7 +428,7 @@ class StatisticsRuntimeTest {
     void shouldGetStatsByFlowIds() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // body
