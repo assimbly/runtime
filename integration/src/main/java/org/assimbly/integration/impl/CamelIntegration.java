@@ -3110,6 +3110,7 @@ public class CamelIntegration extends BaseIntegration {
 		return httpsCertificateValidator.validate(httpsUrl);
 	}
 
+
 	@Override
 	public ValidationErrorMessage validateUrl(String url) {
 		UrlValidator urlValidator = new UrlValidator();

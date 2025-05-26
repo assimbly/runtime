@@ -122,18 +122,19 @@ public class Unmarshall {
 
 			Element stepElement = (Element) steps.item(i);
 
-			String stepId = stepElement.getElementsByTagName("id").item(0).getFirstChild().getTextContent();
-			String type = stepElement.getElementsByTagName("type").item(0).getFirstChild().getTextContent();
+			int index = i + 1;
+			String stepId = conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/id");
+			String type =   conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/type");
 			Node uriList = stepElement.getElementsByTagName("uri").item(0);
 
 			if(uriList != null && uriList.hasChildNodes()){
 				String uri = uriList.getFirstChild().getTextContent();
-				setUri(uri, stepId, type, i + 1);
+				setUri(uri, stepId, type, index);
 			}
 
 			if(routeTemplateList.contains(type)) {
 				setBlocks(stepElement, stepId, type);
-				setRouteTemplate(i + 1, stepId, type);
+				setRouteTemplate(index, stepId, type);
 			}else{
 				setBlocks(stepElement, stepId, type);
 			}

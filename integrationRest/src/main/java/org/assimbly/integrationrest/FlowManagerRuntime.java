@@ -258,7 +258,7 @@ public class FlowManagerRuntime {
 
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
-            consumes =  {MediaType.APPLICATION_XML_VALUE},
+            consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> installFlow(
@@ -278,16 +278,15 @@ public class FlowManagerRuntime {
 
             status = integration.installFlow(flowId, timeout, contentType, configuration);
 
-
             if(mediaType.equals("application/xml")){
                 status = DocConverter.convertJsonToXml(status);
             }
 
             if (status.contains("Started flow successfully")) {
-                log.info("FlowManager Report:\n\n" + status);
+                //log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/install",status,plainResponse);
             } else {
-                log.error("FlowManager Report:\n\n" + status);
+                //log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/install", status, plainResponse);
             }
         } catch (Exception e) {

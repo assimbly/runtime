@@ -11,15 +11,15 @@ spec:
       to do
     type: object
     properties:
-      language:
-          title: Set Body
-          description: Set Body of a message
-          type: string
-          default: constant
-      path:
-          title: Path
-          description: Path
-          type: string
+      expressionType:
+        title: Expression Type
+        description: Set the expression language
+        type: string
+        default: constant
+      content:
+        title: Content
+        description: Set the content of the body
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -29,10 +29,10 @@ spec:
         steps:
           - setProperty:
               name: assimbly.body
-              constant: "{{path}}"
+              constant: "{{content}}"
           - setProperty:
               name: assimbly.language
-              constant: "{{language}}"
+              constant: "{{expressionType}}"
           - process:
               ref: "SetBodyProcessor"
           - to:

@@ -231,6 +231,8 @@ public class RouteTemplate {
         properties.put(type + "." + stepId + ".routetemplate", routeTemplate);
         properties.put(type + "." + stepId + ".routetemplate.id",  routeId);
 
+        //properties.put("frontend","dovetail");
+
     }
 
     private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, String flowId, String stepId) throws Exception {
