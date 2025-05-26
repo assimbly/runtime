@@ -114,7 +114,7 @@ public class MessageEvent {
         return previousFlowVersion;
     }
 
-    @JsonProperty("component")
+    @JsonProperty("step")
     public String getStep() {
         return stepId;
     }
