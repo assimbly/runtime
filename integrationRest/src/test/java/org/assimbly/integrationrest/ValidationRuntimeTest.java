@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.commons.utils.Utils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -193,7 +194,39 @@ class ValidationRuntimeTest {
 
 
     @Test
-    void shouldValidateXsltWithSuccess() {
+    void shouldValidateXsltBodyWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("StopTest", "false");
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            String xslt = Utils.readFileAsStringFromResources("example.xsl");
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("xsltBody", xslt);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.isArray()).isTrue();
+            assertThat(responseJson.size()).isZero();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateXsltUrlWithSuccess() {
         try {
             // headers
             HashMap<String, String> headers = new HashMap<>();
@@ -224,11 +257,40 @@ class ValidationRuntimeTest {
     }
 
     @Test
-    void shouldValidateXsltError() {
+    void shouldValidateXsltUrlError() {
         try {
             // body
             JSONObject body = new JSONObject();
             body.put("xsltUrl", "http://url-invalid-nonexistent.com/fake.xsl");
+
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), body.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertXsltErrorResponse(responseJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateXsltBodyError() {
+        try {
+            // body
+            JSONObject body = new JSONObject();
+            body.put("xsltBody", "blabla");
 
             // headers
             HashMap<String, String> headers = new HashMap<>();

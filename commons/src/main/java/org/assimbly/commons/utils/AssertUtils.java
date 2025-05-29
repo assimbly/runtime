@@ -367,7 +367,7 @@ public final class AssertUtils {
         assertThat(responseJson.isArray()).isTrue();
         assertThat(responseJson.size()).isPositive();
         for (JsonNode errorNode : responseJson) {
-            assertThat(errorNode.get("error").asText().toLowerCase()).contains("i/o error");
+            assertThat(errorNode.get("error").asText().toLowerCase()).contains("error reported by xml parser");
         }
     }
 
