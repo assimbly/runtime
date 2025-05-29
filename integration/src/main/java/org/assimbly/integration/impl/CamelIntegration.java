@@ -2202,126 +2202,169 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception  {
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
 
 		JSONObject json = new JSONObject();
-		JSONObject flow = new JSONObject();
-		JSONArray steps = new JSONArray();
+		JSONObject flow = createBasicFlowJson(flowId);
 
+		List<Route> routes = getRoutesByFlowId(flowId);
+		if(filter!=null && !filter.isEmpty()){
+			routes = filterRoutes(routes, filter);
+		}
+
+		// Calculate basic statistics
+		FlowStatistics stats = calculateFlowStatistics(routes, fullStats);
+
+		// Populate basic stats
+		populateBasicStats(flow, stats);
+
+		// Add additional stats if requested
+		if (fullStats) {
+			populateDetailedStats(flow, stats);
+
+			// Add steps if requested
+			if (includeSteps) {
+				JSONArray steps = collectStepStatistics(routes);
+				json.put("steps", steps);
+			}
+
+		}
+
+		// Add metadata if requested
+		if (includeMetaData) {
+			populateMetadata(flow, flowId);
+		}
+
+		// Build final response
+		json.put("flow", flow);
+
+		return json.toString();
+	}
+
+	private JSONObject createBasicFlowJson(String flowId) {
+		JSONObject flow = new JSONObject();
+		flow.put("id", flowId);
+		return flow;
+	}
+
+	private List<Route> filterRoutes(List<Route> routes, String filter) {
+		if (filter.isEmpty()) {
+			return routes;
+		}
+
+		return routes.stream()
+				.filter(r -> !r.getId().contains(filter))
+				.toList();
+	}
+
+	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
+
+		FlowStatistics stats = new FlowStatistics();
+		long total = 0, completed = 0, failed = 0, pending = 0;
+
+		for (Route r : routes) {
+			long start = System.nanoTime();
+
+			ManagedRouteMBean route = managed.getManagedRoute(r.getId());
+
+			System.out.println("C1. Elapsed time: " + (System.nanoTime() - start) + " ns");
+
+			total += route.getExchangesTotal();
+			completed += route.getExchangesCompleted();
+			failed += route.getExchangesFailed();
+			pending += route.getExchangesInflight();
+
+			System.out.println("C2. Elapsed time: " + (System.nanoTime() - start) + " ns");
+
+			if (fullStats) {
+				collectDetailedStatistics(stats, route);
+			}
+
+			System.out.println("C3. Elapsed time: " + (System.nanoTime() - start) + " ns");
+		}
+
+		stats.totalMessages = total;
+		stats.completedMessages = completed;
+		stats.failedMessages = failed;
+		stats.pendingMessages = pending;
+
+		return stats;
+	}
+
+	private void collectDetailedStatistics(FlowStatistics stats, ManagedRouteMBean route) {
+
+		long start = System.nanoTime();
+
+		// Update uptime if not set
+		if (stats.uptime == null) {
+			stats.uptime = route.getUptime();
+			stats.uptimeMillis = route.getUptimeMillis();
+		}
+
+		System.out.println("D1. Elapsed time: " + (System.nanoTime() - start) + " ns");
+
+		if (stats.lastFailed == null) {
+			stats.lastFailed = route.getLastExchangeFailureTimestamp();
+		}
+
+		System.out.println("D2. Elapsed time: " + (System.nanoTime() - start) + " ns");
+
+		if (stats.lastCompleted == null) {
+			stats.lastCompleted = route.getLastExchangeCompletedTimestamp();
+		}
+
+		System.out.println("D3. Elapsed time: " + (System.nanoTime() - start) + " ns");
+
+	}
+
+	private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
+		flow.put("total", stats.totalMessages);
+		flow.put("completed", stats.completedMessages);
+		flow.put("failed", stats.failedMessages);
+		flow.put("pending", stats.pendingMessages);
+	}
+
+	private void populateDetailedStats(JSONObject flow, FlowStatistics stats) throws MalformedObjectNameException {
+		flow.put("status", getFlowStatus(flow.getString("id")));
+		flow.put("timeout", getTimeout(context));
+		flow.put("uptime", stats.uptime);
+		flow.put("uptimeMillis", stats.uptimeMillis);
+		flow.put("lastFailed", stats.lastFailed != null ? stats.lastFailed : "");
+		flow.put("lastCompleted", stats.lastCompleted != null ? stats.lastCompleted : "");
+	}
+
+	private void populateMetadata(JSONObject flow, String flowId) throws Exception {
+		TreeMap<String, String> flowProps = getFlowConfiguration(flowId);
+		if (flowProps != null) {
+			for (var flowProp : flowProps.entrySet()) {
+				if (flowProp.getKey().startsWith("flow") && !flowProp.getKey().endsWith("id")) {
+					String key = StringUtils.substringAfter(flowProp.getKey(), "flow.");
+					flow.put(key, flowProp.getValue());
+				}
+			}
+		}
+	}
+
+	private JSONArray collectStepStatistics(List<Route> routes) throws Exception {
+		JSONArray steps = new JSONArray();
+		for (Route r : routes) {
+			String routeId = r.getId();
+			JSONObject step = getStepStats(routeId, true);
+			steps.put(step);
+		}
+		return steps;
+	}
+
+	// Helper class to store statistics
+	private static class FlowStatistics {
 		long totalMessages = 0;
 		long completedMessages = 0;
 		long failedMessages = 0;
 		long pendingMessages = 0;
-		BigDecimal cpuLoadLastMinute = new BigDecimal("0.00");
-		BigDecimal cpuLoadLast5Minutes = new BigDecimal("0.00");
-		BigDecimal cpuLoadLast15Minutes = new BigDecimal("0.00");
 		long uptimeMillis = 0;
 		String uptime = null;
 		Date lastFailed = null;
 		Date lastCompleted = null;
-
-		List<Route> routes = getRoutesByFlowId(flowId);
-
-		for(Route r : routes){
-
-			String routeId = r.getId();
-
-			if (!filter.isEmpty() && routeId.contains(filter)) {
-				continue;
-			}
-
-			ManagedRouteMBean route = managed.getManagedRoute(routeId);
-
-			totalMessages += route.getExchangesTotal();
-			completedMessages += route.getExchangesCompleted();
-			failedMessages += route.getExchangesFailed();
-			pendingMessages += route.getExchangesInflight();
-
-			if(fullStats){
-
-				long startTime = System.currentTimeMillis();
-
-				if(uptime==null){
-					uptime = route.getUptime();
-				}
-
-				if(uptimeMillis==0){
-					uptimeMillis = route.getUptimeMillis();
-				}
-
-				if(lastFailed==null){
-					lastFailed = route.getLastExchangeFailureTimestamp();
-				}else{
-					Date failure = route.getLastExchangeFailureTimestamp();
-					if(failure!=null && failure.after(lastFailed)){
-						lastFailed = failure;
-					}
-				}
-
-				if(lastCompleted==null){
-					lastCompleted = route.getLastExchangeCompletedTimestamp();
-				}else{
-					Date completed = route.getLastExchangeCompletedTimestamp();
-					if(completed!=null && completed.after(lastCompleted)){
-						lastCompleted = completed;
-					}
-				}
-
-				cpuLoadLastMinute = cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
-				cpuLoadLast5Minutes = cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
-				cpuLoadLast15Minutes = cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
-
-				if(includeSteps){
-					JSONObject step = getStepStats(routeId, fullStats);
-					steps.put(step);
-				}
-			}
-		}
-
-		flow.put("id",flowId);
-		flow.put("total",totalMessages);
-		flow.put("completed",completedMessages);
-		flow.put("failed",failedMessages);
-		flow.put("pending",pendingMessages);
-
-		if(fullStats){
-			flow.put("status",getFlowStatus(flowId));
-			flow.put("timeout",getTimeout(context));
-			flow.put("uptime",uptime);
-			flow.put("uptimeMillis",uptimeMillis);
-			flow.put("cpuLoadLastMinute",cpuLoadLastMinute);
-			flow.put("cpuLoadLast5Minutes",cpuLoadLast5Minutes);
-			flow.put("cpuLoadLast15Minutes",cpuLoadLast15Minutes);
-			flow.put("lastFailed",lastFailed != null ? lastFailed : "");
-			flow.put("lastCompleted",lastCompleted != null ? lastCompleted : "");
-		}
-
-		if(includeMetaData){
-			TreeMap<String, String> flowProps = getFlowConfiguration(flowId);
-			if(flowProps!=null) {
-				for (var flowProp : flowProps.entrySet()) {
-					if (flowProp.getKey().startsWith("flow") && !flowProp.getKey().endsWith("id")) {
-						String key = StringUtils.substringAfter(flowProp.getKey(), "flow.");
-						flow.put(key, flowProp.getValue());
-					}
-				}
-			}
-
-		}
-
-		if(includeSteps){
-			flow.put("steps",steps);
-		}
-		json.put("flow",flow);
-
-		String flowStats = json.toString(4);
-
-		if(mediaType.contains("xml")) {
-			flowStats = DocConverter.convertJsonToXml(flowStats);
-		}
-
-		return flowStats;
-
 	}
 
 	private long getTimeout(CamelContext context) throws MalformedObjectNameException {
@@ -2584,6 +2627,7 @@ public class CamelIntegration extends BaseIntegration {
 		json.put("totalThreads",ManagementFactory.getThreadMXBean().getThreadCount());
 
 		String stats = json.toString(4);
+
 		if(mediaType.contains("xml")) {
 			stats = DocConverter.convertJsonToXml(stats);
 		}
@@ -2695,18 +2739,74 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
+		long start = System.currentTimeMillis();
 
 		String[] values = flowIds.split(",");
 
-		Set<String> flowSet = new HashSet<String>(Arrays.asList(values));
+		Set<String> flowSet = new HashSet<>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, filter, true, false,false);
+		JSONArray flows = new JSONArray();
 
-		if(mediaType.contains("xml")) {
-			result = DocConverter.convertJsonToXml(result);
+		Iterator<String> it = flowSet.iterator();
+		while (it.hasNext()) {
+			String flowId = it.next();
+
+			JSONObject json = new JSONObject();
+			JSONObject flow = createBasicFlowJson(flowId);
+
+			List<Route> routes = getRoutesByFlowId(flowId);
+
+			if(filter!=null && !filter.isEmpty()){
+				routes = filterRoutes(routes, filter);
+			}
+
+			// Calculate basic statistics
+			FlowStatistics stats = calculateFlowStatistics(routes, true);
+
+			// Populate basic stats
+			populateBasicStats(flow, stats);
+			try {
+				populateDetailedStats(flow, stats);
+			} catch (MalformedObjectNameException e) {
+				throw new RuntimeException(e);
+			}
+
+			// Build final response
+			json.put("flow", flow);
+
+			flows.put(json);
 		}
 
-		return result;
+
+		/*
+		for(String flowId: flowSet){
+
+			JSONObject json = new JSONObject();
+			JSONObject flow = createBasicFlowJson(flowId);
+
+			List<Route> routes = getRoutesByFlowId(flowId);
+
+			if(filter!=null && !filter.isEmpty()){
+				routes = filterRoutes(routes, filter);
+			}
+
+			// Calculate basic statistics
+			FlowStatistics stats = calculateFlowStatistics(routes, true);
+
+			// Populate basic stats
+			populateBasicStats(flow, stats);
+			populateDetailedStats(flow, stats);
+
+			// Build final response
+			json.put("flow", flow);
+
+			flows.put(json);
+
+		}*/
+
+		System.out.println("2. Elapsed time: " + (System.currentTimeMillis() - start) + " ms");
+
+		return flows.toString();
 
 	}
 
@@ -2719,14 +2819,11 @@ public class CamelIntegration extends BaseIntegration {
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, "application/json");
+			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
 			JSONObject flow = new JSONObject(flowStats);
 			flows.put(flow);
 		}
-
-		String result = flows.toString();
-
-		return result;
+		return flows.toString();
 	}
 
 	public String getMessages(String mediaType) throws Exception {
@@ -3428,6 +3525,9 @@ public class CamelIntegration extends BaseIntegration {
 	private List<Route> getRoutesByFlowId(String id){
 		return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).collect(Collectors.toList());
 	}
+
+
+
 
 	private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id){
 		List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();

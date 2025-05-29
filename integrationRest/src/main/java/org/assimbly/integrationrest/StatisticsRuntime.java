@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -126,6 +127,11 @@ public class StatisticsRuntime {
 
         try {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
+
+            if(mediaType.contains("xml")) {
+                stats = DocConverter.convertJsonToXml(stats);
+            }
+
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/statsbyflowids",stats,plainResponse);
         } catch (Exception e) {
@@ -152,7 +158,7 @@ public class StatisticsRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            String flowStats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, mediaType);
+            String flowStats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/stats",flowStats,plainResponse);
         } catch (Exception e) {
