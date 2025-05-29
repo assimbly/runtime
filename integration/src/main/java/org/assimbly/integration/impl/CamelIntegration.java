@@ -2739,7 +2739,6 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception {
-		long start = System.currentTimeMillis();
 
 		String[] values = flowIds.split(",");
 
@@ -2776,35 +2775,6 @@ public class CamelIntegration extends BaseIntegration {
 
 			flows.put(json);
 		}
-
-
-		/*
-		for(String flowId: flowSet){
-
-			JSONObject json = new JSONObject();
-			JSONObject flow = createBasicFlowJson(flowId);
-
-			List<Route> routes = getRoutesByFlowId(flowId);
-
-			if(filter!=null && !filter.isEmpty()){
-				routes = filterRoutes(routes, filter);
-			}
-
-			// Calculate basic statistics
-			FlowStatistics stats = calculateFlowStatistics(routes, true);
-
-			// Populate basic stats
-			populateBasicStats(flow, stats);
-			populateDetailedStats(flow, stats);
-
-			// Build final response
-			json.put("flow", flow);
-
-			flows.put(json);
-
-		}*/
-
-		System.out.println("2. Elapsed time: " + (System.currentTimeMillis() - start) + " ms");
 
 		return flows.toString();
 
