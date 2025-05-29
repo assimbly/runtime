@@ -2263,24 +2263,31 @@ public class CamelIntegration extends BaseIntegration {
 		long total = 0, completed = 0, failed = 0, pending = 0;
 
 		for (Route r : routes) {
-			long start = System.nanoTime();
 
 			ManagedRouteMBean route = managed.getManagedRoute(r.getId());
-
-			System.out.println("C1. Elapsed time: " + (System.nanoTime() - start) + " ns");
 
 			total += route.getExchangesTotal();
 			completed += route.getExchangesCompleted();
 			failed += route.getExchangesFailed();
 			pending += route.getExchangesInflight();
 
-			System.out.println("C2. Elapsed time: " + (System.nanoTime() - start) + " ns");
-
 			if (fullStats) {
-				collectDetailedStatistics(stats, route);
+				// Update uptime if not set
+				if (stats.uptime == null) {
+					stats.uptime = route.getUptime();
+					stats.uptimeMillis = route.getUptimeMillis();
+				}
+
+				if (stats.lastFailed == null) {
+					stats.lastFailed = route.getLastExchangeFailureTimestamp();
+				}
+
+				if (stats.lastCompleted == null) {
+					stats.lastCompleted = route.getLastExchangeCompletedTimestamp();
+				}
+
 			}
 
-			System.out.println("C3. Elapsed time: " + (System.nanoTime() - start) + " ns");
 		}
 
 		stats.totalMessages = total;
@@ -2289,32 +2296,6 @@ public class CamelIntegration extends BaseIntegration {
 		stats.pendingMessages = pending;
 
 		return stats;
-	}
-
-	private void collectDetailedStatistics(FlowStatistics stats, ManagedRouteMBean route) {
-
-		long start = System.nanoTime();
-
-		// Update uptime if not set
-		if (stats.uptime == null) {
-			stats.uptime = route.getUptime();
-			stats.uptimeMillis = route.getUptimeMillis();
-		}
-
-		System.out.println("D1. Elapsed time: " + (System.nanoTime() - start) + " ns");
-
-		if (stats.lastFailed == null) {
-			stats.lastFailed = route.getLastExchangeFailureTimestamp();
-		}
-
-		System.out.println("D2. Elapsed time: " + (System.nanoTime() - start) + " ns");
-
-		if (stats.lastCompleted == null) {
-			stats.lastCompleted = route.getLastExchangeCompletedTimestamp();
-		}
-
-		System.out.println("D3. Elapsed time: " + (System.nanoTime() - start) + " ns");
-
 	}
 
 	private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
