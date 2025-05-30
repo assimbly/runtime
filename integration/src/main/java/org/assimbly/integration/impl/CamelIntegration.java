@@ -2697,7 +2697,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String getFlowsStats(String mediaType) throws Exception {
 
-		Set<String> flowIds = new HashSet<String>();
+		Set<String> flowIds = new HashSet<>();
 
 		List<Route> routes = context.getRoutes();
 
