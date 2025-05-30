@@ -1946,15 +1946,19 @@ public class CamelIntegration extends BaseIntegration {
 		return camelRouteConfiguration;
 	}
 
-	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception {
+
+	public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
+
 		JSONObject json = new JSONObject();
 		JSONObject flow = createBasicFlowJson(flowId);
 
 		List<Route> routes = getRoutesByFlowId(flowId);
-		List<Route> filteredRoutes = filterRoutes(routes, filter);
+		if(filter!=null && !filter.isEmpty()){
+			routes = filterRoutes(routes, filter);
+		}
 
 		// Calculate basic statistics
-		FlowStatistics stats = calculateFlowStatistics(filteredRoutes, fullStats);
+		FlowStatistics stats = calculateFlowStatistics(routes, fullStats);
 
 		// Populate basic stats
 		populateBasicStats(flow, stats);
@@ -1962,6 +1966,13 @@ public class CamelIntegration extends BaseIntegration {
 		// Add additional stats if requested
 		if (fullStats) {
 			populateDetailedStats(flow, stats);
+
+			// Add steps if requested
+			if (includeSteps) {
+				JSONArray steps = collectStepStatistics(routes);
+				json.put("steps", steps);
+			}
+
 		}
 
 		// Add metadata if requested
@@ -1969,17 +1980,8 @@ public class CamelIntegration extends BaseIntegration {
 			populateMetadata(flow, flowId);
 		}
 
-		// Add steps if requested
-		JSONArray steps = new JSONArray();
-		if (includeSteps && fullStats) {
-			steps = collectStepStatistics(filteredRoutes);
-		}
-
 		// Build final response
 		json.put("flow", flow);
-		if (includeSteps && fullStats) {
-			json.put("steps", steps);
-		}
 
 		return json.toString();
 	}
@@ -2001,69 +2003,47 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
+
 		FlowStatistics stats = new FlowStatistics();
+		long total = 0;
+		long completed = 0;
+		long failed = 0;
+		long pending = 0;
 
 		for (Route r : routes) {
-			String routeId = r.getId();
-			ManagedRouteMBean route = managed.getManagedRoute(routeId);
 
-			// Accumulate basic stats
-			stats.totalMessages += route.getExchangesTotal();
-			stats.completedMessages += route.getExchangesCompleted();
-			stats.failedMessages += route.getExchangesFailed();
-			stats.pendingMessages += route.getExchangesInflight();
+			ManagedRouteMBean route = managed.getManagedRoute(r.getId());
+
+			total += route.getExchangesTotal();
+			completed += route.getExchangesCompleted();
+			failed += route.getExchangesFailed();
+			pending += route.getExchangesInflight();
 
 			if (fullStats) {
-				collectDetailedStatistics(stats, route);
+				// Update uptime if not set
+				if (stats.uptime == null) {
+					stats.uptime = route.getUptime();
+					stats.uptimeMillis = route.getUptimeMillis();
+				}
+
+				if (stats.lastFailed == null) {
+					stats.lastFailed = route.getLastExchangeFailureTimestamp();
+				}
+
+				if (stats.lastCompleted == null) {
+					stats.lastCompleted = route.getLastExchangeCompletedTimestamp();
+				}
+
 			}
+
 		}
+
+		stats.totalMessages = total;
+		stats.completedMessages = completed;
+		stats.failedMessages = failed;
+		stats.pendingMessages = pending;
 
 		return stats;
-	}
-
-	private void collectDetailedStatistics(FlowStatistics stats, ManagedRouteMBean route) {
-		// Update uptime if not set
-		if (stats.uptime == null) {
-			stats.uptime = route.getUptime();
-		}
-
-		// Update uptimeMillis if not set
-		if (stats.uptimeMillis == 0) {
-			stats.uptimeMillis = route.getUptimeMillis();
-		}
-
-		// Track last failed timestamp
-		updateLastFailedTimestamp(stats, route);
-
-		// Track last completed timestamp
-		updateLastCompletedTimestamp(stats, route);
-
-		// Accumulate CPU load metrics
-		stats.cpuLoadLastMinute = stats.cpuLoadLastMinute.add(parseBigDecimal(route.getLoad01()));
-		stats.cpuLoadLast5Minutes = stats.cpuLoadLast5Minutes.add(parseBigDecimal(route.getLoad05()));
-		stats.cpuLoadLast15Minutes = stats.cpuLoadLast15Minutes.add(parseBigDecimal(route.getLoad15()));
-	}
-
-	private void updateLastFailedTimestamp(FlowStatistics stats, ManagedRouteMBean route) {
-		Date failure = route.getLastExchangeFailureTimestamp();
-		if (failure == null) {
-			return;
-		}
-
-		if (stats.lastFailed == null || failure.after(stats.lastFailed)) {
-			stats.lastFailed = failure;
-		}
-	}
-
-	private void updateLastCompletedTimestamp(FlowStatistics stats, ManagedRouteMBean route) {
-		Date completed = route.getLastExchangeCompletedTimestamp();
-		if (completed == null) {
-			return;
-		}
-
-		if (stats.lastCompleted == null || completed.after(stats.lastCompleted)) {
-			stats.lastCompleted = completed;
-		}
 	}
 
 	private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
@@ -2078,9 +2058,6 @@ public class CamelIntegration extends BaseIntegration {
 		flow.put("timeout", getTimeout(context));
 		flow.put("uptime", stats.uptime);
 		flow.put("uptimeMillis", stats.uptimeMillis);
-		flow.put("cpuLoadLastMinute", stats.cpuLoadLastMinute);
-		flow.put("cpuLoadLast5Minutes", stats.cpuLoadLast5Minutes);
-		flow.put("cpuLoadLast15Minutes", stats.cpuLoadLast15Minutes);
 		flow.put("lastFailed", stats.lastFailed != null ? stats.lastFailed : "");
 		flow.put("lastCompleted", stats.lastCompleted != null ? stats.lastCompleted : "");
 	}
@@ -2113,9 +2090,6 @@ public class CamelIntegration extends BaseIntegration {
 		long completedMessages = 0;
 		long failedMessages = 0;
 		long pendingMessages = 0;
-		BigDecimal cpuLoadLastMinute = new BigDecimal("0.00");
-		BigDecimal cpuLoadLast5Minutes = new BigDecimal("0.00");
-		BigDecimal cpuLoadLast15Minutes = new BigDecimal("0.00");
 		long uptimeMillis = 0;
 		String uptime = null;
 		Date lastFailed = null;
@@ -2496,13 +2470,39 @@ public class CamelIntegration extends BaseIntegration {
 
 		Set<String> flowSet = new HashSet<>(Arrays.asList(values));
 
-		String result = getStatsFromList(flowSet, filter, true, false,false);
+		JSONArray flows = new JSONArray();
 
-		if(mediaType.contains("xml")) {
-			result = DocConverter.convertJsonToXml(result);
+		Iterator<String> it = flowSet.iterator();
+		while (it.hasNext()) {
+			String flowId = it.next();
+
+			JSONObject json = new JSONObject();
+			JSONObject flow = createBasicFlowJson(flowId);
+
+			List<Route> routes = getRoutesByFlowId(flowId);
+
+			if(filter!=null && !filter.isEmpty()){
+				routes = filterRoutes(routes, filter);
+			}
+
+			// Calculate basic statistics
+			FlowStatistics stats = calculateFlowStatistics(routes, true);
+
+			// Populate basic stats
+			populateBasicStats(flow, stats);
+			try {
+				populateDetailedStats(flow, stats);
+			} catch (MalformedObjectNameException e) {
+				throw new RuntimeException(e);
+			}
+
+			// Build final response
+			json.put("flow", flow);
+
+			flows.put(json);
 		}
 
-		return result;
+		return flows.toString();
 
 	}
 
@@ -2515,7 +2515,7 @@ public class CamelIntegration extends BaseIntegration {
 		JSONArray flows = new JSONArray();
 
 		for(String flowId: flowIds){
-			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, "application/json");
+			String flowStats = getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
 			JSONObject flow = new JSONObject(flowStats);
 			flows.put(flow);
 		}

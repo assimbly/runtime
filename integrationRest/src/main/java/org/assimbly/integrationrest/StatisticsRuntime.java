@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -122,8 +123,13 @@ public class StatisticsRuntime {
 
         try {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
+
+            if(mediaType.contains("xml")) {
+                stats = DocConverter.convertJsonToXml(stats);
+            }
+
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/statsbyflowids",stats,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/statsbyflowids", stats, plainResponse);
         } catch (Exception e) {
             log.error("Get stats by flow ids failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/statsbyflowids",e.getMessage());
@@ -148,11 +154,16 @@ public class StatisticsRuntime {
         try {
             integration = integrationRuntime.getIntegration();
 
-            String flowStats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter, mediaType);
-            if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/stats",flowStats,plainResponse);
+            String stats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
+
+            if(mediaType.contains("xml")) {
+                stats = DocConverter.convertJsonToXml(stats);
+            }
+
+            if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/stats", stats, plainResponse);
         } catch (Exception e) {
-            log.error("Get flowstats " + flowId + " failed",e);
+            log.error("Get flowstats {} failed", flowId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/stats",e.getMessage());
         }
     }
@@ -177,7 +188,7 @@ public class StatisticsRuntime {
             if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",flowStats,plainResponse);
         } catch (Exception e) {
-            log.error("Get flowstats " + flowId + " for stepId=" + stepId + " failed",e);
+            log.error("Get flowstats {} for stepId={} failed", flowId, stepId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",e.getMessage());
         }
     }
@@ -198,7 +209,7 @@ public class StatisticsRuntime {
             String numberOfMessages = integration.getFlowMessages(flowId, includeSteps, mediaType);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/messages",numberOfMessages,true);
         } catch (Exception e) {
-            log.error("Get messages for flow " + flowId + " failed",e);
+            log.error("Get messages for flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
         }
     }
@@ -218,7 +229,7 @@ public class StatisticsRuntime {
             String numberOfMessages = integration.getFlowTotalMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/total",numberOfMessages,numberOfMessages,flowId);
         } catch (Exception e) {
-            log.error("Get total messages for flow " + flowId + " failed",e);
+            log.error("Get total messages for flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/total",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
         }
     }
@@ -238,7 +249,7 @@ public class StatisticsRuntime {
             String completedMessages = integration.getFlowCompletedMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/completed",completedMessages,completedMessages,flowId);
         } catch (Exception e) {
-            log.error("Get completed messages for flow " + flowId + " failed",e);
+            log.error("Get completed messages for flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/completed",e.getMessage(),"unable to get completed messages of flow " + flowId,flowId);
         }
     }
@@ -258,7 +269,7 @@ public class StatisticsRuntime {
             String failedMessages = integration.getFlowFailedMessages(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/failed",failedMessages,failedMessages,flowId);
         } catch (Exception e) {
-            log.error("Get failed messages for flow " + flowId + " failed",e);
+            log.error("Get failed messages for flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/failed",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
         }
     }

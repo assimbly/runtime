@@ -822,7 +822,7 @@ public interface Integration {
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
-    String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
+    String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception;
 
 	/**
 	 * Gets the details stats of a flow step
