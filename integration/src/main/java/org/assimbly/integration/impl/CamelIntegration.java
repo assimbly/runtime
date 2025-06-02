@@ -51,9 +51,11 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
+import org.assimbly.dil.loader.FastFlowLoader;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
+import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
@@ -1290,6 +1292,40 @@ public class CamelIntegration extends BaseIntegration {
 	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
 		super.setFlowConfiguration(flowId, mediaType, configuration);
 		return startFlow(flowId, timeout);
+	}
+
+	public String fastInstallFlow(String flowId, String configuration) throws Exception {
+
+		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
+
+		flowLoaderReport = new FlowLoaderReport(flowId, flowId);
+
+		if(hasFlow(flowId)) {
+			stopFlow(flowId, 250, false);
+		}
+
+		createConnections(properties);
+
+		FastFlowLoader flow = new FastFlowLoader(properties, flowLoaderReport);
+
+		try {
+
+			flow.addRoutesToCamelContext(context);
+
+			if(!flow.isFlowLoaded()){
+				stopFlow(flowId, 250, false);
+				finishFlowActionReport(flowId, "error","error","error");
+			}else{
+				finishFlowActionReport(flowId, "start","Started flow successfully","info");
+			}
+
+		}catch (Exception e) {
+			stopFlow(flowId, 250, false);
+			finishFlowActionReport(flowId, "error","Start flow failed | error=" + e.getMessage(),"error");
+		}
+
+		return flow.getReport();
+
 	}
 
 	public String uninstallFlow(String flowId, long timeout) throws Exception {

@@ -633,12 +633,23 @@ public interface Integration {
 	* Configure and Starts a flow (for testing)
 	*
 	* @param  flowId the id of the flow
+	* @param  timeout the timeout in milliseconds
 	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
     String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
+
+	/**
+	 * Configure and Starts a flow (for testing)
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  configuration (the XML, JSON or YAML file)
+	 * @return returns flow report
+	 * @throws Exception if flow doesn't start
+	 */
+	String fastInstallFlow(String flowId, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)

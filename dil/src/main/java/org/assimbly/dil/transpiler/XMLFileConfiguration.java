@@ -126,6 +126,28 @@ public class XMLFileConfiguration {
 
 	}
 
+	public TreeMap<String, String> getFlowConfigurationMinimal(String flowId, String xml) throws Exception {
+
+		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
+
+		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
+				.setFileName("dil.xml")
+				.setDocumentBuilder(docBuilder)
+				.setSchemaValidation(true)
+				.setExpressionEngine(new XPathExpressionEngine())
+		).getConfiguration();
+
+		FileHandler fh = new FileHandler(conf);
+
+		InputStream is = DocConverter.convertStringToStream(xml);
+
+		fh.load(is);
+
+		return new Unmarshall().getProperties(conf,flowId);
+
+	}
+
+
 	public static boolean validateXMLSchema(String xsdPath, String xml){
 
 		try {

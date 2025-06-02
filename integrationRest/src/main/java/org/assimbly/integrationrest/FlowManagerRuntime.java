@@ -15,7 +15,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.List;
 
-
 /**
  * Resource to return information about the currently running Spring profiles.
  */
@@ -255,7 +254,6 @@ public class FlowManagerRuntime {
 
     }
 
-
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -271,7 +269,7 @@ public class FlowManagerRuntime {
 
         plainResponse = true;
 
-        log.info("Install flowId: " + flowId + ". Configuration:\n\n" + configuration);
+        log.info("Install flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
         try {
             integration = integrationRuntime.getIntegration();
@@ -283,16 +281,33 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Started flow successfully")) {
-                //log.info("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/install",status,plainResponse);
             } else {
-                //log.error("FlowManager Report:\n\n" + status);
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/install", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Test flow " + flowId + " failed",e);
+            log.error("Test flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/install", e.getMessage(), "unable to test flow " + flowId, flowId);
         }
+
+    }
+
+    @PostMapping(
+            path = "/integration/flow/{flowId}/fastinstall",
+            consumes =  {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
+    public String fastInstallFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) throws Exception {
+
+
+        configuration = DocConverter.convertJsonToXml(configuration);
+
+        return integrationRuntime.getIntegration().fastInstallFlow(flowId, configuration);
 
     }
 

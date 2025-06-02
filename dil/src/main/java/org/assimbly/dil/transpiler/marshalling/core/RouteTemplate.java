@@ -72,7 +72,6 @@ public class RouteTemplate {
         }else{
             createStep(optionProperties, links, stepXPath, type, flowId, stepId);
         }
-
         return properties;
     }
 
@@ -230,8 +229,6 @@ public class RouteTemplate {
 
         properties.put(type + "." + stepId + ".routetemplate", routeTemplate);
         properties.put(type + "." + stepId + ".routetemplate.id",  routeId);
-
-        //properties.put("frontend","dovetail");
 
     }
 

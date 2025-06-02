@@ -22,6 +22,7 @@ public class Unmarshall {
 	private XMLConfiguration conf;
 	private String flowId;
 	List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
+	String templatedRoutes;
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -53,10 +54,13 @@ public class Unmarshall {
 			properties.put("frontend",node.getFirstChild().getTextContent());
 		}
 
-		addDependencies(flowElement);
+		//addDependencies(flowElement);
 
+		templatedRoutes = "<templatedRoutes>";
 		addSteps(flowElement);
-
+		templatedRoutes += "</templatedRoutes>";
+		System.out.println("templatedRoutes: " + templatedRoutes);
+		properties.put(flowId + ".templatedRoutes", templatedRoutes);
 	}
 
 	private Element getFlowElement(){
