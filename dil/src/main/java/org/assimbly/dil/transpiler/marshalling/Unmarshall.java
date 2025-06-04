@@ -1,7 +1,6 @@
 package org.assimbly.dil.transpiler.marshalling;
 
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.marshalling.core.*;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
@@ -21,8 +20,13 @@ public class Unmarshall {
 	private TreeMap<String, String> properties;
 	private XMLConfiguration conf;
 	private String flowId;
-	List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
-	String templatedRoutes;
+	private String options;
+	private final List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
+	private final String[] connectionTypes = {
+			"activemq", "amazonmq", "jms", "sjms", "sjms2",
+			"amqp", "amqps", "rabbitmq", "spring-rabbitmq"
+	};
+
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -31,22 +35,14 @@ public class Unmarshall {
 		conf = configuration;
 		properties = new TreeMap<>();
 
-		setFlow();
-
-		return properties;
-
-	}
-
-	public void setFlow() throws Exception {
-
 		properties.put("id",flowId);
 
 		Element flowElement = getFlowElement();
 
-        assert flowElement != null;
-        addProperty(flowElement, "name","flow.");
-		addProperty(flowElement, "type","flow.");
-		addProperty(flowElement, "version","flow.");
+		assert flowElement != null;
+		addProperty(flowElement, "name");
+		addProperty(flowElement, "type");
+		addProperty(flowElement, "version");
 
 		Node node = doc.getElementsByTagName("frontend").item(0);
 
@@ -54,13 +50,10 @@ public class Unmarshall {
 			properties.put("frontend",node.getFirstChild().getTextContent());
 		}
 
-		//addDependencies(flowElement);
-
-		templatedRoutes = "<templatedRoutes>";
 		addSteps(flowElement);
-		templatedRoutes += "</templatedRoutes>";
-		System.out.println("templatedRoutes: " + templatedRoutes);
-		properties.put(flowId + ".templatedRoutes", templatedRoutes);
+
+		return properties;
+
 	}
 
 	private Element getFlowElement(){
@@ -81,40 +74,12 @@ public class Unmarshall {
 		return null;
 	}
 
-	private void addProperty(Element element, String name,String prefix){
+	private void addProperty(Element element, String name){
 		Node node = element.getElementsByTagName(name).item(0);
 
 		if(node!=null){
-			properties.put(prefix + name,node.getFirstChild().getTextContent());
+			properties.put("flow." + name,node.getFirstChild().getTextContent());
 		}
-
-	}
-
-	private void addDependencies(Element element){
-
-		Node dependencies = element.getElementsByTagName("dependencies").item(0);
-
-		if(dependencies==null || !dependencies.hasChildNodes()) {
-			return;
-		}
-
-		StringBuilder flowDependencies = new StringBuilder();
-		NodeList dependenciesList = dependencies.getChildNodes();
-
-		for (int i = 0; i < dependenciesList.getLength(); i++) {
-			Node dependency = dependenciesList.item(i);
-			if (dependency instanceof Element) {
-				if(i == 0){
-					flowDependencies.append(dependency.getTextContent());
-				}else{
-                    assert flowDependencies != null;
-                    flowDependencies.append(",").append(dependency.getTextContent());
-				}
-
-			}
-		}
-
-		properties.put("flow.dependencies", flowDependencies.toString());
 
 	}
 
@@ -122,17 +87,26 @@ public class Unmarshall {
 
 		NodeList steps = flow.getElementsByTagName("step");
 
-		for (int i = 0; i < steps.getLength(); i++) {
+		for (int index = 1; index < steps.getLength() + 1; index++) {
 
-			Element stepElement = (Element) steps.item(i);
+			String stepId = "";
+			String type = "";
+			String uri = "";
+			Element stepElement = (Element) steps.item(index - 1);
 
-			int index = i + 1;
-			String stepId = conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/id");
-			String type =   conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/type");
-			Node uriList = stepElement.getElementsByTagName("uri").item(0);
+			NodeList children = stepElement.getChildNodes();
+			for (int j = 0; j < children.getLength(); j++) {
+				Node node = children.item(j);
+				if (node.getNodeType() == Node.ELEMENT_NODE && "id".equals(node.getNodeName())) {
+					stepId = node.getTextContent().trim();
+				}else if (node.getNodeType() == Node.ELEMENT_NODE && "type".equals(node.getNodeName())) {
+					type = node.getTextContent().trim();
+				}else if (node.getNodeType() == Node.ELEMENT_NODE && "uri".equals(node.getNodeName())) {
+					uri = node.getTextContent().trim();
+				}
+			}
 
-			if(uriList != null && uriList.hasChildNodes()){
-				String uri = uriList.getFirstChild().getTextContent();
+			if(!uri.isEmpty()){
 				setUri(uri, stepId, type, index);
 			}
 
@@ -142,7 +116,6 @@ public class Unmarshall {
 			}else{
 				setBlocks(stepElement, stepId, type);
 			}
-
 		}
 
 	}
@@ -150,37 +123,47 @@ public class Unmarshall {
 	private void setUri(String uri, String stepId, String type, int index) {
 
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
-		String options = getOptions(optionProperties);
 
-		if (!options.isEmpty()) {
-			uri = uri + "?" + options;
+		if(optionProperties.isEmpty()){
+			properties.put(type + "." + stepId + ".uri", uri);
+			return;
 		}
 
-		properties.put(type + "." + stepId + ".uri", uri);
+		options = getOptions(optionProperties);
+
+		properties.put(type + "." + stepId + ".uri", uri + "?" + options);
 
 	}
 
-	private String getOptions(List<String> optionProperties){
+	private String getOptions(List<String> optionProperties) {
 
-		StringBuilder options = new StringBuilder();
+		StringBuilder uriOptions = new StringBuilder();
 
-		for (String optionProperty : optionProperties) {
-			String name = optionProperty.split("options.")[1];
+		for (int i = 0; i < optionProperties.size(); i++) {
+
+			String optionProperty = optionProperties.get(i);
+			int optionsIndex = optionProperty.indexOf("options") + 8;
+
+			String name = optionProperty.substring(optionsIndex);
 			String value = conf.getProperty(optionProperty).toString();
 
-			options.append(name).append("=").append(value).append("&");
+			if (i > 0) {
+				uriOptions.append("&");
+			}
+			uriOptions.append(name).append("=").append(value);
 		}
 
-		if(!options.isEmpty()){
-			options = new StringBuilder(options.substring(0, options.length() - 1));
-		}
+		return uriOptions.toString();
 
-		return options.toString();
 	}
 
 	private void setBlocks(Element stepElement, String stepId, String type) throws Exception {
 
 		NodeList block = stepElement.getElementsByTagName("block");
+
+		if(block.getLength() == 0){
+			return;
+		}
 
 		for (int i = 0; i < block.getLength(); i++) {
 
@@ -209,34 +192,41 @@ public class Unmarshall {
 
 	}
 
-	private void setRouteTemplate(int index, String stepId, String type) throws Exception {
+	private void setRouteTemplate(int stepIndex, String stepId, String type) throws Exception {
 
-		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/";
-		String[] links = conf.getStringArray("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/links/link/id");
-		String baseUri = conf.getString("//flows/flow[id='" + flowId + "']/steps/step[" + index + "]/uri");
-		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
-		String options = getOptions(optionProperties);
-		options = addConnectionFactoryOption(baseUri, options, stepId, type);
+		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + stepIndex + "]/";
+
+		String[] links = conf.getStringArray(stepXPath + "links/links/link/id");
+
+		String baseUri = conf.getString(stepXPath + "uri");
+
+		String scheme = baseUri;
+		String path = "";
+		int colonIndex = baseUri.indexOf(':');
+		if(colonIndex > 0){
+			scheme = baseUri.substring(0, colonIndex);
+			path = baseUri.substring(colonIndex + 1);
+		}
+
+		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
+
+		if(options != null && !options.isEmpty()){
+			options = addConnectionFactoryOption(scheme, options, stepId, type);
+		}
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
-		properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
+		properties = routeTemplate.setRouteTemplate(flowId, stepId, type, baseUri, scheme, path, options, optionProperties, links, stepXPath, stepIndex);
 
 	}
 
-	private String addConnectionFactoryOption(String baseUri, String options, String stepId, String type) {
+	private String addConnectionFactoryOption(String scheme, String options, String stepId, String type) {
 
-		String connectionId = properties.get(type + "." + stepId + ".connection.id");
-		String componentType = baseUri.split(":")[0];
+		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
 
-		String[] connectionTypes = {
-				"activemq", "amazonmq", "jms", "sjms", "sjms2",
-				"amqp", "amqps", "rabbitmq", "spring-rabbitmq"
-		};
-		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(componentType);
+		if(!options.contains("connectionFactory") && hasConnectionFactory){
 
-
-		if(connectionId != null && !options.contains("connectionFactory") && hasConnectionFactory){
+			String connectionId = properties.get(type + "." + stepId + ".connection.id");
 
 			String option = "connectionFactory=#bean:" + connectionId;
 

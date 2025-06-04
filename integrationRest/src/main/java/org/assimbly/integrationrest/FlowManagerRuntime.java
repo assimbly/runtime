@@ -303,12 +303,7 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
-
-
-        configuration = DocConverter.convertJsonToXml(configuration);
-
-        return integrationRuntime.getIntegration().fastInstallFlow(flowId, configuration);
-
+        return integrationRuntime.getIntegration().fastInstallFlow(flowId, DocConverter.convertJsonToXml(configuration));
     }
 
     @DeleteMapping(
@@ -334,14 +329,12 @@ public class FlowManagerRuntime {
             }
 
             if (status.contains("Stopped flow successfully")) {
-                log.info("Uninstalled flow {} successfully. Report: {}", flowId, status);
                 return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/uninstall",status,plainResponse);
             } else {
-                log.error("FlowManager Report:\n\n{}", status);
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/uninstall", status, plainResponse);
             }
         } catch (Exception e) {
-            log.error("Stop flow " + flowId + " failed",e);
+            log.error("Stop flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/uninstall",e.getMessage(),"unable to stop flow " + flowId,flowId);
         }
 

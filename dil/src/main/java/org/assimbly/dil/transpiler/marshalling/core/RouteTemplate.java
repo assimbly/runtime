@@ -14,7 +14,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.*;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
@@ -27,9 +27,9 @@ public class RouteTemplate {
     protected Logger log = LoggerFactory.getLogger(getClass());
     private final TreeMap<String, String> properties;
     private final XMLConfiguration conf;
+    private final Document templateDoc;
     private String uri;
     private Document contentRouteDoc;
-    private Document templateDoc;
     private Element templatedRoutes;
     private Element templatedRoute;
     private String routeId;
@@ -45,20 +45,25 @@ public class RouteTemplate {
     private String outList;
     private String outRulesList;
     private String updatedRouteConfigurationId;
+    private static final String ZERO = "0";
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
         this.conf = conf;
+        templateDoc = new DocumentImpl();
     }
 
-    public TreeMap<String, String> setRouteTemplate(String type, String flowId, String stepId, List<String> optionProperties, String[] links, String stepXPath, String baseUri, String options) throws Exception {
+    public TreeMap<String, String> setRouteTemplate(String flowId, String stepId, String type, String baseUri, String scheme, String path, String options,List<String> optionProperties, String[] links, String stepXPath, int stepIndex) throws Exception {
 
         this.baseUri = baseUri;
-
-        templateDoc = new DocumentImpl();
+        this.options = options;
+        this.scheme = scheme;
+        this.path = path;
 
         routeId = flowId + "-" + stepId;
-        this.options = options;
+
+        templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
+        templatedRoute.setAttribute("routeTemplateRef", templateId);
 
         createTemplatedRoutes();
 
@@ -68,11 +73,13 @@ public class RouteTemplate {
             contentRouteDoc = new DocumentImpl();
             createContentRouter(links, stepXPath, type, stepId);
         }else if(baseUri.startsWith("block")){
-            createCustomStep(optionProperties, links, type, stepXPath, flowId, stepId);
+            createCustomStep(optionProperties, links, type, stepXPath, stepIndex, flowId, stepId);
         }else{
-            createStep(optionProperties, links, stepXPath, type, flowId, stepId);
+            createStep(optionProperties, links, stepXPath,  stepIndex, type, flowId, stepId);
         }
+
         return properties;
+
     }
 
 
@@ -221,9 +228,9 @@ public class RouteTemplate {
         return choice;
     }
 
-    private void createStep(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId, String stepId) throws Exception {
+    private void createStep(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId, String stepId) throws Exception {
 
-        createTemplatedRoute(optionProperties, links, stepXPath, type, flowId);
+        createTemplatedRoute(optionProperties, links, stepXPath, stepIndex, type, flowId);
 
         String routeTemplate = DocConverter.convertDocToString(templateDoc);
 
@@ -232,7 +239,7 @@ public class RouteTemplate {
 
     }
 
-    private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, String flowId, String stepId) throws Exception {
+    private void createCustomStep(List<String> optionProperties, String[] links, String type, String stepXPath, int stepIndex,String flowId, String stepId) throws Exception {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/" + stepXPath + "blocks");
 
@@ -258,7 +265,7 @@ public class RouteTemplate {
 
                     }
 
-                    createStepByType(type, stepId, flowId, stepXPath, optionProperties, links);
+                    createStepByType(type, stepId, flowId, stepXPath, stepIndex,optionProperties, links);
 
                 }
 
@@ -293,14 +300,14 @@ public class RouteTemplate {
 
     }
 
-    public void createStepByType(String type, String stepId, String flowId, String stepXPath, List<String> optionProperties, String[] links) throws Exception {
+    public void createStepByType(String type, String stepId, String flowId, String stepXPath, int stepIndex, List<String> optionProperties, String[] links) throws Exception {
         if(blockType.equalsIgnoreCase("routeTemplate")){
             defineRouteTemplate(templateId, type, stepId);
-            createStep(optionProperties, links, stepXPath, type, flowId, stepId);
+            createStep(optionProperties, links, stepXPath, stepIndex, type, flowId, stepId);
         }else if(blockType.equalsIgnoreCase("message") && blockUri.contains(":")){
             String[] splittedBlockUri = blockUri.split(":");
             baseUri = splittedBlockUri[0] + ":message:" + splittedBlockUri[1];
-            createStep(optionProperties, links, stepXPath, type, flowId, stepId);
+            createStep(optionProperties, links, stepXPath, stepIndex, type, flowId, stepId);
         }else if(blockType.equalsIgnoreCase("route")){
 
             routeId = baseUri;
@@ -336,13 +343,12 @@ public class RouteTemplate {
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
         }else{
-            String[] uriSplitted = uri.split(":");
-            String templateName = uriSplitted[0] + "-" + type;
+            String templateName = scheme + "-" + type;
 
             if(templateExists(templateName)){
                 templateId = templateName;
             }else if(uri.startsWith("block")){
-                String componentName = uriSplitted[1];
+                String componentName = path;
                 componentName = componentName.toLowerCase();
                 templateId = componentName + "-" + type;
             }else{
@@ -364,7 +370,7 @@ public class RouteTemplate {
         templateDoc.appendChild(templatedRoutes);
     }
 
-    private void createTemplatedRoute(List<String> optionProperties, String[] links, String stepXPath, String type, String flowId){
+    private void createTemplatedRoute(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId){
 
         templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
@@ -372,7 +378,7 @@ public class RouteTemplate {
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
-        Element param = createParameter(templateDoc,"routeId",routeId);
+        Element param = createParameter(templateDoc,"routeId", routeId);
         templatedRoute.appendChild(param);
 
         try {
@@ -383,46 +389,56 @@ public class RouteTemplate {
 
         createTemplateParameters();
 
-        if(!optionProperties.isEmpty()){
-            for (String optionProperty : optionProperties) {
-                String name = optionProperty.split("options.")[1];
-                String value = conf.getProperty(optionProperty).toString();
+        createOptionParameters(optionProperties);
 
+        createTransport(flowId);
+
+        createLinks(links, stepXPath, stepIndex, type, flowId);
+
+        createConfigurationId();
+
+    }
+
+    /**
+     * Processes option parameters from either optionProperties list or options string
+     */
+    private void createOptionParameters(List<String> optionProperties) {
+
+        if(optionProperties != null && !optionProperties.isEmpty()){
+
+            for (String optionProperty : optionProperties) {
+                String name = optionProperty.substring(optionProperty.lastIndexOf('/') + 1);
+                String value = conf.getProperty(optionProperty).toString();
                 parameter = createParameter(templateDoc,name,value);
                 templatedRoute.appendChild(parameter);
-
             }
 
         }else if(options!= null && !options.isEmpty()){
+
             if(options.contains("&")){
                 String[] optionsList = options.split("&");
                 for(String option: optionsList){
                     if(option.contains("=")){
-                        String name = option.split("=",2)[0];
-                        String value = option.split("=",2)[1];
-
-                        parameter = createParameter(templateDoc,name,value);
-                        templatedRoute.appendChild(parameter);
+                        createOption(option);
                     }
                 }
             }else {
                 if(options.contains("=")){
-                    String name = options.split("=",2)[0];
-                    String value = options.split("=",2)[1];
-
-                    parameter = createParameter(templateDoc,name,value);
-                    templatedRoute.appendChild(parameter);
+                    createOption(options);
                 }
             }
+
         }
 
+    }
 
-        createTransport(flowId);
-
-        createLinks(links, stepXPath, type, flowId);
-
-        createConfigurationId();
-
+    private void createOption(String option){
+        int eqIndex = option.indexOf('=');
+        if (eqIndex != -1) {
+            String name = option.substring(0, eqIndex);
+            String value = option.substring(eqIndex + 1);
+            templatedRoute.appendChild(createParameter(templateDoc, name, value));
+        }
     }
 
     private void createTemplateParameters(){
@@ -454,34 +470,10 @@ public class RouteTemplate {
 
     private void createUriValues() throws XPathExpressionException, TransformerException {
 
-        if(baseUri.startsWith("block:")){
-            baseUri = StringUtils.substringAfter(baseUri,"block:");
-            uri = baseUri;
-        }else if(baseUri.startsWith("component:")){
-            baseUri = StringUtils.substringAfter(baseUri,"component:");
-            uri = baseUri;
-        }
-        else{
-            uri = baseUri;
-        }
-
-        if(baseUri.contains(":")){
-            scheme = baseUri.split(":",2)[0];
-            scheme = scheme.toLowerCase();
+        if(scheme.equals("block") || scheme.equals("component")){
+            uri = path;
         }else{
-            scheme = baseUri.toLowerCase();
-        }
-
-        if(baseUri.contains(":")){
-            if(baseUri.contains("?")){
-                String pathAndOptions = baseUri.split(":",2)[1];
-                path = pathAndOptions.split("\\?",2)[0];
-                options = pathAndOptions.split("\\?",2)[1];
-            }else{
-                path = baseUri.split(":",2)[1];
-            }
-        }else{
-            path = "";
+            uri = baseUri;
         }
 
         if(options!=null && !options.isEmpty() && !baseUri.contains("?")) {
@@ -500,10 +492,10 @@ public class RouteTemplate {
         }
     }
 
-    private void createLinks(String[] links, String stepXPath, String type, String flowId){
+    private void createLinks(String[] links, String stepXPath, int stepIndex, String type, String flowId){
 
         //set default links when not configured.
-        createDefaultLinks(stepXPath, flowId);
+        createDefaultLinks(stepXPath, stepIndex, flowId);
 
         if(links.length > 0){
             //overwrite default links with configured links.
@@ -512,38 +504,28 @@ public class RouteTemplate {
 
     }
 
-    private void createDefaultLinks(String stepXPath, String flowId){
+    private void createDefaultLinks(String stepXPath, int stepIndex, String flowId){
 
-        String stepIndex = StringUtils.substringBetween(stepXPath,"step[","]");
-        String value;
+        int previousStepIndex = stepIndex - 1;
+        int nextStepIndex = stepIndex + 1;
 
-        if(StringUtils.isNumeric(stepIndex)) {
+        String baseXPath = stepXPath.substring(0, stepXPath.lastIndexOf("/step["));
+        String previousStepXPath = "(" + baseXPath + "/step[" + previousStepIndex + "]/id)[1]";
+        String nextStepXPath = "(" + baseXPath + "/step[" + nextStepIndex + "]/id)[1]";
+        String currentStepXPath = "(" + stepXPath + "id)[1]";
 
-            int previousStepIndex = Integer.parseInt(stepIndex) - 1;
-            int nextStepIndex = Integer.parseInt(stepIndex) + 1;
+        String previousStepId = Objects.toString(conf.getProperty(previousStepXPath), ZERO);
+        String currentStepId = Objects.toString(conf.getProperty(currentStepXPath), ZERO);
+        String nextStepId = Objects.toString(conf.getProperty(nextStepXPath), ZERO);
 
-            String previousStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + previousStepIndex + "]");
-
-            String nextStepXPath = StringUtils.replace(stepXPath, "/step[" + stepIndex + "]", "/step[" + nextStepIndex + "]");
-
-            String previousStepId = Objects.toString(conf.getProperty("(" + previousStepXPath + "id)[1]"), "0");
-            String currentStepId = Objects.toString(conf.getProperty("(" + stepXPath + "id)[1]"), "0");
-            String nextStepId = Objects.toString(conf.getProperty("(" + nextStepXPath + "id)[1]"), "0");
-
-            if (!nextStepId.equals("0")){
-                value = transport + ":" + flowId + "-" + nextStepId;
-
-                parameter = createParameter(templateDoc, "out", value);
-                templatedRoute.appendChild(parameter);
-            }
-
-            if (!previousStepId.equals("0")) {
-                value = transport + ":" + flowId + "-" + currentStepId;
-
-                parameter = createParameter(templateDoc, "in", value);
-                templatedRoute.appendChild(parameter);
-            }
+        if (!ZERO.equals(previousStepId)) {
+            templatedRoute.appendChild(createParameter(templateDoc, "in",transport + ":" + flowId + "-" + currentStepId));
         }
+
+        if (!ZERO.equals(nextStepId)){
+            templatedRoute.appendChild(createParameter(templateDoc, "out", transport + ":" + flowId + "-" + nextStepId));
+        }
+
     }
 
     private void createCustomLinks(String[] links, String stepXPath, String type){
@@ -729,55 +711,59 @@ public class RouteTemplate {
 
     private void createCoreComponents() throws XPathExpressionException, TransformerException {
 
-        if(path.startsWith("message:")) {
-            String name = StringUtils.substringAfter(path, "message:");
-
-            if (scheme.equalsIgnoreCase("setBody") || scheme.equalsIgnoreCase("setMessage")) {
-
-                String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body"), null);
-                if(resourceAsString == null) {
-                    resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body"), null);
-                }
-
-                if(resourceAsString == null){
-
-                    Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/body/*");
-                    if (node == null) {
-                        node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/body/*");
-                    }
-                    resourceAsString = DocConverter.convertNodeToString(node);
-
-                }
-
-                String language = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body/@language"), null);
-                if(language == null) {
-                    language = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body/@language"), "constant");
-                }
-
-                parameter = createParameter(templateDoc, "language", language);
-                templatedRoute.appendChild(parameter);
-
-                parameter = createParameter(templateDoc, "path", resourceAsString);
-                templatedRoute.appendChild(parameter);
-                path = resourceAsString;
-            }
-
-            if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
-
-                Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/headers");
-                if (node == null) {
-                    node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/headers");
-                }
-
-                if (node != null) {
-                    String headerKeysAsString = DocConverter.convertNodeToString(node);
-
-                    parameter = createParameter(templateDoc, "headers", headerKeysAsString);
-                    templatedRoute.appendChild(parameter);
-                }
-
-            }
+        if(!path.startsWith("message:")) {
+            return;
         }
+
+        String name = StringUtils.substringAfter(path, "message:");
+
+        if (scheme.equalsIgnoreCase("setBody") || scheme.equalsIgnoreCase("setMessage")) {
+
+            String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body"), null);
+            if(resourceAsString == null) {
+                resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body"), null);
+            }
+
+            if(resourceAsString == null){
+
+                Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/body/*");
+                if (node == null) {
+                    node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/body/*");
+                }
+                resourceAsString = DocConverter.convertNodeToString(node);
+
+            }
+
+            String language = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body/@language"), null);
+            if(language == null) {
+                language = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body/@language"), "constant");
+            }
+
+            parameter = createParameter(templateDoc, "language", language);
+            templatedRoute.appendChild(parameter);
+
+            parameter = createParameter(templateDoc, "path", resourceAsString);
+            templatedRoute.appendChild(parameter);
+            path = resourceAsString;
+        }
+
+        if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
+
+            Node node = getHeadersNode(conf.getDocument(), name, "name");
+
+            //backup when name is not found
+            if (node == null) {
+                node = getHeadersNode(conf.getDocument(), name, "id");
+            }
+
+            if (node != null) {
+                String headerKeysAsString = DocConverter.convertNodeToString(node);
+                parameter = createParameter(templateDoc, "headers", headerKeysAsString);
+                templatedRoute.appendChild(parameter);
+            }
+
+        }
+
     }
 
     private String getTimestamp(){
@@ -786,4 +772,23 @@ public class RouteTemplate {
         return Long.toString(unixTimestamp);
     }
 
+    public static Node getHeadersNode(Document doc, String value, String type) {
+        NodeList messages = doc.getElementsByTagName("message");
+
+        for (int i = 0; i < messages.getLength(); i++) {
+            Element message = (Element) messages.item(i);
+            NodeList nodeList = message.getElementsByTagName(type);
+
+            if (nodeList.getLength() > 0) {
+                String typeValue = nodeList.item(0).getTextContent().trim();
+                if (value.equals(typeValue)) {
+                    NodeList headersNodes = message.getElementsByTagName("headers");
+                    if (headersNodes.getLength() > 0) {
+                        return headersNodes.item(0);
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -5,12 +5,13 @@ import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
+import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
-import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -24,15 +25,14 @@ public class FastFlowLoader extends RouteBuilder {
 	private final TreeMap<String, String> props;
 	private CamelContext context;
 	private RoutesLoader loader;
-	private String flowId;
-	private String flowEvent;
-	private String flowVersion;
+	private final String flowId;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
-	public FastFlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
+	public FastFlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport, String flowId) {
 		super();
 		this.props = props;
+		this.flowId = flowId;
 		this.flowLoaderReport = flowLoaderReport;
 	}
 
@@ -43,26 +43,14 @@ public class FastFlowLoader extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		init();
+		context = getContext();
+		loader = PluginHelper.getRoutesLoader(context);
 
 		setErrorHandlers();
 
-		setRouteConfigurations();
+		removeRouteConfiguration(flowId);
 
-		setRouteTemplates();
-
-		finish();
-
-	}
-
-	private void init() {
-
-		flowId = props.get("id");
-		flowVersion = props.get("flow.version");
-		flowEvent = "start";
-
-		context = getContext();
-		loader = PluginHelper.getRoutesLoader(context);
+		load();
 
 	}
 
@@ -90,64 +78,34 @@ public class FastFlowLoader extends RouteBuilder {
 
 	}
 
-	private void setRouteConfigurations() throws Exception{
+	private void load() {
 
-		removeRouteConfiguration(flowId);
+		final String routeTemplate = "routetemplate";
+		final String routeConfiguration = "routeconfiguration";
 
-		for(Map.Entry<String, String> prop : props.entrySet()){
-			String key = prop.getKey();
-			if(key.endsWith("routeconfiguration")){
+		for (Map.Entry<String, String> entry : props.entrySet()) {
+			String key = entry.getKey();
+			int lastDot = key.lastIndexOf('.');
+			String type = (lastDot >= 0) ? key.substring(lastDot + 1) : key;
 
+			if (type.equals(routeTemplate) || type.equals(routeConfiguration)) {
 				String id = props.get(key + ".id");
-				String routeConfiguration = prop.getValue();
 
-				loadStep(routeConfiguration, "routeconfiguration", id, null);
+				//log.info("Installing " + type + " id=" + id);
+				//log.info("Step:\n\n" + entry.getValue());
 
-			}
-		}
-	}
-
-	//this route create a route template (from a routetemplate definition)
-	private void setRouteTemplates() {
-
-		props.forEach((key, value) -> {
-			if (key.endsWith("routetemplate")) {
 				try {
-					String basePath = StringUtils.substringBefore(key,"routetemplate");
-					String id = props.get(basePath + "routetemplate.id");
-					String uri = props.get(basePath + "uri");
-
-					loadStep(value, "routeTemplate", id, uri);
-
+					Resource step = ResourceHelper.fromString(type + "_" + id + ".xml", entry.getValue());
+					loader.loadRoutes(step);
+					flowLoaderReport.setStep(id, null, type, "success", null, null);
 				} catch (Exception e) {
-					throw new RuntimeException(e);
+					isFlowLoaded = false;
+					log.error("Failed Loaded " + type + " id=" + id + " Config: \n\n" + entry.getValue());
+					flowLoaderReport.setStep(id, null, type, "error", e.getMessage(), "Config:" + entry.getValue() + " Trace:" + ExceptionUtils.getRootCauseMessage(e));
 				}
 			}
-		});
-
-	}
-
-	private void loadStep(String step, String type, String id, String uri) throws Exception {
-
-		try {
-
-            log.info("Load step:\n\n{}", step);
-
-			loader.loadRoutes(IntegrationUtil.setResource(step));
-
-			flowLoaderReport.setStep(id, uri, type, "success", null, null);
-
-		}catch (Exception e) {
-
-			flowEvent = "error";
-			isFlowLoaded = false;
-
-            log.error("Failed loading step | stepid={}", id);
-			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
-
 		}
 	}
-
 
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
@@ -186,17 +144,6 @@ public class FastFlowLoader extends RouteBuilder {
 			}
 		});
 
-	}
-
-	private void finish() {
-
-		flowLoaderReport.logResult(flowEvent);
-
-		if (isFlowLoaded){
-			flowLoaderReport.finishReport(flowEvent, flowVersion, "Started flow successfully");
-		}else{
-			flowLoaderReport.finishReport(flowEvent, flowVersion, "Failed to load flow");
-		}
 	}
 
 	public String getReport(){

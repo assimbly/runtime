@@ -1296,9 +1296,9 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String fastInstallFlow(String flowId, String configuration) throws Exception {
 
-		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
-
 		flowLoaderReport = new FlowLoaderReport(flowId, flowId);
+
+		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
 
 		if(hasFlow(flowId)) {
 			stopFlow(flowId, 250, false);
@@ -1306,22 +1306,15 @@ public class CamelIntegration extends BaseIntegration {
 
 		createConnections(properties);
 
-		FastFlowLoader flow = new FastFlowLoader(properties, flowLoaderReport);
+		FastFlowLoader flow = new FastFlowLoader(properties, flowLoaderReport, flowId);
 
-		try {
+		flow.addRoutesToCamelContext(context);
 
-			flow.addRoutesToCamelContext(context);
-
-			if(!flow.isFlowLoaded()){
-				stopFlow(flowId, 250, false);
-				finishFlowActionReport(flowId, "error","error","error");
-			}else{
-				finishFlowActionReport(flowId, "start","Started flow successfully","info");
-			}
-
-		}catch (Exception e) {
+		if(flow.isFlowLoaded()){
+			finishFlowActionReport(flowId, "start","Started flow successfully","info");
+		}else{
 			stopFlow(flowId, 250, false);
-			finishFlowActionReport(flowId, "error","Start flow failed | error=" + e.getMessage(),"error");
+			finishFlowActionReport(flowId, "error","error","error");
 		}
 
 		return flow.getReport();
@@ -1339,7 +1332,7 @@ public class CamelIntegration extends BaseIntegration {
 			FileUtils.writeStringToFile(flowFile, configuration, Charset.defaultCharset());
 			return "saved";
 		} catch (Exception e) {
-			log.error("FileInstall flow " + flowId + " failed",e);
+            log.error("FileInstall flow {} failed", flowId, e);
 			return "Fail to save flow " + flowId + " Error: " + e.getMessage();
 		}
 
@@ -1352,7 +1345,7 @@ public class CamelIntegration extends BaseIntegration {
 			FileUtils.deleteQuietly(flowFile);
 			return "deleted";
 		} catch (Exception e) {
-			log.error("FileUninstall flow " + flowId + " failed",e);
+            log.error("FileUninstall flow {} failed", flowId, e);
 			return "failed to delete flow " + e.getMessage();
 		}
 
