@@ -55,7 +55,6 @@ import org.assimbly.dil.loader.FastFlowLoader;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
-import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
@@ -110,11 +109,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyManagementException;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -158,6 +154,7 @@ public class CamelIntegration extends BaseIntegration {
 	private static final String AUTH_PASSWORD_PROP = "authPassword";
 	private long timeCreated;
 	private Path pathCreated;
+	private boolean cacheEnabled = false;
 
 	public CamelIntegration() throws Exception {
 		super();
@@ -212,6 +209,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setHealthChecks(true);
 
+		setCache(false);
+
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -239,6 +238,17 @@ public class CamelIntegration extends BaseIntegration {
 		HealthCheckRepository producersHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "producers");
 		if(producersHealthCheckRepository!=null) {
 			producersHealthCheckRepository.setEnabled(enable);
+		}
+
+	}
+
+	public void setCache(boolean cache) throws Exception {
+
+		if(cache){
+			cacheEnabled = true;
+
+			initFlowDB();
+			startAllFlows();
 		}
 
 	}
@@ -707,11 +717,11 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	private void deleteDeployDirectory(Path path){
-		log.info("Deploy folder | File deleted: " + path);
+        log.info("Deploy folder | File deleted: {}", path);
 		try {
 			fileUninstall(path);
 		} catch (Exception e) {
-			log.error("FileUnInstall for deleted " + path.toString() + " failed",e);
+            log.error("FileUnInstall for deleted {} failed", path.toString(), e);
 		}
 	}
 
@@ -1207,15 +1217,14 @@ public class CamelIntegration extends BaseIntegration {
 	public String startAllFlows() throws Exception {
 		log.info("Starting all flows");
 
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			flowStatus = startFlow(properties.get("id"), STOP_TIMEOUT);
-			if(!flowStatus.equals("started")) {
-				return "failed to start flow with id " + properties.get("id") + ". Status is " + flowStatus;
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				flowLoaderReport = new FlowLoaderReport(flowId, flowId);
+				loadFlow(flowProps);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 
 		return "started";
 	}
@@ -1223,31 +1232,28 @@ public class CamelIntegration extends BaseIntegration {
 	public String restartAllFlows() throws Exception {
 		log.info("Restarting all flows");
 
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			flowStatus = restartFlow(properties.get("id"), STOP_TIMEOUT);
-			if(!flowStatus.equals("restarted")) {
-				return "failed to restart flow with id " + properties.get("id") + ". Status is " + flowStatus;
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				flowLoaderReport = new FlowLoaderReport(flowId, flowId);
+				loadFlow(props);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 
 		return "restarted";
 	}
 
 	public String pauseAllFlows() throws Exception {
 		log.info("Pause all flows");
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
 
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			flowStatus = restartFlow(properties.get("id"), STOP_TIMEOUT);
-			if(!flowStatus.equals("restarted")) {
-				return "failed to restart flow with id " + properties.get("id") + ". Status is " + flowStatus;
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				pauseFlow(flowId);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 
 		return "paused";
 	}
@@ -1255,15 +1261,13 @@ public class CamelIntegration extends BaseIntegration {
 	public String resumeAllFlows() throws Exception {
 		log.info("Resume all flows");
 
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			flowStatus = resumeFlow(properties.get("id"));
-			if(!flowStatus.equals("restarted")) {
-				return "failed to resume flow with id " + properties.get("id") + ". Status is " + flowStatus;
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				resumeFlow(flowId);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 
 		return "started";
 	}
@@ -1271,15 +1275,13 @@ public class CamelIntegration extends BaseIntegration {
 	public String stopAllFlows() throws Exception {
 		log.info("Stopping all flows");
 
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			flowStatus = stopFlow(properties.get("id"), STOP_TIMEOUT);
-			if(!flowStatus.equals("restarted")) {
-				return "failed to stop flow with id " + properties.get("id") + ". Status is " + flowStatus;
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				stopFlow(flowId, 250, false);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 
 		return "stopped";
 	}
@@ -1298,11 +1300,22 @@ public class CamelIntegration extends BaseIntegration {
 
 		flowLoaderReport = new FlowLoaderReport(flowId, flowId);
 
-		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
-
 		if(hasFlow(flowId)) {
 			stopFlow(flowId, 250, false);
 		}
+
+		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
+
+		if(cacheEnabled) {
+			flowsMap.put(flowId, properties);
+			db.commit();
+		}
+
+		return loadingFlow(flowId, properties);
+
+	}
+
+	private String loadingFlow(String flowId, TreeMap<String, String> properties) throws Exception {
 
 		createConnections(properties);
 
@@ -1318,8 +1331,8 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return flow.getReport();
-
 	}
+
 
 	public String uninstallFlow(String flowId, long timeout) throws Exception {
 		return stopFlow(flowId, timeout);
@@ -1425,26 +1438,31 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String stopFlow(String id, long timeout) {
-		return stopFlow(id, timeout, true);
+	public String stopFlow(String flowid, long timeout) {
+		return stopFlow(flowid, timeout, true);
 	}
 
-	public String stopFlow(String id, long timeout, boolean enableReport) {
+	public String stopFlow(String flowid, long timeout, boolean enableReport) {
 
 		if(enableReport) {
-			initFlowActionReport(id);
+			initFlowActionReport(flowid);
+		}
+
+		if(cacheEnabled) {
+			flowsMap.remove(flowid);
+			db.commit();
 		}
 
 		try {
 			// gracefully shutdown routes using startup order
-			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
+			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(flowid);
 			context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
 			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
 				context.removeRoute(routeStartupOrder.getRoute().getId());
 			}
 
 			// remove leftover routes
-			List<String> leftoverRoutes = getAllRoutesByFlowId(id);
+			List<String> leftoverRoutes = getAllRoutesByFlowId(flowid);
 			if (!leftoverRoutes.isEmpty()) {
 				for (String routeId : leftoverRoutes) {
 					removeRoute(routeId);
@@ -1452,14 +1470,14 @@ public class CamelIntegration extends BaseIntegration {
 			}
 
 			if(enableReport) {
-				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
+				finishFlowActionReport(flowid, "stop", "Stopped flow successfully", "info");
 			}
 
 		}catch (Exception e) {
 			if(enableReport) {
-				finishFlowActionReport(id, "error", "Stop flow failed | error=" + e.getMessage(), "error");
+				finishFlowActionReport(flowid, "error", "Stop flow failed | error=" + e.getMessage(), "error");
 			}
-			log.error("Stop flow failed. | flowid=" + id,e);
+			log.error("Stop flow failed. | flowid=" + flowid,e);
 		}
 
 		return loadReport;
@@ -1478,20 +1496,20 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 
-	public String pauseFlow(String id) {
+	public String pauseFlow(String flowid) {
 
-		initFlowActionReport(id);
+		initFlowActionReport(flowid);
 
 		try {
 
-			if(hasFlow(id)) {
+			if(hasFlow(flowid)) {
 
-				List<Route> routeList = getRoutesByFlowId(id);
+				List<Route> routeList = getRoutesByFlowId(flowid);
 				status = routeController.getRouteStatus(routeList.get(0).getId());
 
 				for(Route route : routeList){
 					if(!routeController.getRouteStatus(route.getId()).isSuspendable()){
-						finishFlowActionReport(id, "error","Flow isn't suspendable (Step " + route.getId() + ")","error");
+						finishFlowActionReport(flowid, "error","Flow isn't suspendable (Step " + route.getId() + ")","error");
 						return loadReport;
 					}
 				}
@@ -1500,78 +1518,78 @@ public class CamelIntegration extends BaseIntegration {
 					String routeId = route.getId();
 					routeController.suspendRoute(routeId);
 				}
-				finishFlowActionReport(id, "pause","Paused flow successfully","info");
+				finishFlowActionReport(flowid, "pause","Paused flow successfully","info");
 			}else {
 				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
-				finishFlowActionReport(id, "error",errorMessage,"error");
+				finishFlowActionReport(flowid, "error",errorMessage,"error");
 			}
 		}catch (Exception e) {
-			log.error("Pause flow failed. | flowid=" + id,e);
-			stopFlow(id, STOP_TIMEOUT); //Stop flow if one of the routes cannot be paused.
-			finishFlowActionReport(id, "error",e.getMessage(),"error");
+			log.error("Pause flow failed. | flowid=" + flowid,e);
+			stopFlow(flowid, STOP_TIMEOUT); //Stop flow if one of the routes cannot be paused.
+			finishFlowActionReport(flowid, "error",e.getMessage(),"error");
 		}
 
 		return loadReport;
 
 	}
 
-	public String resumeFlow(String id) throws Exception {
+	public String resumeFlow(String flowid) throws Exception {
 
-		initFlowActionReport(id);
+		initFlowActionReport(flowid);
 
 		try {
 
-			if(hasFlow(id)) {
+			if(hasFlow(flowid)) {
 
-				List<Route> routeList = getRoutesByFlowId(id);
+				List<Route> routeList = getRoutesByFlowId(flowid);
 				for(Route route : routeList){
 					String routeId = route.getId();
 					status = routeController.getRouteStatus(routeId);
 
 					if(status.isSuspended()){
 						routeController.resumeRoute(routeId);
-						log.info("Resumed flow  | flowid=" + id + " | stepid=" + routeId);
+						log.info("Resumed flow  | flowid=" + flowid + " | stepid=" + routeId);
 					}else if (status.isStopped()){
-						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
+						log.info("Starting route as route " + flowid + " is currently stopped (not suspended)");
 						startFlow(routeId, STOP_TIMEOUT);
 					}
 
 				}
-				finishFlowActionReport(id, "resume","Resumed flow successfully","info");
+				finishFlowActionReport(flowid, "resume","Resumed flow successfully","info");
 			}else {
 				String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
-				finishFlowActionReport(id, "error",errorMessage,"error");
+				finishFlowActionReport(flowid, "error",errorMessage,"error");
 			}
 
 		}catch (Exception e) {
-			log.error("Resume flow " + id + " failed.",e);
-			finishFlowActionReport(id, "error",e.getMessage(),"error");
+			log.error("Resume flow " + flowid + " failed.",e);
+			finishFlowActionReport(flowid, "error",e.getMessage(),"error");
 		}
 
 		return loadReport;
 
 	}
 
-	private void initFlowActionReport(String id) {
-		flowLoaderReport = new FlowLoaderReport(id, id);
+	private void initFlowActionReport(String flowid) {
+		flowLoaderReport = new FlowLoaderReport(flowid, flowid);
 	}
 
-	private void finishFlowActionReport(String id, String event, String message, String messageType) {
+	private void finishFlowActionReport(String flowid, String event, String message, String messageType) {
 
 		String eventCapitalized = StringUtils.capitalize(event);
 
 		//logs event to
 		if(messageType.equalsIgnoreCase("error")){
-			log.error(eventCapitalized + " flow " + id + " failed | flowid=" + id,message);
+			log.error(eventCapitalized + " flow " + flowid + " failed | flowid=" + flowid, message);
 		}else if(messageType.equalsIgnoreCase("warning"))
-			log.warn(eventCapitalized + " flow" + id + " failed | flowid=" + id,message);
+			log.warn(eventCapitalized + " flow" + flowid + " failed | flowid=" + flowid, message);
 		else{
-			log.info(message + " | flowid=" + id);
+			log.info(message + " | flowid=" + flowid);
 		}
 
 		TreeMap<String, String> flowProps;
 		try {
-			flowProps = getFlowConfiguration(id);
+			flowProps = getFlowConfiguration(flowid);
 			String version = flowProps.get("flow.version");
 
 			if(version==null){
@@ -1586,11 +1604,11 @@ public class CamelIntegration extends BaseIntegration {
 		loadReport = flowLoaderReport.getReport();
 	}
 
-	public boolean isFlowStarted(String id) {
+	public boolean isFlowStarted(String flowid) {
 
-		if(hasFlow(id)) {
+		if(hasFlow(flowid)) {
 			ServiceStatus serviceStatus = null;
-			List<Route> routes = getRoutesByFlowId(id);
+			List<Route> routes = getRoutesByFlowId(flowid);
 
 			for(Route route : routes){
 				serviceStatus = routeController.getRouteStatus(route.getId());
@@ -1903,14 +1921,16 @@ public class CamelIntegration extends BaseIntegration {
 	public TreeMap<String, String> getIntegrationAlertsCount() throws Exception  {
 
 		TreeMap<String, String> numberOfEntriesList = new TreeMap<>();
-		List<TreeMap<String, String>> allProps = super.getFlowConfigurations();
-		Iterator<TreeMap<String, String>> it = allProps.iterator();
-		while(it.hasNext()){
-			TreeMap<String, String> properties = it.next();
-			String flowId = properties.get("id");
-			String numberOfEntries =  getFlowAlertsCount(flowId);
-			numberOfEntriesList.put(flowId, numberOfEntries);
-		}
+
+		flowsMap.forEach((flowId, flowProps) -> {
+			try {
+				String numberOfEntries =  getFlowAlertsCount(flowId);
+				numberOfEntriesList.put(flowId, numberOfEntries);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
+
 		return numberOfEntriesList;
 
 	}
@@ -1954,7 +1974,7 @@ public class CamelIntegration extends BaseIntegration {
 			if(route.getId().equals(id) || route.getId().startsWith(id + "-")) {
 				ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
 				String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
-				xmlConfiguration = xmlConfiguration.replaceAll("\\<\\?xml(.+?)\\?\\>", "").trim();
+				xmlConfiguration = xmlConfiguration.replaceAll("<\\?xml(.+?)\\?>", "").trim();
 				buf.append(xmlConfiguration);
 			}
 		}

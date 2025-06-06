@@ -7,25 +7,30 @@ import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 
 
 public abstract class BaseIntegration implements Integration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	//properties are (list of) key/value maps
-	private final List<TreeMap<String, String>> properties = new ArrayList<>();
+	ConcurrentMap<String, TreeMap<String, String>> flowsMap;
 
-	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
+	private TreeMap<String, String> configuredFlows;
 
 	private String flowConfiguration;
 
 	private Properties encryptionProperties;
+	DB db;
 
 	public void setEncryptionProperties(Properties encryptionProperties) {
 		this.encryptionProperties = encryptionProperties;
@@ -35,32 +40,35 @@ public abstract class BaseIntegration implements Integration {
 		return encryptionProperties;
 	}
 
-	public List<TreeMap<String,String>> getFlowConfigurations() {
-		return this.properties;
+	public Collection<TreeMap<String,String>> getFlowConfigurations() {
+		return this.flowsMap.values();
 	}
 
 	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception {
 
-		removeFlowConfigurationIfExist(configuration);
-		
-		this.properties.add(configuration);
-		
+		removeFlowConfigurationIfExist(flowId);
+
+		if(db != null) {
+			this.flowsMap.put(flowId, configuration);
+			db.commit();
+		}
+
 	}	
 
-	public void removeFlowConfigurationIfExist(TreeMap<String,String> configuration) {
+	public void initFlowDB() {
 
-		String newId = configuration.get("id");
+		File dbFile = new File(BaseDirectory.getInstance().getBaseDirectory() + "/cache/flowsMap.db");
 
-		Iterator<TreeMap<String, String>> i = this.properties.iterator();
-		
-		while (i.hasNext()) {
-		   TreeMap<String, String> currentConfiguration = i.next(); // must be called before you can call i.remove()
-		   String oldId= currentConfiguration.get("id");
-		   if(newId.equals(oldId)){
-				i.remove();
-			    configuredFlows.remove(oldId);
-		   }
-		}
+		db = DBMaker.fileDB(dbFile)
+				.transactionEnable() // Enable crash safety
+				.make();
+
+		flowsMap = db.hashMap("flowsDB", Serializer.STRING, Serializer.JAVA).createOrOpen();
+
+	}
+
+	public void removeFlowConfigurationIfExist(String flowId) {
+		this.flowsMap.remove(flowId);
 	}	
 	
 	
