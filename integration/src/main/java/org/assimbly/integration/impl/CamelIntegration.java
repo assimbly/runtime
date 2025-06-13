@@ -249,6 +249,9 @@ public class CamelIntegration extends BaseIntegration {
 
 			initFlowDB();
 			startAllFlows();
+		}else{
+			cacheEnabled = false;
+			initFlowMap();
 		}
 
 	}
@@ -1306,8 +1309,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
 
+		flowsMap.put(flowId, properties);
 		if(cacheEnabled) {
-			flowsMap.put(flowId, properties);
 			db.commit();
 		}
 
@@ -1448,8 +1451,8 @@ public class CamelIntegration extends BaseIntegration {
 			initFlowActionReport(flowid);
 		}
 
+		flowsMap.remove(flowid);
 		if(cacheEnabled) {
-			flowsMap.remove(flowid);
 			db.commit();
 		}
 

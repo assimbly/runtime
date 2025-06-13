@@ -128,6 +128,8 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfigurationMinimal(String flowId, String xml) throws Exception {
 
+		log.info("Configuration File: " + xml);
+
 		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
 
 		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()

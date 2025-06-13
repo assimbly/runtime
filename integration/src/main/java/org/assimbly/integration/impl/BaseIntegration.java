@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 
@@ -48,12 +49,17 @@ public abstract class BaseIntegration implements Integration {
 
 		removeFlowConfigurationIfExist(flowId);
 
+		this.flowsMap.put(flowId, configuration);
+
 		if(db != null) {
-			this.flowsMap.put(flowId, configuration);
 			db.commit();
 		}
 
-	}	
+	}
+
+	public void initFlowMap(){
+		flowsMap = new ConcurrentHashMap<>();
+	}
 
 	public void initFlowDB() {
 

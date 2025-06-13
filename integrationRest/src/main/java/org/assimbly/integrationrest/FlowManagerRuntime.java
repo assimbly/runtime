@@ -297,13 +297,17 @@ public class FlowManagerRuntime {
             consumes =  {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
-    public String fastInstallFlow(
+    public ResponseEntity<String> fastInstallFlow(
             @PathVariable(value = "flowId") String flowId,
-            @RequestBody String configuration,
-            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+            @RequestBody String configuration
     ) throws Exception {
-        return integrationRuntime.getIntegration().fastInstallFlow(flowId, DocConverter.convertJsonToXml(configuration));
+        String xml = DocConverter.convertJsonToXml(configuration);
+        status =integrationRuntime.getIntegration().fastInstallFlow(flowId, xml);
+        if (status.contains("Started flow successfully")) {
+            return ResponseUtil.createSuccessResponse(1L, "application/json","/integration/flow/{flowId}/fastinstall",status,true);
+        } else {
+            return ResponseUtil.createFailureResponse(1L, "application/json", "/integration/flow/{flowId}/fastinstall", status, true);
+        }
     }
 
     @DeleteMapping(

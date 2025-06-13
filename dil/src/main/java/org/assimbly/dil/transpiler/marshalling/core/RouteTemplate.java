@@ -661,6 +661,7 @@ public class RouteTemplate {
     private void createLinkLists(String rule, String expression, String endpoint){
 
         if (rule != null && expression != null) {
+
             String newRule = rule + "#;#" + expression + "#;#" + endpoint;
             if (outRulesList == null) {
                 outRulesList = newRule;
@@ -669,11 +670,11 @@ public class RouteTemplate {
             }
 
             //adjust the templateid to call the correct template
-            if (templateId.startsWith("split")) {
+            if (scheme.startsWith("split")) {
                 templateId = "split-" + rule + "-router";
                 templatedRoute.removeAttribute("routeTemplateRef");
                 templatedRoute.setAttribute("routeTemplateRef", templateId);
-            } else if (templateId.startsWith("filter")) {
+            } else if (scheme.startsWith("filter")) {
                 templateId = "filter-" + rule + "-router";
                 templatedRoute.removeAttribute("routeTemplateRef");
                 templatedRoute.setAttribute("routeTemplateRef", templateId);

@@ -124,7 +124,7 @@ public class Unmarshall {
 
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 
-		if(optionProperties.isEmpty()){
+		if(optionProperties.isEmpty() || optionProperties.getFirst().endsWith("options")){
 			properties.put(type + "." + stepId + ".uri", uri);
 			return;
 		}
@@ -196,7 +196,9 @@ public class Unmarshall {
 
 		String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + stepIndex + "]/";
 
-		String[] links = conf.getStringArray(stepXPath + "links/links/link/id");
+		String[] links = conf.getStringArray(stepXPath + "links/link/id");
+
+		System.out.println("1. Links: " + links.length);
 
 		String baseUri = conf.getString(stepXPath + "uri");
 
