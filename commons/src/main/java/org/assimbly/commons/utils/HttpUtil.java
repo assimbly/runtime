@@ -1,5 +1,8 @@
 package org.assimbly.commons.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -12,6 +15,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HttpUtil {
+
+    private static Logger log = LoggerFactory.getLogger(HttpUtil.class);
 
     private HttpUtil() {
         throw new UnsupportedOperationException("Utility class");
@@ -69,6 +74,7 @@ public class HttpUtil {
             return client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
         } catch (Exception e) {
+            log.error("Error to make http call", e);
             return null;
         }
     }
