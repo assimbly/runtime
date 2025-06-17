@@ -82,7 +82,6 @@ public class RouteTemplate {
 
     }
 
-
     private void createContentRouter(String[] links, String stepXPath, String type, String stepId)  throws Exception {
 
         createContentRoute(links, stepXPath);
@@ -480,7 +479,7 @@ public class RouteTemplate {
             uri = uri + "?" + options;
         }
 
-        createCoreComponents();
+        createCoreMessageComponents();
 
     }
 
@@ -710,7 +709,7 @@ public class RouteTemplate {
         }
     }
 
-    private void createCoreComponents() throws XPathExpressionException, TransformerException {
+    private void createCoreMessageComponents() throws XPathExpressionException, TransformerException {
 
         if(!path.startsWith("message:")) {
             return;
@@ -792,4 +791,5 @@ public class RouteTemplate {
         }
         return null;
     }
+
 }

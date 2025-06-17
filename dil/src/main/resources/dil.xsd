@@ -130,6 +130,7 @@
 			<xs:element type="connectionsType" name="connections"  minOccurs="0" maxOccurs="1"/>
 			<xs:element type="environmentVariablesType" name="environmentVariables"  minOccurs="0" maxOccurs="1"/>
 			<xs:element type="messagesType" name="messages"  minOccurs="0" maxOccurs="1"/>
+			<xs:element type="resourcesType" name="resources"  minOccurs="0" maxOccurs="1"/>
 		</xs:choice>
 	</xs:complexType>
 
@@ -225,5 +226,17 @@
 		<xs:sequence minOccurs="0" maxOccurs="unbounded">
 			<xs:any namespace="##any" processContents="lax" />
 		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="resourcesType">
+		<xs:sequence minOccurs="0">
+			<xs:element type="resourceType" name="resource" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="resourceType" mixed="true">
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element type="xs:string" name="id" maxOccurs="1" />
+			<xs:element type="xs:string" name="name" maxOccurs="1" />
+			<xs:element type="xs:string" name="content" maxOccurs="1" />
+		</xs:choice>
 	</xs:complexType>
 </xs:schema>

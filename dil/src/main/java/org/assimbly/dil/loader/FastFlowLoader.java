@@ -5,6 +5,7 @@ import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
+import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
@@ -46,19 +47,22 @@ public class FastFlowLoader extends RouteBuilder {
 		context = getContext();
 		loader = PluginHelper.getRoutesLoader(context);
 
-		setErrorHandlers();
-
-		removeRouteConfiguration(flowId);
+		setUp();
 
 		load();
 
 	}
 
-	private void setErrorHandlers() throws Exception{
+	//Setup before load
+	//1. Bind resources
+	//2. Create error handler
+	//3. Remove old route configuration
+	private void setUp() throws Exception{
 
 		String errorUri = "";
 		String id = "0";
 		boolean useErrorHandler = true;
+		Registry registry = context.getRegistry();
 
 		for(Map.Entry<String, String> prop : props.entrySet()){
 			String key = prop.getKey();
@@ -67,6 +71,10 @@ public class FastFlowLoader extends RouteBuilder {
 				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
+			}else if(key.startsWith("resource")){
+				id = StringUtils.substringAfter(key,"resource.");
+				String resource = prop.getValue();
+				registry.bind(id, resource);
 			}
 		}
 
@@ -76,35 +84,8 @@ public class FastFlowLoader extends RouteBuilder {
 			log.warn("ErrorHandler is not set");
 		}
 
-	}
+		removeRouteConfiguration(flowId);
 
-	private void load() {
-
-		final String routeTemplate = "routetemplate";
-		final String routeConfiguration = "routeconfiguration";
-
-		for (Map.Entry<String, String> entry : props.entrySet()) {
-			String key = entry.getKey();
-			int lastDot = key.lastIndexOf('.');
-			String type = (lastDot >= 0) ? key.substring(lastDot + 1) : key;
-
-			if (type.equals(routeTemplate) || type.equals(routeConfiguration)) {
-				String id = props.get(key + ".id");
-
-				//log.info("Installing " + type + " id=" + id);
-				//log.info("Step:\n\n" + entry.getValue());
-
-				try {
-					Resource step = ResourceHelper.fromString(type + "_" + id + ".xml", entry.getValue());
-					loader.loadRoutes(step);
-					flowLoaderReport.setStep(id, null, type, "success", null, null);
-				} catch (Exception e) {
-					isFlowLoaded = false;
-					log.error("Failed Loaded " + type + " id=" + id + " Config: \n\n" + entry.getValue());
-					flowLoaderReport.setStep(id, null, type, "error", e.getMessage(), "Config:" + entry.getValue() + " Trace:" + ExceptionUtils.getRootCauseMessage(e));
-				}
-			}
-		}
 	}
 
 	private void setErrorHandler(String id, String errorUri) throws Exception {
@@ -144,6 +125,35 @@ public class FastFlowLoader extends RouteBuilder {
 			}
 		});
 
+	}
+
+	private void load() {
+
+		final String routeTemplate = "routetemplate";
+		final String routeConfiguration = "routeconfiguration";
+
+		for (Map.Entry<String, String> entry : props.entrySet()) {
+			String key = entry.getKey();
+			int lastDot = key.lastIndexOf('.');
+			String type = (lastDot >= 0) ? key.substring(lastDot + 1) : key;
+
+			if (type.equals(routeTemplate) || type.equals(routeConfiguration)) {
+				String id = props.get(key + ".id");
+
+				//log.info("Installing " + type + " id=" + id);
+				//log.info("Step:\n\n" + entry.getValue());
+
+				try {
+					Resource step = ResourceHelper.fromString(type + "_" + id + ".xml", entry.getValue());
+					loader.loadRoutes(step);
+					flowLoaderReport.setStep(id, null, type, "success", null, null);
+				} catch (Exception e) {
+					isFlowLoaded = false;
+					log.error("Failed Loaded " + type + " id=" + id + " Config: \n\n" + entry.getValue());
+					flowLoaderReport.setStep(id, null, type, "error", e.getMessage(), "Config:" + entry.getValue() + " Trace:" + ExceptionUtils.getRootCauseMessage(e));
+				}
+			}
+		}
 	}
 
 	public String getReport(){

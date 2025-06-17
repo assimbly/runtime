@@ -5,6 +5,7 @@ import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteConfigurationDefinition;
+import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +65,8 @@ public class FlowLoader extends RouteBuilder {
 
 	private void load() throws Exception {
 
+		setResources();
+
 		setErrorHandlers();
 
 		setRouteConfigurations();
@@ -91,6 +94,21 @@ public class FlowLoader extends RouteBuilder {
 	private void setExtendedcontext() {
 		context = getContext();
 		loader = PluginHelper.getRoutesLoader(context);
+	}
+
+	private void setResources() throws Exception{
+
+		Registry registry = context.getRegistry();
+
+		for(Map.Entry<String, String> prop : props.entrySet()){
+			String key = prop.getKey();
+			if(key.startsWith("resource")){
+				String id = StringUtils.substringAfter(key,"resource.");
+				String resource = prop.getValue();
+				registry.bind(id, resource);
+			}
+		}
+
 	}
 
 	private void setErrorHandlers() throws Exception{

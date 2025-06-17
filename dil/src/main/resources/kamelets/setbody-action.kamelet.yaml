@@ -11,8 +11,8 @@ spec:
       to do
     type: object
     properties:
-      expressionType:
-        title: Expression Type
+      language:
+        title: Language
         description: Set the expression language
         type: string
         default: constant
@@ -32,7 +32,7 @@ spec:
               constant: "{{content}}"
           - setProperty:
               name: assimbly.language
-              constant: "{{expressionType}}"
+              constant: "{{language}}"
           - process:
               ref: "SetBodyProcessor"
           - to:

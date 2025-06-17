@@ -50,6 +50,8 @@ public class Unmarshall {
 			properties.put("frontend",node.getFirstChild().getTextContent());
 		}
 
+		createResources();
+
 		addSteps(flowElement);
 
 		return properties;
@@ -198,8 +200,6 @@ public class Unmarshall {
 
 		String[] links = conf.getStringArray(stepXPath + "links/link/id");
 
-		System.out.println("1. Links: " + links.length);
-
 		String baseUri = conf.getString(stepXPath + "uri");
 
 		String scheme = baseUri;
@@ -241,6 +241,28 @@ public class Unmarshall {
 		}
 
 		return options;
+
+	}
+
+
+	private void createResources() {
+
+		String[] resources = conf.getStringArray("core/resources/resource/content");
+
+		for (int i = 1; i < resources.length + 1; i++) {
+			String id = conf.getString("core/resources/resource[" + i + "]/id");
+			String name = conf.getString("core/resources/resource[" + i + "]/name");
+
+			if (id == null && name == null) {
+				continue;
+			}else if (id == null) {
+				id = name;
+			}
+
+			String content = conf.getString("core/resources/resource[" + i	+ "]/content");
+			properties.put("resource." + id, content);
+
+		}
 
 	}
 
