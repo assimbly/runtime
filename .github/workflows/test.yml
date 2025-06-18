@@ -80,6 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MAVEN_TOKEN }}
 
       - name: Post a Slack message in the backend dev channel
+        if: failure()
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL_BACKEND_DEV }}
