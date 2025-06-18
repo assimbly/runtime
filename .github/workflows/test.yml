@@ -1,14 +1,9 @@
 name: Test
 
 on:
+  schedule:
+    - cron: '0 4 * * *'
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to use'
-        type: string
-        default: 'develop'
-
-  workflow_call:
     inputs:
       branch:
         description: 'Branch to use'
