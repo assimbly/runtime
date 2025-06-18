@@ -86,10 +86,10 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL_BACKEND_DEV }}
           webhook-type: incoming-webhook
           payload: |
-            text: ":x: Runtime Test failed: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ github.job }}>"
+            text: ":x: Runtime Test failed: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: ":x: Runtime Test failed: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ github.job }}>"
+                  text: ":x: Runtime Test failed: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
 
