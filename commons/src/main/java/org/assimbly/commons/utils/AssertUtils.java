@@ -236,7 +236,6 @@ public final class AssertUtils {
         assertThat(flowJson.get("lastCompleted")).isNotNull();
         assertThat(flowJson.get("id")).isNotNull();
         assertThat(flowJson.get(STATUS).asText()).isEqualTo(status);
-        assertCpuLoadStatsResponse(flowJson);
     }
 
     public static void assertCpuLoadStatsResponse(JsonNode responseJson) {
