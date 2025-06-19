@@ -34,7 +34,7 @@ class CertificateManagerRuntimeTest {
     static void tearDown() {
         container.stop();
     }
-
+/*
     @Test
     @Order(1)
     @Disabled("to be tested on future releases")
@@ -63,7 +63,7 @@ class CertificateManagerRuntimeTest {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
     }
-
+*/
     @Test
     @Order(2)
     void shouldUploadCertificate() {
