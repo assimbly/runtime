@@ -67,6 +67,7 @@ public class FastFlowLoader extends RouteBuilder {
 		for(Map.Entry<String, String> prop : props.entrySet()){
 			String key = prop.getKey();
 			if(key.startsWith("error") && key.endsWith("uri")){
+				errorUri = props.get(key);
 				id = StringUtils.substringBetween(key,"error.",".uri");
 				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
@@ -74,6 +75,7 @@ public class FastFlowLoader extends RouteBuilder {
 			}else if(key.startsWith("resource")){
 				id = StringUtils.substringAfter(key,"resource.");
 				String resource = prop.getValue();
+				registry.unbind(id);
 				registry.bind(id, resource);
 			}
 		}

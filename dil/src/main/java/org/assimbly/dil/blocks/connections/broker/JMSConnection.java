@@ -178,7 +178,6 @@ public class JMSConnection {
         SjmsComponent sjmsComponent = context.getComponent(componentName, SjmsComponent.class);
         sjmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 
-        System.out.println("createSjmsComponent: " + connectionId);
         context.getRegistry().bind(connectionId, connectionFactory);
 
     }

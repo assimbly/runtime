@@ -28,8 +28,6 @@ public class FlowLoader extends RouteBuilder {
 	private CamelContext context;
 	private RoutesLoader loader;
 	private String flowId;
-	private String flowEvent;
-	private String flowVersion;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
@@ -37,6 +35,7 @@ public class FlowLoader extends RouteBuilder {
 		super();
 		this.props = props;
 		this.flowLoaderReport = flowLoaderReport;
+		this.flowId = props.get("id");
 	}
 
 	public interface FailureProcessorListener {
@@ -46,25 +45,7 @@ public class FlowLoader extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 
-		init();
-
-		load();
-
-		finish();
-
-	}
-
-	private void init() {
-
-		flowId = props.get("id");
-		flowVersion = props.get("flow.version");
-		flowEvent = "start";
-
 		setExtendedcontext();
-
-	}
-
-	private void load() throws Exception {
 
 		setResources();
 
@@ -78,18 +59,6 @@ public class FlowLoader extends RouteBuilder {
 
 		setRoutes();
 
-	}
-
-
-	private void finish() {
-
-		flowLoaderReport.logResult(flowEvent);
-
-		if (isFlowLoaded){
-			flowLoaderReport.finishReport(flowEvent, flowVersion, "Started flow successfully");
-		}else{
-			flowLoaderReport.finishReport(flowEvent, flowVersion, "Failed to load flow");
-		}
 	}
 
 	private void setExtendedcontext() {
@@ -107,32 +76,8 @@ public class FlowLoader extends RouteBuilder {
 				String id = StringUtils.substringAfter(key,"resource.");
 				String resource = prop.getValue();
 
-				Object x = registry.lookupByName(id);
-				if(x!=null){
-					System.out.println("ZZZ Resource 1: " + x.toString());
-				}else{
-					System.out.println("ZZZ Resource 1: null");
-				}
-
-
-				System.out.println("XXX Resource 2:" + resource);
 				registry.unbind(id);
-
-				Object x2 = registry.lookupByName(id);
-				if(x2!=null){
-					System.out.println("ZZZ Resource 3: " + x2.toString());
-				}else{
-					System.out.println("ZZZ Resource 3: null");
-				}
 				registry.bind(id, resource);
-
-
-				Object x3 = registry.lookupByName(id);
-				if(x3!=null){
-					System.out.println("ZZZ Resource 4: " + x3.toString());
-				}else{
-					System.out.println("ZZZ Resource 4: null");
-				}
 
 			}
 		}
@@ -149,9 +94,11 @@ public class FlowLoader extends RouteBuilder {
 			String key = prop.getKey();
 			if(key.startsWith("error") && key.endsWith("uri")){
 				id = StringUtils.substringBetween(key,"error.",".uri");
+				errorUri = props.get(key);
 				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
+
 			}
 		}
 
@@ -237,7 +184,6 @@ public class FlowLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 
-			flowEvent = "error";
 			isFlowLoaded = false;
 
 			log.error("Failed loading step | stepid={}", id);
@@ -252,13 +198,12 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n" + step);
 
-			loader.updateRoutes(IntegrationUtil.setResource(step));
+			loader.loadRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null, null);
 
 		}catch (Exception e) {
 
-			flowEvent = "error";
 			isFlowLoaded = false;
 
 			log.error("Failed loading step | stepid=" + id);

@@ -25,7 +25,7 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.basedir>${project.basedir}</main.basedir>
-		<activemq.version>6.1.6</activemq.version>
+		<activemq.version>6.1.7</activemq.version>
 		<assimbly.version>5.1.0</assimbly.version>
 		<camel-spring-junit5.version>4.11.0</camel-spring-junit5.version>
 		<hamcrest.version>3.0</hamcrest.version>

@@ -213,7 +213,8 @@ public class Unmarshall {
 
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 
-		if(options != null && !options.isEmpty()){
+		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
+		if(hasConnectionFactory){
 			options = addConnectionFactoryOption(scheme, options, stepId, type);
 		}
 
@@ -225,13 +226,12 @@ public class Unmarshall {
 
 	private String addConnectionFactoryOption(String scheme, String options, String stepId, String type) {
 
-		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
-
-		if(!options.contains("connectionFactory") && hasConnectionFactory){
+		if(!options.contains("connectionFactory")){
 
 			String connectionId = properties.get(type + "." + stepId + ".connection.id");
 
-			String option = "connectionFactory=#bean:" + connectionId;
+			//String option = "connectionFactory=#bean:" + connectionId;
+			String option = "connectionFactory=#" + connectionId;
 
 			if(options.isEmpty()){
 				options = option;
@@ -244,7 +244,6 @@ public class Unmarshall {
 		return options;
 
 	}
-
 
 	private void createResources() {
 
