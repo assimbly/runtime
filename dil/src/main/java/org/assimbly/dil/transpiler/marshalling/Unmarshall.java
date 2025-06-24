@@ -215,7 +215,7 @@ public class Unmarshall {
 
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
 		if(hasConnectionFactory){
-			options = addConnectionFactoryOption(scheme, options, stepId, type);
+			options = addConnectionFactoryOption(options, stepId, type);
 		}
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
@@ -224,13 +224,12 @@ public class Unmarshall {
 
 	}
 
-	private String addConnectionFactoryOption(String scheme, String options, String stepId, String type) {
+	private String addConnectionFactoryOption(String options, String stepId, String type) {
 
 		if(!options.contains("connectionFactory")){
 
 			String connectionId = properties.get(type + "." + stepId + ".connection.id");
 
-			//String option = "connectionFactory=#bean:" + connectionId;
 			String option = "connectionFactory=#" + connectionId;
 
 			if(options.isEmpty()){
