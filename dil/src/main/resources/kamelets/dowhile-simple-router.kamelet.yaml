@@ -1,0 +1,42 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: dowhile-simple-router
+  labels:
+    camel.apache.org/kamelet.type: "dowhile-simple-router"
+spec:
+  definition:
+    title: "dowhile-simple-router"
+    description: |-
+      Loops based on a expression
+    type: object
+    properties:
+      expression:
+          title: Expression
+          description: Expression
+          type: string
+      out_rule:
+        title: Out Rule
+        description: Out Rule
+        type: string
+      out_default:
+        title: Out Default Rule
+        description: Out Default Rule
+        type: string
+        default: "mock:0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - loop:
+              doWhile: true
+              expression:
+                simple:
+                  expression: "{{expression}}"
+              steps:
+                - to: "{{out_rule}}"
+          - to:
+              uri: "{{out_default}}"

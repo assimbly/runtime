@@ -127,6 +127,7 @@ public class Unmarshall {
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + index + "]/options");
 
 		if(optionProperties.isEmpty() || optionProperties.getFirst().endsWith("options")){
+			options = "";
 			properties.put(type + "." + stepId + ".uri", uri);
 			return;
 		}

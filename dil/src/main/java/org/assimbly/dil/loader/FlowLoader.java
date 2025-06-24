@@ -8,6 +8,7 @@ import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
+import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
@@ -105,7 +106,34 @@ public class FlowLoader extends RouteBuilder {
 			if(key.startsWith("resource")){
 				String id = StringUtils.substringAfter(key,"resource.");
 				String resource = prop.getValue();
+
+				Object x = registry.lookupByName(id);
+				if(x!=null){
+					System.out.println("ZZZ Resource 1: " + x.toString());
+				}else{
+					System.out.println("ZZZ Resource 1: null");
+				}
+
+
+				System.out.println("XXX Resource 2:" + resource);
+				registry.unbind(id);
+
+				Object x2 = registry.lookupByName(id);
+				if(x2!=null){
+					System.out.println("ZZZ Resource 3: " + x2.toString());
+				}else{
+					System.out.println("ZZZ Resource 3: null");
+				}
 				registry.bind(id, resource);
+
+
+				Object x3 = registry.lookupByName(id);
+				if(x3!=null){
+					System.out.println("ZZZ Resource 4: " + x3.toString());
+				}else{
+					System.out.println("ZZZ Resource 4: null");
+				}
+
 			}
 		}
 
@@ -203,7 +231,7 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			loader.updateRoutes(IntegrationUtil.setResource(route));
+			loader.loadRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, "route", "success", null, null);
 
@@ -224,7 +252,7 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n" + step);
 
-			loader.loadRoutes(IntegrationUtil.setResource(step));
+			loader.updateRoutes(IntegrationUtil.setResource(step));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null, null);
 

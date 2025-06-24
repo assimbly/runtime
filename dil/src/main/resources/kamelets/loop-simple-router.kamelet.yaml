@@ -1,0 +1,48 @@
+apiVersion: camel.apache.org/v1alpha1
+kind: Kamelet
+metadata:
+  name: loop-simple-router
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "loop-simple-router"
+    description: |-
+      Loops based on a expression
+    type: object
+    properties:
+      copy:
+        title: Copy
+        description: If the copy attribute is true, a copy of the input Exchange is used for each iteration. That means each iteration will start from a copy of the same message.
+        type: boolean
+        default: false
+      expression:
+          title: Expression
+          description: Simple Expression to define how many times we should loop. Notice the expression is only evaluated once, and should return a number as how many times to loop.
+          type: string
+          default: "1"
+      out_rule:
+        title: Out Rule
+        description: Out Rule
+        type: string
+      out_default:
+        title: Out Default Rule
+        description: Out Default Rule
+        type: string
+        default: "mock:0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - loop:
+              copy: "{{copy}}"
+              expression:
+                simple:
+                  expression: "{{expression}}"
+              steps:
+                - to: "{{out_rule}}"
+          - to:
+              uri: "{{out_default}}"

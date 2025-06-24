@@ -22,10 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setHeader:
-              name: CamelVelocityTemplate
-              constant: "{{path}}"
           - to:
-              uri: "velocity:generate?allowTemplateFromHeader=true"
+              uri: "velocity:{{path}}"
           - to:
               uri: "kamelet:sink"

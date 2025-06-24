@@ -442,13 +442,13 @@ public class RouteTemplate {
 
     private void createTemplateParameters(){
 
-        createTemplateParameter("uri",uri);
+        createTemplateParameter("uri", uri);
 
-        createTemplateParameter("path",path);
+        createTemplateParameter("path", path);
 
-        createTemplateParameter("scheme",scheme);
+        createTemplateParameter("scheme", scheme);
 
-        createTemplateParameter("options",options);
+        createTemplateParameter("options", options);
     }
 
     private void createTemplateParameter(String name, String value){
@@ -583,7 +583,7 @@ public class RouteTemplate {
 
             if (bound != null && bound.equalsIgnoreCase("out")) {
                 createLinkLists(rule, expression, endpoint);
-                if (rule != null) {
+                if (rule == null) {
                     parameter = createParameter(templateDoc, bound + "_default", endpoint);
                     templatedRoute.appendChild(parameter);
                 }
@@ -669,15 +669,24 @@ public class RouteTemplate {
             }
 
             //adjust the templateid to call the correct template
+            String templateIdPrefix = null;
+
             if (scheme.startsWith("split")) {
-                templateId = "split-" + rule + "-router";
-                templatedRoute.removeAttribute("routeTemplateRef");
-                templatedRoute.setAttribute("routeTemplateRef", templateId);
+                templateIdPrefix = "split";
             } else if (scheme.startsWith("filter")) {
-                templateId = "filter-" + rule + "-router";
+                templateIdPrefix = "filter";
+            } else if (scheme.startsWith("dowhile")) {
+                templateIdPrefix = "dowhile";
+            } else if (scheme.startsWith("loop")) {
+                templateIdPrefix = "loop";
+            }
+
+            if (templateIdPrefix != null) {
+                templateId = templateIdPrefix + "-" + rule + "-router";
                 templatedRoute.removeAttribute("routeTemplateRef");
                 templatedRoute.setAttribute("routeTemplateRef", templateId);
             }
+
 
         } else {
             if (outList == null) {

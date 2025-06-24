@@ -1080,8 +1080,6 @@ public class CamelIntegration extends BaseIntegration {
 		for (Map.Entry<String, String> entry : properties.entrySet()) {
 			if(entry.getKey().startsWith("route") && entry.getValue().contains("rabbitmqConnectionFactory")) {
 
-				System.out.println(entry.getKey() + ": " + entry.getValue());
-
 				String connection = StringUtils.substringBetween(entry.getValue(),"<rabbitmqConnectionFactory>","</rabbitmqConnectionFactory>");
 				String rabbitMQElement = "<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>";
 
@@ -1090,7 +1088,6 @@ public class CamelIntegration extends BaseIntegration {
 					rabbitMQElement = "<rabbitmqConnectionFactory xmlns=\"http://camel.apache.org/schema/blueprint\">" + connection + "</rabbitmqConnectionFactory>";
 				}
 
-				System.out.println("connection: " + connection);
 				Map<String, String> connectionMap = stringToMap(connection);
 				String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port") + "-" + connectionMap.get("username");
 
@@ -1112,9 +1109,7 @@ public class CamelIntegration extends BaseIntegration {
 		Map<String, String> map = new LinkedHashMap<>();
 		String[] pairs = StringUtils.split(input, ',');
 
-		System.out.println("pairs length: " + pairs.length);
 		for (String pair : pairs) {
-			System.out.println("pair=" + pair);
 			if (StringUtils.contains(pair, '=')) {
 				String key = StringUtils.substringBefore(pair, "=");
 				String value = StringUtils.substringAfter(pair, "=");
@@ -1402,7 +1397,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		try {
 
-			String result = loadFlow(getProperties(flowId));
+			TreeMap<String, String> flowProperties = getProperties(flowId);
+			String result = loadFlow(flowProperties);
 
 			if (result.equals("started")){
 				finishFlowActionReport(flowId, "start","Started flow successfully","info");
@@ -1421,7 +1417,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private TreeMap<String, String> getProperties(String flowId) {
+	private TreeMap<String, String> getProperties(String flowId) throws Exception {
 		return super.getFlowConfigurations().stream()
 				.filter(properties -> flowId.equals(properties.get("id")))
 				.findFirst()
@@ -1449,11 +1445,6 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(enableReport) {
 			initFlowActionReport(flowid);
-		}
-
-		flowsMap.remove(flowid);
-		if(cacheEnabled) {
-			db.commit();
 		}
 
 		try {

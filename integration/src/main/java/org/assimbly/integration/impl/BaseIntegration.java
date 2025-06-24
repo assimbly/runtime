@@ -26,7 +26,7 @@ public abstract class BaseIntegration implements Integration {
 
 	ConcurrentMap<String, TreeMap<String, String>> flowsMap;
 
-	private TreeMap<String, String> configuredFlows;
+	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
 
 	private String flowConfiguration;
 
@@ -42,14 +42,14 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	public Collection<TreeMap<String,String>> getFlowConfigurations() {
-		return this.flowsMap.values();
+		return flowsMap.values();
 	}
 
 	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception {
 
 		removeFlowConfigurationIfExist(flowId);
 
-		this.flowsMap.put(flowId, configuration);
+		flowsMap.put(flowId, configuration);
 
 		if(db != null) {
 			db.commit();
