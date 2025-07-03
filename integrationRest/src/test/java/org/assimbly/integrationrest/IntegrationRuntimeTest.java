@@ -391,7 +391,7 @@ class IntegrationRuntimeTest {
 
             // body
             JSONObject body = new JSONObject();
-            body.put("url", "http://www.dneonline.com/calculator.asmx?wsdl");
+            body.put("url", "http://www.dneonline.com:8080/calculator.asmx?wsdl");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/list/soap/action"), body.toString(), null, headers);
