@@ -20,6 +20,7 @@ public class AssimblyGatewayHeadlessContainer {
     private final Network network;
     private GenericContainer<?> gatewayHeadlessContainer;
     private MongoDBContainer mongoContainer;
+    private GenericContainer<?> wireMockContainer;
 
     public AssimblyGatewayHeadlessContainer() {
         this.network = Network.newNetwork();
@@ -36,6 +37,18 @@ public class AssimblyGatewayHeadlessContainer {
                     .withNetworkAliases("flux-mongo")
                     .waitingFor(Wait.forListeningPort());
             mongoContainer.start();
+        }
+
+        if (wireMockContainer == null) {
+            // initialize wireMock container
+            wireMockContainer = new GenericContainer<>("wiremock/wiremock:latest")
+                    .withExposedPorts(8080)
+                    .withNetwork(network)
+                    .withNetworkAliases("www.dneonline.com")
+                    .withClasspathResourceMapping("wiremock", "/home/wiremock", BindMode.READ_ONLY) // this maps your mock definitions
+                    .withCommand("--port 8080")
+                    .waitingFor(Wait.forListeningPort());
+            wireMockContainer.start();
         }
 
         // initialize assimbly gateway container
