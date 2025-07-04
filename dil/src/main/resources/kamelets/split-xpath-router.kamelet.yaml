@@ -1,9 +1,9 @@
-apiVersion: camel.apache.org/v1alpha1
+apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
   name: split-xpath-router
   labels:
-    camel.apache.org/kamelet.type: "xpath-router"
+    camel.apache.org/kamelet.type: "router"
 spec:
   definition:
     title: "split xpath-router"
