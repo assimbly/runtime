@@ -9,7 +9,7 @@
 
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
-	<version>5.0.6-SNAPSHOT</version>
+	<version>5.0.6</version>
 
 	<modules>
 		<module>broker</module>
@@ -31,7 +31,7 @@
 
     <!-- versions -->
     <activemq.version>6.1.6</activemq.version>
- 	  <assimbly.version>5.0.6-SNAPSHOT</assimbly.version>
+ 	  <assimbly.version>5.0.6</assimbly.version>
 	  <hamcrest.version>3.0</hamcrest.version>
 		<spring-boot.version>3.4.6</spring-boot.version>
 		<maven-api.version>3.9.9</maven-api.version>
