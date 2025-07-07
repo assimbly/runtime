@@ -27,13 +27,8 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setProperty:
-              name: assimbly.body
-              constant: "{{content}}"
-          - setProperty:
-              name: assimbly.language
-              constant: "{{language}}"
-          - process:
-              ref: "SetBodyProcessor"
+          - setBody:
+              language: "{{language}}"
+              expression: "{{content}}"
           - to:
               uri: "kamelet:sink"

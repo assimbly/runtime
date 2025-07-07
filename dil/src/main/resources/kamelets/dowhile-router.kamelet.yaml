@@ -1,26 +1,24 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: loop-simple-router
+  name: dowhile-router
   labels:
-    camel.apache.org/kamelet.type: "router"
+    camel.apache.org/kamelet.type: "dowhile-simple-router"
 spec:
   definition:
-    title: "loop-simple-router"
+    title: "dowhile-router"
     description: |-
       Loops based on a expression
     type: object
     properties:
-      copy:
-        title: Copy
-        description: If the copy attribute is true, a copy of the input Exchange is used for each iteration. That means each iteration will start from a copy of the same message.
-        type: boolean
-        default: false
+      language:
+        title: Expression
+        description: Expression
+        type: string
       expression:
           title: Expression
-          description: Simple Expression to define how many times we should loop. Notice the expression is only evaluated once, and should return a number as how many times to loop.
+          description: Expression
           type: string
-          default: "1"
       out_rule:
         title: Out Rule
         description: Out Rule
@@ -38,9 +36,10 @@ spec:
         uri: "kamelet:source"
         steps:
           - loop:
-              copy: "{{copy}}"
+              doWhile: true
               expression:
-                simple:
+                language:
+                  language: "{{language}}"
                   expression: "{{expression}}"
               steps:
                 - to: "{{out_rule}}"

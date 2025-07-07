@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: filter-xpath-router
+  name: filter-router
   labels:
     camel.apache.org/kamelet.type: "xpath-router"
 spec:
   definition:
-    title: "filter xpath-router"
+    title: "filter-router"
     description: |-
       Filter message by XPath
     type: object
@@ -19,6 +19,10 @@ spec:
           title: Expression
           description: Expression
           type: string
+      language:
+        title: Language
+        description: Language
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,6 +31,8 @@ spec:
         uri: "kamelet:source"
         steps:
           - filter:
-              xpath: "{{expression}}"
+              language:
+                language: "{{language}}"
+                expression: "{{expression}}"
           - to:
               uri: "{{out_rule}}"

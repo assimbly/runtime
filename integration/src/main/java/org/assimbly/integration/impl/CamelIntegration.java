@@ -32,6 +32,8 @@ import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.engine.DefaultCamelContextNameStrategy;
+import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.*;
@@ -168,6 +170,10 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public final void init(boolean useDefaultSettings) throws Exception {
+
+		//set the name of the runtime
+		context.setNameStrategy(new ExplicitCamelContextNameStrategy("assimbly"));
+		context.setManagementName("assimbly");
 
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
@@ -1606,7 +1612,6 @@ public class CamelIntegration extends BaseIntegration {
 
 			for(Route route : routes){
 				serviceStatus = routeController.getRouteStatus(route.getId());
-
 				if(!serviceStatus.isStarted()){
 					return false;
 				}

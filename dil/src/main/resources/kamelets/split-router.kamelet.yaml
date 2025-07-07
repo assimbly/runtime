@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: split-xpath-router
+  name: split-router
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
-    title: "split xpath-router"
+    title: "split-router"
     description: |-
       Splits message by xpath
     type: object
@@ -15,6 +15,10 @@ spec:
           title: Path
           description: Path
           type: string
+      language:
+        title: Language
+        description: Language
+        type: string
       expression:
           title: Expression
           description: Expression
@@ -36,7 +40,9 @@ spec:
         uri: "kamelet:source"
         steps:
           - split:
-              xpath: "{{expression}}"
+              language:
+                language: "{{language}}"
+                expression: "{{expression}}"
               steps:
                 - setHeader:
                     name: CamelSplitIndex

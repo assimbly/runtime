@@ -668,6 +668,7 @@ public class RouteTemplate {
                 outRulesList = outRulesList + "#|#" + newRule;
             }
 
+            /*
             //adjust the templateid to call the correct template
             String templateIdPrefix = null;
 
@@ -686,6 +687,8 @@ public class RouteTemplate {
                 templatedRoute.removeAttribute("routeTemplateRef");
                 templatedRoute.setAttribute("routeTemplateRef", templateId);
             }
+
+             */
 
 
         } else {
