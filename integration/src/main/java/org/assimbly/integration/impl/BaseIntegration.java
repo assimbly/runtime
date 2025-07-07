@@ -386,7 +386,7 @@ public abstract class BaseIntegration implements Integration {
 	
 	public abstract String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception;	
 	
-	public abstract String getFlowStats(String id, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter, String mediaType) throws Exception;
+	public abstract String getFlowStats(String id, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception;
 
 	public abstract String getFlowStepStats(String id, String stepid, boolean fullStats, String mediaType) throws Exception;
 

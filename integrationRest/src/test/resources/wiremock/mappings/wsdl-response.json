@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/calculator.asmx?wsdl"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/xml; charset=utf-8"
+    },
+    "bodyFileName": "calculator.wsdl"
+  }
+}

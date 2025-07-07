@@ -1,0 +1,98 @@
+[
+  {
+    "id": "67c740bc349ced00070004a9_log",
+    "flowId": "67c740bc349ced00070004a9",
+    "flowVersion": 3,
+    "type": "log",
+    "events": [
+      "org.assimbly",
+      "org.camel"
+    ],
+    "stores": [
+      {
+        "type": "elastic",
+        "uri": "http://flux-es-test:9200/logs/_doc"
+      }
+    ],
+    "filters": [
+      {
+        "filter": "67c740bc349ced00070004a9"
+      }
+    ]
+  },
+  {
+    "id": "67c740bc349ced00070004a9_route",
+    "flowId": "67c740bc349ced00070004a9",
+    "flowVersion": 3,
+    "type": "route",
+    "events": [
+      "RouteReloaded",
+      "RouteStarted",
+      "RouteStopped"
+    ],
+    "stores": [
+      {
+        "type": "elastic",
+        "uri": "http://flux-es-test:9200/logs/_doc"
+      }
+    ],
+    "filters": [
+      {
+        "filter": "67c740bc349ced00070004a9"
+      }
+    ]
+  },
+  {
+    "id": "67c740bc349ced00070004a9_step",
+    "flowId": "67c740bc349ced00070004a9",
+    "flowVersion": 3,
+    "type": "step",
+    "events": [
+      "StepStarted"
+    ],
+    "failedEvents": [
+      "StepFailed"
+    ],
+    "stores": [
+      {
+        "type": "elastic",
+        "uri": "http://flux-es-test:9200/transactions/_doc",
+        "expiryInHours": 1
+      }
+    ],
+    "filters": [
+      {
+        "id": "step_0df9d084-4783-492b-a9d4-488f2ee298a5",
+        "filter": "0df9d084-4783-492b-a9d4-488f2ee298a5"
+      },
+      {
+        "id": "step_0df9d084-4783-492b-a9d4-488f2ee298a5_http_retry",
+        "filter": "0df9d084-4783-492b-a9d4-488f2ee298a5_http_retry"
+      },
+      {
+        "id": "step_979912f6-f6a1-43c8-9aa9-f8b480d31237",
+        "filter": "979912f6-f6a1-43c8-9aa9-f8b480d31237"
+      },
+      {
+        "id": "step_979912f6-f6a1-43c8-9aa9-f8b480d31237_http_retry",
+        "filter": "979912f6-f6a1-43c8-9aa9-f8b480d31237_http_retry"
+      },
+      {
+        "id": "step_9aa3aff8-e37c-4059-b9fd-4321454fd9ab",
+        "filter": "9aa3aff8-e37c-4059-b9fd-4321454fd9ab"
+      },
+      {
+        "id": "step_9aa3aff8-e37c-4059-b9fd-4321454fd9ab_http_retry",
+        "filter": "9aa3aff8-e37c-4059-b9fd-4321454fd9ab_http_retry"
+      },
+      {
+        "id": "step_error_67c740bc349ced00070004aa",
+        "filter": "67c740bc349ced00070004aa"
+      },
+      {
+        "id": "step_error_67c740bc349ced00070004aa_http_retry",
+        "filter": "67c740bc349ced00070004aa_http_retry"
+      }
+    ]
+  }
+]

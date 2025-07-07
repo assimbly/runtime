@@ -1,412 +1,630 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.integrationrest.config.IntegrationConfig;
-import org.assimbly.integrationrest.event.FailureCollector;
-import org.assimbly.integrationrest.utils.MockMvcRequestBuildersUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assimbly.commons.utils.AssertUtils;
+import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
+import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Map;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
-@SpringBootTest(classes = ValidationRuntime.class)
-@ComponentScan(basePackageClasses = {
-        IntegrationConfig.class,
-        IntegrationRuntime.class,
-        FailureCollector.class,
-        SimpMessageSendingOperations.class
-})
-@AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ValidationRuntimeTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private static AssimblyGatewayHeadlessContainer container;
 
-    @Test
-    void shouldValidateCronWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/cron",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("expression", "0 0/5 * * * ?")
-        );
+    @BeforeAll
+    static void setUp() {
+        container = new AssimblyGatewayHeadlessContainer();
+        container.init();
+    }
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
-
-        resultActions.andExpect(status().isNoContent());
+    @AfterAll
+    static void tearDown() {
+        container.stop();
     }
 
     @Test
-    void shouldValidateCronWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/cron",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("expression", "0 0/5 * * *")
-        );
+    void shouldValidateCronWithSuccess() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap();
+            params.put("expression", "0 0/5 * * * ?");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("error").value("Cron Validation error: Unexpected end of expression."))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+            // asserts contents
+            assertThat(response.body()).isEmpty();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateCertificateWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/certificate",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("httpsUrl", "https://authenticationtest.com/HTTPAuth/")
-        );
+    void shouldValidateCronWithError() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap();
+            params.put("expression", "0 0/5 * * *");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("validationResultStatus").value("VALID"))
-                .andExpect(jsonPath("message").isEmpty())
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.get("error").asText()).isEqualTo("Cron Validation error: Unexpected end of expression.");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateCertificateWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/certificate",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("httpsUrl", "https://authenticationtest2.com/HTTPAuth/")
-        );
+    void shouldValidateCertificate() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap();
+            params.put("httpsUrl", "https://authenticationtest.com/HTTPAuth/");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("validationResultStatus").value("UNKNOWN"))
-                .andExpect(jsonPath("message").value("authenticationtest2.com"))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertCertificateResponseWithoutMessage(responseJson, "VALID");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateUrlWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/url",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("httpUrl", "https://integrationmadeeasy.com/")
-        );
+    void shouldValidateCertificateError() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap<>();
+            params.put("httpsUrl", "https://expired.badssl.com/");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions.andExpect(status().isNoContent());
+            // call endpoint
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "certification path");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateUrlWithError() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/url",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                Map.of("httpUrl", "https://integrationmadeasy.com/")
-        );
+    void shouldValidateConnection() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/google.com/443/5000"), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("error").value("Url is not reachable from the server!"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Connection successful");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateExpressionWithSuccess() throws Exception {
-        // build body in json format
-        JSONArray bodyJsonArray = new JSONArray();
-        bodyJsonArray.put(new JSONObject(Map.of(
-                "name", "testHeader",
-                "expression", "def x = 5;",
-                "expressionType", "groovy"
-        )));
+    void shouldValidateConnectionError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/expression",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonArray.toString()
-        );
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/192.0.2.1/666/2000"), null, headers);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        resultActions.andExpect(status().isNoContent());
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertConnectionResponse(responseJson, "successful", "Connection error: IOException");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Test
+    void shouldValidateXsltWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("StopTest", "false");
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("xsltUrl", "https://www.w3schools.com/xml/cdcatalog_client.xsl");
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.isArray()).isTrue();
+            assertThat(responseJson.size()).isZero();
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateExpressionWithError() throws Exception {
-        // build body in json format
-        JSONArray bodyJsonArray = new JSONArray();
-        bodyJsonArray.put(new JSONObject(Map.of(
-                "name", "testHeader",
-                "expression", "testing",
-                "expressionType", "groovy"
-        )));
+    void shouldValidateXsltError() {
+        try {
+            // body
+            JSONObject body = new JSONObject();
+            body.put("xsltUrl", "http://url-invalid-nonexistent.com/fake.xsl");
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/expression",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonArray.toString()
-        );
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), body.toString(), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[*].error").value(hasItem(matchesRegex(
-                        ".*nested exception is groovy.lang.MissingPropertyException: No such property: testing.*"))))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode responseJson = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertXsltErrorResponse(responseJson);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+
+    @Test
+    void shouldValidateScriptWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+            // script
+            JSONObject scriptJson = new JSONObject();
+            scriptJson.put("language", "groovy");
+            scriptJson.put("script", "return 1 + 1;");
+
+            // exchange
+            JSONObject exchangeJson = new JSONObject();
+            exchangeJson.put("body", "");
+
+            // headers
+            JSONObject headersJson = new JSONObject();
+            exchangeJson.put("headers", headersJson);
+
+            // properties
+            JSONObject propertiesJson = new JSONObject();
+            exchangeJson.put("properties", propertiesJson);
+
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("script", scriptJson);
+            bodyJson.put("exchange", exchangeJson);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertScriptResponse(responseJson, 1, "2");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateFtpWithSuccess() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of(
-                "protocol", "ftp",
-                "host", "ftp.dlptest.com",
-                "port", "21",
-                "user", "dlpuser",
-                "pwd", "rNrKYTX9g7z3RgJRmxWuGHbeu",
-                "pkf", "/tmp/",
-                "pkfd", ""
-        ));
+    void shouldValidateScriptWithError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/ftp",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // invalid script
+            JSONObject scriptJson = new JSONObject();
+            scriptJson.put("language", "groovy");
+            scriptJson.put("script", "return 1 + ;");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // exchange
+            JSONObject exchangeJson = new JSONObject();
+            exchangeJson.put("body", "");
 
-        resultActions.andExpect(status().isNoContent());
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("script", scriptJson);
+            bodyJson.put("exchange", exchangeJson);
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+            String msg = responseJson.get("message").asText().toLowerCase();
+
+            // asserts contents
+            AssertUtils.assertScriptErrorResponse(msg);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateFtpWithError() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of(
-                "protocol", "ftp",
-                "host", "ftp.dlptest.com",
-                "port", "21",
-                "user", "dlpuser",
-                "pwd", "1234567890",
-                "pkf", "/tmp/",
-                "pkfd", ""
-        ));
+    void shouldValidateRegexWithSuccess() {
+        try {
+            //headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/ftp",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("expression", "^[a-zA-Z0-9]+$");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("error").value("Cannot login into FTP Server!"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateRegexWithSuccess() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*)"));
+    void shouldValidateRegexWithError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/regex",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("expression", "(a-z");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("message").value("2"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
+
+            String actual = response.body();
+            String expected = "Unclosed group near index 4\n" +
+                    "(a-z";
+
+            // asserts contents
+            assertThat(actual).isEqualTo(expected);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateRegexWithError() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of("expression", "(.*) (.*"));
+    void shouldValidateFtpWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/regex",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("host", "test.rebex.net");
+            bodyJson.put("port", 21);
+            bodyJson.put("user", "demo");
+            bodyJson.put("pwd", "password");
+            bodyJson.put("protocol", "ftp");
+            bodyJson.put("explicitTLS", false);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
-        resultActions
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("Unclosed group near index 8")))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateScriptWithSuccess() throws Exception {
-        // build body in json format
-        JSONObject exchangeJsonObject = new JSONObject(Map.of(
-                "properties", new JSONObject(),
-                "headers", new JSONObject(),
-                "body", ""
-        ));
-        JSONObject scriptJsonObject = new JSONObject(Map.of(
-                "language", "groovy",
-                "script", "def x = 5;"
-        ));
-        JSONObject bodyJsonObject = new JSONObject(Map.of(
-                "exchange", exchangeJsonObject,
-                "script", scriptJsonObject
-        ));
+    void shouldValidateFtpWithError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/script",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject bodyJson = new JSONObject();
+            bodyJson.put("host", "invalid.ftp.test.server"); // invalid host
+            bodyJson.put("port", 9999); // invalid port
+            bodyJson.put("user", "error"); // invalid user
+            bodyJson.put("pwd", "testerror"); // invalid password
+            bodyJson.put("protocol", "ftp");
+            bodyJson.put("explicitTLS", false);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("result").value("5"))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.get("error").asText().toLowerCase()).contains("host name could not be resolved");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateScriptWithError() throws Exception {
-        // build body in json format
-        JSONObject exchangeJsonObject = new JSONObject(Map.of(
-                "properties", new JSONObject(),
-                "headers", new JSONObject(),
-                "body", ""
-        ));
-        JSONObject scriptJsonObject = new JSONObject(Map.of(
-                "language", "groovy",
-                "script", "hello"
-        ));
-        JSONObject bodyJsonObject = new JSONObject(Map.of(
-                "exchange", exchangeJsonObject,
-                "script", scriptJsonObject
-        ));
+    void shouldValidateExpressionWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("IsPredicate", "false");
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/script",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject expression = new JSONObject();
+            expression.put("name", "CheckInvoice");
+            expression.put("expression", "1 + 1");
+            expression.put("expressionType", "groovy");
+            expression.put("nextNode", "nextStep");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            JSONArray expressions = new JSONArray();
+            expressions.put(expression);
 
-        resultActions
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("message").value(matchesRegex("Invalid groovy script.*")))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateXsltWithSuccess() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xsl"));
+    void shouldValidateExpressionWithError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("IsPredicate", "false");
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/xslt",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // body
+            JSONObject expression = new JSONObject();
+            expression.put("name", "CheckInvoice");
+            expression.put("expression", "1 + "); // error
+            expression.put("expressionType", "groovy");
+            expression.put("nextNode", "nextStep");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            JSONArray expressions = new JSONArray();
+            expressions.put(expression);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", is(empty())))
-        ;
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertExpressionErrorResponse(json);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateXsltWithError() throws Exception {
-        // build body in json format
-        JSONObject bodyJsonObject = new JSONObject(Map.of("xsltUrl","https://www.w3schools.com/xml/cdcatalog.xml"));
+    void shouldValidateUrlWithSuccess() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap<>();
+            params.put("httpUrl", "https://www.google.com"); // Uma URL válida
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildPostMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/xslt",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE),
-                null,
-                MediaType.APPLICATION_JSON_VALUE,
-                bodyJsonObject.toString()
-        );
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
 
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[*].error")
-                        .value(hasItem(matchesRegex("The supplied file does not appear to be a stylesheet.*"))))
-        ;
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
     @Test
-    void shouldValidateUriWithSuccess() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuildersUtil.buildGetMockHttpServletRequestBuilder(
-                String.format("/api/validation/%d/uri",1),
-                Map.of("Accept", MediaType.APPLICATION_JSON_VALUE, "Uri", "2342424"),
-                null
-        );
+    void shouldValidateUrlWithError() {
+        try {
+            // params
+            HashMap<String, String> params = new HashMap<>();
+            params.put("httpUrl", "http://url-error-test.com");
 
-        ResultActions resultActions = this.mockMvc.perform(requestBuilder);
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-        resultActions.andExpect(status().isOk());
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode responseJson = objectMapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(responseJson.get("error").asText()).isEqualTo("Url is not reachable from the server!");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateUriWithSuccess() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Uri", "direct:teste"); // uri valid on Camel
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode body = mapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(body.get("message").asText().toLowerCase()).contains("valid");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
+    }
+
+    @Test
+    void shouldValidateUriWithError() {
+        try {
+            // headers
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+            headers.put("Uri", "::::uri-invalid::::"); // invalid uri
+
+            // endpoint call
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
+
+            // assert http status
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode body = mapper.readTree(response.body());
+
+            // asserts contents
+            assertThat(body.get("message").asText().toLowerCase()).contains("invalid");
+
+        } catch (Exception e) {
+            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
+        }
     }
 
 }
