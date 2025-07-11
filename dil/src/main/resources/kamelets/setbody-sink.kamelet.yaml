@@ -16,8 +16,8 @@ spec:
         description: Set the expression language
         type: string
         default: constant
-      content:
-        title: Content
+      expression:
+        title: Expression
         description: Set the content of the body
         type: string
   dependencies:
@@ -28,5 +28,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - setBody:
-              language: "{{language}}"
-              expression: "{{content}}"
+              language:
+                language: "{{language}}"
+                expression: "{{expression}}"
