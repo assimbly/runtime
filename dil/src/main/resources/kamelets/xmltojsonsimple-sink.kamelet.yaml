@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: xmltojson-sink
+  name: xmltojsonsimple-sink
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "xmltojson sink"
+    title: "xmltojsonsimple sink"
     description: |-
       Convert XML to JSON
     type: object

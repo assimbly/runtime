@@ -1290,14 +1290,19 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
-	public String configureAndRestartFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
-		super.setFlowConfiguration(flowId, mediaType, configuration);
-		return restartFlow(flowId, timeout);
-	}
+	public String installFlow(String flowId, long timeout, String mediaType, String configuration) {
 
-	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
-		super.setFlowConfiguration(flowId, mediaType, configuration);
+		try {
+			super.setFlowConfiguration(flowId, mediaType, configuration);
+		}catch (Exception e){
+			log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
+			initFlowActionReport(flowId);
+			finishFlowActionReport(flowId, "error",e.getMessage(),"error");
+			return loadReport;
+		}
+
 		return startFlow(flowId, timeout);
+
 	}
 
 	public String fastInstallFlow(String flowId, String configuration) throws Exception {

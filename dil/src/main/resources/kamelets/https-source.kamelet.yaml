@@ -20,7 +20,7 @@ spec:
   template:
     route:
       from:
-        uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false"
+        uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false&sslContextParameters=sslContext"
         steps:
           - removeHeaders:
               pattern: "CamelHttp*"

@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: xmltojson-action
+  name: xmltojsonsimple-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "xmltojson action"
+    title: "xmltojsonsimple action"
     description: |-
       Convert XML to JSON
     type: object

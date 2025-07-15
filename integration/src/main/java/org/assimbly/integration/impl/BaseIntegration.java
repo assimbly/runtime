@@ -80,24 +80,19 @@ public abstract class BaseIntegration implements Integration {
 	
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
-		try {
-
-			TreeMap<String, String> flowProperties;
-			if(mediaType.toLowerCase().contains("xml")) {
-	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
-			}else if(mediaType.toLowerCase().contains("json")) {
-	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
-			}else {
-	        	flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
-			}
-
-			setFlowConfiguration(flowId, flowProperties);
-
-			putFlowConfigurationToMap(flowId, mediaType, configuration);
-
-		} catch (Exception e) {
-			log.error("Set flow configuration failed",e);
+		TreeMap<String, String> flowProperties;
+		if(mediaType.toLowerCase().contains("xml")) {
+			flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
+		}else if(mediaType.toLowerCase().contains("json")) {
+			flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
+		}else {
+			flowProperties = convertYAMLToFlowConfiguration(flowId, configuration);
 		}
+
+		setFlowConfiguration(flowId, flowProperties);
+
+		putFlowConfigurationToMap(flowId, mediaType, configuration);
+
 	}
 
 	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {

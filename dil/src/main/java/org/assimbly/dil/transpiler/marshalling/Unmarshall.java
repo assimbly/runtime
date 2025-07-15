@@ -39,16 +39,9 @@ public class Unmarshall {
 
 		Element flowElement = getFlowElement();
 
-		assert flowElement != null;
 		addProperty(flowElement, "name");
 		addProperty(flowElement, "type");
 		addProperty(flowElement, "version");
-
-		Node node = doc.getElementsByTagName("frontend").item(0);
-
-		if(node!=null){
-			properties.put("frontend",node.getFirstChild().getTextContent());
-		}
 
 		createResources();
 
@@ -69,11 +62,14 @@ public class Unmarshall {
 
 				if (flowId.equals(id)) {
 					return element;
+				}else{
+					throw new RuntimeException("Configured flow ID: " + id + " in the DIL file does not match flow ID: " + flowId);
 				}
 			}
 		}
 
-		return null;
+		throw new RuntimeException("Configuration file misses flow element");
+
 	}
 
 	private void addProperty(Element element, String name){
