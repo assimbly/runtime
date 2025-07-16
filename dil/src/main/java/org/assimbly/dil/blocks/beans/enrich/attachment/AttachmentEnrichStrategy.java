@@ -1,5 +1,6 @@
 package org.assimbly.dil.blocks.beans.enrich.attachment;
 
+import org.apache.axiom.attachments.ByteArrayDataSource;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -55,13 +56,13 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
             data = IOUtils.toByteArray(body);
         } catch (IOException e) { log.error(e.getMessage()); }
 
+        ByteArrayDataSource byteArrayDataSource = new ByteArrayDataSource(data, mimeType);
+        dataHandler = new DataHandler(byteArrayDataSource);
 
         log.info(String.format("Adding attachment '%s' with mime type: '%s'", attachmentName, mimeType));
 
         log.info("Attachment details");
         log.info(String.format("\tsize: %s", data.length));
-
-        dataHandler = new DataHandler(data,mimeType);
 
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
 
