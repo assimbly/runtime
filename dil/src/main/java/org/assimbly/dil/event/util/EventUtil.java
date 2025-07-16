@@ -29,15 +29,14 @@ public class EventUtil {
 
     }
 
-    public static String getCreatedTimestamp(long time){
+    public static String getCreatedTimestamp(){
+        return getCreatedTimestamp(Instant.now());
+    }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
-        Instant i = Instant.ofEpochMilli(time);
-        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(i, ZoneOffset.UTC);
-
+    public static String getCreatedTimestamp(Instant time){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.nnnnnnnnnZ");
+        ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(time, ZoneOffset.UTC);
         return formatter.format(zonedDateTime);
-
     }
 
     public static String getExpiryTimestamp(String expiryInHours){
