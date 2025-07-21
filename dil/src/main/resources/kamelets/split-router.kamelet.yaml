@@ -8,13 +8,9 @@ spec:
   definition:
     title: "split-router"
     description: |-
-      Splits message by xpath
+      Splits message by an expression
     type: object
     properties:
-      path:
-          title: Path
-          description: Path
-          type: string
       language:
         title: Language
         description: Language

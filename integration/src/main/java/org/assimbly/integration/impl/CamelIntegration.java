@@ -38,6 +38,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.*;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -2058,10 +2059,11 @@ public class CamelIntegration extends BaseIntegration {
 	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
 
 		FlowStatistics stats = new FlowStatistics();
-		long total = 0;
-		long completed = 0;
-		long failed = 0;
-		long pending = 0;
+		long total = 0, completed = 0, failed = 0, pending = 0;
+
+		List<Long> uptimeList = new ArrayList<>();
+		List<Date> lastFailedList = new ArrayList<>();
+		List<Date> lastCompletedList = new ArrayList<>();
 
 		for (Route r : routes) {
 
@@ -2075,26 +2077,37 @@ public class CamelIntegration extends BaseIntegration {
 			if (fullStats) {
 				// Update uptime if not set
 				if (stats.uptime == null) {
-					stats.uptime = route.getUptime();
-					stats.uptimeMillis = route.getUptimeMillis();
+					uptimeList.add(route.getUptimeMillis());
 				}
-
 				if (stats.lastFailed == null) {
-					stats.lastFailed = route.getLastExchangeFailureTimestamp();
+					lastFailedList.add(route.getLastExchangeFailureTimestamp());
 				}
-
 				if (stats.lastCompleted == null) {
-					stats.lastCompleted = route.getLastExchangeCompletedTimestamp();
+					lastCompletedList.add(route.getLastExchangeCompletedTimestamp());
 				}
-
 			}
-
 		}
 
 		stats.totalMessages = total;
 		stats.completedMessages = completed;
 		stats.failedMessages = failed;
 		stats.pendingMessages = pending;
+
+		if (fullStats) {
+			stats.uptimeMillis = uptimeList.stream()
+					.filter(Objects::nonNull)
+					.max(Long::compareTo)
+					.orElse(0L);
+			stats.uptime = TimeUtils.printDuration(stats.uptimeMillis);
+			stats.lastFailed = lastFailedList.stream()
+					.filter(Objects::nonNull)
+					.max(Date::compareTo)
+					.orElse(null);
+			stats.lastCompleted = lastCompletedList.stream()
+					.filter(Objects::nonNull)
+					.max(Date::compareTo)
+					.orElse(null);
+		}
 
 		return stats;
 	}

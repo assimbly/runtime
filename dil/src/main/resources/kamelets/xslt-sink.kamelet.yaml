@@ -11,10 +11,10 @@ spec:
       Apply XSLT on message
     type: object
     properties:
-      options:
-          title: 
-          description: .
-          type: string
+      path:
+        title: Path
+        description: Path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:

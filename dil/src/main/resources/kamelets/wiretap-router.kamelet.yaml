@@ -1,0 +1,34 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: wiretap-router
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "wiretap router"
+    description: |-
+      Copy the original message to a wiretap in a fire and forget style
+    type: object
+    properties:
+      out_rule:
+        title: Out Rule
+        description: Out Rule
+        type: string
+      out_default:
+        title: Out Default Rule
+        description: Out Default Rule
+        type: string
+        default: "mock:0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - wireTap:
+              uri: "{{out_rule}}"
+              executor-service: "wiretapProfile"
+          - to:
+              uri: "{{out_default}}"

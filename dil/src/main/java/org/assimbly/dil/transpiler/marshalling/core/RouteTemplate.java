@@ -574,18 +574,18 @@ public class RouteTemplate {
         if (type.equals("router")) {
 
             if (rule != null) {
-                parameter = createParameter(templateDoc, bound + "_rule", endpoint);
-                templatedRoute.appendChild(parameter);
+                Element param = createParameter(templateDoc, bound + "_rule", endpoint);
+                templatedRoute.appendChild(param);
             } else {
-                parameter = createParameter(templateDoc, bound , endpoint);
-                templatedRoute.appendChild(parameter);
+                Element param = createParameter(templateDoc, bound , endpoint);
+                templatedRoute.appendChild(param);
             }
 
             if (bound != null && bound.equalsIgnoreCase("out")) {
                 createLinkLists(rule, expression, endpoint);
                 if (rule == null) {
-                    parameter = createParameter(templateDoc, bound + "_default", endpoint);
-                    templatedRoute.appendChild(parameter);
+                    Element param = createParameter(templateDoc, bound + "_default", endpoint);
+                    templatedRoute.appendChild(param);
                 }
             }
 
@@ -599,15 +599,15 @@ public class RouteTemplate {
 
                 if (name.getNodeValue().equals(bound)) {
                     parameterUpdated = true;
-                    parameter = createParameter(templateDoc, bound, endpoint);
-                    templatedRoute.replaceChild(parameter, oldParameter);
+                    Element param = createParameter(templateDoc, bound, endpoint);
+                    templatedRoute.replaceChild(param, oldParameter);
                 }
 
             }
 
             if(!parameterUpdated){
-                parameter = createParameter(templateDoc, bound, endpoint);
-                templatedRoute.appendChild(parameter);
+                Element param = createParameter(templateDoc, bound, endpoint);
+                templatedRoute.appendChild(param);
             }
 
         }

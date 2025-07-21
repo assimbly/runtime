@@ -6,15 +6,15 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "xmltocsv sink"
+    title: "xmltocsv action"
     description: |-
-      to do
+      Transform XML to CSV
     type: object
     properties:
       options:
-          title: 
-          description: .
-          type: string
+        title: options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -23,5 +23,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "xmltocsv://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&quoteFields={{quoteFields}}&delimiter=RAW({{delimiter}})&lineSeparator=RAW({{lineSeparator}})"
-
+              uri: "xmltocsv://?{{options}}"

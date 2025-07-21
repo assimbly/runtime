@@ -8,24 +8,13 @@ spec:
   definition:
     title: "xmltocsv action"
     description: |-
-      to do
+      Transform XML to CSV
     type: object
     properties:
-      orderHeaders:
-          title: .
-          description: .
-          type: string
-          default: UNORDERED
-      quoteFields:
-          title: .
-          description: .
-          type: string
-          default: ALL_FIELDS
-      delimiter:
-          title: .
-          description: .
-          type: string
-          default: LA==
+      options:
+        title: options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -34,6 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "xmltocsv://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&quoteFields={{quoteFields}}&delimiter=RAW({{delimiter}})&lineSeparator=RAW({{lineSeparator}})"
+              uri: "xmltocsv://?{{options}}"
           - to:
               uri: "kamelet:sink"

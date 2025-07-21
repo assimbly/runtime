@@ -30,7 +30,7 @@
 		<camel-spring-junit5.version>4.13.0</camel-spring-junit5.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<h2database.version>2.3.232</h2database.version>
-		<maven-api.version>3.9.10</maven-api.version>
+		<maven-api.version>3.9.11</maven-api.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
@@ -38,12 +38,12 @@
 		<!-- test versions -->
 		<assertj.version>3.27.3</assertj.version>
 		<googleauth.version>1.5.0</googleauth.version>
-		<jackson.version>2.19.1</jackson.version>
+		<jackson.version>2.19.2</jackson.version>
 		<jetty.version>12.0.23</jetty.version>
 		<json.version>20250107</json.version>
 		<json-unit-assertj.version>4.1.1</json-unit-assertj.version>
 		<junit.version>4.13.2</junit.version>
-		<junit-jupiter.version>5.13.3</junit-jupiter.version>
+		<junit-jupiter.version>5.13.4</junit-jupiter.version>
 		<mongo.version>4.7.2</mongo.version>
 		<testcontainers.version>1.21.3</testcontainers.version>
 	</properties>
