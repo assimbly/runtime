@@ -19,6 +19,8 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class MessageBrokerRuntime {
 
+    private static final long ID = 0L;
+    
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final ManagedBrokerRuntime broker;
@@ -26,8 +28,6 @@ public class MessageBrokerRuntime {
     public MessageBrokerRuntime(ManagedBrokerRuntime broker) {
         this.broker = broker;
     }
-
-    private static final long ID = 0L;
 
     /**
      * GET  /brokers/{brokerType}/messages/{endpointName}: get a list of messages by endpoint.
