@@ -62,18 +62,12 @@ public class ActiveMQArtemis implements Broker {
 
 			//
 			if (brokerFile.exists()) {
-				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-				log.info("Using config file 'broker.xml'. Loaded from " + brokerFile.getAbsolutePath());
-				log.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
+				log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				broker.setConfigResourcePath(fileConfig);
 			} else {
-				this.setFileConfiguration("");
 				log.warn("No config file 'broker.xml' found.");
-				log.info("Created default 'broker.xml' stored in following directory: " + baseDir + "/broker");
-				log.info("broker.xml documentation reference: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html");
-				log.info("");
-				log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
-
+				log.info("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path= {}", baseDir);
+				this.setFileConfiguration("");
 				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				broker.setConfigResourcePath(fileConfig);
 			}
@@ -82,11 +76,16 @@ public class ActiveMQArtemis implements Broker {
 
 			setManageBroker();
 
+			log.info("event=StartBroker status={}",status());
+
 			return status();
 
 		} catch (Exception e) {
-            log.error("Failed to start broker. Reason:{}", e.getMessage());
-			return "Failed to start broker. Reason: " + e.getMessage();
+			
+            log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
+
+			return "failed";
+
 		}
 
 	}
@@ -95,30 +94,33 @@ public class ActiveMQArtemis implements Broker {
 
 	public String startEmbedded() throws Exception {
 
-			log.warn("Start embedded broker in local mode on url: tcp://127.0.0.1:61616");
+		log.info("event=StartEmbeddedBroker status=starting url=tcp://127.0.0.1:61616");
 
-			Configuration config = new ConfigurationImpl();
-			config.addAcceptorConfiguration("in-vm", "vm://0");
-			config.addAcceptorConfiguration("tcp", "tcp://127.0.0.1:61616");
-			config.setSecurityEnabled(false);
+		Configuration config = new ConfigurationImpl();
+		config.addAcceptorConfiguration("in-vm", "vm://0");
+		config.addAcceptorConfiguration("tcp", "tcp://127.0.0.1:61616");
+		config.setSecurityEnabled(false);
 
-			broker = new EmbeddedActiveMQ();
-			broker.setConfiguration(config);
-			broker.start();
+		broker = new EmbeddedActiveMQ();
+		broker.setConfiguration(config);
+		broker.start();
 
-			return status();
+		log.info("event=StartEmbeddedBroker status={}",status());
+
+		return status();
 
 	}
 
 	
 	public String stop() throws Exception {
+
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 		
 		if(activeBroker!=null) {
 			String nodeID= String.valueOf(activeBroker.getNodeID());
-			log.info("Broker with nodeId '" + nodeID + "' is stopping. Uptime=" + activeBroker.getUptime());
+            log.info("event=StopBroker status=stopping id='{}' uptime={} ", nodeID, activeBroker.getUptime());
 			broker.stop();
-			log.info("Broker with nodeId '" + nodeID + "' is stopped.");
+            log.info("event=StopBroker status=stopping id='{}'", nodeID);
 		}
 		
 		return status();
@@ -126,14 +128,17 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	public String restart() throws Exception {
+
 		this.stop();
 		this.start();
 		
 		return status();
+
 	}
 
 	
 	public String restartEmbedded() throws Exception {
+
 		this.stop();
 		this.startEmbedded();
 		
@@ -151,14 +156,8 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		if(activeBroker!=null) {
-			log.debug("State=" + activeBroker.getState().name());
-
-			if(activeBroker.isActive()) {
-				status = "started";
-			}else if(activeBroker.getState().name().equals("STARTED")){
-				status = "started with errors";
-			}
+		if(activeBroker!=null && (activeBroker.isActive() || activeBroker.getState().name().equals("STARTED"))) {
+			status = "started";
 		}
 
 		return status;
@@ -203,7 +202,7 @@ public class ActiveMQArtemis implements Broker {
         		is.close();
 				
 			} catch (IOException e) {
-				log.error("Failed to get file configuration (broker.xml). Reason:", e);
+				log.error("event=GetFileConfiguration status=failed config=broker.xml reason={}", e.getMessage(), e);
 			}
 		}
     	
@@ -231,7 +230,8 @@ public class ActiveMQArtemis implements Broker {
 			is.close();
 		}
 
-		return "configuration set";
+		return "success";
+
 	}
 
 	public void setAIO() throws IOException {
@@ -250,9 +250,9 @@ public class ActiveMQArtemis implements Broker {
 				if(is!=null) {
 					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					is.close();
-					log.info("AIO Directory is set to " + aioFile.getParent());
+                    log.info("event=SetAIO status=success path={}", aioFile.getParent());
 				}else{
-					log.warn("Can't enable AIO");
+					log.warn("event=SetAIO status=failed");
 				}
 
 			}
@@ -264,9 +264,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public static void addDir(String s) {
 		try {
-			// This enables the java.library.path to be modified at runtime
-			// From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
-			//
+
 			Field field = ClassLoader.class.getDeclaredField("usr_paths");
 			field.setAccessible(true);
 			String[] paths = (String[])field.get(null);
@@ -275,15 +273,16 @@ public class ActiveMQArtemis implements Broker {
 					return;
 				}
 			}
+
 			String[] tmp = new String[paths.length+1];
 			System.arraycopy(paths,0,tmp,0,paths.length);
 			tmp[paths.length] = s;
 			field.set(null,tmp);
 			System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
 		} catch (IllegalAccessException e) {
-			log.error("Failed to get permissions to set library path",e);
+			log.error("event=AddDir status=failed reason=Failed to get permissions to set library path",e);
 		} catch (NoSuchFieldException e) {
-			log.error("Failed to get field handle to set library path",e);
+			log.error("event=AddDir status=failed reason=Failed to get field handle to set library path",e);
 		}
 	}
 
@@ -324,7 +323,7 @@ public class ActiveMQArtemis implements Broker {
 					endpointInfo.append("queue", getEndpoint(endpoint));
 				}
 			}catch (Exception e){
-				log.error("Error getting queues: " + e.getMessage());
+                log.error("event=GetQueues status={} reason={}", status(), e.getMessage(), e);
 			}
 
 			endpointsInfo.put("queues",endpointInfo);
@@ -693,7 +692,7 @@ public class ActiveMQArtemis implements Broker {
 			}
 
 		} catch (Exception e) {
-			log.error("Error to get all destinations and messages counts", e);
+			log.error("event=getFlowIdsMessageCountMap reason=Error to get all destinations and messages counts", e);
 		}
 
 		return destinationMessageCounts;

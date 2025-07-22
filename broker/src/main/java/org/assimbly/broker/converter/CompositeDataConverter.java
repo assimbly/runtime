@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import java.util.Set;
+
 public final class CompositeDataConverter {
 
     private CompositeDataConverter() {
@@ -76,73 +77,82 @@ public final class CompositeDataConverter {
 
     }
 
-    public static JSONObject messageToJSON(CompositeData compositeData, boolean excludeBody){
+    public static JSONObject messageToJSON(CompositeData compositeData, boolean excludeBody) {
+        JSONObject message = new JSONObject();
+        JSONObject headers = new JSONObject();
+        JSONObject jmsHeaders = new JSONObject();
 
         Set<String> keys = compositeData.getCompositeType().keySet();
 
-        JSONObject message = new JSONObject();
-        JSONObject headers = new JSONObject();
-        JSONObject jmsheaders = new JSONObject();
-
-        for(String key : keys){
+        for (String key : keys) {
             Object value = compositeData.get(key);
-
             if (!(value instanceof TabularData)) {
-
-                if(key.equals("PropertiesText")){
-                    Object propertiesTextObject = compositeData.get("PropertiesText");
-                    if(propertiesTextObject instanceof String propertiesText){
-
-                        propertiesText = propertiesText.substring( 1, propertiesText.length() - 1);
-
-                        String[] properties = propertiesText.split(", ");
-                        for(String property: properties){
-
-                            String headerKey;
-                            String headerValue;
-
-                            if(property.contains("=")) {
-                                headerKey = property.substring(0, property.indexOf('='));
-                                headerValue = property.substring(property.indexOf('=') + 1);
-                                if(headerKey.startsWith("JMS")){
-                                    jmsheaders.put(headerKey,headerValue);
-                                }else{
-                                    headers.put(headerKey,headerValue);
-                                }
-                            }else if(!property.isEmpty()){
-                                headerKey = "header";
-                                headerValue = property;
-                                headers.put(headerKey,headerValue);
-                            }
-                        }
-                    }
-                    message.put("headers",headers);
-                }else if(key.startsWith("JMS")){
-
-                    if(key.equalsIgnoreCase("JMSMessageID")) {
-                        message.put("messageid", value);
-                    } else if(key.equalsIgnoreCase("JMSTimestamp")) {
-                        message.put("timestamp",value);
-                    }
-
-                    jmsheaders.put(key,value);
-
-                }else if(key.equalsIgnoreCase("messageID")) {
-                        message.put("messageid", value);
-                }else if(key.equalsIgnoreCase("Text")) {
-                    if(!excludeBody) {
-                        message.put("body", value);
-                    }
-                }else{
-                    message.put(key,value);
-                }
+                processMessageProperty(key, value, message, headers, jmsHeaders, excludeBody);
             }
         }
 
-        message.put("jmsHeaders",jmsheaders);
-
+        message.put("headers", headers);
+        message.put("jmsHeaders", jmsHeaders);
         return message;
+    }
 
+    private static void processMessageProperty(String key, Object value, JSONObject message,
+                                               JSONObject headers, JSONObject jmsHeaders, boolean excludeBody) {
+        if ("PropertiesText".equals(key)) {
+            parsePropertiesText(value, headers, jmsHeaders);
+        } else if (key.startsWith("JMS")) {
+            handleJmsProperty(key, value, message, jmsHeaders);
+        } else if ("messageID".equalsIgnoreCase(key)) {
+            message.put("messageid", value);
+        } else if ("Text".equalsIgnoreCase(key) && !excludeBody) {
+            message.put("body", value);
+        } else if (!"Text".equalsIgnoreCase(key)) {
+            message.put(key, value);
+        }
+    }
+
+    private static void parsePropertiesText(Object propertiesTextObject, JSONObject headers, JSONObject jmsHeaders) {
+        if (!(propertiesTextObject instanceof String propertiesText)) return;
+
+        String cleanedText = propertiesText.substring(1, propertiesText.length() - 1);
+        String[] properties = cleanedText.split(", ");
+
+        for (String property : properties) {
+            if (!property.isEmpty()) {
+                addPropertyToHeaders(property, headers, jmsHeaders);
+            }
+        }
+    }
+
+    private static void addPropertyToHeaders(String property, JSONObject headers, JSONObject jmsHeaders) {
+        String headerKey;
+        String headerValue;
+
+        if (property.contains("=")) {
+            int equalsIndex = property.indexOf('=');
+            headerKey = property.substring(0, equalsIndex);
+            headerValue = property.substring(equalsIndex + 1);
+        } else {
+            headerKey = "header";
+            headerValue = property;
+        }
+
+        if (headerKey.startsWith("JMS")) {
+            jmsHeaders.put(headerKey, headerValue);
+        } else {
+            headers.put(headerKey, headerValue);
+        }
+
+    }
+
+    private static void handleJmsProperty(String key, Object value, JSONObject message, JSONObject jmsHeaders) {
+        if ("JMSMessageID".equalsIgnoreCase(key)) {
+            message.put("messageid", value);
+        } else if ("JMSTimestamp".equalsIgnoreCase(key)) {
+            message.put("timestamp", value);
+        }
+
+        jmsHeaders.put(key, value);
     }
 
 }

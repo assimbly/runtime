@@ -62,23 +62,17 @@ public class ActiveMQClassic implements Broker {
             String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
 
             if(brokerFile.exists()) {
-                log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
+                log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
                 URI configurationUri = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(configurationUri);
             }else {
                 this.setFileConfiguration("");
                 log.warn("No config file 'activemq.xml' found.");
-                log.info("Created default 'activemq.xml' stored in following directory: " + brokerFile.getAbsolutePath());
-                log.info("broker.xml documentation reference: https://activemq.apache.org/xml-configuration");
-                log.info("");
-                log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
+                log.info("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path= {}", baseDir);
 
                 brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
-
                 URI urlConfig = new URI(brokerUrl);
-
                 broker = BrokerFactory.createBroker(urlConfig);
-
             }
 
             if(!broker.isStarted()) {
@@ -91,17 +85,18 @@ public class ActiveMQClassic implements Broker {
 
             return status();
         }catch (Exception e) {
-            log.error("Failed to start broker. Reason: {}", e.getMessage());
-            return "Failed to start broker. Reason: " + e.getMessage();
+            log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
+
+            return "failed";
         }
 
     }
 
     public String startEmbedded() throws Exception {
 
-        broker = new BrokerService();
+        log.info("event=StartEmbeddedBroker status=starting url=tcp://127.0.0.1:61616");
 
-        log.info("Start broker in local mode on url: tcp://127.0.0.1:61616");
+        broker = new BrokerService();
 
         TransportConnector connector = new TransportConnector();
         connector.setUri(new URI("tcp://127.0.0.1:61616"));
@@ -117,12 +112,16 @@ public class ActiveMQClassic implements Broker {
             setBrokerViewMBean();
         }
 
+        log.info("event=StartEmbeddedBroker status={}",status());
+
         return status();
 
     }
 
     public String stop() throws Exception {
+        log.info("event=StopBroker status=stopping");
         broker.stop();
+        log.info("event=StopBroker status={}", status());
         return status();
     }
 
@@ -168,7 +167,7 @@ public class ActiveMQClassic implements Broker {
                 is.close();
 
             } catch (IOException e) {
-                log.error("Failed to get file configuration (activemq.xml). Reason:", e);
+                log.error("event=GetFileConfiguration status=failed config=activemq.xml reason={}", e.getMessage(), e);
             }
         }
 
@@ -205,7 +204,7 @@ public class ActiveMQClassic implements Broker {
 
         }
 
-        return "configuration set";
+        return "success";
     }
 
 
@@ -747,7 +746,7 @@ public class ActiveMQClassic implements Broker {
                 }
             }
         } catch (Exception e) {
-            log.error("Error to get all destinations and messages counts", e);
+            log.error("event=getFlowIdsMessageCountMap status=failed message=Failed to get all destinations and messages counts reason={}", e.getMessage(), e);
         }
 
         return destinationMessageCounts;

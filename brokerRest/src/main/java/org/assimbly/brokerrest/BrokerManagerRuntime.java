@@ -3,13 +3,12 @@ package org.assimbly.brokerrest;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for managing Broker.
+ * REST controller for managing the broker.
  */
 @RestController
 @RequestMapping("/api")
@@ -17,17 +16,19 @@ public class BrokerManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-	private ManagedBrokerRuntime broker;
-
-    private String result;
-
     private static final long ID = 0L;
+
+    private final ManagedBrokerRuntime broker;
+
+    public BrokerManagerRuntime(ManagedBrokerRuntime broker) {
+        this.broker = broker;
+    }
 
     /**
      * GET  /brokers/:id : get the broker status by "id".
      *
      * @param id, the id of the broker to retrieve
+     * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/status")
@@ -35,14 +36,15 @@ public class BrokerManagerRuntime {
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType
     ) {
-        log.debug("REST request to get status of Broker : {}", id);
+
+        log.debug("event=getBrokerStatus type=GET message=Request to get the status of the broker id={} type={}", id, brokerType);
 
         String status = "stopped";
 
         try {
             status = broker.getStatus(brokerType);
-        } catch (Exception e1) {
-            log.error("Can't get status", e1);
+        } catch (Exception e) {
+            log.error("event=getBrokerStatus type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
         }
 
         return status;
@@ -53,21 +55,22 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : get the broker info by "id".
      *
      * @param id, the id of the broker to retrieve
+     * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/info")
-    public String infoBroker(
+    public String getBrokerInfo(
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType
     ) {
-        log.debug("REST request to get status of Broker : {}", id);
+        log.debug("event=getBrokerInfo type=GET message=Request to get info about the broker id={} type={}", id, brokerType);
 
         String info = "unknown";
 
         try {
             info = broker.getInfo(brokerType);
-        } catch (Exception e1) {
-            log.error("Can't get status", e1);
+        } catch (Exception e) {
+            log.error("event=getBrokerInfo type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
         }
 
         return info;
@@ -76,7 +79,8 @@ public class BrokerManagerRuntime {
     /**
      * GET  /brokers/:id : start the broker by "id".
      *
-     * @param id the id of the brokerDTO to retrieve
+     * @param id the id of the broker
+     * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/start")
@@ -85,19 +89,15 @@ public class BrokerManagerRuntime {
             @RequestParam(value = "brokerType") String brokerType,
             @RequestParam(value = "brokerConfigurationType") String brokerConfigurationType
     ) throws Exception {
-        log.debug("REST request to start Broker : {}", id);
+
+        log.debug("event=startBroker type=GET message=Request to start the broker id={} type={} configurationType={}", id, brokerType, brokerConfigurationType);
 
         try {
    			String status = broker.start(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/start", status);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/start", status);
         } catch (Exception e) {
-        	log.error("Can't start broker", e);
-            try {
-                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
-            } catch (Exception ex) {
-                log.error("Can't start broker | Return error", ex);
-                return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{brokerType}/start", "error");
-            }
+            log.error("event=startBroker type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
         }
 
     }
@@ -105,7 +105,8 @@ public class BrokerManagerRuntime {
     /**
      * GET  /brokers/:id : restart the broker by "id".
      *
-     * @param id the id of the brokerDTO to retrieve
+     * @param id the id of the broker
+     * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/restart")
@@ -114,23 +115,24 @@ public class BrokerManagerRuntime {
             @RequestParam(value = "brokerType") String brokerType,
             @RequestParam(value = "brokerConfigurationType") String brokerConfigurationType
     ) throws Exception {
-        log.debug("REST request to restart Broker : {}", id);
+
+        log.debug("event=restartBroker type=GET message=Request to restart the broker id={} type={} brokerConfigurationType={}", id, brokerType, brokerConfigurationType);
 
         try {
             String status = broker.restart(brokerType,brokerConfigurationType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", status);
         } catch (Exception e) {
-        	log.error("Can't restart broker", e);
+            log.error("event=restartBroker type=GET id={} type={} brokerConfigurationType={} reason={}", id, brokerType, brokerConfigurationType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
-    	}
+        }
 
     }
-
 
     /**
      * GET  /brokers/:id : stop the broker by "id".
      *
-     * @param id the id of the brokerDTO to retrieve
+     * @param id the id of the broker
+     * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @GetMapping("/brokers/{id}/stop")
@@ -138,18 +140,18 @@ public class BrokerManagerRuntime {
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType
     ) throws Exception {
-        log.debug("REST request to stop Broker : {}", id);
+
+        log.debug("event=stopBroker type=GET message=Request to stop the broker id={} type={}", id, brokerType);
 
         try {
             String status = broker.stop(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", status);
         } catch (Exception e) {
-        	log.error("Can't stop broker", e);
+            log.error("event=stopBroker type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/stop", e.getMessage());
     	}
 
     }
-
 
     /**
      * GET  /brokers/{brokerType}/connections: get list of all broker connections.
@@ -166,13 +168,13 @@ public class BrokerManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     )  throws Exception {
 
-        log.debug("REST request to get get connections");
+        log.debug("event=getConnections type=GET message=Get list of all broker connections type={}", brokerType);
 
         try {
-            result = broker.getConnections(brokerType, mediaType);
+            String result = broker.getConnections(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
         } catch (Exception e) {
-            log.error("Can't get connections", e);
+            log.error("event=getConnections type=GET type={} reason={}", brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
         }
 
@@ -193,13 +195,13 @@ public class BrokerManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     )  throws Exception {
 
-        log.debug("REST request to get get consumers");
+        log.debug("event=getConsumers type=GET message=Get list of all broker consumers type={}", brokerType);
 
         try {
-            result = broker.getConsumers(brokerType, mediaType);
+            String result = broker.getConsumers(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/consumers", result);
         } catch (Exception e) {
-            log.error("Can't get topics information", e);
+            log.error("event=getConsumers type=GET type={} reason={}", brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
         }
 

@@ -3,26 +3,26 @@ package org.assimbly.brokerrest;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for managing Broker.
+ * REST controller for managing queues on the broker.
  */
 @RestController
 @RequestMapping("/api")
 public class QueueManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-	
-    @Autowired
-    private ManagedBrokerRuntime broker;
-
-	private String result;
 
     private static final long ID = 0L;
+
+    private final ManagedBrokerRuntime broker;
+
+    public QueueManagerRuntime(ManagedBrokerRuntime broker) {
+        this.broker = broker;
+    }
 
     /**
      * POST  /brokers/{brokerType}/queue/{queueName} : creates a queue on the broker.
@@ -41,13 +41,13 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
-        log.debug("REST request to create queue : {}", queueName);
+        log.debug("event=createQueue type=POST message=Create a new queue name={} type={}", queueName, brokerType);
 
         try {
-            result = broker.createQueue(brokerType,queueName);
+            String result = broker.createQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
-            log.error("Can't create queue", e);
+            log.error("event=createQueue type=POST name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
@@ -70,13 +70,13 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
-        log.debug("REST request to get delete queue : {}", queueName);
+        log.debug("event=deleteQueue type=DELETE message=Delete a queue name={} type={}", queueName, brokerType);
 
         try {
-            result = broker.deleteQueue(brokerType,queueName);
+            String result = broker.deleteQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
-            log.error("Can't delete queue", e);
+            log.error("event=deleteQueue type=DELETE name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
@@ -99,18 +99,17 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
-        log.debug("REST request to get get queue information : {}", queueName);
+        log.debug("event=getQueue type=GET message=Get queue info name={} type={}", queueName, brokerType);
 
         try {
-            result = broker.getQueue(brokerType,queueName, mediaType);
+            String result = broker.getQueue(brokerType,queueName, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
-            log.error("Can't get queue information", e);
+            log.error("event=getQueue type=GET name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
         }
 
     }
-
 
     /**
      * GET  /brokers/{brokerType}/queues : get information on all queues on the broker
@@ -127,13 +126,13 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
-        log.debug("REST request to get get queues");
+        log.debug("event=getQueues type=GET message=Get queues info type={}", brokerType);
 
         try {
-            result = broker.getQueues(brokerType, mediaType);
+            String result = broker.getQueues(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queues", result);
         } catch (Exception e) {
-            log.error("Can't get queues information", e);
+            log.error("event=getQueues type=GET type={} reason={}", brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queues", e.getMessage());
         }
 
@@ -156,13 +155,13 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) throws Exception {
 
-        log.debug("REST request to clear queue : {}", queueName);
+        log.debug("event=clearQueue type=POST message=Deletes messages on the queue name={} type={}", queueName, brokerType);
 
         try {
-            result = broker.clearQueue(brokerType,queueName);
+            String result = broker.clearQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
         } catch (Exception e) {
-            log.error("Can't clear queue", e);
+            log.error("event=clearQueue type=POST name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", e.getMessage());
         }
 
@@ -183,13 +182,13 @@ public class QueueManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     )  throws Exception {
 
-        log.debug("REST request to clear queues : this removes all messages on the broker!");
+        log.debug("event=clearQueues type=POST message=Deletes messages on all queue type={}", brokerType);
 
         try {
-            result = broker.clearQueues(brokerType);
+            String result = broker.clearQueues(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queues/clear", result);
         } catch (Exception e) {
-            log.error("Can't clear queues", e);
+            log.error("event=clearQueues type=POST type={} reason={}", brokerType, e.getMessage(), e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queues/clear", e.getMessage());
         }
 
