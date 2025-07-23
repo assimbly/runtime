@@ -1,5 +1,6 @@
 package org.assimbly.integrationrest;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,7 +16,6 @@ import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +36,13 @@ public class ValidationRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
-
     private boolean plainResponse;
 
-    private Integration integration;
+    private final Integration integration;
+
+    public ValidationRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
 
     //validations
 
@@ -57,7 +58,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             ValidationErrorMessage cronResp = integration.validateCron(expression);
 
@@ -88,7 +88,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             HttpsCertificateValidator.ValidationResult certificateResp = integration.validateCertificate(httpsUrl);
 
@@ -118,7 +117,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             ValidationErrorMessage urlResp = integration.validateUrl(httpUrl);
 
@@ -130,6 +128,7 @@ public class ValidationRuntime {
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);
             }
+
         } catch (Exception e) {
             log.error("ErrorMessage",e);
             return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/url", e.getMessage(), plainResponse);
@@ -151,20 +150,23 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             List<Expression> expressionsList = null;
             if(body!=null){
                 expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<Expression>>(){});
             }
 
-            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList, isPredicate);
+            List<Expression> expressions = integration.validateExpressions(expressionsList, isPredicate);
 
-            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            final ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(out, expressionResp);
-
-            return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
+            if(expressions!=null) {
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final ObjectMapper mapper = new ObjectMapper();
+                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // Ignore null fields
+                mapper.writeValue(out, expressions);
+                return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
+            } else {
+                return ResponseUtil.createNoContentResponse(1L, mediaType);
+            }
 
         } catch (Exception e) {
             log.error("Error",e);
@@ -187,7 +189,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             FtpSettings ftpSettings = null;
             if(body!=null){
@@ -226,7 +227,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             Regex regex = null;
             if(body!=null){
@@ -267,7 +267,6 @@ public class ValidationRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             EvaluationRequest scriptRequest = null;
             if(body!=null){
@@ -306,7 +305,6 @@ public class ValidationRuntime {
             @RequestHeader(value = "Uri") String uri
     ) throws Exception {
         try {
-            integration = integrationRuntime.getIntegration();
             String flowValidation = integration.validateFlow(uri);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/uri",flowValidation);
         } catch (Exception e) {
@@ -333,7 +331,6 @@ public class ValidationRuntime {
             if(body!=null){
                 paramList = new ObjectMapper().readValue(body, new TypeReference<HashMap<String,String>>(){});
 
-                integration = integrationRuntime.getIntegration();
                 List<ValidationErrorMessage> expressionResp = integration.validateXslt(
                         paramList.get("xsltUrl"),
                         paramList.get("xsltBody")
@@ -369,7 +366,6 @@ public class ValidationRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
             String testConnectionResult = integration.testConnection(host, port, timeout);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",testConnectionResult);
         } catch (Exception e) {

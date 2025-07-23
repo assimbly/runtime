@@ -6,7 +6,6 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +23,13 @@ public class FlowConfigurerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
-
     private boolean plainResponse;
 
-    private Integration integration;
+	private final Integration integration;
+
+	public FlowConfigurerRuntime(IntegrationRuntime integrationRuntime) {
+		this.integration = integrationRuntime.getIntegration();
+	}
 
     /**
      * POST  /integration/flow/{flowId}/configure : Set configuration.
@@ -51,7 +51,6 @@ public class FlowConfigurerRuntime {
 	) throws Exception {
 
        	try {
-            integration = integrationRuntime.getIntegration();
             integration.setFlowConfiguration(flowId, mediaType, configuration);
        		return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/configure","Flow configuration set");
    		} catch (Exception e) {
@@ -79,7 +78,6 @@ public class FlowConfigurerRuntime {
     	plainResponse = true;
 
     	try {
-            integration = integrationRuntime.getIntegration();
 			String flowConfiguration = integration.getFlowConfiguration(flowId, mediaType);
 			if(flowConfiguration.startsWith("Error")||flowConfiguration.startsWith("Warning")) {
 				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/configure",flowConfiguration);
@@ -101,7 +99,6 @@ public class FlowConfigurerRuntime {
 	) throws Exception {
 
 		try {
-			integration = integrationRuntime.getIntegration();
 			boolean hasFlow = integration.hasFlow(flowId);
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow", Boolean.toString(hasFlow));
 		} catch (Exception e) {
@@ -118,7 +115,6 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
 		try {
-            integration = integrationRuntime.getIntegration();
             String documentation = integration.getDocumentationVersion();
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/documentation/version",documentation,plainResponse);
 		} catch (Exception e) {
@@ -139,7 +135,6 @@ public class FlowConfigurerRuntime {
     	plainResponse = true;
 
 		try {
-            integration = integrationRuntime.getIntegration();
             String documentation = integration.getDocumentation(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/documentation/{componenttype}",documentation);
@@ -166,7 +161,6 @@ public class FlowConfigurerRuntime {
 		plainResponse = true;
 
 		try {
-			integration = integrationRuntime.getIntegration();
 			String components = integration.getComponents(includeCustomComponents, mediaType);
 
 			if(components.startsWith("Unknown")) {
@@ -191,7 +185,7 @@ public class FlowConfigurerRuntime {
     	plainResponse = true;
 
 		try {
-            integration = integrationRuntime.getIntegration();
+
             String documentation = integration.getComponentSchema(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				//return empty default if unknown
@@ -217,7 +211,6 @@ public class FlowConfigurerRuntime {
     	plainResponse = true;
 
 		try {
-            integration = integrationRuntime.getIntegration();
             String documentation = integration.getComponentParameters(componenttype, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/options/{componenttype}",documentation);
@@ -239,7 +232,6 @@ public class FlowConfigurerRuntime {
 	) throws Exception {
 
 		try {
-            integration = integrationRuntime.getIntegration();
             String camelRoute = integration.getCamelRouteConfiguration(flowId, mediaType);
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/route",camelRoute,true);
 		} catch (Exception e) {
@@ -258,7 +250,6 @@ public class FlowConfigurerRuntime {
 	) throws Exception {
 
 		try {
-			integration = integrationRuntime.getIntegration();
 			String stepTemplate = integration.getStepTemplate(mediaType, templatename);
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/step/{templatename}",stepTemplate,true);
 		} catch (Exception e) {
@@ -275,7 +266,6 @@ public class FlowConfigurerRuntime {
 	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
 
 		try {
-			integration = integrationRuntime.getIntegration();
 			String stepTemplates = integration.getListOfStepTemplates();
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/list/steps",stepTemplates,true);
 		} catch (Exception e) {
@@ -295,11 +285,10 @@ public class FlowConfigurerRuntime {
 	) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
             boolean removedFlow = integration.removeFlow(flowId);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/remove", Boolean.toString(removedFlow));
         } catch (Exception e) {
-			log.error("Remove flow " + flowId +" failed",e);
+            log.error("Remove flow {} failed", flowId, e);
 			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/remove",e.getMessage());
         }
 

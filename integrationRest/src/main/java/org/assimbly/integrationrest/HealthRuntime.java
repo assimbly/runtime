@@ -5,7 +5,6 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +20,13 @@ public class HealthRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
-
-    private Integration integration;
-
     private boolean plainResponse;
+
+    private final Integration integration;
+
+    public HealthRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
 
     //healtchecks of flows and steps
 
@@ -39,7 +39,6 @@ public class HealthRuntime {
             @RequestHeader(required = true, defaultValue = "route", value = "Type") String type) throws Exception {
 
         plainResponse = true;
-        integration = integrationRuntime.getIntegration();
 
         try {
             String health = integration.getHealth(type, mediaType);
@@ -62,7 +61,6 @@ public class HealthRuntime {
     ) throws Exception {
 
         plainResponse = true;
-        integration = integrationRuntime.getIntegration();
 
         try {
             String health = integration.getHealthByFlowIds(flowIds, type, mediaType);
@@ -92,8 +90,6 @@ public class HealthRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             String flowHealth = integration.getFlowHealth(flowId, type, includeSteps, includeError, includeDetails, mediaType);
             if(flowHealth.startsWith("Error")||flowHealth.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/health",flowHealth,plainResponse);
@@ -119,8 +115,6 @@ public class HealthRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             String flowHealth = integration.getFlowStepHealth(flowId, stepId, type, includeError, includeDetails, mediaType);
             if(flowHealth.startsWith("Error")||flowHealth.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/health",flowHealth,plainResponse);

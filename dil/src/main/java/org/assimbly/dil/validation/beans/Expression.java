@@ -7,15 +7,17 @@ public class Expression {
     private String id;
 
     private String name;
-    private String expressionValue;
+    private String expression;
     private String expressionType;
     private String nextNode;
+    private boolean valid;
+    private String message;
 
     public Expression() { }
 
-    public Expression(String name, String expressionValue, String expressionType, String nextNode) {
+    public Expression(String name, String expression, String expressionType, String nextNode) {
         this.name = name;
-        this.expressionValue = expressionValue;
+        this.expression = expression;
         this.expressionType = expressionType;
         this.nextNode = nextNode;
     }
@@ -29,11 +31,12 @@ public class Expression {
     }
 
     public String getExpression() {
-        return expressionValue;
+        return expression;
     }
 
-    public void setExpression(String expressionValue) {
-        this.expressionValue = expressionValue;}
+    public void setExpression(String expression) {
+        this.expression = expression;
+    }
 
     public String getNextNode() {
         return nextNode;
@@ -59,4 +62,21 @@ public class Expression {
     public void setExpressionType(String expressionType) {
         this.expressionType = expressionType;
     }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
 }

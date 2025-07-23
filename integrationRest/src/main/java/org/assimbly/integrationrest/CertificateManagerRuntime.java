@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import org.assimbly.integration.Integration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.CertificatesUtil;
 import org.assimbly.util.rest.ResponseUtil;
@@ -8,7 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,8 +40,11 @@ public class CertificateManagerRuntime {
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
+    private final Integration integration;
+
+    public CertificateManagerRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
 
     /**
      * POST  /certificates/ : Sets TLS certificates.
@@ -64,10 +67,10 @@ public class CertificateManagerRuntime {
         log.debug("REST request to set certificates for url: {}", url);
 
         try {
-            integrationRuntime.getIntegration().setCertificatesInKeystore(keystoreName, keystorePassword, url);
+            integration.setCertificatesInKeystore(keystoreName, keystorePassword, url);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/setcertificates/{id}","Certificates set");
         } catch (Exception e) {
-            log.error("Set certificates for keystore=" + keystoreName + " for url=" + url + " failed",e);
+            log.error("Set certificates for keystore={} for url={} failed", keystoreName, url, e);
 
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/setcertificates/{id}",e.getMessage());
         }
@@ -151,7 +154,7 @@ public class CertificateManagerRuntime {
 
             String result = certificatesAsJSon(certificateMap, null, keystoreName);
 
-            log.debug("Uploaded certificate: " + cert);
+            log.debug("Uploaded certificate: {}", cert);
 
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/upload", result);
 
@@ -293,9 +296,9 @@ public class CertificateManagerRuntime {
             Instant certificateExpiry = Instant.parse(certificate.getString("certificateExpiry"));
 
             if(dateNow.isAfter(certificateExpiry)) {
-                log.warn("Certificate '" + certificateName + "' for url " + url  + " is expired (Expiry Date: " + certificateExpiry + ")");
+                log.warn("Certificate '{}' for url {} is expired (Expiry Date: {})", certificateName, url, certificateExpiry);
             }else {
-                log.info("Certificate '" + certificateName + "' for url " + url + " is valid (Expiry Date: " + certificateExpiry + ")");
+                log.info("Certificate '{}' for url {} is valid (Expiry Date: {})", certificateName, url, certificateExpiry);
             }
 
             X509Certificate real = CertificatesUtil.convertPemToX509Certificate(certificateFile);

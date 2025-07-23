@@ -3184,7 +3184,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public List<ValidationErrorMessage> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
+	public List<org.assimbly.dil.validation.beans.Expression> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
 		ExpressionsValidator expressionValidator = new ExpressionsValidator();
 		return expressionValidator.validate(expressions, isPredicate);
 	}

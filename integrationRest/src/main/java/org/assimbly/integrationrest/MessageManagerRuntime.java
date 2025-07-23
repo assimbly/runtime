@@ -9,7 +9,6 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +28,11 @@ public class MessageManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
+    private final Integration integration;
 
-    private Integration integration;
+    public MessageManagerRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
 
     /**
      * POST  /integration/send : Send messages to an step (fire and forget).
@@ -61,8 +61,6 @@ public class MessageManagerRuntime {
         TreeMap<String, String> serviceMap;
 
         TreeMap<String, Object> headerMap = new TreeMap<>();
-
-        integration = integrationRuntime.getIntegration();
 
         try {
             if(serviceId != null && !serviceId.isBlank()) {
@@ -112,8 +110,6 @@ public class MessageManagerRuntime {
 
         String body = requestBody.orElse(" ");
         String result;
-
-        integration = integrationRuntime.getIntegration();
 
         TreeMap<String, String> serviceMap;
 
@@ -177,7 +173,6 @@ public class MessageManagerRuntime {
 
 
     private void setService(TreeMap<String, String> serviceMap, String stepId) throws Exception {
-        integration = integrationRuntime.getIntegration();
         integration.setConnection(serviceMap,"to." + stepId + ".service.id");
     }
 

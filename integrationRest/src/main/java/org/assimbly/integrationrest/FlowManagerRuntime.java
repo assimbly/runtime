@@ -7,7 +7,6 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,17 +24,18 @@ public class FlowManagerRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
-
-    private Integration integration;
-
     private String flowId;
 
     private boolean plainResponse;
 
     private String status;
 
+    private final Integration integration;
+
+    public FlowManagerRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
+    
     //manage flows
     @GetMapping(
             path = "/integration/flow/{flowId}/start",
@@ -50,8 +50,6 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-
-            integration = integrationRuntime.getIntegration();
 
             status = integration.startFlow(flowId, timeout);
 
@@ -86,8 +84,6 @@ public class FlowManagerRuntime {
 
         try {
 
-            integration = integrationRuntime.getIntegration();
-
             status = integration.stopFlow(flowId, timeout);
 
             if(mediaType.equals("application/xml")){
@@ -120,7 +116,6 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.restartFlow(flowId, timeout);
 
@@ -153,7 +148,6 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.pauseFlow(flowId);
 
@@ -186,7 +180,6 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.resumeFlow(flowId);
 
@@ -223,7 +216,6 @@ public class FlowManagerRuntime {
         log.info("Install routeId: " + routeId + ". Configuration:\n\n" + route);
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             if(contentType.equals("application/json")){
                 route = DocConverter.convertJsonToXml(route);
@@ -264,7 +256,6 @@ public class FlowManagerRuntime {
         log.info("Install flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.installFlow(flowId, timeout, contentType, configuration);
 
@@ -294,7 +285,7 @@ public class FlowManagerRuntime {
             @RequestBody String configuration
     ) throws Exception {
         String xml = DocConverter.convertJsonToXml(configuration);
-        status =integrationRuntime.getIntegration().fastInstallFlow(flowId, xml);
+        status = integration.fastInstallFlow(flowId, xml);
         if (status.contains("Started flow successfully")) {
             return ResponseUtil.createSuccessResponse(1L, "application/json","/integration/flow/{flowId}/fastinstall",status,true);
         } else {
@@ -315,8 +306,6 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-
-            integration = integrationRuntime.getIntegration();
 
             status = integration.uninstallFlow(flowId, timeout);
 
@@ -348,7 +337,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.fileInstallFlow(flowId, configuration);
 
@@ -375,7 +363,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
 
             status = integration.fileUninstallFlow(flowId);
 
@@ -403,8 +390,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             boolean started = integration.isFlowStarted(flowId);
             String isStarted = Boolean.toString(started);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/isstarted",isStarted,isStarted,flowId);
@@ -427,7 +412,7 @@ public class FlowManagerRuntime {
         plainResponse = true;
 
         try {
-            integration = integrationRuntime.getIntegration();
+
             String info = integration.getFlowInfo(flowId, mediaType);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/info",info,true);
         } catch (Exception e) {
@@ -447,8 +432,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             status = integration.getFlowStatus(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/status",status,status,flowId);
         } catch (Exception e) {
@@ -468,8 +451,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             String uptime = integration.getFlowUptime(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/uptime",uptime,uptime,flowId);
         } catch (Exception e) {
@@ -489,8 +470,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             String lastError = integration.getFlowLastError(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/lasterror",lastError,lastError,flowId);
         } catch (Exception e) {
@@ -509,8 +488,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
-
             String alertsLog = integration.getFlowAlertsLog(flowId,100);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts",alertsLog,alertsLog,flowId);
         } catch (Exception e) {
@@ -529,7 +506,7 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
+
             String numberOfEntries = integration.getFlowAlertsCount(flowId);
 
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts/count",numberOfEntries,numberOfEntries,flowId);
@@ -549,7 +526,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-            integration = integrationRuntime.getIntegration();
             String eventsLog = integration.getFlowEventsLog(flowId,100);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/events",eventsLog,eventsLog,flowId);
         } catch (Exception e) {
@@ -572,9 +548,6 @@ public class FlowManagerRuntime {
     ) throws Exception {
 
         try {
-
-
-            integration = integrationRuntime.getIntegration();
 
             Thread thread = new Thread(() -> {
 

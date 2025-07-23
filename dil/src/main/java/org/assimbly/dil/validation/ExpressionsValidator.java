@@ -1,80 +1,81 @@
 package org.assimbly.dil.validation;
 
+import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.catalog.LanguageValidationResult;
 import org.assimbly.dil.validation.beans.Expression;
-import org.assimbly.dil.validation.expressions.*;
-import org.assimbly.util.error.ValidationErrorMessage;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathCompiler;
+
 import java.util.List;
 
 public class ExpressionsValidator {
 
-    private static final ValidationErrorMessage EMPTY_EXPRESSION_ERROR = new ValidationErrorMessage("Empty expressions aren't allowed!");
+    private final DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    List<ValidationErrorMessage> validationErrors = new ArrayList<>();
-
-    private final JsonPathValidator jsonPathValidator = new JsonPathValidator();
-    private final SimpleValidator simpleValidator = new SimpleValidator();
-    private final XPathValidator xpathValidator = new XPathValidator();
-    private final ConstantValidator constantValidator = new ConstantValidator();
-    private final GroovyValidator groovyValidator = new GroovyValidator();
-
-    public List<ValidationErrorMessage> validate(List<Expression> expressions, boolean isPredicate) {
-
-        isExpressionsEmpty(expressions);
-
-        checkExpressions(expressions,isPredicate);
-
-        if (validationErrors.isEmpty())
-            return Collections.emptyList();
-
-        return validationErrors;
-    }
-
-    private void checkExpressions(List<Expression> expressions, boolean isPredicate) {
+    public List<Expression> validate(List<Expression> expressions, boolean isPredicate) {
 
         for (Expression expression : expressions) {
+            validateExpression(expression, isPredicate);
+        }
 
-            ValidationErrorMessage error;
+        return expressions;
 
-            switch(expression.getExpressionType()) {
-                case "constant":
-                    error = constantValidator.validate(expression);
-                    break;
-                case "groovy":
-                    error = groovyValidator.validate(expression);
-                    break;
-                case "jsonpath":
-                    error = jsonPathValidator.validate(expression);
-                    break;
-                case "simple":
-                    if(isPredicate){
-                        error = simpleValidator.validatePredicate(expression);
-                    }else{
-                        error = simpleValidator.validate(expression);
-                    }
-                    break;
-                case "xpath":
-                    error = xpathValidator.validate(expression);
-                    break;
-                default:
-                    throw new RuntimeException("Could not validate the type of expression submitted.");
+    }
+
+    private void validateExpression(Expression expression, boolean isPredicate) {
+
+        if (isBlank(expression.getName())) {
+            expression.setValid(false);
+            expression.setMessage("Header name cannot be empty");
+            return;
+        }
+
+        if (isBlank(expression.getExpression())) {
+            expression.setValid(false);
+            expression.setMessage("Expression cannot be empty");
+            return;
+        }
+
+        if (expression.getExpressionType().equalsIgnoreCase("xpath")) {
+            String result = validateXpathExpression(expression.getExpression());
+            if(result.equalsIgnoreCase("valid")){
+                expression.setValid(true);
+            }else{
+                expression.setValid(false);
+                expression.setMessage(result);
             }
+            return;
+        }
 
-            if (error != null) {
-                validationErrors.add(error);
-            }
+        LanguageValidationResult result = isPredicate
+                ? catalog.validateLanguagePredicate(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression())
+                : catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression());
 
+        expression.setValid(result.isSuccess());
+        if (!result.isSuccess()) {
+            expression.setMessage(result.getError());
         }
 
     }
 
-    private void  isExpressionsEmpty(List<Expression> expressions) {
-        if (expressions.isEmpty()) {
-            validationErrors.add(EMPTY_EXPRESSION_ERROR);
-        }
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
+    private String validateXpathExpression(String expression){
+
+        try {
+            Processor proc = new Processor(false);
+            XPathCompiler xpath = proc.newXPathCompiler();
+            xpath.compile(expression);
+        } catch (SaxonApiException e) {
+            return e.getMessage();
+        }
+
+        return "valid";
+
+    }
 
 }

@@ -6,7 +6,6 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +31,11 @@ public class HealthIntegrationRuntime {
 
     private final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
-    @Autowired
-    private IntegrationRuntime integrationRuntime;
+    private final Integration integration;
+
+    public HealthIntegrationRuntime(IntegrationRuntime integrationRuntime) {
+        this.integration = integrationRuntime.getIntegration();
+    }
 
     private boolean plainResponse;
 
@@ -45,7 +47,6 @@ public class HealthIntegrationRuntime {
 
         plainResponse = true;
         long connectorId = 1;
-        Integration integration = integrationRuntime.getIntegration();
 
         try {
             String stats = integration.getStats(mediaType);
