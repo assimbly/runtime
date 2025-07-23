@@ -20,7 +20,7 @@ import java.util.Optional;
 public class MessageBrokerRuntime {
 
     private static final long ID = 0L;
-    
+
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final ManagedBrokerRuntime broker;
