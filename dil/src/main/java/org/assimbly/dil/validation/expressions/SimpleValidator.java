@@ -11,14 +11,23 @@ public class SimpleValidator implements Validator {
     @Override
     public ValidationErrorMessage validate(Expression expression){
 
-        DefaultCamelCatalog catalog = new DefaultCamelCatalog();
-        LanguageValidationResult result = catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), "simple", expression.getExpression());
+        if(expression.getName() == null || expression.getName().isEmpty())
+            return new ValidationErrorMessage("Header name cannot be empty");
+        else if(expression.getExpression() == null || expression.getExpression().isEmpty())
+            return new ValidationErrorMessage("Expression cannot be empty");
+        else {
 
-        if(result.isSuccess())
-            return null;
-        else{
-            return new ValidationErrorMessage("[" + expression.getName() + "]: " + result.getError());
+            DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+            LanguageValidationResult result = catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), "simple", expression.getExpression());
+
+            if(result.isSuccess())
+                return null;
+            else{
+                return new ValidationErrorMessage(result.getError());
+            }
+
         }
+
 
     }
 
@@ -30,7 +39,7 @@ public class SimpleValidator implements Validator {
         if(result.isSuccess())
             return null;
         else{
-            return new ValidationErrorMessage("[" + expression.getName() + "]: " + result.getError());
+            return new ValidationErrorMessage(result.getError());
         }
 
     }

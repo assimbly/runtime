@@ -4,39 +4,24 @@ import org.assimbly.dil.validation.beans.Expression;
 import org.assimbly.dil.validation.expressions.*;
 import org.assimbly.util.error.ValidationErrorMessage;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 public class ExpressionsValidator {
 
-    private static final ValidationErrorMessage EMPTY_EXPRESSION_ERROR = new ValidationErrorMessage("Empty expressions aren't allowed!");
+    private final JsonPathValidator jsonPathValidator = new JsonPathValidator();
+    private final SimpleValidator simpleValidator = new SimpleValidator();
+    private final XPathValidator xpathValidator = new XPathValidator();
+    private final ConstantValidator constantValidator = new ConstantValidator();
+    private final GroovyValidator groovyValidator = new GroovyValidator();
 
-    List<ValidationErrorMessage> validationErrors = new ArrayList<>();
-
-    private JsonPathValidator jsonPathValidator = new JsonPathValidator();
-    private SimpleValidator simpleValidator = new SimpleValidator();
-    private XPathValidator xpathValidator = new XPathValidator();
-    private ConstantValidator constantValidator = new ConstantValidator();
-    private GroovyValidator groovyValidator = new GroovyValidator();
-
-    public List<ValidationErrorMessage> validate(List<Expression> expressions, boolean isPredicate) {
-
-        isExpressionsEmpty(expressions);
-
-        checkExpressions(expressions,isPredicate);
-
-        if (validationErrors.isEmpty())
-            return null;
-
-        return validationErrors;
-    }
-
-    private void checkExpressions(List<Expression> expressions, boolean isPredicate) {
+    public List<Expression> validate(List<Expression> expressions, boolean isPredicate) {
 
         for (Expression expression : expressions) {
+
             ValidationErrorMessage error;
 
-            switch(expression.getExpressionType()) {
+            switch (expression.getExpressionType()) {
                 case "constant":
                     error = constantValidator.validate(expression);
                     break;
@@ -47,9 +32,9 @@ public class ExpressionsValidator {
                     error = jsonPathValidator.validate(expression);
                     break;
                 case "simple":
-                    if(isPredicate){
+                    if (isPredicate) {
                         error = simpleValidator.validatePredicate(expression);
-                    }else{
+                    } else {
                         error = simpleValidator.validate(expression);
                     }
                     break;
@@ -61,17 +46,15 @@ public class ExpressionsValidator {
             }
 
             if (error != null) {
-                validationErrors.add(error);
+                expression.setValid(false);
+                expression.setMessage(error.getError());
+            } else {
+                expression.setValid(true);
             }
         }
 
-    }
+        return expressions;
 
-    private void  isExpressionsEmpty(List<Expression> expressions) {
-        if (expressions.isEmpty()) {
-            validationErrors.add(EMPTY_EXPRESSION_ERROR);
-        }
     }
-
 
 }
