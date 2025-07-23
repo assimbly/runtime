@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import progress.message.jclient.ConnectionFactory;
 
-
 public class SonicMQConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());

@@ -8,7 +8,6 @@ import org.apache.camel.model.RouteConfigurationDefinition;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
-import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;

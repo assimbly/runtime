@@ -1,7 +1,6 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

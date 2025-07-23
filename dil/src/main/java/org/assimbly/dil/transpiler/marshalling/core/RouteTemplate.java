@@ -360,7 +360,7 @@ public class RouteTemplate {
 
     private boolean templateExists(String templateName) {
         String fullTemplateName = "kamelets/" + templateName + ".kamelet.yaml";
-        return CustomKameletCatalog.names.contains(fullTemplateName);
+        return CustomKameletCatalog.getNames().contains(fullTemplateName);
     }
 
 
@@ -667,29 +667,6 @@ public class RouteTemplate {
             } else {
                 outRulesList = outRulesList + "#|#" + newRule;
             }
-
-            /*
-            //adjust the templateid to call the correct template
-            String templateIdPrefix = null;
-
-            if (scheme.startsWith("split")) {
-                templateIdPrefix = "split";
-            } else if (scheme.startsWith("filter")) {
-                templateIdPrefix = "filter";
-            } else if (scheme.startsWith("dowhile")) {
-                templateIdPrefix = "dowhile";
-            } else if (scheme.startsWith("loop")) {
-                templateIdPrefix = "loop";
-            }
-
-            if (templateIdPrefix != null) {
-                templateId = templateIdPrefix + "-" + rule + "-router";
-                templatedRoute.removeAttribute("routeTemplateRef");
-                templatedRoute.setAttribute("routeTemplateRef", templateId);
-            }
-
-             */
-
 
         } else {
             if (outList == null) {

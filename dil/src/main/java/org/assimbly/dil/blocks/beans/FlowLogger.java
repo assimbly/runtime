@@ -16,9 +16,6 @@ public class FlowLogger implements Processor {
         String logLevel = exchange.getProperty("DovetailLogLevel", String.class);
 
         switch (logLevel) {
-            case "INFO":
-                log.info(messageToLog);
-                break;
             case "WARNING":
                 log.warn(messageToLog);
                 break;

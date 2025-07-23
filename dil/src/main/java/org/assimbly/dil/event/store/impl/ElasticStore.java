@@ -25,12 +25,10 @@ public class ElasticStore {
 
         this.store = store;
 
-        if(restClient == null){
-            try {
-                start();
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            start();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
         }
 
     }
@@ -44,17 +42,15 @@ public class ElasticStore {
                 new ResponseListener() {
                     @Override
                     public void onSuccess(Response response) {
-                        log.debug("Insert into elasticsearch. json=" + json);
+                        log.debug("Insert into elasticsearch. json={}", json);
                     }
 
                     @Override
-                    public void onFailure(Exception exception) {
-                        log.error("Failed to store event into elasticsearch. Reason: " + exception.getMessage());
+                    public void onFailure(Exception e) {
+                        log.error("Failed to store event into elasticsearch. Reason: {}", e.getMessage(), e);
                     }
                 });
     }
-
-
 
     public void start() throws MalformedURLException {
 
@@ -65,7 +61,7 @@ public class ElasticStore {
         int port = url.getPort();
         path = url.getPath();
 
-        log.info("Start elasticsearch client for url: " + uri);
+        log.info("Start elasticsearch client for url: {}", uri);
 
         restClient = RestClient.builder(new HttpHost(host, port, protocol)).build();
     }
@@ -74,7 +70,7 @@ public class ElasticStore {
 
         String uri = store.getUri();
 
-        log.info("Stop elasticsearch client for url: " + uri);
+        log.info("Stop elasticsearch client for url: {}", uri);
 
         restClient.close();
     }

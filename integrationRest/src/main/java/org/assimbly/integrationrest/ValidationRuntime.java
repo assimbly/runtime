@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
-import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.BadRequestResponse;
@@ -151,12 +151,12 @@ public class ValidationRuntime {
 
         try {
 
-            List<Expression> expressionsList = null;
+            List<ValidationExpression> expressionsList = null;
             if(body!=null){
-                expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<Expression>>(){});
+                expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<ValidationExpression>>(){});
             }
 
-            List<Expression> expressions = integration.validateExpressions(expressionsList, isPredicate);
+            List<ValidationExpression> expressions = integration.validateExpressions(expressionsList, isPredicate);
 
             if(expressions!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();

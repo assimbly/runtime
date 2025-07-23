@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
-
 public class AMQPConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
@@ -122,7 +121,7 @@ public class AMQPConnection {
 
         }
 
-        if(modifiedUrl.length() == 0){
+        if(modifiedUrl.isEmpty()){
             log.info("SSLEnabled Url: " + url);
             return url;
         }else{

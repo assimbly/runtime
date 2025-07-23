@@ -105,7 +105,7 @@ public class FileBasedTrustStore {
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                // not usd
+                // not used
             }
 
             @Override

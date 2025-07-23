@@ -142,9 +142,6 @@ public class FastFlowLoader extends RouteBuilder {
 			if (type.equals(routeTemplate) || type.equals(routeConfiguration)) {
 				String id = props.get(key + ".id");
 
-				//log.info("Installing " + type + " id=" + id);
-				//log.info("Step:\n\n" + entry.getValue());
-
 				try {
 					Resource step = ResourceHelper.fromString(type + "_" + id + ".xml", entry.getValue());
 					loader.loadRoutes(step);

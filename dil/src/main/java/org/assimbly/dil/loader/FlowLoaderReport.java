@@ -6,7 +6,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class FlowLoaderReport {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());

@@ -2,7 +2,7 @@ package org.assimbly.dil.validation.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Expression {
+public class ValidationExpression {
 
     private String id;
 
@@ -13,9 +13,9 @@ public class Expression {
     private boolean valid;
     private String message;
 
-    public Expression() { }
+    public ValidationExpression() { }
 
-    public Expression(String name, String expression, String expressionType, String nextNode) {
+    public ValidationExpression(String name, String expression, String expressionType, String nextNode) {
         this.name = name;
         this.expression = expression;
         this.expressionType = expressionType;

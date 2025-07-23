@@ -1,7 +1,8 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import com.ibm.mq.jms.MQConnectionFactory;
-import com.ibm.msg.client.wmq.WMQConstants;
+import com.ibm.msg.client.jms.JmsConstants;
+import com.ibm.msg.client.wmq.common.CommonConstants;
 import jakarta.jms.ConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
@@ -126,7 +127,7 @@ public class IBMMQConnection {
         cf.setChannel(channel); //communications link
         cf.setQueueManager(queueManager); //service provider
 
-        cf = setOptionalParameter(cf);
+        setOptionalParameter(cf);
 
         return createConnection(cf);
 
@@ -159,10 +160,23 @@ public class IBMMQConnection {
     //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
     private MQConnectionFactory setOptionalParameter(MQConnectionFactory cf) throws JMSException {
 
+        if (appName != null) {
+            cf.setAppName(appName);
+        }
+        if (clientId != null) {
+            cf.setClientID(clientId);
+        }
+        if (pollingIntervalAsString != null) {
+            cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));
+        }
+        if (maxBufferSizeAsString != null) {
+            cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));
+        }
+
         if (transportTypeAsString != null) {
             cf.setTransportType(Integer.parseInt(transportTypeAsString));
         } else {
-            cf.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+            cf.setTransportType(CommonConstants.WMQ_CM_CLIENT);
         }
 
         if (clientReconnectTimeOutAsString != null) {
@@ -177,10 +191,16 @@ public class IBMMQConnection {
             cf.setClientReconnectOptions(0);
         }
 
-        cf.setBooleanProperty(com.ibm.msg.client.wmq.common.CommonConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
+        cf.setBooleanProperty(JmsConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
 
-        cf.setBooleanProperty(WMQConstants.WMQ_MQMD_WRITE_ENABLED, true);
+        cf.setBooleanProperty(CommonConstants.WMQ_MQMD_WRITE_ENABLED, true);
 
+        configureChannelExits(cf);
+
+        return cf;
+    }
+
+    private void configureChannelExits(MQConnectionFactory cf) {
         if (channelReceiveExit != null) {
             cf.setReceiveExit(channelReceiveExit);
         }
@@ -199,20 +219,6 @@ public class IBMMQConnection {
         if (channelSecurityExitUserData != null) {
             cf.setSecurityExitInit(channelSecurityExitUserData);
         }
-        if (appName != null) {
-            cf.setAppName(appName);
-        }
-        if (clientId != null) {
-            cf.setClientID(clientId);
-        }
-        if (pollingIntervalAsString != null) {
-            cf.setPollingInterval(Integer.parseInt(pollingIntervalAsString));
-        }
-        if (maxBufferSizeAsString != null) {
-            cf.setMaxBufferSize(Integer.parseInt(maxBufferSizeAsString));
-        }
-
-        return cf;
     }
 
     private MQConnectionFactory createConnection(MQConnectionFactory cf) throws JMSException {
@@ -226,7 +232,7 @@ public class IBMMQConnection {
         } else
 
             if (username != null && !username.isEmpty()) {
-                cf.setStringProperty(WMQConstants.USERID, username);
+                cf.setStringProperty(JmsConstants.USERID, username);
             }
 
             try (var connection = cf.createConnection()) {

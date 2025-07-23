@@ -3,9 +3,8 @@ package org.assimbly.integration;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
-import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
@@ -1030,7 +1029,7 @@ public interface Integration {
 	 * @param  expressions the expression (for example simple, xpath, jsonpath or Groovy)
 	 * @return result of validation
 	 */
-    List<Expression> validateExpressions(List<Expression> expressions, boolean isPredicate);
+    List<ValidationExpression> validateExpressions(List<ValidationExpression> expressions, boolean isPredicate);
 
 	/**
 	 * Validates a ftp expression
@@ -1046,7 +1045,7 @@ public interface Integration {
 	 * @param  regex the regex expression
 	 * @return result of validation
 	 */
-    AbstractMap.SimpleEntry validateRegex(Regex regex);
+    AbstractMap.SimpleEntry<Integer, String> validateRegex(Regex regex);
 
 	/**
 	 * Validates a script

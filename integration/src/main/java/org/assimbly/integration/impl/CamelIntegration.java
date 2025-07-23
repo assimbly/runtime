@@ -44,6 +44,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.cookies.CookieStore;
 import org.assimbly.dil.blocks.beans.*;
@@ -395,7 +396,7 @@ public class CamelIntegration extends BaseIntegration {
 		List<String> resourceNames = getKamelets();
 
 		//Set to use the list globally
-		CustomKameletCatalog.names.addAll(resourceNames);
+		CustomKameletCatalog.addAllNames(resourceNames);
 
 		for(String resourceName: resourceNames){
 
@@ -498,12 +499,12 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(resourceAsString.contains("route:")){
 
-			resourceAsString = StringUtils.replaceOnce(resourceAsString,"route:","route:\n" +
+			resourceAsString = Strings.CS.replaceOnce(resourceAsString,"route:","route:\n" +
 					"      routeConfigurationId: \"{{routeConfigurationId}}\"");
 
 		}
 
-		resourceAsString = StringUtils.replaceOnce(resourceAsString, """
+		resourceAsString = Strings.CS.replaceOnce(resourceAsString, """
   template:
     from:""", """
   template:
@@ -511,11 +512,11 @@ public class CamelIntegration extends BaseIntegration {
       routeConfigurationId: "{{routeConfigurationId}}"
     from:""");
 
-		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
-		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
-		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
-		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
-		resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
+		resourceAsString = Strings.CS.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
+		resourceAsString = Strings.CS.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
+		resourceAsString = Strings.CS.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
+		resourceAsString = Strings.CS.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
+		resourceAsString = Strings.CS.replace(resourceAsString,"    properties:", properties,1);
 		resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
 		return ResourceHelper.fromString(resourceName, resourceAsString);
 
@@ -782,7 +783,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		if (configuration.startsWith("- from:") || configuration.contains("kind: Integration") || configuration.contains("kind: Kamelet")) {
 			if (configuration.startsWith("- from:")){
-				configuration= StringUtils.replace(configuration,"\n","\n  ");
+				configuration= Strings.CS.replace(configuration,"\n","\n  ");
 			}
 
 			configuration = StringUtils.substringAfter(configuration, "from:");
@@ -1105,7 +1106,8 @@ public class CamelIntegration extends BaseIntegration {
 				props.put("connection." + connectionId + ".port",connectionMap.get("port"));
 				props.put("connection." + connectionId + ".username",connectionMap.get("username"));
 				props.put("connection." + connectionId + ".password",connectionMap.get("password"));
-				props.put(entry.getKey(),StringUtils.replace(entry.getValue(),rabbitMQElement,""));
+				props.put(entry.getKey(), Strings.CS.replace(entry.getValue(),rabbitMQElement,""));
+
 
 			}
 		}
@@ -1726,7 +1728,7 @@ public class CamelIntegration extends BaseIntegration {
 				}
 			}
 		}
-		if(sb.toString().isEmpty()){
+		if(sb.isEmpty()){
 			flowInfo = "0";
 		} else{
 			flowInfo = sb.toString();
@@ -2059,7 +2061,10 @@ public class CamelIntegration extends BaseIntegration {
 	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
 
 		FlowStatistics stats = new FlowStatistics();
-		long total = 0, completed = 0, failed = 0, pending = 0;
+		long total = 0;
+		long completed = 0;
+		long failed = 0;
+		long pending = 0;
 
 		List<Long> uptimeList = new ArrayList<>();
 		List<Date> lastFailedList = new ArrayList<>();
@@ -3184,7 +3189,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public List<org.assimbly.dil.validation.beans.Expression> validateExpressions(List<org.assimbly.dil.validation.beans.Expression> expressions, boolean isPredicate) {
+	public List<org.assimbly.dil.validation.beans.ValidationExpression> validateExpressions(List<org.assimbly.dil.validation.beans.ValidationExpression> expressions, boolean isPredicate) {
 		ExpressionsValidator expressionValidator = new ExpressionsValidator();
 		return expressionValidator.validate(expressions, isPredicate);
 	}

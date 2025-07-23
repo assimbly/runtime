@@ -10,7 +10,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class JDBCConnection {
 
-
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final CamelContext context;

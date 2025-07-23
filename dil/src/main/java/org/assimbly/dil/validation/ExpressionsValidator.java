@@ -2,7 +2,7 @@ package org.assimbly.dil.validation;
 
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.LanguageValidationResult;
-import org.assimbly.dil.validation.beans.Expression;
+import org.assimbly.dil.validation.beans.ValidationExpression;
 
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -14,9 +14,9 @@ public class ExpressionsValidator {
 
     private final DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
-    public List<Expression> validate(List<Expression> expressions, boolean isPredicate) {
+    public List<ValidationExpression> validate(List<ValidationExpression> expressions, boolean isPredicate) {
 
-        for (Expression expression : expressions) {
+        for (ValidationExpression expression : expressions) {
             validateExpression(expression, isPredicate);
         }
 
@@ -24,7 +24,7 @@ public class ExpressionsValidator {
 
     }
 
-    private void validateExpression(Expression expression, boolean isPredicate) {
+    private void validateExpression(ValidationExpression expression, boolean isPredicate) {
 
         if (isBlank(expression.getName())) {
             expression.setValid(false);
