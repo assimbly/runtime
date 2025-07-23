@@ -1,59 +1,80 @@
 package org.assimbly.dil.validation;
 
+import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.catalog.LanguageValidationResult;
 import org.assimbly.dil.validation.beans.Expression;
-import org.assimbly.dil.validation.expressions.*;
-import org.assimbly.util.error.ValidationErrorMessage;
 
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathCompiler;
 
 import java.util.List;
 
 public class ExpressionsValidator {
 
-    private final JsonPathValidator jsonPathValidator = new JsonPathValidator();
-    private final SimpleValidator simpleValidator = new SimpleValidator();
-    private final XPathValidator xpathValidator = new XPathValidator();
-    private final ConstantValidator constantValidator = new ConstantValidator();
-    private final GroovyValidator groovyValidator = new GroovyValidator();
+    private final DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
     public List<Expression> validate(List<Expression> expressions, boolean isPredicate) {
 
         for (Expression expression : expressions) {
-
-            ValidationErrorMessage error;
-
-            switch (expression.getExpressionType()) {
-                case "constant":
-                    error = constantValidator.validate(expression);
-                    break;
-                case "groovy":
-                    error = groovyValidator.validate(expression);
-                    break;
-                case "jsonpath":
-                    error = jsonPathValidator.validate(expression);
-                    break;
-                case "simple":
-                    if (isPredicate) {
-                        error = simpleValidator.validatePredicate(expression);
-                    } else {
-                        error = simpleValidator.validate(expression);
-                    }
-                    break;
-                case "xpath":
-                    error = xpathValidator.validate(expression);
-                    break;
-                default:
-                    throw new RuntimeException("Could not validate the type of expression submitted.");
-            }
-
-            if (error != null) {
-                expression.setValid(false);
-                expression.setMessage(error.getError());
-            } else {
-                expression.setValid(true);
-            }
+            validateExpression(expression, isPredicate);
         }
 
         return expressions;
+
+    }
+
+    private void validateExpression(Expression expression, boolean isPredicate) {
+
+        if (isBlank(expression.getName())) {
+            expression.setValid(false);
+            expression.setMessage("Header name cannot be empty");
+            return;
+        }
+
+        if (isBlank(expression.getExpression())) {
+            expression.setValid(false);
+            expression.setMessage("Expression cannot be empty");
+            return;
+        }
+
+        if (expression.getExpressionType().equalsIgnoreCase("xpath")) {
+            String result = validateXpathExpression(expression.getExpression());
+            if(result.equalsIgnoreCase("valid")){
+                expression.setValid(true);
+            }else{
+                expression.setValid(false);
+                expression.setMessage(result);
+            }
+            return;
+        }
+
+        LanguageValidationResult result = isPredicate
+                ? catalog.validateLanguagePredicate(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression())
+                : catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression());
+
+        expression.setValid(result.isSuccess());
+        if (!result.isSuccess()) {
+            expression.setMessage(result.getError());
+        }
+
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private String validateXpathExpression(String expression){
+
+        try {
+            Processor proc = new Processor(false);
+            XPathCompiler xpath = proc.newXPathCompiler();
+            xpath.compile(expression);
+        } catch (SaxonApiException e) {
+            return e.getMessage();
+        }
+
+        return "valid";
 
     }
 
