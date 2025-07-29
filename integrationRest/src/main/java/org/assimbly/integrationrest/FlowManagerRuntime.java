@@ -275,24 +275,6 @@ public class FlowManagerRuntime {
 
     }
 
-    @PostMapping(
-            path = "/integration/flow/{flowId}/fastinstall",
-            consumes =  {MediaType.APPLICATION_JSON_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE}
-    )
-    public ResponseEntity<String> fastInstallFlow(
-            @PathVariable(value = "flowId") String flowId,
-            @RequestBody String configuration
-    ) throws Exception {
-        String xml = DocConverter.convertJsonToXml(configuration);
-        status = integration.fastInstallFlow(flowId, xml);
-        if (status.contains("Started flow successfully")) {
-            return ResponseUtil.createSuccessResponse(1L, "application/json","/integration/flow/{flowId}/fastinstall",status,true);
-        } else {
-            return ResponseUtil.createFailureResponse(1L, "application/json", "/integration/flow/{flowId}/fastinstall", status, true);
-        }
-    }
-
     @DeleteMapping(
             path = "/integration/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -324,61 +306,6 @@ public class FlowManagerRuntime {
         }
 
     }
-
-    @PostMapping(
-            path = "/integration/flow/{flowId}/install/file",
-            consumes = {MediaType.APPLICATION_XML_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> fileInstallFlow(
-            @PathVariable(value = "flowId") String flowId,
-            @RequestBody String configuration,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
-
-        try {
-
-            status = integration.fileInstallFlow(flowId, configuration);
-
-            if (status.equals("saved")) {
-                return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/install/file", "flow " + flowId + " saved in the deploy directory", "flow " + flowId + " saved in the deploy directory", flowId);
-            } else {
-                log.error("FlowManager Report:\n\n" + status);
-                throw new Exception(status);
-            }
-        } catch (Exception e) {
-            log.error("FileInstall flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/install/file", e.getMessage(), "unable to save flow " + flowId, flowId);
-        }
-
-    }
-
-    @DeleteMapping(
-            path = "/integration/flow/{flowId}/uninstall/file",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> fileUninstallFlow(
-            @PathVariable(value = "flowId") String flowId,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
-
-        try {
-
-            status = integration.fileUninstallFlow(flowId);
-
-            if (status.equals("deleted")) {
-                return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/uninstall/file", "flow " + flowId + " deleted from deploy directory", "flow " + flowId + " deleted from the deploy directory", flowId);
-            } else {
-                log.error("FlowManager Report:\n\n" + status);
-                throw new Exception(status);
-            }
-        } catch (Exception e) {
-            log.error("FileUnstall flow " + flowId + " failed",e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/uninstall/file", e.getMessage(), "unable to save flow " + flowId, flowId);
-        }
-
-    }
-
 
     @GetMapping(
             path = "/integration/flow/{flowId}/isstarted",

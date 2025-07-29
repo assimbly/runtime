@@ -13,7 +13,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.transform.TransformerException;
+import javax.xml.transform.*;
 import javax.xml.xpath.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -44,8 +44,9 @@ public class RouteTemplate {
     private String baseUri;
     private String outList;
     private String outRulesList;
-    private String updatedRouteConfigurationId;
+
     private static final String ZERO = "0";
+    private static final String SYNC_TRANSPORT = "sync";
 
     public RouteTemplate(TreeMap<String, String> properties, XMLConfiguration conf) {
         this.properties = properties;
@@ -70,7 +71,9 @@ public class RouteTemplate {
         createTemplateId(baseUri, type);
 
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
-            contentRouteDoc = new DocumentImpl();
+            if (contentRouteDoc == null) {
+                contentRouteDoc = new DocumentImpl();
+            }
             createContentRouter(links, stepXPath, type, stepId);
         }else if(baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, stepIndex, flowId, stepId);
@@ -127,8 +130,9 @@ public class RouteTemplate {
         Element fromEndpoint = contentRouteDoc.createElement("from");
 
         int index = 1;
+        int linksLength = links.length;
 
-        for(int i = 0; i < links.length; i++) {
+        for(int i = 0; i < linksLength; i++) {
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
@@ -323,8 +327,7 @@ public class RouteTemplate {
             Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
             String routeConfiguration = DocConverter.convertNodeToString(routeNode);
 
-
-            updatedRouteConfigurationId = baseUri + "_" + timestamp;
+            String updatedRouteConfigurationId = baseUri + "_" + timestamp;
             String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
 
             if (updatedRouteConfiguration.contains("<dataFormats>")){
@@ -476,7 +479,10 @@ public class RouteTemplate {
         }
 
         if(options!=null && !options.isEmpty() && !baseUri.contains("?")) {
-            uri = uri + "?" + options;
+            StringBuilder sb = new StringBuilder(uri); // Initialize with the base URI
+            sb.append("?");
+            sb.append(options);
+            uri = sb.toString();
         }
 
         createCoreMessageComponents();
@@ -487,7 +493,7 @@ public class RouteTemplate {
         transport = Objects.toString(conf.getProperty("integration/flows/flow[id='" + flowId + "']/transport"), null);
 
         if(transport==null){
-            transport = "sync";
+            transport = SYNC_TRANSPORT;
         }
     }
 
@@ -614,7 +620,7 @@ public class RouteTemplate {
     }
 
     public String createLinkTransport(String xpath){
-        return Objects.toString(conf.getProperty(xpath + "transport"), "sync");
+        return Objects.toString(conf.getProperty(xpath + "transport"), SYNC_TRANSPORT);
     }
 
     public String createLinkEndpoint(String linkTransport, String id){
@@ -690,10 +696,10 @@ public class RouteTemplate {
     }
 
     private void createConfigurationId(){
-        String routeConfiguratinID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
+        String routeConfigurationID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
 
-        if(routeConfiguratinID!=null){
-            Element param = createParameter(templateDoc, "routeconfigurationid", updatedRouteConfigurationId);
+        if(routeConfigurationID!=null){
+            Element param = createParameter(templateDoc, "routeconfigurationid", routeConfigurationID);
             templatedRoute.appendChild(param);
         }
     }

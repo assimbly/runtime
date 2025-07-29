@@ -1,21 +1,16 @@
 package org.assimbly.dil.transpiler;
 
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.BasicConfigurationBuilder;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.builder.fluent.XMLBuilderParameters;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -23,15 +18,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -47,12 +38,36 @@ public class XMLFileConfiguration {
 
 	protected static Logger log = LoggerFactory.getLogger(XMLFileConfiguration.class);
 
-	private TreeMap<String, String> properties;
 	private List<TreeMap<String, String>> propertiesList;
 
 	private XMLConfiguration conf;
+	private FileHandler fh;
 
 	private Document doc;
+
+    public XMLFileConfiguration() {
+		try {
+			initConf();
+		}catch (Exception e){
+			log.error("Configuration failed",e);
+		}
+    }
+
+	private void initConf() throws Exception {
+
+		DocumentBuilder docBuilder = setDocumentBuilder();
+
+		XMLBuilderParameters params = new Parameters().xml()
+				.setFileName("dil.xml")
+				.setDocumentBuilder(docBuilder)
+				.setSchemaValidation(true)
+				.setExpressionEngine(new XPathExpressionEngine());
+
+		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(params).getConfiguration();
+
+		fh = new FileHandler(conf);
+
+	}
 
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, String xml) throws Exception {
 
@@ -95,87 +110,27 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
-		log.info("Configuration File: " + xml);
+		log.info("Configuration File: {}", xml);
 
-		String dilXml = xml;
 		if(!xml.endsWith("</dil>")){
 			Transform transform = new Transform("transform-to-dil.xsl");
-			dilXml = transform.transformToDil(xml);
+			xml = transform.transformToDil(xml);
 		}
 
-		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
-
-		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
-				.setFileName("dil.xml")
-				.setDocumentBuilder(docBuilder)
-				.setSchemaValidation(true)
-				.setExpressionEngine(new XPathExpressionEngine())
-		).getConfiguration();
-
-		FileHandler fh = new FileHandler(conf);
-
-		InputStream is = DocConverter.convertStringToStream(dilXml);
-
-		fh.load(is);
-
-		properties = new Unmarshall().getProperties(conf,flowId);
-
-		IntegrationUtil.printTreemap(properties);
-
-		return properties;
-
-	}
-
-	public TreeMap<String, String> getFlowConfigurationMinimal(String flowId, String xml) throws Exception {
-
-		log.info("Configuration File: " + xml);
-
-		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
-
-		conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(new Parameters().xml()
-				.setFileName("dil.xml")
-				.setDocumentBuilder(docBuilder)
-				.setSchemaValidation(true)
-				.setExpressionEngine(new XPathExpressionEngine())
-		).getConfiguration();
-
-		FileHandler fh = new FileHandler(conf);
-
-		InputStream is = DocConverter.convertStringToStream(xml);
-
-		fh.load(is);
+		fh.load(new StringReader(xml));
 
 		return new Unmarshall().getProperties(conf,flowId);
 
 	}
 
-
-	public static boolean validateXMLSchema(String xsdPath, String xml){
-
-		try {
-
-			SchemaFactory factory =
-					SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-			Schema schema = factory.newSchema(new File(xsdPath));
-			Validator validator = schema.newValidator();
-			validator.validate(new StreamSource(new StringReader(xml)));
-		} catch (Exception e) {
-            log.error("Exception: {}", e.getMessage());
-			return false;
-		}
-		return true;
-	}
-
 	public String getRouteConfiguration(String xml) throws Exception {
 
-		log.info("Configuration File: " + xml);
+        log.info("Route Configuration File: {}", xml);
 
 		Transform transform = new Transform("transform-to-route.xsl");
 		return transform.transformToDil(xml);
 
 	}
-
-
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, URI uri) throws Exception {
 
@@ -183,7 +138,7 @@ public class XMLFileConfiguration {
 
 		Parameters params = new Parameters();
 
-		DocumentBuilder docBuilder = setDocumentBuilder("dil.xsd");
+		DocumentBuilder docBuilder = setDocumentBuilder();
 
 		if(scheme.startsWith("sonicfs")) {
 
@@ -200,7 +155,7 @@ public class XMLFileConfiguration {
 			File xml = new File(uri.getRawPath());
 
 			FileBasedConfigurationBuilder<XMLConfiguration> builder =
-					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
+					new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
 							.configure(params.xml()
 									.setFileName("dil.xml")
 									.setFile(xml)
@@ -217,8 +172,7 @@ public class XMLFileConfiguration {
 
 			URL url = uri.toURL();
 
-			FileBasedConfigurationBuilder<XMLConfiguration> builder =
-					new FileBasedConfigurationBuilder<XMLConfiguration>(XMLConfiguration.class)
+			FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
 							.configure(params.xml()
 									.setURL(url)
 									.setFileName("dil.xml")
@@ -234,9 +188,7 @@ public class XMLFileConfiguration {
 			throw new Exception("URI scheme for " + uri.getRawPath() + " is not supported");
 		}
 
-		properties = new Unmarshall().getProperties(conf,flowId);
-
-		return properties;
+        return new Unmarshall().getProperties(conf, flowId);
 	}
 
 	public String createConfiguration(String integrationId, List<TreeMap<String, String>> configurations) throws Exception {
@@ -255,7 +207,6 @@ public class XMLFileConfiguration {
 		}
 
 	}
-
 
 	public String createFlowConfiguration(TreeMap<String, String> configuration) throws Exception {
 
@@ -279,9 +230,9 @@ public class XMLFileConfiguration {
 		return xmlFlowConfiguration;
 	}
 
-	private DocumentBuilder setDocumentBuilder(String schemaFilename) throws SAXException, ParserConfigurationException {
+	private DocumentBuilder setDocumentBuilder() throws SAXException, ParserConfigurationException {
 
-		URL schemaUrl = this.getClass().getResource("/" + schemaFilename);
+		URL schemaUrl = this.getClass().getResource("/" + "dil.xsd");
 		Schema schema = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1").newSchema(schemaUrl);
 
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -289,9 +240,7 @@ public class XMLFileConfiguration {
 		docBuilderFactory.setSchema(schema);
 
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-		//if you want an exception to be thrown when there is invalid xml document,
-		//you need to set your own ErrorHandler because the default
-		//behavior is to just print an error message.
+
 		docBuilder.setErrorHandler(new ErrorHandler() {
 			@Override
 			public void warning(SAXParseException exception) throws SAXException {
@@ -328,47 +277,6 @@ public class XMLFileConfiguration {
 
 		return list;
 	}
-
-
-	public static class MapEntryConverter implements Converter {
-
-		public boolean canConvert(Class clazz) {
-			return AbstractMap.class.isAssignableFrom(clazz);
-		}
-
-		public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
-
-			AbstractMap<Object, Object> map = (AbstractMap<Object, Object>) value;
-			for (Map.Entry<Object, Object> obj : map.entrySet()) {
-                writer.startNode(obj.getKey().toString());
-				Object val = obj.getValue();
-				if ( null != val ) {
-					writer.setValue(val.toString());
-				}
-				writer.endNode();
-			}
-
-		}
-
-		public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-
-			Map<String, String> map = new HashMap<>();
-
-			while(reader.hasMoreChildren()) {
-				reader.moveDown();
-
-				String key = reader.getNodeName(); // nodeName aka element's name
-				String value = reader.getValue();
-				map.put(key, value);
-
-				reader.moveUp();
-			}
-
-			return map;
-		}
-
-	}
-
 
 }
 

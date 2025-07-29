@@ -202,13 +202,6 @@ public interface Integration {
     void setDebugging(boolean debugging);
 
 	/**
-	 * Turn on/off loading/starting flows (as file) from the deploy directory
-	 * @param deployOnStart if true then flows in the deploy directory are started on startup of Assimbly
-	 * @param deployOnChange if true then flows in the deploy directory are started on file change
-	 */
-    void setDeployDirectory(boolean deployOnStart, boolean deployOnChange) throws Exception;
-
-	/**
 	 * Turn on/off suppressLoggingOnTimeout
 	 * @param suppressLoggingOnTimeout to turn on debugging, false to turn it off
 	 */
@@ -644,42 +637,11 @@ public interface Integration {
 	 * Configure and Starts a flow (for testing)
 	 *
 	 * @param  flowId the id of the flow
-	 * @param  configuration (the XML, JSON or YAML file)
-	 * @return returns flow report
-	 * @throws Exception if flow doesn't start
-	 */
-	String fastInstallFlow(String flowId, String configuration) throws Exception;
-
-	/**
-	 * Configure and Starts a flow (for testing)
-	 *
-	 * @param  flowId the id of the flow
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
     String uninstallFlow(String flowId, long timeout) throws Exception;
 
-	/**
-	* Installs a flow by saving the configuration as a file in the deploy directory
-	*
-	* @param  flowId the id of the flow
-	* @param  configuration (the Camel routes XML)
-	* @return returns a confirmation message ("saved")
-	* @throws Exception if flow doesn't start
-	*/
-    String fileInstallFlow(String flowId, String configuration) throws Exception;
-
-
-	/**
-	* Uninstalls a flow by deleting the configuration as a file in the deploy directory
-	*
-	* @param  flowId the id of the flow
-	* @return returns a confirmation message ("deleted")
-	* @throws Exception if flow doesn't start
-	*/
-    String fileUninstallFlow(String flowId) throws Exception;
-
-	
 	/**
 	* Checks if a flow is started
 	*
@@ -824,7 +786,6 @@ public interface Integration {
 	 * Gets the details stats of a flow
 	 *
 	 * @param flowId    the id of the flow
-	 * @param mediaType (xml or json)
 	 * @param fullStats (include additional fields)
 	 * @param includeMetaData (includes information about the flow)
 	 * @param includeSteps (include stats for every step)

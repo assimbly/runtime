@@ -10,7 +10,7 @@
 	<groupId>org.assimbly</groupId>
 	<artifactId>runtime</artifactId>
 	<version>5.1.0</version>
-	
+
 	<modules>
 		<module>broker</module>
 		<module>brokerRest</module>
@@ -31,7 +31,7 @@
 		<hamcrest.version>3.0</hamcrest.version>
 		<h2database.version>2.3.232</h2database.version>
 		<maven-api.version>3.9.11</maven-api.version>
-		<spring-boot.version>3.5.3</spring-boot.version>
+		<spring-boot.version>3.5.4</spring-boot.version>
 		<zip4j.version>2.11.5</zip4j.version>
 		<maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
 
@@ -42,12 +42,11 @@
 		<jetty.version>12.0.23</jetty.version>
 		<json.version>20250107</json.version>
 		<json-unit-assertj.version>4.1.1</json-unit-assertj.version>
-		<junit.version>4.13.2</junit.version>
-		<junit-jupiter.version>5.13.4</junit-jupiter.version>
+		<junit.version>5.13.4</junit.version>
 		<mongo.version>4.7.2</mongo.version>
 		<testcontainers.version>1.21.3</testcontainers.version>
 	</properties>
-	
+
 	<distributionManagement>
 		<repository>
 			<id>github</id>
@@ -77,21 +76,65 @@
 	
 	<build>
 		<pluginManagement>
-			<!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
 			<plugins>
-				<!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
 				<plugin>
 					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.4.1</version>
+					<version>3.5.0</version>
 				</plugin>
-				<!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+				<plugin>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.4</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.14.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>3.6.1</version>
+					<executions>
+						<execution>
+							<id>enforce-maven</id>
+							<goals>
+								<goal>enforce</goal>
+							</goals>
+							<configuration>
+								<rules>
+									<requireMavenVersion>
+										<version>[3.9.9,)</version>
+									</requireMavenVersion>
+									<requireJavaVersion>
+										<version>21</version>
+									</requireJavaVersion>
+								</rules>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.4.2</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>3.1.4</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>3.9.0</version>
+				</plugin>
 				<plugin>
 					<artifactId>maven-resources-plugin</artifactId>
 					<version>3.3.1</version>
 				</plugin>
 				<plugin>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.14.0</version>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.21.0</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.5.3</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-toolchains-plugin</artifactId>
@@ -111,31 +154,6 @@
 						</execution>
 					</executions>
 				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.5.2</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.2</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-install-plugin</artifactId>
-					<version>3.1.3</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.3</version>
-				</plugin>
-				<!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-				<plugin>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.21.0</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.8.0</version>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -146,6 +164,10 @@
 					<source>21</source>
 					<target>21</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>

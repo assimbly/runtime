@@ -146,7 +146,7 @@ public class FlowLoader extends RouteBuilder {
 		props.forEach((key, value) -> {
 			if (key.endsWith("routetemplate")) {
 				try {
-                    String basePath = StringUtils.substringBefore(key,"routetemplate");
+					String basePath = StringUtils.substringBefore(key,"routetemplate");
 					String id = props.get(basePath + "routetemplate.id");
 					String uri = props.get(basePath + "uri");
 
@@ -185,17 +185,18 @@ public class FlowLoader extends RouteBuilder {
 
 			isFlowLoaded = false;
 
-			log.error("Failed loading step | stepid={}", id);
+			log.error("Failed loading step | routeid={}", id);
 			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
+
 	}
 
 	private void loadStep(String step, String type, String id, String uri) throws Exception {
 
 		try {
 
-			log.info("Load step:\n\n" + step);
+			log.info("Load step:\n\n{}", step);
 
 			loader.loadRoutes(IntegrationUtil.setResource(step));
 
@@ -205,12 +206,12 @@ public class FlowLoader extends RouteBuilder {
 
 			isFlowLoaded = false;
 
-			log.error("Failed loading step | stepid=" + id);
+			log.error("Failed loading step | stepid={}", id);
 			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
-	}
 
+	}
 
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 

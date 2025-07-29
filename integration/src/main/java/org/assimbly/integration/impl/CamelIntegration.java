@@ -1,11 +1,17 @@
 package org.assimbly.integration.impl;
 
-import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.MeterNotFoundException;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
@@ -25,6 +31,7 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFa
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
+import org.apache.camel.component.micrometer.routepolicy.MicrometerRoutePolicyFactory;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
@@ -32,7 +39,6 @@ import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.impl.engine.DefaultCamelContextNameStrategy;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.spi.*;
@@ -54,8 +60,8 @@ import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
+import org.assimbly.dil.event.collect.MicrometerTimestampRoutePolicyFactory;
 import org.assimbly.dil.event.domain.Collection;
-import org.assimbly.dil.loader.FastFlowLoader;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
@@ -74,7 +80,6 @@ import org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat;
 import org.assimbly.multipart.processor.MultipartProcessor;
 import org.assimbly.util.*;
 import org.assimbly.util.error.ValidationErrorMessage;
-import org.assimbly.util.file.DirectoryWatcher;
 import org.assimbly.util.helper.JsonHelper;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
@@ -108,7 +113,6 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -135,14 +139,13 @@ public class CamelIntegration extends BaseIntegration {
 	private ServiceStatus status;
 	private String flowStatus;
 	private final MetricRegistry metricRegistry = new MetricRegistry();
+	private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 	private final SimpleRegistry registry = new SimpleRegistry();
 	private String flowInfo;
 	private RouteController routeController;
 	private ManagedCamelContext managed;
 	private Properties encryptionProperties;
-	private boolean watchDeployDirectoryInitialized;
 	private TreeMap<String, String> props;
-	private final TreeMap<String, String> confFiles = new TreeMap<>();
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
 
@@ -156,11 +159,8 @@ public class CamelIntegration extends BaseIntegration {
 	private static final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
 	private static final String RESOURCE_PROP = "resource";
 	private static final String AUTH_PASSWORD_PROP = "authPassword";
-	private long timeCreated;
-	private Path pathCreated;
-	private boolean cacheEnabled = false;
 
-	public CamelIntegration() throws Exception {
+    public CamelIntegration() throws Exception {
 		super();
 		context = new DefaultCamelContext(registry);
 	}
@@ -252,7 +252,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void setCache(boolean cache) throws Exception {
 
-		if(cache){
+        boolean cacheEnabled = false;
+        if(cache){
 			cacheEnabled = true;
 
 			initFlowDB();
@@ -288,6 +289,12 @@ public class CamelIntegration extends BaseIntegration {
 	public void setMetrics(boolean metrics){
 		if(metrics){
 			context.addRoutePolicyFactory(new MetricsRoutePolicyFactory());
+
+			//Add custom micrometerpolicyfactor that add support for timestamps
+			MicrometerTimestampRoutePolicyFactory micrometerTimestampRoutePolicy = new MicrometerTimestampRoutePolicyFactory(meterRegistry);
+			micrometerTimestampRoutePolicy.setMeterRegistry(meterRegistry);
+			context.addRoutePolicyFactory(micrometerTimestampRoutePolicy);
+
 		}
 	}
 
@@ -454,8 +461,7 @@ public class CamelIntegration extends BaseIntegration {
 				paths.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
 						.forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\", "/")));
 			} catch (IOException e) {
-				// Handle exception appropriately
-				e.printStackTrace();
+				log.error("Can't update kamelets in directory: {}", kameletDir,e);
 			}
 
 			kamelets.addAll(filepathNames);
@@ -499,12 +505,12 @@ public class CamelIntegration extends BaseIntegration {
 
 		if(resourceAsString.contains("route:")){
 
-			resourceAsString = Strings.CS.replaceOnce(resourceAsString,"route:","route:\n" +
+			resourceAsString = StringUtils.replaceOnce(resourceAsString,"route:","route:\n" +
 					"      routeConfigurationId: \"{{routeConfigurationId}}\"");
 
 		}
 
-		resourceAsString = Strings.CS.replaceOnce(resourceAsString, """
+		resourceAsString = StringUtils.replaceOnce(resourceAsString, """
   template:
     from:""", """
   template:
@@ -512,11 +518,11 @@ public class CamelIntegration extends BaseIntegration {
       routeConfigurationId: "{{routeConfigurationId}}"
     from:""");
 
-		resourceAsString = Strings.CS.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
-		resourceAsString = Strings.CS.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
-		resourceAsString = Strings.CS.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
-		resourceAsString = Strings.CS.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
-		resourceAsString = Strings.CS.replace(resourceAsString,"    properties:", properties,1);
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:source\"", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"\"kamelet:sink\"", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:source", "\"{{in}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"kamelet:sink", "\"{{out}}\"");
+		resourceAsString = StringUtils.replace(resourceAsString,"    properties:", properties,1);
 		resourceName= StringUtils.substringAfter(resourceName, "kamelets/");
 		return ResourceHelper.fromString(resourceName, resourceAsString);
 
@@ -613,169 +619,6 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-
-	public void setDeployDirectory(boolean deployOnStart, boolean deployOnEvent) throws Exception {
-
-		Path path = Paths.get(baseDir + "/deploy");
-
-		//Create the deploy directory if not exist
-		Files.createDirectories(path);
-
-		if(deployOnStart && deployOnEvent){
-			checkDeployDirectory(path);
-			watchDeployDirectory(path);
-		}else if (deployOnStart){
-			//Check & Start files found in the deploy directory
-			checkDeployDirectory(path);
-		}else if(deployOnEvent){
-			//Monitor files in the deploy directory after start
-			watchDeployDirectory(path);
-		}
-
-	}
-
-	private void checkDeployDirectory(Path path) {
-		try (Stream<Path> paths = Files.walk(path)) {
-			paths.filter(fPath -> fPath.toString().endsWith(".xml")
-							|| fPath.toString().endsWith(".json")
-							|| fPath.toString().endsWith(".yaml"))
-					.forEach(fPath -> {
-						try {
-							fileInstall(fPath);
-						} catch (Exception e) {
-							log.error("Check deploy directory " + path + " failed", e);
-						}
-					});
-		} catch (IOException e) {
-			log.error("Error while walking the file tree for path: " + path, e);
-		}
-
-	}
-
-	private void watchDeployDirectory(Path path) throws Exception {
-
-		if(watchDeployDirectoryInitialized){
-			return;
-		}
-
-		log.info("Deploy folder | Init watching for changes: {}", path);
-		watchDeployDirectoryInitialized = true;
-
-		DirectoryWatcher watcher = new DirectoryWatcher.Builder()
-				.addDirectories(path)
-				.setPreExistingAsCreated(true)
-				.build((event, path1) -> {
-
-					switch (event) {
-						case ENTRY_CREATE:
-							createDeployDirectory(path1);
-							break;
-						case ENTRY_MODIFY:
-							modifyDeployDirectory(path1);
-							break;
-						case ENTRY_DELETE:
-							deleteDeployDirectory(path1);
-							break;
-					}
-				});
-
-		watcher.start();
-
-	}
-
-	private void createDeployDirectory(Path path){
-		log.info("Deploy folder | File created: " + path);
-
-		try {
-			timeCreated = System.currentTimeMillis();
-			long lastModified = FileUtils.lastModifiedFileTime(path.toFile()).toMillis();
-			long diff = timeCreated - lastModified;
-
-			log.info("time modified: " + diff);
-
-			if(diff < 5000){
-				fileInstall(path);
-			}
-
-			pathCreated = path;
-
-		} catch (Exception e) {
-			log.error("FileInstall for created {} failed", path.toString(), e);
-		}
-	}
-
-	private void modifyDeployDirectory(Path path){
-		long timeModified = System.currentTimeMillis();
-		String pathAsString = path.toString();
-		String fileName = FilenameUtils.getBaseName(pathAsString);
-
-		long diff = timeModified - timeCreated;
-
-		if(diff > 5000){
-			log.info("Deploy folder | File modified: " + path);
-			try {
-				if (path.equals(pathCreated) && confFiles.get(fileName)!= null){
-					fileReinstall(path);
-				}else if (confFiles.get(fileName)!= null){
-					fileReinstall(path);
-				}else{
-					fileInstall(path);
-				}
-			} catch (Exception e) {
-				log.error("FileInstall for modified {} failed", path, e);
-			}
-		}
-	}
-
-	private void deleteDeployDirectory(Path path){
-        log.info("Deploy folder | File deleted: {}", path);
-		try {
-			fileUninstall(path);
-		} catch (Exception e) {
-            log.error("FileUnInstall for deleted {} failed", path.toString(), e);
-		}
-	}
-
-	public void fileInstall(Path path) throws Exception {
-
-		String pathAsString = path.toString();
-		String fileName = FilenameUtils.getBaseName(pathAsString);
-		String mediaType = FilenameUtils.getExtension(pathAsString);
-		String configuration = FileUtils.readFileToString(new File(pathAsString), StandardCharsets.UTF_8);
-
-		confFiles.put(fileName,configuration);
-
-		if(mediaType.contains("json")){
-			configuration = DocConverter.convertJsonToXml(configuration);
-			mediaType = "xml";
-
-		}else if(mediaType.contains("yaml")){
-			if(configuration.contains("dil")){
-				configuration = DocConverter.convertYamlToXml(configuration);
-			}else{
-				configuration = convertDefaultYAMLToConfiguration(fileName, configuration);
-			}
-
-			mediaType = "xml";
-		}
-
-		String flowId = setFlowId(fileName, configuration);
-
-		if(flowId!=null){
-			log.info("File install flowid=" + flowId + " | path=" + pathAsString);
-			loadReport = installFlow(flowId, STOP_TIMEOUT, mediaType, configuration);
-
-			if(loadReport.contains("\"event\": \"error\"")||loadReport.contains("\"event\": \"failed\"") || loadReport.contains("message\": \"Failed to load flow\"")){
-				log.error(loadReport);
-			}else{
-				log.info(loadReport);
-			}
-		}else{
-			log.error("File install for " + pathAsString + " failed. Invalid configuration file.");
-		}
-
-	}
-
 	public String convertDefaultYAMLToConfiguration(String fileName, String configuration) {
 
 		StringBuilder xmlRoute = new StringBuilder();
@@ -819,54 +662,6 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 		return "<routes id=\"" + fileName + "\" xmlns=\"http://camel.apache.org/schema/spring\">" + xmlRoute + "</routes>";
-
-	}
-
-	public void fileReinstall(Path path) throws Exception {
-
-		String pathAsString = path.toString();
-		String fileName = FilenameUtils.getBaseName(pathAsString);
-		String mediaType = FilenameUtils.getExtension(pathAsString);
-		String oldConfiguration = confFiles.get(fileName);
-
-		if(mediaType.contains("json")){
-			oldConfiguration = DocConverter.convertJsonToXml(oldConfiguration);
-		}else if(mediaType.contains("yaml")){
-			oldConfiguration = DocConverter.convertYamlToXml(oldConfiguration);
-		}
-
-		String flowId = setFlowId(fileName, oldConfiguration);
-
-		stopFlow(flowId, STOP_TIMEOUT);
-
-		fileInstall(path);
-
-	}
-
-
-	public void fileUninstall(Path path) throws Exception {
-
-		String pathAsString = path.toString();
-		String fileName = FilenameUtils.getBaseName(pathAsString);
-		String mediaType = FilenameUtils.getExtension(pathAsString);
-		String configuration = confFiles.get(fileName);
-
-		confFiles.remove(fileName);
-
-		if(mediaType.contains("json")){
-			configuration = DocConverter.convertJsonToXml(configuration);
-		}else if(mediaType.contains("yaml")){
-			configuration = DocConverter.convertYamlToXml(configuration);
-		}
-
-		String flowId = setFlowId(fileName, configuration);
-
-		if(flowId!=null){
-			log.info("File uninstall flowid=" + flowId + " | path=" + pathAsString);
-			stopFlow(flowId, STOP_TIMEOUT);
-		}else{
-			log.error("File uninstall for " + pathAsString + " failed. FlowId is null.");
-		}
 
 	}
 
@@ -920,7 +715,7 @@ public class CamelIntegration extends BaseIntegration {
 			context.start();
 			started = true;
 
-			log.info("Runtime started");
+			log.info("Integration Runtime started");
 
 		}
 
@@ -1308,72 +1103,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	public String fastInstallFlow(String flowId, String configuration) throws Exception {
-
-		flowLoaderReport = new FlowLoaderReport(flowId, flowId);
-
-		if(hasFlow(flowId)) {
-			stopFlow(flowId, 250, false);
-		}
-
-		TreeMap<String, String> properties = new XMLFileConfiguration().getFlowConfigurationMinimal(flowId, configuration);
-
-		flowsMap.put(flowId, properties);
-		if(cacheEnabled) {
-			db.commit();
-		}
-
-		return loadingFlow(flowId, properties);
-
-	}
-
-	private String loadingFlow(String flowId, TreeMap<String, String> properties) throws Exception {
-
-		createConnections(properties);
-
-		FastFlowLoader flow = new FastFlowLoader(properties, flowLoaderReport, flowId);
-
-		flow.addRoutesToCamelContext(context);
-
-		if(flow.isFlowLoaded()){
-			finishFlowActionReport(flowId, "start","Started flow successfully","info");
-		}else{
-			stopFlow(flowId, 250, false);
-			finishFlowActionReport(flowId, "error","error","error");
-		}
-
-		return flow.getReport();
-	}
-
-
 	public String uninstallFlow(String flowId, long timeout) throws Exception {
 		return stopFlow(flowId, timeout);
-	}
-
-	public String fileInstallFlow(String flowId, String configuration) throws Exception {
-
-		try {
-			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
-			FileUtils.writeStringToFile(flowFile, configuration, Charset.defaultCharset());
-			return "saved";
-		} catch (Exception e) {
-            log.error("FileInstall flow {} failed", flowId, e);
-			return "Fail to save flow " + flowId + " Error: " + e.getMessage();
-		}
-
-	}
-
-	public String fileUninstallFlow(String flowId) throws Exception {
-
-		try {
-			File flowFile = new File(baseDir + "/deploy/" + flowId + ".xml");
-			FileUtils.deleteQuietly(flowFile);
-			return "deleted";
-		} catch (Exception e) {
-            log.error("FileUninstall flow {} failed", flowId, e);
-			return "failed to delete flow " + e.getMessage();
-		}
-
 	}
 
 	public String installRoute(String routeId, String route) throws Exception {
@@ -2058,39 +1789,45 @@ public class CamelIntegration extends BaseIntegration {
 				.toList();
 	}
 
-	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
+	private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) throws Exception {
 
 		FlowStatistics stats = new FlowStatistics();
 		long total = 0;
 		long completed = 0;
 		long failed = 0;
 		long pending = 0;
+		long lastFailed = 0;
+		long lastCompleted = 0;
 
 		List<Long> uptimeList = new ArrayList<>();
-		List<Date> lastFailedList = new ArrayList<>();
-		List<Date> lastCompletedList = new ArrayList<>();
+		List<Long> lastFailedList = new ArrayList<>();
+		List<Long> lastCompletedList = new ArrayList<>();
 
 		for (Route r : routes) {
 
-			ManagedRouteMBean route = managed.getManagedRoute(r.getId());
+			String routeId = r.getId();
 
-			total += route.getExchangesTotal();
-			completed += route.getExchangesCompleted();
-			failed += route.getExchangesFailed();
-			pending += route.getExchangesInflight();
+			total += getCounter("camel.exchanges.total", routeId);
+			failed += getCounter("camel.exchanges.failed", routeId);
+			completed += getCounter("camel.exchanges.succeeded", routeId);
+			pending += getGauge("camel.exchanges.inflight",routeId);
 
 			if (fullStats) {
-				// Update uptime if not set
 				if (stats.uptime == null) {
-					uptimeList.add(route.getUptimeMillis());
+					uptimeList.add(r.getUptimeMillis());
 				}
-				if (stats.lastFailed == null) {
-					lastFailedList.add(route.getLastExchangeFailureTimestamp());
+				lastFailed = getGauge("camel.exchanges.lastfailure.timestamp",routeId);
+				if (lastFailed != 0) {
+					lastFailedList.add(lastFailed);
 				}
-				if (stats.lastCompleted == null) {
-					lastCompletedList.add(route.getLastExchangeCompletedTimestamp());
+
+				lastCompleted = getGauge("camel.exchanges.lastcompleted.timestamp",routeId);
+				if (lastCompleted != 0) {
+					lastCompletedList.add(lastCompleted);
 				}
+
 			}
+
 		}
 
 		stats.totalMessages = total;
@@ -2106,15 +1843,43 @@ public class CamelIntegration extends BaseIntegration {
 			stats.uptime = TimeUtils.printDuration(stats.uptimeMillis);
 			stats.lastFailed = lastFailedList.stream()
 					.filter(Objects::nonNull)
-					.max(Date::compareTo)
-					.orElse(null);
+					.max(Long::compareTo)
+					.orElse(0L);
 			stats.lastCompleted = lastCompletedList.stream()
 					.filter(Objects::nonNull)
-					.max(Date::compareTo)
-					.orElse(null);
+					.max(Long::compareTo)
+					.orElse(0L);
 		}
 
 		return stats;
+	}
+
+	private long getCounter(String metricName, String routeId){
+
+		try {
+			Counter counter = meterRegistry.get(metricName)
+					.tag("kind", "CamelRoute")
+					.tag("routeId", routeId)
+					.counter();
+			return (long) counter.count();
+		}catch (MeterNotFoundException meterNotFoundException){
+			return 0L;
+		}
+
+	}
+
+	private long getGauge(String metricName, String routeId){
+
+		try {
+			Gauge gauge = meterRegistry.get(metricName)
+					.tag("kind", "CamelRoute")
+					.tag("routeId", routeId)
+					.gauge();
+			return (long) gauge.value();
+		}catch (MeterNotFoundException meterNotFoundException){
+			return 0L;
+		}
+
 	}
 
 	private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
@@ -2129,8 +1894,8 @@ public class CamelIntegration extends BaseIntegration {
 		flow.put("timeout", getTimeout(context));
 		flow.put("uptime", stats.uptime);
 		flow.put("uptimeMillis", stats.uptimeMillis);
-		flow.put("lastFailed", stats.lastFailed != null ? stats.lastFailed : "");
-		flow.put("lastCompleted", stats.lastCompleted != null ? stats.lastCompleted : "");
+		flow.put("lastFailed", stats.lastFailed);
+		flow.put("lastCompleted", stats.lastCompleted);
 	}
 
 	private void populateMetadata(JSONObject flow, String flowId) throws Exception {
@@ -2162,9 +1927,10 @@ public class CamelIntegration extends BaseIntegration {
 		long failedMessages = 0;
 		long pendingMessages = 0;
 		long uptimeMillis = 0;
+		long lastFailed = 0;
+		long lastCompleted = 0;
 		String uptime = null;
-		Date lastFailed = null;
-		Date lastCompleted = null;
+
 	}
 
 	private long getTimeout(CamelContext context) throws MalformedObjectNameException {

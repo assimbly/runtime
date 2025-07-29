@@ -28,6 +28,19 @@
         </repository> 
     </distributionManagement>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- JUnit BOM to align all versions -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
   <dependencies>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
@@ -61,21 +74,13 @@
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>
-		  <groupId>junit</groupId>
-		  <artifactId>junit</artifactId>
-		  <version>${junit.version}</version>
-		  <scope>test</scope>
-	  </dependency>
-	  <dependency>
 		  <groupId>org.junit.jupiter</groupId>
 		  <artifactId>junit-jupiter-api</artifactId>
-		  <version>${junit-jupiter.version}</version>
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.junit.jupiter</groupId>
 		  <artifactId>junit-jupiter-engine</artifactId>
-		  <version>${junit-jupiter.version}</version>
 		  <scope>test</scope>
 	  </dependency>
 	  <dependency>

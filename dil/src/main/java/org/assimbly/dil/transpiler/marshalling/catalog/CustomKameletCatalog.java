@@ -1,15 +1,13 @@
 package org.assimbly.dil.transpiler.marshalling.catalog;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class CustomKameletCatalog {
 
-    private static final List<String> names = new ArrayList<>();
+    private static final Set<String> names = new HashSet<>();
 
-    public static List<String> getNames() {
-        return Collections.unmodifiableList(names); // Return read-only view
+    public static Set<String> getNames() {
+        return names;
     }
 
     public static void addAllNames(List<String> list) {
