@@ -45,7 +45,7 @@ public class RouteLoader extends RouteBuilder {
 
 	}
 
-	private void load() throws Exception {
+	private void load() {
 
 		try {
 
@@ -57,7 +57,7 @@ public class RouteLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 			String errorMessage = e.getMessage();
-			log.error("Failed loading route id=" + routeId);
+            log.error("Failed loading route id={}", routeId);
 			flowLoaderReport.setStep(routeId, null, "route", "error", errorMessage, ExceptionUtils.getStackTrace(e));
 			isFlowLoaded = false;
 		}

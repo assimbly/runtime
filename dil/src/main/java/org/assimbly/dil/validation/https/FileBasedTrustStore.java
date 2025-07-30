@@ -1,24 +1,13 @@
 package org.assimbly.dil.validation.https;
 
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.SecureRandom;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-import java.util.Collections;
 
 public class FileBasedTrustStore {
 
@@ -71,47 +60,4 @@ public class FileBasedTrustStore {
         }
     }
 
-    public void addCertificateForHttpsUrl(String url) throws Exception {
-        HttpsURLConnection conn = getUnsecuredConnection(url);
-        conn.connect();
-        Certificate[] certs = conn.getServerCertificates();
-
-        for (Certificate cert : certs) {
-            if (cert instanceof X509Certificate x509) {
-                this.addCertificateEntry(String.valueOf(x509.getSerialNumber()), x509);
-            } else {
-                throw new Exception("unknown certificate type " + cert);
-            }
-        }
-    }
-
-    private HttpsURLConnection getUnsecuredConnection(String url) throws Exception {
-        URI uri = URI.create(url);
-        URL destinationURL =uri.toURL();
-        HttpsURLConnection conn = (HttpsURLConnection) destinationURL.openConnection();
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(null, new TrustManager[]{insecureTrustManager()}, new SecureRandom());
-        conn.setSSLSocketFactory(ctx.getSocketFactory());
-        conn.setHostnameVerifier(new NoopHostnameVerifier());
-        return conn;
-    }
-
-    private static TrustManager insecureTrustManager() {
-        return new X509TrustManager() {
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return Collections.emptyList().toArray(new X509Certificate[0]);
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                // not used
-            }
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                // not used
-            }
-        };
-    }
 }

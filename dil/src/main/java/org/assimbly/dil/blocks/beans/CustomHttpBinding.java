@@ -37,7 +37,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                 try {
                     doWriteExceptionResponse(target, exchange.getException(), response);    
                 } catch (Exception e) {
-                    log.error("Cannot write response: " + e.getMessage());
+                    log.error("Cannot write response: {}", e.getMessage(), e);
                 }
                 
             } else {
@@ -91,7 +91,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
             response.getWriter().write(message);
         }
 
-    private String generateJsonResponse(int code, String info, String error) throws Exception {
+    private String generateJsonResponse(int code, String info, String error) {
         
         JSONObject response = new JSONObject();
 

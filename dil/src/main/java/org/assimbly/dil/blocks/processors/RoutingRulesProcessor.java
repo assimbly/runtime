@@ -84,7 +84,7 @@ public class RoutingRulesProcessor implements Processor {
 			}
 
 		} else {
-			log.warn("Invalid routing rule: " + rule);
+            log.warn("Invalid routing rule: {}", rule);
 		}
 
 		return "";

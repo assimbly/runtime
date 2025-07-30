@@ -25,7 +25,6 @@ import javax.management.openmbean.CompositeData;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -33,6 +32,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -164,7 +164,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	@Override
-	public Map<String, Object> stats() throws Exception {
+	public Map<String, Object> stats() {
 		return Map.of();
 	}
 
@@ -236,56 +236,51 @@ public class ActiveMQArtemis implements Broker {
 
 	public void setAIO() throws IOException {
 
-		if(OSUtil.getOS().equals(OSUtil.OS.LINUX)){
+		if (OSUtil.getOS().equals(OSUtil.OS.LINUX)) {
 
-			if(!aioFile.exists()) {
-
-				//Create an empty file
-				FileUtils.touch(aioFile);
-
-				//Copy file from resources into empty file
-				ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-				InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
-
-				if(is!=null) {
-					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					is.close();
-                    log.info("event=SetAIO status=success path={}", aioFile.getParent());
-				}else{
-					log.warn("event=SetAIO status=failed");
-				}
-
-			}
-
-			addDir(aioFile.getParent());
+			checkIfNativeLibraryExists();
+			loadNativeLibrary();
 
 		}
 	}
 
-	public static void addDir(String s) {
+	private void checkIfNativeLibraryExists() throws IOException {
+
+		if (!aioFile.exists()) {
+			File parentDir = aioFile.getParentFile();
+			if (parentDir != null && !parentDir.exists()) {
+				boolean dirsCreated = parentDir.mkdirs();
+				if (!dirsCreated) {
+					log.error("event=SetAIO status=failed reason=Failed to create parent directories for native library path={}", parentDir.getAbsolutePath());
+					throw new IOException("Failed to create parent directories for " + parentDir.getAbsolutePath());
+				}
+			}
+
+			// Copy file from resources into empty file
+			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+			InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
+
+			if (is != null) {
+				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				is.close();
+				log.info("event=SetAIO status=success path={}", aioFile.getParent());
+			} else {
+				log.warn("event=SetAIO status=failed reason=Native library resource not found");
+			}
+		}
+
+	}
+
+	private void loadNativeLibrary(){
 		try {
-
-			Field field = ClassLoader.class.getDeclaredField("usr_paths");
-			field.setAccessible(true);
-			String[] paths = (String[])field.get(null);
-			for (int i = 0; i < paths.length; i++) {
-				if (s.equals(paths[i])) {
-					return;
-				}
-			}
-
-			String[] tmp = new String[paths.length+1];
-			System.arraycopy(paths,0,tmp,0,paths.length);
-			tmp[paths.length] = s;
-			field.set(null,tmp);
-			System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
-		} catch (IllegalAccessException e) {
-			log.error("event=AddDir status=failed reason=Failed to get permissions to set library path",e);
-		} catch (NoSuchFieldException e) {
-			log.error("event=AddDir status=failed reason=Failed to get field handle to set library path",e);
+			System.load(aioFile.getAbsolutePath());
+			log.info("event=AIO_Library_Loaded status=success library={}", aioFile.getAbsolutePath());
+		} catch (UnsatisfiedLinkError e) {
+			log.error("event=AIO_Library_Loaded status=failed reason=Could not load native library {}", aioFile.getAbsolutePath(), e);
+		} catch (SecurityException e) {
+			log.error("event=AIO_Library_Loaded status=failed reason=Security exception when loading native library {}", aioFile.getAbsolutePath(), e);
 		}
 	}
-
 
 	//Manage queues
 	public String createQueue(String queueName) throws Exception {
@@ -537,11 +532,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject messageInfo = new JSONObject();
 
 		String messages;
-		if(filter==null){
-			messages = queueControl.listMessagesAsJSON("");
-		}else{
-			messages = queueControl.listMessagesAsJSON(filter);
-		}
+        messages = queueControl.listMessagesAsJSON(Objects.requireNonNullElse(filter, ""));
 
 		JSONArray messagesArray = new JSONArray(messages);
 
@@ -556,7 +547,7 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
-	public String countMessagesFromList(String endpointList) throws Exception {
+	public String countMessagesFromList(String endpointList) {
 
 		long numberOfMessages = 0L;
 		String[] endpointNames= endpointList.split("\\s*,\\s*");
@@ -736,15 +727,14 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	@Override
-	public Object getBroker() throws Exception {
+	public Object getBroker() {
 		return broker;
 	}
 
 	private void setManageBroker(){
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		ActiveMQServerControlImpl activeBrokerControl = activeBroker.getActiveMQServerControl();
-		manageBroker = activeBrokerControl;
+        manageBroker = activeBroker.getActiveMQServerControl();
 
 	}
 

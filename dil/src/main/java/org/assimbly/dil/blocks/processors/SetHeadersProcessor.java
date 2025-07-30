@@ -14,6 +14,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.xpath.XPathFactory;
 
 //set headers for each step
+@SuppressWarnings("resource")
 public class SetHeadersProcessor implements Processor {
 
 	public void process(Exchange exchange) throws Exception {

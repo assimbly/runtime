@@ -53,7 +53,7 @@ public class ValidationRuntime {
     public ResponseEntity<String> validateCron(
             @RequestParam(value = "expression") String expression,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -83,7 +83,7 @@ public class ValidationRuntime {
     public ResponseEntity<String> validateCertificate(
             @RequestParam(value = "httpsUrl") String httpsUrl,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -112,7 +112,7 @@ public class ValidationRuntime {
     public ResponseEntity<String> validateUrl(
             @RequestParam(value = "httpUrl") String httpUrl,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -145,7 +145,7 @@ public class ValidationRuntime {
             @RequestBody String body,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -153,7 +153,8 @@ public class ValidationRuntime {
 
             List<ValidationExpression> expressionsList = null;
             if(body!=null){
-                expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<ValidationExpression>>(){});
+                expressionsList = new ObjectMapper().readValue(body, new TypeReference<>() {
+                });
             }
 
             List<ValidationExpression> expressions = integration.validateExpressions(expressionsList, isPredicate);
@@ -184,7 +185,7 @@ public class ValidationRuntime {
             @RequestBody String body,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -222,7 +223,7 @@ public class ValidationRuntime {
             @RequestBody String body,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -262,7 +263,7 @@ public class ValidationRuntime {
             @RequestBody String body,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -303,7 +304,7 @@ public class ValidationRuntime {
     public ResponseEntity<String> validateUri(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "Uri") String uri
-    ) throws Exception {
+    ) {
         try {
             String flowValidation = integration.validateFlow(uri);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/uri",flowValidation);
@@ -320,7 +321,7 @@ public class ValidationRuntime {
             @RequestBody String body,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
-    ) throws Exception {
+    ) {
 
         try {
 
@@ -329,7 +330,8 @@ public class ValidationRuntime {
             HashMap<String,String> paramList;
 
             if(body!=null){
-                paramList = new ObjectMapper().readValue(body, new TypeReference<HashMap<String,String>>(){});
+                paramList = new ObjectMapper().readValue(body, new TypeReference<>() {
+                });
 
                 List<ValidationErrorMessage> expressionResp = integration.validateXslt(
                         paramList.get("xsltUrl"),
@@ -363,7 +365,7 @@ public class ValidationRuntime {
             @PathVariable(value = "port") int port,
             @PathVariable(value = "timeout") int timeout,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         try {
             String testConnectionResult = integration.testConnection(host, port, timeout);

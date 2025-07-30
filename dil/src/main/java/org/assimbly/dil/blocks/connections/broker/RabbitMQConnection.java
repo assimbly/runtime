@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 
+import java.util.Objects;
+
 
 public class RabbitMQConnection {
 
@@ -29,7 +31,7 @@ public class RabbitMQConnection {
         this.componentName = componentName;
     }
 
-    public void start() throws Exception {
+    public void start() {
 
         setFields();
 
@@ -53,7 +55,7 @@ public class RabbitMQConnection {
 
     }
 
-    private boolean checkConnection() throws Exception {
+    private boolean checkConnection() {
 
         Object isRegistered = context.getRegistry().lookupByName(connectionId);
 
@@ -84,11 +86,7 @@ public class RabbitMQConnection {
             connectionFactory.setPort(5672);
         }
 
-        if (virtualHost != null) {
-            connectionFactory.setVirtualHost(virtualHost);
-        } else {
-            connectionFactory.setVirtualHost("/");
-        }
+        connectionFactory.setVirtualHost(Objects.requireNonNullElse(virtualHost, "/"));
 
         if (username != null && password != null) {
             connectionFactory.setUsername(username);

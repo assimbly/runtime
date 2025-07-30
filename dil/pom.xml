@@ -37,12 +37,7 @@
 		  <artifactId>camel-components</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>extra</artifactId>
- 		  <version>${assimbly.version}</version>
-	  </dependency>
-    	<dependency>
+     	<dependency>
 			<groupId>org.assimbly</groupId>
 			<artifactId>test-base</artifactId>
 			<version>${assimbly.version}</version>

@@ -39,7 +39,7 @@ public class TopicManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=createTopic type=POST message=Create new topic name={} type={}", topicName, brokerType);
 
@@ -68,7 +68,7 @@ public class TopicManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=deleteTopic type=DELETE message=Create new topic name={} type={}", topicName, brokerType);
 
@@ -97,7 +97,7 @@ public class TopicManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=getTopic type=POST message=get topic name={} type={}", topicName, brokerType);
 
@@ -125,7 +125,7 @@ public class TopicManagerRuntime {
     public ResponseEntity<String> getTopics(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=getTopics type=GET message=Get list of topics type={}", brokerType);
 
@@ -154,7 +154,7 @@ public class TopicManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "topicName") String topicName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=clearTopic type=POST message=Clear topic name={} type={}", topicName, brokerType);
 
@@ -181,7 +181,7 @@ public class TopicManagerRuntime {
     public ResponseEntity<String> clearTopics(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=clearTopics type=POST message=Removes all topic messages on the broker type={}", brokerType);
 

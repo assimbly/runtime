@@ -10,24 +10,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 
 public class Connection {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
-	private String uri;
 	private String connectionId;
-	private String connectionIdValue;
-	private String flowId;
 	private final TreeMap<String, String> properties;
 	private final String key;
 	private final CamelContext context;
 	private String stepType;
     private Object stepId;
     private String connectionType;
-    private static final Random RANDOM = new Random();
 
 	public Connection(CamelContext context, TreeMap<String, String> properties, String key) {
 		this.context = context;
@@ -41,10 +36,9 @@ public class Connection {
         connectionType = properties.get("connection." + connectionId + ".type" );
 
         stepType = key.split("\\.")[0]; 
-        stepId = key.split("\\.")[1]; 
+        stepId = key.split("\\.")[1];
 
-        connectionIdValue = properties.get(stepType + "." + stepId + ".connection.id");
-        flowId = properties.get("id");
+        String connectionIdValue = properties.get(stepType + "." + stepId + ".connection.id");
 
         if(connectionIdValue!=null) {
             startConnection();        
@@ -75,13 +69,6 @@ public class Connection {
 
             case "ibmq" ->
                     new IBMMQConnection(context, decryptedProperties, connectionId, connectionType).start();
-
-            case "sonicmq" -> {
-                String connectId = stepType + connectionIdValue + RANDOM.nextInt(1000000);
-                new SonicMQConnection(context, decryptedProperties, connectionId, connectionType).start(flowId, connectId, connectionIdValue);
-                uri = uri.replace("sonicmq:", "sonicmq." + flowId + connectId + ":");
-                properties.put(stepType + "." + stepId + ".uri", uri);
-            }
 
             case "jdbc" ->
                     new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);

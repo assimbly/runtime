@@ -59,7 +59,7 @@ public class BrokerConfigurerRuntime {
             @RequestParam(value = "brokerType") String brokerType,
             @RequestParam(value = "brokerConfigurationType") String brokerConfigurationType,
             @RequestBody(required = false) String brokerConfiguration
-    ) throws Exception {
+    ) {
 
         log.debug("event=setConfigurationBroker type=POST message=Request to set the configuration of Broker id={} type={}", id, brokerType);
 

@@ -15,18 +15,12 @@ public class AggregateStrategy implements AggregationStrategy {
             aggregateType = oldExchange.getProperty("Aggregate-Type", String.class);
         }
 
-        AggregationStrategy aggregateStrategy;
+        AggregationStrategy aggregateStrategy = switch (aggregateType) {
+            case "xml", "text/xml", "application/xml" -> new XmlAggregateStrategy();
+            case "json", "application/json" -> new JsonAggregateStrategy();
+            default -> throw new UnsupportedOperationException("Unknown aggregateType");
+        };
 
-        switch(aggregateType) {
-            case "xml", "text/xml", "application/xml":
-                aggregateStrategy = new XmlAggregateStrategy();
-                break;
-            case "json", "application/json":
-                aggregateStrategy = new JsonAggregateStrategy();
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown aggregateType");
-        }
         return aggregateStrategy.aggregate(oldExchange, newExchange);
     }
 }

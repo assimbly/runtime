@@ -57,7 +57,7 @@ public class StepCollector extends EventNotifierSupport {
         this.storeManager = new StoreManager(collectorId, stores);
         List<Store> elasticStores = stores.stream().filter(p -> p.getType().equals("elastic")).toList();
         if(elasticStores.size()==1){
-            this.expiryInHours = elasticStores.get(0).getExpiryInHours();
+            this.expiryInHours = elasticStores.getFirst().getExpiryInHours();
         }else{
             this.expiryInHours = "1";
         }
@@ -65,7 +65,7 @@ public class StepCollector extends EventNotifierSupport {
 
 
     @Override
-    public void notify(CamelEvent event) throws Exception {
+    public void notify(CamelEvent event) {
 
         boolean isSuccessEvent = successEvents != null && successEvents.contains(event.getType().name());
         boolean isFailedEvent = failedEvents != null && failedEvents.contains(event.getType().name());
@@ -184,14 +184,14 @@ public class StepCollector extends EventNotifierSupport {
             if (body == null || body.length == 0) {
                 return "<empty>";
             } else if (body.length <= limitBodyLength) {
-                if (isText(body, CHARSET)) {
+                if (isText(body)) {
                     return new String(body, CHARSET);
                 } else {
                     return "<binary content>";
                 }
             }
 
-            if (isText(body, CHARSET)) {
+            if (isText(body)) {
                 return new String(Arrays.copyOfRange(body, 0, limitBodyLength), CHARSET);
             } else {
                 return "<binary content>";
@@ -207,9 +207,9 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private boolean isText(byte[] data, Charset charset) {
+    private boolean isText(byte[] data) {
         try {
-            CharsetDecoder decoder = charset.newDecoder();
+            CharsetDecoder decoder = StepCollector.CHARSET.newDecoder();
             decoder.onMalformedInput(CodingErrorAction.REPORT);
             decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
             decoder.decode(ByteBuffer.wrap(data));

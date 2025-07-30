@@ -82,40 +82,46 @@ public class Unmarshall {
 	}
 
 	private void addSteps(Element flow) throws Exception {
-
 		NodeList steps = flow.getElementsByTagName("step");
-
 		for (int index = 1; index < steps.getLength() + 1; index++) {
-
-			String stepId = "";
-			String type = "";
-			String uri = "";
 			Element stepElement = (Element) steps.item(index - 1);
+			processStep(stepElement, index);
+		}
+	}
 
-			NodeList children = stepElement.getChildNodes();
-			for (int j = 0; j < children.getLength(); j++) {
-				Node node = children.item(j);
-				if (node.getNodeType() == Node.ELEMENT_NODE && "id".equals(node.getNodeName())) {
-					stepId = node.getTextContent().trim();
-				}else if (node.getNodeType() == Node.ELEMENT_NODE && "type".equals(node.getNodeName())) {
-					type = node.getTextContent().trim();
-				}else if (node.getNodeType() == Node.ELEMENT_NODE && "uri".equals(node.getNodeName())) {
-					uri = node.getTextContent().trim();
+	private void processStep(Element stepElement, int index) throws Exception {
+		String stepId = "";
+		String type = "";
+		String uri = "";
+
+		NodeList children = stepElement.getChildNodes();
+		for (int j = 0; j < children.getLength(); j++) {
+			Node node = children.item(j);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				switch (node.getNodeName()) {
+					case "id":
+						stepId = node.getTextContent().trim();
+						break;
+					case "type":
+						type = node.getTextContent().trim();
+						break;
+					case "uri":
+						uri = node.getTextContent().trim();
+						break;
 				}
-			}
-
-			if(!uri.isEmpty()){
-				setUri(uri, stepId, type, index);
-			}
-
-			if(routeTemplateList.contains(type)) {
-				setBlocks(stepElement, stepId, type);
-				setRouteTemplate(index, stepId, type);
-			}else{
-				setBlocks(stepElement, stepId, type);
 			}
 		}
 
+		if (!uri.isEmpty()) {
+			setUri(uri, stepId, type, index);
+		}
+
+		if (routeTemplateList.contains(type)) {
+			setBlocks(stepElement, stepId, type);
+			setRouteTemplate(index, stepId, type);
+		} else {
+			setBlocks(stepElement, stepId, type);
+		}
 	}
 
 	private void setUri(String uri, String stepId, String type, int index) {

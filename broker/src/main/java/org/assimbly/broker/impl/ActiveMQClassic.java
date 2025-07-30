@@ -68,7 +68,7 @@ public class ActiveMQClassic implements Broker {
             }else {
                 this.setFileConfiguration("");
                 log.warn("No config file 'activemq.xml' found.");
-                log.debug("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path= {}", baseDir);
+                log.debug("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path={}", baseDir);
 
                 brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
                 URI urlConfig = new URI(brokerUrl);
@@ -87,7 +87,6 @@ public class ActiveMQClassic implements Broker {
             return status();
         }catch (Exception e) {
             log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
-
             return "failed";
         }
 
@@ -188,8 +187,6 @@ public class ActiveMQClassic implements Broker {
                 return xmlValidation;
             }
 
-            brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
-            FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
         }else {
             FileUtils.touch(brokerFile);
             InputStream inputStream = classloader.getResourceAsStream("activemq.xml");
@@ -199,11 +196,9 @@ public class ActiveMQClassic implements Broker {
 
             inputStream.close();
 
-            brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
-
-            FileUtils.writeStringToFile(brokerFile,brokerConfiguration, StandardCharsets.UTF_8);
-
         }
+        brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
+        FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 
         return "success";
     }
@@ -276,7 +271,7 @@ public class ActiveMQClassic implements Broker {
 
         JSONObject endpointInfo = new JSONObject();
 
-        JSONObject endpoint = getEndpoint("false","Queue",queueName);
+        JSONObject endpoint = getEndpoint("Queue",queueName);
         endpointInfo.put("queue",endpoint);
 
         return endpointInfo.toString();
@@ -293,7 +288,7 @@ public class ActiveMQClassic implements Broker {
 
             String queueAsString = StringUtils.substringAfter(queue.toString(), "destinationName=");
 
-            endpointInfo.append("queue", getEndpoint("false","Queue",queueAsString));
+            endpointInfo.append("queue", getEndpoint("Queue",queueAsString));
 
         }
 
@@ -337,7 +332,7 @@ public class ActiveMQClassic implements Broker {
 
     public String clearTopic(String topicName) throws Exception {
 
-        topicViewMbean = getTopicViewMBean("Topic", topicName);
+        topicViewMbean = getTopicViewMBean(topicName);
         topicViewMbean.resetStatistics();
 
         return "success";
@@ -349,7 +344,7 @@ public class ActiveMQClassic implements Broker {
 
         for(Object topic: topics){
             String topicAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
-            topicViewMbean = getTopicViewMBean("Topic", topicAsString);
+            topicViewMbean = getTopicViewMBean(topicAsString);
             topicViewMbean.resetStatistics();
 
         }
@@ -361,7 +356,7 @@ public class ActiveMQClassic implements Broker {
     public String getTopic(String topicName) throws Exception {
         JSONObject endpointInfo = new JSONObject();
 
-        JSONObject endpoint = getEndpoint("false","Topic",topicName);
+        JSONObject endpoint = getEndpoint("Topic",topicName);
         endpointInfo.put("topic",endpoint);
 
         return endpointInfo.toString();
@@ -377,7 +372,7 @@ public class ActiveMQClassic implements Broker {
         for(Object topic: topics){
             String topicAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
             if(!topicAsString.startsWith("ActiveMQ")){
-                endpointInfo.append("topic", getEndpoint("false","Topic",topicAsString));
+                endpointInfo.append("topic", getEndpoint("Topic",topicAsString));
             }
         }
 
@@ -615,7 +610,7 @@ public class ActiveMQClassic implements Broker {
     }
 
 
-    public String getConsumers() throws Exception {
+    public String getConsumers() {
         return "n/a";
     }
 
@@ -674,7 +669,7 @@ public class ActiveMQClassic implements Broker {
     }
 
 
-    private JSONObject getEndpoint(String isTemporary, String endpointType, String endpointName) throws Exception {
+    private JSONObject getEndpoint(String endpointType, String endpointName) throws Exception {
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
@@ -682,7 +677,7 @@ public class ActiveMQClassic implements Broker {
 
         endpoint.put("name",endpointName);
         endpoint.put("address",destinationViewMBean.getName());
-        endpoint.put("temporary",isTemporary);
+        endpoint.put("temporary", "false");
         if(endpointType.equalsIgnoreCase("Topic")){
             endpoint.put("numberOfMessages",destinationViewMBean.getEnqueueCount());
         }else{
@@ -696,7 +691,7 @@ public class ActiveMQClassic implements Broker {
 
 
     @Override
-    public Object getBroker() throws Exception {
+    public Object getBroker() {
         return broker;
     }
 
@@ -712,7 +707,7 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    private Map<String, Long> getFlowIdsMessageCountMap(String destinationType, boolean excludeEmptyQueues) throws MalformedObjectNameException {
+    private Map<String, Long> getFlowIdsMessageCountMap(String destinationType, boolean excludeEmptyQueues) {
         Map<String, Long> destinationMessageCounts = new HashMap<>();
 
         try {
@@ -760,9 +755,9 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    private TopicViewMBean getTopicViewMBean(String destinationType, String destinationName) throws MalformedObjectNameException {
+    private TopicViewMBean getTopicViewMBean(String destinationName) throws MalformedObjectNameException {
 
-        ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=" + destinationName);
+        ObjectName activeMQ = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + "Topic" + ",destinationName=" + destinationName);
         return (TopicViewMBean) broker.getManagementContext().newProxyInstance(activeMQ, TopicViewMBean.class, true);
 
     }

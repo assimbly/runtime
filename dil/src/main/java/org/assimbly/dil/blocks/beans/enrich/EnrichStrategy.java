@@ -19,27 +19,14 @@ public class EnrichStrategy implements AggregationStrategy {
             enrichType = originalExchange.getProperty("Enrich-Type", String.class);
         }
 
-        AggregationStrategy enrichStrategy;
-
-        switch(enrichType) {
-            case "xml", "text/xml", "application/xml":
-                enrichStrategy = new XmlEnrichStrategy();
-                break;
-            case "json", "application/json":
-                enrichStrategy = new JsonEnrichStrategy();
-                break;
-            case "application/zip":
-                enrichStrategy = new ZipFileEnrichStrategy();
-                break;
-            case "application/attachment":
-                enrichStrategy = new AttachmentEnrichStrategy();
-                break;
-            case "application/override":
-                enrichStrategy = new OverrideEnrichStrategy();
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
+        AggregationStrategy enrichStrategy = switch (enrichType) {
+            case "xml", "text/xml", "application/xml" -> new XmlEnrichStrategy();
+            case "json", "application/json" -> new JsonEnrichStrategy();
+            case "application/zip" -> new ZipFileEnrichStrategy();
+            case "application/attachment" -> new AttachmentEnrichStrategy();
+            case "application/override" -> new OverrideEnrichStrategy();
+            default -> throw new UnsupportedOperationException();
+        };
 
         return enrichStrategy.aggregate(originalExchange, resourceExchange);
     }

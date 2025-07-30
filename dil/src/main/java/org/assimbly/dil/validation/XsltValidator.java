@@ -14,8 +14,10 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class XsltValidator {
 
@@ -48,11 +50,7 @@ public class XsltValidator {
             URIResolver uriResolver = new StandardURIResolver();
             return uriResolver.resolve(url, BASE);
         } else {
-            if(xsltBody == null) {
-                return new StreamSource(new java.io.StringReader(""));
-            }
-
-            return new StreamSource(new java.io.StringReader(xsltBody));
+            return new StreamSource(new StringReader(Objects.requireNonNullElse(xsltBody, "")));
         }
     }
 

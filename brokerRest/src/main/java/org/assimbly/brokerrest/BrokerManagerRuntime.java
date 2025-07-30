@@ -88,7 +88,7 @@ public class BrokerManagerRuntime {
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType,
             @RequestParam(value = "brokerConfigurationType") String brokerConfigurationType
-    ) throws Exception {
+    ) {
 
         log.debug("event=startBroker type=GET message=Request to start the broker id={} type={} configurationType={}", id, brokerType, brokerConfigurationType);
 
@@ -114,7 +114,7 @@ public class BrokerManagerRuntime {
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType,
             @RequestParam(value = "brokerConfigurationType") String brokerConfigurationType
-    ) throws Exception {
+    ) {
 
         log.debug("event=restartBroker type=GET message=Request to restart the broker id={} type={} brokerConfigurationType={}", id, brokerType, brokerConfigurationType);
 
@@ -139,7 +139,7 @@ public class BrokerManagerRuntime {
     public ResponseEntity<String> stopBroker(
             @PathVariable(value = "id") Long id,
             @RequestParam(value = "brokerType") String brokerType
-    ) throws Exception {
+    ) {
 
         log.debug("event=stopBroker type=GET message=Request to stop the broker id={} type={}", id, brokerType);
 
@@ -166,7 +166,7 @@ public class BrokerManagerRuntime {
     public ResponseEntity<String> getConnections(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=getConnections type=GET message=Get list of all broker connections type={}", brokerType);
 
@@ -193,7 +193,7 @@ public class BrokerManagerRuntime {
     public ResponseEntity<String> getConsumers(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=getConsumers type=GET message=Get list of all broker consumers type={}", brokerType);
 

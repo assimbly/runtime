@@ -50,7 +50,6 @@ public interface Broker {
 	* Starts the broker from a file configuration. 
 	*
     * @return status of broker 
-	* @throws Exception if broker can't be started
 	*/
     String start();
 

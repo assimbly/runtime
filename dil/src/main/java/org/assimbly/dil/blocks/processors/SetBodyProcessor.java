@@ -10,6 +10,7 @@ import org.apache.camel.spi.Language;
 import javax.xml.xpath.XPathFactory;
 
 //set headers for each step
+@SuppressWarnings("resource")
 public class SetBodyProcessor implements Processor {
 
 	public void process(Exchange exchange) throws Exception {

@@ -122,10 +122,10 @@ public class AMQPConnection {
         }
 
         if(modifiedUrl.isEmpty()){
-            log.info("SSLEnabled Url: " + url);
+            log.info("SSLEnabled Url: {}", url);
             return url;
         }else{
-            log.info("SSLEnabled Url: " + modifiedUrl);
+            log.info("SSLEnabled Modified Url: {}", modifiedUrl);
             return modifiedUrl.toString();
         }
 
@@ -142,15 +142,15 @@ public class AMQPConnection {
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
 
-            if (!Arrays.stream(optionsSplitted).noneMatch("transport.verifyHost"::startsWith)) {
+            if (Arrays.stream(optionsSplitted).anyMatch("transport.verifyHost"::startsWith)) {
                 sslUrl = url + "&transport.verifyHost=false";
             }
 
-            if (!Arrays.stream(optionsSplitted).noneMatch("transport.trustStoreLocation"::startsWith)) {
+            if (Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
                 sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
             }
 
-            if (!Arrays.stream(optionsSplitted).noneMatch("transport.trustStorePassword"::startsWith)) {
+            if (Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {
                 sslUrl = url + "&transport.trustStorePassword=" + getKeystorePassword();
             }
 

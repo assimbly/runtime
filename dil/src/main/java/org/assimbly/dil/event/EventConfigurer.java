@@ -35,7 +35,7 @@ public class EventConfigurer {
 
     public String add(String jsonConfiguration) {
 
-        log.info("Check event collector configuration:\n\n" + jsonConfiguration);
+        log.info("Check event collector configuration:\n\n{}", jsonConfiguration);
 
         try {
             configuration = new Collection().fromJson(jsonConfiguration);
@@ -57,23 +57,26 @@ public class EventConfigurer {
 
     public String remove(String collectorId) {
 
-        log.info("Removing collector with id=" + collectorId);
+        log.info("Removing collector with id={}", collectorId);
 
         Object collector = context.getRegistry().lookupByName(collectorId);
 
-       if(collector instanceof StepCollector){
-           ((StepCollector) collector).shutdown();
-           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
-           log.info("Removed step collector with id=" + collectorId);
-       }else if(collector instanceof RouteCollector){
-           ((RouteCollector) collector).shutdown();
-           context.getManagementStrategy().removeEventNotifier((EventNotifier)collector);
-           log.info("Removed route collector with id=" + collectorId);
-       }else if(collector instanceof LogCollector logCollector){
-           removeLogger(logCollector);
-            log.info("Removed log collector with id=" + collectorId);
-        }else{
-            log.warn("Collector with id=" + collectorId + " does not exist");
+        switch (collector) {
+            case StepCollector stepCollector -> {
+                stepCollector.shutdown();
+                context.getManagementStrategy().removeEventNotifier((EventNotifier) collector);
+                log.info("Removed step collector with id={}", collectorId);
+            }
+            case RouteCollector routeCollector -> {
+                routeCollector.shutdown();
+                context.getManagementStrategy().removeEventNotifier((EventNotifier) collector);
+                log.info("Removed route collector with id={}", collectorId);
+            }
+            case LogCollector logCollector -> {
+                removeLogger(logCollector);
+                log.info("Removed log collector with id={}", collectorId);
+            }
+            case null, default -> log.warn("Collector with id={} does not exist", collectorId);
         }
 
         return "removed";
@@ -138,11 +141,11 @@ public class EventConfigurer {
                         configureLogCollector();
                         break;
                     default:
-                        log.warn("Unknown collector type: " + type);
+                        log.warn("Unknown collector type: {}", type);
                 }
 
             } catch (Exception e){
-                e.printStackTrace();
+                log.error("Can't configure collector.",e);
                 return e.getMessage();
             }
 
@@ -220,7 +223,7 @@ public class EventConfigurer {
         if(!packageNames.isEmpty()) {
             for (String packageName : packageNames) {
                 log.info("Add log event: {}", packageName);
-                addLogger(logCollector, packageName, "info");
+                addLogger(logCollector, packageName);
             }
         }else{
             log.error("No log events are configured. Please provide one or more packageName");
@@ -230,7 +233,7 @@ public class EventConfigurer {
 
     }
 
-    private void addLogger(LogCollector logCollector, String packageName, String logLevel){
+    private void addLogger(LogCollector logCollector, String packageName){
 
         ch.qos.logback.classic.Logger logbackLogger;
 
@@ -242,7 +245,7 @@ public class EventConfigurer {
 
         //setAdditive to true, so that it's treated as an additional log (log is kept in the main log file)
         logbackLogger.setAdditive(true);
-        logbackLogger.setLevel(Level.toLevel(logLevel));
+        logbackLogger.setLevel(Level.toLevel("info"));
         logbackLogger.addAppender(logCollector);
 
     }

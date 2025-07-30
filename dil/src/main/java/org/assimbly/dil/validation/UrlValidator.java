@@ -42,8 +42,8 @@ public class UrlValidator {
         return null;
     }
 
-    public static final boolean validateURL(String url) {
-        Pattern regex = Pattern.compile("^(https?):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]");
+    public static boolean validateURL(String url) {
+        Pattern regex = Pattern.compile("^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
         Matcher matcher = regex.matcher(url);
         return matcher.find();
     }

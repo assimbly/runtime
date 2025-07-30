@@ -9,8 +9,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -71,7 +69,7 @@ public class Route {
             if(dataFormatAsString!=null) {
                 route = route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
             }else{
-                log.warn("Route:\n\n" + route + "\n\n Contains custom csv dataformat, but csv dataFormat is null");
+                log.warn("Route:\n\n{}\n\n Contains custom csv dataformat, but csv dataFormat is null", route);
             }
         }
 
@@ -84,7 +82,7 @@ public class Route {
 
     }
 
-    private Node evaluateNodeXpath(String xpath) throws TransformerException, XPathExpressionException {
+    private Node evaluateNodeXpath(String xpath) throws XPathExpressionException {
         XPathExpression xp = xf.newXPath().compile(xpath);
         return (Node) xp.evaluate(doc, XPathConstants.NODE);
     }

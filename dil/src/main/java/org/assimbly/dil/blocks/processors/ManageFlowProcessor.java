@@ -22,7 +22,7 @@ public class ManageFlowProcessor implements Processor {
 
 		if(flowId != null && action != null){
 
-			log.info("ManageFlow start: Action=" + action +  " Flow=" + flowId);
+            log.info("ManageFlow start: Action={} Flow={}", action, flowId);
 
 			CamelContext context = exchange.getContext();
 			RouteController routeController = context.getRouteController();
@@ -35,7 +35,7 @@ public class ManageFlowProcessor implements Processor {
 			exchange.removeProperty("flowId");
 			exchange.removeProperty("action");
 
-			log.info("ManageFlow finished: Action=" + action +  " Flow=" + flowId);
+            log.info("ManageFlow finished: Action={} Flow={}", action, flowId);
 
 		}else{
 			if(flowId==null){
@@ -55,16 +55,16 @@ public class ManageFlowProcessor implements Processor {
 		String routeId = route.getId();
 
 		if(action.equalsIgnoreCase("startflow")){
-			log.info("start route: " + route);
+            log.info("start route: {}", route);
 			routeController.startRoute(routeId);
 		}else if(action.equalsIgnoreCase("stopflow")){
-			log.info("stop route: " + route);
+            log.info("stop route: {}", route);
 			routeController.stopRoute(routeId,10, TimeUnit.SECONDS);
 		}else if(action.equalsIgnoreCase("suspendflow") || action.equalsIgnoreCase("pauseflow")){
-			log.info("suspend route: " + route);
+            log.info("suspend route: {}", route);
 			routeController.suspendRoute(routeId,10, TimeUnit.SECONDS);
 		}else if(action.equalsIgnoreCase("resumeflow") || action.equalsIgnoreCase("continueflow")){
-			log.info("resume route: " + route);
+            log.info("resume route: {}", route);
 			routeController.resumeRoute(routeId);
 		}
 

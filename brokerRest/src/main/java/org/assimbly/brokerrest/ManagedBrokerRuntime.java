@@ -35,19 +35,19 @@ public class ManagedBrokerRuntime {
     //Broker manage
     public String start(String brokerType, String brokerConfigurationType) throws Exception {
 
-        log.info("Current ActiveMQ broker status: " + status + " (type=" + brokerType + ",configurationtype=" + brokerConfigurationType + ")");
+        log.info("Current ActiveMQ broker status: {} (type={},configurationtype={})", status, brokerType, brokerConfigurationType);
 
         broker = getBroker(brokerType);
         status = getStatus(brokerType);
 
         if(status.equals("stopped")) {
-            log.info("Starting ActiveMQ " + brokerType + " broker");
+            log.info("Starting ActiveMQ {} broker", brokerType);
             if (brokerConfigurationType.equals("file")) {
                 status = broker.start();
             }else if (brokerConfigurationType.equals("embedded")) {
                 status = broker.startEmbedded();
             }
-            log.info("Started ActiveMQ " + brokerType + " broker");
+            log.info("Started ActiveMQ {} broker", brokerType);
 
         }
 
@@ -308,7 +308,7 @@ public class ManagedBrokerRuntime {
     }
 
     //private methods
-	private Broker getBroker(String brokerType) throws Exception {
+	private Broker getBroker(String brokerType) {
         if (brokerType.equalsIgnoreCase("classic")) {
             return classic;
         }else if (brokerType.equalsIgnoreCase("artemis")) {

@@ -1,0 +1,17 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] runtime                                                            [pom]
+[INFO] broker                                                             [jar]
+[INFO] dil                                                                [jar]
+[INFO] integration                                                        [jar]
+[INFO] commons                                                            [jar]
+[INFO] broker-rest                                                        [jar]
+[INFO] integration-rest                                                   [jar]
+[INFO] 
+[INFO] ------------------------< org.assimbly:runtime >------------------------
+[INFO] Building runtime 5.1.0                                             [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+Terminate batch job (Y/N)? 

@@ -24,7 +24,7 @@ public class RouteCollector extends EventNotifierSupport {
     }
 
     @Override
-    public void notify(CamelEvent event) throws Exception {
+    public void notify(CamelEvent event) {
 
         String type = event.getType().name();
 

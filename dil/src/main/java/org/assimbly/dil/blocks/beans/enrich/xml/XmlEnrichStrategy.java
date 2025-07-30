@@ -73,13 +73,13 @@ public class XmlEnrichStrategy implements AggregationStrategy {
             Document document = XmlHelper.newDocument(exchange.getIn().getBody(String.class));
 
             if (document == null) {
-                log.warn("No valid XML returned by the " + route + " route to the Enrich component.");
+                log.warn("No valid XML returned by the {} route to the Enrich component.", route);
             }
 
             return document;
 
         } catch (Exception e) {
-            log.warn("Unable to get data from the " + route + " route to the Enrich component.");
+            log.warn("Unable to get data from the {} route to the Enrich component.", route);
         }
 
         return null;

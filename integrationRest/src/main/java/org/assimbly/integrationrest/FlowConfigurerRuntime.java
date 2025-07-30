@@ -11,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.net.URISyntaxException;
-
 /**
  * Resource to return information about the currently running Spring profiles.
  */
@@ -37,7 +35,6 @@ public class FlowConfigurerRuntime {
      * @param flowId (FlowId)
      * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(
 			path = "/integration/flow/{flowId}/configure",
@@ -48,7 +45,7 @@ public class FlowConfigurerRuntime {
 			@PathVariable(value = "flowId") String flowId,
 			@RequestBody String configuration,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
        	try {
             integration.setFlowConfiguration(flowId, mediaType, configuration);
@@ -64,7 +61,6 @@ public class FlowConfigurerRuntime {
      *
      * @param flowId (flowId)
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @GetMapping(
 			path = "/integration/flow/{flowId}/configure",
@@ -73,7 +69,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getFlowConfiguration(
 			@PathVariable(value = "flowId") String flowId,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
     	plainResponse = true;
 
@@ -96,13 +92,13 @@ public class FlowConfigurerRuntime {
 	public ResponseEntity<String> hasFlow(
 			@PathVariable(value = "flowId") String flowId,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
 		try {
 			boolean hasFlow = integration.hasFlow(flowId);
 			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow", Boolean.toString(hasFlow));
 		} catch (Exception e) {
-			log.error("Check if integration has flow with id=" + flowId + " failed",e);
+            log.error("Check if integration has flow with id={} failed", flowId, e);
 			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow",e.getMessage());
 		}
 
@@ -112,7 +108,7 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/documentation/version",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
 	)
-    public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
+    public ResponseEntity<String> getDocumentationVersion(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
 		try {
             String documentation = integration.getDocumentationVersion();
@@ -130,7 +126,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getDocumentation(
 			@PathVariable(value = "componenttype") String componenttype,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
     	plainResponse = true;
 
@@ -154,7 +150,7 @@ public class FlowConfigurerRuntime {
 	public ResponseEntity<String> getComponents(
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
 			@RequestHeader(value = "IncludeCustomComponents") boolean includeCustomComponents
-	) throws Exception {
+	) {
 
 		log.info("Get components");
 
@@ -180,7 +176,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getComponentSchema(
 			@PathVariable(value = "componenttype") String componenttype,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
     	plainResponse = true;
 
@@ -206,7 +202,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getComponentOptions(
 			@PathVariable(value = "componenttype") String componenttype,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
     	plainResponse = true;
 
@@ -229,7 +225,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> getCamelRoute(
 			@PathVariable(value = "flowId") String flowId,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
 		try {
             String camelRoute = integration.getCamelRouteConfiguration(flowId, mediaType);
@@ -247,7 +243,7 @@ public class FlowConfigurerRuntime {
 	public ResponseEntity<String> getStepTemplate(
 			@PathVariable(value = "templatename") String templatename,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
 		try {
 			String stepTemplate = integration.getStepTemplate(mediaType, templatename);
@@ -263,7 +259,7 @@ public class FlowConfigurerRuntime {
 			path = "/integration/flow/list/steps",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
 	)
-	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) throws Exception {
+	public ResponseEntity<String> getListOfStepTemplates(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
 		try {
 			String stepTemplates = integration.getListOfStepTemplates();
@@ -282,7 +278,7 @@ public class FlowConfigurerRuntime {
     public ResponseEntity<String> removeFlow(
 			@PathVariable(value = "flowId") String flowId,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) throws Exception {
+	) {
 
         try {
             boolean removedFlow = integration.removeFlow(flowId);
@@ -296,7 +292,7 @@ public class FlowConfigurerRuntime {
 
     // Generates a generic error response (exceptions outside try catch):
     @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
+    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
 
 		HttpServletRequest httpRequest = request.getNativeRequest(HttpServletRequest.class);
 

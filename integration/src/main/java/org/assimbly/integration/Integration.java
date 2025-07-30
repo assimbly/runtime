@@ -126,7 +126,6 @@ public interface Integration {
 	 *
 	 * @param  props Properties of connection
 	 * @param  stepType (from,to, response or error)
-	 * @return properties of connection
 	 * @throws Exception if connection can't be set
 	 */
     void setConnection(TreeMap<String, String> props, String stepType) throws Exception;
@@ -438,7 +437,6 @@ public interface Integration {
 
 	/**
 	* Gets TLS certificates for a url.
-	*  
 	* Download the chain of certificates for the specified url
 	*
 	* @param url an https url
@@ -449,7 +447,6 @@ public interface Integration {
 
 	/**
 	* Gets TLS certificates for a url.
-	*  
 	* Download the chain of certificates for the specified url
 	*
 	* @param certificateName name of the certificate
@@ -462,7 +459,6 @@ public interface Integration {
 	
 	/**
 	* Sets TLS certificates.
-	*  
 	* Download and import certificates to truststore (jks) used by the integration
 	*
 	* @param url an https url
@@ -473,7 +469,6 @@ public interface Integration {
 	
 	/**
 	* Import TLS certificate.
-	*  
 	* Import certificate into truststore (jks) used by the integration
 	*
 	* @param certificateName name of the certificate
@@ -487,7 +482,6 @@ public interface Integration {
 	
 	/**
 	* Import TLS certificates.
-	*  
 	* Import certificates to truststore (jks) used by the integration
 	*
 	* @param certificates map with one or more Java certificate object
@@ -500,7 +494,6 @@ public interface Integration {
 
 	/**
 	 * Import TLS certificate.
-	 *
 	 * Import certificate into truststore (jks) used by the integration
 	 *
 	 * @return returns a confirmation message
@@ -527,12 +520,11 @@ public interface Integration {
     boolean removeFlow(String flowId) throws Exception;
 	
 	/**
-	* Starts all configured flows
-	*
-	* @return returns a confirmation message
-	* @throws Exception if one of the flows doesn't start
-	*/
-    String startAllFlows() throws Exception;
+	 * Starts all configured flows
+	 *
+	 * @throws Exception if one of the flows doesn't start
+	 */
+    void startAllFlows() throws Exception;
 
 	/**
 	* Restarts all configured flows
@@ -789,7 +781,6 @@ public interface Integration {
 	 * @param fullStats (include additional fields)
 	 * @param includeMetaData (includes information about the flow)
 	 * @param includeSteps (include stats for every step)
-	 * @param filter
 	 * @return returns number of messages
 	 * @throws Exception if flow doesn't start
 	 */
@@ -972,14 +963,12 @@ public interface Integration {
 	/**
 	 * Validates a certificate
 	 *
-	 * @param  httpsUrl
 	 * @return result of validation	 */
     HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, CertificateException, IOException;
 
 	/**
 	 * Validates a url expression
 	 *
-	 * @param  url
 	 * @return result of validation
 	 */
     ValidationErrorMessage validateUrl(String url);
@@ -994,8 +983,6 @@ public interface Integration {
 
 	/**
 	 * Validates a ftp expression
-	 *
-	 * @param  ftpSettings
 	 * @return result of validation
 	 */
     ValidationErrorMessage validateFtp(FtpSettings ftpSettings) throws IOException;

@@ -38,7 +38,6 @@ public class MessageManagerRuntime {
      * POST  /integration/send : Send messages to an step (fire and forget).
      *
      * @return if message has been send
-     * @throws Exception Message send failure
      */
     @PostMapping(
             path = "/integration/send/{numberOfTimes}",
@@ -54,7 +53,7 @@ public class MessageManagerRuntime {
             @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
             @RequestHeader(value = "headerKeys", required = false) String headerKeys,
             @PathVariable(value = "numberOfTimes") Integer numberOfTimes
-    ) throws Exception {
+    ) {
 
         String body = requestBody.orElse(" ");
 
@@ -82,7 +81,7 @@ public class MessageManagerRuntime {
 
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send","Sent successfully");
         } catch (Exception e) {
-            log.error("Send message to " + uri + " failed",e);
+            log.error("Send message to {} failed", uri, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
@@ -91,7 +90,6 @@ public class MessageManagerRuntime {
      * POST  /integration/sendrequest : Send request messages to an step.
      *
      * @return the reply message
-     * @throws Exception Message send failure
      */
     @PostMapping(
             path = "/integration/sendrequest",
@@ -106,7 +104,7 @@ public class MessageManagerRuntime {
             @RequestHeader(value = "serviceid", required = false) String serviceId,
             @RequestHeader(value = "serviceKeys", required = false) String serviceKeys,
             @RequestHeader(value = "headerKeys", required = false) String headerKeys
-    ) throws Exception {
+    ) {
 
         String body = requestBody.orElse(" ");
         String result;
@@ -135,7 +133,7 @@ public class MessageManagerRuntime {
 
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/sendrequest",result);
         } catch (Exception e) {
-            log.error("Send reuqest message to " + uri + " failed",e);
+            log.error("Send reuqest message to {} failed", uri, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/sendrequest",e.getMessage());
         }
     }
@@ -143,7 +141,7 @@ public class MessageManagerRuntime {
 
     // Generates a generic error response (exceptions outside try catch):
     @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) throws Exception {
+    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
 
         HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
         String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
@@ -155,7 +153,8 @@ public class MessageManagerRuntime {
 
     private  TreeMap<String, Object> getMap(String message) throws JsonProcessingException {
 
-        return new ObjectMapper().readValue(message, new TypeReference<TreeMap<String, Object>>(){});
+        return new ObjectMapper().readValue(message, new TypeReference<>() {
+        });
 
     }
 

@@ -79,14 +79,14 @@ public class SetOriginalMessageProcessor implements Processor {
 
 	private HttpMethod getHttpMethod(String methodStr) {
 		if (methodStr == null) {
-			log.error("HTTP method is null. Using default: " + HttpMethod.GET);
+            log.error("HTTP method is null. Using default: {}", HttpMethod.GET);
 			return HttpMethod.GET;
 		}
 
 		try {
 			return HttpMethod.valueOf(methodStr);
 		} catch (IllegalArgumentException e) {
-			log.error("Invalid HTTP method: " + methodStr + ". Using default: " + HttpMethod.GET);
+            log.error("Invalid HTTP method: {}. Using default: {}", methodStr, HttpMethod.GET);
 			return HttpMethod.GET;
 		}
 	}

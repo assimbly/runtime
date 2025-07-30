@@ -18,7 +18,7 @@ public abstract class DilImpl implements Dil {
 
 	private final List<TreeMap<String, String>> properties = new ArrayList<>();
 
-	public void transpile(String flowId, String mediaType, String configuration) throws Exception {
+	public void transpile(String flowId, String mediaType, String configuration) {
 
 		try {
 			TreeMap<String, String> flowProperties;

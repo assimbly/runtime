@@ -38,7 +38,6 @@ public class RouteTemplate {
     private String scheme;
     private String options;
     private String blockType;
-    private Element parameter;
     private String transport;
     private String blockUri;
     private String baseUri;
@@ -246,13 +245,12 @@ public class RouteTemplate {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/" + stepXPath + "blocks");
 
-        if(node != null && node.hasChildNodes()){
-
-            if(node instanceof Element nodeElement) {
+        if(node != null && node.hasChildNodes() && node instanceof Element nodeElement) {
 
                 NodeList blocks = nodeElement.getElementsByTagName("block");
 
                 for (int i = 0; i < blocks.getLength(); i++) {
+
                     Node block = blocks.item(i);
 
                     if(block instanceof Element blockElement) {
@@ -273,10 +271,7 @@ public class RouteTemplate {
                 }
 
             }
-        }else{
-            //create default log block
-            log.info("Creating default log block");
-        }
+
 
     }
 
@@ -331,7 +326,7 @@ public class RouteTemplate {
             String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
 
             if (updatedRouteConfiguration.contains("<dataFormats>")){
-                updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.\\n)*)<\\/dataFormats>", "");
+                updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.\\n)*)</dataFormats>", "");
             }
 
             properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
@@ -405,33 +400,35 @@ public class RouteTemplate {
      * Processes option parameters from either optionProperties list or options string
      */
     private void createOptionParameters(List<String> optionProperties) {
-
-        if(optionProperties != null && !optionProperties.isEmpty()){
-
-            for (String optionProperty : optionProperties) {
-                String name = optionProperty.substring(optionProperty.lastIndexOf('/') + 1);
-                String value = conf.getProperty(optionProperty).toString();
-                parameter = createParameter(templateDoc,name,value);
-                templatedRoute.appendChild(parameter);
-            }
-
-        }else if(options!= null && !options.isEmpty()){
-
-            if(options.contains("&")){
-                String[] optionsList = options.split("&");
-                for(String option: optionsList){
-                    if(option.contains("=")){
-                        createOption(option);
-                    }
-                }
-            }else {
-                if(options.contains("=")){
-                    createOption(options);
-                }
-            }
-
+        if (optionProperties != null && !optionProperties.isEmpty()) {
+            processOptionProperties(optionProperties);
+        } else if (options != null && !options.isEmpty()) {
+            processOptionsString(options);
         }
+    }
 
+    private void processOptionProperties(List<String> optionProperties) {
+        for (String optionProperty : optionProperties) {
+            String name = optionProperty.substring(optionProperty.lastIndexOf('/') + 1);
+            String value = conf.getProperty(optionProperty).toString();
+            Element parameter = createParameter(templateDoc, name, value);
+            templatedRoute.appendChild(parameter);
+        }
+    }
+
+    private void processOptionsString(String options) {
+        if (options.contains("&")) {
+            String[] optionsList = options.split("&");
+            for (String option : optionsList) {
+                if (option.contains("=")) {
+                    createOption(option);
+                }
+            }
+        } else {
+            if (options.contains("=")) {
+                createOption(options);
+            }
+        }
     }
 
     private void createOption(String option){
@@ -479,10 +476,7 @@ public class RouteTemplate {
         }
 
         if(options!=null && !options.isEmpty() && !baseUri.contains("?")) {
-            StringBuilder sb = new StringBuilder(uri); // Initialize with the base URI
-            sb.append("?");
-            sb.append(options);
-            uri = sb.toString();
+            uri = uri + "?" + options;
         }
 
         createCoreMessageComponents();
@@ -560,62 +554,67 @@ public class RouteTemplate {
     }
 
     public void createCustomLink(String linkXPath, String type) {
-
-        //get values from configuration
+        // get values from configuration
         String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
         String linkTransport = createLinkTransport(linkXPath);
         String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
         String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
         String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
         String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+
+        // Assuming 'options' is an instance variable. If not, it should be passed or returned.
         options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
         String endpoint = createLinkEndpoint(linkTransport, id);
 
-        //set values
+        // Set values based on retrieved configuration and type
         if (expression != null) {
             Element param = createParameter(templateDoc, "expression", expression);
             templatedRoute.appendChild(param);
         }
 
         if (type.equals("router")) {
-
-            if (rule != null) {
-                Element param = createParameter(templateDoc, bound + "_rule", endpoint);
-                templatedRoute.appendChild(param);
-            } else {
-                Element param = createParameter(templateDoc, bound , endpoint);
-                templatedRoute.appendChild(param);
-            }
-
-            if (bound != null && bound.equalsIgnoreCase("out")) {
-                createLinkLists(rule, expression, endpoint);
-                if (rule == null) {
-                    Element param = createParameter(templateDoc, bound + "_default", endpoint);
-                    templatedRoute.appendChild(param);
-                }
-            }
-
+            handleRouterLinkType(bound, rule, expression, endpoint);
         } else {
-            NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
+            handleNonRouterLinkType(bound, endpoint);
+        }
+    }
 
-            boolean parameterUpdated = false;
-            for (Node oldParameter : iterable(oldParameters)) {
+    private void handleRouterLinkType(String bound, String rule, String expression, String endpoint) {
+        Element param;
+        if (rule != null) {
+            param = createParameter(templateDoc, bound + "_rule", endpoint);
+        } else {
+            param = createParameter(templateDoc, bound, endpoint);
+        }
+        templatedRoute.appendChild(param);
 
-                Node name = oldParameter.getAttributes().getNamedItem("name");
-
-                if (name.getNodeValue().equals(bound)) {
-                    parameterUpdated = true;
-                    Element param = createParameter(templateDoc, bound, endpoint);
-                    templatedRoute.replaceChild(param, oldParameter);
-                }
-
-            }
-
-            if(!parameterUpdated){
-                Element param = createParameter(templateDoc, bound, endpoint);
+        if (bound != null && bound.equalsIgnoreCase("out")) {
+            createLinkLists(rule, expression, endpoint);
+            if (rule == null) {
+                param = createParameter(templateDoc, bound + "_default", endpoint);
                 templatedRoute.appendChild(param);
             }
+        }
+    }
 
+    private void handleNonRouterLinkType(String bound, String endpoint) {
+        NodeList oldParameters = templatedRoute.getElementsByTagName("parameter");
+        boolean parameterUpdated = false;
+
+        for (Node oldParameter : iterable(oldParameters)) {
+            Node name = oldParameter.getAttributes().getNamedItem("name");
+
+            if (name != null && name.getNodeValue().equals(bound)) { // Added null check for 'name' attribute
+                parameterUpdated = true;
+                Element param = createParameter(templateDoc, bound, endpoint);
+                templatedRoute.replaceChild(param, oldParameter);
+                break; // No need to continue loop once updated
+            }
+        }
+
+        if (!parameterUpdated) {
+            Element param = createParameter(templateDoc, bound, endpoint);
+            templatedRoute.appendChild(param);
         }
     }
 
@@ -704,61 +703,73 @@ public class RouteTemplate {
         }
     }
 
-    private void createCoreMessageComponents() throws XPathExpressionException, TransformerException {
-
-        if(!path.startsWith("message:")) {
+    private void createCoreMessageComponents() throws XPathExpressionException {
+        if (!path.startsWith("message:")) {
             return;
         }
 
         String name = StringUtils.substringAfter(path, "message:");
 
         if (scheme.equalsIgnoreCase("setBody") || scheme.equalsIgnoreCase("setMessage")) {
-
-            String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body"), null);
-            if(resourceAsString == null) {
-                resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body"), null);
-            }
-
-            if(resourceAsString == null){
-
-                Node node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[name='" + name + "']/body/*");
-                if (node == null) {
-                    node = IntegrationUtil.getNode(conf,"/dil/core/messages/message[id='" + name + "']/body/*");
-                }
-                resourceAsString = DocConverter.convertNodeToString(node);
-
-            }
-
-            String language = Objects.toString(conf.getProperty("core/messages/message[name='" + name + "']/body/@language"), null);
-            if(language == null) {
-                language = Objects.toString(conf.getProperty("core/messages/message[id='" + name + "']/body/@language"), "constant");
-            }
-
-            parameter = createParameter(templateDoc, "language", language);
-            templatedRoute.appendChild(parameter);
-
-            parameter = createParameter(templateDoc, "path", resourceAsString);
-            templatedRoute.appendChild(parameter);
-            path = resourceAsString;
+            setCoreMessageBody(name);
         }
 
         if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
+            setCoreMessageHeaders(name);
+        }
+    }
 
-            Node node = getHeadersNode(conf.getDocument(), name, "name");
+    private void setCoreMessageBody(String messageName) throws XPathExpressionException {
+        String resourceAsString = getBodyResource(messageName);
 
-            //backup when name is not found
-            if (node == null) {
-                node = getHeadersNode(conf.getDocument(), name, "id");
-            }
-
-            if (node != null) {
-                String headerKeysAsString = DocConverter.convertNodeToString(node);
-                parameter = createParameter(templateDoc, "headers", headerKeysAsString);
-                templatedRoute.appendChild(parameter);
-            }
-
+        String language = Objects.toString(conf.getProperty("core/messages/message[name='" + messageName + "']/body/@language"), null);
+        if (language == null) {
+            language = Objects.toString(conf.getProperty("core/messages/message[id='" + messageName + "']/body/@language"), "constant");
         }
 
+        // Assuming 'parameter', 'templateDoc', and 'templatedRoute' are instance variables
+        Element parameter = createParameter(templateDoc, "language", language);
+        templatedRoute.appendChild(parameter);
+
+        parameter = createParameter(templateDoc, "path", resourceAsString);
+        templatedRoute.appendChild(parameter);
+
+        // Assuming 'path' is an instance variable being updated
+        path = resourceAsString;
+    }
+
+    private String getBodyResource(String messageName) throws XPathExpressionException {
+        String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + messageName + "']/body"), null);
+        if (resourceAsString == null) {
+            resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + messageName + "']/body"), null);
+        }
+
+        if (resourceAsString == null) {
+            Node node = IntegrationUtil.getNode(conf, "/dil/core/messages/message[name='" + messageName + "']/body/*");
+            if (node == null) {
+                node = IntegrationUtil.getNode(conf, "/dil/core/messages/message[id='" + messageName + "']/body/*");
+            }
+            resourceAsString = DocConverter.convertNodeToString(node);
+        }
+        return resourceAsString;
+    }
+
+
+    private void setCoreMessageHeaders(String messageName) {
+        // Assuming 'conf' is an instance variable and getDocument() exists
+        Node node = getHeadersNode(conf.getDocument(), messageName, "name");
+
+        // Backup when name is not found
+        if (node == null) {
+            node = getHeadersNode(conf.getDocument(), messageName, "id");
+        }
+
+        if (node != null) {
+            String headerKeysAsString = DocConverter.convertNodeToString(node);
+            // Assuming 'parameter', 'templateDoc', and 'templatedRoute' are instance variables
+            Element parameter = createParameter(templateDoc, "headers", headerKeysAsString);
+            templatedRoute.appendChild(parameter);
+        }
     }
 
     private String getTimestamp(){

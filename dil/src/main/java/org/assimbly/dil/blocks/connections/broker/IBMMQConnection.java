@@ -1,16 +1,13 @@
 package org.assimbly.dil.blocks.connections.broker;
 
-import com.ibm.mq.jms.MQConnectionFactory;
-import com.ibm.msg.client.jms.JmsConstants;
-import com.ibm.msg.client.wmq.common.CommonConstants;
-import jakarta.jms.ConnectionFactory;
+import com.ibm.mq.jakarta.jms.MQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
 
 
 public class IBMMQConnection {
@@ -105,12 +102,12 @@ public class IBMMQConnection {
         log.info("Setting up IBM MQ client connection.");
         if (context.hasComponent(componentName) == null) {
             JmsComponent jmsComponent = new JmsComponent();
-            jmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            jmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, jmsComponent);
         } else {
             context.removeComponent(componentName);
             JmsComponent jmsComponent = new JmsComponent();
-            jmsComponent.setConnectionFactory((ConnectionFactory) cf);
+            jmsComponent.setConnectionFactory(cf);
             context.addComponent(componentName, jmsComponent);
         }
 
@@ -158,7 +155,7 @@ public class IBMMQConnection {
     //public static final int 	WMQ_CM_DIRECT_TCPIP 			2
     //public static final int 	WMQ_CM_DIRECT_HTTP 				4
     //public static final int 	WMQ_CM_BINDINGS_THEN_CLIENT 	8
-    private MQConnectionFactory setOptionalParameter(MQConnectionFactory cf) throws JMSException {
+    private void setOptionalParameter(MQConnectionFactory cf) throws Exception {
 
         if (appName != null) {
             cf.setAppName(appName);
@@ -176,7 +173,7 @@ public class IBMMQConnection {
         if (transportTypeAsString != null) {
             cf.setTransportType(Integer.parseInt(transportTypeAsString));
         } else {
-            cf.setTransportType(CommonConstants.WMQ_CM_CLIENT);
+            cf.setTransportType(1);
         }
 
         if (clientReconnectTimeOutAsString != null) {
@@ -191,13 +188,12 @@ public class IBMMQConnection {
             cf.setClientReconnectOptions(0);
         }
 
-        cf.setBooleanProperty(JmsConstants.USER_AUTHENTICATION_MQCSP, clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
+        cf.setBooleanProperty("USER_AUTHENTICATION_MQCSP", clientUserAuthenticationMQCSP == null || !clientUserAuthenticationMQCSP.equalsIgnoreCase("false"));
 
-        cf.setBooleanProperty(CommonConstants.WMQ_MQMD_WRITE_ENABLED, true);
+        cf.setBooleanProperty("WMQ_MQMD_WRITE_ENABLED", true);
 
         configureChannelExits(cf);
 
-        return cf;
     }
 
     private void configureChannelExits(MQConnectionFactory cf) {
@@ -221,25 +217,24 @@ public class IBMMQConnection {
         }
     }
 
-    private MQConnectionFactory createConnection(MQConnectionFactory cf) throws JMSException {
+    private MQConnectionFactory createConnection(MQConnectionFactory cf) throws Exception {
 
         if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
             try (var connection = cf.createConnection(username, password)) {
                 connection.start();
-            } catch (JMSException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         } else
 
             if (username != null && !username.isEmpty()) {
-                cf.setStringProperty(JmsConstants.USERID, username);
+                cf.setStringProperty("USERID", username);
             }
 
-            try (var connection = cf.createConnection()) {
-                connection.start();
-            } catch (JMSException e) {
-                throw new RuntimeException(e);
-            }
+        try(Connection connection = cf.createConnection()){
+            connection.start();
+        }
+
 
         return cf;
     }

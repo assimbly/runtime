@@ -32,7 +32,7 @@ public class SSLConfiguration {
 		if(context.getComponent(componentName)!=null){
 			((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
 		}else{
-			log.warn("Can't set SSL for component " + componentName + ". Component is not loaded on the classpath");
+            log.warn("Can't set SSL for component {}. Component is not loaded on the classpath", componentName);
 		}
 	}
 

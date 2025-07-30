@@ -39,7 +39,7 @@ public class QueueManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "queueName") String queueName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=createQueue type=POST message=Create a new queue name={} type={}", queueName, brokerType);
 
@@ -68,7 +68,7 @@ public class QueueManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "queueName") String queueName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=deleteQueue type=DELETE message=Delete a queue name={} type={}", queueName, brokerType);
 
@@ -97,7 +97,7 @@ public class QueueManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "queueName") String queueName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=getQueue type=GET message=Get queue info name={} type={}", queueName, brokerType);
 
@@ -124,7 +124,7 @@ public class QueueManagerRuntime {
     public ResponseEntity<String> getQueues(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=getQueues type=GET message=Get queues info type={}", brokerType);
 
@@ -153,7 +153,7 @@ public class QueueManagerRuntime {
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "queueName") String queueName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) throws Exception {
+    ) {
 
         log.debug("event=clearQueue type=POST message=Deletes messages on the queue name={} type={}", queueName, brokerType);
 
@@ -180,7 +180,7 @@ public class QueueManagerRuntime {
     public ResponseEntity<String> clearQueues(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    )  throws Exception {
+    ) {
 
         log.debug("event=clearQueues type=POST message=Deletes messages on all queue type={}", brokerType);
 

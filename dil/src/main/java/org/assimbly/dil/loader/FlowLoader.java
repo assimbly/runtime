@@ -26,7 +26,7 @@ public class FlowLoader extends RouteBuilder {
 	private final TreeMap<String, String> props;
 	private CamelContext context;
 	private RoutesLoader loader;
-	private String flowId;
+	private final String flowId;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 
@@ -65,7 +65,7 @@ public class FlowLoader extends RouteBuilder {
 		loader = PluginHelper.getRoutesLoader(context);
 	}
 
-	private void setResources() throws Exception{
+	private void setResources() {
 
 		Registry registry = context.getRegistry();
 
@@ -109,7 +109,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void setRouteConfigurations() throws Exception{
+	private void setRouteConfigurations() {
 
 		removeRouteConfiguration(flowId);
 
@@ -127,7 +127,7 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 	//this route defines a route template
-	private void defineRouteTemplates() throws Exception{
+	private void defineRouteTemplates() {
 		for(Map.Entry<String, String> prop : props.entrySet()){
 			String key = prop.getKey();
 			if(key.endsWith("routetemplatedefinition")){
@@ -160,7 +160,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void setRoutes() throws Exception{
+	private void setRoutes() {
 
 		for(String key : props.descendingKeySet()){
 			if(key.endsWith("route")){
@@ -173,7 +173,7 @@ public class FlowLoader extends RouteBuilder {
 	}
 
 
-	private void loadRoute(String route, String id) throws Exception {
+	private void loadRoute(String route, String id) {
 
 		try {
 
@@ -192,7 +192,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void loadStep(String step, String type, String id, String uri) throws Exception {
+	private void loadStep(String step, String type, String id, String uri) {
 
 		try {
 

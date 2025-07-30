@@ -158,7 +158,7 @@ public class Marshall {
 			}
 	}
 
-	private void setStepFromConfiguration(String confType, String confUri, String confstepId, Element step) throws Exception {
+	private void setStepFromConfiguration(String confType, String confUri, String confstepId, Element step) {
 
 		Element uri = doc.createElement("uri");
 		Element type = doc.createElement("type");
@@ -267,7 +267,7 @@ public class Marshall {
 		}
 	}
 
-	private void setConnectionFromConfiguration(String connectionid, TreeMap<String, String> configuration) throws Exception {
+	private void setConnectionFromConfiguration(String connectionid, TreeMap<String, String> configuration) {
 
 		if(!connectionsList.contains(connectionid)) {
 			connectionsList.add(connectionid);
@@ -293,7 +293,7 @@ public class Marshall {
 		}
 	}
 
-	private void setMessageFromConfiguration(String messageid, TreeMap<String, String> configuration) throws Exception {
+	private void setMessageFromConfiguration(String messageid, TreeMap<String, String> configuration) {
 
 		if(!messageList.contains(messageid)) {
 

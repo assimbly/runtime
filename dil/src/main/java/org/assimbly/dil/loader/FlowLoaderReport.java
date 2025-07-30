@@ -22,7 +22,7 @@ public class FlowLoaderReport {
 	private final long startTime;
 
 	public FlowLoaderReport(String flowId, String flowName) {
-		log.info("initialize flow report | flowid=" + flowId);
+        log.info("initialize flow report | flowid={}", flowId);
 
 		this.flowId = flowId;
 		this.flowName = flowName;
@@ -58,9 +58,9 @@ public class FlowLoaderReport {
 		report = json.toString(4);
 
 		if(loaded == loadedSuccess){
-			log.info("Flow loaded successfully | flowid=" + flowId + " | time=" + time + " milliseconds\n\n" + report);
+            log.info("Flow loaded successfully | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}else{
-			log.error("Flow failed to load | flowid=" + flowId + " | time=" + time + " milliseconds\n\n" + report);
+            log.error("Flow failed to load | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}
 
 	}
@@ -110,18 +110,18 @@ public class FlowLoaderReport {
 		//logging
 		if(loaded == loadedSuccess) {
 			if(loadedSuccess == 1){
-				log.info(loadedSuccess + " step loaded successfully | flowid=" + flowId);
+                log.info("{} step loaded successfully | flowid={}", loadedSuccess, flowId);
 			}else if(loadedSuccess > 1){
-				log.info(loadedSuccess + " steps loaded successfully | flowid=" + flowId);
+                log.info("{} steps loaded successfully | flowid={}", loadedSuccess, flowId);
 			}
-			log.info("Start flow | name=" + flowName + " | flowid=" + flowId);
+            log.info("Start flow | name={} | flowid={}", flowName, flowId);
 		}else{
 			if(loadedError == 1){
-				log.error(loadedError + " step failed to load | flowid=" + flowId);
+                log.error("{} step failed to load | flowid={}", loadedError, flowId);
 			}else if(loadedError > 1){
-				log.error(loadedError + " steps failed to load | flowid=" + flowId);
+                log.error("{} steps failed to load | flowid={}", loadedError, flowId);
 			}
-			log.error("Event=" + event + " | name=" + flowName + " | flowid=" + flowId);
+            log.error("Event={} | name={} | flowid={}", event, flowName, flowId);
 		}
 
 	}

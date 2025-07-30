@@ -45,7 +45,7 @@ public abstract class BaseIntegration implements Integration {
 		return flowsMap.values();
 	}
 
-	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) throws Exception {
+	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) {
 
 		removeFlowConfigurationIfExist(flowId);
 
@@ -61,6 +61,7 @@ public abstract class BaseIntegration implements Integration {
 		flowsMap = new ConcurrentHashMap<>();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void initFlowDB() {
 
 		File dbFile = new File(BaseDirectory.getInstance().getBaseDirectory() + "/cache/flowsMap.db");
@@ -95,7 +96,7 @@ public abstract class BaseIntegration implements Integration {
 
 	}
 
-	public TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception {
+	public TreeMap<String,String> getFlowConfiguration(String flowId) {
 		TreeMap<String,String> flowConf = null;
 		for (TreeMap<String, String> props : getFlowConfigurations()) {
 			if (props.get("id").equals(flowId)) {

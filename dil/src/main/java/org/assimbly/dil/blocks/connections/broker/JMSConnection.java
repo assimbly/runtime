@@ -57,7 +57,7 @@ public class JMSConnection {
 
     }
 
-    private boolean checkConnection() throws Exception {
+    private boolean checkConnection() {
 
         Object isRegistered = context.getRegistry().lookupByName(connectionId);
 
@@ -123,7 +123,7 @@ public class JMSConnection {
         connectionFactory.setMaxRetryInterval(1); // Disable reconnection
         connectionFactory.setRetryIntervalMultiplier(2.0);
 
-        return (ConnectionFactory) connectionFactory;
+        return connectionFactory;
 
     }
 
@@ -143,7 +143,7 @@ public class JMSConnection {
 
     private PooledConnectionFactory createPooledConnectionFactory(ConnectionFactory connectionFactory) {
 
-        log.info("Setting pooled connectionFactory for" + componentName);
+        log.info("Setting pooled connectionFactory for{}", componentName);
 
         PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
         pooledConnectionFactory.setConnectionFactory(connectionFactory);

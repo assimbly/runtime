@@ -147,7 +147,7 @@ public class XMLFileConfiguration {
 			InputStream is = url.openStream();
 
 			conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(params.xml()).getConfiguration();
-			FileHandler fh = new FileHandler(conf);
+			fh = new FileHandler(conf);
 			fh.load(is);
 
 		}else if (scheme.startsWith("file")) {

@@ -31,14 +31,11 @@ public class ScriptValidator {
         }
 
         try {
-            switch(scriptDto.getLanguage()) {
-                case "js":
-                    return validateJavaScript(evaluationRequest.getExchange(), scriptDto.getScript());
-                case "groovy":
-                    return validateGroovyScript(evaluationRequest.getExchange(), scriptDto.getScript());
-                default:
-                    return createBadRequestResponse(evaluationRequest.getExchange(), "Unsupported scripting language");
-            }
+            return switch (scriptDto.getLanguage()) {
+                case "js" -> validateJavaScript(evaluationRequest.getExchange(), scriptDto.getScript());
+                case "groovy" -> validateGroovyScript(evaluationRequest.getExchange(), scriptDto.getScript());
+                default -> createBadRequestResponse(evaluationRequest.getExchange(), "Unsupported scripting language");
+            };
         } catch (Exception e) {
             log.error("Invalid script: '", e);
             return createBadRequestResponse(evaluationRequest.getExchange(), "Invalid script: '" + e.getMessage() + "'");

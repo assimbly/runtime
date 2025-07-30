@@ -9,22 +9,17 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class FileStore {
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
     private File file;
     private final Date date = new Date();
-    private final String collectorId;
-    private final org.assimbly.dil.event.domain.Store store;
 
     public FileStore(String collectorId, org.assimbly.dil.event.domain.Store store) {
-        this.collectorId = collectorId;
-        this.store = store;
 
-        if(file==null){
-            createFile(this.collectorId, this.store);
-        }
+        createFile(collectorId, store);
 
     }
 
@@ -42,11 +37,7 @@ public class FileStore {
         String uri = store.getUri();
         String today = new SimpleDateFormat("yyyyMMdd").format(date);
 
-        if(uri!=null)
-            file = new File(uri);
-        else{
-            file = new File(baseDir + "/events/" + collectorid + "/" + today + "_events.log");
-        }
+        file = new File(Objects.requireNonNullElseGet(uri, () -> baseDir + "/events/" + collectorid + "/" + today + "_events.log"));
 
     }
 

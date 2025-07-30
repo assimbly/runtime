@@ -463,16 +463,20 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
         return answer;
     }
 
+    @SuppressWarnings("unchecked")
     private JSONObject getJsonFromMap(Map<String, Object> map) throws JSONException {
         JSONObject jsonData = new JSONObject();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
             Object value = entry.getValue();
-            if (value instanceof Map<?, ?>) {
-                value = getJsonFromMap((Map<String, Object>) value);
+            if (value instanceof Map) {
+                // We know it's a Map, but we need to ensure its generic types are compatible
+                // This is where the recursive call helps with type safety
+                jsonData.put(key, getJsonFromMap((Map<String, Object>) value));
+            } else {
+                jsonData.put(key, value);
             }
-            jsonData.put(entry.getKey(), value);
         }
-
         return jsonData;
     }
 

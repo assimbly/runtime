@@ -25,7 +25,7 @@ public class FailureProcessor implements Processor {
 		FlowEvent flowEvent = new FlowEvent(exchange.getFromRouteId(), date, exchange.getException().getMessage());
 
 		String flowId;
-		if(flowEvent.getFlowId().indexOf("-") == -1){
+		if(flowEvent.getFlowId().contains("-")){
 			flowId = flowEvent.getFlowId();
 		}else{
 			flowId = StringUtils.substringBefore(flowEvent.getFlowId(),"-");

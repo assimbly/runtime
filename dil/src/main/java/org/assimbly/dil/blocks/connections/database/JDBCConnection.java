@@ -34,7 +34,7 @@ public class JDBCConnection {
         setFields();
 
         if (url != null) {
-            log.info("Create datasource for url: " + url + "(driver=" + driver + ")");
+            log.info("Create datasource for url: {} (driver={})", url, driver);
             setConnection(direction, stepId);
         } else {
             log.error("Database JDBC url is missing.");
@@ -51,7 +51,7 @@ public class JDBCConnection {
 
     }
 
-    private void setConnection(String direction, Object stepId) throws Exception {
+    private void setConnection(String direction, Object stepId) {
 
         String connectionIdValue;
         if(direction.equals("error")) {

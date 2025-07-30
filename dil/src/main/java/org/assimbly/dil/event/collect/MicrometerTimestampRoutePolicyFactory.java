@@ -54,7 +54,7 @@ public class MicrometerTimestampRoutePolicyFactory extends MicrometerRoutePolicy
                 AtomicLong::get);
 
         // Return a custom route policy that wraps the base policy
-        return new TimestampTrackingRoutePolicy(basePolicy, routeId, lastFailureTimestamp, lastCompletionTimestamp);
+        return new TimestampTrackingRoutePolicy(basePolicy, lastFailureTimestamp, lastCompletionTimestamp);
     }
 
     /**
@@ -79,16 +79,13 @@ public class MicrometerTimestampRoutePolicyFactory extends MicrometerRoutePolicy
     private static class TimestampTrackingRoutePolicy implements RoutePolicy {
 
         private final MicrometerRoutePolicy basePolicy;
-        private final String routeId;
-        private final AtomicLong lastFailureTimestamp;
+         private final AtomicLong lastFailureTimestamp;
         private final AtomicLong lastCompletionTimestamp;
 
         public TimestampTrackingRoutePolicy(MicrometerRoutePolicy basePolicy,
-                                            String routeId,
-                                            AtomicLong lastFailureTimestamp,
+                                             AtomicLong lastFailureTimestamp,
                                             AtomicLong lastCompletionTimestamp) {
             this.basePolicy = basePolicy;
-            this.routeId = routeId;
             this.lastFailureTimestamp = lastFailureTimestamp;
             this.lastCompletionTimestamp = lastCompletionTimestamp;
         }

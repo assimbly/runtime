@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -50,7 +49,6 @@ public class CertificateManagerRuntime {
      * POST  /certificates/ : Sets TLS certificates.
      *
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(
             path = "/certificates/set",
@@ -62,7 +60,7 @@ public class CertificateManagerRuntime {
             @RequestBody String url,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) throws Exception {
+    ) {
 
         log.debug("REST request to set certificates for url: {}", url);
 
@@ -82,7 +80,6 @@ public class CertificateManagerRuntime {
      *
      * @param url the url to get the certificates
      * @return the ResponseEntity<String> with status 200 (Imported) and with body (certificates), or with status 400 (Bad Request) if the certificates failed to import
-     * @throws Exception
      */
     @PostMapping(
             path = "/certificates/import",
@@ -93,7 +90,7 @@ public class CertificateManagerRuntime {
             @RequestBody String url,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) throws Exception {
+    ) {
 
         log.debug("REST request to import certificates for url: {}", url);
 
@@ -131,7 +128,7 @@ public class CertificateManagerRuntime {
             @RequestHeader(value = "FileType") String fileType,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) throws Exception {
+    ) {
 
         try {
 
@@ -179,7 +176,7 @@ public class CertificateManagerRuntime {
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword,
             @RequestHeader(value = "password") String password
-    ) throws Exception {
+    ) {
 
         try {
 
@@ -206,7 +203,7 @@ public class CertificateManagerRuntime {
             @RequestHeader(value = "cn") String cn,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) throws Exception {
+    ) {
 
         try {
 
@@ -223,7 +220,7 @@ public class CertificateManagerRuntime {
 
             String result = certificatesAsJSon(certificateMap, null, keystoreName);
 
-            log.debug("Generated certificate: " + cert);
+            log.debug("Generated certificate: {}", cert);
 
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/generate", result);
 
@@ -252,7 +249,7 @@ public class CertificateManagerRuntime {
             @PathVariable(value = "certificateName") String certificateName,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) throws Exception {
+    ) {
         log.debug("REST request to delete certificate : {}", certificateName);
 
         try {
@@ -321,7 +318,6 @@ public class CertificateManagerRuntime {
             Certificate certificate = entry.getValue();
             X509Certificate real = (X509Certificate) certificate;
 
-            String certificateName = key;
             Instant certificateExpiry = real.getNotAfter().toInstant();
 
             String certificateFile = CertificatesUtil.convertX509CertificateToPem(real);
@@ -329,7 +325,7 @@ public class CertificateManagerRuntime {
             JSONObject certificateDetails = new JSONObject();
 
             certificateDetails.put("certificateFile",certificateFile);
-            certificateDetails.put("certificateName",certificateName);
+            certificateDetails.put("certificateName", key);
             certificateDetails.put("certificateStore",certificateStore);
 
             certificateDetails.put("certificateExpiry",certificateExpiry);
@@ -348,8 +344,8 @@ public class CertificateManagerRuntime {
         try {
             CertificatesUtil util = new CertificatesUtil();
             return util.downloadCertificates(url);
-        } catch (Exception e1) {
-            e1.printStackTrace();
+        } catch (Exception e) {
+            log.error("Download of certificate from url {} failed", url, e);
         }
         return new Certificate[0];
     }
@@ -367,18 +363,18 @@ public class CertificateManagerRuntime {
             Certificate[] certificates = util.downloadCertificates(url);
             String keystorePath = baseDir + "/security/" + keystoreName;
             util.importCertificates(keystorePath, keystorePassword, certificates);
-        } catch (Exception e1) {
-            e1.printStackTrace();
+        } catch (Exception e) {
+            log.error("Set Certificate in keystore {} for url {} failed", keystoreName, url, e);
         }
     }
 
-    public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
+    public void importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
 
         CertificatesUtil util = new CertificatesUtil();
 
         String keystorePath = baseDir + "/security/" + keystoreName;
 
-        return  util.importCertificate(keystorePath, keystorePassword, certificateName, certificate);
+        util.importCertificate(keystorePath, keystorePassword, certificateName, certificate);
 
     }
 

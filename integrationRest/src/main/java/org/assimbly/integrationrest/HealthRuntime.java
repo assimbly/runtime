@@ -36,7 +36,7 @@ public class HealthRuntime {
     )
     public ResponseEntity<String> getHealth(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(required = true, defaultValue = "route", value = "Type") String type) throws Exception {
+            @RequestHeader(defaultValue = "route", value = "Type") String type) {
 
         plainResponse = true;
 
@@ -57,8 +57,8 @@ public class HealthRuntime {
     public ResponseEntity<String> getHealthByFlowIds(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestBody String flowIds,
-            @RequestHeader(required = true, defaultValue = "route", value = "Type") String type
-    ) throws Exception {
+            @RequestHeader(defaultValue = "route", value = "Type") String type
+    ) {
 
         plainResponse = true;
 
@@ -81,11 +81,11 @@ public class HealthRuntime {
     public ResponseEntity<String> getFlowHealth(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(required = true, defaultValue = "route", value = "Type") String type,
+            @RequestHeader(defaultValue = "route", value = "Type") String type,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeSteps") boolean includeSteps,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeError") boolean includeError,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeDetails") boolean includeDetails
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -94,7 +94,7 @@ public class HealthRuntime {
             if(flowHealth.startsWith("Error")||flowHealth.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/health",flowHealth,plainResponse);
         } catch (Exception e) {
-            log.error("Get flowHealth " + flowId + " failed",e);
+            log.error("Get flowHealth {} failed", flowId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/health",e.getMessage());
         }
     }
@@ -103,14 +103,15 @@ public class HealthRuntime {
             path = "/integration/flow/{flowId}/step/{stepId}/health",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
+
     public ResponseEntity<String> getFlowStepHealth(
             @PathVariable(value = "flowId") String flowId,
             @PathVariable(value = "stepId") String stepId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(required = true, defaultValue = "route", value = "Type") String type,
+            @RequestHeader(defaultValue = "route", value = "Type") String type,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeError") boolean includeError,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeDetails") boolean includeDetails
-    ) throws Exception {
+    ) {
 
         plainResponse = true;
 
@@ -119,7 +120,7 @@ public class HealthRuntime {
             if(flowHealth.startsWith("Error")||flowHealth.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/health",flowHealth,plainResponse);
         } catch (Exception e) {
-            log.error("Get flowHealth " + flowId + " for stepId=" + stepId + " failed",e);
+            log.error("Get flowHealth {} for stepId={} failed", flowId, stepId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/health",e.getMessage());
         }
     }
