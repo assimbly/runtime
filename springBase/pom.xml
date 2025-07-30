@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>base</artifactId>
+        <groupId>org.assimbly</groupId>
+        <version>5.1.0</version>
+    </parent>
+
+    <artifactId>spring-base</artifactId>
+
+    <properties>
+  	  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<maven.compiler.release>11</maven.compiler.release>
+        <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
+    </properties>
+
+    <distributionManagement> 
+        <repository>
+            <id>github</id> 
+            <name>Temporary Staging Repository</name> 
+            <url>https://maven.pkg.github.com/assimbly/base</url> 
+        </repository> 
+    </distributionManagement>
+  
+    <dependencies>
+
+        <!-- spring dependencies -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${spring-data.version}</version>
+        </dependency>
+
+    </dependencies>
+
+</project>

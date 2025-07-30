@@ -55,7 +55,7 @@
       <dependency>
           <groupId>org.apache.activemq</groupId>
           <artifactId>activemq-pool</artifactId>
-          <version>${activemq.version}</version>
+          <version>${activemq-classic.version}</version>
           <scope>compile</scope>
       </dependency>
 

@@ -1,0 +1,74 @@
+package org.assimbly.util.rest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+
+/**
+ * Utility class for HTTP headers creation.
+ */
+public final class HeaderUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(HeaderUtil.class);
+
+    private static final String APPLICATION_NAME = "gatewayApp";
+
+    private HeaderUtil() {
+    }
+
+    public static HttpHeaders createAlert(String message, String param) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-" + APPLICATION_NAME + "-alert", message);
+        headers.add("X-" + APPLICATION_NAME + "-params", param);
+        return headers;
+    }
+
+    public static HttpHeaders createEntityCreationAlert(String entityName, String param) {
+        return createAlert("A new " + entityName + " is created with identifier " + param, param);
+    }
+
+    public static HttpHeaders createEntityUpdateAlert(String entityName, String param) {
+        return createAlert("A " + entityName + " is updated with identifier " + param, param);
+    }
+    
+    public static HttpHeaders createEntityDeletionAlert(String entityName, String param) {
+        return createAlert("A " + entityName + " is deleted with identifier " + param, param);
+    }
+
+    public static HttpHeaders createStartAlert(String param) {
+        return createAlert("Started flow " + param, param);
+    }
+    
+    public static HttpHeaders createRestartAlert(String param) {
+        return createAlert("Restarted " + param, param);
+    }
+
+    public static HttpHeaders createStopAlert(String param) {
+        return createAlert("Stopped flow " + param, param);
+    }
+
+	public static HttpHeaders createPauseAlert(String param) {
+		return createAlert("Paused flow " + param, param);
+	}
+
+	public static HttpHeaders createResumeAlert(String param) {
+		return createAlert("Route " + param + " resumes", param);
+	}
+
+	public static HttpHeaders flowFailureAlert(String flowName, String defaultMessage) {
+        log.error("Entity flowFailureAlert processing failed, {}", defaultMessage);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-gatewayApp-error", defaultMessage);
+        headers.add("X-gatewayApp-params", flowName);
+        return headers;
+    }
+    
+    public static HttpHeaders createFailureAlert(String entityName, String defaultMessage) {
+        log.error("Entity createFailureAlert processing failed, {}", defaultMessage);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-" + APPLICATION_NAME + "-error", defaultMessage);
+        headers.add("X-" + APPLICATION_NAME + "-params", entityName);
+        return headers;
+    }
+
+}
