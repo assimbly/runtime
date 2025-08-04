@@ -20,7 +20,7 @@ spec:
   template:
     route:
       from:
-        uri: "jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false"
+        uri: "jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding"
         steps:
           - removeHeaders:
               pattern: "CamelHttp*"
