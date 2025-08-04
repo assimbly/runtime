@@ -54,7 +54,6 @@ public class IntegrationRuntime {
             if (integration.isStarted()) {
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/start", "Integration already running");
             } else {
-                integration.setTracing(false, "default");
                 integration.start();
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/start", "Integration started");
             }

@@ -187,49 +187,6 @@ public interface Integration {
 	 */
     boolean isStarted();
 
-	/**
-	 * Turn on/off tracing
-	 * @param tracing to turn on tracing, false to turn it off
-	 * @param type of tracing which can be default (log to default logging) or backlog (log to a backlog queue)
-	 */
-    void setTracing(boolean tracing, String type);
-
-	/**
-	 * Turn on/off debugging
-	 * @param debugging to turn on debugging, false to turn it off
-	 */
-    void setDebugging(boolean debugging);
-
-	/**
-	 * Turn on/off suppressLoggingOnTimeout
-	 * @param suppressLoggingOnTimeout to turn on debugging, false to turn it off
-	 */
-    void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout);
-
-	/**
-	 * Turn on/off streamCaching
-	 * @param streamCaching to turn on streamCaching, false to turn it off
-	 */
-    void setStreamCaching(boolean streamCaching);
-
-	/**
-	 * Turn on/off debugging
-	 * @param certificateStore to turn on certificateStore, false to turn it off
-	 */
-    void setCertificateStore(boolean certificateStore) throws Exception;
-
-	/**
-	 * Turn on/off metrics
-	 * @param metrics to turn on metrics, false to turn it off
-	 */
-    void setMetrics(boolean metrics);
-
-	/**
-	 * Turn on/off historyMetrics
-	 * @param historyMetrics to turn on historyMetrics, false to turn it off
-	 */
-    void setHistoryMetrics(boolean historyMetrics);
-
 	//manage flow
 	/**
 	* Checks if a flow is a part of integration
