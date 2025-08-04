@@ -8,12 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Indexed;
 import org.springframework.web.bind.annotation.*;
 
 
 /**
  * Resource to return information about the stats of flows.
  */
+@Indexed
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")

@@ -12,15 +12,15 @@ spec:
     type: object
     properties:
       path:
-          title: Path
-          description: Path of the URL
-          type: string
+        title: Path
+        description: Path of the URL
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&matchOnUriPrefix=false&sslContextParameters=sslContext"
+        uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&sslContextParameters=sslContext"
         steps:
           - removeHeaders:
               pattern: "CamelHttp*"

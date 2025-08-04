@@ -37,11 +37,15 @@ import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.DefaultModel;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.model.*;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.*;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.util.AntPathMatcher;
+import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.io.FileUtils;
@@ -69,6 +73,7 @@ import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
+import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
@@ -119,6 +124,7 @@ import java.security.cert.Certificate;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -145,6 +151,15 @@ public class CamelIntegration extends BaseIntegration {
 	private TreeMap<String, String> props;
 	private String loadReport;
 	private FlowLoaderReport flowLoaderReport;
+
+	private final List<ModelLifecycleStrategy> modelLifecycleStrategies = new ArrayList<>();
+	private final List<org.apache.camel.model.RouteDefinition> routeDefinitions = new ArrayList<>();
+	private final List<RouteTemplateDefinition> routeTemplateDefinitions = new ArrayList<>();
+	private final Map<String, RouteTemplateDefinition.Converter> routeTemplateConverters = new ConcurrentHashMap<>();
+	private Model model;
+	private ModelCamelContext modelContext;
+
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private static final String SEP = "/";
@@ -173,6 +188,9 @@ public class CamelIntegration extends BaseIntegration {
 		//set the name of the runtime
 		context.setNameStrategy(new ExplicitCamelContextNameStrategy("assimbly"));
 		context.setManagementName("assimbly");
+
+		model = new DefaultModel(context);
+		modelContext = (ModelCamelContext) context;
 
 		//setting tracing standby to true, so it can be enabled during runtime
 		context.setTracingStandby(true);
@@ -1095,6 +1113,117 @@ public class CamelIntegration extends BaseIntegration {
 		return "stopped";
 	}
 
+	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
+
+		IntegrationRoot result = null;
+		result = mapper.readValue(configuration, IntegrationRoot.class);
+
+        List<Step> steps = getSteps(result);
+
+        long startTime = System.nanoTime(); // Start timing
+
+        for (Step step : steps) {
+			String routeId = flowId + "_" + step.getId();
+			String templateId = getTemplateId(step);
+			Map<String, Object> parameters = getParameters(step);
+
+			RouteTemplateContext rtc = new DefaultRouteTemplateContext(context);
+			if (parameters != null) {
+				parameters.forEach(rtc::setParameter);
+			}
+			doAddRouteFromTemplate(routeId, templateId, null, null, null, null, rtc);
+
+            //String installed = context.addRouteFromTemplate(routeId, templateId, parameters);
+
+		}
+
+        long durationNs = System.nanoTime() - startTime; // Duration in nanoseconds
+        System.out.println("Duration: " + durationNs + " ns");
+
+        return "Started flow successfully";
+
+	}
+
+	private List<Step> getSteps(IntegrationRoot root){
+		 return root.getDil()
+				.getIntegrations()
+				.getIntegration()
+				.getFlows()
+				.getFlow()
+				.getSteps()
+				.getStep();
+	}
+
+	private String getTemplateId(Step step){
+		String type = step.getType();
+		String uri = step.getUri();
+		if(uri.contains(":")){
+			int colonIndex = uri.indexOf(':');
+			String scheme = colonIndex != -1 ? uri.substring(0, colonIndex) : uri;
+			return scheme + "-" + type;
+		}
+
+		return uri + "-" + type;
+
+	}
+
+	private Map<String, Object> getParameters(Step step) {
+
+		Map<String, Object> map = new HashMap<>();
+
+		// Process options and build query string in single pass
+		String optionsString = null;
+		if (step.getOptions() != null && !step.getOptions().isEmpty()) {
+			StringBuilder options = new StringBuilder();
+			boolean first = true;
+
+			for (Map.Entry<String, Object> entry : step.getOptions().entrySet()) {
+				map.put(entry.getKey(), entry.getValue());
+
+				if (first) {
+					first = false;
+				} else {
+					options.append("&");
+				}
+				options.append(entry.getKey()).append("=").append(entry.getValue());
+			}
+			optionsString = options.toString();
+		}
+
+		// Build URI and add options
+		String baseUri = step.getUri();
+		if (optionsString != null) {
+			map.put("uri", baseUri + "?" + optionsString);
+			map.put("options", optionsString);
+		} else {
+			map.put("uri", baseUri);
+		}
+
+		// Parse scheme and path more efficiently
+		int colonIndex = baseUri.indexOf(':');
+		if (colonIndex != -1) {
+			map.put("scheme", baseUri.substring(0, colonIndex));
+			map.put("path", baseUri.substring(colonIndex + 1));
+		} else {
+			map.put("scheme", baseUri);
+		}
+
+		// Process links
+		if (step.getLinks() != null && step.getLinks().getMultipleLinks() != null) {
+			for (Link link : step.getLinks().getMultipleLinks()) {
+				// Pre-calculate capacity to avoid StringBuilder resizing
+				String transport = link.getTransport();
+				String id = link.getId();
+				StringBuilder uriBuilder = new StringBuilder(transport.length() + id.length() + 1);
+				String uri = uriBuilder.append(transport).append(":").append(id).toString();
+				map.put(link.getBound(), uri);
+			}
+		}
+
+		return map;
+	}
+
+	/*
 	public String installFlow(String flowId, long timeout, String mediaType, String configuration) {
 
 		try {
@@ -1108,7 +1237,7 @@ public class CamelIntegration extends BaseIntegration {
 
 		return startFlow(flowId, timeout);
 
-	}
+	}*/
 
 	public String uninstallFlow(String flowId, long timeout) {
 		return stopFlow(flowId, timeout);
@@ -2951,7 +3080,7 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	@Override
-	public List<org.assimbly.dil.validation.beans.ValidationExpression> validateExpressions(List<org.assimbly.dil.validation.beans.ValidationExpression> expressions, boolean isPredicate) {
+	public List<ValidationExpression> validateExpressions(List<ValidationExpression> expressions, boolean isPredicate) {
 		ExpressionsValidator expressionValidator = new ExpressionsValidator();
 		return expressionValidator.validate(expressions, isPredicate);
 	}
@@ -3095,6 +3224,120 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 		return value;
+	}
+
+	private String doAddRouteFromTemplate(
+			String routeId, String routeTemplateId, String prefixId, String group,
+			String parentRouteId, String parentProcessorId,
+			RouteTemplateContext routeTemplateContext)
+			throws Exception {
+
+		RouteTemplateDefinition target = modelContext.getRouteTemplateDefinition(routeTemplateId);
+
+		// Prepare parameters from the template, environment variables, and user input
+		final Map<String, Object> prop = new HashMap<>();
+		final Map<String, Object> propDefaultValues = new HashMap<>();
+
+		if (target.getTemplateParameters() != null) {
+			for (RouteTemplateParameterDefinition temp : target.getTemplateParameters()) {
+				if (routeTemplateContext.hasEnvironmentVariable(temp.getName())) {
+					addProperty(prop, temp.getName(), routeTemplateContext.getEnvironmentVariable(temp.getName()));
+				} else if (temp.getDefaultValue() != null) {
+					addProperty(prop, temp.getName(), temp.getDefaultValue());
+					addProperty(propDefaultValues, temp.getName(), temp.getDefaultValue());
+				}
+			}
+		}
+
+		// Override with user-provided parameters
+		if (routeTemplateContext.getParameters() != null) {
+			prop.putAll(routeTemplateContext.getParameters());
+		}
+
+		// Set default parameters in the context for full parameter availability
+		if (target.getTemplateParameters() != null) {
+			for (RouteTemplateParameterDefinition temp : target.getTemplateParameters()) {
+				if (!routeTemplateContext.hasParameter(temp.getName()) && temp.getDefaultValue() != null) {
+					routeTemplateContext.setParameter(temp.getName(), temp.getDefaultValue());
+				}
+			}
+		}
+
+		// Select the appropriate converter for the template
+		RouteTemplateDefinition.Converter converter = routeTemplateConverters.entrySet().stream()
+				.filter(entry -> {
+					final String key = entry.getKey();
+					final String templateId = target.getId();
+					return "*".equals(key) || templateId.equals(key) || AntPathMatcher.INSTANCE.match(key, templateId) || templateId.matches(key);
+				})
+				.map(Map.Entry::getValue)
+				.findFirst()
+				.orElse(RouteTemplateDefinition.Converter.DEFAULT_CONVERTER);
+
+		RouteDefinition def = converter.apply(target, prop);
+		def.setId(routeId);
+		def.setTemplateParameters(prop);
+		def.setTemplateDefaultParameters(propDefaultValues);
+		def.setRouteTemplateContext(routeTemplateContext);
+
+		// Configure the route and add to the context
+		if (target.getConfigurer() != null) {
+			routeTemplateContext.setConfigurer(target.getConfigurer());
+		}
+
+		removeRouteDefinition(def);
+
+		this.routeDefinitions.add(def);
+		modelContext.addRouteDefinition(def);
+
+		return routeId;
+	}
+
+	private static void addProperty(Map<String, Object> prop, String key, Object value) {
+		prop.put(key, value);
+		key = StringHelper.dashToCamelCase(key);
+		prop.put(key, value);
+		key = StringHelper.camelCaseToDash(key);
+		prop.put(key, value);
+	}
+
+
+
+	public synchronized void removeRouteDefinition(RouteDefinition routeDefinition) throws Exception {
+		RouteDefinition toBeRemoved = routeDefinition;
+		String id = routeDefinition.getId();
+		if (id != null) {
+			// remove existing route
+			context.getRouteController().stopRoute(id);
+			context.removeRoute(id);
+			toBeRemoved = getRouteDefinition(id);
+		}
+		for (ModelLifecycleStrategy s : modelLifecycleStrategies) {
+			s.onRemoveRouteDefinition(toBeRemoved);
+		}
+		this.routeDefinitions.remove(toBeRemoved);
+	}
+
+	public synchronized RouteDefinition getRouteDefinition(String id) {
+		for (RouteDefinition route : routeDefinitions) {
+			if (route.idOrCreate(context.getCamelContextExtension().getContextPlugin(NodeIdFactory.class)).equals(id)) {
+				return route;
+			}
+		}
+		return null;
+	}
+
+	public List<RouteTemplateDefinition> getRouteTemplateDefinitions() {
+		return routeTemplateDefinitions;
+	}
+
+	public RouteTemplateDefinition getRouteTemplateDefinition(String id) {
+		for (RouteTemplateDefinition route : routeTemplateDefinitions) {
+			if (route.idOrCreate(context.getCamelContextExtension().getContextPlugin(NodeIdFactory.class)).equals(id)) {
+				return route;
+			}
+		}
+		return null;
 	}
 
 }
