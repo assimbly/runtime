@@ -1,7 +1,9 @@
 package org.assimbly.integration.impl;
 
 import com.codahale.metrics.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
@@ -153,13 +155,13 @@ public class CamelIntegration extends BaseIntegration {
 	private FlowLoaderReport flowLoaderReport;
 
 	private final List<ModelLifecycleStrategy> modelLifecycleStrategies = new ArrayList<>();
-	private final List<org.apache.camel.model.RouteDefinition> routeDefinitions = new ArrayList<>();
+	private final List<RouteDefinition> routeDefinitions = new ArrayList<>();
 	private final List<RouteTemplateDefinition> routeTemplateDefinitions = new ArrayList<>();
 	private final Map<String, RouteTemplateDefinition.Converter> routeTemplateConverters = new ConcurrentHashMap<>();
 	private Model model;
 	private ModelCamelContext modelContext;
 
-	private final ObjectMapper mapper = new ObjectMapper();
+	private final ObjectMapper mapper = new ObjectMapper().registerModule(new BlackbirdModule());
 
 	private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private static final String SEP = "/";
@@ -1115,25 +1117,27 @@ public class CamelIntegration extends BaseIntegration {
 
 	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
 
-		IntegrationRoot result = null;
-		result = mapper.readValue(configuration, IntegrationRoot.class);
+		mapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+		Dil dil = mapper.readValue(configuration, Dil.class);
 
-        List<Step> steps = getSteps(result);
+        List<Step> steps = getSteps(dil);
 
         long startTime = System.nanoTime(); // Start timing
 
         for (Step step : steps) {
-			String routeId = flowId + "_" + step.getId();
+			String routeId = flowId + "_" + step.id();
 			String templateId = getTemplateId(step);
 			Map<String, Object> parameters = getParameters(step);
 
+			//Default way to load a flow
+			//String installed = context.addRouteFromTemplate(routeId, templateId, parameters);
+
+			//Stripped down installation
 			RouteTemplateContext rtc = new DefaultRouteTemplateContext(context);
 			if (parameters != null) {
 				parameters.forEach(rtc::setParameter);
 			}
 			doAddRouteFromTemplate(routeId, templateId, null, null, null, null, rtc);
-
-            //String installed = context.addRouteFromTemplate(routeId, templateId, parameters);
 
 		}
 
@@ -1144,19 +1148,21 @@ public class CamelIntegration extends BaseIntegration {
 
 	}
 
-	private List<Step> getSteps(IntegrationRoot root){
-		 return root.getDil()
-				.getIntegrations()
-				.getIntegration()
-				.getFlows()
-				.getFlow()
-				.getSteps()
-				.getStep();
+	private List<Step> getSteps(Dil dil){
+
+		return dil
+				.root()
+				.integrations()
+				.integration()
+				.flows()
+				.flow()
+				.steps()
+				.step();
 	}
 
 	private String getTemplateId(Step step){
-		String type = step.getType();
-		String uri = step.getUri();
+		String type = step.type();
+		String uri = step.uri();
 		if(uri.contains(":")){
 			int colonIndex = uri.indexOf(':');
 			String scheme = colonIndex != -1 ? uri.substring(0, colonIndex) : uri;
@@ -1169,37 +1175,39 @@ public class CamelIntegration extends BaseIntegration {
 
 	private Map<String, Object> getParameters(Step step) {
 
-		Map<String, Object> map = new HashMap<>();
+		Options options = step.options();
 
-		// Process options and build query string in single pass
-		String optionsString = null;
-		if (step.getOptions() != null && !step.getOptions().isEmpty()) {
-			StringBuilder options = new StringBuilder();
-			boolean first = true;
-
-			for (Map.Entry<String, Object> entry : step.getOptions().entrySet()) {
-				map.put(entry.getKey(), entry.getValue());
-
-				if (first) {
-					first = false;
-				} else {
-					options.append("&");
-				}
-				options.append(entry.getKey()).append("=").append(entry.getValue());
-			}
-			optionsString = options.toString();
+		Map<String, Object> map;
+		if(options!=null){
+			map = options.properties();
+		}else{
+			map = new HashMap<>();
 		}
 
+		StringBuilder optionsSB = new StringBuilder();
+		boolean first = true;
+
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			map.put(entry.getKey(), entry.getValue());
+
+			if (first) {
+				first = false;
+			} else {
+				optionsSB.append("&");
+			}
+			optionsSB.append(entry.getKey()).append("=").append(entry.getValue());
+		}
+		String optionsString = optionsSB.toString();
+
 		// Build URI and add options
-		String baseUri = step.getUri();
-		if (optionsString != null) {
+		String baseUri = step.uri();
+		if (!optionsString.isEmpty()) {
 			map.put("uri", baseUri + "?" + optionsString);
 			map.put("options", optionsString);
 		} else {
 			map.put("uri", baseUri);
 		}
 
-		// Parse scheme and path more efficiently
 		int colonIndex = baseUri.indexOf(':');
 		if (colonIndex != -1) {
 			map.put("scheme", baseUri.substring(0, colonIndex));
@@ -1208,16 +1216,12 @@ public class CamelIntegration extends BaseIntegration {
 			map.put("scheme", baseUri);
 		}
 
-		// Process links
-		if (step.getLinks() != null && step.getLinks().getMultipleLinks() != null) {
-			for (Link link : step.getLinks().getMultipleLinks()) {
-				// Pre-calculate capacity to avoid StringBuilder resizing
-				String transport = link.getTransport();
-				String id = link.getId();
-				StringBuilder uriBuilder = new StringBuilder(transport.length() + id.length() + 1);
-				String uri = uriBuilder.append(transport).append(":").append(id).toString();
-				map.put(link.getBound(), uri);
-			}
+		List<Link> links = step.links().link();
+		for (Link link : links) {
+			String transport = link.transport();
+			String id = link.id();
+			String uri = transport + ":" + id;
+			map.put(link.bound(), uri);
 		}
 
 		return map;
