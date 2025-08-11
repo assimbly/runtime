@@ -384,9 +384,9 @@ public final class AssertUtils {
         assertThat(json.isArray()).isTrue();
         assertThat(json.size()).isGreaterThan(0);
         for (JsonNode error : json) {
-            assertThat(error.get("error").asText().toLowerCase())
-                    .contains("could not compile")
-                    .contains("checkinvoice");
+            assertThat(error.get("message").asText())
+                    .contains("MultipleCompilationErrorsException")
+                    .contains("Unexpected input");
         }
     }
 
