@@ -52,10 +52,8 @@
       <dependency>
           <groupId>org.apache.camel</groupId>
           <artifactId>camel-platform-http</artifactId>
-          <version>4.13.0</version>
+          <version>${camel.version}</version>
       </dependency>
-
-
 
   </dependencies>
 
