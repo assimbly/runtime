@@ -1,16 +1,13 @@
 package org.assimbly.integration.impl.manager;
 
 import com.codahale.metrics.MetricRegistry;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Route;
-import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -19,9 +16,7 @@ import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
-import org.apache.camel.spi.RouteController;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.util.TimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.event.collect.MicrometerTimestampRoutePolicyFactory;
 import org.assimbly.docconverter.DocConverter;
@@ -30,13 +25,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.JMX;
-import javax.management.ObjectName;
+import javax.management.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
@@ -51,9 +44,11 @@ public class StatsManager {
     private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     private final ConcurrentMap<String, TreeMap<String, String>> flowsMap;
+    private final FlowManager flowManager;
 
-    public StatsManager(CamelContext context, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public StatsManager(CamelContext context, FlowManager flowManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         this.context = context;
+        this.flowManager = flowManager;
         this.flowsMap = flowsMap;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
     }
@@ -94,18 +89,13 @@ public class StatsManager {
         }
     }
 
-    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
+    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
 
         JSONObject json = new JSONObject();
         JSONObject flow = createBasicFlowJson(flowId);
 
-        List<Route> routes = getRoutesByFlowId(flowId);
-        if (filter != null && !filter.isEmpty()) {
-            routes = filterRoutes(routes, filter);
-        }
-
         // Calculate basic statistics
-        FlowStatistics stats = calculateFlowStatistics(routes, fullStats);
+        FlowStatistics stats = calculateFlowStatistics(flowId, fullStats);
 
         // Populate basic stats
         populateBasicStats(flow, stats);
@@ -116,6 +106,7 @@ public class StatsManager {
 
             // Add steps if requested
             if (includeSteps) {
+                List<Route> routes = flowManager.getRoutesByFlowId(flowId);
                 JSONArray steps = collectStepStatistics(routes);
                 json.put("steps", steps);
             }
@@ -139,107 +130,28 @@ public class StatsManager {
         return flow;
     }
 
-    private List<Route> filterRoutes(List<Route> routes, String filter) {
-        if (filter.isEmpty()) {
-            return routes;
-        }
+    private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats) {
 
-        return routes.stream()
-                .filter(r -> !r.getId().contains(filter))
-                .toList();
-    }
-
-    private FlowStatistics calculateFlowStatistics(List<Route> routes, boolean fullStats) {
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
         FlowStatistics stats = new FlowStatistics();
-        long total = 0;
-        long completed = 0;
-        long failed = 0;
-        long pending = 0;
-        long lastFailed;
-        long lastCompleted;
-
-        List<Long> uptimeList = new ArrayList<>();
-        List<Long> lastFailedList = new ArrayList<>();
-        List<Long> lastCompletedList = new ArrayList<>();
-
-        for (Route r : routes) {
-
-            String routeId = r.getId();
-
-            total += getCounter("camel.exchanges.total", routeId);
-            failed += getCounter("camel.exchanges.failed", routeId);
-            completed += getCounter("camel.exchanges.succeeded", routeId);
-            pending += getGauge("camel.exchanges.inflight", routeId);
-
-            if (fullStats) {
-                if (stats.uptime == null) {
-                    uptimeList.add(r.getUptimeMillis());
-                }
-                lastFailed = getGauge("camel.exchanges.lastfailure.timestamp", routeId);
-                if (lastFailed != 0) {
-                    lastFailedList.add(lastFailed);
-                }
-
-                lastCompleted = getGauge("camel.exchanges.lastcompleted.timestamp", routeId);
-                if (lastCompleted != 0) {
-                    lastCompletedList.add(lastCompleted);
-                }
-
-            }
-
+        if(managedRouteGroup==null){
+            return stats;
         }
 
-        stats.totalMessages = total;
-        stats.completedMessages = completed;
-        stats.failedMessages = failed;
-        stats.pendingMessages = pending;
+        stats.totalMessages = managedRouteGroup.getExchangesTotal();
+        stats.completedMessages = managedRouteGroup.getExchangesCompleted();
+        stats.failedMessages = managedRouteGroup.getExchangesFailed();
+        stats.pendingMessages = managedRouteGroup.getExchangesInflight();
 
         if (fullStats) {
-            stats.uptimeMillis = uptimeList.stream()
-                    .filter(Objects::nonNull)
-                    .max(Long::compareTo)
-                    .orElse(0L);
-            stats.uptime = TimeUtils.printDuration(stats.uptimeMillis);
-            stats.lastFailed = lastFailedList.stream()
-                    .filter(Objects::nonNull)
-                    .max(Long::compareTo)
-                    .orElse(0L);
-            stats.lastCompleted = lastCompletedList.stream()
-                    .filter(Objects::nonNull)
-                    .max(Long::compareTo)
-                    .orElse(0L);
+            stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
+            stats.uptime = managedRouteGroup.getUptime();
+            stats.lastFailed = managedRouteGroup.getLastExchangeFailureTimestamp() != null ? managedRouteGroup.getLastExchangeFailureTimestamp().getTime() : 0;
+            stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0;
         }
 
         return stats;
-    }
-
-    private long getCounter(String metricName, String routeId) {
-
-        try {
-            Counter counter = meterRegistry.get(metricName)
-                    .tag("kind", "CamelRoute")
-                    .tag("routeId", routeId)
-                    .counter();
-            return (long) counter.count();
-        } catch (MeterNotFoundException meterNotFoundException) {
-            return 0L;
-        }
-
-    }
-
-    private long getGauge(String metricName, String routeId) {
-
-        try {
-            Gauge gauge = meterRegistry.get(metricName)
-                    .tag("kind", "CamelRoute")
-                    .tag("routeId", routeId)
-                    .gauge();
-            return (long) gauge.value();
-        } catch (MeterNotFoundException meterNotFoundException) {
-            return 0L;
-        }
-
     }
 
     private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
@@ -250,7 +162,7 @@ public class StatsManager {
     }
 
     private void populateDetailedStats(JSONObject flow, FlowStatistics stats) {
-        flow.put("status", getFlowStatus(flow.getString("id")));
+        flow.put("status", flowManager.getFlowStatus(flow.getString("id")));
         flow.put("timeout", getTimeout(context));
         flow.put("uptime", stats.uptime);
         flow.put("uptimeMillis", stats.uptimeMillis);
@@ -325,7 +237,7 @@ public class StatsManager {
 
         ManagedRouteMBean route = managedContext.getManagedRoute(routeid);
 
-        String stepStatus = getFlowStatus(routeid);
+        String stepStatus = flowManager.getFlowStatus(routeid);
 
         step.put("id", routeid);
         step.put("status", stepStatus);
@@ -333,23 +245,12 @@ public class StatsManager {
         if (route != null && stepStatus.equals("started")) {
 
             if (fullStats) {
-                String stepUptime = getFlowUptime(routeid);
+                String stepUptime = flowManager.getFlowUptime(routeid);
                 String stepUptimeMilliseconds = Long.toString(route.getUptimeMillis());
 
                 step.put("uptime", stepUptime);
                 step.put("uptimeMilliseconds", stepUptimeMilliseconds);
 
-                JSONObject load = new JSONObject();
-
-                String stepLoad01 = route.getLoad01();
-                String stepLoad05 = route.getLoad05();
-                String stepLoad15 = route.getLoad15();
-
-                load.put("cpuLoadLastMinute", stepLoad01);
-                load.put("cpuLoadLast5Minutes", stepLoad05);
-                load.put("cpuLoadLast15Minutes", stepLoad15);
-
-                step.put("load", load);
             }
 
             String statsAsXml = route.dumpStatsAsXml(fullStats);
@@ -364,7 +265,6 @@ public class StatsManager {
 
     }
 
-
     public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception {
 
         JSONObject json = new JSONObject();
@@ -376,28 +276,27 @@ public class StatsManager {
         long failedMessages = 0;
         long pendingMessages = 0;
 
-        List<Route> routes = getRoutesByFlowId(flowId);
+        List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
 
-        for (Route r : routes) {
-            String routeId = r.getId();
+        for (ManagedRouteMBean route : routes) {
 
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-            if (route != null) {
-                totalMessages += route.getExchangesTotal();
-                completedMessages += route.getExchangesCompleted();
-                failedMessages += route.getExchangesFailed();
-                pendingMessages += route.getExchangesInflight();
-                if (includeSteps) {
-                    JSONObject step = new JSONObject();
-                    String stepId = StringUtils.substringAfter(routeId, flowId + "-");
-                    step.put("id", stepId);
-                    step.put("total", route.getExchangesTotal());
-                    step.put("completed", route.getExchangesCompleted());
-                    step.put("failed", route.getExchangesFailed());
-                    step.put("pending", route.getExchangesInflight());
-                    steps.put(step);
-                }
+            totalMessages += route.getExchangesTotal();
+            completedMessages += route.getExchangesCompleted();
+            failedMessages += route.getExchangesFailed();
+            pendingMessages += route.getExchangesInflight();
+
+            if (includeSteps) {
+                JSONObject step = new JSONObject();
+                String routeId = route.getRouteId();
+                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+                step.put("id", stepId);
+                step.put("total", route.getExchangesTotal());
+                step.put("completed", route.getExchangesCompleted());
+                step.put("failed", route.getExchangesFailed());
+                step.put("pending", route.getExchangesInflight());
+                steps.put(step);
             }
+
         }
 
         flow.put("id", flowId);
@@ -420,76 +319,24 @@ public class StatsManager {
     }
 
     public String getFlowTotalMessages(String flowId) {
-
-        List<Route> routeList = getRoutesByFlowId(flowId);
-
-        long totalMessages = 0;
-
-        for (Route r : routeList) {
-            String routeId = r.getId();
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-
-            if (route != null) {
-                totalMessages += route.getExchangesTotal();
-            }
-        }
-
-        return Long.toString(totalMessages);
-
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        return Long.toString(managedRouteGroup.getExchangesTotal());
     }
 
     public String getFlowCompletedMessages(String flowId) {
-
-        List<Route> routeList = getRoutesByFlowId(flowId);
-        long completedMessages = 0;
-
-        for (Route r : routeList) {
-            String routeId = r.getId();
-
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-            if (route != null) {
-                completedMessages += route.getExchangesCompleted();
-            }
-        }
-
-        return Long.toString(completedMessages);
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        return Long.toString(managedRouteGroup.getExchangesCompleted());
 
     }
 
     public String getFlowFailedMessages(String flowId) {
-
-        List<Route> routeList = getRoutesByFlowId(flowId);
-        long failedMessages = 0;
-
-        for (Route r : routeList) {
-            String routeId = r.getId();
-
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-            if (route != null) {
-                failedMessages += route.getExchangesFailed();
-            }
-        }
-
-        return Long.toString(failedMessages);
-
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        return Long.toString(managedRouteGroup.getExchangesFailed());
     }
 
     public String getFlowPendingMessages(String flowId) {
-
-        List<Route> routeList = getRoutesByFlowId(flowId);
-        long pendingMessages = 0;
-
-        for (Route r : routeList) {
-            String routeId = r.getId();
-
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-            if (route != null) {
-                pendingMessages += route.getExchangesInflight();
-            }
-        }
-
-        return Long.toString(pendingMessages);
-
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        return Long.toString(managedRouteGroup.getExchangesInflight());
     }
 
     public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception {
@@ -531,17 +378,7 @@ public class StatsManager {
 
     public String getHealth(String type, String mediaType) throws Exception {
 
-        Set<String> flowIds = new HashSet<>();
-
-        List<Route> routes = context.getRoutes();
-
-        for (Route route : routes) {
-            String routeId = route.getId();
-            String flowId = StringUtils.substringBefore(routeId, "-");
-            if (flowId != null && !flowId.isEmpty()) {
-                flowIds.add(flowId);
-            }
-        }
+        Set<String> flowIds = flowManager.getListOfFlowIds(null);
 
         String result = getHealthFromList(flowIds, type);
 
@@ -591,7 +428,7 @@ public class StatsManager {
 
         String state = "UNKNOWN";
 
-        List<Route> routes = getRoutesByFlowId(flowId);
+        List<Route> routes = flowManager.getRoutesByFlowId(flowId);
 
         for (Route r : routes) {
 
@@ -821,7 +658,7 @@ public class StatsManager {
 
     }
 
-    public String getStatsByFlowIds(String flowIds, String filter) {
+    public String getStatsByFlowIds(String flowIds) {
 
         String[] values = flowIds.split(",");
 
@@ -833,14 +670,7 @@ public class StatsManager {
             JSONObject json = new JSONObject();
             JSONObject flow = createBasicFlowJson(flowId);
 
-            List<Route> routes = getRoutesByFlowId(flowId);
-
-            if (filter != null && !filter.isEmpty()) {
-                routes = filterRoutes(routes, filter);
-            }
-
-            // Calculate basic statistics
-            FlowStatistics stats = calculateFlowStatistics(routes, true);
+            FlowStatistics stats = calculateFlowStatistics(flowId, true);
 
             // Populate basic stats
             populateBasicStats(flow, stats);
@@ -861,7 +691,7 @@ public class StatsManager {
         JSONArray flows = new JSONArray();
 
         for (String flowId : flowIds) {
-            String flowStats = getFlowStats(flowId, fullStats, false, false, "");
+            String flowStats = getFlowStats(flowId, fullStats, false, false);
             JSONObject flow = new JSONObject(flowStats);
             flows.put(flow);
         }
@@ -952,44 +782,14 @@ public class StatsManager {
 
     }
 
-    private List<Route> getRoutesByFlowId(String id) {
-        return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).toList();
-    }
-
     public String countFlows(String filter) {
 
-        Set<String> flowIds = getListOfFlowIds(filter);
+        Set<String> flowIds = flowManager.getListOfFlowIds(filter);
 
         return Integer.toString(flowIds.size());
 
     }
 
-    private Set<String> getListOfFlowIds(String filter) {
-
-        //get all routes
-        List<Route> routes = context.getRoutes();
-
-        Set<String> flowIds = new HashSet<>();
-
-        //filter flows from routes
-        for (Route route : routes) {
-            String routeId = route.getId();
-            String flowId = StringUtils.substringBefore(routeId, "-");
-            if (flowId != null && !flowId.isEmpty()) {
-                if (filter != null && !filter.isEmpty()) {
-                    String serviceStatus = getFlowStatus(flowId);
-                    if (serviceStatus.equalsIgnoreCase(filter)) {
-                        flowIds.add(flowId);
-                    }
-                } else {
-                    flowIds.add(flowId);
-                }
-            }
-        }
-
-        return flowIds;
-
-    }
 
     public String countSteps(String filter) {
 
@@ -1013,78 +813,6 @@ public class StatsManager {
 
         return Integer.toString(stepIds.size());
 
-    }
-
-
-    public static BigDecimal parseBigDecimal(String value) {
-        if (value == null || value.isEmpty()) {
-            return BigDecimal.ZERO;  // or handle as needed
-        }
-        return new BigDecimal(value);
-    }
-
-    public String getFlowStatus(String id) {
-
-        RouteController routeController = context.getRouteController();
-
-        String flowStatus;
-        if (hasFlow(id)) {
-            String updatedId;
-            if (id.contains("-")) {
-                updatedId = id;
-            } else {
-                updatedId = id + "-";
-            }
-
-            try {
-                List<Route> routesList = getRoutesByFlowId(updatedId);
-                if (routesList.isEmpty()) {
-                    flowStatus = "unconfigured";
-                } else {
-                    String flowId = routesList.getFirst().getId();
-                    ServiceStatus serviceStatus = routeController.getRouteStatus(flowId);
-                    flowStatus = serviceStatus.toString().toLowerCase();
-                }
-            } catch (Exception e) {
-                log.error("Get status flow {} failed.", id, e);
-
-                flowStatus = "error: " + e.getMessage();
-            }
-
-        } else {
-            flowStatus = "unconfigured";
-        }
-
-        return flowStatus;
-
-    }
-
-    public boolean hasFlow(String id) {
-
-        boolean routeFound = false;
-
-        if (context != null) {
-            for (Route route : context.getRoutes()) {
-                if (route.getId().startsWith(id)) {
-                    routeFound = true;
-                }
-            }
-        }
-        return routeFound;
-    }
-
-
-    public String getFlowUptime(String flowId) {
-
-        String flowUptime;
-        if (hasFlow(flowId)) {
-            Route route = getRoutesByFlowId(flowId).getFirst();
-            flowUptime = route.getUptime();
-        } else {
-            flowUptime = "0";
-        }
-
-        return flowUptime;
     }
 
 }

@@ -63,7 +63,7 @@ public class CamelIntegration extends BaseIntegration {
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
         this.flowManager = new FlowManager(context, flowsMap);
-        this.statsManager = new StatsManager(context, flowsMap);
+        this.statsManager = new StatsManager(context, flowManager, flowsMap);
         this.configManager = new ConfigManager(context, registry);
         init(false);
     }
@@ -73,7 +73,7 @@ public class CamelIntegration extends BaseIntegration {
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
         this.flowManager = new FlowManager(context, flowsMap);
-        this.statsManager = new StatsManager(context, flowsMap);
+        this.statsManager = new StatsManager(context, flowManager, flowsMap);
         this.configManager = new ConfigManager(context, registry);
         init(useDefaultSettings);
     }
@@ -586,7 +586,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
-        return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
+        return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps);
     }
 
     @Override
@@ -749,7 +749,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getStatsByFlowIds(String flowIds, String filter, String mediaType) {
-        return statsManager.getStatsByFlowIds(flowIds, filter);
+        return statsManager.getStatsByFlowIds(flowIds);
     }
 
     @Override

@@ -583,37 +583,18 @@ public class FlowManager {
         }
     }
 
-    private Set<String> getListOfFlowIds(String filter) {
-
-        //get all routes
-        List<Route> routes = context.getRoutes();
-
-        Set<String> flowIds = new HashSet<>();
-
-        //filter flows from routes
-        for (Route route : routes) {
-
-            String flowId = route.getGroup();
-
-            if(flowId==null || flowId.isEmpty()){
-                String routeId = route.getId();
-                flowId = StringUtils.substringBefore(routeId, "-");
-            }
-
-            if (flowId != null && !flowId.isEmpty()) {
-                if (filter != null && !filter.isEmpty()) {
-                    String serviceStatus = getFlowStatus(flowId);
-                    if (serviceStatus.equalsIgnoreCase(filter)) {
-                        flowIds.add(flowId);
+    public Set<String> getListOfFlowIds(String filter) {
+        return context.getRoutes().stream()
+                .map(route -> {
+                    String flowId = route.getGroup();
+                    if (flowId == null || flowId.isEmpty()) {
+                        return StringUtils.substringBefore(route.getId(), "-");
                     }
-                } else {
-                    flowIds.add(flowId);
-                }
-            }
-        }
-
-        return flowIds;
-
+                    return flowId;
+                })
+                .filter(flowId -> flowId != null && !flowId.isEmpty())
+                .filter(flowId -> filter == null || filter.isEmpty() || getFlowStatus(flowId).equalsIgnoreCase(filter))
+                .collect(Collectors.toSet());
     }
 
     public String getListOfFlows(String filter, String mediaType) throws Exception {
@@ -777,7 +758,7 @@ public class FlowManager {
         return value;
     }
 
-    private List<Route> getRoutesByFlowId(String id) {
+    public List<Route> getRoutesByFlowId(String id) {
 
         List<Route> routes = context.getRoutesByGroup(id);
 
