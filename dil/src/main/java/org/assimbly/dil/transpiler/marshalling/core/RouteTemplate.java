@@ -64,6 +64,7 @@ public class RouteTemplate {
 
         templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
+        templatedRoute.setAttribute("group", flowId);
 
         createTemplatedRoutes();
 
@@ -371,6 +372,7 @@ public class RouteTemplate {
 
         templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
+        templatedRoute.setAttribute("group", flowId);
 
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);

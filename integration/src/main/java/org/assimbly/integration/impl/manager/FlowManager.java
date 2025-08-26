@@ -43,6 +43,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class FlowManager {
 
@@ -114,16 +115,10 @@ public class FlowManager {
 
     public boolean hasFlow(String id) {
 
-        boolean routeFound = false;
+        List<Route> routes = context.getRoutesByGroup(id);
 
-        if (context != null) {
-            for (Route route : context.getRoutes()) {
-                if (route.getId().startsWith(id)) {
-                    routeFound = true;
-                }
-            }
-        }
-        return routeFound;
+        return routes != null && !routes.isEmpty();
+
     }
 
     public void startAllFlows(SSLManager sslManager) {
@@ -456,15 +451,8 @@ public class FlowManager {
 
         String flowStatus;
         if (hasFlow(id)) {
-            String updatedId;
-            if (id.contains("-")) {
-                updatedId = id;
-            } else {
-                updatedId = id + "-";
-            }
-
             try {
-                List<Route> routesList = getRoutesByFlowId(updatedId);
+                List<Route> routesList = getRoutesByFlowId(id);
                 if (routesList.isEmpty()) {
                     flowStatus = "unconfigured";
                 } else {
@@ -604,8 +592,14 @@ public class FlowManager {
 
         //filter flows from routes
         for (Route route : routes) {
-            String routeId = route.getId();
-            String flowId = StringUtils.substringBefore(routeId, "-");
+
+            String flowId = route.getGroup();
+
+            if(flowId==null || flowId.isEmpty()){
+                String routeId = route.getId();
+                flowId = StringUtils.substringBefore(routeId, "-");
+            }
+
             if (flowId != null && !flowId.isEmpty()) {
                 if (filter != null && !filter.isEmpty()) {
                     String serviceStatus = getFlowStatus(flowId);
@@ -784,7 +778,15 @@ public class FlowManager {
     }
 
     private List<Route> getRoutesByFlowId(String id) {
+
+        List<Route> routes = context.getRoutesByGroup(id);
+
+        if(routes != null && !routes.isEmpty()){
+            return routes;
+        }
+
         return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).toList();
+
     }
 
     private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id) {
@@ -793,6 +795,16 @@ public class FlowManager {
     }
 
     private List<String> getAllRoutesByFlowId(String id) {
+
+        List<Route> routes = context.getRoutesByGroup(id);
+
+        if(routes != null && !routes.isEmpty()){
+            return routes
+                    .stream()
+                    .map(Route::getId)
+                    .toList();
+        }
+
         return context.getRoutes().stream()
                 .map(Route::getId)
                 .filter(routeId -> routeId.startsWith(id))
