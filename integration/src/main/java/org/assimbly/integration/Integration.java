@@ -748,11 +748,10 @@ public interface Integration {
 	 *
 	 * @param  flowId the id of the flow
 	 * @param  stepId the id of the step
-	 * @param  mediaType (xml or json)
 	 * @throws Exception if flow doesn't start
 	 * @return returns number of messages
 	 */
-    String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception;
+    String getFlowStepStats(String flowId, String stepId, boolean fullStats) throws Exception;
 
 	/**
 	 * Gets the health of an integration

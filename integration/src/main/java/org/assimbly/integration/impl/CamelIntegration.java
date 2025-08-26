@@ -590,8 +590,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowStepStats(String flowId, String stepId, boolean fullStats, String mediaType) throws Exception {
-        return statsManager.getFlowStepStats(flowId, stepId, fullStats, mediaType);
+    public String getFlowStepStats(String flowId, String stepId, boolean fullStats) throws Exception {
+        return statsManager.getFlowStepStats(flowId, stepId, fullStats);
     }
 
     @Override

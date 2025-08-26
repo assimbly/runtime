@@ -177,11 +177,14 @@ public class StatisticsRuntime {
         plainResponse = true;
 
         try {
-            
 
-            String flowStats = integration.getFlowStepStats(flowId, stepId, fullStats, mediaType);
-            if(flowStats.startsWith("Error")||flowStats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",flowStats,plainResponse);
+            String flowStepStats = integration.getFlowStepStats(flowId, stepId, fullStats);
+            if(flowStepStats.startsWith("Error")||flowStepStats.startsWith("Warning")) {plainResponse = false;}
+
+            if (mediaType.contains("xml")) {
+                flowStepStats = DocConverter.convertJsonToXml(flowStepStats);
+            }
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",flowStepStats,plainResponse);
         } catch (Exception e) {
             log.error("Get flowstats {} for stepId={} failed", flowId, stepId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",e.getMessage());

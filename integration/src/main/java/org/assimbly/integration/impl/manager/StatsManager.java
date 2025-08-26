@@ -106,8 +106,7 @@ public class StatsManager {
 
             // Add steps if requested
             if (includeSteps) {
-                List<Route> routes = flowManager.getRoutesByFlowId(flowId);
-                JSONArray steps = collectStepStatistics(routes);
+                JSONArray steps = collectStepStatistics(flowId);
                 json.put("steps", steps);
             }
 
@@ -139,6 +138,7 @@ public class StatsManager {
             return stats;
         }
 
+        stats.status = managedRouteGroup.getState();
         stats.totalMessages = managedRouteGroup.getExchangesTotal();
         stats.completedMessages = managedRouteGroup.getExchangesCompleted();
         stats.failedMessages = managedRouteGroup.getExchangesFailed();
@@ -162,7 +162,7 @@ public class StatsManager {
     }
 
     private void populateDetailedStats(JSONObject flow, FlowStatistics stats) {
-        flow.put("status", flowManager.getFlowStatus(flow.getString("id")));
+        flow.put("status", stats.status);
         flow.put("timeout", getTimeout(context));
         flow.put("uptime", stats.uptime);
         flow.put("uptimeMillis", stats.uptimeMillis);
@@ -182,10 +182,11 @@ public class StatsManager {
         }
     }
 
-    private JSONArray collectStepStatistics(List<Route> routes) throws Exception {
+    private JSONArray collectStepStatistics(String flowId) throws Exception {
         JSONArray steps = new JSONArray();
-        for (Route r : routes) {
-            String routeId = r.getId();
+        List<Route> routes = context.getRoutesByGroup(flowId);
+        for (Route route : routes) {
+            String routeId = route.getId();
             JSONObject step = getStepStats(routeId, true);
             steps.put(step);
         }
@@ -202,7 +203,7 @@ public class StatsManager {
         long lastFailed = 0;
         long lastCompleted = 0;
         String uptime = null;
-
+        String status = null;
     }
 
     private long getTimeout(CamelContext context) {
@@ -217,17 +218,13 @@ public class StatsManager {
         }
     }
 
-    public String getFlowStepStats(String flowId, String stepid, boolean fullStats, String mediaType) throws Exception {
+    public String getFlowStepStats(String flowId, String stepid, boolean fullStats) throws Exception {
 
         String routeid = flowId + "-" + stepid;
 
         JSONObject json = getStepStats(routeid, fullStats);
-        String stepStats = json.toString(4);
-        if (mediaType.contains("xml")) {
-            stepStats = DocConverter.convertJsonToXml(stepStats);
-        }
+        return json.toString(4);
 
-        return stepStats;
     }
 
     private JSONObject getStepStats(String routeid, boolean fullStats) throws Exception {
@@ -237,15 +234,13 @@ public class StatsManager {
 
         ManagedRouteMBean route = managedContext.getManagedRoute(routeid);
 
-        String stepStatus = flowManager.getFlowStatus(routeid);
-
         step.put("id", routeid);
-        step.put("status", stepStatus);
+        step.put("status", route.getState());
 
-        if (route != null && stepStatus.equals("started")) {
+        if (route.getState().equals("started")) {
 
             if (fullStats) {
-                String stepUptime = flowManager.getFlowUptime(routeid);
+                String stepUptime = route.getUptime();
                 String stepUptimeMilliseconds = Long.toString(route.getUptimeMillis());
 
                 step.put("uptime", stepUptime);
@@ -428,7 +423,7 @@ public class StatsManager {
 
         String state = "UNKNOWN";
 
-        List<Route> routes = flowManager.getRoutesByFlowId(flowId);
+        List<Route> routes = context.getRoutesByGroup(flowId);
 
         for (Route r : routes) {
 
@@ -789,7 +784,6 @@ public class StatsManager {
         return Integer.toString(flowIds.size());
 
     }
-
 
     public String countSteps(String filter) {
 
