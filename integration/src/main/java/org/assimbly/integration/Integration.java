@@ -1,5 +1,6 @@
 package org.assimbly.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
@@ -580,7 +581,19 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
+    String installFlow(String flowId, long timeout, String mediaType, String configuration);
+
+	/**
+	 * Configure and Starts a flow (for testing)
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  timeout the timeout in milliseconds
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  configuration (the XML, JSON or YAML file)
+	 * @return returns a confirmation message
+	 * @throws Exception if flow doesn't start
+	 */
+	String fastInstallFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Configure and Starts a flow (for testing)
