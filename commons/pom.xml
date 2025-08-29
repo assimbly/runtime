@@ -9,6 +9,9 @@
         <version>5.1.0</version>
     </parent>
 
+    <name>commons</name>
+    <packaging>jar</packaging>
+
     <artifactId>commons</artifactId>
 
     <properties>

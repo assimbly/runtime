@@ -6,10 +6,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>base</artifactId>
+        <artifactId>runtime</artifactId>
         <groupId>org.assimbly</groupId>
         <version>5.1.0</version>
     </parent>
+
+    <name>common-base</name>
+    <packaging>jar</packaging>
 
     <artifactId>common-base</artifactId>
 
