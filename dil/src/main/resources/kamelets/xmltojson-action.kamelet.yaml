@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: xmltojson-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "xmltojson action"
+    description: |-
+      Convert XML to JSON
+    type: object
+    properties:
+      options:
+          title: options
+          description: Options
+          type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "xmltojson:path?{{options}}"
+          - to:
+              uri: "kamelet:sink"
