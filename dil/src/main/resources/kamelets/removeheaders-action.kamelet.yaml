@@ -11,9 +11,9 @@ spec:
       Remove headers from message
     type: object
     properties:
-      path:
-          title: Path
-          description: Path
+      pattern:
+          title:
+          description: Regex pattern to remove headers
           type: string
       excludePatterns:
           title: Exclude Pattern
@@ -28,7 +28,7 @@ spec:
         uri: "kamelet:source"
         steps:
           - removeHeaders:
-              pattern: "{{path}}"
+              pattern: "{{pattern}}"
               exclude-pattern: "{{excludePattern}}"
           - to:
               uri: "kamelet:sink"

@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: amazon-action
+  name: setoneway-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "amazon action"
+    title: "setoneway action"
     description: |-
-      Amazon component
+      Set the exchange pattern to inonly (one way)
     type: object
     properties:
   dependencies:
@@ -18,7 +18,6 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "amazon:{{path}}?{{options}}"
+          - setExchangePattern: "InOnly"
           - to:
               uri: "kamelet:sink"

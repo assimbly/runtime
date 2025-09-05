@@ -11,9 +11,9 @@ spec:
       Add multipart to message
     type: object
     properties:
-      path:
-        title: Path
-        description: Path
+      fname:
+        title: Field Name
+        description: Field Name
         type: string
       contentType:
         title: Content-Type
@@ -33,7 +33,7 @@ spec:
                   steps:
                     - setHeader:
                         name: MultipartFieldName
-                        constant: "{{path}}"
+                        constant: "{{fname}}"
               otherwise:
                   steps:
                     - setHeader:
@@ -41,7 +41,7 @@ spec:
                         constant: "{{contentType}}"
                     - setHeader:
                         name: MultipartFieldName
-                        constant: "{{path}}"
+                        constant: "{{fname}}"
           - process:
               ref: "multipartProcessor"
           - to:

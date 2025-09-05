@@ -1,0 +1,35 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: repeater-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "repeater source"
+    description: |-
+      Repeater that sends message on the time (based on camel-timer)
+    type: object
+    properties:
+      path:
+          title: path
+          description: Path
+          type: string
+      repeatCount:
+        title: repeatCount
+        description: Specifies a maximum limit for the number of fires.
+        type: string
+      period:
+        title: period
+        description: Generate periodic events every period.
+        type: string
+        default: 10000
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "timer:{{path}}?repeatCount={{repeatCount}}&period={{period}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"

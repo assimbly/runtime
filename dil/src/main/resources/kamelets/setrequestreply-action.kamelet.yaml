@@ -1,28 +1,23 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: edifactstandardstoxml-action
+  name: setrequestreply-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "edifactstandardstoxml action"
+    title: "setrequestreply action"
     description: |-
-      Convert Edifact Standards to XML
+      Set the exchange pattern to inOut (request and reply)
     type: object
     properties:
-      path:
-          title: Path
-          description: Path
-          type: string
   dependencies:
-    - "camel:kamelet"
+      - "camel:kamelet"
   template:
     route:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "edifact-standards:{{path}}"
+          - setExchangePattern: "InOut"
           - to:
               uri: "kamelet:sink"

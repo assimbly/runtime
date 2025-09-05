@@ -1,0 +1,32 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: encoder-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "encoder action"
+    description: |-
+      Encodes message body to a defined charset
+    type: object
+    properties:
+      originCharset:
+        title: Origin Charset
+        description: Charset of the input message body
+        type: string
+      targetCharset:
+        title: Target Charset
+        description: Charset of the output message body
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "encoder://{{originCharset}}?{{targetCharset}}"
+          - to:
+              uri: "kamelet:sink"

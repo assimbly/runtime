@@ -16,9 +16,9 @@ spec:
           description: Delimiter
           type: string
           default: ","
-      usemaps:
-          title: Use maps
-          description: Wether to use maps or not
+      useHeader:
+          title: Use header maps
+          description: Wether to use header maps or not
           type: string
           default: "true"
       encoding:
@@ -36,7 +36,7 @@ spec:
           - unmarshal:
               csv:
                 delimiter: "{{delimiter}}"
-                useMaps: "{{usemaps}}"
+                useMaps: "{{useHeader}}"
           - to:
               uri: "csvtoxml://?encoding={{encoding}}"
           - to:

@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: jsontoxml-sink
+  name: jsontoxmlsimple-action
   labels:
-    camel.apache.org/kamelet.type: "sink"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "jsontoxml sink"
+    title: "jsontoxmlsimple action"
     description: |-
       Convert JSON to XML
     type: object
@@ -23,4 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "jsontoxml:path?{{options}}"
+              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"
+          - to:
+              uri: "kamelet:sink"

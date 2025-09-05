@@ -23,6 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"
+              uri: "jsontoxml:path?{{options}}"
           - to:
               uri: "kamelet:sink"

@@ -381,8 +381,9 @@ public class RouteTemplate {
         templatedRoute.appendChild(param);
 
         try {
+            createPathValues(routeId);
             createUriValues();
-        } catch (XPathExpressionException | TransformerException e) {
+        } catch (XPathExpressionException e) {
             throw new RuntimeException(e);
         }
 
@@ -469,7 +470,15 @@ public class RouteTemplate {
 
     }
 
-    private void createUriValues() throws XPathExpressionException, TransformerException {
+    private void createPathValues(String routeId) {
+
+        if(path.isEmpty()) {
+            path = routeId;
+        }
+
+    }
+
+    private void createUriValues() throws XPathExpressionException {
 
         if(scheme.equals("block") || scheme.equals("component")){
             uri = path;

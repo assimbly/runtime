@@ -1,20 +1,20 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: xmltoedifactstandards-action
+  name: pdftotext-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "xmltoedifactstandards action"
+    title: "pdf to text action"
     description: |-
-      Convert XML to EDI (Standards)
+      PDF to text in message
     type: object
     properties:
-      path:
-          title: path
-          description: Path
-          type: string
+      options:
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -23,6 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "edifact-standards:{{path}}"
+              uri: "pdftotext:path"
           - to:
               uri: "kamelet:sink"

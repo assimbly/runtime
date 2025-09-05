@@ -1,19 +1,19 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: xmltoedifactstandards-sink
+  name: jsontoxmlsimple-sink
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "xmltoedifactstandards sink"
+    title: "jsontoxmlsimple sink"
     description: |-
-      Convert XML to EDI (Standards)
+      Convert JSON to XML
     type: object
     properties:
-      path:
-          title: path
-          description: Path
+      options:
+          title: Options
+          description: Options
           type: string
   dependencies:
     - "camel:kamelet"
@@ -23,4 +23,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "edifact-standards:{{path}}"
+              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"

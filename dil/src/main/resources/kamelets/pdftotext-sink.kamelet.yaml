@@ -1,19 +1,19 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: edifactstandardstoxml-sink
+  name: pdftotext-sink
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "edifactstandardstoxml sink"
+    title: "pdf to text sink"
     description: |-
-      Convert Edifact Standards to XML
+      PDF to text in message
     type: object
     properties:
-      path:
-        title: Path
-        description: Path
+      options:
+        title: Options
+        description: Options
         type: string
   dependencies:
     - "camel:kamelet"
@@ -23,4 +23,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "edifact-standards:{{path}}"
+              uri: "pdftotext:path"

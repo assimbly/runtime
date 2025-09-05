@@ -19,6 +19,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "formtoxml://?{{options}}"
+              uri: "formtoxml://?encoding=utf-8"
           - to:
               uri: "kamelet:sink"

@@ -11,9 +11,9 @@ spec:
       Sets a browser cookie
     type: object
     properties:
-      path:
-        title: Path
-        description: Path
+      name:
+        title: Name
+        description: Name of the cookie
         type: string
         default: AssimblyCookie
       domain:
@@ -29,4 +29,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{path}}','{{domain}}')"
+              uri: "bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{name}}','{{domain}}')"
