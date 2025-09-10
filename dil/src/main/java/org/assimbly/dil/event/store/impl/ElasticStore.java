@@ -74,9 +74,9 @@ public class ElasticStore {
 
                 RestClient client = RestClient.builder(new HttpHost(host, port, protocol))
                         .setRequestConfigCallback(cfg -> cfg
-                                .setConnectTimeout(5000)
-                                .setSocketTimeout(5000)
-                                .setConnectionRequestTimeout(5000))
+                                .setConnectTimeout(10000)
+                                .setSocketTimeout(10000)
+                                .setConnectionRequestTimeout(10000))
                         .setHttpClientConfigCallback(HttpAsyncClientBuilder::disableAuthCaching)
                         .build();
 
