@@ -64,7 +64,7 @@ public class ElasticStore {
     private void ensureConnection() throws InterruptedException {
         while (restClient == null && isRunning) {
             try {
-                log.info("Attempting to establish ES connection... (Attempt {} of {})", connectionRetryCount + 1, CONNECTION_MAX_RETRIES);
+                log.info("Attempting to establish ElasticSearch connection... (Attempt {} of {})", connectionRetryCount + 1, CONNECTION_MAX_RETRIES);
                 String uri = store.getUri();
                 URL url = new URL(uri);
                 String protocol = url.getProtocol();
@@ -81,14 +81,14 @@ public class ElasticStore {
                         .build();
 
                 client.performRequest(new Request("HEAD", "/"));
-                log.info("ES client created and responsive.");
+                log.info("ElasticSearch client created and responsive.");
                 this.restClient = client;
                 connectionRetryCount = 0; // Reset counter on success
                 currentConnectionDelay = CONNECTION_INITIAL_DELAY_SECONDS;
                 return;
 
             } catch (Exception e) {
-                log.warn("ES connection failed: {}", e.getMessage());
+                log.warn("ElasticSearch connection failed", e);
                 if (connectionRetryCount < CONNECTION_MAX_RETRIES) {
                     connectionRetryCount++;
                     log.info("Retrying connection in {} seconds...", currentConnectionDelay);
@@ -108,7 +108,7 @@ public class ElasticStore {
             eventQueue.put(json);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("Failed to queue event for ES: {}", e.getMessage());
+            log.error("Failed to queue event for ElasticSearch", e);
         }
     }
 
@@ -119,7 +119,7 @@ public class ElasticStore {
                 eventQueue.put(json);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.error("Failed to re-queue event: {}", e.getMessage());
+                log.error("Failed to re-queue event", e);
             }
             return;
         }
@@ -133,12 +133,12 @@ public class ElasticStore {
         restClient.performRequestAsync(request, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-                log.info("Event inserted into ES");
+                log.info("Event inserted into ElasticSearch");
             }
 
             @Override
             public void onFailure(Exception exception) {
-                log.error("Failed to insert into ES: {}", exception.getMessage());
+                log.error("Failed to insert into ElasticSearch: {}", exception.getMessage());
 
                 if (isConnectionError(exception)) {
                     log.warn("Connection lost. Re-queuing event and initiating reconnection.");
@@ -154,7 +154,7 @@ public class ElasticStore {
                     log.warn("Retrying post in {}ms.", delay);
                     scheduler.schedule(() -> postToElasticsearchWithRetry(json, attempt + 1), delay, TimeUnit.MILLISECONDS);
                 } else {
-                    log.error("Failed to insert into ES after {} attempts. Giving up on this event.", attempt + 1);
+                    log.error("Failed to insert into ElasticSearch after {} attempts. Giving up on this event.", attempt + 1);
                 }
             }
         });
