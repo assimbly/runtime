@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -101,7 +102,7 @@ public class ExchangeCollector extends EventNotifierSupport {
         messageId = message.getHeader(BREADCRUMB_ID_HEADER, messageId, String.class);
 
         //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(exchange.getCreated());
+        String timestamp = EventUtil.getCreatedTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         //create json

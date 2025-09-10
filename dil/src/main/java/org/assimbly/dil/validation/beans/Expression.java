@@ -10,6 +10,8 @@ public class Expression {
     private String expression;
     private String expressionType;
     private String nextNode;
+    private boolean valid;
+    private String message;
 
     public Expression() { }
 
@@ -60,4 +62,21 @@ public class Expression {
     public void setExpressionType(String expressionType) {
         this.expressionType = expressionType;
     }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
 }

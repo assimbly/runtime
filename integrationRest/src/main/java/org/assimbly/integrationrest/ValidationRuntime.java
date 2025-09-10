@@ -1,5 +1,6 @@
 package org.assimbly.integrationrest;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -158,12 +159,13 @@ public class ValidationRuntime {
                 expressionsList = new ObjectMapper().readValue(body, new TypeReference<List<Expression>>(){});
             }
 
-            List<ValidationErrorMessage> expressionResp = integration.validateExpressions(expressionsList, isPredicate);
+            List<Expression> expressions = integration.validateExpressions(expressionsList, isPredicate);
 
-            if(expressionResp!=null) {
+            if(expressions!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, expressionResp);
+                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // Ignore null fields
+                mapper.writeValue(out, expressions);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);

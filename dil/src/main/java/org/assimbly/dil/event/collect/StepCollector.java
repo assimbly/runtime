@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -122,7 +123,7 @@ public class StepCollector extends EventNotifierSupport {
         exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
 
         //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
+        String timestamp = EventUtil.getCreatedTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         MessageEvent messageEvent = null;

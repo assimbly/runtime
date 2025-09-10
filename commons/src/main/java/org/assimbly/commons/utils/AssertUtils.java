@@ -380,13 +380,21 @@ public final class AssertUtils {
         assertThat(msg).contains("startup failed");
     }
 
+    public static void assertExpressionResponse(JsonNode json) {
+        assertThat(json.isArray()).isTrue();
+        assertThat(json.size()).isGreaterThan(0);
+        for (JsonNode error : json) {
+            assertThat(error.get("valid").asBoolean()).isTrue();
+        }
+    }
+
     public static void assertExpressionErrorResponse(JsonNode json) {
         assertThat(json.isArray()).isTrue();
         assertThat(json.size()).isGreaterThan(0);
         for (JsonNode error : json) {
-            assertThat(error.get("error").asText().toLowerCase())
-                    .contains("could not compile")
-                    .contains("checkinvoice");
+            assertThat(error.get("message").asText())
+                    .contains("MultipleCompilationErrorsException")
+                    .contains("Unexpected input");
         }
     }
 

@@ -484,7 +484,13 @@ class ValidationRuntimeTest {
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
             // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(response.body());
+
+            // asserts contents
+            AssertUtils.assertExpressionResponse(json);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
