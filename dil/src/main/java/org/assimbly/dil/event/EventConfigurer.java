@@ -119,9 +119,7 @@ public class EventConfigurer {
 
     public boolean isConfigured(){
         Object collector = context.getRegistry().lookupByName(collectorId);
-
-        return collector==null;
-
+        return collector!=null;
     }
 
     public String configureCollector(){
