@@ -12,9 +12,9 @@ spec:
     type: object
     properties:
       path:
-          title: Path
-          description: Path
-          type: string
+        title: Path
+        description: path
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -22,7 +22,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "sandbox://groovy?script=RAW({{path}})"
+          - setBody:
+              groovy: "resource:{{path}}"
           - to:
               uri: "kamelet:sink"

@@ -1,0 +1,59 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: sql-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "sql action"
+    description: |-
+      SQL (Custom Assimbly component)
+    type: object
+    properties:
+      host:
+          title: host
+          description: host
+          type: string
+      port:
+        title: port
+        description: port
+        type: string
+        default: dummy
+      username:
+        title: Username
+        description: Username of the database
+        type: string
+      password:
+        title: Password
+        description: Password of the database
+        type: string
+      useSSL:
+        title: Use SSL
+        description: Use SSL (TLS)
+        type: boolean
+        default: false
+      tlsVersion:
+        title: TLS Version
+        description: TLS Version to use
+        type: string
+      escapeChars:
+        title: Escape chars
+        description: Enabling to escape chars
+        type: boolean
+        default: false
+      query:
+        title: Query
+        description: SQL Query to execute
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "sql-custom://?host={{host}}&port={{port}}&username={{username}}&password=RAW({{password}})&database={{database}}&connectionType={{connectionType}}&useSSL={{useSSL}}&tlsVersion={{tlsVersion}}&escapeChars={{escapeChars}}&query=RAW({{query}})"
+          - to:
+              uri: "kamelet:sink"

@@ -217,7 +217,11 @@ public class Unmarshall {
 
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
 		if(hasConnectionFactory){
-			options = addConnectionFactoryOption(options, stepId, type);
+
+			if(!options.contains("connectionFactory")) {
+				optionProperties.add(stepXPath + "options/connectionFactory");
+			}
+			options = addConnectionFactoryOption(options, stepId, type, stepXPath);
 		}
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
@@ -226,13 +230,15 @@ public class Unmarshall {
 
 	}
 
-	private String addConnectionFactoryOption(String options, String stepId, String type) {
+	private String addConnectionFactoryOption(String options, String stepId, String type, String stepXPath) {
 
 		if(!options.contains("connectionFactory")){
 
 			String connectionId = properties.get(type + "." + stepId + ".connection.id");
 
 			String option = "connectionFactory=#" + connectionId;
+
+			conf.addProperty(stepXPath + "options/connectionFactory","#" + connectionId);
 
 			if(options.isEmpty()){
 				options = option;

@@ -1,0 +1,61 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: smtp-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "smtp action"
+    description: |-
+      Send message to email address
+    type: object
+    properties:
+      scheme:
+          title: scheme of components
+          description: Endpoint URI
+          type: string
+      path:
+        title: path
+        description: path of component
+        type: string
+        default: dummy
+      username:
+        title: username smpt server
+        description: username smpt server
+        type: string
+      password:
+        title: password of smtp server
+        description: password of smtp server
+        type: string
+      from:
+        title: from email address
+        description: from email address
+        type: string
+      subject:
+        title: subject of email
+        description: subject of email
+        type: string
+      to:
+        title: to email address
+        description: to email address
+        type: string
+      replyTo:
+        title: replyTo email address
+        description: replyTo email address
+        type: string
+      tenant:
+        title: tenant email address
+        description: tenant email address
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "{{scheme}}://{{path}}?=RAW(@{accessToken})&authenticationType=RAW(oauth)&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{replyTo}})&tenant=RAW({{tenant}})&headerFilterStrategy=#ExtendedHeaderFilterStrategy&mail.smtp.starttls.enable=true"
+          - to:
+              uri: "kamelet:sink"

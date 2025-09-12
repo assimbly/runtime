@@ -1,0 +1,57 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: rabbitmq-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "rabbitmq source"
+    description: |-
+      to do
+    type: object
+    properties:
+      path:
+        title: path
+        description: path
+        type: string
+      connectionFactory:
+        title: connectionFactory
+        description: The connectionFactory
+        type: string
+      exchangeType:
+        title: exchangeType
+        description: exchangeType
+        type: string
+      queues:
+        title: Queues
+        description: Queues
+        type: string
+      durable:
+        title: Durable
+        description: Durable
+        type: boolean
+        default: false
+      autoDelete:
+        title: AutoDelete
+        description: AutoDelete
+        type: boolean
+        default: false
+      useErrorRoute:
+        title: useErrorRoute
+        description: useErrorRoute
+        type: boolean
+        default: false
+      exchangePattern:
+        title: ExchangePattern
+        description: ExchangePattern
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&queues=RAW({{queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"

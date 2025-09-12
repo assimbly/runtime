@@ -13,7 +13,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.transform.*;
 import javax.xml.xpath.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -21,6 +20,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import static org.assimbly.util.IntegrationUtil.iterable;
+import static org.assimbly.util.IntegrationUtil.printConfiguration;
 
 public class RouteTemplate {
 

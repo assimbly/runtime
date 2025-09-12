@@ -1,28 +1,26 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: javascript-action
+  name: sftp-source
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "javascript action"
+    title: "sftp source"
     description: |-
-      Apply Javascript
+      to do
     type: object
     properties:
-      path:
-          title: Path
-          description: Path
+      uri:
+          title: Uri
+          description: Uri
           type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{uri}}"
         steps:
-          - setBody:
-              js: "resource:{{path}}"
           - to:
               uri: "kamelet:sink"
