@@ -1,7 +1,6 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -9,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.NativeWebRequest;
 
 import java.net.URISyntaxException;
 import java.util.Properties;
@@ -20,7 +19,7 @@ import java.util.TreeMap;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
-@ControllerAdvice
+@Component
 @RestController
 @RequestMapping("/api")
 public class IntegrationRuntime {
@@ -36,7 +35,6 @@ public class IntegrationRuntime {
     public IntegrationRuntime() throws Exception {
         // Empty constructor needed because of Exception.
     }
-
 
     /**
      * Get  /start : starts integration.
@@ -446,18 +444,6 @@ public class IntegrationRuntime {
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/{collectorId}/remove", e.getMessage());
         }
 
-    }
-
-    // Generates a generic error response (exceptions outside try catch):
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
-
-        HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
-        String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
-        String path = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
-        String message = error.getMessage();
-
-        return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
     }
 
     public Integration getIntegration() {
