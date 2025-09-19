@@ -115,6 +115,7 @@ public class RouteTemplate {
         route.appendChild(fromEndpoint);
 
         Element choice = contentRouteDoc.createElement("choice");
+        choice = createNamespace(stepXPath, choice);
         choice = createWhens(links, stepXPath, choice);
         choice = createOtherwise(links, stepXPath, choice);
         route.appendChild(choice);
@@ -152,6 +153,19 @@ public class RouteTemplate {
         }
 
         return fromEndpoint;
+    }
+
+    public Element createNamespace( String stepXPath, Element choice) {
+
+        String namespace = Objects.toString(conf.getProperty(stepXPath + "options/namespace"), null);
+
+        if(namespace==null){
+            return choice;
+        }
+
+        choice.setAttribute("xmlns:ns", namespace);
+
+        return choice;
     }
 
 
