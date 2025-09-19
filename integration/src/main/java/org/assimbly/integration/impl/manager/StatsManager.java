@@ -43,13 +43,11 @@ public class StatsManager {
     private final MetricRegistry metricRegistry = new MetricRegistry();
     private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
-    private final ConcurrentMap<String, TreeMap<String, String>> flowsMap;
     private final FlowManager flowManager;
 
-    public StatsManager(CamelContext context, FlowManager flowManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public StatsManager(CamelContext context, FlowManager flowManager) {
         this.context = context;
         this.flowManager = flowManager;
-        this.flowsMap = flowsMap;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
     }
 
@@ -89,7 +87,7 @@ public class StatsManager {
         }
     }
 
-    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps) throws Exception {
+    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         JSONObject json = new JSONObject();
         JSONObject flow = createBasicFlowJson(flowId);
@@ -114,7 +112,7 @@ public class StatsManager {
 
         // Add metadata if requested
         if (includeMetaData) {
-            populateMetadata(flow, flowId);
+            populateMetadata(flow, flowId, flowsMap);
         }
 
         // Build final response
@@ -170,7 +168,7 @@ public class StatsManager {
         flow.put("lastCompleted", stats.lastCompleted);
     }
 
-    private void populateMetadata(JSONObject flow, String flowId) {
+    private void populateMetadata(JSONObject flow, String flowId, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         TreeMap<String, String> flowProps = flowsMap.get(flowId);
         if (flowProps != null) {
             for (var flowProp : flowProps.entrySet()) {
@@ -629,7 +627,7 @@ public class StatsManager {
 
     }
 
-    public String getFlowsStats(String mediaType) throws Exception {
+    public String getFlowsStats(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         Set<String> flowIds = new HashSet<>();
 
@@ -643,7 +641,7 @@ public class StatsManager {
             }
         }
 
-        String result = getStatsFromList(flowIds, true);
+        String result = getStatsFromList(flowIds, true, flowsMap);
 
         if (mediaType.contains("xml")) {
             result = DocConverter.convertJsonToXml(result);
@@ -681,12 +679,12 @@ public class StatsManager {
 
     }
 
-    private String getStatsFromList(Set<String> flowIds, boolean fullStats) throws Exception {
+    private String getStatsFromList(Set<String> flowIds, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         JSONArray flows = new JSONArray();
 
         for (String flowId : flowIds) {
-            String flowStats = getFlowStats(flowId, fullStats, false, false);
+            String flowStats = getFlowStats(flowId, fullStats, false, false, flowsMap);
             JSONObject flow = new JSONObject(flowStats);
             flows.put(flow);
         }
@@ -695,7 +693,7 @@ public class StatsManager {
 
     }
 
-    public String getMessages(String mediaType) throws Exception {
+    public String getMessages(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         Set<String> flowIds = new HashSet<>();
 
@@ -709,7 +707,7 @@ public class StatsManager {
             }
         }
 
-        String result = getStatsFromList(flowIds, false);
+        String result = getStatsFromList(flowIds, false, flowsMap);
 
         if (mediaType.contains("xml")) {
             result = DocConverter.convertJsonToXml(result);

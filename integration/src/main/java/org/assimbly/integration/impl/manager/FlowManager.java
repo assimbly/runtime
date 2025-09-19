@@ -56,7 +56,6 @@ public class FlowManager {
 
     private final CamelContext context;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-    private final ConcurrentMap<String, TreeMap<String, String>> flowsMap;
 
     private static final String RESOURCE_PROP = "resource";
     private static final String AUTH_PASSWORD_PROP = "authPassword";
@@ -64,9 +63,8 @@ public class FlowManager {
     private static final String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
     private static final long STOP_TIMEOUT = 300;
 
-    public FlowManager(CamelContext context, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public FlowManager(CamelContext context) {
         this.context = context;
-        this.flowsMap = flowsMap;
     }
 
     public String loadFlow(TreeMap<String, String> properties, SSLManager sslManager) {
@@ -121,7 +119,7 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(SSLManager sslManager) {
+    public void startAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Starting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
@@ -135,7 +133,7 @@ public class FlowManager {
 
     }
 
-    public String restartAllFlows(SSLManager sslManager) {
+    public String restartAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Restarting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
@@ -150,7 +148,7 @@ public class FlowManager {
         return "restarted";
     }
 
-    public String pauseAllFlows() {
+    public String pauseAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Pause all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
@@ -164,7 +162,7 @@ public class FlowManager {
         return "paused";
     }
 
-    public String resumeAllFlows(SSLManager sslManager) {
+    public String resumeAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Resume all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
@@ -178,7 +176,7 @@ public class FlowManager {
         return "started";
     }
 
-    public String stopAllFlows() {
+    public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Stopping all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
@@ -407,21 +405,10 @@ public class FlowManager {
             log.info("{} | flowid={}", message, flowid);
         }
 
-        TreeMap<String, String> flowProps;
-        try {
-            flowProps = flowsMap.get(flowid);
-            String version = flowProps.get("flow.version");
+        flowLoaderReport.finishReport(event, "0", message);
 
-            if (version == null) {
-                version = "0";
-            }
-
-            flowLoaderReport.finishReport(event, version, message);
-
-        } catch (Exception e) {
-            flowLoaderReport.finishReport(event, "", message);
-        }
         loadReport = flowLoaderReport.getReport();
+
     }
 
     public boolean isFlowStarted(String flowid) {
@@ -535,7 +522,7 @@ public class FlowManager {
         }
     }
 
-    public TreeMap<String, String> getIntegrationAlertsCount() {
+    public TreeMap<String, String> getIntegrationAlertsCount(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         TreeMap<String, String> numberOfEntriesList = new TreeMap<>();
 
@@ -623,7 +610,7 @@ public class FlowManager {
 
     }
 
-    public String getFlowInfo(String flowId, String mediaType) throws Exception {
+    public String getFlowInfo(String flowId, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         TreeMap<String, String> flowProperties = flowsMap.get(flowId);
 
@@ -654,14 +641,14 @@ public class FlowManager {
 
     }
 
-    public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
+    public String getListOfFlowsDetails(String filter, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
 
         Set<String> flowIds = getListOfFlowIds(filter);
 
         JSONArray flowsArray = new JSONArray();
 
         for (String flowId : flowIds) {
-            JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json"));
+            JSONObject flowObject = new JSONObject(getFlowInfo(flowId, "application/json", flowsMap));
             flowsArray.put(flowObject);
         }
 

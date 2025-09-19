@@ -339,6 +339,7 @@ public class ConfigManager {
         resourceAsString = Strings.CS.replace(resourceAsString, "kamelet:sink", "\"{{out}}\"");
         resourceAsString = Strings.CS.replace(resourceAsString, "    properties:", properties, 1);
         resourceName = StringUtils.substringAfter(resourceName, "kamelets/");
+
         return ResourceHelper.fromString(resourceName, resourceAsString);
 
     }

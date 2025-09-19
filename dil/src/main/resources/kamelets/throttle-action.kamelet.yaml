@@ -1,0 +1,46 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: throttle-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "throttle action"
+    description: |-
+      Throttle messages
+    type: object
+    properties:
+      timePeriod:
+        title: Time period
+        description: Time period
+        type: integer
+      maxRequests:
+        title: Maximum requests
+        description: Maximum messages per requests
+        type: integer
+      routeId:
+        title: Route ID
+        description: Route ID
+        type: string
+      out_default:
+        title: Out Default Endpoint
+        description: Out Default Endpoint
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - throttle:
+              asyncDelayed: true
+              constant:
+                expression: "{{maxRequests}}"
+              correlationExpression:
+                constant:
+                  expression: "{{routeId}}"
+              timePeriodMillis: "{{timePeriod}}"
+          - to:
+              uri: "kamelet:sink"

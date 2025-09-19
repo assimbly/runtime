@@ -60,22 +60,12 @@ public class CamelIntegration extends BaseIntegration {
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
 
-    public CamelIntegration() throws Exception {
-        super();
-        context = new DefaultCamelContext(registry);
-        this.sslManager = new SSLManager();
-        this.flowManager = new FlowManager(context, flowsMap);
-        this.statsManager = new StatsManager(context, flowManager, flowsMap);
-        this.configManager = new ConfigManager(context, registry);
-        init(false);
-    }
-
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
-        this.flowManager = new FlowManager(context, flowsMap);
-        this.statsManager = new StatsManager(context, flowManager, flowsMap);
+        this.flowManager = new FlowManager(context);
+        this.statsManager = new StatsManager(context, flowManager);
         this.configManager = new ConfigManager(context, registry);
         init(useDefaultSettings);
     }
@@ -184,7 +174,7 @@ public class CamelIntegration extends BaseIntegration {
 
         if (cache) {
             initFlowDB();
-            flowManager.startAllFlows(sslManager);
+            flowManager.startAllFlows(sslManager, flowsMap);
         } else {
             initFlowMap();
         }
@@ -493,7 +483,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getFlowInfo(String flowId, String mediaType) throws Exception {
-        return flowManager.getFlowInfo(flowId, mediaType);
+        return flowManager.getFlowInfo(flowId, mediaType, flowsMap);
     }
 
     @Override
@@ -518,7 +508,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
-        return flowManager.getListOfFlowsDetails(filter, mediaType);
+        return flowManager.getListOfFlowsDetails(filter, mediaType, flowsMap);
     }
 
     @Override
@@ -578,7 +568,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public TreeMap<String, String> getIntegrationAlertsCount() {
-        return flowManager.getIntegrationAlertsCount();
+        return flowManager.getIntegrationAlertsCount(flowsMap);
     }
 
     @Override
@@ -588,7 +578,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
-        return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps);
+        return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, flowsMap);
     }
 
     @Override
@@ -673,27 +663,27 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(sslManager);
+        flowManager.startAllFlows(sslManager, flowsMap);
     }
 
     @Override
     public String restartAllFlows() {
-        return flowManager.restartAllFlows(sslManager);
+        return flowManager.restartAllFlows(sslManager, flowsMap);
     }
 
     @Override
     public String pauseAllFlows() {
-        return flowManager.pauseAllFlows();
+        return flowManager.pauseAllFlows(flowsMap);
     }
 
     @Override
     public String resumeAllFlows() {
-        return flowManager.resumeAllFlows(sslManager);
+        return flowManager.resumeAllFlows(sslManager, flowsMap);
     }
 
     @Override
     public String stopAllFlows() {
-        return flowManager.stopAllFlows();
+        return flowManager.stopAllFlows(flowsMap);
     }
 
     @Override
@@ -741,12 +731,12 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getFlowsStats(String mediaType) throws Exception {
-        return statsManager.getFlowsStats(mediaType);
+        return statsManager.getFlowsStats(mediaType, flowsMap);
     }
 
     @Override
     public String getMessages(String mediaType) throws Exception {
-        return statsManager.getMessages(mediaType);
+        return statsManager.getMessages(mediaType, flowsMap);
     }
 
     @Override

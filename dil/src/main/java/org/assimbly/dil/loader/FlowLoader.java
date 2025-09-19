@@ -85,8 +85,6 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setErrorHandlers() throws Exception{
 
-		System.out.println("setErrorHandlers");
-
 		String errorUri = "";
 		String id = "0";
 		boolean useErrorHandler = true;
@@ -102,9 +100,6 @@ public class FlowLoader extends RouteBuilder {
 
 			}
 		}
-
-		System.out.println("setErrorHandlers uri=" + errorUri);
-		System.out.println("setErrorHandlers uid=" + id);
 
 		IntegrationUtil.printTreemap(props);
 
