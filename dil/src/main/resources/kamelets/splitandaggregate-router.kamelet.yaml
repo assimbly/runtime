@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: split-router
+  name: splitandaggregate-router
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
-    title: "split-router"
+    title: "splitandaggregate-router"
     description: |-
-      Splits message by an expression
+      Splits message by an expression and aggregate result by XML or JSON
     type: object
     properties:
       language:
@@ -29,13 +29,18 @@ spec:
         description: Use Streaming
         type: boolean
         default: false
+      aggregateType:
+        title: Aggregate Type
+        description: Content-Type to use for aggregation (XML or JSON)
+        type: boolean
+        default: false
       out_rule:
         title: Out Rule
         description: Out Rule
         type: string
       out_default:
-        title: Out Default Endpoint
-        description: Out Default Endpoint
+        title: Out Default Rule
+        description: Out Default Rule
         type: string
         default: "mock:0"
   dependencies:
@@ -45,7 +50,12 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - setProperty:
+              name: Aggregate-Type
+              constant:
+                expression: "{{aggregateType}}"
           - split:
+              aggregationStrategy: CurrentAggregateStrategy
               parallelProcessing: "{{parallelProcessing}}"
               streaming: "{{streaming}}"
               language:

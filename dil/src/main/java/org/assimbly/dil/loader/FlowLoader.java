@@ -85,6 +85,8 @@ public class FlowLoader extends RouteBuilder {
 
 	private void setErrorHandlers() throws Exception{
 
+		System.out.println("setErrorHandlers");
+
 		String errorUri = "";
 		String id = "0";
 		boolean useErrorHandler = true;
@@ -101,7 +103,13 @@ public class FlowLoader extends RouteBuilder {
 			}
 		}
 
+		System.out.println("setErrorHandlers uri=" + errorUri);
+		System.out.println("setErrorHandlers uid=" + id);
+
+		IntegrationUtil.printTreemap(props);
+
 		if(useErrorHandler) {
+			log.info("ErrorHandler is set. uri={}",errorUri);
 			setErrorHandler(id, errorUri);
 		}else{
 			log.warn("ErrorHandler is not set");
@@ -177,15 +185,18 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
+			log.info("Load route:\n\n{}", route);
+
 			loader.loadRoutes(IntegrationUtil.setResource(route));
 
 			flowLoaderReport.setStep(id, null, "route", "success", null, null);
 
 		}catch (Exception e) {
 
+			log.error("Failed loading step | routeid={}", id);
+
 			isFlowLoaded = false;
 
-			log.error("Failed loading step | routeid={}", id);
 			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
@@ -204,9 +215,10 @@ public class FlowLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 
+			log.error("Failed loading step | stepid={}", id);
+
 			isFlowLoaded = false;
 
-			log.error("Failed loading step | stepid={}", id);
 			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 
 		}
@@ -216,7 +228,7 @@ public class FlowLoader extends RouteBuilder {
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
 		DeadLetterChannelBuilder routeErrorHandler;
-		if (errorUri!=null && !errorUri.isEmpty()) {
+		if (errorUri!=null && !errorUri.isEmpty() && !errorUri.equals("failedexchange")) {
 			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");

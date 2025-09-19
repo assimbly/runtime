@@ -20,7 +20,6 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import static org.assimbly.util.IntegrationUtil.iterable;
-import static org.assimbly.util.IntegrationUtil.printConfiguration;
 
 public class RouteTemplate {
 
@@ -171,14 +170,14 @@ public class RouteTemplate {
             String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String language = Objects.toString(conf.getProperty(linkXPath + "language"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
             options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
             String endpoint = createLinkEndpoint(linkTransport, id);
 
-            if(bound!=null && bound.equalsIgnoreCase("out") && rule != null && expression != null) {
+            if(bound!=null && bound.equalsIgnoreCase("out") && language != null && expression != null) {
 
-                Element elementRule = contentRouteDoc.createElement(rule);
+                Element elementRule = contentRouteDoc.createElement(language);
                 elementRule.setTextContent(expression);
                 when.appendChild(elementRule);
 
@@ -211,12 +210,12 @@ public class RouteTemplate {
             String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String language = Objects.toString(conf.getProperty(linkXPath + "language"), null);
             String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
             options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
             String endpoint = createLinkEndpoint(linkTransport, id);
 
-            if(bound!=null && bound.equalsIgnoreCase("out") && rule == null && expression == null) {
+            if(bound!=null && bound.equalsIgnoreCase("out") && language == null && expression == null) {
 
                 Element toEndpoint = contentRouteDoc.createElement("to");
                 toEndpoint.setAttribute("uri",endpoint);
@@ -570,8 +569,9 @@ public class RouteTemplate {
         String linkTransport = createLinkTransport(linkXPath);
         String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
         String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-        String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+        String language = Objects.toString(conf.getProperty(linkXPath + "language"), null);
         String expression = Objects.toString(conf.getProperty(linkXPath + "expression"), null);
+        String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
 
         // Assuming 'options' is an instance variable. If not, it should be passed or returned.
         options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
@@ -584,24 +584,24 @@ public class RouteTemplate {
         }
 
         if (type.equals("router")) {
-            handleRouterLinkType(bound, rule, expression, endpoint);
+            handleRouterLinkType(bound, language, rule, expression, endpoint);
         } else {
             handleNonRouterLinkType(bound, endpoint);
         }
     }
 
-    private void handleRouterLinkType(String bound, String rule, String expression, String endpoint) {
+    private void handleRouterLinkType(String bound, String language, String rule, String expression, String endpoint) {
         Element param;
         if (rule != null) {
-            param = createParameter(templateDoc, bound + "_rule", endpoint);
+            param = createParameter(templateDoc, bound + "_" + rule, endpoint);
         } else {
             param = createParameter(templateDoc, bound, endpoint);
         }
         templatedRoute.appendChild(param);
 
         if (bound != null && bound.equalsIgnoreCase("out")) {
-            createLinkLists(rule, expression, endpoint);
-            if (rule == null) {
+            createLinkLists(language, expression, endpoint);
+            if (language == null) {
                 param = createParameter(templateDoc, bound + "_default", endpoint);
                 templatedRoute.appendChild(param);
             }
@@ -673,11 +673,11 @@ public class RouteTemplate {
 
     }
 
-    private void createLinkLists(String rule, String expression, String endpoint){
+    private void createLinkLists(String language, String expression, String endpoint){
 
-        if (rule != null && expression != null) {
+        if (language != null && expression != null) {
 
-            String newRule = rule + "#;#" + expression + "#;#" + endpoint;
+            String newRule = language + "#;#" + expression + "#;#" + endpoint;
             if (outRulesList == null) {
                 outRulesList = newRule;
             } else {

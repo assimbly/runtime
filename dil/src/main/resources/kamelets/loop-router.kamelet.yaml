@@ -25,9 +25,9 @@ spec:
           description: Simple Expression to define how many times we should loop. Notice the expression is only evaluated once, and should return a number as how many times to loop.
           type: string
           default: "1"
-      out_rule:
-        title: Out Rule
-        description: Out Rule
+      out_loop:
+        title: Out Loop Endpoint
+        description: Out Loop Endpoint
         type: string
       out_default:
         title: Out Default Rule
@@ -48,6 +48,6 @@ spec:
                   language: "{{language}}"
                   expression: "{{expression}}"
               steps:
-                - to: "{{out_rule}}"
+                - to: "{{out_loop}}"
           - to:
               uri: "{{out_default}}"

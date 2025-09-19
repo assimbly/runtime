@@ -1,17 +1,17 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: filter-router
+  name: filter-action
   labels:
-    camel.apache.org/kamelet.type: "xpath-router"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "filter-router"
+    title: "filter-action"
     description: |-
       Filter message by XPath
     type: object
     properties:
-      out_rule:
+      out_filter:
           title: Out Rules
           description: Out going URI
           type: string
@@ -35,4 +35,4 @@ spec:
                 language: "{{language}}"
                 expression: "{{expression}}"
           - to:
-              uri: "{{out_rule}}"
+              uri: "kamelet:sink"

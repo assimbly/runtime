@@ -19,13 +19,13 @@ spec:
           title: Expression
           description: Expression
           type: string
-      out_rule:
-        title: Out Rule
-        description: Out Rule
+      out_dowhile:
+        title: Out Dowhile Endpoint
+        description: Out Dowhile Endpoint
         type: string
       out_default:
-        title: Out Default Rule
-        description: Out Default Rule
+        title: Out Default Endpoint
+        description: Out Default Endpoint
         type: string
         default: "mock:0"
   dependencies:
@@ -42,6 +42,6 @@ spec:
                   language: "{{language}}"
                   expression: "{{expression}}"
               steps:
-                - to: "{{out_rule}}"
+                - to: "{{out_dowhile}}"
           - to:
               uri: "{{out_default}}"

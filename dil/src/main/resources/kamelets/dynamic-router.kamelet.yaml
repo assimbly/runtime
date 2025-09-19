@@ -6,12 +6,15 @@ metadata:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
-    title: "dynamic router"
+    title: "Dynamic router"
     description: |-
-      Dynamic route message to on or more addresses
+      Content-based router to route messages to one or more addresses.
+      Note: this Kamelet is an alternative for the content-router that is generated as a normal route, instead of a Kamelet
     type: object
     properties:
       out_rules_list:
+        type: string
+      out_default:
         type: string
   dependencies:
     - "camel:kamelet"
@@ -22,10 +25,10 @@ spec:
         steps:
           - setProperty:
               name: routingRules
-              constant: "{{path}}"
+              constant: "{{out_rules_list}}"
           - setProperty:
               name: defaultEndpoint
-              constant: "{{out}}"
+              constant: "{{out_default}}"
           - process:
               ref: "RoutingRulesProcessor"
           - toD:

@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: aggregate-router
+  name: aggregate-sink
   labels:
-    camel.apache.org/kamelet.type: "router"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "aggregate router"
+    title: "aggregate sink"
     description: |-
-      to do
+      Aggregate multiple messages to one message
     type: object
     properties:
       aggregateType:
@@ -21,6 +21,14 @@ spec:
           description: Completion Size
           type: string
           default: 3
+      completionTimeout:
+        title: Completion Timeout
+        description: Completion Timeout in milliseconds
+        type: string
+      completionInterval:
+        title: Completion Interval
+        description: Completion Interval in milliseconds
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -34,7 +42,9 @@ spec:
           - aggregate:
               aggregationStrategy: "AggregateStrategy"
               completionSize: "{{completionSize}}"
+              completionTimeout: "{{?completionTimeout}}"
+              completionInterval: "{{?completionInterval}}"
               correlationExpression:
                 constant: "true"
           - to:
-              uri: "kamelet:sink"
+              uri: "mock:result"

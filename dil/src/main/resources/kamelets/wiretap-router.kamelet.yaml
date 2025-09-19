@@ -11,13 +11,13 @@ spec:
       Copy the original message to a wiretap in a fire and forget style
     type: object
     properties:
-      out_rule:
-        title: Out Rule
-        description: Out Rule
+      out_wiretap:
+        title: Out Wiretap Endpoint
+        description: Out Wiretap Endpoint
         type: string
       out_default:
-        title: Out Default Rule
-        description: Out Default Rule
+        title: Out Default Endpoint
+        description: Out Default Endpoint
         type: string
         default: "mock:0"
   dependencies:
@@ -28,7 +28,7 @@ spec:
         uri: "kamelet:source"
         steps:
           - wireTap:
-              uri: "{{out_rule}}"
+              uri: "{{out_wiretap}}"
               executor-service: "wiretapProfile"
           - to:
               uri: "{{out_default}}"

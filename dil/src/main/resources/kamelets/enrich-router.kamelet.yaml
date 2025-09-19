@@ -11,17 +11,22 @@ spec:
       Enrich message
     type: object
     properties:
-      out_rule:
-          title: Out Rule
-          description: Out Rule
+      out_enrich:
+          title: Out Enrich Endpoint
+          description: Out enrich endpoint
           type: string
+      out_default:
+          title: Out Default Endpoint
+          description: Out Default Endpoint
+          type: string
+          default: "mock:0"
       enrichType:
           title: Enrich Type
           description: Type of enrichment
           type: string
-          default: text/xml
-      errorRoute:
-        title: Error Route
+          default: xml
+      useErrorRoute:
+        title: Use Error Route
         description: Error Route
         type: string
         default: text/xml
@@ -37,9 +42,9 @@ spec:
               constant: "{{enrichType}}"
           - setProperty:
               name: Error-Route
-              constant: "{{errorRoute}}"
+              constant: "{{useErrorRoute}}"
           - enrich:
-              constant: "{{out_rule}}"
+              constant: "{{out_enrich}}"
               aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
           - to:
-              uri: "kamelet:sink"
+              uri: "{{out_default}}"

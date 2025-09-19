@@ -93,7 +93,6 @@ public class ConfigManager {
     public void setStreamCaching(boolean streamCaching) {
         context.setStreamCaching(streamCaching);
         context.getStreamCachingStrategy().setBufferSize(32 * 1024);
-
     }
 
     public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {

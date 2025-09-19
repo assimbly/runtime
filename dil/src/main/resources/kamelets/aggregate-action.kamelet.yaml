@@ -1,0 +1,50 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: aggregate-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "aggregate action"
+    description: |-
+      Aggregate multiple messages to one message
+    type: object
+    properties:
+      aggregateType:
+          title: Aggregate Type
+          description: Aggregate Type
+          type: string
+          default: "text/xml"
+      completionSize:
+          title: Completion Size
+          description: Completion Size
+          type: string
+          default: 3
+      completionTimeout:
+        title: Completion Timeout
+        description: Completion Timeout in milliseconds
+        type: string
+      completionInterval:
+        title: Completion Interval
+        description: Completion Interval in milliseconds
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setProperty:
+              name: Aggregate-Type
+              constant: "{{aggregateType}}"
+          - aggregate:
+              aggregationStrategy: "AggregateStrategy"
+              completionSize: "{{completionSize}}"
+              completionTimeout: "{{?completionTimeout}}"
+              completionInterval: "{{?completionInterval}}"
+              correlationExpression:
+                constant: "true"
+          - to:
+              uri: "kamelet:sink"
