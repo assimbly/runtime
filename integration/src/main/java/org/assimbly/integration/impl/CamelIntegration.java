@@ -1204,7 +1204,11 @@ public class CamelIntegration extends BaseIntegration {
 						String key = paramEntry.getKey();
 						String value = paramEntry.getValue();
 
-						if (key.equals("signingCertificateChain") || key.equals("signingPrivateKey") || key.equals("decryptingPrivateKey")) {
+						boolean signingCertificateChainFlag = key.equals("signingCertificateChain");
+						boolean signingPrivateKeyFlag = key.equals("signingPrivateKey");
+						boolean decryptingPrivateKeyFlag = key.equals("decryptingPrivateKey");
+
+						if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag) {
 							String beanId = key + "-" + uniqueId;
 							String methodName = "get" + key.substring(0, 1).toUpperCase() + key.substring(1);
 
@@ -1217,10 +1221,18 @@ public class CamelIntegration extends BaseIntegration {
 								value = trimmedValue;
 							}
 
-							Method method = as2KeyBeanClass.getMethod(methodName, URI.class, String.class, String.class);
 							URI uriValue = new URI(value);
+							Method method;
+							Object keyObject;
 
-							Object keyObject = method.invoke(null, uriValue, password, alias);
+							if(signingCertificateChainFlag) {
+								method = as2KeyBeanClass.getMethod(methodName, URI.class);
+								keyObject = method.invoke(null, uriValue);
+							} else {
+								method = as2KeyBeanClass.getMethod(methodName, URI.class, String.class, String.class);
+								keyObject = method.invoke(null, uriValue, password, alias);
+							}
+
 							this.context.getRegistry().bind(beanId, keyObject);
 							boundParams.put(key, "#" + beanId);
 						} else {

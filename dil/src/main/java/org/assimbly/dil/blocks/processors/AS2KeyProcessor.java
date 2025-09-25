@@ -74,8 +74,8 @@ public class AS2KeyProcessor implements Processor {
     }
 
     // public static methods used by as2 inbound step
-    public static Certificate[] getSigningCertificateChain(URI certificateUri, String password, String alias) throws Exception {
-        return getCertificateFromP12(certificateUri, password, alias);
+    public static Certificate[] getSigningCertificateChain(URI certificateUri) throws Exception {
+        return getCertificateChainFromX509(certificateUri);
     }
     public static PrivateKey getSigningPrivateKey(URI certificateUri, String password, String alias) throws Exception {
         return getPrivateKey(certificateUri, password, alias);
@@ -120,7 +120,7 @@ public class AS2KeyProcessor implements Processor {
     }
 
     // get Certificate from a X509 certificate - by a URI
-    private Certificate[] getCertificateChainFromX509(URI certUri) throws Exception {
+    private static Certificate[] getCertificateChainFromX509(URI certUri) throws Exception {
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
         URL url = certUri.toURL();
 
