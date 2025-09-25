@@ -1,0 +1,39 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: flowlink-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "flowlink sink"
+    description: |-
+      Generic kamelet for Camel Components
+    type: object
+    properties:
+      transport:
+        title: Transport
+        description: Transport
+        type: string
+      routeId:
+        title: Route ID
+        description: Route ID
+        type: string
+      connectionFactory:
+        title: Connection Factory
+        description: Connection Factory
+        type: string
+      exchangePattern:
+        title: Exchange Pattern
+        description: Exchange Pattern
+        type: string
+        default: InOut
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "{{transport}}:{{routeId}}?connectionFactory={{?connectionFactory}}&exchangePattern={{exchangePattern}}"

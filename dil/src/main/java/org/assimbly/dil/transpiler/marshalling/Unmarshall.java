@@ -23,8 +23,8 @@ public class Unmarshall {
 	private String options;
 	private final List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
 	private final String[] connectionTypes = {
-			"activemq", "amazonmq", "jms", "sjms", "sjms2",
-			"amqp", "amqps", "rabbitmq", "spring-rabbitmq"
+			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
+			"amqp", "amqps", "rabbitmq", "spring-rabbitmq", "flowlink"
 	};
 
 
@@ -216,13 +216,26 @@ public class Unmarshall {
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
+
+		System.out.println("scheme=" + scheme);
+		System.out.println("hasConnectionFactory=" + hasConnectionFactory);
+
 		if(hasConnectionFactory){
 
-			if(!options.contains("connectionFactory")) {
+			System.out.println("2. hasConnectionFactory=" + hasConnectionFactory);
+			System.out.println("2. options=" + options);
+
+			if(!options.contains("connectionFactory") && !options.contains("transport=sync") && !options.contains("transport=async")) {
+				System.out.println("3. Add connectionfactory");
 				optionProperties.add(stepXPath + "options/connectionFactory");
+				options = addConnectionFactoryOption(options, stepId, type, stepXPath);
 			}
-			options = addConnectionFactoryOption(options, stepId, type, stepXPath);
+
 		}
+
+		System.out.println("4. options=" + options);
+		System.out.println("----------------------------");
+		System.out.println();
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
@@ -232,20 +245,16 @@ public class Unmarshall {
 
 	private String addConnectionFactoryOption(String options, String stepId, String type, String stepXPath) {
 
-		if(!options.contains("connectionFactory")){
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
 
-			String connectionId = properties.get(type + "." + stepId + ".connection.id");
+		String option = "connectionFactory=#" + connectionId;
 
-			String option = "connectionFactory=#" + connectionId;
+		conf.addProperty(stepXPath + "options/connectionFactory","#" + connectionId);
 
-			conf.addProperty(stepXPath + "options/connectionFactory","#" + connectionId);
-
-			if(options.isEmpty()){
-				options = option;
-			}else{
-				options = options + "&" + option;
-			}
-
+		if(options.isEmpty()){
+			options = option;
+		}else{
+			options = options + "&" + option;
 		}
 
 		return options;

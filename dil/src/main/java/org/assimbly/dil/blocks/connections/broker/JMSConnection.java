@@ -86,7 +86,7 @@ public class JMSConnection {
         }
 
         switch (componentName) {
-            case "jms" -> createJmsComponent(connectionFactory);
+            case "activemq", "amazonmq", "jms" -> createJmsComponent(connectionFactory);
             case "sjms" -> createSjmsComponent(connectionFactory);
             case "sjms2" -> createSjms2Component(connectionFactory);
             default -> throw new Exception("Unknown component name: " + componentName);
@@ -98,7 +98,7 @@ public class JMSConnection {
 
         ConnectionFactory connectionFactory;
 
-        if (jmsProvider.equalsIgnoreCase("AMQ") || jmsProvider.equalsIgnoreCase("ActiveMQ Artemis")) {
+        if (jmsProvider.equalsIgnoreCase("amq") || jmsProvider.equalsIgnoreCase("artemis") || jmsProvider.equalsIgnoreCase("activemq artemis")) {
             connectionFactory = setActiveMQArtemisConnectionFactory();
         } else {
             connectionFactory = setActiveMQClassicConnectionFactory();
@@ -143,7 +143,7 @@ public class JMSConnection {
 
     private PooledConnectionFactory createPooledConnectionFactory(ConnectionFactory connectionFactory) {
 
-        log.info("Setting pooled connectionFactory for{}", componentName);
+        log.info("Setting pooled connectionFactory for {}", componentName);
 
         PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
         pooledConnectionFactory.setConnectionFactory(connectionFactory);

@@ -1,0 +1,34 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: flowlink-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "flowlink source"
+    description: |-
+      Link two flow to each other
+    type: object
+    properties:
+      transport:
+          title: Transport
+          description: Transport
+          type: string
+      routeId:
+        title: Route ID
+        description: Route ID
+        type: string
+      connectionFactory:
+        title: Connection Factory
+        description: Connection Factory
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "{{transport}}:{{routeId}}?connectionFactory={{?connectionFactory}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"

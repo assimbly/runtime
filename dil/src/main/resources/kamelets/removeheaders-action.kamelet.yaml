@@ -19,7 +19,6 @@ spec:
           title: Exclude Pattern
           description: Exclude Pattern
           type: string
-          default: 0
   dependencies:
     - "camel:kamelet"
   template:
@@ -29,6 +28,6 @@ spec:
         steps:
           - removeHeaders:
               pattern: "{{pattern}}"
-              exclude-pattern: "{{excludePattern}}"
+              exclude-pattern: "{{?excludePattern}}"
           - to:
               uri: "kamelet:sink"

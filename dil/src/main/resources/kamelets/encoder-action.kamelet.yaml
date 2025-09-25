@@ -27,6 +27,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "encoder://{{originCharset}}?{{targetCharset}}"
+              uri: "encoder://{{originCharset}}?targetCharset={{targetCharset}}"
           - to:
               uri: "kamelet:sink"

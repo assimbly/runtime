@@ -223,7 +223,7 @@ public class FlowLoader extends RouteBuilder {
 	private void setErrorHandler(String id, String errorUri) throws Exception {
 
 		DeadLetterChannelBuilder routeErrorHandler;
-		if (errorUri!=null && !errorUri.isEmpty() && !errorUri.equals("failedexchange")) {
+		if (errorUri!=null && !errorUri.isEmpty() && !errorUri.startsWith("failedexchange")) {
 			routeErrorHandler = new DeadLetterChannelBuilder(errorUri);
 		}else{
 			routeErrorHandler = deadLetterChannel("log:org.assimbly.integration.routes.ESBRoute?level=ERROR");
