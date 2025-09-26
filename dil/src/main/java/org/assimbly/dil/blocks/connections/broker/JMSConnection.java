@@ -39,10 +39,10 @@ public class JMSConnection {
         setFields();
 
         if(checkConnection()){
-            log.info("Creating new {} client connection", componentName);
+            log.info("Creating new {} client connection with id={}", componentName, connectionId);
             setConnection();
         }else{
-            log.info("Reuse {}  client connection", componentName);
+            log.info("Reusing {} client connection with id={}", componentName, connectionId);
         }
 
     }

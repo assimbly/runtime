@@ -393,6 +393,9 @@ public class RouteTemplate {
         Element param = createParameter(templateDoc,"routeId", routeId);
         templatedRoute.appendChild(param);
 
+        Element flowIdParam = createParameter(templateDoc,"flowId", flowId);
+        templatedRoute.appendChild(flowIdParam);
+
         try {
             createPathValues(routeId);
             createUriValues();

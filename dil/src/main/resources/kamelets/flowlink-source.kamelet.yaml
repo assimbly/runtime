@@ -15,9 +15,9 @@ spec:
           title: Transport
           description: Transport
           type: string
-      routeId:
-        title: Route ID
-        description: Route ID
+      flowId:
+        title: Flow ID
+        description: Flow ID (id of group)
         type: string
       connectionFactory:
         title: Connection Factory
@@ -28,7 +28,7 @@ spec:
   template:
     route:
       from:
-        uri: "{{transport}}:{{routeId}}?connectionFactory={{?connectionFactory}}"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
         steps:
           - to:
               uri: "kamelet:sink"

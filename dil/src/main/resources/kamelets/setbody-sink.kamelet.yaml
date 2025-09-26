@@ -6,9 +6,9 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "setbody action"
+    title: "setbody sink"
     description: |-
-      to do
+      Sets the body of message by an expression
     type: object
     properties:
       language:
@@ -20,6 +20,7 @@ spec:
         title: Expression
         description: Set the content of the body
         type: string
+        default: ""
   dependencies:
     - "camel:kamelet"
   template:

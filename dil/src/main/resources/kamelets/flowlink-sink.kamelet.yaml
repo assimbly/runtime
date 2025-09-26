@@ -15,9 +15,9 @@ spec:
         title: Transport
         description: Transport
         type: string
-      routeId:
-        title: Route ID
-        description: Route ID
+      targetFlowId:
+        title: TargetFlowID
+        description: Flow ID of the target flow
         type: string
       connectionFactory:
         title: Connection Factory
@@ -36,4 +36,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{transport}}:{{routeId}}?connectionFactory={{?connectionFactory}}&exchangePattern={{exchangePattern}}"
+              uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"
