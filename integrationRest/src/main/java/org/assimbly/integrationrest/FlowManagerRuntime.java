@@ -1,6 +1,7 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
@@ -240,6 +241,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Schema(description = "Flows", example = "")
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -370,6 +372,8 @@ public class FlowManagerRuntime {
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
+
+        log.info("Get flow info for flowId: {}", flowId);
 
         plainResponse = true;
 

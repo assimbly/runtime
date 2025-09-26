@@ -5,7 +5,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.processors.FailureProcessor;
-
 import java.util.TreeMap;
 
 
@@ -23,38 +22,14 @@ public class ErrorHandler {
 		this.flowId = flowId;
 	}
 	
-	
-	public DeadLetterChannelBuilder configure() throws Exception {
+	public DeadLetterChannelBuilder configure() {
 
-		int backOffMultiplier = 0;
-		int maximumRedeliveries = 0;
-		int redeliveryDelay = 30000;
-		int maximumRedeliveryDelay = 60000;
+		int maximumRedeliveries = getErrorHandlerOption("maximumRedeliveries", 0);
+		int redeliveryDelay = getErrorHandlerOption("redeliveryDelay", 0);
+		int maximumRedeliveryDelay = getErrorHandlerOption("maximumRedeliveryDelay", redeliveryDelay * 10);
+		int backOffMultiplier = getErrorHandlerOption("backOffMultiplier", 0);
 
 		Processor failureProcessor = new FailureProcessor();
-
-
-		if (props.containsKey("flow.maximumRedeliveries")) {
-			String maximumRedeliveriesAsString = props.get("flow.maximumRedeliveries");
-			if (StringUtils.isNumeric(maximumRedeliveriesAsString)) {
-				maximumRedeliveries = Integer.parseInt(maximumRedeliveriesAsString);
-			}
-		}
-
-		if (props.containsKey("flowredeliveryDelay")){
-			String redeliveryDelayAsString = props.get("flow.redeliveryDelay");
-			if(StringUtils.isNumeric(redeliveryDelayAsString)) {
-				redeliveryDelay = Integer.parseInt(redeliveryDelayAsString);
-				maximumRedeliveryDelay = redeliveryDelay * 10;
-			}
-		}
-
-		if (props.containsKey("flow.backOffMultiplier")){
-			String backOffMultiplierAsString = props.get("flow.backOffMultiplier");
-			if(StringUtils.isNumeric(backOffMultiplierAsString)) {
-				backOffMultiplier = Integer.parseInt(backOffMultiplierAsString);
-			}
-		}
 
 		deadLetterChannelBuilder.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()
@@ -78,6 +53,19 @@ public class ErrorHandler {
 
 		return deadLetterChannelBuilder;
 		
+	}
+
+	private int getErrorHandlerOption(String option, int defaultValue) {
+
+		if (props.containsKey("flow." + option)){
+			String errorHandlerOption = props.get("flow." + option);
+			if(StringUtils.isNumeric(errorHandlerOption)) {
+				return Integer.parseInt(errorHandlerOption);
+			}
+		}
+
+		return defaultValue;
+
 	}
 
 }

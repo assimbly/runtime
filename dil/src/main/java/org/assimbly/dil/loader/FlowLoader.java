@@ -14,10 +14,8 @@ import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+
+import java.util.*;
 
 
 public class FlowLoader extends RouteBuilder {
@@ -97,7 +95,6 @@ public class FlowLoader extends RouteBuilder {
 				if(props.containsKey("error." + id + ".route") && props.containsKey("error." + id + ".routeconfiguration")){
 					useErrorHandler = false;
 				}
-
 			}
 		}
 

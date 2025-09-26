@@ -138,6 +138,10 @@ public class Unmarshall {
 
 		properties.put(type + "." + stepId + ".uri", uri + "?" + options);
 
+		if(type.equals("error")){
+			setErrorHandlerOptions(optionProperties);
+		}
+
 	}
 
 	private String getOptions(List<String> optionProperties) {
@@ -159,6 +163,20 @@ public class Unmarshall {
 		}
 
 		return uriOptions.toString();
+
+	}
+
+	private void setErrorHandlerOptions(List<String> optionProperties){
+
+        for (String optionProperty : optionProperties) {
+
+            int optionsIndex = optionProperty.indexOf("options") + 8;
+
+            String name = optionProperty.substring(optionsIndex);
+            String value = conf.getProperty(optionProperty).toString();
+
+            properties.put("flow." + name, value);
+        }
 
 	}
 
@@ -217,25 +235,11 @@ public class Unmarshall {
 
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
 
-		System.out.println("scheme=" + scheme);
-		System.out.println("hasConnectionFactory=" + hasConnectionFactory);
-
-		if(hasConnectionFactory){
-
-			System.out.println("2. hasConnectionFactory=" + hasConnectionFactory);
-			System.out.println("2. options=" + options);
-
-			if(!options.contains("connectionFactory") && !options.contains("transport=sync") && !options.contains("transport=async")) {
+		if(hasConnectionFactory && !options.contains("connectionFactory") && !options.contains("transport=sync") && !options.contains("transport=async")) {
 				System.out.println("3. Add connectionfactory");
 				optionProperties.add(stepXPath + "options/connectionFactory");
 				options = addConnectionFactoryOption(options, stepId, type, stepXPath);
-			}
-
 		}
-
-		System.out.println("4. options=" + options);
-		System.out.println("----------------------------");
-		System.out.println();
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 

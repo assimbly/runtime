@@ -620,13 +620,14 @@ public class FlowManager {
         if (flowProperties != null) {
             flow.put("id", flowProperties.get("id"));
             flow.put("name", flowProperties.get("flow.name"));
-            flow.put("version", flowProperties.get("flow.version"));
-            flow.put("environment", flowProperties.get("environment"));
             flow.put("isRunning", isFlowStarted(flowId));
             flow.put("status", getFlowStatus(flowId));
+            flow.put("version", flowProperties.get("flow.version"));
+            flow.put("environment", flowProperties.get("environment"));
             flow.put("uptime", getFlowUptime(flowId));
         } else {
             flow.put("id", flowId);
+            flow.put("isRunning", false);
             flow.put("status", getFlowStatus(flowId));
         }
 
