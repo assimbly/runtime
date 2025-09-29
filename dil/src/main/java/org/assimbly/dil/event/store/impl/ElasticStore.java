@@ -1,6 +1,8 @@
 package org.assimbly.dil.event.store.impl;
 
 import org.apache.http.HttpHost;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.assimbly.dil.event.domain.Store;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
@@ -9,75 +11,107 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
+import java.util.concurrent.*;
 
 public class ElasticStore {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(ElasticStore.class);
 
-    RestClient restClient;
-    private final org.assimbly.dil.event.domain.Store store;
+    private final Store store;
+    private volatile RestClient restClient;
     private String path;
 
-    public ElasticStore(org.assimbly.dil.event.domain.Store store) {
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ExecutorService initExecutor = Executors.newSingleThreadExecutor();
 
+    public ElasticStore(String collectorId, Store store) {
         this.store = store;
+        // Start the async initialization chain
+        initElasticsearch();
+    }
 
-        try {
-            start();
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+    private void initElasticsearch() {
+        // Run the blocking client creation on a separate thread
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                log.info("Attempting to initialize ES client...");
+                String uri = store.getUri();
+                URL url = new URL(uri);
+                String protocol = url.getProtocol();
+                String host = url.getHost();
+                int port = url.getPort();
+                path = url.getPath();
 
+                // This is a blocking call, but it's on a dedicated thread
+                RestClient client = RestClient.builder(new HttpHost(host, port, protocol))
+                        .setRequestConfigCallback(cfg -> cfg
+                                .setConnectTimeout(5000)
+                                .setSocketTimeout(5000)
+                                .setConnectionRequestTimeout(5000))
+                        .setHttpClientConfigCallback(HttpAsyncClientBuilder::disableAuthCaching)
+                        .build();
+
+                // Optional: A quick health check using a blocking call on the same thread
+                client.performRequest(new Request("HEAD", "/"));
+                log.info("ES client created and responsive.");
+                return client;
+
+            } catch (Exception e) {
+                log.warn("ES client creation failed: {}", e.getMessage());
+                return null;
+            }
+        }, initExecutor)
+        .thenAccept(client -> {
+            if (client != null) {
+                this.restClient = client;
+                log.info("ES initialized successfully.");
+            }
+        });
     }
 
     public void store(String json) {
+        if (restClient == null) {
+            log.warn("ES not initialized, skipping event");
+            return;
+        }
+        try {
+            Request request = new Request("POST", path);
+            request.setJsonEntity(json);
 
-        Request request = new Request("POST", path);
-        request.setJsonEntity(json);
+            restClient.performRequestAsync(request, new ResponseListener() {
+                @Override
+                public void onSuccess(Response response) {
+                    log.debug("Event inserted into ES: {}", json);
+                }
 
-        restClient.performRequestAsync(request,
-                new ResponseListener() {
-                    @Override
-                    public void onSuccess(Response response) {
-                        log.debug("Insert into elasticsearch. json={}", json);
-                    }
-
-                    @Override
-                    public void onFailure(Exception e) {
-                        log.error("Failed to store event into elasticsearch. Reason: {}", e.getMessage(), e);
-                    }
-                });
-    }
-
-    public void start() throws MalformedURLException {
-
-        URI uri = URI.create(store.getUri());
-        URL url = uri.toURL();
-        String protocol = url.getProtocol();
-        String host = url.getHost();
-        int port = url.getPort();
-        path = url.getPath();
-
-        log.info("Start elasticsearch client for url: {}", uri);
-
-        restClient = RestClient.builder(new HttpHost(host, port, protocol)).build();
+                @Override
+                public void onFailure(Exception exception) {
+                    log.error("Failed to insert into ES: {}", exception.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            log.error("Unexpected error sending to ES: {}", e.getMessage());
+        }
     }
 
     public void stop() throws IOException {
-
-        String uri = store.getUri();
-
-        log.info("Stop elasticsearch client for url: {}", uri);
-
-        restClient.close();
+        scheduler.shutdown();
+        initExecutor.shutdown();
+        try {
+            if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+            if (!initExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                initExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            initExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        if (restClient != null) {
+            restClient.close();
+        }
     }
-
-    public boolean isRunning() {
-        return restClient.isRunning();
-    }
-
-
 }
