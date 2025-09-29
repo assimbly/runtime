@@ -37,7 +37,7 @@ public class ElasticStore {
     private int connectionRetryCount = 0;
     private long currentConnectionDelay = CONNECTION_INITIAL_DELAY_SECONDS;
 
-    public ElasticStore(String collectorId, Store store) {
+    public ElasticStore(Store store) {
         this.store = store;
         // Start the background consumer thread
         scheduler.submit(this::processEvents);
