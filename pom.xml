@@ -55,7 +55,7 @@
 		<commons-dbcp.version>2.13.0</commons-dbcp.version>
 		<commons-io.version>2.20.0</commons-io.version>
 		<commons-jxpath.version>1.4.0</commons-jxpath.version>
-		<commons-lang3.version>3.18.0</commons-lang3.version>
+		<commons-lang3.version>3.19.0</commons-lang3.version>
 		<commons-net.version>3.12.0</commons-net.version>
 		<commons-math3.version>3.6.1</commons-math3.version>
 		<commons-text.version>1.14.0</commons-text.version>
@@ -63,7 +63,7 @@
 		<docconverter.version>1.15.0</docconverter.version>
 		<dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
 		<elasticsearch-rest-client.version>9.1.4</elasticsearch-rest-client.version>
-		<h2database.version>2.3.232</h2database.version>
+		<h2database.version>2.4.240</h2database.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<gson.version>2.13.2</gson.version>
 		<groovy-script.version>4.0.28</groovy-script.version>
@@ -108,7 +108,7 @@
 		<zip4j.version>2.11.5</zip4j.version>
 
 		<!-- Manage the versions of test dependencies here -->
-		<assertj.version>3.27.5</assertj.version>
+		<assertj.version>3.27.6</assertj.version>
 		<googleauth.version>1.5.0</googleauth.version>
 		<jetty.version>12.1.1</jetty.version>
 		<json-unit-assertj.version>4.1.1</json-unit-assertj.version>
