@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: rabbit-action
+  name: rabbitmq-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "rabbit action"
+    title: "rabbitmq action"
     description: |-
       Send message to a RabbitMQ broker
     type: object
@@ -54,6 +54,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&queues=RAW({{queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
+              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
           - to:
               uri: "kamelet:sink"

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.*;
 
@@ -37,7 +38,7 @@ public class ElasticStore {
     private int connectionRetryCount = 0;
     private long currentConnectionDelay = CONNECTION_INITIAL_DELAY_SECONDS;
 
-    public ElasticStore(String collectorId, Store store) {
+    public ElasticStore(Store store) {
         this.store = store;
         // Start the background consumer thread
         scheduler.submit(this::processEvents);
@@ -65,8 +66,10 @@ public class ElasticStore {
         while (restClient == null && isRunning) {
             try {
                 log.info("Attempting to establish ElasticSearch connection... (Attempt {} of {})", connectionRetryCount + 1, CONNECTION_MAX_RETRIES);
-                String uri = store.getUri();
-                URL url = new URL(uri);
+                String uriString = store.getUri();
+                URI uri = URI.create(uriString);
+                // If you need a URL object for legacy APIs:
+                URL url = uri.toURL();
                 String protocol = url.getProtocol();
                 String host = url.getHost();
                 int port = url.getPort();

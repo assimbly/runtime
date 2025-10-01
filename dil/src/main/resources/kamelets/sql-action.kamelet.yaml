@@ -46,6 +46,10 @@ spec:
         title: Query
         description: SQL Query to execute
         type: string
+      connectionType:
+        title: Connection type
+        description: Type of connection (database)
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
