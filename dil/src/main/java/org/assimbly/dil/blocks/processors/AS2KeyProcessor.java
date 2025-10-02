@@ -2,6 +2,7 @@ package org.assimbly.dil.blocks.processors;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.apache.camel.component.as2.api.AS2CompressionAlgorithm;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -20,6 +21,9 @@ public class AS2KeyProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
+
+        // message structure
+        String messageStructure = exchange.getProperty("messageStructure", String.class);
 
         // password and alias
         String password = exchange.getProperty("keyPassword", String.class);
@@ -69,6 +73,11 @@ public class AS2KeyProcessor implements Processor {
             // decryptingPrivateKey
             PrivateKey decryptingPrivateKey = getPrivateKey(decryptCertificateUri, password, alias);
             exchange.getMessage().setHeader("CamelAs2.decryptingPrivateKey", decryptingPrivateKey);
+        }
+
+        if(messageStructure != null && messageStructure.contains("COMPRESSED")) {
+            // compressionAlgorithm
+            exchange.getMessage().setHeader("CamelAs2.compressionAlgorithm", AS2CompressionAlgorithm.ZLIB);
         }
 
     }
