@@ -73,6 +73,9 @@ public class Connection {
             case "jdbc" ->
                     new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
 
+            case "imaps" ->
+                    log.debug("Imaps connection will be configured on the component");
+
             default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
 
         }

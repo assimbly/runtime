@@ -62,13 +62,15 @@ public class ActiveMQClassic implements Broker {
             String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
 
             if(brokerFile.exists()) {
-                log.debug("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
+                log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
                 URI configurationUri = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(configurationUri);
             }else {
+
+                log.info("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path={}", baseDir);
                 this.setFileConfiguration("");
+
                 log.warn("No config file 'activemq.xml' found.");
-                log.debug("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path={}", baseDir);
 
                 brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
                 URI urlConfig = new URI(brokerUrl);

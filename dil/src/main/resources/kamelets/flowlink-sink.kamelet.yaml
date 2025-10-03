@@ -15,6 +15,11 @@ spec:
         title: Transport
         description: Transport
         type: string
+      destinationType:
+        title: Type of desintation
+        description: Type of destination (queue or topic)
+        type: string
+        default: queue
       targetFlowId:
         title: TargetFlowID
         description: Flow ID of the target flow
@@ -36,4 +41,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"
+              uri: "{{transport}}:{{destinationType}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"

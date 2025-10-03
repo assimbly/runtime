@@ -117,6 +117,7 @@ public class JMSConnection {
         } else {
             connectionFactory = new org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory(url, username, password);
         }
+
         connectionFactory.setConnectionTTL(-1);
         connectionFactory.setReconnectAttempts(1);
         connectionFactory.setRetryInterval(3000);
@@ -129,12 +130,14 @@ public class JMSConnection {
 
     private ConnectionFactory setActiveMQClassicConnectionFactory() {
 
-        ActiveMQConnectionFactory connectionFactory;
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
 
-        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-            connectionFactory = new ActiveMQConnectionFactory(url);
-        } else {
-            connectionFactory = new ActiveMQConnectionFactory(username, password, url);
+        if (username != null && !username.isEmpty()){
+            connectionFactory.setUserName(username);
+        }
+
+        if(password != null && !password.isEmpty()) {
+            connectionFactory.setPassword(password);
         }
 
         return connectionFactory;
@@ -161,13 +164,21 @@ public class JMSConnection {
 
         JmsComponent jmsComponent = context.getComponent(componentName, JmsComponent.class);
 
-        //override defaults
-        jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-        jmsComponent.setIncludeCorrelationIDAsBytes(false);
-        jmsComponent.setConcurrentConsumers(10);
-        jmsComponent.setMaxConcurrentConsumers(50);
-        jmsComponent.setArtemisStreamingEnabled(true);
-        jmsComponent.setTestConnectionOnStartup(true);
+
+        if(jmsComponent == null){
+            System.out.println("----> Yes it's null");
+        }else{
+            System.out.println("----> No it's not null");
+        }
+
+        if(jmsComponent != null){
+            jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+            jmsComponent.setIncludeCorrelationIDAsBytes(false);
+            jmsComponent.setConcurrentConsumers(10);
+            jmsComponent.setMaxConcurrentConsumers(50);
+            jmsComponent.setArtemisStreamingEnabled(true);
+            jmsComponent.setTestConnectionOnStartup(true);
+        }
 
         context.getRegistry().bind(connectionId, connectionFactory);
 
