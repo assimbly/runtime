@@ -129,7 +129,8 @@
 	  <dependency>
 		  <groupId>org.hamcrest</groupId>
 		  <artifactId>hamcrest</artifactId>
-		  <version>${hamcrest.version}</version><scope>test</scope>
+		  <version>${hamcrest.version}</version>
+		  <scope>test</scope>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.apache.maven</groupId>

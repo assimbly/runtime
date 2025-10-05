@@ -176,18 +176,6 @@
             <version>${jakarta-activation-api.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>aopalliance</groupId>
-            <artifactId>aopalliance</artifactId>
-            <version>${aopalliance.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>
-
         <!-- Groovy - expression validator -->
         <dependency>
             <groupId>org.apache.groovy</groupId>

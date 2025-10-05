@@ -100,22 +100,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-mqtt-protocol</artifactId>
-            <version>${activemq-artemis.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-stomp-protocol</artifactId>
-            <version>${activemq-artemis.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-openwire-protocol</artifactId>
-            <version>${activemq-artemis.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-hornetq-protocol</artifactId>
             <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
