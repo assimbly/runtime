@@ -1,7 +1,6 @@
 package org.assimbly.dil.blocks.processors;
 
 import jakarta.mail.BodyPart;
-import jakarta.mail.Header;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
@@ -11,10 +10,8 @@ import org.apache.camel.component.as2.api.entity.DispositionNotificationMultipar
 import org.assimbly.dil.blocks.exceptions.AS2BusinessException;
 
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 public class AS2MDNProcessor implements Processor {
 
@@ -44,26 +41,29 @@ public class AS2MDNProcessor implements Processor {
                 // Get the second part (MDN message)
                 BodyPart bodyPart = mimeMultipart.getBodyPart(1);
 
-                // Print all headers
-                Enumeration<Header> headers = bodyPart.getAllHeaders();
-                System.out.println("   - MDN Headers:");
-                while (headers.hasMoreElements()) {
-                    Header header = headers.nextElement();
-                    System.out.println(header.getName() + ": " + header.getValue());
+                // Read MDN body content as String
+                String mdnText;
+                try (Scanner scanner = new Scanner(bodyPart.getInputStream(), "UTF-8").useDelimiter("\\A")) {
+                    mdnText = scanner.hasNext() ? scanner.next() : "";
                 }
 
-                // Get the MDN body content
-                String mdnText = new Scanner(bodyPart.getInputStream(), "UTF-8").useDelimiter("\\A").next();
+                // Parse MDN body lines and set headers dynamically
+                for (String line : mdnText.split("\\r?\\n")) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
 
-                System.out.println("   - MDN Body Content:");
-                System.out.println(mdnText);
+                    String[] parts = line.split(":", 2);
+                    if (parts.length != 2) continue;
 
-                if (!Pattern.compile("automatic-action/MDN-sent-automatically;\\s*processed").matcher(mdnText).find()) {
-                    throw new AS2BusinessException("MDN indicates message not processed: " + mdnText);
+                    String key = "AS2" + parts[0].trim().replaceAll("\\s+", "-"); // e.g., "Reporting-UA" -> "AS2Reporting-UA"
+                    String value = parts[1].trim();
+
+                    exchange.getIn().setHeader(key, value);
                 }
             }
         } else {
-            throw new AS2BusinessException("Body is not an instance of DispositionNotificationMultipartReportEntity -> " + exchange.getIn().getBody());
+            exchange.getIn().setHeader("AS2Disposition", "NOT-PROCESSED");
+            throw new AS2BusinessException("Body is not an instance of DispositionNotificationMultipartReportEntity");
         }
     }
 
