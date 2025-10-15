@@ -1225,13 +1225,8 @@ public class CamelIntegration extends BaseIntegration {
 							Method method;
 							Object keyObject;
 
-							if(signingCertificateChainFlag) {
-								method = as2KeyBeanClass.getMethod(methodName, URI.class);
-								keyObject = method.invoke(null, uriValue);
-							} else {
-								method = as2KeyBeanClass.getMethod(methodName, URI.class, String.class, String.class);
-								keyObject = method.invoke(null, uriValue, password, alias);
-							}
+							method = as2KeyBeanClass.getMethod(methodName, URI.class, String.class, String.class);
+							keyObject = method.invoke(null, uriValue, password, alias);
 
 							this.context.getRegistry().bind(beanId, keyObject);
 							boundParams.put(key, "#" + beanId);
