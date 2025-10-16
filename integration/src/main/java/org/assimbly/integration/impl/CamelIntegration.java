@@ -1226,6 +1226,8 @@ public class CamelIntegration extends BaseIntegration {
 
 							if (signingCertificateChainFlag) {
 								keyObject = as2KeyProcessor.getSigningCertificateChain(new URI(value), password, alias);
+								// set signingAlgorithm param with the same certificate algorithm
+								boundParams.put("signingAlgorithm", as2KeyProcessor.getSigningAlgorithm((Certificate[]) keyObject));
 							} else if(signingPrivateKeyFlag) {
 								keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
 							} else if(decryptingPrivateKeyFlag) {
