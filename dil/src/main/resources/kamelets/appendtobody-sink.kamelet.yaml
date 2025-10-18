@@ -23,6 +23,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - transform:
-              simple: "${body}{{path}}"
-          - to:
-              uri: "kamelet:sink"
+              method: body().append("{{path}}")

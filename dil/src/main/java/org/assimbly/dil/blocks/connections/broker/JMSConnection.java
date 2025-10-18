@@ -86,8 +86,8 @@ public class JMSConnection {
         }
 
         switch (componentName) {
-            case "activemq", "amazonmq", "jms" -> createJmsComponent(connectionFactory);
-            case "sjms" -> createSjmsComponent(connectionFactory);
+            case "jms", "artemis" -> createJmsComponent(connectionFactory);
+            case "sjms", "activemq", "amazonmq" -> createSjmsComponent(connectionFactory);
             case "sjms2" -> createSjms2Component(connectionFactory);
             default -> throw new Exception("Unknown component name: " + componentName);
         }
@@ -164,19 +164,11 @@ public class JMSConnection {
 
         JmsComponent jmsComponent = context.getComponent(componentName, JmsComponent.class);
 
-
-        if(jmsComponent == null){
-            System.out.println("----> Yes it's null");
-        }else{
-            System.out.println("----> No it's not null");
-        }
-
         if(jmsComponent != null){
             jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
             jmsComponent.setIncludeCorrelationIDAsBytes(false);
             jmsComponent.setConcurrentConsumers(10);
             jmsComponent.setMaxConcurrentConsumers(50);
-            jmsComponent.setArtemisStreamingEnabled(true);
             jmsComponent.setTestConnectionOnStartup(true);
         }
 
@@ -188,6 +180,7 @@ public class JMSConnection {
 
         SjmsComponent sjmsComponent = context.getComponent(componentName, SjmsComponent.class);
         sjmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+        sjmsComponent.setBridgeErrorHandler(true);
 
         context.getRegistry().bind(connectionId, connectionFactory);
 
@@ -197,6 +190,7 @@ public class JMSConnection {
 
         Sjms2Component sjms2Component = context.getComponent(componentName, Sjms2Component.class);
         sjms2Component.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+        sjms2Component.setBridgeErrorHandler(true);
 
         context.getRegistry().bind(connectionId, connectionFactory);
 

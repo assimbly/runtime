@@ -1,30 +1,34 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: get-source
+  name: rest-source
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "get source"
+    title: "rest source"
     description: |-
       to do
     type: object
     properties:
+      method:
+        title: Method
+        description: HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH CONNECT)
+        type: string
       path:
           title: 
           description: .
           type: string
       options:
-          title: 
-          description: .
+          title: Options
+          description: Endpoint options
           type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "rest:get:{{path}}?{{options}}"
+        uri: "rest:{{method}}:{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

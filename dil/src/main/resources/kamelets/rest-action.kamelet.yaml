@@ -1,25 +1,28 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: manageflow-action
+  name: rest-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "manageflow action"
+    title: "rest action"
     description: |-
-      to do
+      REST Endpoint
     type: object
     properties:
+      method:
+        title: Method
+        description: HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH, CONNECT)
+        type: string
       path:
         title: Path
         description: Path
         type: string
-      action:
-        title: Path
-        description: Path
+      options:
+        title: Options
+        description: Endpoint options
         type: string
-        default: "startflow"
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,13 +30,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setProperty:
-              name: flowId
-              constant: "{{path}}"
-          - setProperty:
-              name: action
-              constant: "{{action}}"
-          - process:
-              ref: "ManageFlowProcessor"
+          - to:
+              uri: "rest:{{method}}:{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"

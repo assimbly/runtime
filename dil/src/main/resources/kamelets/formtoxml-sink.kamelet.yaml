@@ -20,5 +20,3 @@ spec:
         steps:
           - to:
               uri: "formtoxml://?encoding=utf-8"
-          - to:
-              uri: "kamelet:sink"

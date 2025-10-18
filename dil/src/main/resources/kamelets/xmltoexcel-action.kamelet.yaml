@@ -13,29 +13,29 @@ spec:
     properties:
       includeHeader:
         title: Include Header
-        description: .
+        description: Whether to include a header row in the Excel output
         type: string
         default: true
       includeIndexColumn:
         title: Include Index Column
-        description: .
+        description: Whether to include an index column in the Excel output
         type: string
         default: false
       indexColumnName:
         title: Index ColumnName
-        description: .
+        description: The name of the index column
         type: string
         default: line
       orderHeaders:
           title: Order Headers
-          description: .
+          description:  how the columns should be ordered in the Excel document (by name). unordered, ascending, or descending
           type: string
-          default: UNORDERED
+          default: unordered
       excelFormat:
           title: Excel Format
-          description: .
+          description: Choose between Excel format xslx or xsl
           type: string
-          default: XLSX
+          default: xlsx
   dependencies:
     - "camel:kamelet"
   template:

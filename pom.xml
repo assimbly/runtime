@@ -44,7 +44,7 @@
 		<activemq-artemis.version>2.42.0</activemq-artemis.version>
 		<activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
 		<bouncycastle.version>1.82</bouncycastle.version>
-		<camel.version>4.14.1</camel.version>
+		<camel.version>4.15.0</camel.version>
 		<commons-beanutils.version>1.11.0</commons-beanutils.version>
 		<commons-cli.version>1.10.0</commons-cli.version>
 		<commons-codec.version>1.19.0</commons-codec.version>
@@ -61,7 +61,7 @@
 		<db2-jdbc.version>db2jcc4</db2-jdbc.version>
 		<docconverter.version>1.15.0</docconverter.version>
 		<dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
-		<elasticsearch-rest-client.version>9.1.4</elasticsearch-rest-client.version>
+		<elasticsearch-rest-client.version>9.1.5</elasticsearch-rest-client.version>
 		<gson.version>2.13.2</gson.version>
 		<groovy-script.version>4.0.28</groovy-script.version>
 		<ibmmq-client.version>9.4.3.1</ibmmq-client.version>
@@ -74,14 +74,14 @@
 		<jakarta-xml-soap-api.version>3.0.2</jakarta-xml-soap-api.version>
 		<jakarta-xml-bind-api.version>4.0.4</jakarta-xml-bind-api.version>
 		<jasypt.version>1.9.3</jasypt.version>
-		<jeka.version>0.11.54</jeka.version>
+		<jeka.version>0.11.56</jeka.version>
 		<json.version>20250517</json.version>
 		<jsonassert.version>1.5.3</jsonassert.version>
 		<json-path.version>2.9.0</json-path.version>
 		<jwt.version>0.13.0</jwt.version>
 		<jolokia.version>2.3.0</jolokia.version>
 		<httpclient.version>4.5.14</httpclient.version>
-		<kamelet.version>4.14.0</kamelet.version>
+		<kamelet.version>4.14.1</kamelet.version>
 		<logback-classic.version>1.5.19</logback-classic.version>
 		<mapdb.version>3.1.0</mapdb.version>
 		<messaginghub.version>3.1.7</messaginghub.version>
@@ -106,7 +106,7 @@
 		<googleauth.version>1.5.0</googleauth.version>
 		<h2database.version>2.4.240</h2database.version>
 		<hamcrest.version>3.0</hamcrest.version>
-		<jetty.version>12.1.1</jetty.version>
+		<jetty.version>12.1.2</jetty.version>
 		<json-unit-assertj.version>4.1.1</json-unit-assertj.version>
 		<junit.version>5.14.0</junit.version>
 		<mockito.version>5.20.0</mockito.version>

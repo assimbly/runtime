@@ -20,12 +20,12 @@ public class EnrichStrategy implements AggregationStrategy {
         }
 
         AggregationStrategy enrichStrategy = switch (enrichType) {
-            case "xml", "text/xml", "application/xml" -> new XmlEnrichStrategy();
-            case "json", "application/json" -> new JsonEnrichStrategy();
-            case "application/zip" -> new ZipFileEnrichStrategy();
-            case "application/attachment" -> new AttachmentEnrichStrategy();
-            case "application/override" -> new OverrideEnrichStrategy();
-            default -> throw new UnsupportedOperationException();
+            case "application/xml", "text/xml", "xml"  -> new XmlEnrichStrategy();
+            case "application/json", "json" -> new JsonEnrichStrategy();
+            case "application/zip", "zip" -> new ZipFileEnrichStrategy();
+            case "application/attachment", "attachment" -> new AttachmentEnrichStrategy();
+            case "application/override", "override" -> new OverrideEnrichStrategy();
+            default -> throw new UnsupportedOperationException("enrichType '" + enrichType + "' isn't a supported enrichStrategy (valid values are xml, json, zip, attachment or override)");
         };
 
         return enrichStrategy.aggregate(originalExchange, resourceExchange);

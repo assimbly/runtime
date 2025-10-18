@@ -79,7 +79,7 @@ public class SSLManager {
             log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: {}", e.getMessage());
         }
 
-        String[] sslComponents = {"ftps", "https", "imaps", "kafka", "jetty", "netty", "netty-http", "smtps", "vertx-http"};
+        String[] sslComponents = {"ftps", "https", "imaps", "jetty", "netty", "smtps"};
 
         sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
 

@@ -11,10 +11,11 @@ spec:
       PDF to text in message
     type: object
     properties:
-      options:
-        title: Options
-        description: Options
+      routeId:
+        title: routeId
+        description: ID of the step
         type: string
+        default: dummy
   dependencies:
     - "camel:kamelet"
   template:

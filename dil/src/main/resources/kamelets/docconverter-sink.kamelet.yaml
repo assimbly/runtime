@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: python-script
+  name: docconverter-sink
   labels:
-    camel.apache.org/kamelet.type: "script"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "python script"
+    title: "DocConverter Sink"
     description: |-
-      Apply Python script
+      Convert between various formats (XML, JSON, YAML and CSV)
     type: object
     properties:
       path:
@@ -22,7 +22,5 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setBody:
-              python: "{{path}}"
           - to:
-              uri: "kamelet:sink"
+              uri: "docconverter:{{path}}"

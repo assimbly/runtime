@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: filter-action
+  name: filter-sink
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "filter-action"
+    title: "filter-sink"
     description: |-
       Filter message by an expression (XPath, Jsonpath or Simple)
     type: object
@@ -30,5 +30,3 @@ spec:
               language:
                 language: "{{language}}"
                 expression: "{{expression}}"
-          - to:
-              uri: "kamelet:sink"

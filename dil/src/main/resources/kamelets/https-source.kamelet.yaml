@@ -23,8 +23,6 @@ spec:
       from:
         uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&sslContextParameters=sslContext"
         steps:
-          - convertBodyTo:
-              type: String
           - removeHeaders:
               pattern: "CamelHttp*"
           - to:

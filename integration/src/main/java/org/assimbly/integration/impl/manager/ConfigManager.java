@@ -13,6 +13,8 @@ import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.seda.SedaComponent;
+import org.apache.camel.component.sjms.SjmsComponent;
+import org.apache.camel.component.sjms2.Sjms2Component;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.spi.Resource;
@@ -147,7 +149,7 @@ public class ConfigManager {
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
-        context.addComponent("activemq", new JmsComponent());
+        context.addComponent("activemq", new SjmsComponent());
 
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());

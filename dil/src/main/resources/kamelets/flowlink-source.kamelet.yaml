@@ -12,22 +12,22 @@ spec:
     type: object
     properties:
       transport:
-          title: Transport
-          description: Transport
-          type: string
+        title: Transport
+        description: Transport
+        type: string
       destinationType:
         title: Type of desintation
         description: Type of destination (queue or topic)
         type: string
         default: queue
       flowId:
-        title: Flow ID
-        description: Flow ID (id of group)
+        title: FlowID
+        description: Flow ID of the flow
         type: string
       connectionFactory:
         title: Connection Factory
         description: Connection Factory
-        type: string
+        type: strings
   dependencies:
     - "camel:kamelet"
   template:
