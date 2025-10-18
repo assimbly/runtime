@@ -34,24 +34,9 @@
 
         <!-- apache commons dependencies -->
         <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <version>${commons-beanutils.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>${commons-codec.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>${commons-collections4.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons-compress.version}</version>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>${commons-cli.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -59,46 +44,10 @@
             <version>${commons-configuration2.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-            <version>${commons-cli.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-dbcp2</artifactId>
-            <version>${commons-dbcp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-jxpath</groupId>
-            <artifactId>commons-jxpath</artifactId>
-            <version>${commons-jxpath.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-net</groupId>
-            <artifactId>commons-net</artifactId>
-            <version>${commons-net.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>${commons-math3.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>${commons-text.version}</version>
-        </dependency>
-
 
         <!-- Java 9+ dependencies -->
         <dependency>
