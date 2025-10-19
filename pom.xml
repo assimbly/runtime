@@ -93,8 +93,8 @@
         <hamcrest.version>3.0</hamcrest.version>
         <jetty.version>12.1.2</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
-        <json-unit-assertj.version>4.1.1</json-unit-assertj.version>
-        <junit.version>5.14.0</junit.version>
+        <json-unit-assertj.version>5.0.0</json-unit-assertj.version>
+        <junit.version>6.0.0</junit.version>
         <mockito.version>5.20.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
