@@ -836,14 +836,6 @@ public interface Integration {
     String getCamelRouteConfiguration(String flowId, String mediaType) throws Exception;
 
 	/**
-	* Resolve the Camel component dependency by scheme name (this is download and dynamically loaded in runtime)
-	*
-	* @param  scheme name of the scheme
-	* @return Message on succes or failure
-	*/
-    String resolveDependency(String scheme) throws Exception;
-
-	/**
 	* Get the context of integration (can be used to access extended methods by the implementation (Camel)
 	* Note: Calling this you're on your own :)
 	*

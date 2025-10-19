@@ -233,23 +233,27 @@ public class StatsManager {
         ManagedRouteMBean route = managedContext.getManagedRoute(routeid);
 
         step.put("id", routeid);
-        step.put("status", route.getState());
+        if(route == null) {
+            step.put("status", "unconfigured");
+        }else {
+            step.put("status", route.getState());
 
-        if (route.getState().equals("started")) {
+            if (route.getState().equals("started")) {
 
-            if (fullStats) {
-                String stepUptime = route.getUptime();
-                String stepUptimeMilliseconds = Long.toString(route.getUptimeMillis());
+                if (fullStats) {
+                    String stepUptime = route.getUptime();
+                    String stepUptimeMilliseconds = Long.toString(route.getUptimeMillis());
 
-                step.put("uptime", stepUptime);
-                step.put("uptimeMilliseconds", stepUptimeMilliseconds);
+                    step.put("uptime", stepUptime);
+                    step.put("uptimeMilliseconds", stepUptimeMilliseconds);
 
+                }
+
+                String statsAsXml = route.dumpStatsAsXml(fullStats);
+                String statsAsJson = DocConverter.convertXmlToJson(statsAsXml);
+                JSONObject stepStatsObject = new JSONObject(statsAsJson);
+                step.put("stats", stepStatsObject.get("stats"));
             }
-
-            String statsAsXml = route.dumpStatsAsXml(fullStats);
-            String statsAsJson = DocConverter.convertXmlToJson(statsAsXml);
-            JSONObject stepStatsObject = new JSONObject(statsAsJson);
-            step.put("stats", stepStatsObject.get("stats"));
         }
 
         json.put("step", step);

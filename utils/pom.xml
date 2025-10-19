@@ -52,12 +52,6 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.jeka</groupId>
-            <artifactId>jeka-core</artifactId>
-            <version>${jeka.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.jasypt</groupId>
             <artifactId>jasypt</artifactId>
             <version>${jasypt.version}</version>

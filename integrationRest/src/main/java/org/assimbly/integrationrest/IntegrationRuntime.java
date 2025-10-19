@@ -144,35 +144,6 @@ public class IntegrationRuntime {
 
     }
 
-    /**
-     * POST  /integration/resolvedependencybyscheme/{scheme} : Resolve the Mave dependency by URI scheme (for example SFTP or FILE).
-     *
-     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     */
-    @PostMapping(
-            path = "/integration/resolvedependencybyscheme/{scheme}",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> resolveDepedencyByScheme(
-            @PathVariable(value = "scheme") String scheme,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) {
-
-        try {
-            String result = integration.resolveDependency(scheme);
-            log.info("resolveDepedencyByScheme Result: {}", result);
-            if(result.contains("Error")){
-                log.info("Returns an error");
-                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/resolvedependency/{groupId}/{artifactId}/{version}",result);
-            }
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/resolvedependency/{groupId}/{artifactId}/{version}",result);
-        } catch (Exception e) {
-            log.error("Resolve dependency for scheme={} failed", scheme, e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/resolvedependency/{groupId}/{artifactId}/{version}",e.getMessage());
-        }
-
-    }
-
     @GetMapping(
             path = "/integration/basedirectory",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

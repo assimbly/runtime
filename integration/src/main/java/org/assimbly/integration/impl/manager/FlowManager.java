@@ -24,7 +24,6 @@ import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.DependencyUtil;
 import org.assimbly.util.INetUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONArray;
@@ -780,46 +779,6 @@ public class FlowManager {
                 .toList();
     }
 
-    public String resolveDependency(String scheme) {
-
-        DefaultCamelCatalog catalog = new DefaultCamelCatalog();
-        String jsonString = catalog.componentJSonSchema(scheme);
-
-        if (jsonString == null || jsonString.isEmpty()) {
-            log.info("Unknown scheme: {}. Error: Could not found scheme in catalog.", scheme);
-            return "Unknown scheme: " + scheme + ". Error: Could not found scheme in catalog.";
-        }
-
-        JSONObject componentSchema = new JSONObject(jsonString);
-        JSONObject component = componentSchema.getJSONObject("component");
-
-        String groupId = component.getString("groupId");
-        String artifactId = component.getString("artifactId");
-        String version = catalog.getCatalogVersion();
-
-        String dependency = groupId + ":" + artifactId + ":" + version;
-        String result;
-
-        try {
-            List<Class<?>> classes = resolveMavenDependency(groupId, artifactId, version);
-            Component camelComponent = getComponent(classes, scheme);
-            context.addComponent(scheme, camelComponent);
-            result = "Dependency " + dependency + " resolved";
-        } catch (Exception e) {
-            log.error("Dependency {} resolved failed.", dependency, e);
-            result = "Dependency " + dependency + " resolved failed. Error message: " + e.getMessage();
-        }
-
-        return result;
-
-    }
-
-    public List<Class<?>> resolveMavenDependency(String groupId, String artifactId, String version) throws Exception {
-        DependencyUtil dependencyUtil = new DependencyUtil();
-        List<Path> paths = dependencyUtil.resolveDependency(groupId, artifactId, version);
-        return dependencyUtil.loadDependency(paths);
-    }
-
     public Component getComponent(List<Class<?>> classes, String scheme) {
 
         Component component = null;
@@ -947,30 +906,8 @@ public class FlowManager {
                 setConnection(properties, key);
             }
 
-            if (key.equals("flow.dependencies") && properties.get(key) != null) {
-
-                String[] schemes = StringUtils.split(properties.get(key), ",");
-
-                for (String scheme : schemes) {
-                    createConnection(scheme);
-                }
-            }
         }
 
-    }
-
-    private void createConnection(String scheme) throws Exception {
-        if (!scheme.equals("null") && context.getComponent(scheme.toLowerCase()) == null && !DependencyUtil.CompiledDependency.hasCompiledDependency(scheme.toLowerCase())) {
-
-            log.warn("Component {} is not supported by Assimbly. Try to resolve dependency dynamically.", scheme);
-
-            if (INetUtil.isHostAvailable("repo1.maven.org")) {
-                log.info(resolveDependency(scheme));
-            } else {
-                log.error("Failed to resolve {}. No available internet is found. Cannot reach http://repo1.maven.org/maven2/", scheme);
-            }
-
-        }
     }
 
     public String getFlowReport() {

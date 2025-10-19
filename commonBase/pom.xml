@@ -44,6 +44,11 @@
             <version>${commons-configuration2.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-jxpath</groupId>
+            <artifactId>commons-jxpath</artifactId>
+            <version>${commons-jxpath.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
@@ -60,7 +65,6 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>${jakarta-xml-bind-api.version}</version>
         </dependency>
-
         <!--End Java 9+ dependencies -->
 
         <dependency>
@@ -192,11 +196,6 @@
             <groupId>org.exist-db.thirdparty.org.eclipse.wst.xml</groupId>
             <artifactId>xpath2</artifactId>
             <version>${xpath2.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.messaginghub</groupId>
-            <artifactId>pooled-jms</artifactId>
-            <version>${messaginghub.version}</version>
         </dependency>
 
         <dependency>

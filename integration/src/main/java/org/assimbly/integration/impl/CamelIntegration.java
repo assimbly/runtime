@@ -512,11 +512,6 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String resolveDependency(String scheme) {
-        return flowManager.resolveDependency(scheme);
-    }
-
-    @Override
     public void setConnection(TreeMap<String, String> props, String stepType) throws Exception {
         flowManager.setConnection(props, stepType);
     }
