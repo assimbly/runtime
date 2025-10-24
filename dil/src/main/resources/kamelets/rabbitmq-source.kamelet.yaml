@@ -8,7 +8,7 @@ spec:
   definition:
     title: "rabbitmq source"
     description: |-
-      to do
+      Receive messages from a RabbitMQ broker
     type: object
     properties:
       path:

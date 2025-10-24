@@ -8,7 +8,7 @@ spec:
   definition:
     title: "recipient router"
     description: |-
-      Send message to all recipient in comma-separated out_like
+      Sends a copy of the message to all recipients in comma-separated list (out_list)
     type: object
     properties:
       out_list:

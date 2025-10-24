@@ -8,7 +8,7 @@ spec:
   definition:
     title: "repeater source"
     description: |-
-      Repeater that sends message on the time (based on camel-timer)
+      Repeater that sends a message every fixed period (based on camel-timer)
     type: object
     properties:
       path:

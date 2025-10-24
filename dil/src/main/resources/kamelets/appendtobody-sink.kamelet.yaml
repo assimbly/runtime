@@ -8,7 +8,7 @@ spec:
   definition:
     title: "appendtobody action"
     description: |-
-      append to message body
+      Append text to a message body
     type: object
     properties:
       path:

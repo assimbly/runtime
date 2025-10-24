@@ -8,7 +8,7 @@ spec:
   definition:
     title: "setmessage action"
     description: |-
-      Set headers on a message
+      Set multiple headers on a message
     type: object
     properties:
       headers:

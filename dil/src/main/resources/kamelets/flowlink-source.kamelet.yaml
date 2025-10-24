@@ -8,7 +8,7 @@ spec:
   definition:
     title: "flowlink source"
     description: |-
-      Link two flow to each other
+      Links messages to another flow (inbound) using an endpoint like sync (direct), async (seda), activemq
     type: object
     properties:
       transport:

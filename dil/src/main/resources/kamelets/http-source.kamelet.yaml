@@ -8,7 +8,7 @@ spec:
   definition:
     title: "http source"
     description: |-
-      to do
+      Act as a server (Jetty) to receive HTTP calls
     type: object
     properties:
       path:

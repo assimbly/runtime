@@ -28,8 +28,7 @@ public class ErrorHandler {
 		int redeliveryDelay = getErrorHandlerOption("redeliveryDelay", 0);
 		int maximumRedeliveryDelay = getErrorHandlerOption("maximumRedeliveryDelay", redeliveryDelay * 10);
 		int backOffMultiplier = getErrorHandlerOption("backOffMultiplier", 0);
-
-		Processor failureProcessor = new FailureProcessor();
+        boolean failureProcessorEnabled = getFailureProcessorOption();
 
 		deadLetterChannelBuilder.allowRedeliveryWhileStopping(false)
 			.asyncDelayedRedelivery()
@@ -47,9 +46,10 @@ public class ErrorHandler {
 			.logExhaustedMessageBody(true)
 			.logExhaustedMessageHistory(true);
 
-		deadLetterChannelBuilder.onExceptionOccurred(failureProcessor);
-
-		deadLetterChannelBuilder.asyncDelayedRedelivery();
+        if(failureProcessorEnabled) {
+            Processor failureProcessor = new FailureProcessor();
+            deadLetterChannelBuilder.onExceptionOccurred(failureProcessor);
+        }
 
 		return deadLetterChannelBuilder;
 		
@@ -67,5 +67,16 @@ public class ErrorHandler {
 		return defaultValue;
 
 	}
+
+    private boolean getFailureProcessorOption() {
+
+        if (props.containsKey("flow.failureProcessor")) {
+            String failureProcessorOption = props.get("flow." + "failureProcessor");
+            return Boolean.parseBoolean(failureProcessorOption);
+        }
+
+        return false;
+
+    }
 
 }

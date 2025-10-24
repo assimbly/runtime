@@ -8,7 +8,7 @@ spec:
   definition:
     title: "setbodybyheader sink"
     description: |-
-      Set body from header
+      Set body from a header
     type: object
     properties:
       path:

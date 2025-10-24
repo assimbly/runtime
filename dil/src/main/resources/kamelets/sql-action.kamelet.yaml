@@ -8,7 +8,7 @@ spec:
   definition:
     title: "sql action"
     description: |-
-      SQL (Custom Assimbly component)
+      SQL (Custom Assimbly component) to connect to a database and execute queries
     type: object
     properties:
       host:
@@ -24,10 +24,14 @@ spec:
         title: Username
         description: Username of the database
         type: string
+        x-descriptors:
+          - urn:camel:group:credentials
       password:
         title: Password
         description: Password of the database
         type: string
+        x-descriptors:
+          - urn:camel:group:credentials
       useSSL:
         title: Use SSL
         description: Use SSL (TLS)

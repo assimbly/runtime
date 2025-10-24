@@ -8,7 +8,7 @@ spec:
   definition:
     title: "texttobase64 sink"
     description: |-
-      Convert text to base64 string
+      Converts text to base64 encoded string
     type: object
     properties:
   dependencies:

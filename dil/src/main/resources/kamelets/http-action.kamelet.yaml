@@ -8,7 +8,7 @@ spec:
   definition:
     title: "http action"
     description: |-
-      HTTP Action
+      Act as a client to call external servers using HTTP
     type: object
     properties:
       uri:

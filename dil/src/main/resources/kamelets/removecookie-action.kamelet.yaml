@@ -8,7 +8,7 @@ spec:
   definition:
     title: "removecookie action"
     description: |-
-      Sets a browser cookie
+      Removes a browser cookie
     type: object
     properties:
       name:

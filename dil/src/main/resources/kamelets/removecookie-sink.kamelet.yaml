@@ -8,7 +8,7 @@ spec:
   definition:
     title: "removecookie sink"
     description: |-
-      Sets a browser cookie
+      Removes a browser cookie
     type: object
     properties:
       name:

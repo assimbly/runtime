@@ -8,7 +8,7 @@ spec:
   definition:
     title: "flowlink sink"
     description: |-
-      Generic kamelet for Camel Components
+      Links messages to another flow (outbound) using an endpoint like sync (direct), async (seda), activemq
     type: object
     properties:
       transport:
@@ -16,7 +16,7 @@ spec:
         description: Transport
         type: string
       destinationType:
-        title: Type of desintation
+        title: Type of destination
         description: Type of destination (queue or topic)
         type: string
         default: queue

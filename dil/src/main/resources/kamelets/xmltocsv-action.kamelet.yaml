@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xmltocsv action"
     description: |-
-      Transform XML to CSV
+      Converts XML to CSV
     type: object
     properties:
       options:

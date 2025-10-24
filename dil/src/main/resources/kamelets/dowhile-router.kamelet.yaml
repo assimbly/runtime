@@ -8,7 +8,7 @@ spec:
   definition:
     title: "dowhile-router"
     description: |-
-      Loops based on a expression
+      Loops message based on a expression
     type: object
     properties:
       language:

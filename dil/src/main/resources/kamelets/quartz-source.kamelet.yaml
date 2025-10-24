@@ -8,7 +8,7 @@ spec:
   definition:
     title: "quatz source"
     description: |-
-      Scheduler with quartz
+      Scheduler using quartz
     type: object
     properties:
       path:

@@ -15,15 +15,26 @@ spec:
           title: Path
           description: Path of the URL
           type: string
+      matchOnUriPrefix:
+          title: MatchOnPrefix
+          description: Whether you would like to accept requests that start with the given URL.
+          type: boolean
+          default: false
+      preserveHttpHeaders:
+        title: PreserveHttpHeaders
+        description: Whether to keep the CamelHttp* headers.
+        type: boolean
+        default: false
   dependencies:
     - "camel:kamelet"
   template:
     route:
       streamCache: true
       from:
-        uri: "jetty:https:{{path}}?jettyHttpBinding=#customHttpBinding&sslContextParameters=sslContext"
+        uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
         steps:
           - removeHeaders:
               pattern: "CamelHttp*"
+              disabled: "{{preserveHttpHeaders}}"
           - to:
               uri: "kamelet:sink"

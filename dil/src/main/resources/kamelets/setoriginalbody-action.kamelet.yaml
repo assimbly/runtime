@@ -8,7 +8,7 @@ spec:
   definition:
     title: "setoriginalbody action"
     description: |-
-      Set body from header
+      Sets the original body of a exchange
     type: object
     properties:
       path:

@@ -8,7 +8,7 @@ spec:
   definition:
     title: "imaps source"
     description: |-
-      to do
+      IMAPS (Internet Message Access Protocol over SSL) — to retrieve emails stored on a mail server.
     type: object
     properties:
       scheme:

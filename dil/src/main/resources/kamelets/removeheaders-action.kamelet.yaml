@@ -8,7 +8,7 @@ spec:
   definition:
     title: "removeheaders action"
     description: |-
-      Remove headers from message
+      Removes headers from message using a pattern
     type: object
     properties:
       pattern:

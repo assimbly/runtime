@@ -143,7 +143,7 @@ public class ConfigManager {
         JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
         jettyHttpComponent12.setRequestHeaderSize(80000);
         jettyHttpComponent12.setResponseHeaderSize(80000);
-        jettyHttpComponent12.setBridgeErrorHandler(true);
+
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
@@ -155,8 +155,7 @@ public class ConfigManager {
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
-        registry.bind("customHttpBinding", new CustomHttpBinding());
-        registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
+        registry.bind("CustomHttpBinding", new CustomHttpBinding());
         registry.bind("flowCookieStore", new CookieStore());
         registry.bind("InputStreamToStringProcessor", new InputStreamToStringProcessor());
         registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());

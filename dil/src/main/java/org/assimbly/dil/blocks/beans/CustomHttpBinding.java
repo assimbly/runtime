@@ -22,7 +22,8 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String DEFAULT_ERROR_MESSAGE = "Something went wrong calling the HTTP service. Please refer to the logs for more information.";
+    private static final String DEFAULT_ERROR_MESSAGE = "Error processing request. Details available in the log/trace viewer.";
+
     private static final String EMPTY_BODY_MESSAGE = "HTTP service couldn't read your request, did you supply a correct body?";
 
     private static final String HTTP_RESPONSE_TIME = "ResponseTime";
@@ -31,20 +32,17 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
 
         Message target = exchange.getMessage();
-        if (exchange.isFailed()) {
-            if (exchange.getException() != null) {
-                addResponseTimeHeader(exchange, target);
-                try {
-                    doWriteExceptionResponse(target, exchange.getException(), response);    
-                } catch (Exception e) {
-                    log.error("Cannot write response: {}", e.getMessage(), e);
-                }
-                
-            } else {
-                addResponseTimeHeader(exchange, target);
-                // it must be a fault, no need to check for the fault flag on the message
-                doWriteFaultResponse(target, response, exchange);
+
+        Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+
+        if (exception != null) {
+            addResponseTimeHeader(exchange, target);
+            try {
+                doWriteExceptionResponse(target, exception, response);
+            } catch (Exception e) {
+                log.error("Cannot write response: {}", e.getMessage(), e);
             }
+
         } else {
             if (exchange.getMessage() != null) {
                 // just copy the protocol relates header if we do not have them
@@ -53,43 +51,60 @@ public class CustomHttpBinding extends DefaultHttpBinding {
             addResponseTimeHeader(exchange, target);
             doWriteResponse(target, response, exchange);
         }
+
     }
 
     private void doWriteExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
-        String accept = target.getHeader("Accept", String.class);
 
         if (exception instanceof TimeoutException) {
             response.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
             response.setContentType("text/plain");
             response.getWriter().write("Timeout error");
         }else {
-                generateExceptionResponse(target, exception, response, accept);
-            }
+            generateExceptionResponse(target, exception, response);
         }
-        private void generateExceptionResponse(Message target, Throwable exception, HttpServletResponse response, String accept) throws Exception {
-            String infoMessage;
-            String message = null;
-            if(target.getBody() == null) {
-                infoMessage = EMPTY_BODY_MESSAGE;
-            } else {
-                infoMessage = DEFAULT_ERROR_MESSAGE;
-            }
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            if(accept != null){
-                if(accept.contains("application/xml") || accept.contains("text/xml")){
-                    message = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
-                    response.setContentType("text/xml");
-                }
-                if(accept.contains("application/json")){
-                    message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
-                    response.setContentType("application/json");
-                }
-            }
-            if(message == null) {
+    }
+
+    private void generateExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
+
+        String accept = target.getHeader("Accept", String.class);
+        String userAgent = target.getHeader("User-Agent", String.class);
+        String infoMessage;
+        String message = null;
+
+        if(target.getBody() == null) {
+            infoMessage = EMPTY_BODY_MESSAGE;
+        } else {
+            infoMessage = DEFAULT_ERROR_MESSAGE;
+        }
+
+        boolean isBrowser = userAgent != null && (
+                userAgent.contains("Firefox") ||
+                userAgent.contains("Chrome") ||
+                userAgent.contains("Safari")
+        );
+
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+        if(accept != null){
+            if(isBrowser){
+                message = generateHtmlResponse(response.getStatus(), infoMessage, exception.toString());
+                response.setContentType("text/html; charset=UTF-8");
+            }else if(accept.contains("application/xml") || accept.contains("text/xml")){
+                message = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
+                response.setContentType("text/xml");
+            }else if(accept.contains("application/json")){
                 message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
+                response.setContentType("application/json");
             }
-            response.getWriter().write(message);
         }
+        if(message == null) {
+            message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
+        }
+
+        response.getWriter().write(message);
+
+    }
 
     private String generateJsonResponse(int code, String info, String error) {
         
@@ -103,30 +118,95 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
 
     private String generateXmlResponse(int code, String info, String error) {
-        
-        Document doc = XmlHelper.newDocument();
 
-        if(doc == null) {
-            return "<Response>Something went wrong generating the response message</Response>";
-        }
+        return String.format("""
+            <Response>
+               <Code>%s</Code>
+               <Info>%s</Info>
+               <Error>%s</Error>
+            </Response>
+            """, code, info, error);
 
-        Element rootElement = doc.createElement("Response");
+    }
 
-        Element codeElement = doc.createElement("Code");
-        codeElement.setTextContent(String.valueOf(code));
-        rootElement.appendChild(codeElement);
+    private String generateHtmlResponse(int code, String info, String error) {
 
-        Element infoElement = doc.createElement("Info");
-        infoElement.setTextContent(String.valueOf(info));
-        rootElement.appendChild(infoElement);
+        return String.format("""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Error Report</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            max-width: 800px;
+                            margin: 50px auto;
+                            padding: 20px;
+                            background: #f5f5f5;
+                        }
+                
+                        .report {
+                            background: white;
+                            padding: 30px;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                
+                        h1 {
+                            color: #d32f2f;
+                            margin-bottom: 30px;
+                        }
+                
+                        .section {
+                            margin-bottom: 20px;
+                        }
+                
+                        .label {
+                            font-weight: bold;
+                            margin-bottom: 5px;
+                            color: #555;
+                        }
+                
+                        .value {
+                            padding: 10px;
+                            background: #f9f9f9;
+                            border-left: 3px solid #d32f2f;
+                        }
+                
+                        .code {
+                            font-family: monospace;
+                            font-size: 13px;
+                            line-height: 1.5;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="report">
+                        <h1>Error Report</h1>
 
-        Element errorElement = doc.createElement("Error");
-        errorElement.setTextContent(error);
-        rootElement.appendChild(errorElement);
+                        <div class="section">
+                            <div class="label">Info</div>
+                            <div class="value">%s</div>
+                        </div>                
+                        
+                        <div class="section">
+                            <div class="label">Code</div>
+                            <div class="value">%s</div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="label">Error</div>
+                            <div class="value code">%s</div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            """, info, code, error);
 
-        doc.appendChild(rootElement);
 
-        return XmlHelper.prettyPrint(doc);
+
     }
 
     private void customCopyProtocolHeaders(Message request, Message response) {

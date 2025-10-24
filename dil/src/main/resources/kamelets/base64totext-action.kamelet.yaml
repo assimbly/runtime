@@ -8,7 +8,7 @@ spec:
   definition:
     title: "base64totext action"
     description: |-
-      to do
+      Convert a body in base64 encoding to plain text
     type: object
     properties:
   dependencies:

@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xmltojsonsimple action"
     description: |-
-      Convert XML to JSON
+      Converts XML to JSON
     type: object
     properties:
       options:

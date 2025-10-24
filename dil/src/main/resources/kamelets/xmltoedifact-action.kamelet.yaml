@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xmltoedifact action"
     description: |-
-      to do
+      Converts XML to Edifact
     type: object
     properties:
       options:

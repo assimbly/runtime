@@ -8,7 +8,7 @@ spec:
   definition:
     title: "enrich router"
     description: |-
-      Enrich message
+      Enrich message based on a chosen strategy (XML, JSON, Override, Add as zip, Add as attachemet)
     type: object
     properties:
       out_enrich:

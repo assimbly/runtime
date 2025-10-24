@@ -6,15 +6,15 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "smtp sink"
+    title: "smtp action"
     description: |-
-      Send message to email address
+      SMTP (Simple Mail Transfer Protocol) SMTP is the standard protocol for sending emails from one system to another.
     type: object
     properties:
       scheme:
-          title: scheme of components
-          description: Endpoint URI
-          type: string
+        title: scheme of components
+        description: Endpoint URI
+        type: string
       path:
         title: path
         description: path of component
@@ -24,10 +24,14 @@ spec:
         title: username smpt server
         description: username smpt server
         type: string
+        x-descriptors:
+          - urn:camel:group:credentials
       password:
         title: password of smtp server
         description: password of smtp server
         type: string
+        x-descriptors:
+          - urn:camel:group:credentials
       from:
         title: from email address
         description: from email address
@@ -48,12 +52,23 @@ spec:
         title: tenant email address
         description: tenant email address
         type: string
+      accessToken:
+        title: AccessToken
+        description: Access token
+        type: string
+      authenticationType:
+        title: AthenticationType
+        description: Which authentication type is used (like oauth)
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
+    beans:
+      - name: ExtendedHeaderFilterStrategy
+        type: "#class:org.assimbly.util.mail.ExtendedHeaderFilterStrategy"
     route:
       from:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{scheme}}://{{path}}?=RAW(@{accessToken})&authenticationType=RAW(oauth)&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{replyTo}})&tenant=RAW({{tenant}})&headerFilterStrategy=#ExtendedHeaderFilterStrategy&mail.smtp.starttls.enable=true"
+              uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{replyTo}})&tenant=RAW({{tenant}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"

@@ -8,7 +8,7 @@ spec:
   definition:
     title: "http sink"
     description: |-
-      to do
+      Act as a client to call external servers using HTTP
     type: object
     properties:
       uri:

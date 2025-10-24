@@ -8,7 +8,7 @@ spec:
   definition:
     title: "xmltoexcel action"
     description: |-
-      Convert XML to Excel
+      Converts XML to Excel
     type: object
     properties:
       includeHeader:

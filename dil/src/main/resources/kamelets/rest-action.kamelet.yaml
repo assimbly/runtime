@@ -8,7 +8,7 @@ spec:
   definition:
     title: "rest action"
     description: |-
-      REST Endpoint
+      Calls a REST Endpoint
     type: object
     properties:
       method:
