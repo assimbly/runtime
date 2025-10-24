@@ -1,0 +1,56 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: soap-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "soap action"
+    description: |-
+      Sends SOAP Requests
+    type: object
+    properties:
+      uri:
+        title: URI
+        description: Endpoint URI
+        type: string
+      action:
+        title: Action
+        description: SOAP Action
+        type: string
+      extract:
+        title: Extract
+        description: Extracts the SOAP envelope
+        type: String
+      smart:
+        title: Smart
+        description: Apply namespace automatically
+        type: String
+      params:
+        title: Params
+        description: Query parameters on the SOAP URL
+        type: string
+      auth:
+        title: Auth
+        description: Authentication (optional)
+        type: string
+      headers:
+        title: Headers
+        description: SOAP headers (optional)
+        type: string
+      httpHeaders:
+        title: HTTPHeaders
+        description: HTTP Headers (optional)
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "soap://{{path}}?action={{action}}&extract={{extract}}&smart={{smart}}&params={{?params}}&auth={{?auth}}&headers={{?headers}}&httpHeaders={{?httpHeaders}}"
+          - to:
+              uri: "kamelet:sink"
