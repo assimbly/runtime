@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: pdftransform-sink
+  name: headerstopdf-sink
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "pdf transform"
+    title: "headers to PDF sink"
     description: |-
-      Transform elements in PDF
+      Add message headers as Adobe elements to a PDF template
     type: object
     properties:
       path:
@@ -27,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "pdftransform://{{path}}?{{options}}"
+              uri: "headerstopdf://{{path}}?{{options}}"

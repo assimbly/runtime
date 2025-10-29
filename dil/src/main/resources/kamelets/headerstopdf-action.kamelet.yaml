@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: pdftransform-action
+  name: headerstopdf-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "pdftransform action"
+    title: "Headers to PDF action"
     description: |-
-      Transform elements in PDF
+      Add message headers as Adobe elements to a PDF template
     type: object
     properties:
       path:
@@ -27,6 +27,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "pdftransform://{{path}}?{{options}}"
+              uri: "headerstopdf://{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"
