@@ -36,6 +36,10 @@ spec:
           description: Choose between Excel format xslx or xsl
           type: string
           default: xlsx
+      expressions:
+        title: Worksheet expressions
+        description: Custom Worksheet expressions
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -44,6 +48,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}"
+              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&worksheets={{?expressions}}"
           - to:
               uri: "kamelet:sink"

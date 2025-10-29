@@ -1,14 +1,14 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: replaceinpdf-action
+  name: pdftransform-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "replaceinpdf action"
+    title: "pdftransform action"
     description: |-
-      Replace headers in PDF
+      Transform elements in PDF
     type: object
     properties:
       path:
@@ -27,6 +27,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "pdf-transform://{{path}}?{{options}}"
+              uri: "pdftransform://{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"

@@ -40,7 +40,7 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>5.1.0</assimbly.version>
-        <activemq-classic.version>6.1.7</activemq-classic.version>
+        <activemq-classic.version>6.1.8</activemq-classic.version>
         <activemq-artemis.version>2.43.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.82</bouncycastle.version>
@@ -52,7 +52,7 @@
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>1.15.0</docconverter.version>
         <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.1.5</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.2.0</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.28</groovy-script.version>
         <ibmmq-client.version>9.4.4.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.0.2</informix-jdbc.version>
@@ -78,9 +78,9 @@
         <oracle.version>23.9.0.25.07</oracle.version>
         <postgresql.version>42.7.8</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <spring.version>6.2.12</spring.version>
-        <spring-boot.version>3.5.6</spring-boot.version>
-        <spring-data.version>3.5.5</spring-data.version>
+        <spring.version>7.0.0-RC2</spring.version>
+        <spring-boot.version>4.0.0-RC1</spring-boot.version>
+        <spring-data.version>4.0.0-RC1</spring-data.version>
         <springdoc.version>2.8.13</springdoc.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
@@ -100,7 +100,7 @@
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
         <testcontainers.version>1.21.3</testcontainers.version>
-        <xmlunit.version>2.10.4</xmlunit.version>
+        <xmlunit.version>2.11.0</xmlunit.version>
 
     </properties>
 
@@ -123,7 +123,7 @@
             <dependency>
                 <groupId>org.apache.maven.plugin-tools</groupId>
                 <artifactId>maven-plugin-annotations</artifactId>
-                <version>3.15.1</version>
+                <version>3.15.2</version>
                 <scope>provided
                 </scope> <!-- annotations are not used at runtime because @Retention(value=CLASS), they are needed only to build the plugin -->
             </dependency>

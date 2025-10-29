@@ -31,14 +31,14 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     @Override
     public void writeResponse(Exchange exchange, HttpServletResponse response) throws IOException {
 
-        Message target = exchange.getMessage();
+        Message message = exchange.getMessage();
 
         Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
 
         if (exception != null) {
-            addResponseTimeHeader(exchange, target);
+            addResponseTimeHeader(exchange, message);
             try {
-                doWriteExceptionResponse(target, exception, response);
+                doWriteExceptionResponse(message, exception, response);
             } catch (Exception e) {
                 log.error("Cannot write response: {}", e.getMessage(), e);
             }
@@ -48,31 +48,31 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                 // just copy the protocol relates header if we do not have them
                 customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
             }
-            addResponseTimeHeader(exchange, target);
-            doWriteResponse(target, response, exchange);
+            addResponseTimeHeader(exchange, message);
+            doWriteResponse(message, response, exchange);
         }
 
     }
 
-    private void doWriteExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
+    private void doWriteExceptionResponse(Message message, Throwable exception, HttpServletResponse response) throws Exception {
 
         if (exception instanceof TimeoutException) {
             response.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
             response.setContentType("text/plain");
             response.getWriter().write("Timeout error");
         }else {
-            generateExceptionResponse(target, exception, response);
+            generateExceptionResponse(message, exception, response);
         }
     }
 
-    private void generateExceptionResponse(Message target, Throwable exception, HttpServletResponse response) throws Exception {
+    private void generateExceptionResponse(Message message, Throwable exception, HttpServletResponse response) throws Exception {
 
-        String accept = target.getHeader("Accept", String.class);
-        String userAgent = target.getHeader("User-Agent", String.class);
+        String accept = message.getHeader("Accept", String.class);
+        String userAgent = message.getHeader("User-Agent", String.class);
         String infoMessage;
-        String message = null;
+        String responseBody = null;
 
-        if(target.getBody() == null) {
+        if(message.getBody() == null) {
             infoMessage = EMPTY_BODY_MESSAGE;
         } else {
             infoMessage = DEFAULT_ERROR_MESSAGE;
@@ -88,21 +88,21 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
         if(accept != null){
             if(isBrowser){
-                message = generateHtmlResponse(response.getStatus(), infoMessage, exception.toString());
+                responseBody = generateHtmlResponse(response.getStatus(), infoMessage, exception.toString());
                 response.setContentType("text/html; charset=UTF-8");
             }else if(accept.contains("application/xml") || accept.contains("text/xml")){
-                message = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
+                responseBody = generateXmlResponse(response.getStatus(), infoMessage, exception.toString());
                 response.setContentType("text/xml");
             }else if(accept.contains("application/json")){
-                message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
+                responseBody = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
                 response.setContentType("application/json");
             }
         }
-        if(message == null) {
-            message = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
+        if(responseBody == null) {
+            responseBody = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
         }
 
-        response.getWriter().write(message);
+        response.getWriter().write(responseBody);
 
     }
 
