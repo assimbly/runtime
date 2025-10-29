@@ -1200,6 +1200,8 @@ public class CamelIntegration extends BaseIntegration {
 					}
 					alias = URLDecoder.decode(alias, "UTF-8");
 
+					AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
+
 					for (Map.Entry<String, String> paramEntry : allParams.entrySet()) {
 						String key = paramEntry.getKey();
 						String value = paramEntry.getValue();
@@ -1210,7 +1212,6 @@ public class CamelIntegration extends BaseIntegration {
 
 						if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag) {
 							String beanId = key + "-" + uniqueId;
-							String methodName = "get" + key.substring(0, 1).toUpperCase() + key.substring(1);
 
 							String trimmedValue = value.trim();
 							// Check for RAW(...) syntax
@@ -1221,16 +1222,16 @@ public class CamelIntegration extends BaseIntegration {
 								value = trimmedValue;
 							}
 
-							URI uriValue = new URI(value);
-							Method method;
-							Object keyObject;
+							Object keyObject = null;
 
-							if(signingCertificateChainFlag) {
-								method = as2KeyBeanClass.getMethod(methodName, URI.class);
-								keyObject = method.invoke(null, uriValue);
-							} else {
-								method = as2KeyBeanClass.getMethod(methodName, URI.class, String.class, String.class);
-								keyObject = method.invoke(null, uriValue, password, alias);
+							if (signingCertificateChainFlag) {
+								keyObject = as2KeyProcessor.getSigningCertificateChain(new URI(value), password, alias);
+								// set signingAlgorithm param with the same certificate algorithm
+								boundParams.put("signingAlgorithm", as2KeyProcessor.getSigningAlgorithm((Certificate[]) keyObject));
+							} else if(signingPrivateKeyFlag) {
+								keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
+							} else if(decryptingPrivateKeyFlag) {
+								keyObject = as2KeyProcessor.getDecryptingPrivateKey(new URI(value), password, alias);
 							}
 
 							this.context.getRegistry().bind(beanId, keyObject);
