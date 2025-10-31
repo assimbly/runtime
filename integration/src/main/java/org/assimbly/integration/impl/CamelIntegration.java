@@ -1209,8 +1209,9 @@ public class CamelIntegration extends BaseIntegration {
 						boolean signingCertificateChainFlag = key.equals("signingCertificateChain");
 						boolean signingPrivateKeyFlag = key.equals("signingPrivateKey");
 						boolean decryptingPrivateKeyFlag = key.equals("decryptingPrivateKey");
+						boolean validateSigningCertificateChainFlag = key.equals("validateSigningCertificateChain");
 
-						if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag) {
+						if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag || validateSigningCertificateChainFlag) {
 							String beanId = key + "-" + uniqueId;
 
 							String trimmedValue = value.trim();
@@ -1232,6 +1233,8 @@ public class CamelIntegration extends BaseIntegration {
 								keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
 							} else if(decryptingPrivateKeyFlag) {
 								keyObject = as2KeyProcessor.getDecryptingPrivateKey(new URI(value), password, alias);
+							} else if(validateSigningCertificateChainFlag) {
+								keyObject = as2KeyProcessor.getValidateSigningCertificateChain(new URI(value));
 							}
 
 							this.context.getRegistry().bind(beanId, keyObject);
