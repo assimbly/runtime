@@ -143,6 +143,7 @@ public class ConfigManager {
         JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
         jettyHttpComponent12.setRequestHeaderSize(80000);
         jettyHttpComponent12.setResponseHeaderSize(80000);
+        jettyHttpComponent12.setUseXForwardedForHeader(true);
 
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);

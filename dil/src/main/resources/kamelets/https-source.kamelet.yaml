@@ -12,14 +12,14 @@ spec:
     type: object
     properties:
       path:
-          title: Path
-          description: Path of the URL
-          type: string
+        title: Path
+        description: Path of the URL
+        type: string
       matchOnUriPrefix:
-          title: MatchOnPrefix
-          description: Whether you would like to accept requests that start with the given URL.
-          type: boolean
-          default: false
+        title: MatchOnPrefix
+        description: Whether you would like to accept requests that start with the given URL.
+        type: boolean
+        default: false
       preserveHttpHeaders:
         title: PreserveHttpHeaders
         description: Whether to keep the CamelHttp* headers.

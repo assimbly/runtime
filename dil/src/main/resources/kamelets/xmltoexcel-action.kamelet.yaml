@@ -27,15 +27,19 @@ spec:
         type: string
         default: line
       orderHeaders:
-          title: Order Headers
-          description:  how the columns should be ordered in the Excel document (by name). unordered, ascending, or descending
-          type: string
-          default: unordered
+        title: Order Headers
+        description:  how the columns should be ordered in the Excel document (by name). unordered, ascending, or descending
+        type: string
+        default: unordered
       excelFormat:
-          title: Excel Format
-          description: Choose between Excel format xslx or xsl
-          type: string
-          default: xlsx
+        title: Excel Format
+        description: Choose between Excel format xslx or xsl
+        type: string
+        default: xlsx
+      expressions:
+        title: Worksheet expressions
+        description: Custom Worksheet expressions
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -44,6 +48,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}"
+              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&worksheets={{?expressions}}"
           - to:
               uri: "kamelet:sink"

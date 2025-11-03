@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: headerstopdf-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "headers to PDF sink"
+    description: |-
+      Add message headers as Adobe elements to a PDF template
+    type: object
+    properties:
+      path:
+        title: Path
+        description: Path
+        type: string
+      options:
+        title: Options
+        description: Options
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "headerstopdf://{{path}}?{{options}}"
