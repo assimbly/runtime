@@ -45,6 +45,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
@@ -94,7 +95,10 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -106,6 +110,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -299,17 +305,22 @@ public class CamelIntegration extends BaseIntegration {
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
+		registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
+		registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
 		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("customHttpBinding", new CustomHttpBinding());
+		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 		registry.bind("ExtendedHeaderFilterStrategy", new ExtendedHeaderFilterStrategy());
+		registry.bind("FlowLogger", new FlowLogger());
 		registry.bind("flowCookieStore", new org.assimbly.cookies.CookieStore());
 		registry.bind("InputStreamToStringProcessor", new InputStreamToStringProcessor());
 		registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
 		registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
 		registry.bind("multipartProcessor",new org.assimbly.multipart.processor.MultipartProcessor());
+		registry.bind("permissiveHostnameVerifier", new NoopHostnameVerifier());
 		registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
 		registry.bind("SetOriginalMessageProcessor", new SetOriginalMessageProcessor());
 		registry.bind("SetBodyProcessor", new SetBodyProcessor());
@@ -318,13 +329,6 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("Unzip", new UnzipProcessor());
 		registry.bind("uuid-function", new UuidExtensionFunction());
 		registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
-		registry.bind("FlowLogger", new FlowLogger());
-		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
-
-		//registry.bind("SetLogProcessor", new SetLogProcessor());
-		//registry.bind("JsonExchangeFormatter", new JsonExchangeFormatter());
-		//registry.bind("opentelemetry", new OpenTelemetryLogProcessor());
-
 	}
 
 	public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
@@ -990,6 +994,9 @@ public class CamelIntegration extends BaseIntegration {
 			// add custom connections if needed
 			addCustomRabbitMQConnection(new TreeMap<>(props));
 
+			// init AS2 inbound security
+			initializeAs2InboundSecurity(props);
+
 			//create connections & install dependencies if needed
 			createConnections(props);
 
@@ -1136,6 +1143,139 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
+	}
+
+	private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
+
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			if(entry.getKey().startsWith("route") && entry.getValue().contains("from uri=\"as2://server/listen")) {
+
+				try {
+					// Step 1: Extract the URI string from the XML
+					Pattern uriPattern = Pattern.compile("from uri=\"([^\"]+)\"");
+					Matcher matcher = uriPattern.matcher(entry.getValue());
+
+					if (!matcher.find()) {
+						continue;
+					}
+
+					// Step 2: Unescape the URI string
+					String originalUri = matcher.group(1);
+					String unescapedUri = originalUri.replace("&amp;", "&");
+					String cleanedUri = unescapedUri.replaceAll("\\s+", "");
+
+					// Step 3: Parse the URI parameters
+					int queryStartIndex = cleanedUri.indexOf("?");
+					String baseUri = cleanedUri.substring(0, queryStartIndex);
+					String query = (queryStartIndex != -1) ? cleanedUri.substring(queryStartIndex + 1) : "";
+
+					if (query == null) {
+						continue;
+					}
+
+					String[] params = query.split("&(?![^()]*\\))");
+
+					// First pass: extract all necessary info and bind the beans
+					String uniqueId = UUID.randomUUID().toString();
+					Map<String, String> boundParams = new LinkedHashMap<>();
+					Class<?> as2KeyBeanClass = AS2KeyProcessor.class; // AS2KeyBean.class;
+
+					// Collect all parameters
+					Map<String, String> allParams = new LinkedHashMap<>();
+					for (String param : params) {
+						String[] parts = param.split("=", 2);
+						allParams.put(parts[0], parts.length > 1 ? parts[1] : "");
+					}
+
+					// Extract and clean password and alias
+					String password = allParams.getOrDefault("password", "");
+					if (password.startsWith("RAW(") && password.endsWith(")")) {
+						password = password.substring(4, password.length() - 1);
+					}
+					password = URLDecoder.decode(password, "UTF-8");
+
+					String alias = allParams.getOrDefault("alias", "");
+					if (alias.startsWith("RAW(") && alias.endsWith(")")) {
+						alias = alias.substring(4, alias.length() - 1);
+					}
+					alias = URLDecoder.decode(alias, "UTF-8");
+
+					AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
+
+					for (Map.Entry<String, String> paramEntry : allParams.entrySet()) {
+						String key = paramEntry.getKey();
+						String value = paramEntry.getValue();
+
+						boolean signingCertificateChainFlag = key.equals("signingCertificateChain");
+						boolean signingPrivateKeyFlag = key.equals("signingPrivateKey");
+						boolean decryptingPrivateKeyFlag = key.equals("decryptingPrivateKey");
+						boolean validateSigningCertificateChainFlag = key.equals("validateSigningCertificateChain");
+
+						if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag || validateSigningCertificateChainFlag) {
+							String beanId = key + "-" + uniqueId;
+
+							String trimmedValue = value.trim();
+							// Check for RAW(...) syntax
+							if (trimmedValue.startsWith("RAW(") && trimmedValue.endsWith(")")) {
+								value = trimmedValue.substring(4, trimmedValue.length() - 1);
+							} else {
+								// If not found, use the original trimmed value
+								value = trimmedValue;
+							}
+
+							Object keyObject = null;
+
+							if (signingCertificateChainFlag) {
+								keyObject = as2KeyProcessor.getSigningCertificateChain(new URI(value), password, alias);
+								// set signingAlgorithm param with the same certificate algorithm
+								boundParams.put("signingAlgorithm", as2KeyProcessor.getSigningAlgorithm((Certificate[]) keyObject));
+							} else if(signingPrivateKeyFlag) {
+								keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
+							} else if(decryptingPrivateKeyFlag) {
+								keyObject = as2KeyProcessor.getDecryptingPrivateKey(new URI(value), password, alias);
+							} else if(validateSigningCertificateChainFlag) {
+								keyObject = as2KeyProcessor.getValidateSigningCertificateChain(new URI(value));
+							}
+
+							this.context.getRegistry().bind(beanId, keyObject);
+							boundParams.put(key, "#" + beanId);
+						} else {
+							boundParams.put(key, value);
+						}
+					}
+
+					// Second pass: rebuild the URI without password and alias
+					StringBuilder newQuery = new StringBuilder();
+					boolean firstParam = true;
+					for (Map.Entry<String, String> paramEntry : boundParams.entrySet()) {
+						String key = paramEntry.getKey();
+						String value = paramEntry.getValue();
+
+						if (!key.equals("password") && !key.equals("alias")) {
+							if (!firstParam) {
+								newQuery.append("&");
+							}
+							newQuery.append(key).append("=").append(value);
+							firstParam = false;
+						}
+					}
+
+					String newUriString = baseUri + "?" + newQuery;
+					String updatedXml = matcher.replaceFirst(
+							Matcher.quoteReplacement("from uri=\"" + newUriString.replace("&", "&amp;") + "\"")
+					);
+
+					entry.setValue(updatedXml);
+
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+					// Handle the error appropriately
+				} catch (Exception e) {
+					e.printStackTrace();
+					// Handle reflection exceptions
+				}
+			}
+		}
 	}
 
 	private Map<String, String> stringToMap(String input){
@@ -3457,7 +3597,8 @@ public class CamelIntegration extends BaseIntegration {
 		SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
 
 		registry.bind("default", sslContextParameters);
-		registry.bind("sslContext", sslContextParameters);
+		registry.bind("sslContext", sslContextParameters); // TODO - rename to sslContextParameters
+		registry.bind("sslContextObj", sslContextParameters.createSSLContext(context)); // TODO - rename to sslContext
 		registry.bind("keystore", sslContextParametersKeystoreOnly);
 		registry.bind("truststore", sslContextParametersTruststoreOnly);
 

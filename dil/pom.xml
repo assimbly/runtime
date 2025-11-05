@@ -4,7 +4,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>5.0.7</version>
+    <version>5.0.8</version>
   </parent>
 
   <name>dil</name>
@@ -57,6 +57,13 @@
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>camel-as2-component</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
+
 	  <dependency>
 		  <groupId>net.lingala.zip4j</groupId>
 		  <artifactId>zip4j</artifactId>
