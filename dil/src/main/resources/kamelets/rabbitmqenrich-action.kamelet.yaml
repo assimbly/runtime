@@ -1,12 +1,12 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: rabbitmq-action
+  name: rabbitmqenrich-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "rabbitmq action"
+    title: "rabbitmq enrich action"
     description: |-
       Send message to a RabbitMQ broker
     type: object
@@ -47,16 +47,21 @@ spec:
         description: useErrorRoute
         type: boolean
         default: false
-      autoDeclareProducer:
-        title: Auto Declare Producer
+      autoDeclare:
+        title: Auto Declare Consumer
         description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
         type: boolean
         default: true
+      timeout:
+        title: Time Out
+        description: Time Out
+        type: string
+        default: "10000"
       exchangePattern:
         title: ExchangePattern
         description: ExchangePattern
         type: string
-        default: InOnly
+        default: InOut
   dependencies:
     - "camel:kamelet"
   template:
@@ -65,16 +70,18 @@ spec:
         uri: "kamelet:source"
         steps:
           - setProperty:
-              name: excludedHeader_breadcrumbId
+              name: Enrich-Type
               simple:
-                expression: ${header.breadcrumbId}
-          - removeHeader:
-              name: breadcrumbId
+                expression: application/override
+          - setProperty:
+              name: DovetailAggregateNoExceptionOnNull
+              simple:
+                expression: true
+                resultType: java.lang.Boolean
+          - pollEnrich:
+              timeout: "{{timeout}}"
+              aggregationStrategy: CurrentEnrichStrategy
+              simple:
+                expression: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&autoDeclareProducer={{autoDeclare}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
           - to:
-              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}&exchangePattern={{exchangePattern}}"
-          - setHeader:
-              name: breadcrumbId
-              simple:
-                expression: ${exchangeProperty.excludedHeader_breadcrumbId}
-          - removeProperty:
-              name: excludedHeader_breadcrumbId
+              uri: "kamelet:sink"

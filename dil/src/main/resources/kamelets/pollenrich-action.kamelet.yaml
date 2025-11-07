@@ -32,9 +32,8 @@ spec:
         uri: "kamelet:source"
         steps:
           - pollEnrich:
-              expression:
-                simple:
-                  expression: "{{path}}?{{options}}"
               timeout: "{{timeout}}"
+              simple:
+                expression: "{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"

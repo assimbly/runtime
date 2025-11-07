@@ -24,7 +24,7 @@ public class Unmarshall {
 	private final List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
 	private final String[] connectionTypes = {
 			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
-			"amqp", "amqps", "rabbitmq", "spring-rabbitmq", "flowlink"
+			"amqp", "amqps", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
 	};
 
 
@@ -236,7 +236,6 @@ public class Unmarshall {
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
 
 		if(hasConnectionFactory && !options.contains("connectionFactory") && !options.contains("transport=sync") && !options.contains("transport=async")) {
-				System.out.println("3. Add connectionfactory");
 				optionProperties.add(stepXPath + "options/connectionFactory");
 				options = addConnectionFactoryOption(options, stepId, type, stepXPath);
 		}

@@ -1,6 +1,7 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +37,10 @@ public class RabbitMQConnection {
         setFields();
 
         if(checkConnection()){
-            log.info("Creating new AMQP client connection for RabbitMQ.");
+            log.info("Creating new AMQP client connection for RabbitMQ with id={}", connectionId);
             setConnection();
         }else{
-            log.info("Reuse AMQP client connection for RabbitMQ.");
+            log.info("Reuse AMQP client connection for RabbitMQ with id={}", connectionId);
         }
 
     }
@@ -95,7 +96,8 @@ public class RabbitMQConnection {
 
         connectionFactory.start();
         context.getRegistry().bind(connectionId, connectionFactory);
-
+        //SpringRabbitMQComponent rabbitmqComponent = context.getComponent("spring-rabbitmq", SpringRabbitMQComponent.class);
+        //rabbitmqComponent.setConnectionFactory(connectionFactory);
     }
 
 }

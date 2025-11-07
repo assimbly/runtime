@@ -15,6 +15,7 @@ spec:
         title: path
         description: path
         type: string
+        default: default
       connectionFactory:
         title: connectionFactory
         description: The connectionFactory
@@ -22,6 +23,10 @@ spec:
       exchangeType:
         title: exchangeType
         description: exchangeType
+        type: string
+      routingKey:
+        title: routingKey
+        description: The routing key
         type: string
       queues:
         title: Queues
@@ -42,10 +47,16 @@ spec:
         description: useErrorRoute
         type: boolean
         default: false
+      autoDeclareProducer:
+        title: Auto Declare Producer
+        description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
+        type: boolean
+        default: true
       exchangePattern:
         title: ExchangePattern
         description: ExchangePattern
         type: string
+        default: InOnly
   dependencies:
     - "camel:kamelet"
   template:
@@ -53,7 +64,19 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - toD:
-              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
+          - setProperty:
+              name: excludedHeader_breadcrumbId
+              simple:
+                expression: ${header.breadcrumbId}
+          - removeHeader:
+              name: breadcrumbId
+          - to:
+              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}&exchangePattern={{exchangePattern}}"
+          - setHeader:
+              name: breadcrumbId
+              simple:
+                expression: ${exchangeProperty.excludedHeader_breadcrumbId}
+          - removeProperty:
+              name: excludedHeader_breadcrumbId
           - to:
               uri: "kamelet:sink"

@@ -23,6 +23,10 @@ spec:
         title: exchangeType
         description: exchangeType
         type: string
+      routingKey:
+        title: routingKey
+        description: The routing key
+        type: string
       queues:
         title: Queues
         description: Queues
@@ -37,6 +41,11 @@ spec:
         description: AutoDelete
         type: boolean
         default: false
+      autoDeclare:
+        title: Auto Declare Consumer
+        description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
+        type: boolean
+        default: true
       useErrorRoute:
         title: useErrorRoute
         description: useErrorRoute
@@ -51,7 +60,7 @@ spec:
   template:
     route:
       from:
-        uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&queues=RAW({{queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
+        uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
         steps:
           - to:
               uri: "kamelet:sink"
