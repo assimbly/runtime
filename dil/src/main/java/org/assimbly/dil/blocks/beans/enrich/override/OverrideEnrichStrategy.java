@@ -16,6 +16,7 @@ public class OverrideEnrichStrategy implements AggregationStrategy {
         if (original == null) {
             result = resource;
         } else if (resource == null) {
+
             boolean errorRoute = original.getProperty("Error-Route", boolean.class);
             boolean ignoreNullResource = original.getProperty("AssimblyAggregateNoExceptionOnNull", boolean.class);
 
@@ -35,5 +36,6 @@ public class OverrideEnrichStrategy implements AggregationStrategy {
         }
 
         return result;
+
     }
 }

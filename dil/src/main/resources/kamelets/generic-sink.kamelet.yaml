@@ -8,7 +8,7 @@ spec:
   definition:
     title: "generic action"
     description: |-
-      Generic kamelet for Camel Components
+      Generic kamelet for Camel Components to send messages to an endpoint
     type: object
     properties:
       scheme:
@@ -32,4 +32,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{scheme}}://{{path}}?{{options}}"
+              uri: "{{scheme}}://{{path}}?{{?options}}"

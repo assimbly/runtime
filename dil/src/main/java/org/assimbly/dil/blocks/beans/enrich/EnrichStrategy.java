@@ -13,6 +13,8 @@ public class EnrichStrategy implements AggregationStrategy {
     @Override
     public Exchange aggregate(Exchange originalExchange, Exchange resourceExchange) {
 
+        System.out.println("1. Komt hier");
+
         String enrichType= "";
 
         if (originalExchange != null && originalExchange.getProperty("Enrich-Type") != null) {

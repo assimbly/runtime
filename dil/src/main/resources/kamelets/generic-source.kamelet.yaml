@@ -8,19 +8,28 @@ spec:
   definition:
     title: "generic source"
     description: |-
-      to do
+      A generic kamelet for Camel components to receive messages from an endpoint
     type: object
     properties:
-      uri:
-          title: Uri
-          description: Uri
-          type: string
+      scheme:
+        title: scheme of components
+        description: Endpoint URI
+        type: string
+      path:
+        title: path
+        description: path of component
+        type: string
+        default: dummy
+      options:
+        title: options (query parameterS)
+        description: Endpoint URI
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "{{uri}}"
+        uri: "{{scheme}}://{{path}}?{{? options}}"
         steps:
           - to:
               uri: "kamelet:sink"
