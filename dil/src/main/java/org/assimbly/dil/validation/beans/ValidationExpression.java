@@ -8,17 +8,17 @@ public class ValidationExpression {
 
     private String name;
     private String expression;
-    private String expressionType;
+    private String language;
     private String nextNode;
     private boolean valid;
     private String message;
 
     public ValidationExpression() { }
 
-    public ValidationExpression(String name, String expression, String expressionType, String nextNode) {
+    public ValidationExpression(String name, String expression, String language, String nextNode) {
         this.name = name;
         this.expression = expression;
-        this.expressionType = expressionType;
+        this.language = language;
         this.nextNode = nextNode;
     }
 
@@ -55,12 +55,12 @@ public class ValidationExpression {
         this.id = id;
     }
 
-    public String getExpressionType() {
-        return expressionType;
+    public String getLanguage() {
+        return language;
     }
 
-    public void setExpressionType(String expressionType) {
-        this.expressionType = expressionType;
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public boolean isValid() {

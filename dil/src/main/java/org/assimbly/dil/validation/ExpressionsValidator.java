@@ -38,7 +38,7 @@ public class ExpressionsValidator {
             return;
         }
 
-        if (expression.getExpressionType().equalsIgnoreCase("xpath")) {
+        if (expression.getLanguage().equalsIgnoreCase("xpath")) {
             String result = validateXpathExpression(expression.getExpression());
             if(result.equalsIgnoreCase("valid")){
                 expression.setValid(true);
@@ -50,8 +50,8 @@ public class ExpressionsValidator {
         }
 
         LanguageValidationResult result = isPredicate
-                ? catalog.validateLanguagePredicate(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression())
-                : catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), expression.getExpressionType(), expression.getExpression());
+                ? catalog.validateLanguagePredicate(ClassLoader.getSystemClassLoader(), expression.getLanguage(), expression.getExpression())
+                : catalog.validateLanguageExpression(ClassLoader.getSystemClassLoader(), expression.getLanguage(), expression.getExpression());
 
         expression.setValid(result.isSuccess());
         if (!result.isSuccess()) {
