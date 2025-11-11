@@ -6,7 +6,7 @@
   <parent>
     <artifactId>runtime</artifactId>
     <groupId>org.assimbly</groupId>
-    <version>5.0.9-SNAPSHOT</version>
+    <version>5.0.8</version>
   </parent>
 
   <name>broker-rest</name>
