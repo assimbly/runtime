@@ -994,17 +994,14 @@ public class CamelIntegration extends BaseIntegration {
 			// add custom connections if needed
 			addCustomRabbitMQConnection(new TreeMap<>(props));
 
+			// init mutual ssl contexts
+			initializeMutualSslContexts(props);
+
 			// init AS2 inbound security
 			initializeAs2InboundSecurity(props);
 
 			//create connections & install dependencies if needed
 			createConnections(props);
-
-			HashMap<String, String> mutualSSLInfoMap = getMutualSSLInfoFromProps(props);
-			if(mutualSSLInfoMap!=null && !mutualSSLInfoMap.isEmpty()) {
-				// add certificate on keystore
-				addCertificateFromUrl(mutualSSLInfoMap.get(RESOURCE_PROP), mutualSSLInfoMap.get(AUTH_PASSWORD_PROP));
-			}
 
 			FlowLoader flow = new FlowLoader(props, flowLoaderReport);
 
@@ -1143,6 +1140,66 @@ public class CamelIntegration extends BaseIntegration {
 			}
 		}
 
+	}
+
+	// Dynamically initializes and registers route-specific SSL contexts for Mutual TLS client authentication.
+	private void initializeMutualSslContexts(TreeMap<String, String> properties) throws Exception {
+
+		for (Map.Entry<String, String> entry : properties.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+
+			if (key.startsWith("route")) {
+				if (value.contains("<setProperty name=\"httpMutualSSL\">") &&
+						value.contains("<constant>true</constant>")) {
+
+					String routeId = extractRouteIdFromKey(key);
+
+					// Parse XML snippet in value to extract resource and authPassword
+					String keystoreResource = extractPropertyValue(value, "resource");
+					String keystorePassword = extractPropertyValue(value, "authPassword");
+
+					if (keystoreResource != null && !keystoreResource.isEmpty() &&
+							keystorePassword != null && !keystorePassword.isEmpty()) {
+
+						String contextId = "mutualSslContext_" + routeId;
+
+						String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
+						String truststorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
+
+						SSLConfiguration sslConfiguration = new SSLConfiguration();
+						SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
+								keystoreResource, keystorePassword, truststorePath, getKeystorePassword()
+						);
+
+						registry.bind(contextId, sslContextParameters);
+					}
+				}
+			}
+		}
+	}
+
+	// Simple method to extract <setProperty name="X"><constant>VALUE</constant></setProperty>
+	private String extractPropertyValue(String xmlSnippet, String propertyName) {
+		String startTag = "<setProperty name=\"" + propertyName + "\">";
+		int startIdx = xmlSnippet.indexOf(startTag);
+		if (startIdx == -1) return null;
+		int constStart = xmlSnippet.indexOf("<constant>", startIdx);
+		int constEnd = xmlSnippet.indexOf("</constant>", constStart);
+		if (constStart == -1 || constEnd == -1) return null;
+		return xmlSnippet.substring(constStart + "<constant>".length(), constEnd).trim();
+	}
+
+	// Extracts the route ID by taking the segment immediately following 'route.' from a key string.
+	private String extractRouteIdFromKey(String key) {
+		if (key == null || !key.startsWith("route.")) {
+			return null;
+		}
+		String[] parts = key.split("\\.");
+		if (parts.length >= 2) {
+			return parts[1];
+		}
+		return null;
 	}
 
 	private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
