@@ -1,0 +1,27 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: velocity-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "velocity sink"
+    description: |-
+      Send messages to a directory
+    type: object
+    properties:
+      path:
+        title: path
+        description: path of component (reference id to the registry)
+        type: string
+        default: dummy
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "velocity:{{path}}"

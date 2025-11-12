@@ -1,28 +1,24 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: generic-action
+  name: log-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "generic action"
+    title: "log action"
     description: |-
-      Generic kamelet for Camel Components to send messages to an endpoint
+      Logs e message
     type: object
     properties:
-      scheme:
-        title: scheme of components
-        description: Scheme of URI (normally the name of the component)
-        type: string
-      path:
-        title: path
-        description: path of the URI
+      routeId:
+        title: routeId
+        description: path of component
         type: string
         default: dummy
       options:
         title: options (query parameterS)
-        description: URI query parameters (Endpoint options)
+        description: Endpoint URI
         type: string
   dependencies:
     - "camel:kamelet"
@@ -32,6 +28,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{scheme}}://{{path}}?{{?options}}"
+              uri: "log://{{routeId}}?{{?options}}"
           - to:
               uri: "kamelet:sink"

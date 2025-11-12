@@ -1,0 +1,33 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: log-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "log sink"
+    description: |-
+      Logs e message
+    type: object
+    properties:
+      routeId:
+        title: routeId
+        description: path of component
+        type: string
+        default: dummy
+      options:
+        title: options (query parameterS)
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "log://{{routeId}}?{{?options}}"
+          - to:
+              uri: "kamelet:sink"

@@ -1,35 +1,31 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: generic-source
+  name: file-source
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "generic source"
+    title: "file source"
     description: |-
-      A generic kamelet for Camel components to receive messages from an endpoint
+      File endpoint that listens to a directory
     type: object
     properties:
-      scheme:
-        title: scheme of components
-        description: Scheme of URI (normally the name of the component)
-        type: string
       path:
         title: path
-        description: path of the URI
+        description: path of component
         type: string
         default: dummy
       options:
         title: options (query parameterS)
-        description: URI query parameters (Endpoint options)
+        description: Endpoint URI
         type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "{{scheme}}://{{path}}?{{?options}}"
+        uri: "file://{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
           - to:
               uri: "kamelet:sink"

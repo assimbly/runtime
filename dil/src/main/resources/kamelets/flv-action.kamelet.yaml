@@ -1,28 +1,24 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: generic-action
+  name: flv-action
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "generic action"
+    title: "flv action"
     description: |-
-      Generic kamelet for Camel Components to send messages to an endpoint
+      Transform FLV (Fixed length)
     type: object
     properties:
-      scheme:
-        title: scheme of components
-        description: Scheme of URI (normally the name of the component)
-        type: string
-      path:
-        title: path
-        description: path of the URI
+      routeId:
+        title: routeId
+        description: ID of route (flowId + stepId)
         type: string
         default: dummy
       options:
         title: options (query parameterS)
-        description: URI query parameters (Endpoint options)
+        description: Endpoint URI
         type: string
   dependencies:
     - "camel:kamelet"
@@ -31,7 +27,7 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - toD:
-              uri: "{{scheme}}://{{path}}?{{?options}}"
+          - to:
+              uri: "flv:{{routeId}}?{{?options}}"
           - to:
               uri: "kamelet:sink"

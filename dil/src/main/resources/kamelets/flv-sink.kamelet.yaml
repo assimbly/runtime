@@ -1,0 +1,33 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: flv-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "flv sink"
+    description: |-
+      Transform FLV (Fixed length)
+    type: object
+    properties:
+      routeId:
+        title: routeId
+        description: ID of route (flowId + stepId)
+        type: string
+        default: dummy
+      options:
+        title: options (query parameterS)
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "flv:{{routeId}}?{{?options}}"
+          - to:
+              uri: "kamelet:sink"
