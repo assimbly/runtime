@@ -1,6 +1,7 @@
 package org.assimbly.integration.impl.manager;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.spi.Registry;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.FilenameUtils;
@@ -68,7 +69,8 @@ public class SSLManager {
         SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
 
         registry.bind("default", sslContextParameters);
-        registry.bind("sslContext", sslContextParameters);
+        registry.bind("sslContext", sslContextParameters); // TODO - rename to sslContextParameters
+        registry.bind("sslContextObj", sslContextParameters.createSSLContext(context)); // TODO - rename to sslContext
         registry.bind("keystore", sslContextParametersKeystoreOnly);
         registry.bind("truststore", sslContextParametersTruststoreOnly);
 
@@ -244,6 +246,19 @@ public class SSLManager {
 
         CertificatesUtil util = new CertificatesUtil();
         util.deleteCertificate(keystorePath, keystorePassword);
+    }
+
+    public void setMutualSsl(String keystoreResource, String keystorePassword, String contextId, Registry registry) throws Exception {
+
+        String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
+        String truststorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
+
+        SSLConfiguration sslConfiguration = new SSLConfiguration();
+        SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
+                keystoreResource, keystorePassword, truststorePath, getKeystorePassword()
+        );
+
+        registry.bind(contextId, sslContextParameters);
     }
 
 }

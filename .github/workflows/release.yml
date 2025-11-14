@@ -46,6 +46,7 @@ jobs:
             org.assimbly.dil
             org.assimbly.broker
             org.assimbly.broker-rest
+            org.assimbly.commons
             org.assimbly.integration
             org.assimbly.integration-rest
 
