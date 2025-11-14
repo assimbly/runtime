@@ -52,11 +52,6 @@ spec:
         description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
         type: boolean
         default: true
-      exchangePattern:
-        title: ExchangePattern
-        description: ExchangePattern
-        type: string
-        default: InOnly
   dependencies:
     - "camel:kamelet"
   template:
@@ -64,17 +59,5 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - setProperty:
-              name: excludedHeader_breadcrumbId
-              simple:
-                expression: ${header.breadcrumbId}
-          - removeHeader:
-              name: breadcrumbId
           - to:
-              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}&exchangePattern={{exchangePattern}}"
-          - setHeader:
-              name: breadcrumbId
-              simple:
-                expression: ${exchangeProperty.excludedHeader_breadcrumbId}
-          - removeProperty:
-              name: excludedHeader_breadcrumbId
+              uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}"
