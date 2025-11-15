@@ -10,11 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.KeyStore;
 
 
 public class SSLConfiguration {
@@ -103,6 +106,43 @@ public class SSLConfiguration {
 		keystoreParameters.setPassword(keystorePassword);
 
 		return keystoreParameters;
+	}
+
+	public SSLContextParameters createRuntimeSSLContext(String keystoreResource, String keystorePassword,
+														String truststorePath, String truststorePassword) throws Exception {
+
+		// Load the keystore from resource
+		KeyStore ks = KeyStore.getInstance("JKS");
+		try (InputStream is = new URL(keystoreResource).openStream()) {
+			ks.load(is, keystorePassword.toCharArray());
+		}
+
+		KeyStoreParameters keyStoreParameters = new KeyStoreParameters();
+		keyStoreParameters.setKeyStore(ks); // in-memory keystore
+		keyStoreParameters.setPassword(keystorePassword);
+
+		KeyManagersParameters keyManagers = new KeyManagersParameters();
+		keyManagers.setKeyStore(keyStoreParameters);
+		keyManagers.setKeyPassword(keystorePassword);
+
+		// Load truststore from file
+		KeyStore ts = KeyStore.getInstance("JKS");
+		try (InputStream is = new FileInputStream(truststorePath)) {
+			ts.load(is, truststorePassword.toCharArray());
+		}
+
+		KeyStoreParameters trustStoreParameters = new KeyStoreParameters();
+		trustStoreParameters.setKeyStore(ts); // in-memory truststore
+		trustStoreParameters.setPassword(truststorePassword);
+
+		TrustManagersParameters trustManagers = new TrustManagersParameters();
+		trustManagers.setKeyStore(trustStoreParameters);
+
+		SSLContextParameters sslContextParameters = new SSLContextParameters();
+		sslContextParameters.setKeyManagers(keyManagers);
+		sslContextParameters.setTrustManagers(trustManagers);
+
+		return sslContextParameters;
 	}
 
 }

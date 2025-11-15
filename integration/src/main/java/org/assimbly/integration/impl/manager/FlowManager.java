@@ -9,7 +9,6 @@ import org.apache.camel.ServiceStatus;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
-import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.RouteController;
@@ -18,13 +17,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.assimbly.dil.blocks.connections.Connection;
+import org.assimbly.dil.blocks.processors.AS2KeyProcessor;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.INetUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,12 +35,16 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FlowManager {
@@ -80,16 +83,16 @@ public class FlowManager {
                 // add custom connections if needed
                 addCustomRabbitMQConnection(new TreeMap<>(properties));
 
+                // init mutual ssl contexts
+                initializeMutualSslContexts(props);
+
+                // init AS2 inbound security
+                initializeAs2InboundSecurity(props);
+
             }
 
             //create connections & install dependencies if needed
             createConnections(properties);
-
-            Map<String, String> mutualSSLInfoMap = sslManager.getMutualSSLInfoFromProps(properties);
-            if (mutualSSLInfoMap != null && !mutualSSLInfoMap.isEmpty()) {
-                // add certificate on keystore
-                sslManager.addCertificateFromUrl(mutualSSLInfoMap.get(RESOURCE_PROP), mutualSSLInfoMap.get(AUTH_PASSWORD_PROP));
-            }
 
             FlowLoader flow = new FlowLoader(properties, flowLoaderReport);
 
@@ -852,6 +855,192 @@ public class FlowManager {
             }
         }
 
+    }
+
+    // Dynamically initializes and registers route-specific SSL contexts for Mutual TLS client authentication.
+    private void initializeMutualSslContexts(TreeMap<String, String> properties) throws Exception {
+
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            if (key.startsWith("route")) {
+                if (value.contains("<setProperty name=\"httpMutualSSL\">") &&
+                        value.contains("<constant>true</constant>")) {
+
+                    String routeId = extractRouteIdFromKey(key);
+
+                    // Parse XML snippet in value to extract resource and authPassword
+                    String keystoreResource = extractPropertyValue(value, "resource");
+                    String keystorePassword = extractPropertyValue(value, "authPassword");
+
+                    if (keystoreResource != null && !keystoreResource.isEmpty() &&
+                            keystorePassword != null && !keystorePassword.isEmpty()) {
+
+                        String contextId = "mutualSslContext_" + routeId;
+
+                        SSLManager sslManager = new SSLManager();
+                        sslManager.setMutualSsl(keystoreResource, keystorePassword, contextId, this.context.getRegistry());
+                    }
+                }
+            }
+        }
+    }
+
+    // Simple method to extract <setProperty name="X"><constant>VALUE</constant></setProperty>
+    private String extractPropertyValue(String xmlSnippet, String propertyName) {
+        String startTag = "<setProperty name=\"" + propertyName + "\">";
+        int startIdx = xmlSnippet.indexOf(startTag);
+        if (startIdx == -1) return null;
+        int constStart = xmlSnippet.indexOf("<constant>", startIdx);
+        int constEnd = xmlSnippet.indexOf("</constant>", constStart);
+        if (constStart == -1 || constEnd == -1) return null;
+        return xmlSnippet.substring(constStart + "<constant>".length(), constEnd).trim();
+    }
+
+    // Extracts the route ID by taking the segment immediately following 'route.' from a key string.
+    private String extractRouteIdFromKey(String key) {
+        if (key == null || !key.startsWith("route.")) {
+            return null;
+        }
+        String[] parts = key.split("\\.");
+        if (parts.length >= 2) {
+            return parts[1];
+        }
+        return null;
+    }
+
+    private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
+
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            if(entry.getKey().startsWith("route") && entry.getValue().contains("from uri=\"as2://server/listen")) {
+
+                try {
+                    // Step 1: Extract the URI string from the XML
+                    Pattern uriPattern = Pattern.compile("from uri=\"([^\"]+)\"");
+                    Matcher matcher = uriPattern.matcher(entry.getValue());
+
+                    if (!matcher.find()) {
+                        continue;
+                    }
+
+                    // Step 2: Unescape the URI string
+                    String originalUri = matcher.group(1);
+                    String unescapedUri = originalUri.replace("&amp;", "&");
+                    String cleanedUri = unescapedUri.replaceAll("\\s+", "");
+
+                    // Step 3: Parse the URI parameters
+                    int queryStartIndex = cleanedUri.indexOf("?");
+                    String baseUri = cleanedUri.substring(0, queryStartIndex);
+                    String query = (queryStartIndex != -1) ? cleanedUri.substring(queryStartIndex + 1) : "";
+
+                    if (query == null) {
+                        continue;
+                    }
+
+                    String[] params = query.split("&(?![^()]*\\))");
+
+                    // First pass: extract all necessary info and bind the beans
+                    String uniqueId = UUID.randomUUID().toString();
+                    Map<String, String> boundParams = new LinkedHashMap<>();
+                    Class<?> as2KeyBeanClass = AS2KeyProcessor.class; // AS2KeyBean.class;
+
+                    // Collect all parameters
+                    Map<String, String> allParams = new LinkedHashMap<>();
+                    for (String param : params) {
+                        String[] parts = param.split("=", 2);
+                        allParams.put(parts[0], parts.length > 1 ? parts[1] : "");
+                    }
+
+                    // Extract and clean password and alias
+                    String password = allParams.getOrDefault("password", "");
+                    if (password.startsWith("RAW(") && password.endsWith(")")) {
+                        password = password.substring(4, password.length() - 1);
+                    }
+                    password = URLDecoder.decode(password, "UTF-8");
+
+                    String alias = allParams.getOrDefault("alias", "");
+                    if (alias.startsWith("RAW(") && alias.endsWith(")")) {
+                        alias = alias.substring(4, alias.length() - 1);
+                    }
+                    alias = URLDecoder.decode(alias, "UTF-8");
+
+                    AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
+
+                    for (Map.Entry<String, String> paramEntry : allParams.entrySet()) {
+                        String key = paramEntry.getKey();
+                        String value = paramEntry.getValue();
+
+                        boolean signingCertificateChainFlag = key.equals("signingCertificateChain");
+                        boolean signingPrivateKeyFlag = key.equals("signingPrivateKey");
+                        boolean decryptingPrivateKeyFlag = key.equals("decryptingPrivateKey");
+                        boolean validateSigningCertificateChainFlag = key.equals("validateSigningCertificateChain");
+
+                        if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag || validateSigningCertificateChainFlag) {
+                            String beanId = key + "-" + uniqueId;
+
+                            String trimmedValue = value.trim();
+                            // Check for RAW(...) syntax
+                            if (trimmedValue.startsWith("RAW(") && trimmedValue.endsWith(")")) {
+                                value = trimmedValue.substring(4, trimmedValue.length() - 1);
+                            } else {
+                                // If not found, use the original trimmed value
+                                value = trimmedValue;
+                            }
+
+                            Object keyObject = null;
+
+                            if (signingCertificateChainFlag) {
+                                keyObject = as2KeyProcessor.getSigningCertificateChain(new URI(value), password, alias);
+                                // set signingAlgorithm param with the same certificate algorithm
+                                boundParams.put("signingAlgorithm", as2KeyProcessor.getSigningAlgorithm((java.security.cert.Certificate[]) keyObject));
+                            } else if(signingPrivateKeyFlag) {
+                                keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
+                            } else if(decryptingPrivateKeyFlag) {
+                                keyObject = as2KeyProcessor.getDecryptingPrivateKey(new URI(value), password, alias);
+                            } else if(validateSigningCertificateChainFlag) {
+                                keyObject = as2KeyProcessor.getValidateSigningCertificateChain(new URI(value));
+                            }
+
+                            this.context.getRegistry().bind(beanId, keyObject);
+                            boundParams.put(key, "#" + beanId);
+                        } else {
+                            boundParams.put(key, value);
+                        }
+                    }
+
+                    // Second pass: rebuild the URI without password and alias
+                    StringBuilder newQuery = new StringBuilder();
+                    boolean firstParam = true;
+                    for (Map.Entry<String, String> paramEntry : boundParams.entrySet()) {
+                        String key = paramEntry.getKey();
+                        String value = paramEntry.getValue();
+
+                        if (!key.equals("password") && !key.equals("alias")) {
+                            if (!firstParam) {
+                                newQuery.append("&");
+                            }
+                            newQuery.append(key).append("=").append(value);
+                            firstParam = false;
+                        }
+                    }
+
+                    String newUriString = baseUri + "?" + newQuery;
+                    String updatedXml = matcher.replaceFirst(
+                            Matcher.quoteReplacement("from uri=\"" + newUriString.replace("&", "&amp;") + "\"")
+                    );
+
+                    entry.setValue(updatedXml);
+
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    // Handle the error appropriately
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // Handle reflection exceptions
+                }
+            }
+        }
     }
 
     private Map<String, String> stringToMap(String input) {

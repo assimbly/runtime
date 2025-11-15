@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.assimbly.cookies.CookieStore;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
@@ -152,6 +153,8 @@ public class ConfigManager {
 
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());
+        registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
+        registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
         registry.bind("AttachmentAttacher", new AttachmentAttacher());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
@@ -162,6 +165,7 @@ public class ConfigManager {
         registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
         registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
         registry.bind("multipartProcessor", new MultipartProcessor());
+        registry.bind("permissiveHostnameVerifier", new NoopHostnameVerifier());
         registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
         registry.bind("SetOriginalMessageProcessor", new SetOriginalMessageProcessor());
         registry.bind("SetBodyProcessor", new SetBodyProcessor());
