@@ -1,0 +1,44 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: smbenrich-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "smb enrich action"
+    description: |-
+      Enrich a file from a SMB directory
+    type: object
+    properties:
+      path:
+        title: path
+        description: path
+        type: string
+      options:
+        title: options
+        description: options
+        type: string
+      timeout:
+        title: Time Out
+        description: Time Out
+        type: string
+        default: "10000"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - setProperty:
+              name: Enrich-Type
+              simple:
+                expression: application/override
+          - pollEnrich:
+              timeout: "{{timeout}}"
+              aggregationStrategy: "#CurrentEnrichStrategy"
+              simple:
+                expression: "smb:{{path}}?noop=true&idempotent=false&bridgeErrorHandler=true&{{?options}}"
+          - to:
+              uri: "kamelet:sink"

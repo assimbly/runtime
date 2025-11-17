@@ -1,0 +1,30 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: smb-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "smb source"
+    description: |-
+      SMB endpoint that listens to a directory
+    type: object
+    properties:
+      path:
+        title: path
+        description: path of component
+        type: string
+      options:
+        title: options (query parameterS)
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "smb:{{path}}?bridgeErrorHandler=true&{{?options}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"
