@@ -40,19 +40,19 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>5.1.0</assimbly.version>
-        <activemq-classic.version>6.1.8</activemq-classic.version>
+        <activemq-classic.version>6.2.0</activemq-classic.version>
         <activemq-artemis.version>2.44.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.82</bouncycastle.version>
         <camel.version>4.16.0</camel.version>
-        <commons-cli.version>1.10.0</commons-cli.version>
+        <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.12.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
-        <commons-lang3.version>3.19.0</commons-lang3.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>1.15.0</docconverter.version>
         <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.2.0</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.2.1</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.4.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.0.2</informix-jdbc.version>
@@ -69,8 +69,8 @@
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.4.1</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <kamelet.version>4.15.0</kamelet.version>
-        <logback-classic.version>1.5.20</logback-classic.version>
+        <kamelet.version>4.16.0</kamelet.version>
+        <logback-classic.version>1.5.21</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.5.0</mysql-connector-java.version>
@@ -91,9 +91,9 @@
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <jetty.version>12.1.3</jetty.version>
+        <jetty.version>12.1.4</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
-        <json-unit-assertj.version>5.0.0</json-unit-assertj.version>
+        <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
         <junit.version>6.0.1</junit.version>
         <mockito.version>5.20.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>

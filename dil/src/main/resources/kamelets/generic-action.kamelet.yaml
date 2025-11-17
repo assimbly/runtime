@@ -21,7 +21,7 @@ spec:
         type: string
         default: dummy
       options:
-        title: options (query parameterS)
+        title: options (query parameters)
         description: URI query parameters (Endpoint options)
         type: string
   dependencies:
