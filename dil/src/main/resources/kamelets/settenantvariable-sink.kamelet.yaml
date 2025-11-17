@@ -1,0 +1,54 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: settenantvariable-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "set tenant variable action"
+    description: |-
+      set tenant variable on mongodb
+    type: object
+    properties:
+      path:
+        title: path
+        description: path of the URI, that also refers the name of the tenant variable
+        type: string
+        default: dummy
+      language:
+        title: Language
+        description: Language of the expression
+        type: string
+        default: simple
+      value:
+        title: Value
+        description: Value of the tenant variable
+        type: string
+      encrypt:
+        title: Encrypt
+        description: To encrypt the tenant variable
+        type: boolean
+        default: false
+      groupName:
+        title: GroupName
+        description: Group name of the flow
+        type: string
+        default: Groupless
+      flowName:
+        title: FlowName
+        description: Flow name
+        type: string
+      tenantDbName:
+        title: TenantDbName
+        description: Tenant dbname of the tenant variable
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - toD:
+              uri: "tenantvariables://{{path}}?operation=SET&language={{language}}&value=RAW({{value}})&encrypt={{encrypt}}&groupName=RAW({{groupName}})&flowName=RAW({{flowName}})&tenantDbName=RAW({{tenantDbName}})"
