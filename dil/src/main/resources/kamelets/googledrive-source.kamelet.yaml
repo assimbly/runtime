@@ -11,16 +11,21 @@ spec:
       Get files from GoogleDrive
     type: object
     properties:
+      path:
+        title: path
+        description: path of the URI, that also refers the directoryId
+        type: string
+        default: dummy
       options:
-          title: Options
-          description: Options
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
     route:
       from:
-        uri: "googledrive://?{{options}}"
+        uri: "googledrive://{{path}}?{{options}}"
         steps:
           - to:
               uri: "kamelet:sink"

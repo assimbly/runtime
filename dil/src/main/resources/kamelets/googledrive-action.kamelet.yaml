@@ -11,10 +11,15 @@ spec:
       Put files on GoogleDrive
     type: object
     properties:
+      path:
+        title: path
+        description: path of the URI, that also refers the directoryId
+        type: string
+        default: dummy
       options:
-          title: Options
-          description: Options
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -23,6 +28,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "googledrive://?{{options}}"
+              uri: "googledrive://{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"
