@@ -536,19 +536,21 @@ public class RouteTemplate {
         int nextStepIndex = stepIndex + 1;
 
         String baseXPath = stepXPath.substring(0, stepXPath.lastIndexOf("/step["));
-        String previousStepXPath = "(" + baseXPath + "/step[" + previousStepIndex + "]/id)[1]";
-        String nextStepXPath = "(" + baseXPath + "/step[" + nextStepIndex + "]/id)[1]";
-        String currentStepXPath = "(" + stepXPath + "id)[1]";
+        String previousStepIdXPath = "(" + baseXPath + "/step[" + previousStepIndex + "]/id)[1]";
+        String nextStepIdXPath = "(" + baseXPath + "/step[" + nextStepIndex + "]/id)[1]";
+        String currentStepIdXPath = "(" + stepXPath + "id)[1]";
+        String currentStepTypeXPath = "(" + stepXPath + "type)[1]";
 
-        String previousStepId = Objects.toString(conf.getProperty(previousStepXPath), ZERO);
-        String currentStepId = Objects.toString(conf.getProperty(currentStepXPath), ZERO);
-        String nextStepId = Objects.toString(conf.getProperty(nextStepXPath), ZERO);
+        String currentStepType = Objects.toString(conf.getProperty(currentStepTypeXPath), ZERO);
+        String currentStepId = Objects.toString(conf.getProperty(currentStepIdXPath), ZERO);
+        String previousStepId = Objects.toString(conf.getProperty(previousStepIdXPath), ZERO);
+        String nextStepId = Objects.toString(conf.getProperty(nextStepIdXPath), ZERO);
 
-        if (!ZERO.equals(previousStepId)) {
+        if (!ZERO.equals(previousStepId) && !currentStepType.equals("source")) {
             templatedRoute.appendChild(createParameter(templateDoc, "in",transport + ":" + flowId + "-" + currentStepId));
         }
 
-        if (!ZERO.equals(nextStepId)){
+        if (!ZERO.equals(nextStepId) && !currentStepType.equals("sink")){
             templatedRoute.appendChild(createParameter(templateDoc, "out", transport + ":" + flowId + "-" + nextStepId));
         }
 

@@ -8,20 +8,15 @@ spec:
   definition:
     title: "sftp source"
     description: |-
-      to do
+      SFTP Endpoint to pick up files from a directory
     type: object
     properties:
-      scheme:
-        title: scheme of components
-        description: Endpoint URI
-        type: string
       path:
         title: path
         description: path of component
         type: string
-        default: dummy
       options:
-        title: options (query parameterS)
+        title: options (query parameters)
         description: Endpoint URI
         type: string
   dependencies:
@@ -29,7 +24,7 @@ spec:
   template:
     route:
       from:
-        uri: "{{scheme}}://{{path}}?{{options}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&serverHostKeys=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&publicKeyAcceptedAlgorithms=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&keyExchangeProtocols=curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1"
+        uri: "sftp:{{path}}?{{?options}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&serverHostKeys=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&publicKeyAcceptedAlgorithms=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&keyExchangeProtocols=curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1"
         steps:
           - to:
               uri: "kamelet:sink"

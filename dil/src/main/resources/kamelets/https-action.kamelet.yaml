@@ -11,10 +11,84 @@ spec:
       Sends HTTP Requests
     type: object
     properties:
-      uri:
-        title: URI
-        description: Endpoint URI
+      scheme:
+        title: scheme of components
+        description: Scheme of URI (normally the name of the component)
         type: string
+      path:
+        title: path
+        description: path of the URI
+        type: string
+        default: dummy
+      httpMethod:
+        title: HttpMethod
+        description: Http Method (GET, POST, etc)
+        type: string
+        default: GET
+      authMethod:
+        title: authMethod
+        description: Authenitication Method
+        type: string
+      customUserAgent:
+        title: CustomUserAgent
+        description: Custom User-Agent Header
+        type: string
+        default: fluxygen
+      useErrorRoute:
+        title: useErrorRoute
+        description: Use ErrorRoute (or handlen by the onException)
+        type: boolean
+        default: true
+      useCustomDateHeader:
+        title: UseCustomDateHeader
+        description: Use CustomDateHeader (date or Date)
+        type: boolean
+        default: false
+      transferException:
+        title: TransferException
+        description: transferException
+        type: boolean
+        default: true
+      throwExceptionOnFailure:
+        title: ThrowExceptionOnFailure
+        description: ThrowExceptionOnFailure
+        type: boolean
+        default: true
+      lazyStartProducer:
+        title: LazyStartProducer
+        description: LazyStartProducer
+        type: boolean
+        default: true
+      followRedirects:
+        title: FollowRedirects
+        description: FollowRedirects
+        type: boolean
+        default: true
+      authenticationPreemptive:
+        title: AuthenticationPreemptive
+        description: AuthenticationPreemptive
+        type: boolean
+        default: false
+      maxTotalConnections:
+        title: MaxTotalConnections
+        description: MaxTotalConnections
+        type: integer
+        default: 20
+      connectionsPerRoute:
+        title: ConnectionsPerRoute
+        description: ConnectionsPerRoute
+        type: integer
+        default: 2
+      connectTimeout:
+        title: ConnectTimeout
+        description: ConnectTimeout
+        type: integer
+        default: 180000
+      socketTimeout:
+        title: SockTimeout
+        description: Sock Timeout
+        type: integer
+        default: 180000
   dependencies:
     - "camel:kamelet"
   template:
@@ -22,7 +96,15 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - setHeader:
+              name: user-agent
+              constant: "{{customUserAgent}}"
+          - setProperty:
+              name: useCustomDateHeader
+              constant: "{{useCustomDateHeader}}"
           - to:
-              uri: "{{uri}}"
+              uri: "{{scheme}}://{{path}}?httpMethod={{httpMethod}}&authMethod={{?authMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&amp;connectTimeout={{connectTimeout}}&amp;soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy&sslContextParameters=#sslContext"
+          - removeHeaders:
+              pattern: user-agent
           - to:
               uri: "kamelet:sink"

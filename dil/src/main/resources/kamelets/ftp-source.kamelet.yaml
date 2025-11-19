@@ -1,18 +1,18 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: log-sink
+  name: ftp-source
   labels:
-    camel.apache.org/kamelet.type: "sink"
+    camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "log sink"
+    title: "ftp source"
     description: |-
-      Logs e message
+      FTP endpoint that listens to a directory
     type: object
     properties:
-      routeId:
-        title: routeId
+      path:
+        title: path
         description: path of component
         type: string
         default: dummy
@@ -25,7 +25,7 @@ spec:
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "ftp:{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
-          - toD:
-              uri: "log://{{routeId}}?{{?options}}"
+          - to:
+              uri: "kamelet:sink"

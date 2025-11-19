@@ -1,24 +1,23 @@
 apiVersion: camel.apache.org/v1
 kind: Kamelet
 metadata:
-  name: log-sink
+  name: ftp-sink
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "log sink"
+    title: "ftp sink"
     description: |-
-      Logs e message
+      Sends messages to a FTP directory
     type: object
     properties:
-      routeId:
-        title: routeId
-        description: path of component
+      path:
+        title: path
+        description: path of the URI
         type: string
-        default: dummy
       options:
         title: options (query parameterS)
-        description: Endpoint URI
+        description: URI query parameters (Endpoint options)
         type: string
   dependencies:
     - "camel:kamelet"
@@ -28,4 +27,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "log://{{routeId}}?{{?options}}"
+              uri: "ftp://{{path}}?{{?options}}"

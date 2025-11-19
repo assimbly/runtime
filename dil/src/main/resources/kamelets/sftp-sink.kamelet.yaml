@@ -6,15 +6,11 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "sftp action"
+    title: "sftp sink"
     description: |-
-      Generic kamelet for Camel Components
+      Send message to SFTP directory
     type: object
     properties:
-      scheme:
-        title: scheme of components
-        description: Endpoint URI
-        type: string
       path:
         title: path
         description: path of component
@@ -32,4 +28,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{scheme}}://{{path}}?{{options}}"
+              uri: "sftp:{{path}}?{{?options}}"
