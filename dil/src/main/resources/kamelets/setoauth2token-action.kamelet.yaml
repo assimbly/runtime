@@ -11,6 +11,11 @@ spec:
       Set oAuth2token
     type: object
     properties:
+      path:
+        title: path
+        description: path of the URI (id)
+        type: string
+        default: dummy
       options:
         type: string
   dependencies:
@@ -21,6 +26,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "setoauth2token://?{{options}}"
+              uri: "oauth2token://{{path}}?{{options}}"
           - to:
               uri: "kamelet:sink"
