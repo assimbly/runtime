@@ -13,7 +13,7 @@ spec:
     properties:
       path:
         title: path
-        description: path of the URI, that also refers the name of the tenant variable
+        description: path of the URI (tenant variable name)
         type: string
         default: dummy
       language:

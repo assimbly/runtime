@@ -13,7 +13,7 @@ spec:
     properties:
       path:
         title: path
-        description: path of the URI, that also refers the directoryId
+        description: path of the URI (directoryId)
         type: string
         default: dummy
       options:
