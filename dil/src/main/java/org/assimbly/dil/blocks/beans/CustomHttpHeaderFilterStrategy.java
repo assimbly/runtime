@@ -19,10 +19,14 @@ package org.assimbly.dil.blocks.beans;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
 
     private static final String DATE_HEADER = "date";
-    private static final String USE_CUSTOM_DATE_HEADER = "useCustomDateHeader";
+    private static final String USE_CUSTOM_DATE_HEADER = "ASSIMBLY_CUSTOM_DATE_HEADERS";
 
     public CustomHttpHeaderFilterStrategy() {
         initialize();
@@ -53,11 +57,27 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
 
     @Override
     public boolean applyFilterToCamelHeaders(String headerName, Object headerValue, Exchange exchange) {
+
         if (skipFilter(headerName, exchange)) {
             // filter is not applied
             return false;
         }
-        // it will apply filter
+
+        String excludeList = exchange.getProperty("ASSIMBLY_EXCLUDE_HEADERS", String.class);
+
+        //Apply filter dynamically for user defined exclusion of headers
+        if (excludeList != null && !excludeList.isEmpty()) {
+
+            Set<String> exclusions = Arrays.stream(excludeList.split("\\|"))
+                    .map(String::trim)
+                    .collect(Collectors.toSet());
+
+            if (exclusions.contains(headerName)) {
+                return true;
+            }
+        }
+
+        // it will apply default filter
         return super.applyFilterToCamelHeaders(headerName, headerValue, exchange);
     }
 
@@ -67,16 +87,20 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
             // filter is not applied
             return false;
         }
+
         // it will apply filter
         return super.applyFilterToExternalHeaders(headerName, headerValue, exchange);
     }
 
     private boolean skipFilter(String headerName, Exchange exchange) {
-        // Check if the key is the date header
+
+        // Exclude special case for Date header (Normal the data header is lowercase, but in exception in can be lowercas)
         if (headerName.equalsIgnoreCase(DATE_HEADER)) {
             Object useCustomHeaderObj = exchange.getProperty(USE_CUSTOM_DATE_HEADER);
             return Boolean.parseBoolean(String.valueOf(useCustomHeaderObj));
         }
+
         return false;
     }
+
 }

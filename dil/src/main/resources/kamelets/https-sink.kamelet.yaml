@@ -8,13 +8,121 @@ spec:
   definition:
     title: "https sink"
     description: |-
-      Sends HTTP Requests
+      Sends HTTPS Requests (Encrypted)
     type: object
     properties:
-      uri:
-          title: URI
-          description: Endpoint URI
-          type: string
+      path:
+        title: path
+        description: path of the URI
+        type: string
+        default: dummy
+      in:
+        title: In
+        description: In endpoint
+        type: string
+        default: dummy
+      httpMethod:
+        title: HttpMethod
+        description: Http Method (GET, POST, etc)
+        type: string
+        default: GET
+      authMethod:
+        title: authMethod
+        description: Authenitication Method
+        type: string
+      authUsername:
+        title: AuthUsername
+        description: Authenitication User name
+        type: string
+      authPassword:
+        title: authPassword
+        description: Authenitication Password
+        type: string
+      sslContextParameters:
+        title: SSLContextParameters
+        description: SSLContextParameters (reference to the keystore)
+        type: string
+        default: sslContext
+      customUserAgent:
+        title: CustomUserAgent
+        description: Custom User-Agent Header
+        type: string
+        default: fluxygen
+      excludeHeaders:
+        title: ExcludeHeaders
+        description: Exclude header to send to https endpoint
+        type: string
+        default: ""
+      useErrorRoute:
+        title: useErrorRoute
+        description: Use ErrorRoute (or handlen by the onException)
+        type: boolean
+        default: true
+      retryRequests:
+        title: RetryRequests
+        description: Retry Requests
+        type: boolean
+        default: true
+      useCustomDateHeader:
+        title: UseCustomDateHeader
+        description: Use CustomDateHeader (date or Date)
+        type: boolean
+        default: false
+      transferException:
+        title: TransferException
+        description: transferException
+        type: boolean
+        default: true
+      throwExceptionOnFailure:
+        title: ThrowExceptionOnFailure
+        description: ThrowExceptionOnFailure
+        type: boolean
+        default: true
+      lazyStartProducer:
+        title: LazyStartProducer
+        description: LazyStartProducer
+        type: boolean
+        default: true
+      followRedirects:
+        title: FollowRedirects
+        description: FollowRedirects
+        type: boolean
+        default: true
+      authenticationPreemptive:
+        title: AuthenticationPreemptive
+        description: AuthenticationPreemptive
+        type: boolean
+        default: false
+      maxTotalConnections:
+        title: MaxTotalConnections
+        description: MaxTotalConnections
+        type: integer
+        default: 20
+      connectionsPerRoute:
+        title: ConnectionsPerRoute
+        description: ConnectionsPerRoute
+        type: integer
+        default: 2
+      connectTimeout:
+        title: ConnectTimeout
+        description: ConnectTimeout
+        type: integer
+        default: 180000
+      socketTimeout:
+        title: SockTimeout
+        description: Sock Timeout
+        type: integer
+        default: 180000
+      retryInterval:
+        title: RetryInterval
+        description: Retry Interval
+        type: integer
+        default: 30000
+      retryAttempts:
+        title: RetryInterval
+        description: Retry Interval
+        type: integer
+        default: 5
   dependencies:
     - "camel:kamelet"
   template:
@@ -22,5 +130,93 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
-          - to:
-              uri: "{{uri}}"
+          - choice:
+              disabled: "{{retryRequests}}"
+              when:
+                - simple: "${header.ASSIMBLY_RetryAttempts} == null"
+                  steps:
+                    - setProperty:
+                        name: "ASSIMBLY_originalHttpMessageMethod"
+                        constant: SET
+                    - process:
+                        ref: SetOriginalMessageProcessor
+          - setProperty:
+              name: ASSIMBLY_CUSTOM_DATE_HEADERS
+              constant: "{{useCustomDateHeader}}"
+          - setProperty:
+              name: ASSIMBLY_EXCLUDE_HEADERS
+              constant: "{{excludeHeaders}}"
+          - setHeader:
+              name: user-agent
+              constant: "{{customUserAgent}}"
+          - doTry:
+              steps:
+                - to:
+                    uri: "https://{{path}}?httpMethod={{httpMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&connectTimeout={{connectTimeout}}&soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy&sslContextParameters=#{{sslContextParameters}}&authMethod={{?authMethod}}&authUsername=RAW({{?authUsername}})&authPassword=RAW({{?authPassword}})"
+              doCatch:
+                - exception: java.net.SocketTimeoutException
+                  disabled: "{{useErrorRoute}}"
+                  steps:
+                    - log:
+                        loggingLevel: WARN
+                        logName: "org.assimbly.errorhandler.{{flowId}}"
+                        message: "Timeout exception: java.net.SocketTimeoutException | Flow: {{flowId}} | API Endpoint: {{scheme}}:{{path}}"
+                - exception: org.apache.hc.client5.http.ConnectTimeoutException
+                  disabled: "{{useErrorRoute}}"
+                  steps:
+                    - log:
+                        loggingLevel: WARN
+                        logName: "org.assimbly.errorhandler.{{flowId}}"
+                        message: "Timeout exception: org.apache.hc.client5.http.ConnectTimeoutException | Flow: {{flowId}} | API Endpoint: {{scheme}}:{{path}}"
+                    - setHeader:
+                        name: CamelHttpResponseCode
+                        constant: "504"
+              doFinally:
+                disabled: "{{retryRequests}}"
+                steps:
+                  - choice:
+                      when:
+                        - simple: "${header.ASSIMBLY_RetryAttempts} == {{retryAttempts}}"
+                          steps:
+                            - setHeader:
+                                name: "ASSIMBLY_RetryError"
+                                constant: "Maximum attempts reached"
+                            - log:
+                                loggingLevel: WARN
+                                logName: "org.assimbly.errorhandler.{{flowId}}"
+                                message: "HTTP Retry: Maximum attempts reached | Flow: {{flowId}}
+                                      | API Endpoint:
+                                      {{scheme}}:{{path}} |
+                                      Retry in 10000 milliseconds | Attempt
+                                      ${header.ASSIMBLY_RetryAttempts} | Body: ${body} |
+                                      ResponseText: ${header.CamelHttpResponseText}"
+                        - simple: "${header.CamelHttpResponseCode} >= 500"
+                          steps:
+                            - log:
+                                loggingLevel: WARN
+                                logName: "org.assimbly.errorhandler.{{flowId}}"
+                                message: "HTTP Status: ${header.CamelHttpResponseCode}
+                                      ${header.CamelHttpResponseText} | Flow:
+                                      {{flowId}} | API Endpoint:
+                                      {{scheme}}:{{path}} |
+                                      Retry in 10000 milliseconds | Attempt
+                                      ${header.ASSIMBLY_RetryAttempts} | Body: ${body} |
+                                      ResponseText: ${header.CamelHttpResponseText}"
+                            - setProperty:
+                                name: "ASSIMBLY_originalHttpMessageMethod"
+                                constant: GET
+                            - process:
+                                ref: SetOriginalMessageProcessor
+                            - delay:
+                                constant: "{{retryInterval}}"
+                            - to:
+                                uri: "{{in}}"
+                      otherwise:
+                        steps:
+                          - setProperty:
+                              name: "ASSIMBLY_originalHttpMessageMethod"
+                              constant: DEL
+                          - process:
+                              ref: SetOriginalMessageProcessor
+          - removeHeaders:
+              pattern: "user-agent|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
