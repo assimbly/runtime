@@ -29,9 +29,9 @@ spec:
         description: Use Streaming
         type: boolean
         default: false
-      out_rule:
-        title: Out Rule
-        description: Out Rule
+      out_split:
+        title: Out of split
+        description: Out of split
         type: string
       out_default:
         title: Out Default Endpoint
