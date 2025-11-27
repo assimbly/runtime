@@ -12,9 +12,9 @@ spec:
     type: object
     properties:
       options:
-          title: Options
-          description: Options
-          type: string
+        title: Options
+        description: Options
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
