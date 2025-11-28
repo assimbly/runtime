@@ -71,4 +71,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - toD:
-              uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{replyTo}})&tenant=RAW({{tenant}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"
+              uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{?from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{?replyTo}})&tenant=RAW({{tenant}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"
