@@ -37,6 +37,13 @@ spec:
         format: password
         x-descriptors:
           - urn:camel:group:credentials
+      accessToken:
+        title: accessToken
+        description: The accessToken to access the mail box.
+        type: string
+        format: string
+        x-descriptors:
+          - urn:camel:group:credentials
       fetchSize:
         title: Fetch Size
         description: The number of messages fetched for each poll (-1 for no limits).
@@ -73,7 +80,7 @@ spec:
   template:
     route:
       from:
-        uri: "imaps:{{path}}?authenticationType=RAW({{authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&fetchSize={{fetchSize}}&delay={{delay}}&searchTerm.subject={{?searchSubject}}&searchTerm.body={{?searchBody}}?searchTerm.from={{?searchFrom}}&searchTerm.to={{?searchTo}}&unseen={{unseen}}&bridgeErrorHandler=true"
+        uri: "imaps:{{path}}?authenticationType=RAW({{authenticationType}})&username=RAW({{username}})&password=RAW({{?password}})&accessToken=RAW({{?accessToken}})&fetchSize={{fetchSize}}&delay={{delay}}&searchTerm.subject={{?searchSubject}}&searchTerm.body={{?searchBody}}?searchTerm.from={{?searchFrom}}&searchTerm.to={{?searchTo}}&unseen={{unseen}}&bridgeErrorHandler=true"
         steps:
           - convertBodyTo:
               type: "java.lang.String"
