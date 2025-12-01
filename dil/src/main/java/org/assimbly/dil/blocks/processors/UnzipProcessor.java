@@ -45,6 +45,8 @@ public class UnzipProcessor implements Processor {
             zipInputStream.closeEntry();
         }
 
+        in.removeHeader("Content-Disposition");
+
         //If the zip file only contains text files than convert the files to utf-8 strings
         if(textFiles){
             ArrayList<String> unzippedText = new ArrayList<>();

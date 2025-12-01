@@ -11,7 +11,12 @@ spec:
       Zips a message
     type: object
     properties:
-  dependencies:
+      routeId:
+        title: RouteID
+        description: ID of the route
+        type: string
+        default: dummy
+    dependencies:
     - "camel:kamelet"
   template:
     route:
@@ -20,6 +25,9 @@ spec:
         steps:
           - marshal:
               zipFile:
-                id: zipFile-{{routeid}}
+                id: zipFile-{{routeId}}
+          - setHeader:
+              name: Content-Disposition
+              simple: attachment; filename="${header.CamelFileName}"
           - to:
               uri: "kamelet:sink"

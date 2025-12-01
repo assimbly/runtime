@@ -43,7 +43,7 @@
         <activemq-classic.version>6.2.0</activemq-classic.version>
         <activemq-artemis.version>2.44.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <bouncycastle.version>1.83</bouncycastle.version>
         <camel.version>4.16.0</camel.version>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.12.0</commons-configuration2.version>
