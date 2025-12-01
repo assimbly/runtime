@@ -12,7 +12,7 @@ spec:
     type: object
     properties:
       options:
-        title: options
+        title: Options
         description: Options
         type: string
   dependencies:

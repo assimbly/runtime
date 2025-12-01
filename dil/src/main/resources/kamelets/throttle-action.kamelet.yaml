@@ -23,10 +23,6 @@ spec:
         title: Route ID
         description: Route ID
         type: string
-      out_default:
-        title: Out Default Endpoint
-        description: Out Default Endpoint
-        type: string
   dependencies:
     - "camel:kamelet"
   template:

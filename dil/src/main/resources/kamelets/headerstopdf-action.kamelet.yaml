@@ -15,10 +15,6 @@ spec:
           title: Path
           description: Path
           type: string
-      options:
-          title: Options
-          description: Options
-          type: string
   dependencies:
     - "camel:kamelet"
   template:
@@ -27,6 +23,6 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "headerstopdf://{{path}}?{{options}}"
+              uri: "headerstopdf:{{path}}"
           - to:
               uri: "kamelet:sink"

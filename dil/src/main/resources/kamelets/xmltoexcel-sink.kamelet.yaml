@@ -14,12 +14,12 @@ spec:
       includeHeader:
         title: Include Header
         description: Whether to include a header row in the Excel output
-        type: string
+        type: boolean
         default: true
       includeIndexColumn:
         title: Include Index Column
         description: Whether to include an index column in the Excel output
-        type: string
+        type: boolean
         default: false
       indexColumnName:
         title: Index ColumnName
@@ -36,6 +36,11 @@ spec:
         description: Choose between Excel format xslx or xsl
         type: string
         default: xlsx
+      useCustomWorksheets:
+        title: UseCustomWorksheets
+        description: Whether to use a CustomWorksheets with expressions
+        type: boolean
+        default: false
       expressions:
         title: Worksheet expressions
         description: Custom Worksheet expressions
@@ -48,4 +53,4 @@ spec:
         uri: "kamelet:source"
         steps:
           - to:
-              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&worksheets={{?expressions}}"
+              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?expressions}}"

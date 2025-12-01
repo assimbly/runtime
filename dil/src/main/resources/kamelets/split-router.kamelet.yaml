@@ -16,9 +16,9 @@ spec:
         description: Language
         type: string
       expression:
-          title: Expression
-          description: Expression
-          type: string
+        title: Expression
+        description: Expression
+        type: string
       parallelProcessing:
         title: Parallel Processing
         description: Parallel Processing of split
