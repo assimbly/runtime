@@ -15,11 +15,6 @@ spec:
         title: Transport
         description: Transport
         type: string
-      destinationType:
-        title: Type of desintation
-        description: Type of destination (queue or topic)
-        type: string
-        default: queue
       flowId:
         title: FlowID
         description: Flow ID of the flow
@@ -33,7 +28,7 @@ spec:
   template:
     route:
       from:
-        uri: "{{transport}}:{{destinationType}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
         steps:
           - to:
               uri: "kamelet:sink"

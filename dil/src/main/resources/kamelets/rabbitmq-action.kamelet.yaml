@@ -59,6 +59,8 @@ spec:
       from:
         uri: "kamelet:source"
         steps:
+          - setExchangePattern:
+              pattern: InOnly
           - to:
               uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}"
           - to:
