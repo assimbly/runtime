@@ -234,11 +234,12 @@ public class Unmarshall {
 		List<String> optionProperties = IntegrationUtil.getXMLParameters(conf, stepXPath + "options");
 
 		boolean hasConnectionFactory = Arrays.asList(connectionTypes).contains(scheme);
+        boolean transportNotSpecified = !options.matches(".*transport=(sync|direct|async|seda).*");
 
-		if(hasConnectionFactory && !options.contains("connectionFactory") && !options.contains("transport=sync") && !options.contains("transport=async")) {
-				optionProperties.add(stepXPath + "options/connectionFactory");
-				options = addConnectionFactoryOption(options, stepId, type, stepXPath);
-		}
+        if (hasConnectionFactory && transportNotSpecified && !options.contains("connectionFactory")) {
+            optionProperties.add(stepXPath + "options/connectionFactory");
+            options = addConnectionFactoryOption(options, stepId, type, stepXPath);
+        }
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 

@@ -22,7 +22,7 @@ spec:
       connectionFactory:
         title: Connection Factory
         description: Connection Factory
-        type: strings
+        type: string
   dependencies:
     - "camel:kamelet"
   template:
