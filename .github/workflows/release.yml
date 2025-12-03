@@ -42,13 +42,14 @@ jobs:
           keep: 0
           version-pattern: "${{inputs.milestone}}"
           names: |
-            org.assimbly.runtime
-            org.assimbly.dil
+            org.assimbly:activemq-base
             org.assimbly.broker
             org.assimbly.broker-rest
             org.assimbly.commons
+            org.assimbly.dil
             org.assimbly.integration
             org.assimbly.integration-rest
+            org.assimbly.runtime
 
   release-jars:
     needs: delete_old_snapshots
