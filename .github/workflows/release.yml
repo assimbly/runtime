@@ -45,11 +45,18 @@ jobs:
             org.assimbly.activemq-base
             org.assimbly.broker
             org.assimbly.broker-rest
+            org.assimbly.camel-base
+            org.assimbly.camel-components
             org.assimbly.commons
+            org.assimbly.common-base
+            org.assimbly.database-drivers
             org.assimbly.dil
             org.assimbly.integration
             org.assimbly.integration-rest
             org.assimbly.runtime
+            org.assimbly.spring-base
+            org.assimbly.test-base
+            org.assimbly.utils
 
   release-jars:
     needs: delete_old_snapshots
