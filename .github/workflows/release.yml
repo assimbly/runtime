@@ -42,7 +42,7 @@ jobs:
           keep: 0
           version-pattern: "${{inputs.milestone}}"
           names: |
-            org.assimbly:activemq-base
+            org.assimbly.activemq-base
             org.assimbly.broker
             org.assimbly.broker-rest
             org.assimbly.commons
