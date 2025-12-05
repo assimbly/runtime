@@ -5,6 +5,11 @@ import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
@@ -22,7 +27,6 @@ import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringEscapeUtils;
@@ -41,25 +45,11 @@ import org.assimbly.mail.component.mail.AttachmentAttacher;
 import org.assimbly.mail.component.mail.MailComponent;
 import org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat;
 import org.assimbly.multipart.processor.MultipartProcessor;
-import org.assimbly.util.BaseDirectory;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 public class ConfigManager {
 
@@ -68,13 +58,10 @@ public class ConfigManager {
     private final CamelContext context;
     private final SimpleRegistry registry;
 
-    private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
-
     public ConfigManager(CamelContext context, SimpleRegistry registry) {
         this.context = context;
         this.registry = registry;
     }
-
 
     public void setDebugging(boolean debugging) {
         context.setDebugging(debugging);
@@ -90,7 +77,6 @@ public class ConfigManager {
         }
 
     }
-
 
     public void setStreamCaching(boolean streamCaching) {
         context.setStreamCaching(streamCaching);
@@ -228,11 +214,6 @@ public class ConfigManager {
 
         for (String resourceName : resourceNames) {
 
-            if (resourceName.equals("kamelets/resolve-pojo-schema-action.kamelet.yaml")
-                    || resourceName.equals("kamelets/djl-image-to-text-action.kamelet.yaml")) {
-                continue;
-            }
-
             URL url;
             if (resourceName.startsWith("file:")) {
                 url = URI.create(resourceName).toURL();
@@ -256,7 +237,7 @@ public class ConfigManager {
 
     }
 
-    private List<String> getKamelets() throws IOException {
+    private List<String> getKamelets() {
 
         List<String> kamelets = new ArrayList<>();
 
@@ -268,25 +249,6 @@ public class ConfigManager {
 
         if (classpathNames != null && !classpathNames.isEmpty()) {
             kamelets.addAll(classpathNames);
-        }
-
-        // Add resource paths from filepath (Kamelets .assimbly/kamelets directory)
-        List<String> filepathNames = new ArrayList<>();
-
-        File kameletDir = new File(baseDir + "/kamelets");
-        if (!kameletDir.exists()) {
-            FileUtils.forceMkdir(kameletDir);
-        } else {
-
-            try (Stream<Path> paths = Files.walk(Paths.get(baseDir + "/kamelets"))) {
-                paths.filter(path -> Files.isRegularFile(path) && path.toString().endsWith("kamelet.yaml"))
-                        .forEach(path -> filepathNames.add("file:///" + path.toString().replace("\\", "/")));
-            } catch (IOException e) {
-                log.error("Can't update kamelets in directory: {}", kameletDir, e);
-            }
-
-            kamelets.addAll(filepathNames);
-
         }
 
         return kamelets;
@@ -350,7 +312,7 @@ public class ConfigManager {
 
     }
 
-    public String getListOfStepTemplates() throws IOException {
+    public String getListOfStepTemplates() {
 
         List<String> kamelets = getKamelets();
 

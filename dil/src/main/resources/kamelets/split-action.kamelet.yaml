@@ -59,4 +59,5 @@ spec:
                     simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
                 - convertBodyTo:
                     type: java.lang.String
-                - to: "{{out}}"
+                - to:
+                    uri: "kamelet:sink"

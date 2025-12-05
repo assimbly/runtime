@@ -120,17 +120,18 @@
         </dependency>-->
 
         <!-- kamelets -->
-        <dependency>
-            <groupId>org.apache.camel.kamelets</groupId>
-            <artifactId>camel-kamelets</artifactId>
-            <version>${kamelet.version}</version>
-        </dependency>
+        <!-- Exclude the kamelets to avoid double kamelets -->
         <dependency>
             <groupId>org.apache.camel.kamelets</groupId>
             <artifactId>camel-kamelets-catalog</artifactId>
             <version>${kamelet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.camel.kamelets</groupId>
+                    <artifactId>camel-kamelets</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-
     </dependencies>
 
 </project>

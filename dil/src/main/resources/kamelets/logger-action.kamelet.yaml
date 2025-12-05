@@ -1,0 +1,41 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: logger-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "logger action"
+    description: |-
+      Logs a message using simple expressions
+    type: object
+    properties:
+      routeId:
+        title: routeId
+        description: path of component
+        type: string
+        default: dummy
+      language:
+        title: Language
+        description: Set the expression language
+        type: string
+        default: constant
+      expression:
+        title: Expression
+        description: Set the content of the body
+        type: string
+        default: "${body}"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - log:
+              logName: "{{routeId}}"
+              logLanguage: "{{language}}"
+              message: "{{expression}}"
+          - to:
+              uri: "kamelet:sink"

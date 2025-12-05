@@ -23,6 +23,5 @@ spec:
         uri: "kamelet:source"
         steps:
           - recipientList:
-              expression:
-                constant:
-                  expression: "{{out_list}}"
+              constant:
+                expression: "{{out_list}}"
