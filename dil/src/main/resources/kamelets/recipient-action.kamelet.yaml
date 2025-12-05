@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: recipient-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "recipient action"
+    description: |-
+      Sends a copy of the message to all recipients in comma-separated list (out_list)
+    type: object
+    properties:
+      out:
+        title: Out list
+        description: List of comma-separated destinations
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - recipientList:
+              expression:
+                constant:
+                  expression: "{{out}}"

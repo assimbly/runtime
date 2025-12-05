@@ -1,0 +1,62 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: split-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "split-action"
+    description: |-
+      Splits message by an expression
+    type: object
+    properties:
+      language:
+        title: Language
+        description: Language
+        type: string
+      expression:
+        title: Expression
+        description: Expression
+        type: string
+      parallelProcessing:
+        title: Parallel Processing
+        description: Parallel Processing of split
+        type: boolean
+        default: false
+      streaming:
+        title: Streaming
+        description: Use Streaming
+        type: boolean
+        default: false
+      out:
+        title: Out Default Endpoint
+        description: Out Default Endpoint
+        type: string
+        default: "mock:0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - split:
+              parallelProcessing: "{{parallelProcessing}}"
+              streaming: "{{streaming}}"
+              language:
+                language: "{{language}}"
+                expression: "{{expression}}"
+              steps:
+                - setHeader:
+                    name: CamelSplitIndex
+                    simple: "${exchangeProperty.CamelSplitIndex}"
+                - setHeader:
+                    name: CamelSplitSize
+                    simple: "${exchangeProperty.CamelSplitSize}"
+                - setHeader:
+                    name: CamelSplitComplete
+                    simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
+                - convertBodyTo:
+                    type: java.lang.String
+                - to: "{{out}}"
