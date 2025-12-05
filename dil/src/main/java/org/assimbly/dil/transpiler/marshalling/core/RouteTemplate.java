@@ -620,7 +620,7 @@ public class RouteTemplate {
 
         if (bound != null && bound.equalsIgnoreCase("out")) {
             createLinkLists(language, expression, endpoint);
-            if (language == null) {
+            if (rule == null) {
                 param = createParameter(templateDoc, bound + "_default", endpoint);
                 templatedRoute.appendChild(param);
             }
