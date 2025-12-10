@@ -1,0 +1,28 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: as2-action
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "as2 action"
+    description: |-
+      Sends documents to a partner using the AS2 protocol
+    type: object
+    properties:
+      options:
+        title: options (query parameters)
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - to:
+              uri: "as2://client/send?{{?options}}"
+          - to:
+              uri: "kamelet:sink"

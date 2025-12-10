@@ -1,0 +1,26 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: as2-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "as2 source"
+    description: |-
+      AS2 endpoint that accepts and processes inbound AS2 transmissions
+    type: object
+    properties:
+      options:
+        title: options (query parameters)
+        description: Endpoint URI
+        type: string
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "as2://server/listen?{{?options}}"
+        steps:
+          - to:
+              uri: "kamelet:sink"
