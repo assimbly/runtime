@@ -44,8 +44,8 @@ spec:
         format: string
         x-descriptors:
           - urn:camel:group:credentials
-      tenant:
-        title: Tenant
+      tenantDbName:
+        title: TenantDbName
         description: tenant db name
         type: string
       fetchSize:
@@ -84,7 +84,7 @@ spec:
   template:
     route:
       from:
-        uri: "imaps:{{path}}?authenticationType=RAW({{authenticationType}})&username=RAW({{username}})&password=RAW({{?password}})&accessToken=RAW({{?accessToken}})&tenant=RAW({{?tenant}})&fetchSize={{fetchSize}}&delay={{delay}}&searchTerm.subject={{?searchSubject}}&searchTerm.body={{?searchBody}}?searchTerm.from={{?searchFrom}}&searchTerm.to={{?searchTo}}&unseen={{unseen}}&bridgeErrorHandler=true"
+        uri: "imaps:{{path}}?authenticationType=RAW({{authenticationType}})&username=RAW({{username}})&password=RAW({{?password}})&accessToken=RAW({{?accessToken}})&tenantDbName=RAW({{?tenantDbName}})&fetchSize={{fetchSize}}&delay={{delay}}&searchTerm.subject={{?searchSubject}}&searchTerm.body={{?searchBody}}?searchTerm.from={{?searchFrom}}&searchTerm.to={{?searchTo}}&unseen={{unseen}}&bridgeErrorHandler=true"
         steps:
           - convertBodyTo:
               type: "java.lang.String"
