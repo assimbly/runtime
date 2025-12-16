@@ -13,17 +13,92 @@ spec:
     properties:
       path:
         title: path
-        description: path
+        description: Path of the FTP directory
         type: string
-      options:
-        title: options
-        description: options
+      userName:
+        title: Username
+        description: Username to login
         type: string
+      password:
+        title: Password
+        description: Password to login
+        type: string
+      fileName:
+        title: FileName
+        description: Name of the file
+        type: string
+        default: "missing"
+      include:
+        title: Include
+        description: Include files by filename pattern
+        type: string
+      exclude:
+        title: Exclude
+        description: Exclude files by filename pattern
+        type: string
+      move:
+        title: Move
+        description: Directory to move processed file to
+        type: string
+      moveFailed:
+        title: MoveFailed
+        description: Directory to move failed file to
+        type: string
+      charset:
+        title: Charset
+        description: Character set
+        type: string
+        default: "utf-8"
+      readLock:
+        title: ReadLock
+        description: ReadLock
+        type: string
+        default: "none"
       timeout:
-        title: Time Out
+        title: TimeOut
         description: Time Out
+        type: integer
+        default: 5000
+      maxMessagesPerPoll:
+        title: MaxMessagesPerPoll
+        description: Maximum Messages to pick up per poll
         type: string
-        default: "10000"
+        default: -1
+      disconnect:
+        title: Disconnect
+        description: Disconnect
+        type: boolean
+        default: true
+      autoCreate:
+        title: AutoCreate
+        description: Auto create the directory (path)
+        type: boolean
+        default: true
+      passiveMode:
+        title: PassiveMode
+        description: Sets passive mode connections
+        type: boolean
+        default: true
+      binary:
+        title: Binary
+        description: Specifies the file transfer mode, BINARY or ASCII
+        type: boolean
+        default: false
+      delete:
+        title: Delete
+        description: If true, the file will be deleted after it is processed successfully
+        type: boolean
+        default: false
+      recursive:
+        title: Recursive
+        description: Check subdirectories recursively
+        type: boolean
+        default: false
+      abortMode:
+        title: AbortMode
+        description: Abort when no files are found (not an endpoint parameter)
+        type: boolean
+        default: false
   dependencies:
     - "camel:kamelet"
   template:
@@ -33,12 +108,61 @@ spec:
         steps:
           - setProperty:
               name: Enrich-Type
-              simple:
-                expression: application/override
-          - pollEnrich:
-              timeout: "{{timeout}}"
-              aggregationStrategy: "#CurrentEnrichStrategy"
-              simple:
-                expression: "ftp:{{path}}?bridgeErrorHandler=true&{{?options}}"
-          - to:
-              uri: "kamelet:sink"
+              constant: "application/override"
+          - setProperty:
+              name: Enrich-MaxMessagesPerPoll
+              constant: "{{maxMessagesPerPoll}}"
+          - loop:
+              doWhile: true
+              expression:
+                simple: "${exchangeProperty.Enrich-MaxMessagesPerPoll} != 0"
+              steps:
+                - choice:
+                    when:
+                      - simple: "'{{fileName}}' != 'missing'"
+                        steps:
+                          - pollEnrich:
+                              timeout: "{{timeout}}"
+                              aggregationStrategy: "#CurrentEnrichStrategy"
+                              simple: "ftp:{{path}}?userName={{userName}}&password={{password}}&fileName={{?fileName}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true"
+                    otherwise:
+                      steps:
+                        - pollEnrich:
+                            timeout: "{{timeout}}"
+                            aggregationStrategy: "#CurrentEnrichStrategy"
+                            simple: "ftp:{{path}}?userName={{userName}}&password={{password}}&include={{?include}}&exclude={{?exclude}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true"
+                - setProperty:
+                    name: Enrich-MaxMessagesPerPoll
+                    simple: "${exchangeProperty.Enrich-MaxMessagesPerPoll}--"
+                - choice:
+                    when:
+                      - simple: "${body} == null"
+                        steps:
+                          - setProperty:
+                              name: Enrich-MaxMessagesPerPoll
+                              constant: "0"
+                    otherwise:
+                      disabled: "{{!abortMode}}"
+                      steps:
+                        - to:
+                            disabled: "{{!abortMode}}"
+                            uri: "kamelet:sink"
+                        - removeHeaders:
+                            disabled: "{{!abortMode}}"
+                            pattern: "CamelFile*"
+                        - setProperty:
+                            disabled: "{{!abortMode}}"
+                            name: Enrich-Response
+                            simple: "${body}"
+                - to:
+                    disabled: "{{abortMode}}"
+                    uri: "kamelet:sink"
+                - removeHeaders:
+                    disabled: "{{abortMode}}"
+                    pattern: "CamelFile*"
+                - setProperty:
+                    disabled: "{{abortMode}}"
+                    name: Enrich-Response
+                    simple: "${body}"
+          - setBody:
+              simple: "${exchangeProperty.Enrich-Response}"
