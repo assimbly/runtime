@@ -136,7 +136,7 @@ public class StatsManager {
             return stats;
         }
 
-        stats.status = managedRouteGroup.getState();
+        stats.status = managedRouteGroup.getState().toLowerCase();
         stats.totalMessages = managedRouteGroup.getExchangesTotal();
         stats.completedMessages = managedRouteGroup.getExchangesCompleted();
         stats.failedMessages = managedRouteGroup.getExchangesFailed();
@@ -145,8 +145,8 @@ public class StatsManager {
         if (fullStats) {
             stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
             stats.uptime = managedRouteGroup.getUptime();
-            stats.lastFailed = managedRouteGroup.getLastExchangeFailureTimestamp() != null ? managedRouteGroup.getLastExchangeFailureTimestamp().getTime() : 0;
-            stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0;
+            stats.lastFailed = managedRouteGroup.getLastExchangeFailureTimestamp() != null ? managedRouteGroup.getLastExchangeFailureTimestamp().getTime() : 0L;
+            stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0L;
         }
 
         return stats;
@@ -433,7 +433,7 @@ public class StatsManager {
             String healthCheckId = type + ":" + routeId;
             JSONObject step = getStepHealth(routeId, healthCheckId, includeError, includeDetails);
 
-            String stepState = step.getJSONObject("step").getString("state");
+            String stepState = step.getJSONObject("step").getString("status");
             if (!state.equalsIgnoreCase("DOWN")) {
                 state = stepState;
             }
@@ -442,7 +442,7 @@ public class StatsManager {
         }
 
         flow.put("id", flowId);
-        flow.put("state", state);
+        flow.put("status", state);
 
         if (includeSteps) {
             flow.put("steps", steps);
@@ -485,7 +485,7 @@ public class StatsManager {
         if (healthCheck != null && healthCheck.isReadiness()) {
 
             HealthCheck.Result result = healthCheck.callReadiness();
-            step.put("state", result.getState().toString());
+            step.put("status", result.getState().toString());
 
             if (includeError) {
                 JSONObject error = new JSONObject();
@@ -511,7 +511,7 @@ public class StatsManager {
             }
 
         } else {
-            step.put("state", "UNKNOWN");
+            step.put("status", "UNKNOWN");
         }
 
 
