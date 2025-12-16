@@ -28,21 +28,19 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
     protected void append(ILoggingEvent event) {
 
         if(event!=null){
-
-            String message = event.getMessage();
+            String message = event.getFormattedMessage();
             String loggerName = event.getLoggerName();
+            long timestamp = event.getTimeStamp();
 
             if(filters==null || EventUtil.isFiltered(filters, message + loggerName)){
-                processEvent(event, message);
+                processEvent(event, message, timestamp);
             }
 
         }
     }
 
-    private void processEvent(ILoggingEvent event, String message){
-
+    private void processEvent(ILoggingEvent event, String message, long timestamp){
         //set fields
-        String timestamp = EventUtil.getTimestamp();
         String logLevel = event.getLevel().toString();
         String exception = (logLevel.equalsIgnoreCase("error")) ? message : "";
 

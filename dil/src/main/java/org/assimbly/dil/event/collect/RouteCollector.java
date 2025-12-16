@@ -45,7 +45,7 @@ public class RouteCollector extends EventNotifierSupport {
     private void processEvent(CamelEvent.RouteEvent routeEvent, String stepId){
 
         //set fields
-        String timestamp = Long.toString(routeEvent.getTimestamp());
+        long timestamp = routeEvent.getTimestamp();
         String routeEventType = routeEvent.getType().name().substring(5);
 
         String logLevel = "INFO";

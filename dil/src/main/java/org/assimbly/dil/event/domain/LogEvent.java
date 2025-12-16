@@ -17,13 +17,13 @@ public class LogEvent {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private String logLevel;
-    private String timestamp;
+    private long timestamp;
     private String flowId;
     private String tag;
     private String message;
     private String exception;
 
-    public LogEvent(String timestamp, String flowId, String logLevel, String tag, String message, String exception) {
+    public LogEvent(long timestamp, String flowId, String logLevel, String tag, String message, String exception) {
         this.timestamp = timestamp;
         this.flowId = flowId;
         this.logLevel = logLevel;
@@ -42,11 +42,11 @@ public class LogEvent {
     }
 
     @JsonProperty("timestamp")
-    public String getTimestamp() {
-        return this.timestamp;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
