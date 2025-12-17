@@ -1,76 +1,95 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: smtp-action
+  name: "smtp-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "smtp action"
-    description: |-
-      SMTP (Simple Mail Transfer Protocol) SMTP is the standard protocol for sending emails from one system to another.
-    type: object
+    description: "SMTP (Simple Mail Transfer Protocol) SMTP is the standard protocol\
+      \ for sending emails from one system to another."
+    type: "object"
     properties:
       scheme:
-          title: scheme of components
-          description: Endpoint URI
-          type: string
+        title: "scheme of components"
+        description: "Endpoint URI"
+        type: "string"
       path:
-        title: path
-        description: path of component
-        type: string
-        default: dummy
+        title: "path"
+        description: "path of component"
+        type: "string"
+        default: "dummy"
       username:
-        title: username smpt server
-        description: username smpt server
-        type: string
+        title: "username smpt server"
+        description: "username smpt server"
+        type: "string"
         x-descriptors:
-          - urn:camel:group:credentials
+        - "urn:camel:group:credentials"
       password:
-        title: password of smtp server
-        description: password of smtp server
-        type: string
+        title: "password of smtp server"
+        description: "password of smtp server"
+        type: "string"
         x-descriptors:
-          - urn:camel:group:credentials
+        - "urn:camel:group:credentials"
       from:
-        title: from email address
-        description: from email address
-        type: string
+        title: "from email address"
+        description: "from email address"
+        type: "string"
       subject:
-        title: subject of email
-        description: subject of email
-        type: string
+        title: "subject of email"
+        description: "subject of email"
+        type: "string"
       to:
-        title: to email address
-        description: to email address
-        type: string
+        title: "to email address"
+        description: "to email address"
+        type: "string"
       replyTo:
-        title: replyTo email address
-        description: replyTo email address
-        type: string
+        title: "replyTo email address"
+        description: "replyTo email address"
+        type: "string"
       tenantDbName:
-        title: TenantDbName
-        description: tenant db name
-        type: string
+        title: "TenantDbName"
+        description: "tenant db name"
+        type: "string"
       accessToken:
-        title: AccessToken
-        description: Access token
-        type: string
+        title: "AccessToken"
+        description: "Access token"
+        type: "string"
       authenticationType:
-        title: AthenticationType
-        description: Which authentication type is used (like oauth)
-        type: string
+        title: "AthenticationType"
+        description: "Which authentication type is used (like oauth)"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     beans:
-      - name: ExtendedHeaderFilterStrategy
-        type: "#class:org.assimbly.util.mail.ExtendedHeaderFilterStrategy"
+    - name: "ExtendedHeaderFilterStrategy"
+      type: "#class:org.assimbly.util.mail.ExtendedHeaderFilterStrategy"
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - toD:
-              uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{?from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{?replyTo}})&tenantDbName=RAW({{?tenantDbName}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{?from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{?replyTo}})&tenantDbName=RAW({{?tenantDbName}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,66 +1,85 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: rabbitmq-source
+  name: "rabbitmq-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "rabbitmq source"
-    description: |-
-      Receive messages from a RabbitMQ broker
-    type: object
+    description: "Receive messages from a RabbitMQ broker"
+    type: "object"
     properties:
       path:
-        title: path
-        description: path
-        type: string
+        title: "path"
+        description: "path"
+        type: "string"
       connectionFactory:
-        title: connectionFactory
-        description: The connectionFactory
-        type: string
+        title: "connectionFactory"
+        description: "The connectionFactory"
+        type: "string"
       exchangeType:
-        title: exchangeType
-        description: exchangeType
-        type: string
+        title: "exchangeType"
+        description: "exchangeType"
+        type: "string"
       routingKey:
-        title: routingKey
-        description: The routing key
-        type: string
+        title: "routingKey"
+        description: "The routing key"
+        type: "string"
       queues:
-        title: Queues
-        description: Queues
-        type: string
+        title: "Queues"
+        description: "Queues"
+        type: "string"
       durable:
-        title: Durable
-        description: Durable
-        type: boolean
+        title: "Durable"
+        description: "Durable"
+        type: "boolean"
         default: false
       autoDelete:
-        title: AutoDelete
-        description: AutoDelete
-        type: boolean
+        title: "AutoDelete"
+        description: "AutoDelete"
+        type: "boolean"
         default: false
       autoDeclare:
-        title: Auto Declare Consumer
-        description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
-        type: boolean
+        title: "Auto Declare Consumer"
+        description: "Specifies whether the producer should auto declare binding between\
+          \ exchange, queue and routing key when starting"
+        type: "boolean"
         default: true
       useErrorRoute:
-        title: useErrorRoute
-        description: useErrorRoute
-        type: boolean
+        title: "useErrorRoute"
+        description: "useErrorRoute"
+        type: "boolean"
         default: false
       exchangePattern:
-        title: ExchangePattern
-        description: ExchangePattern
-        type: string
+        title: "ExchangePattern"
+        description: "ExchangePattern"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
         steps:
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

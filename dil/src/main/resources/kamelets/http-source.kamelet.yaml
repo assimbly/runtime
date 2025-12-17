@@ -1,28 +1,46 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: http-source
+  name: "http-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "http source"
-    description: |-
-      Act as a server (Jetty) to receive HTTP calls
-    type: object
+    description: "Act as a server (Jetty) to receive HTTP calls"
+    type: "object"
     properties:
       path:
-          title: Path
-          description: Path of the URL
-          type: string
+        title: "Path"
+        description: "Path of the URL"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding"
         steps:
-          - removeHeaders:
-              pattern: "CamelHttp*"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - removeHeaders:
+                pattern: "CamelHttp*"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

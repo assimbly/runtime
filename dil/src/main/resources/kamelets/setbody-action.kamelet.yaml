@@ -1,36 +1,54 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setbody-action
+  name: "setbody-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "setbody action"
-    description: |-
-      Sets the body of message by an expression
-    type: object
+    description: "Sets the body of message by an expression"
+    type: "object"
     properties:
       language:
-        title: Language
-        description: Set the expression language
-        type: string
-        default: constant
+        title: "Language"
+        description: "Set the expression language"
+        type: "string"
+        default: "constant"
       expression:
-        title: Expression
-        description: Set the content of the body
-        type: string
+        title: "Expression"
+        description: "Set the content of the body"
+        type: "string"
         default: ""
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setBody:
-              language:
-                language: "{{language}}"
-                expression: "{{expression}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setBody:
+                language:
+                  language: "{{language}}"
+                  expression: "{{expression}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

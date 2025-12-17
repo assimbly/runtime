@@ -1,32 +1,50 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setpattern-action
+  name: "setpattern-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "setpattern action"
-    description: |-
-      Set the exchange pattern
-    type: object
+    description: "Set the exchange pattern"
+    type: "object"
     properties:
       path:
-          title: 
-          description: .
-          type: string
+        title: null
+        description: "."
+        type: "string"
       pattern:
-          title: Pattern
-          description: Pattern to use (inOnly, inOut, inOptionalOut)
-          type: string
-          default: InOnly
+        title: "Pattern"
+        description: "Pattern to use (inOnly, inOut, inOptionalOut)"
+        type: "string"
+        default: "InOnly"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setExchangePattern: "{{pattern}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setExchangePattern: "{{pattern}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

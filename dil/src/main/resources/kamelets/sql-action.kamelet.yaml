@@ -1,67 +1,86 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: sql-action
+  name: "sql-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "sql action"
-    description: |-
-      SQL (Custom Assimbly component) to connect to a database and execute queries
-    type: object
+    description: "SQL (Custom Assimbly component) to connect to a database and execute\
+      \ queries"
+    type: "object"
     properties:
       host:
-          title: host
-          description: host
-          type: string
+        title: "host"
+        description: "host"
+        type: "string"
       port:
-        title: port
-        description: port
-        type: string
-        default: dummy
+        title: "port"
+        description: "port"
+        type: "string"
+        default: "dummy"
       username:
-        title: Username
-        description: Username of the database
-        type: string
+        title: "Username"
+        description: "Username of the database"
+        type: "string"
         x-descriptors:
-          - urn:camel:group:credentials
+        - "urn:camel:group:credentials"
       password:
-        title: Password
-        description: Password of the database
-        type: string
+        title: "Password"
+        description: "Password of the database"
+        type: "string"
         x-descriptors:
-          - urn:camel:group:credentials
+        - "urn:camel:group:credentials"
       useSSL:
-        title: Use SSL
-        description: Use SSL (TLS)
-        type: boolean
+        title: "Use SSL"
+        description: "Use SSL (TLS)"
+        type: "boolean"
         default: false
       tlsVersion:
-        title: TLS Version
-        description: TLS Version to use
-        type: string
+        title: "TLS Version"
+        description: "TLS Version to use"
+        type: "string"
       escapeChars:
-        title: Escape chars
-        description: Enabling to escape chars
-        type: boolean
+        title: "Escape chars"
+        description: "Enabling to escape chars"
+        type: "boolean"
         default: false
       query:
-        title: Query
-        description: SQL Query to execute
-        type: string
+        title: "Query"
+        description: "SQL Query to execute"
+        type: "string"
       connectionType:
-        title: Connection type
-        description: Type of connection (database)
-        type: string
+        title: "Connection type"
+        description: "Type of connection (database)"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - toD:
-              uri: "sql-custom://?host={{host}}&port={{port}}&username={{username}}&password=RAW({{password}})&database={{database}}&connectionType={{connectionType}}&useSSL={{useSSL}}&tlsVersion={{tlsVersion}}&escapeChars={{escapeChars}}&query=RAW({{query}})"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "sql-custom://?host={{host}}&port={{port}}&username={{username}}&password=RAW({{password}})&database={{database}}&connectionType={{connectionType}}&useSSL={{useSSL}}&tlsVersion={{tlsVersion}}&escapeChars={{escapeChars}}&query=RAW({{query}})"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

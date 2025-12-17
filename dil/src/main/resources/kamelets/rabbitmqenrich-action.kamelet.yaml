@@ -1,87 +1,106 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: rabbitmqenrich-action
+  name: "rabbitmqenrich-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "rabbitmq enrich action"
-    description: |-
-      Send message to a RabbitMQ broker
-    type: object
+    description: "Send message to a RabbitMQ broker"
+    type: "object"
     properties:
       path:
-        title: path
-        description: path
-        type: string
-        default: default
+        title: "path"
+        description: "path"
+        type: "string"
+        default: "default"
       connectionFactory:
-        title: connectionFactory
-        description: The connectionFactory
-        type: string
+        title: "connectionFactory"
+        description: "The connectionFactory"
+        type: "string"
       exchangeType:
-        title: exchangeType
-        description: exchangeType
-        type: string
+        title: "exchangeType"
+        description: "exchangeType"
+        type: "string"
       routingKey:
-        title: routingKey
-        description: The routing key
-        type: string
+        title: "routingKey"
+        description: "The routing key"
+        type: "string"
       queues:
-        title: Queues
-        description: Queues
-        type: string
+        title: "Queues"
+        description: "Queues"
+        type: "string"
       durable:
-        title: Durable
-        description: Durable
-        type: boolean
+        title: "Durable"
+        description: "Durable"
+        type: "boolean"
         default: false
       autoDelete:
-        title: AutoDelete
-        description: AutoDelete
-        type: boolean
+        title: "AutoDelete"
+        description: "AutoDelete"
+        type: "boolean"
         default: false
       useErrorRoute:
-        title: useErrorRoute
-        description: useErrorRoute
-        type: boolean
+        title: "useErrorRoute"
+        description: "useErrorRoute"
+        type: "boolean"
         default: false
       autoDeclare:
-        title: Auto Declare Consumer
-        description: Specifies whether the producer should auto declare binding between exchange, queue and routing key when starting
-        type: boolean
+        title: "Auto Declare Consumer"
+        description: "Specifies whether the producer should auto declare binding between\
+          \ exchange, queue and routing key when starting"
+        type: "boolean"
         default: true
       timeout:
-        title: Time Out
-        description: Time Out
-        type: string
+        title: "Time Out"
+        description: "Time Out"
+        type: "string"
         default: "10000"
       exchangePattern:
-        title: ExchangePattern
-        description: ExchangePattern
-        type: string
-        default: InOut
+        title: "ExchangePattern"
+        description: "ExchangePattern"
+        type: "string"
+        default: "InOut"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setProperty:
-              name: Enrich-Type
-              simple:
-                expression: application/override
-          - setProperty:
-              name: DovetailAggregateNoExceptionOnNull
-              simple:
-                expression: true
-                resultType: java.lang.Boolean
-          - pollEnrich:
-              timeout: "{{timeout}}"
-              aggregationStrategy: CurrentEnrichStrategy
-              simple:
-                expression: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&autoDeclareProducer={{autoDeclare}}&exchangePattern={{exchangePattern}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "Enrich-Type"
+                simple:
+                  expression: "application/override"
+            - setProperty:
+                name: "DovetailAggregateNoExceptionOnNull"
+                simple:
+                  expression: true
+                  resultType: "java.lang.Boolean"
+            - pollEnrich:
+                timeout: "{{timeout}}"
+                aggregationStrategy: "CurrentEnrichStrategy"
+                simple:
+                  expression: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&autoDeclareProducer={{autoDeclare}}&exchangePattern={{exchangePattern}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

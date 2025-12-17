@@ -1,22 +1,40 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: unzip-sink
+  name: "unzip-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "unzip sink"
-    description: |-
-      Unzips a message
-    type: object
+    description: "Unzips a message"
+    type: "object"
     properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - process:
-              ref: "Unzip"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - process:
+                ref: "Unzip"
+      routeConfigurationId: "{{routeConfigurationId}}"

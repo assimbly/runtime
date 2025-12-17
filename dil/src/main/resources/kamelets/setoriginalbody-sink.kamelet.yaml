@@ -1,26 +1,44 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setoriginalbody-sink
+  name: "setoriginalbody-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "setoriginalbody sink"
-    description: |-
-      Sets the original body of a exchange
-    type: object
+    description: "Sets the original body of a exchange"
+    type: "object"
     properties:
       path:
-          title: Path
-          description: Path
-          type: string
+        title: "Path"
+        description: "Path"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setBody:
-              simple: "${originalBody}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setBody:
+                simple: "${originalBody}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,78 +1,96 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: splitandaggregate-router
+  name: "splitandaggregate-router"
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
     title: "splitandaggregate-router"
-    description: |-
-      Splits message by an expression and aggregate result by XML or JSON
-    type: object
+    description: "Splits message by an expression and aggregate result by XML or JSON"
+    type: "object"
     properties:
       language:
-        title: Language
-        description: Language
-        type: string
+        title: "Language"
+        description: "Language"
+        type: "string"
       expression:
-          title: Expression
-          description: Expression
-          type: string
+        title: "Expression"
+        description: "Expression"
+        type: "string"
       parallelProcessing:
-        title: Parallel Processing
-        description: Parallel Processing of split
-        type: boolean
+        title: "Parallel Processing"
+        description: "Parallel Processing of split"
+        type: "boolean"
         default: false
       streaming:
-        title: Streaming
-        description: Use Streaming
-        type: boolean
+        title: "Streaming"
+        description: "Use Streaming"
+        type: "boolean"
         default: false
       aggregateType:
-        title: Aggregate Type
-        description: Content-Type to use for aggregation (XML or JSON)
-        type: boolean
+        title: "Aggregate Type"
+        description: "Content-Type to use for aggregation (XML or JSON)"
+        type: "boolean"
         default: false
       out_rule:
-        title: Out Rule
-        description: Out Rule
-        type: string
+        title: "Out Rule"
+        description: "Out Rule"
+        type: "string"
       out_default:
-        title: Out Default Rule
-        description: Out Default Rule
-        type: string
+        title: "Out Default Rule"
+        description: "Out Default Rule"
+        type: "string"
         default: "mock:0"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setProperty:
-              name: Aggregate-Type
-              constant:
-                expression: "{{aggregateType}}"
-          - split:
-              aggregationStrategy: CurrentAggregateStrategy
-              parallelProcessing: "{{parallelProcessing}}"
-              streaming: "{{streaming}}"
-              language:
-                language: "{{language}}"
-                expression: "{{expression}}"
-              steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "Aggregate-Type"
+                constant:
+                  expression: "{{aggregateType}}"
+            - split:
+                aggregationStrategy: "CurrentAggregateStrategy"
+                parallelProcessing: "{{parallelProcessing}}"
+                streaming: "{{streaming}}"
+                language:
+                  language: "{{language}}"
+                  expression: "{{expression}}"
+                steps:
                 - setHeader:
-                    name: CamelSplitIndex
+                    name: "CamelSplitIndex"
                     simple: "${exchangeProperty.CamelSplitIndex}"
                 - setHeader:
-                    name: CamelSplitSize
+                    name: "CamelSplitSize"
                     simple: "${exchangeProperty.CamelSplitSize}"
                 - setHeader:
-                    name: CamelSplitComplete
+                    name: "CamelSplitComplete"
                     simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
                 - convertBodyTo:
-                    type: java.lang.String
+                    type: "java.lang.String"
                 - to: "{{out_split}}"
-          - to:
-              uri: "{{out_default}}"
+            - to:
+                uri: "{{out_default}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,49 +1,67 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setmessage-action
+  name: "setmessage-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "setmessage action"
-    description: |-
-      Set message (body and headers)
-    type: object
+    description: "Set message (body and headers)"
+    type: "object"
     properties:
       headers:
-          title: Headers
-          description: Headers
-          type: string
-          default: 0
+        title: "Headers"
+        description: "Headers"
+        type: "string"
+        default: 0
       language:
-          title: Language
-          description: Language
-          type: string
-          default: constant
+        title: "Language"
+        description: "Language"
+        type: "string"
+        default: "constant"
       path:
-          title: Path
-          description: Path
-          type: string
+        title: "Path"
+        description: "Path"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setProperty:
-              name: assimbly.body
-              constant: "{{path}}"
-          - setProperty:
-              name: assimbly.language
-              constant: "{{language}}"
-          - setProperty:
-              name: assimbly.headers
-              constant: "{{headers}}"
-          - process:
-              ref: "SetBodyProcessor"
-          - process:
-              ref: "SetHeadersProcessor"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "assimbly.body"
+                constant: "{{path}}"
+            - setProperty:
+                name: "assimbly.language"
+                constant: "{{language}}"
+            - setProperty:
+                name: "assimbly.headers"
+                constant: "{{headers}}"
+            - process:
+                ref: "SetBodyProcessor"
+            - process:
+                ref: "SetHeadersProcessor"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

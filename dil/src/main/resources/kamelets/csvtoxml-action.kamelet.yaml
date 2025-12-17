@@ -1,43 +1,61 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: csvtoxml-action
+  name: "csvtoxml-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "csvtoxml action"
-    description: |-
-      Converts CSV to XML
-    type: object
+    description: "Converts CSV to XML"
+    type: "object"
     properties:
       delimiter:
-          title: Delimiter
-          description: Delimiter
-          type: string
-          default: ","
+        title: "Delimiter"
+        description: "Delimiter"
+        type: "string"
+        default: ","
       useHeader:
-          title: Use header maps
-          description: Wether to use header maps or not
-          type: string
-          default: "true"
+        title: "Use header maps"
+        description: "Wether to use header maps or not"
+        type: "string"
+        default: "true"
       encoding:
-        title: Encoding
-        description: Type of encoding
-        type: string
+        title: "Encoding"
+        description: "Type of encoding"
+        type: "string"
         default: "UTF-8"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - unmarshal:
-              csv:
-                delimiter: "{{delimiter}}"
-                useMaps: "{{useHeader}}"
-          - to:
-              uri: "csvtoxml://?encoding={{encoding}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - unmarshal:
+                csv:
+                  delimiter: "{{delimiter}}"
+                  useMaps: "{{useHeader}}"
+            - to:
+                uri: "csvtoxml://?encoding={{encoding}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

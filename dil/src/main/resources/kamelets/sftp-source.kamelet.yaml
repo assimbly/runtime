@@ -1,30 +1,48 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: sftp-source
+  name: "sftp-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "sftp source"
-    description: |-
-      SFTP Endpoint to pick up files from a directory
-    type: object
+    description: "SFTP Endpoint to pick up files from a directory"
+    type: "object"
     properties:
       path:
-        title: path
-        description: path of component
-        type: string
+        title: "path"
+        description: "path of component"
+        type: "string"
       options:
-        title: options (query parameters)
-        description: Endpoint URI
-        type: string
+        title: "options (query parameters)"
+        description: "Endpoint URI"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "sftp:{{path}}?{{?options}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&serverHostKeys=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&publicKeyAcceptedAlgorithms=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&keyExchangeProtocols=curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1"
         steps:
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

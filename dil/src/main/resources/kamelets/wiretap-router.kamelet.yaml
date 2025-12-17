@@ -1,34 +1,52 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: wiretap-router
+  name: "wiretap-router"
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
     title: "wiretap router"
-    description: |-
-      Copy the original message to a wiretap in a fire and forget style
-    type: object
+    description: "Copy the original message to a wiretap in a fire and forget style"
+    type: "object"
     properties:
       out_wiretap:
-        title: Out Wiretap Endpoint
-        description: Out Wiretap Endpoint
-        type: string
+        title: "Out Wiretap Endpoint"
+        description: "Out Wiretap Endpoint"
+        type: "string"
       out_default:
-        title: Out Default Endpoint
-        description: Out Default Endpoint
-        type: string
+        title: "Out Default Endpoint"
+        description: "Out Default Endpoint"
+        type: "string"
         default: "mock:0"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - wireTap:
-              uri: "{{out_wiretap}}"
-              executor-service: "wiretapProfile"
-          - to:
-              uri: "{{out_default}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - wireTap:
+                uri: "{{out_wiretap}}"
+                executor-service: "wiretapProfile"
+            - to:
+                uri: "{{out_default}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

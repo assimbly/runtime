@@ -1,42 +1,60 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: queuethrottle-action
+  name: "queuethrottle-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "queuethrottle action"
-    description: |-
-      Throttles messages on an ActiveMQ queue
-    type: object
+    description: "Throttles messages on an ActiveMQ queue"
+    type: "object"
     properties:
       timePeriod:
-          title: Time Period
-          description: Time Period
-          type: string
-          default: 5000
+        title: "Time Period"
+        description: "Time Period"
+        type: "string"
+        default: 5000
       messages:
-          title: Messages
-          description: Max number of messages
-          type: string
-          default: 1
+        title: "Messages"
+        description: "Max number of messages"
+        type: "string"
+        default: 1
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - throttle:
-              asyncDelayed: true
-              timePeriodMillis: "{{timePeriod}}"
-              expression:
-                constant: "{{messages}}"
-              correlationExpression:
-                constant:
-                  expression: "{{routeId}}"
-          - to:
-              uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - throttle:
+                asyncDelayed: true
+                timePeriodMillis: "{{timePeriod}}"
+                expression:
+                  constant: "{{messages}}"
+                correlationExpression:
+                  constant:
+                    expression: "{{routeId}}"
+            - to:
+                uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,33 +1,51 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setuuid-sink
+  name: "setuuid-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "setuuid sink"
-    description: |-
-      Set UUID as message header
-    type: object
+    description: "Set UUID as message header"
+    type: "object"
     properties:
       path:
-        title: Path
-        description: Path
-        type: string
-        default: uuid
+        title: "Path"
+        description: "Path"
+        type: "string"
+        default: "uuid"
       generator:
-        title: Generator
-        description: Type of UUID Generator
-        type: string
-        default: default
+        title: "Generator"
+        description: "Type of UUID Generator"
+        type: "string"
+        default: "default"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setHeader:
-              name: "{{path}}"
-              constant: "${uuid({{generator}})}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setHeader:
+                name: "{{path}}"
+                constant: "${uuid({{generator}})}"
+      routeConfigurationId: "{{routeConfigurationId}}"

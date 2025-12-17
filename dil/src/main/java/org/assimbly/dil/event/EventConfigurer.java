@@ -124,32 +124,31 @@ public class EventConfigurer {
 
         if(!checkMessage.equals("ok")){
             return checkMessage;
-        }else{
+        }
 
-            try {
+        try {
 
-                switch (type) {
-                    case "step":
-                        configureStepCollector();
-                        break;
-                    case "route":
-                        configureRouteCollector();
-                        break;
-                    case "log":
-                        configureLogCollector();
-                        break;
-                    default:
-                        log.warn("Unknown collector type: {}", type);
-                }
-
-            } catch (Exception e){
-                log.error("Can't configure collector.",e);
-                return e.getMessage();
+            switch (type) {
+                case "step":
+                    configureStepCollector();
+                    break;
+                case "route":
+                    configureRouteCollector();
+                    break;
+                case "log":
+                    configureLogCollector();
+                    break;
+                default:
+                    log.warn("Unknown collector type: {}", type);
+                    return "Unknown collector type: " + type;
             }
 
-            return "configured";
-
+        } catch (Exception e){
+            log.error("Failed to configure collector.", e);
+            return e.getMessage();
         }
+
+        return "configured";
 
     }
 

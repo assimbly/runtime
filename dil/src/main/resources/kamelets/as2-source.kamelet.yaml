@@ -1,26 +1,44 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: as2-source
+  name: "as2-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "as2 source"
-    description: |-
-      AS2 endpoint that accepts and processes inbound AS2 transmissions
-    type: object
+    description: "AS2 endpoint that accepts and processes inbound AS2 transmissions"
+    type: "object"
     properties:
       options:
-        title: options (query parameters)
-        description: Endpoint URI
-        type: string
+        title: "options (query parameters)"
+        description: "Endpoint URI"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "as2://server/listen?{{?options}}"
         steps:
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

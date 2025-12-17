@@ -1,28 +1,46 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: xslt-action
+  name: "xslt-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "xslt action"
-    description: |-
-      Apply XSLT on message
-    type: object
+    description: "Apply XSLT on message"
+    type: "object"
     properties:
       path:
-        title: Path
-        description: Path
-        type: string
+        title: "Path"
+        description: "Path"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

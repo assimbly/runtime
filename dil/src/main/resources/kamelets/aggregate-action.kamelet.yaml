@@ -1,50 +1,68 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: aggregate-action
+  name: "aggregate-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "aggregate action"
-    description: |-
-      Aggregate multiple messages to one message
-    type: object
+    description: "Aggregate multiple messages to one message"
+    type: "object"
     properties:
       aggregateType:
-          title: Aggregate Type
-          description: Aggregate Type
-          type: string
-          default: "text/xml"
+        title: "Aggregate Type"
+        description: "Aggregate Type"
+        type: "string"
+        default: "text/xml"
       completionSize:
-          title: Completion Size
-          description: Completion Size
-          type: string
-          default: 3
+        title: "Completion Size"
+        description: "Completion Size"
+        type: "string"
+        default: 3
       completionTimeout:
-        title: Completion Timeout
-        description: Completion Timeout in milliseconds
-        type: string
+        title: "Completion Timeout"
+        description: "Completion Timeout in milliseconds"
+        type: "string"
       completionInterval:
-        title: Completion Interval
-        description: Completion Interval in milliseconds
-        type: string
+        title: "Completion Interval"
+        description: "Completion Interval in milliseconds"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setProperty:
-              name: Aggregate-Type
-              constant: "{{aggregateType}}"
-          - aggregate:
-              aggregationStrategy: "AggregateStrategy"
-              completionSize: "{{completionSize}}"
-              completionTimeout: "{{?completionTimeout}}"
-              completionInterval: "{{?completionInterval}}"
-              correlationExpression:
-                constant: "true"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "Aggregate-Type"
+                constant: "{{aggregateType}}"
+            - aggregate:
+                aggregationStrategy: "AggregateStrategy"
+                completionSize: "{{completionSize}}"
+                completionTimeout: "{{?completionTimeout}}"
+                completionInterval: "{{?completionInterval}}"
+                correlationExpression:
+                  constant: "true"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,56 +1,75 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: xmltoexcel-sink
+  name: "xmltoexcel-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "xmltoexcel action"
-    description: |-
-      Converts XML to Excel
-    type: object
+    description: "Converts XML to Excel"
+    type: "object"
     properties:
       includeHeader:
-        title: Include Header
-        description: Whether to include a header row in the Excel output
-        type: boolean
+        title: "Include Header"
+        description: "Whether to include a header row in the Excel output"
+        type: "boolean"
         default: true
       includeIndexColumn:
-        title: Include Index Column
-        description: Whether to include an index column in the Excel output
-        type: boolean
+        title: "Include Index Column"
+        description: "Whether to include an index column in the Excel output"
+        type: "boolean"
         default: false
       indexColumnName:
-        title: Index ColumnName
-        description: The name of the index column
-        type: string
-        default: line
+        title: "Index ColumnName"
+        description: "The name of the index column"
+        type: "string"
+        default: "line"
       orderHeaders:
-        title: Order Headers
-        description:  how the columns should be ordered in the Excel document (by name). unordered, ascending, or descending
-        type: string
-        default: unordered
+        title: "Order Headers"
+        description: "how the columns should be ordered in the Excel document (by\
+          \ name). unordered, ascending, or descending"
+        type: "string"
+        default: "unordered"
       excelFormat:
-        title: Excel Format
-        description: Choose between Excel format xslx or xsl
-        type: string
-        default: xlsx
+        title: "Excel Format"
+        description: "Choose between Excel format xslx or xsl"
+        type: "string"
+        default: "xlsx"
       useCustomWorksheets:
-        title: UseCustomWorksheets
-        description: Whether to use a CustomWorksheets with expressions
-        type: boolean
+        title: "UseCustomWorksheets"
+        description: "Whether to use a CustomWorksheets with expressions"
+        type: "boolean"
         default: false
       expressions:
-        title: Worksheet expressions
-        description: Custom Worksheet expressions
-        type: string
+        title: "Worksheet expressions"
+        description: "Custom Worksheet expressions"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?expressions}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?expressions}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

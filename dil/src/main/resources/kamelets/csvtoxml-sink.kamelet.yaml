@@ -1,41 +1,59 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: csvtoxml-sink
+  name: "csvtoxml-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "csvtoxml sink"
-    description: |-
-      Converts CSV to XML
-    type: object
+    description: "Converts CSV to XML"
+    type: "object"
     properties:
       delimiter:
-        title: Delimiter
-        description: Delimiter
-        type: string
+        title: "Delimiter"
+        description: "Delimiter"
+        type: "string"
         default: ","
       useMaps:
-        title: Use Maps
-        description: Wether to use maps or not
-        type: string
+        title: "Use Maps"
+        description: "Wether to use maps or not"
+        type: "string"
         default: "true"
       encoding:
-        title: Encoding
-        description: Type of encoding
-        type: string
+        title: "Encoding"
+        description: "Type of encoding"
+        type: "string"
         default: "UTF-8"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - unmarshal:
-              csv:
-                delimiter: "{{delimiter}}"
-                useMaps: "{{useMaps}}"
-          - to:
-              uri: "csvtoxml://?encoding={{encoding}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - unmarshal:
+                csv:
+                  delimiter: "{{delimiter}}"
+                  useMaps: "{{useMaps}}"
+            - to:
+                uri: "csvtoxml://?encoding={{encoding}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

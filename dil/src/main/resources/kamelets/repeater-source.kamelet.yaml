@@ -1,35 +1,53 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: repeater-source
+  name: "repeater-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "repeater source"
-    description: |-
-      Repeater that sends a message every fixed period (based on camel-timer)
-    type: object
+    description: "Repeater that sends a message every fixed period (based on camel-timer)"
+    type: "object"
     properties:
       path:
-          title: path
-          description: Path
-          type: string
+        title: "path"
+        description: "Path"
+        type: "string"
       repeatCount:
-        title: repeatCount
-        description: Specifies a maximum limit for the number of fires.
-        type: string
+        title: "repeatCount"
+        description: "Specifies a maximum limit for the number of fires."
+        type: "string"
       period:
-        title: period
-        description: Generate periodic events every period.
-        type: string
+        title: "period"
+        description: "Generate periodic events every period."
+        type: "string"
         default: 10000
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "timer:{{path}}?repeatCount={{repeatCount}}&period={{period}}"
         steps:
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

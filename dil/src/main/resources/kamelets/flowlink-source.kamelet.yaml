@@ -1,34 +1,53 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: flowlink-source
+  name: "flowlink-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "flowlink source"
-    description: |-
-      Links messages to another flow (inbound) using an endpoint like sync (direct), async (seda), activemq
-    type: object
+    description: "Links messages to another flow (inbound) using an endpoint like\
+      \ sync (direct), async (seda), activemq"
+    type: "object"
     properties:
       transport:
-        title: Transport
-        description: Transport
-        type: string
+        title: "Transport"
+        description: "Transport"
+        type: "string"
       flowId:
-        title: FlowID
-        description: Flow ID of the flow
-        type: string
+        title: "FlowID"
+        description: "Flow ID of the flow"
+        type: "string"
       connectionFactory:
-        title: Connection Factory
-        description: Connection Factory
-        type: string
+        title: "Connection Factory"
+        description: "Connection Factory"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
         uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
         steps:
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

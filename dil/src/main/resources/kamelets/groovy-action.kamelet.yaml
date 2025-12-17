@@ -1,28 +1,46 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: groovy-action
+  name: "groovy-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "groovy action"
-    description: |-
-      Apply Groovy script
-    type: object
+    description: "Apply Groovy script"
+    type: "object"
     properties:
       path:
-        title: Path
-        description: path
-        type: string
+        title: "Path"
+        description: "path"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setBody:
-              groovy: "resource:{{path}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setBody:
+                groovy: "resource:{{path}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

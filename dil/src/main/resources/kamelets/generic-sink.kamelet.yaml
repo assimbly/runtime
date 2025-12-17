@@ -1,35 +1,53 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: generic-sink
+  name: "generic-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "generic action"
-    description: |-
-      Generic kamelet for Camel Components to send messages to an endpoint
-    type: object
+    description: "Generic kamelet for Camel Components to send messages to an endpoint"
+    type: "object"
     properties:
       scheme:
-        title: scheme of components
-        description: Scheme of URI (normally the name of the component)
-        type: string
+        title: "scheme of components"
+        description: "Scheme of URI (normally the name of the component)"
+        type: "string"
       path:
-        title: path
-        description: path of the URI
-        type: string
-        default: dummy
+        title: "path"
+        description: "path of the URI"
+        type: "string"
+        default: "dummy"
       options:
-        title: options (query parameterS)
-        description: URI query parameters (Endpoint options)
-        type: string
+        title: "options (query parameterS)"
+        description: "URI query parameters (Endpoint options)"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - toD:
-              uri: "{{scheme}}://{{path}}?{{?options}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "{{scheme}}://{{path}}?{{?options}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

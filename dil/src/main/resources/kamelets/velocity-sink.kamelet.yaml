@@ -1,27 +1,45 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: velocity-sink
+  name: "velocity-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "velocity sink"
-    description: |-
-      Send messages to a directory
-    type: object
+    description: "Send messages to a directory"
+    type: "object"
     properties:
       path:
-        title: path
-        description: path of component (reference id to the registry)
-        type: string
-        default: dummy
+        title: "path"
+        description: "path of component (reference id to the registry)"
+        type: "string"
+        default: "dummy"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "velocity:{{path}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "velocity:{{path}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

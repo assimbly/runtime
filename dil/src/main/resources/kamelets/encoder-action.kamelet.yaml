@@ -1,32 +1,50 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: encoder-action
+  name: "encoder-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "encoder action"
-    description: |-
-      Encodes message body to a defined charset
-    type: object
+    description: "Encodes message body to a defined charset"
+    type: "object"
     properties:
       originCharset:
-        title: Origin Charset
-        description: Charset of the input message body
-        type: string
+        title: "Origin Charset"
+        description: "Charset of the input message body"
+        type: "string"
       targetCharset:
-        title: Target Charset
-        description: Charset of the output message body
-        type: string
+        title: "Target Charset"
+        description: "Charset of the output message body"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "encoder://{{originCharset}}?targetCharset={{targetCharset}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "encoder://{{originCharset}}?targetCharset={{targetCharset}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -5,6 +5,7 @@ import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -14,9 +15,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.component.direct.DirectComponent;
-import org.apache.camel.component.file.remote.SftpComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
-import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
@@ -206,7 +205,6 @@ public class ConfigManager {
     public void setRouteTemplates() throws Exception {
 
         //load kamelets into Camel Context
-
         RoutesLoader loader = PluginHelper.getRoutesLoader(context);
 
         List<String> resourceNames = getKamelets();
@@ -223,16 +221,14 @@ public class ConfigManager {
                 url = Resources.getResource(resourceName);
             }
 
+            resourceName = StringUtils.substringAfter(resourceName, "kamelets/");
             String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
-
-            registry.bind(StringUtils.substringBetween(resourceName, "kamelets/", ".kamelet.yaml"), resourceAsString);
-
-            Resource resource = convertKameletToStep(resourceName, resourceAsString);
+            Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
 
             try {
                 loader.loadRoutes(resource);
             } catch (Exception e) {
-                log.warn("could not load: {}. Reason: {}", resourceName, e.getMessage());
+                log.warn("Could not load Kamelet: {}. Reason: {}", resourceName, e.getMessage());
             }
 
         }
@@ -254,63 +250,6 @@ public class ConfigManager {
         }
 
         return kamelets;
-
-    }
-
-    private Resource convertKameletToStep(String resourceName, String resourceAsString) {
-
-        String properties = """
-                    properties:
-                      in:
-                          title: Source endpoint
-                          description: The Camel uri of the source endpoint.
-                          type: string
-                          default: kamelet:source
-                      out:
-                          title: Sink endpoint
-                          description: The Camel uri of the sink endpoint.
-                          type: string
-                          default: kamelet:sink
-                      routeId:
-                          title: Route ID
-                          description: The Camel route ID.
-                          type: string
-                      routeConfigurationId:
-                          title: RouteConfiguration ID
-                          description: The Camel routeconfiguration ID.
-                          type: string
-                          default: 0
-                """;
-
-        //replace values
-        if (resourceName.contains("action") && !resourceAsString.contains("kamelet:sink")) {
-            resourceAsString = resourceAsString + "      - to:\n" +
-                    "          uri: \"kamelet:sink\"";
-        }
-
-        if (resourceAsString.contains("route:")) {
-
-            resourceAsString = Strings.CS.replaceOnce(resourceAsString, "route:", "route:\n" +
-                    "      routeConfigurationId: \"{{routeConfigurationId}}\"");
-
-        }
-
-        resourceAsString = Strings.CS.replaceOnce(resourceAsString, """
-                template:
-                  from:""", """
-                template:
-                  route:
-                    routeConfigurationId: "{{routeConfigurationId}}"
-                  from:""");
-
-        resourceAsString = Strings.CS.replace(resourceAsString, "\"kamelet:source\"", "\"{{in}}\"");
-        resourceAsString = Strings.CS.replace(resourceAsString, "\"kamelet:sink\"", "\"{{out}}\"");
-        resourceAsString = Strings.CS.replace(resourceAsString, "kamelet:source", "\"{{in}}\"");
-        resourceAsString = Strings.CS.replace(resourceAsString, "kamelet:sink", "\"{{out}}\"");
-        resourceAsString = Strings.CS.replace(resourceAsString, "    properties:", properties, 1);
-        resourceName = StringUtils.substringAfter(resourceName, "kamelets/");
-
-        return ResourceHelper.fromString(resourceName, resourceAsString);
 
     }
 

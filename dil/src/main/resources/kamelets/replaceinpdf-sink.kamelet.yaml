@@ -1,30 +1,48 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: replaceinpdf-sink
+  name: "replaceinpdf-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "replaceinpdf sink"
-    description: |-
-      Replace headers in PDF
-    type: object
+    description: "Replace headers in PDF"
+    type: "object"
     properties:
       path:
-        title: Path
-        description: Path
-        type: string
+        title: "Path"
+        description: "Path"
+        type: "string"
       options:
-        title: Options
-        description: Options
-        type: string
+        title: "Options"
+        description: "Options"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "pdf-transform://{{path}}?{{options}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "pdf-transform://{{path}}?{{options}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

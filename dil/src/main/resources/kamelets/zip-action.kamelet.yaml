@@ -1,33 +1,48 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: zip-action
+  name: "zip-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "zip action"
-    description: |-
-      Zips a message
-    type: object
+    description: "Zips a message"
+    type: "object"
     properties:
       routeId:
-        title: RouteID
-        description: ID of the route
-        type: string
-        default: dummy
-    dependencies:
-    - "camel:kamelet"
+        title: "RouteID"
+        description: "ID of the route"
+        type: "string"
+        default: "dummy"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - marshal:
-              zipFile:
-                id: zipFile-{{routeId}}
-          - setHeader:
-              name: Content-Disposition
-              simple: attachment; filename="${header.CamelFileName}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - marshal:
+                zipFile:
+                  id: "zipFile-{{routeId}}"
+            - setHeader:
+                name: "Content-Disposition"
+                simple: "attachment; filename=\"${header.CamelFileName}\""
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

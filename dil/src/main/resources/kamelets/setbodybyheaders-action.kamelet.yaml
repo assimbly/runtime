@@ -1,23 +1,44 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: setbodybyheaders-action
+  name: "setbodybyheaders-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "setbodybyheaders action"
-    description: |-
-      Set body as key/value map (comma-separated) from all headers
-    type: object
+    description: "Set body as key/value map (comma-separated) from all headers"
+    type: "object"
+    properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setBody:
-              simple: "${headers.entrySet().stream().map(e -> e.getKey() + \"=\" + e.getValue()).collect(java.util.stream.Collectors.joining(\",\"))}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setBody:
+                simple: "${headers.entrySet().stream().map(e -> e.getKey() + \"=\"\
+                  \ + e.getValue()).collect(java.util.stream.Collectors.joining(\"\
+                  ,\"))}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

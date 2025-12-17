@@ -1,42 +1,57 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: throttle-action
+  name: "throttle-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "throttle action"
-    description: |-
-      Throttle messages
-    type: object
+    description: "Throttle messages"
+    type: "object"
     properties:
       timePeriod:
-        title: Time period
-        description: Time period
-        type: integer
+        title: "Time period"
+        description: "Time period"
+        type: "integer"
       maxRequests:
-        title: Maximum requests
-        description: Maximum messages per requests
-        type: integer
+        title: "Maximum requests"
+        description: "Maximum messages per requests"
+        type: "integer"
       routeId:
-        title: Route ID
-        description: Route ID
-        type: string
+        title: "Route ID"
+        description: "Route ID"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - throttle:
-              asyncDelayed: true
-              constant:
-                expression: "{{maxRequests}}"
-              correlationExpression:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - throttle:
+                asyncDelayed: true
                 constant:
-                  expression: "{{routeId}}"
-              timePeriodMillis: "{{timePeriod}}"
-          - to:
-              uri: "kamelet:sink"
+                  expression: "{{maxRequests}}"
+                correlationExpression:
+                  constant:
+                    expression: "{{routeId}}"
+                timePeriodMillis: "{{timePeriod}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

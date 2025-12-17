@@ -1,24 +1,42 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: base64totext-action
+  name: "base64totext-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "base64totext action"
-    description: |-
-      Convert a body in base64 encoding to plain text
-    type: object
+    description: "Convert a body in base64 encoding to plain text"
+    type: "object"
     properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - unmarshal:
-              base64: {}
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - unmarshal:
+                base64: {}
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

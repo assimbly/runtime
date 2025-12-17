@@ -1,39 +1,57 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: pollenrich-action
+  name: "pollenrich-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "pollenrich action"
-    description: |-
-      Enrich message by polling
-    type: object
+    description: "Enrich message by polling"
+    type: "object"
     properties:
       path:
-          title: Path
-          description: Path
-          type: string
+        title: "Path"
+        description: "Path"
+        type: "string"
       options:
-          title: Options
-          description: Options
-          type: string
+        title: "Options"
+        description: "Options"
+        type: "string"
       timeout:
-        title: Time Out
-        description: Time Out
-        type: string
+        title: "Time Out"
+        description: "Time Out"
+        type: "string"
         default: "60000"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - pollEnrich:
-              timeout: "{{timeout}}"
-              simple:
-                expression: "{{path}}?{{options}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - pollEnrich:
+                timeout: "{{timeout}}"
+                simple:
+                  expression: "{{path}}?{{options}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

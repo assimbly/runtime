@@ -1,41 +1,56 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: logger-action
+  name: "logger-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "logger action"
-    description: |-
-      Logs a message using simple expressions
-    type: object
+    description: "Logs a message using simple expressions"
+    type: "object"
     properties:
       routeId:
-        title: routeId
-        description: path of component
-        type: string
-        default: dummy
+        title: "routeId"
+        description: "path of component"
+        type: "string"
+        default: "dummy"
       language:
-        title: Language
-        description: Set the expression language
-        type: string
-        default: constant
+        title: "Language"
+        description: "Set the expression language"
+        type: "string"
+        default: "constant"
       expression:
-        title: Expression
-        description: Set the content of the body
-        type: string
+        title: "Expression"
+        description: "Set the content of the body"
+        type: "string"
         default: "${body}"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - log:
-              logName: "{{routeId}}"
-              logLanguage: "{{language}}"
-              message: "{{expression}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - log:
+                logName: "{{routeId}}"
+                logLanguage: "{{language}}"
+                message: "{{expression}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

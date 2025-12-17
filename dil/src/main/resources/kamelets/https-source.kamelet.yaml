@@ -1,40 +1,59 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: https-source
+  name: "https-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "https source"
-    description: |-
-      Receives HTTP Requests
-    type: object
+    description: "Receives HTTP Requests"
+    type: "object"
     properties:
       path:
-        title: Path
-        description: Path of the URL
-        type: string
+        title: "Path"
+        description: "Path of the URL"
+        type: "string"
       matchOnUriPrefix:
-        title: MatchOnPrefix
-        description: Whether you would like to accept requests that start with the given URL.
-        type: boolean
+        title: "MatchOnPrefix"
+        description: "Whether you would like to accept requests that start with the\
+          \ given URL."
+        type: "boolean"
         default: false
       preserveHttpHeaders:
-        title: PreserveHttpHeaders
-        description: Whether to keep the CamelHttp* headers.
-        type: boolean
+        title: "PreserveHttpHeaders"
+        description: "Whether to keep the CamelHttp* headers."
+        type: "boolean"
         default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       streamCache: true
       from:
         uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
         steps:
-          - removeHeaders:
-              pattern: "CamelHttp*"
-              disabled: "{{preserveHttpHeaders}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - removeHeaders:
+                pattern: "CamelHttp*"
+                disabled: "{{preserveHttpHeaders}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

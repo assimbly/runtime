@@ -1,28 +1,46 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: edifacttoxml-action
+  name: "edifacttoxml-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
     title: "edifacttoxml action"
-    description: |-
-      Converts Edifact to XML
-    type: object
+    description: "Converts Edifact to XML"
+    type: "object"
     properties:
       options:
-          title: Options
-          description: Options
-          type: string
+        title: "Options"
+        description: "Options"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "dataformat:edifact:marshal?{{options}}"
-          - to:
-              uri: "kamelet:sink"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "dataformat:edifact:marshal?{{options}}"
+            - to:
+                uri: "{{out}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

@@ -1,26 +1,44 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: jsontoxmlsimple-sink
+  name: "jsontoxmlsimple-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "jsontoxmlsimple sink"
-    description: |-
-      Convert JSON to XML
-    type: object
+    description: "Convert JSON to XML"
+    type: "object"
     properties:
       options:
-          title: Options
-          description: Options
-          type: string
+        title: "Options"
+        description: "Options"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - to:
-              uri: "dataformat:custom-xmljson:unmarshal?{{options}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "dataformat:custom-xmljson:unmarshal?{{options}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

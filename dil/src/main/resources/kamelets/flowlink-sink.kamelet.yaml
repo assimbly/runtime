@@ -1,39 +1,58 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: flowlink-sink
+  name: "flowlink-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "flowlink sink"
-    description: |-
-      Links messages to another flow (outbound) using an endpoint like sync (direct), async (seda), activemq
-    type: object
+    description: "Links messages to another flow (outbound) using an endpoint like\
+      \ sync (direct), async (seda), activemq"
+    type: "object"
     properties:
       transport:
-        title: Transport
-        description: Transport
-        type: string
+        title: "Transport"
+        description: "Transport"
+        type: "string"
       targetFlowId:
-        title: TargetFlowID
-        description: Flow ID of the target flow
-        type: string
+        title: "TargetFlowID"
+        description: "Flow ID of the target flow"
+        type: "string"
       connectionFactory:
-        title: Connection Factory
-        description: Connection Factory
-        type: string
+        title: "Connection Factory"
+        description: "Connection Factory"
+        type: "string"
       exchangePattern:
-        title: Exchange Pattern
-        description: Exchange Pattern
-        type: string
-        default: InOut
+        title: "Exchange Pattern"
+        description: "Exchange Pattern"
+        type: "string"
+        default: "InOut"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - toD:
-              uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

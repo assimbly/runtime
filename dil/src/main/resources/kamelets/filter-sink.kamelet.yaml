@@ -1,32 +1,50 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: filter-sink
+  name: "filter-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
     title: "filter-sink"
-    description: |-
-      Filter message by an expression (XPath, Jsonpath or Simple)
-    type: object
+    description: "Filter message by an expression (XPath, Jsonpath or Simple)"
+    type: "object"
     properties:
       expression:
-          title: Expression
-          description: Expression
-          type: string
+        title: "Expression"
+        description: "Expression"
+        type: "string"
       language:
-        title: Language
-        description: Language
-        type: string
+        title: "Language"
+        description: "Language"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - filter:
-              language:
-                language: "{{language}}"
-                expression: "{{expression}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - filter:
+                language:
+                  language: "{{language}}"
+                  expression: "{{expression}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

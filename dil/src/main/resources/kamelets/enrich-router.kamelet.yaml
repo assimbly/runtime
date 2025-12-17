@@ -1,50 +1,69 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: enrich-router
+  name: "enrich-router"
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
   definition:
     title: "enrich router"
-    description: |-
-      Enrich message based on a chosen strategy (XML, JSON, Override, Add as zip, Add as attachemet)
-    type: object
+    description: "Enrich message based on a chosen strategy (XML, JSON, Override,\
+      \ Add as zip, Add as attachemet)"
+    type: "object"
     properties:
       out_enrich:
-          title: Out Enrich Endpoint
-          description: Out enrich endpoint
-          type: string
+        title: "Out Enrich Endpoint"
+        description: "Out enrich endpoint"
+        type: "string"
       out_default:
-          title: Out Default Endpoint
-          description: Out Default Endpoint
-          type: string
-          default: "mock:0"
+        title: "Out Default Endpoint"
+        description: "Out Default Endpoint"
+        type: "string"
+        default: "mock:0"
       enrichType:
-          title: Enrich Type
-          description: Type of enrichment
-          type: string
-          default: xml
+        title: "Enrich Type"
+        description: "Type of enrichment"
+        type: "string"
+        default: "xml"
       useErrorRoute:
-        title: Use Error Route
-        description: Error Route
-        type: string
-        default: text/xml
+        title: "Use Error Route"
+        description: "Error Route"
+        type: "string"
+        default: "text/xml"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - setProperty:
-              name: Enrich-Type
-              constant: "{{enrichType}}"
-          - setProperty:
-              name: Error-Route
-              constant: "{{useErrorRoute}}"
-          - enrich:
-              constant: "{{out_enrich}}"
-              aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
-          - to:
-              uri: "{{out_default}}"
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "Enrich-Type"
+                constant: "{{enrichType}}"
+            - setProperty:
+                name: "Error-Route"
+                constant: "{{useErrorRoute}}"
+            - enrich:
+                constant: "{{out_enrich}}"
+                aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
+            - to:
+                uri: "{{out_default}}"
+      routeConfigurationId: "{{routeConfigurationId}}"

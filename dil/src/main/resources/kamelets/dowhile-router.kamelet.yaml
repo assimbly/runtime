@@ -1,47 +1,65 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: dowhile-router
+  name: "dowhile-router"
   labels:
     camel.apache.org/kamelet.type: "dowhile-simple-router"
 spec:
   definition:
     title: "dowhile-router"
-    description: |-
-      Loops message based on a expression
-    type: object
+    description: "Loops message based on a expression"
+    type: "object"
     properties:
       language:
-        title: Expression
-        description: Expression
-        type: string
+        title: "Expression"
+        description: "Expression"
+        type: "string"
       expression:
-          title: Expression
-          description: Expression
-          type: string
+        title: "Expression"
+        description: "Expression"
+        type: "string"
       out_dowhile:
-        title: Out Dowhile Endpoint
-        description: Out Dowhile Endpoint
-        type: string
+        title: "Out Dowhile Endpoint"
+        description: "Out Dowhile Endpoint"
+        type: "string"
       out_default:
-        title: Out Default Endpoint
-        description: Out Default Endpoint
-        type: string
+        title: "Out Default Endpoint"
+        description: "Out Default Endpoint"
+        type: "string"
         default: "mock:0"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - loop:
-              doWhile: true
-              expression:
-                language:
-                  language: "{{language}}"
-                  expression: "{{expression}}"
-              steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - loop:
+                doWhile: true
+                expression:
+                  language:
+                    language: "{{language}}"
+                    expression: "{{expression}}"
+                steps:
                 - to: "{{out_dowhile}}"
-          - to:
-              uri: "{{out_default}}"
+            - to:
+                uri: "{{out_default}}"
+      routeConfigurationId: "{{routeConfigurationId}}"
