@@ -1,0 +1,43 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: delay-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "Delay sink"
+    description: Delay the processing using a specific amount of time
+    type: object
+    properties:
+      milliseconds:
+        title: "Milliseconds"
+        description: "The number of milliseconds of delay"
+        type: "integer"
+        default: 5000
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:core"
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "kamelet:source"
+        steps:
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - delay:
+                  constant: "{{milliseconds}}"

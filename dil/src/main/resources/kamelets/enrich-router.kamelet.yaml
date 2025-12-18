@@ -49,6 +49,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -66,4 +67,3 @@ spec:
                 aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"
             - to:
                 uri: "{{out_default}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

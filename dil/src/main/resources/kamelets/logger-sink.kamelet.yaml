@@ -1,24 +1,30 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "flv-sink"
+  name: "logger-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "flv sink"
-    description: "Transform FLV (Fixed length)"
+    title: "logger sink"
+    description: "Logs a message using simple expressions"
     type: "object"
     properties:
       routeId:
         title: "routeId"
-        description: "ID of route (flowId + stepId)"
+        description: "path of component"
         type: "string"
         default: "dummy"
-      options:
-        title: "options (query parameterS)"
-        description: "Endpoint URI"
+      language:
+        title: "Language"
+        description: "Set the expression language"
         type: "string"
+        default: "constant"
+      expression:
+        title: "Expression"
+        description: "Set the content of the body"
+        type: "string"
+        default: "${body}"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -42,5 +48,7 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - to:
-                uri: "flv:{{routeId}}?{{?options}}"
+            - log:
+                logName: "{{routeId}}"
+                logLanguage: "{{language}}"
+                message: "{{expression}}"

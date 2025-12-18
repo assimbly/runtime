@@ -47,6 +47,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -65,4 +66,3 @@ spec:
                   constant: "true"
             - to:
                 uri: "mock:result"
-      routeConfigurationId: "{{routeConfigurationId}}"

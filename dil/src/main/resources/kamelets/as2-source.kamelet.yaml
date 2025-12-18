@@ -33,6 +33,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "as2://server/listen?{{?options}}"
         steps:
@@ -41,4 +42,3 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

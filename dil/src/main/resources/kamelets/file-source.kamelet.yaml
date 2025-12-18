@@ -38,6 +38,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "file://{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
@@ -46,4 +47,4 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"
+

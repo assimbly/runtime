@@ -44,6 +44,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -56,4 +57,3 @@ spec:
                   useMaps: "{{useMaps}}"
             - to:
                 uri: "csvtoxml://?encoding={{encoding}}"
-      routeConfigurationId: "{{routeConfigurationId}}"
