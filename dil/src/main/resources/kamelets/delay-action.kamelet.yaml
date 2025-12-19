@@ -40,6 +40,6 @@ spec:
               id: "{{routeId}}"
               steps:
                 - delay:
-                  constant: "{{milliseconds}}"
+                    constant: "{{milliseconds}}"
                 - to:
-                  uri: "{{out}}"
+                    uri: "{{out}}"
