@@ -34,6 +34,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -45,4 +46,3 @@ spec:
                 constant: "{{headers}}"
             - process:
                 ref: "SetHeadersProcessor"
-      routeConfigurationId: "{{routeConfigurationId}}"

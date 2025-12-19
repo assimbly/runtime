@@ -71,6 +71,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -81,4 +82,3 @@ spec:
                 pattern: "InOnly"
             - to:
                 uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

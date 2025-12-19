@@ -43,6 +43,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -62,4 +63,3 @@ spec:
                 ref: "SetBodyProcessor"
             - process:
                 ref: "SetHeadersProcessor"
-      routeConfigurationId: "{{routeConfigurationId}}"

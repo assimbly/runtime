@@ -53,6 +53,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -63,4 +64,3 @@ spec:
                 uri: "bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

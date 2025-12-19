@@ -1,23 +1,18 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "removetenantvariable-action"
+  name: "jsonata-sink"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "remove tenant variable action"
-    description: "remove tenant variable from mongodb"
+    title: "JSONata sink"
+    description: "Apply JSONata template on a message"
     type: "object"
     properties:
       path:
-        title: "path"
-        description: "path of the URI (tenant variable name)"
-        type: "string"
-        default: "dummy"
-      tenantDbName:
-        title: "TenantDbName"
-        description: "Tenant dbname of the tenant variable"
+        title: "Path"
+        description: "Path"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -45,7 +40,5 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - toD:
-                uri: "tenantvariables://{{path}}?operation=DELETE&tenantDbName={{tenantDbName}}"
             - to:
-                uri: "{{out}}"
+                uri: "jsonata:{{path}}"

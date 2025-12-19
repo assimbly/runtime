@@ -82,6 +82,7 @@ spec:
     - name: "ExtendedHeaderFilterStrategy"
       type: "#class:org.assimbly.util.mail.ExtendedHeaderFilterStrategy"
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -92,4 +93,3 @@ spec:
                 uri: "{{scheme}}://{{path}}?accessToken=RAW({{?accessToken}})&authenticationType=RAW({{?authenticationType}})&username=RAW({{username}})&password=RAW({{password}})&from=RAW({{?from}})&subject=RAW({{subject}})&to=RAW({{to}})&replyTo=RAW({{?replyTo}})&tenantDbName=RAW({{?tenantDbName}})&mail.smtp.starttls.enable=true&headerFilterStrategy=#{{ExtendedHeaderFilterStrategy}}"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

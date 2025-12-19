@@ -1,13 +1,13 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "setbodyasbytes-action"
+  name: "setbodyasstring-sink"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "setbodyasstring action"
-    description: "Set body as a bytes[] type"
+    title: "setbodyasstring sink"
+    description: "Set body as a string type"
     type: "object"
     properties:
       in:
@@ -29,6 +29,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -36,7 +37,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - convertBodyTo:
-                type: "bytes[]"
-            - to:
-                uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"
+                type: "java.lang.String"

@@ -73,6 +73,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -83,4 +84,3 @@ spec:
                 uri: "sql-custom://?host={{host}}&port={{port}}&username={{username}}&password=RAW({{password}})&database={{database}}&connectionType={{connectionType}}&useSSL={{useSSL}}&tlsVersion={{tlsVersion}}&escapeChars={{escapeChars}}&query=RAW({{query}})"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

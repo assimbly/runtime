@@ -117,6 +117,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -183,4 +184,3 @@ spec:
                     simple: "${body}"
             - setBody:
                 simple: "${exchangeProperty.Enrich-Response}"
-      routeConfigurationId: "{{routeConfigurationId}}"

@@ -39,6 +39,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -49,4 +50,3 @@ spec:
                 language:
                   language: "{{language}}"
                   expression: "{{expression}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

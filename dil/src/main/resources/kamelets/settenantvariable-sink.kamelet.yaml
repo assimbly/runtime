@@ -61,6 +61,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -69,4 +70,4 @@ spec:
             steps:
             - toD:
                 uri: "tenantvariables://{{path}}?operation=SET&language={{language}}&value=RAW({{value}})&encrypt={{encrypt}}&groupName=RAW({{groupName}})&flowName=RAW({{flowName}})&tenantDbName=RAW({{tenantDbName}})"
-      routeConfigurationId: "{{routeConfigurationId}}"
+

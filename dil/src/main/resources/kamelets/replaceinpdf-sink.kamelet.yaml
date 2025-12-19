@@ -37,6 +37,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -45,4 +46,3 @@ spec:
             steps:
             - to:
                 uri: "pdf-transform://{{path}}?{{options}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

@@ -42,6 +42,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "timer:{{path}}?repeatCount={{repeatCount}}&period={{period}}"
         steps:
@@ -50,4 +51,3 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

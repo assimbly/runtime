@@ -29,6 +29,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -37,4 +38,3 @@ spec:
             steps:
             - setBody:
                 groovy: "headers.collect { k, v -> \"$k=$v\" }.join(',')"
-      routeConfigurationId: "{{routeConfigurationId}}"
