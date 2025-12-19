@@ -30,10 +30,22 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -913,134 +925,174 @@ public class FlowManager {
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if(entry.getKey().startsWith("route") && entry.getValue().contains("from uri=\"as2://server/listen")) {
+            if (!entry.getKey().endsWith(".routetemplate") || !entry.getValue().contains("routeTemplateRef=\"as2-source\"")) {
+                continue;
+            }
 
-                try {
-                    // Step 1: Extract the URI string from the XML
-                    Pattern uriPattern = Pattern.compile("from uri=\"([^\"]+)\"");
-                    Matcher matcher = uriPattern.matcher(entry.getValue());
+            try {
+                // ---------- Parse XML ----------
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                dbf.setNamespaceAware(true);
+                DocumentBuilder db = dbf.newDocumentBuilder();
 
-                    if (!matcher.find()) {
-                        continue;
-                    }
+                Document doc = db.parse(
+                        new InputSource(new StringReader(entry.getValue()))
+                );
 
-                    // Step 2: Unescape the URI string
-                    String originalUri = matcher.group(1);
-                    String unescapedUri = originalUri.replace("&amp;", "&");
-                    String cleanedUri = unescapedUri.replaceAll("\\s+", "");
+                Element root = doc.getDocumentElement();
+                Element templatedRoute = (Element)
+                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
 
-                    // Step 3: Parse the URI parameters
-                    int queryStartIndex = cleanedUri.indexOf("?");
-                    String baseUri = cleanedUri.substring(0, queryStartIndex);
-                    String query = (queryStartIndex != -1) ? cleanedUri.substring(queryStartIndex + 1) : "";
-
-                    if (query == null) {
-                        continue;
-                    }
-
-                    String[] params = query.split("&(?![^()]*\\))");
-
-                    // First pass: extract all necessary info and bind the beans
-                    String uniqueId = UUID.randomUUID().toString();
-                    Map<String, String> boundParams = new LinkedHashMap<>();
-                    Class<?> as2KeyBeanClass = AS2KeyProcessor.class; // AS2KeyBean.class;
-
-                    // Collect all parameters
-                    Map<String, String> allParams = new LinkedHashMap<>();
-                    for (String param : params) {
-                        String[] parts = param.split("=", 2);
-                        allParams.put(parts[0], parts.length > 1 ? parts[1] : "");
-                    }
-
-                    // Extract and clean password and alias
-                    String password = allParams.getOrDefault("password", "");
-                    if (password.startsWith("RAW(") && password.endsWith(")")) {
-                        password = password.substring(4, password.length() - 1);
-                    }
-                    password = URLDecoder.decode(password, "UTF-8");
-
-                    String alias = allParams.getOrDefault("alias", "");
-                    if (alias.startsWith("RAW(") && alias.endsWith(")")) {
-                        alias = alias.substring(4, alias.length() - 1);
-                    }
-                    alias = URLDecoder.decode(alias, "UTF-8");
-
-                    AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
-
-                    for (Map.Entry<String, String> paramEntry : allParams.entrySet()) {
-                        String key = paramEntry.getKey();
-                        String value = paramEntry.getValue();
-
-                        boolean signingCertificateChainFlag = key.equals("signingCertificateChain");
-                        boolean signingPrivateKeyFlag = key.equals("signingPrivateKey");
-                        boolean decryptingPrivateKeyFlag = key.equals("decryptingPrivateKey");
-                        boolean validateSigningCertificateChainFlag = key.equals("validateSigningCertificateChain");
-
-                        if (signingCertificateChainFlag || signingPrivateKeyFlag || decryptingPrivateKeyFlag || validateSigningCertificateChainFlag) {
-                            String beanId = key + "-" + uniqueId;
-
-                            String trimmedValue = value.trim();
-                            // Check for RAW(...) syntax
-                            if (trimmedValue.startsWith("RAW(") && trimmedValue.endsWith(")")) {
-                                value = trimmedValue.substring(4, trimmedValue.length() - 1);
-                            } else {
-                                // If not found, use the original trimmed value
-                                value = trimmedValue;
-                            }
-
-                            Object keyObject = null;
-
-                            if (signingCertificateChainFlag) {
-                                keyObject = as2KeyProcessor.getSigningCertificateChain(new URI(value), password, alias);
-                                // set signingAlgorithm param with the same certificate algorithm
-                                boundParams.put("signingAlgorithm", as2KeyProcessor.getSigningAlgorithm((java.security.cert.Certificate[]) keyObject));
-                            } else if(signingPrivateKeyFlag) {
-                                keyObject = as2KeyProcessor.getSigningPrivateKey(new URI(value), password, alias);
-                            } else if(decryptingPrivateKeyFlag) {
-                                keyObject = as2KeyProcessor.getDecryptingPrivateKey(new URI(value), password, alias);
-                            } else if(validateSigningCertificateChainFlag) {
-                                keyObject = as2KeyProcessor.getValidateSigningCertificateChain(new URI(value));
-                            }
-
-                            this.context.getRegistry().bind(beanId, keyObject);
-                            boundParams.put(key, "#" + beanId);
-                        } else {
-                            boundParams.put(key, value);
-                        }
-                    }
-
-                    // Second pass: rebuild the URI without password and alias
-                    StringBuilder newQuery = new StringBuilder();
-                    boolean firstParam = true;
-                    for (Map.Entry<String, String> paramEntry : boundParams.entrySet()) {
-                        String key = paramEntry.getKey();
-                        String value = paramEntry.getValue();
-
-                        if (!key.equals("password") && !key.equals("alias")) {
-                            if (!firstParam) {
-                                newQuery.append("&");
-                            }
-                            newQuery.append(key).append("=").append(value);
-                            firstParam = false;
-                        }
-                    }
-
-                    String newUriString = baseUri + "?" + newQuery;
-                    String updatedXml = matcher.replaceFirst(
-                            Matcher.quoteReplacement("from uri=\"" + newUriString.replace("&", "&amp;") + "\"")
-                    );
-
-                    entry.setValue(updatedXml);
-
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                    // Handle the error appropriately
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    // Handle reflection exceptions
+                if (templatedRoute == null) {
+                    continue;
                 }
+
+                // ---------- Collect parameter elements ----------
+                Map<String, Element> paramElements = new LinkedHashMap<>();
+                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
+
+                for (int i = 0; i < params.getLength(); i++) {
+                    Element p = (Element) params.item(i);
+                    paramElements.put(p.getAttribute("name"), p);
+                }
+
+                // ---------- Extract parameter values ----------
+                Map<String, String> allParams = new LinkedHashMap<>();
+                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
+                    String value = e.getValue()
+                            .getAttribute("value")
+                            .replace("&amp;", "&")
+                            .trim();
+                    allParams.put(e.getKey(), value);
+                }
+
+                // ---------- Extract password & alias ----------
+                String password = cleanRaw(allParams.get("password"));
+                String alias = cleanRaw(allParams.get("alias"));
+
+                // ---------- Bind keys and rebuild params ----------
+                Set<String> securityParams = Set.of(
+                        "signingPrivateKey",
+                        "decryptingPrivateKey",
+                        "signingCertificateChain",
+                        "validateSigningCertificateChain"
+                );
+
+                String uniqueId = UUID.randomUUID().toString();
+                Map<String, String> boundParams = new LinkedHashMap<>();
+
+                AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
+
+                for (Map.Entry<String, String> e : allParams.entrySet()) {
+                    String key = e.getKey();
+                    String value = e.getValue();
+
+                    if (securityParams.contains(key)) {
+
+                        String beanId = key + "-" + uniqueId;
+                        String cleanedValue = cleanRaw(value);
+                        Object keyObject;
+
+                        switch (key) {
+                            case "signingCertificateChain":
+                                keyObject = as2KeyProcessor.getSigningCertificateChain(
+                                        new URI(cleanedValue), password, alias);
+                                boundParams.put(
+                                        "signingAlgorithm",
+                                        as2KeyProcessor.getSigningAlgorithm(
+                                                (java.security.cert.Certificate[]) keyObject));
+                                break;
+
+                            case "signingPrivateKey":
+                                keyObject = as2KeyProcessor.getSigningPrivateKey(
+                                        new URI(cleanedValue), password, alias);
+                                break;
+
+                            case "decryptingPrivateKey":
+                                keyObject = as2KeyProcessor.getDecryptingPrivateKey(
+                                        new URI(cleanedValue), password, alias);
+                                break;
+
+                            default:
+                                keyObject = as2KeyProcessor.getValidateSigningCertificateChain(
+                                        new URI(cleanedValue));
+                        }
+
+                        context.getRegistry().bind(beanId, keyObject);
+                        boundParams.put(key, "#" + beanId);
+
+                    } else {
+                        boundParams.put(key, value);
+                    }
+                }
+
+                // ---------- Rebuild query ----------
+                StringBuilder newQuery = new StringBuilder();
+                boolean first = true;
+
+                for (Map.Entry<String, String> e : boundParams.entrySet()) {
+                    String key = e.getKey();
+
+                    if (key.equals("password") || key.equals("alias")) {
+                        continue;
+                    }
+
+                    if (!first) newQuery.append("&");
+                    newQuery.append(key).append("=").append(e.getValue());
+                    first = false;
+                }
+
+                String escapedQuery = newQuery.toString().replace("&", "&amp;");
+
+                // ---------- Write back to XML ----------
+                if (paramElements.containsKey("uri")) {
+                    paramElements.get("uri")
+                            .setAttribute("value", "as2?" + escapedQuery);
+                }
+
+                if (paramElements.containsKey("options")) {
+                    paramElements.get("options")
+                            .setAttribute("value", escapedQuery);
+                }
+
+                for (String sec : securityParams) {
+                    if (paramElements.containsKey(sec)) {
+                        paramElements.get(sec)
+                                .setAttribute("value",
+                                        boundParams.get(sec).replace("&", "&amp;"));
+                    }
+                }
+
+                // Remove sensitive parameters
+                if (paramElements.containsKey("password")) {
+                    templatedRoute.removeChild(paramElements.get("password"));
+                }
+                if (paramElements.containsKey("alias")) {
+                    templatedRoute.removeChild(paramElements.get("alias"));
+                }
+
+                // ---------- Serialize XML ----------
+                Transformer tf = TransformerFactory.newInstance().newTransformer();
+                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+                StringWriter sw = new StringWriter();
+                tf.transform(new DOMSource(doc), new StreamResult(sw));
+
+                entry.setValue(sw.toString());
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+    }
+
+    private String cleanRaw(String value) throws Exception {
+        if (value == null) return "";
+        if (value.startsWith("RAW(") && value.endsWith(")")) {
+            value = value.substring(4, value.length() - 1);
+        }
+        return URLDecoder.decode(value, "UTF-8");
     }
 
     private Map<String, String> stringToMap(String input) {

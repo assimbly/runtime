@@ -10,6 +10,47 @@ spec:
     description: "AS2 endpoint that accepts and processes inbound AS2 transmissions"
     type: "object"
     properties:
+      serverPortNumber:
+        title: ServerPortNumber
+        description: ServerPortNumber
+        type: string
+        default: "9002"
+      requestUriPattern:
+        title: RequestUriPattern
+        description: RequestUriPattern
+        type: string
+      as2From:
+        title: As2From
+        description: As2From
+        type: string
+      as2To:
+        title: As2To
+        description: As2To
+        type: string
+      serverFqdn:
+        title: ServerFqdn
+        description: ServerFqdn
+        type: string
+      as2MessageStructure:
+        title: As2MessageStructure
+        description: As2MessageStructure
+        type: string
+      signingPrivateKey:
+        title: SigningPrivateKey
+        description: signingPrivateKey
+        type: string
+      decryptingPrivateKey:
+        title: DecryptingPrivateKey
+        description: DecryptingPrivateKey
+        type: string
+      signingCertificateChain:
+        title: SigningCertificateChain
+        description: SigningCertificateChain
+        type: string
+      validateSigningCertificateChain:
+        title: ValidateSigningCertificateChain
+        description: ValidateSigningCertificateChain
+        type: string
       options:
         title: "options (query parameters)"
         description: "Endpoint URI"
@@ -35,7 +76,17 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "as2://server/listen?{{?options}}"
+        uri: >-
+          as2://server/listen?serverPortNumber={{serverPortNumber}}
+          &requestUriPattern={{requestUriPattern}}
+          &as2From={{as2From}}
+          &as2To={{as2To}}
+          &serverFqdn={{serverFqdn}}
+          &as2MessageStructure={{as2MessageStructure}}
+          &signingPrivateKey=RAW({{?signingPrivateKey}})
+          &decryptingPrivateKey=RAW({{?decryptingPrivateKey}})
+          &signingCertificateChain=RAW({{?signingCertificateChain}})
+          &validateSigningCertificateChain=RAW({{?validateSigningCertificateChain}})
         steps:
         - step:
             id: "{{routeId}}"

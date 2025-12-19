@@ -10,9 +10,67 @@ spec:
     description: "Sends documents to a partner using the AS2 protocol"
     type: "object"
     properties:
-      options:
-        title: "options (query parameters)"
-        description: "Endpoint URI"
+      hostName:
+        title: HostName
+        description: HostName
+        type: "string"
+      targetPortNumber:
+        title: TargetPortNumber
+        description: TargetPortNumber
+        type: "string"
+      requestUri:
+        title: RequestUri
+        description: RequestUri
+        type: string
+      as2From:
+        title: As2From
+        description: As2From
+        type: string
+      as2To:
+        title: As2To
+        description: As2To
+        type: string
+      subject:
+        title: Subject
+        description: Subject
+        type: string
+      as2MessageStructure:
+        title: As2MessageStructure
+        description: As2MessageStructure
+        type: "string"
+      ediMessageContentType:
+        title: EdiMessageContentType
+        description: EdiMessageContentType
+        type: "string"
+      encryptingAlgorithm:
+        title: EncryptingAlgorithm
+        description: EncryptingAlgorithm
+        type: "string"
+      signingAlgorithm:
+        title: SigningAlgorithm
+        description: SigningAlgorithm
+        type: "string"
+      sslContext:
+        title: SslContext
+        description: SslContext
+        type: "string"
+      password:
+        title: Password
+        description: Password
+        type: "string"
+        x-descriptors:
+          - "urn:camel:group:credentials"
+      alias:
+        title: Alias
+        description: Alias
+        type: "string"
+      certificateForSigning:
+        title: CertificateForSigning
+        description: CertificateForSigning
+        type: "string"
+      certificateForEncrypt:
+        title: CertificateForEncrypt
+        description: CertificateForEncrypt
         type: "string"
       in:
         title: "Source Endpoint"
@@ -40,8 +98,43 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
+            - setProperty:
+                name: "messageStructure"
+                constant: "{{as2MessageStructure}}"
+            - setProperty:
+                name: "keyPassword"
+                constant: "{{password}}"
+            - setProperty:
+                name: "keyAlias"
+                constant: "{{alias}}"
+            - setProperty:
+                name: "certificateForSigning"
+                constant: "{{certificateForSigning}}"
+            - setProperty:
+                name: "certificateForEncrypt"
+                constant: "{{certificateForEncrypt}}"
+            - process:
+                ref: "AS2KeyProcessor"
             - to:
-                uri: "as2://client/send?{{?options}}"
+                uri: >-
+                  as2://client/send?inBody=ediMessage
+                  &targetHostname={{hostName}}
+                  &targetPortNumber={{targetPortNumber}}
+                  &requestUri={{requestUri}}
+                  &as2From={{as2From}}
+                  &as2To={{as2To}}
+                  &subject=RAW({{subject}})
+                  &from={{as2From}}
+                  &dispositionNotificationTo=test
+                  &as2MessageStructure={{as2MessageStructure}}
+                  &ediMessageContentType={{ediMessageContentType}}
+                  &methodName=send&encryptingAlgorithm={{encryptingAlgorithm}}
+                  &signingAlgorithm={{signingAlgorithm}}
+                  &exchangePattern=InOut
+                  &sslContext={{?sslContext}}
+                  &hostnameVerifier=#permissiveHostnameVerifier
+            - process:
+                ref: "AS2MDNProcessor"
             - to:
                 uri: "{{out}}"
 
