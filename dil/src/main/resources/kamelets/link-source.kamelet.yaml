@@ -29,6 +29,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "kamelet:source"
         steps:
@@ -37,4 +38,3 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

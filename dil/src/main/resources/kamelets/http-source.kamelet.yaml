@@ -33,6 +33,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding"
         steps:
@@ -43,4 +44,3 @@ spec:
                 pattern: "CamelHttp*"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

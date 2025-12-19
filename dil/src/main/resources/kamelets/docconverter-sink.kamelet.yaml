@@ -10,10 +10,11 @@ spec:
     description: "Convert between various formats (XML, JSON, YAML and CSV)"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
+      convert:
+        title: "Convert"
+        description: "Convert dataformat to another"
         type: "string"
+        default: "xmltojson"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -40,5 +41,5 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - to:
-                uri: "docconverter:{{path}}"
+              - to:
+                  uri: "docconverter:{{convert}}"

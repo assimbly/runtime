@@ -38,6 +38,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -61,4 +62,3 @@ spec:
                       constant: "{{path}}"
             - process:
                 ref: "multipartProcessor"
-      routeConfigurationId: "{{routeConfigurationId}}"

@@ -43,6 +43,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{scheme}}://{{path}}?{{?options}}"
         steps:
@@ -51,4 +52,3 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

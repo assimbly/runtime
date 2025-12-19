@@ -10,9 +10,9 @@ spec:
     description: "Set header from body"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
+      headerName:
+        title: "HeaderName"
+        description: "Name of the header"
         type: "string"
         default: "body"
       in:
@@ -41,7 +41,7 @@ spec:
             id: "{{routeId}}"
             steps:
             - setHeader:
-                name: "{{path}}"
+                name: "{{headerName}}"
                 simple: "${body}"
             - to:
                 uri: "{{out}}"

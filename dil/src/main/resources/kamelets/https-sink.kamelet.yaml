@@ -137,6 +137,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -231,4 +232,3 @@ spec:
                             ref: "SetOriginalMessageProcessor"
             - removeHeaders:
                 pattern: "user-agent|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
-      routeConfigurationId: "{{routeConfigurationId}}"

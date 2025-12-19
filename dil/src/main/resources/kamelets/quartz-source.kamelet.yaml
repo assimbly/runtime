@@ -45,6 +45,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "quartz:{{path}}?cron={{cron}}&trigger.timeZone={{timeZone}}"
         steps:
@@ -53,4 +54,3 @@ spec:
             steps:
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

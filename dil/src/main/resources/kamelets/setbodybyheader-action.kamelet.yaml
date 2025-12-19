@@ -10,9 +10,9 @@ spec:
     description: "Set body from a header"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
+      headerName:
+        title: "HeaderName"
+        description: "Name of the header"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -33,6 +33,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -40,7 +41,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - setBody:
-                header: "{{path}}"
+                header: "{{headerName}}"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

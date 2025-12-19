@@ -1,4 +1,4 @@
-apiVersion: "camel.apache.org/v1"
+sapiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
   name: "setheaderbybody-sink"
@@ -10,9 +10,9 @@ spec:
     description: "Set header from body"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
+      headerName:
+        title: "HeaderName"
+        description: "Name of the header"
         type: "string"
         default: "body"
       in:
@@ -34,6 +34,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -41,6 +42,5 @@ spec:
             id: "{{routeId}}"
             steps:
             - setHeader:
-                name: "{{path}}"
+                name: "{{headerName}}"
                 simple: "${body}"
-      routeConfigurationId: "{{routeConfigurationId}}"

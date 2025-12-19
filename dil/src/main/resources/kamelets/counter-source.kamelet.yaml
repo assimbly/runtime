@@ -1,0 +1,52 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: counter-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Counter Source"
+    description: "Generates sequential number events starting from a configurable value, incrementing by a specified step. Useful for testing, scheduled tasks, or creating ordered event sequences."
+    type: object
+    properties:
+      period:
+        title: Period
+        description: The time interval between two numbers
+        type: integer
+        default: 1000
+      start:
+        title: Starting Number
+        description: The starting number
+        type: integer
+        default: 1
+      numbers:
+        title: Numbers
+        description: How many numbers to generate
+        type: integer
+  dependencies:
+    - "camel:timer"
+    - "camel:core"
+    - "camel:bean"
+    - "camel:kamelet"
+  template:
+    beans:
+      - name: counter
+        type: java.util.concurrent.atomic.AtomicInteger
+        constructors:
+          "0": "{{start}}"
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "timer:counter"
+        parameters:
+          period: "{{period}}"
+          repeatCount: "{{?numbers}}"
+        steps:
+          - bean:
+              ref: "{{counter}}"
+              method: getAndIncrement
+          - setHeader:
+              name: "Content-Type"
+              constant: "text/plain"
+          - to: "{{out}}"

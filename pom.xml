@@ -31,7 +31,7 @@
 
     <properties>
 
-        <maven-api.version>3.9.11</maven-api.version>
+        <maven-api.version>3.9.12</maven-api.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
@@ -79,7 +79,7 @@
         <postgresql.version>42.7.8</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
         <spring.version>6.2.14</spring.version>
-        <spring-boot.version>3.5.8</spring-boot.version>
+        <spring-boot.version>3.5.9</spring-boot.version>
         <spring-data.version>3.5.7</spring-data.version>
         <springdoc.version>2.8.14</springdoc.version>
         <tika.version>1.28.5</tika.version>

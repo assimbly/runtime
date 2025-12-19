@@ -38,6 +38,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -46,4 +47,3 @@ spec:
             steps:
             - to:
                 uri: "googledrive://{{path}}?{{options}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

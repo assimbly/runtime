@@ -98,6 +98,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "imaps:{{path}}?authenticationType=RAW({{authenticationType}})&username=RAW({{username}})&password=RAW({{?password}})&accessToken=RAW({{?accessToken}})&tenantDbName=RAW({{?tenantDbName}})&fetchSize={{fetchSize}}&delay={{delay}}&searchTerm.subject={{?searchSubject}}&searchTerm.body={{?searchBody}}&searchTerm.from={{?searchFrom}}&searchTerm.to={{?searchTo}}&unseen={{unseen}}&bridgeErrorHandler=true"
         steps:
@@ -108,4 +109,3 @@ spec:
                 type: "java.lang.String"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

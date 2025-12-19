@@ -39,6 +39,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
@@ -57,4 +58,3 @@ spec:
                 uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

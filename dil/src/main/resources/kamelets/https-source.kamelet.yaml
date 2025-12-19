@@ -44,6 +44,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       streamCache: true
       from:
         uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
@@ -56,4 +57,3 @@ spec:
                 disabled: "{{preserveHttpHeaders}}"
             - to:
                 uri: "{{out}}"
-      routeConfigurationId: "{{routeConfigurationId}}"

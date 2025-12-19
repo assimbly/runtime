@@ -33,6 +33,7 @@ spec:
   - "camel:kamelet"
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "kamelet:source"
         steps:
@@ -43,4 +44,3 @@ spec:
                 uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
             - to:
                 uri: "kamelet:sink"
-      routeConfigurationId: "{{routeConfigurationId}}"
