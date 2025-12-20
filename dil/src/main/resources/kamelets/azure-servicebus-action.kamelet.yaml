@@ -1,0 +1,77 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: azure-servicebus-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "Azure Servicebus Sink"
+    description: Send Messages to Azure Servicebus.
+    required:
+      - topicOrQueueName
+      - connectionString
+    type: object
+    properties:
+      topicOrQueueName:
+        title: Topic Or Queue Name
+        description: Topic Or Queue Name for the Azure Servicebus instance
+        type: string
+      connectionString:
+        title: Connection String
+        description: Connection String for Azure Servicebus instance
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      serviceBusType:
+        title: Servicebus Type
+        description: The service bus type of connection to execute. Queue is for typical queue option and topic for subscription based model.
+        type: string
+        default: queue
+        enum: ["queue", "topic"]
+      credentialType:
+        title: Credential Type
+        description: Determines the credential strategy to adopt.
+        type: string
+        enum: ["AZURE_IDENTITY", "CONNECTION_STRING", "TOKEN_CREDENTIAL"]
+        default: "CONNECTION_STRING"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  types:
+    in:
+      mediaType: application/octet-stream
+  dependencies:
+    - "camel:azure-servicebus"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "azure-servicebus:{{topicOrQueueName}}"
+                parameters:
+                  connectionString: "{{connectionString}}"
+                  serviceBusType: "{{serviceBusType}}"
+                  producerOperation: "sendMessages"
+                  credentialType: "{{credentialType}}"
+            - to: "{out}}"                              

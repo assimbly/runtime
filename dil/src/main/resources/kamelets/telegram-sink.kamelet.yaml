@@ -1,0 +1,109 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: telegram-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "Telegram Sink"
+    description: Send a message to a Telegram chat by using your Telegram bot as sender.
+    required:
+      - authorizationToken
+    type: object
+    properties:
+      authorizationToken:
+        title: Token
+        description: "The token to access your bot on Telegram. You you can obtain it from the Telegram @botfather."
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      chatId:
+        title: Chat ID
+        description: The Chat ID to where you want to send messages by default.
+        type: string
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  types:
+    out:
+      mediaType: application/json
+  dependencies:
+    - "camel:core"
+    - "camel:jackson"
+    - "camel:kamelet"
+    - "camel:telegram"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:      
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:            
+            - choice:
+                when:
+                - simple: "${header[Content-Type]} == 'image/png'"
+                  steps:
+                  - convertBodyTo:
+                      type: "byte[]"
+                  - setHeader:
+                      name: CamelTelegramMediaType
+                      constant: PHOTO_PNG
+                - simple: "${header[Content-Type]} == 'image/jpeg'"
+                  steps:
+                  - convertBodyTo:
+                      type: "byte[]"
+                  - setHeader:
+                      name: CamelTelegramMediaType
+                      constant: PHOTO_JPG
+                otherwise:
+                  steps:
+                  - convertBodyTo:
+                      type: "java.lang.String"
+            - choice:
+                when:
+                - simple: "${header[text]}"
+                  steps:
+                  - setHeader:
+                      name: CamelTelegramMediaTitleCaption
+                      simple: "${header[text]}"
+                - simple: "${header[ce-text]}"
+                  steps:
+                  - setHeader:
+                      name: CamelTelegramMediaTitleCaption
+                      simple: "${header[ce-text]}"
+            - choice:
+                when:
+                - simple: "${header[chat-id]}"
+                  steps:
+                  - setHeader:
+                      name: CamelTelegramChatId
+                      simple: "${header[chat-id]}"
+                - simple: "${header[ce-chatid]}"
+                  steps:
+                  - setHeader:
+                      name: CamelTelegramChatId
+                      simple: "${header[ce-chatid]}"
+            - to:
+                uri: "telegram:bots"
+                parameters:
+                  authorizationToken: "{{authorizationToken}}"
+                  chatId: "{{?chatId}}"
+            - marshal:
+                json: {}
+        

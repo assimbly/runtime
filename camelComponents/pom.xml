@@ -58,6 +58,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jslt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-jsonata</artifactId>
         </dependency>
         <dependency>
@@ -83,6 +87,10 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-rest-openapi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>

@@ -1,20 +1,15 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "rest-action"
+  name: "restopenapi-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "rest action"
-    description: "Calls a REST Endpoint"
+    title: "restopenapi action"
+    description: "Configures rest producers from OpenApi (Open API) specification document."
     type: "object"
     properties:
-      method:
-        title: "Method"
-        description: "HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH,\
-          \ CONNECT)"
-        type: "string"
       path:
         title: "Path"
         description: "Path"
@@ -50,6 +45,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - to:
-                uri: "rest:{{method}}:{{path}}?{{?options}}"
+                uri: "rest-openapi:{{path}}?{{?options}}"
             - to:
                 uri: "{{out}}"

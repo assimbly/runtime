@@ -1,0 +1,115 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: elasticsearch-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "ElasticSearch Source"
+    description: Search data on ElasticSearch
+    required:
+      - query
+      - clusterName
+      - indexName
+      - hostAddresses
+    type: object
+    properties:
+      period:
+        title: Period
+        description: The time interval between two searches
+        type: integer
+        default: 1000
+      query:
+        title: Query
+        description: The query we want to use to search on ElasticSearch.
+        type: string
+      user:
+        title: Username
+        description: Username to connect to ElasticSearch.
+        type: string
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: Password
+        description: Password to connect to ElasticSearch.
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      enableSSL:
+        title: Enable SSL
+        description: Do we want to connect using SSL?
+        type: boolean
+        default: true
+      hostAddresses:
+        title: Host Addresses
+        description: Comma separated list with ip:port formatted remote transport addresses to use.
+        type: string
+      indexName:
+        title: Index in ElasticSearch
+        description: The name of the index to act against.
+        type: string
+      clusterName:
+        title: ElasticSearch Cluster Name
+        description: The name of the cluster.
+        type: string
+      certificate:
+        title: Certificate 
+        description: The Certificate for accessing the Elasticsearch cluster. You must encode this value in base64.
+        type: string
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  types:
+    out:
+      mediaType: application/json
+  dependencies:
+      - "camel:core"
+      - "camel:kamelet"
+      - "camel:timer"
+      - "camel:elasticsearch"
+      - "camel:gson"
+  template:
+    beans:
+      - name: local-es
+        type: "#class:org.apache.camel.component.es.ElasticsearchComponent"
+        properties:
+            user: "{{?user}}"
+            password: "{{?password}}"
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: timer:tick      
+        parameters:
+          period: "{{period}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setBody:            
+                constant: "{{query?nested=false}}"
+            - to:
+                uri: "{{local-es}}:{{clusterName}}"
+                parameters:
+                  operation: "SEARCH"
+                  indexName: "{{indexName}}"
+                  hostAddresses: "{{hostAddresses}}"
+                  enableSSL: "{{enableSSL}}"
+                  certificatePath: "base64:{{?certificate}}"
+            - marshal:
+                json:
+                  library: Gson
+            - to: "{out}}"

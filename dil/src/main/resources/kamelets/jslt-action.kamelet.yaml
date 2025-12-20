@@ -1,27 +1,18 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "rest-action"
+  name: "jslt-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "rest action"
-    description: "Calls a REST Endpoint"
+    title: "jslt action"
+    description: "Apply JSLT on a message"
     type: "object"
     properties:
-      method:
-        title: "Method"
-        description: "HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH,\
-          \ CONNECT)"
-        type: "string"
       path:
         title: "Path"
         description: "Path"
-        type: "string"
-      options:
-        title: "Options"
-        description: "Endpoint options"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -50,6 +41,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - to:
-                uri: "rest:{{method}}:{{path}}?{{?options}}"
+                uri: "jslt:{{path}}"
             - to:
                 uri: "{{out}}"

@@ -1,0 +1,74 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: nats-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "NATS Sink"
+    description: Send data to NATS topics.
+    required:
+      - topic
+      - servers
+    type: object
+    properties:
+      topic:
+        title: Topic
+        description: NATS Topic name
+        type: string
+      servers:
+        title: Servers
+        description: Comma separated list of NATS Servers
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      jetstreamEnabled:
+        title: Jetstream Enabled
+        description: Sets whether to enable JetStream support for this endpoint.
+        type: boolean
+        default: false
+      jetstreamName:
+        title: Jetstream Stream Name
+        description: Sets the name of the JetStream stream to use.
+        type: string
+      jetstreamAsync:
+        title: Jetstream Async Enabled
+        description: Sets whether to operate JetStream requests asynchronously.
+        type: boolean
+        default: true
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  dependencies:
+  - "camel:nats"
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"  
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:        
+            - to:
+                uri: "nats:{{topic}}"
+                parameters:
+                  servers: "{{servers}}"
+                  jetstreamEnabled: "{{?jetstreamEnabled}}"
+                  jetstreamName: "{{?jetstreamName}}"
+                  jetstreamAsync: "{{?jetstreamAsync}}"

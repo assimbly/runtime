@@ -49,4 +49,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - to:
-                uri: "rest:{{method}}:{{path}}?{{options}}"
+                uri: "rest:{{method}}:{{path}}?{{?options}}"

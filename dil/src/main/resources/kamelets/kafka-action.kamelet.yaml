@@ -1,0 +1,108 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: kafka-sink
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "Kafka Sink"
+    description: Send data to Kafka topics through Plain Login Module.
+    required:
+      - topic
+      - bootstrapServers
+      - user
+      - password
+    type: object
+    properties:
+      topic:
+        title: Topic Names
+        description: Comma separated list of Kafka topic names
+        type: string
+      bootstrapServers:
+        title: Bootstrap Servers
+        description: Comma separated list of Kafka Broker URLs
+        type: string
+      securityProtocol:
+        title: Security Protocol
+        description: Protocol used to communicate with brokers. SASL_PLAINTEXT, PLAINTEXT, SASL_SSL and SSL are supported
+        type: string
+        default: SASL_SSL
+      saslMechanism:
+        title: SASL Mechanism
+        description: The Simple Authentication and Security Layer (SASL) Mechanism used. 
+        type: string
+        default: PLAIN
+      user:
+        title: Username
+        description: Username to authenticate to Kafka 
+        type: string
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: Password
+        description: Password to authenticate to kafka
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  dependencies:
+    - "camel:core"
+    - "camel:kafka"
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:        
+            - choice:
+                when:
+                - simple: "${header[key]}"
+                  steps:
+                  - setHeader:
+                      name: kafka.KEY
+                      simple: "${header[key]}"
+                - simple: "${header[ce-key]}"
+                  steps:
+                  - setHeader:
+                      name: kafka.KEY
+                      simple: "${header[ce-key]}"
+            - choice:
+                when:
+                - simple: "${header[partition-key]}"
+                  steps:
+                  - setHeader:
+                      name: kafka.PARTITION_KEY
+                      simple: "${header[partition-key]}"
+                - simple: "${header[ce-partitionkey]}"
+                  steps:
+                  - setHeader:
+                      name: kafka.PARTITION_KEY
+                      simple: "${header[ce-partitionkey]}"
+            - to:
+                uri: "kafka:{{topic}}"
+                parameters:
+                  brokers: "{{bootstrapServers}}"
+                  securityProtocol: "{{securityProtocol}}"
+                  saslMechanism: "{{saslMechanism}}"
+                  saslJaasConfig: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="{{user}}" password="{{password}}";'
+            - to: "{out}}"                              

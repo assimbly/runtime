@@ -1,0 +1,66 @@
+apiVersion: camel.apache.org/v1
+kind: Kamelet
+metadata:
+  name: telegram-source
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Telegram Source"
+    description: Receive all messages that people send to your Telegram bot.
+
+    required:
+      - authorizationToken
+    type: object
+    properties:
+      authorizationToken:
+        title: Token
+        description: "The token to access your bot on Telegram. You can obtain it from the Telegram @botfather."
+        type: string
+        format: password
+        x-descriptors:
+        - urn:camel:group:credentials
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"        
+  types:
+    out:
+      mediaType: application/json
+  dependencies:
+    - "camel:jackson"
+    - "camel:kamelet"
+    - "camel:telegram"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: telegram:bots
+        parameters:
+          authorizationToken: "{{authorizationToken}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:         
+             - setHeader:
+                 name: chat-id
+                 simple: "${header[CamelTelegramChatId]}"
+             - setHeader:
+                 name: ce-chatid
+                 simple: "${header[CamelTelegramChatId]}"
+             - marshal:
+                 json: {}
+             - to: "{out}}"
+       

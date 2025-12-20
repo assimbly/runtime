@@ -43,7 +43,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "rest:{{method}}:{{path}}?{{options}}"
+        uri: "rest:{{method}}:{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
         - step:
             id: "{{routeId}}"

@@ -1,20 +1,15 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "rest-action"
+  name: "restopenapi-sink"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "rest action"
-    description: "Calls a REST Endpoint"
+    title: "restopenapi sink"
+    description: "Configures rest producers from OpenApi (Open API) specification document."
     type: "object"
     properties:
-      method:
-        title: "Method"
-        description: "HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH,\
-          \ CONNECT)"
-        type: "string"
       path:
         title: "Path"
         description: "Path"
@@ -39,17 +34,15 @@ spec:
         type: "string"
         default: "0"
   dependencies:
-  - "camel:kamelet"
+    - "camel:kamelet"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "{{routeId}}"
-            steps:
-            - to:
-                uri: "rest:{{method}}:{{path}}?{{?options}}"
-            - to:
-                uri: "{{out}}"
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - to:
+                    uri: "rest-openapi:{{path}}?{{?options}}"
