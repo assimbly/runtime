@@ -400,7 +400,7 @@ public class RouteTemplate {
 
         try {
             createPathValues(routeId);
-            createUriValues();
+            createUriValues(type);
         } catch (XPathExpressionException e) {
             throw new RuntimeException(e);
         }
@@ -496,7 +496,7 @@ public class RouteTemplate {
 
     }
 
-    private void createUriValues() throws XPathExpressionException {
+    private void createUriValues(String type) throws XPathExpressionException {
 
         if(scheme.equals("block") || scheme.equals("component")){
             uri = path;
@@ -510,7 +510,7 @@ public class RouteTemplate {
 
         createCoreMessageComponents();
 
-        createCustomInitialization();
+        createCustomInitialization(type);
 
     }
 
@@ -755,10 +755,16 @@ public class RouteTemplate {
 
     }
 
-    private void createCustomInitialization(){
-        if (scheme.equalsIgnoreCase("as2") ){
-            properties.put("as2", "true");
+    private void createCustomInitialization(String type){
+
+        String templateName = scheme + "-" + type;
+
+        if (templateName.equalsIgnoreCase("as2-inbound")){
+            properties.put(templateName, "true");
+        }else if (templateName.equalsIgnoreCase("https-action") || templateName.equalsIgnoreCase("https-sink")) {
+            properties.put(templateName, "true");
         }
+
     }
 
     private void setCoreMessageBody(String messageName) throws XPathExpressionException {

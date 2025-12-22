@@ -85,16 +85,15 @@ public class FlowManager {
 
         try {
 
-            if (properties.containsKey("as2") && properties.get("as2").equals("true")) {
-
-                log.info("Initialize AS2 security");
-
-                // init mutual ssl contexts
-                initializeMutualSslContexts(props);
-
-                // init AS2 inbound security
+            if (properties.containsKey("as2-source") && properties.get("as2-source").equals("true")) {
+                log.info("Initialize AS2 Inbound security");
                 initializeAs2InboundSecurity(props);
+            }
 
+            if ((properties.containsKey("https-action") && properties.get("as2-action").equals("true")) ||
+                (properties.containsKey("https-sink") && properties.get("as2-sink").equals("true"))) {
+                log.info("Initialize HTTPS mutualSSL");
+                initializeMutualSslContexts(props);
             }
 
             //create connections & install dependencies if needed
