@@ -59,7 +59,6 @@ public class CamelIntegration extends BaseIntegration {
     private RouteController routeController;
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
-    private final boolean cache = true;
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -173,7 +172,10 @@ public class CamelIntegration extends BaseIntegration {
 
     public void setCaching() {
 
-        if (cache) {
+        String assimblyFlowCacheVar = System.getenv("ASSIMBLY_FLOWCACHE");
+        boolean assimblyFlowCache = "true".equalsIgnoreCase(assimblyFlowCacheVar);
+
+        if (assimblyFlowCache) {
             initFlowDB();
             if(!flowsMap.isEmpty()) {
                 log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
@@ -182,7 +184,7 @@ public class CamelIntegration extends BaseIntegration {
             }else {
                 log.info("No active flows found in cache. Cache is ready.");
             }
-        } else {
+        }else{
             initFlowMap();
         }
 
