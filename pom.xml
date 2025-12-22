@@ -52,9 +52,9 @@
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>1.15.0</docconverter.version>
         <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.2.2</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.2.3</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
-        <ibmmq-client.version>9.4.4.0</ibmmq-client.version>
+        <ibmmq-client.version>9.4.4.1</ibmmq-client.version>
         <informix-jdbc.version>15.0.0.2</informix-jdbc.version>
         <jackson.version>2.20.1</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
@@ -70,11 +70,11 @@
         <jolokia.version>2.4.2</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
         <kamelet.version>4.16.0</kamelet.version>
-        <logback-classic.version>1.5.22</logback-classic.version>
+        <logback-classic.version>1.5.23</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.5.0</mysql-connector-java.version>
-        <netty.version>4.2.8.Final</netty.version>
+        <netty.version>4.2.9.Final</netty.version>
         <oracle.version>23.26.0.0.0</oracle.version>
         <postgresql.version>42.7.8</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>

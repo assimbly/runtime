@@ -76,6 +76,9 @@ public abstract class BaseIntegration implements Integration {
 
 	public void removeFlowConfigurationIfExist(String flowId) {
 		this.flowsMap.remove(flowId);
+        if(db != null) {
+            db.commit();
+        }
 	}	
 	
 	

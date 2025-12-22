@@ -1,0 +1,56 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "ifelse-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "ifelse-action"
+    description: "Routes message by an if-else expression (XPath, Jsonpath or Simple)"
+    type: "object"
+    properties:
+      expression:
+        title: "Expression"
+        description: "Expression"
+        type: "string"
+      language:
+        title: "Language"
+        description: "Language"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - choice:
+                when:
+                  - expression:
+                      language:
+                        language: "{{language}}"
+                        expression: "{{expression}}"
+                otherwise:
+                  disabled: true
+            - to:
+                uri: "{{out}}"

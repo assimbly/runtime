@@ -356,6 +356,8 @@ public class RouteTemplate {
         }else{
             String templateName = scheme + "-" + type;
 
+            templateId = templateName;
+
             if(templateExists(templateName)){
                 templateId = templateName;
             }else if(uri.startsWith("block")){
@@ -507,6 +509,8 @@ public class RouteTemplate {
         }
 
         createCoreMessageComponents();
+
+        createCustomInitialization();
 
     }
 
@@ -734,6 +738,7 @@ public class RouteTemplate {
     }
 
     private void createCoreMessageComponents() throws XPathExpressionException {
+
         if (!path.startsWith("message:")) {
             return;
         }
@@ -746,6 +751,13 @@ public class RouteTemplate {
 
         if (scheme.equalsIgnoreCase("setHeaders") || scheme.equalsIgnoreCase("setMessage")) {
             setCoreMessageHeaders(name);
+        }
+
+    }
+
+    private void createCustomInitialization(){
+        if (scheme.equalsIgnoreCase("as2") ){
+            properties.put("as2", "true");
         }
     }
 

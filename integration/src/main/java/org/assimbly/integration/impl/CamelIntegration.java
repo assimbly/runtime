@@ -59,6 +59,7 @@ public class CamelIntegration extends BaseIntegration {
     private RouteController routeController;
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
+    private final boolean cache = true;
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -115,7 +116,7 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setHealthChecks(true, statsManager);
 
-        setCaching(false);
+        setCaching();
 
     }
 
@@ -170,11 +171,17 @@ public class CamelIntegration extends BaseIntegration {
         return flowManager.stopFlow(flowId, timeout);
     }
 
-    public void setCaching(boolean cache) {
+    public void setCaching() {
 
         if (cache) {
             initFlowDB();
-            flowManager.startAllFlows(sslManager, flowsMap);
+            if(!flowsMap.isEmpty()) {
+                log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
+                flowManager.startAllFlows(sslManager, flowsMap);
+                log.info("Restored flows from cache.");
+            }else {
+                log.info("No active flows found in cache. Cache is ready.");
+            }
         } else {
             initFlowMap();
         }
@@ -695,6 +702,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String stopFlow(String flowId, long timeout) {
+        removeFlowConfigurationIfExist(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 

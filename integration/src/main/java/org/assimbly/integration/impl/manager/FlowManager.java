@@ -71,8 +71,6 @@ public class FlowManager {
     private final CamelContext context;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    private static final String RESOURCE_PROP = "resource";
-    private static final String AUTH_PASSWORD_PROP = "authPassword";
     private static final String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
     private static final String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
     private static final long STOP_TIMEOUT = 300;
@@ -87,13 +85,9 @@ public class FlowManager {
 
         try {
 
-            if (properties.containsKey("frontend") && properties.get("frontend").equals("dovetail")) {
+            if (properties.containsKey("as2") && properties.get("as2").equals("true")) {
 
-                // add custom connections if needed
-                addCustomActiveMQConnection();
-
-                // add custom connections if needed
-                addCustomRabbitMQConnection(new TreeMap<>(properties));
+                log.info("Initialize AS2 security");
 
                 // init mutual ssl contexts
                 initializeMutualSslContexts(props);
@@ -140,6 +134,7 @@ public class FlowManager {
             try {
                 flowLoaderReport = new FlowLoaderReport(flowId, flowId);
                 loadFlow(flowProps, sslManager);
+                log.info("Started flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -154,6 +149,7 @@ public class FlowManager {
             try {
                 flowLoaderReport = new FlowLoaderReport(flowId, flowId);
                 loadFlow(props, sslManager);
+                log.info("Restarted flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -168,6 +164,7 @@ public class FlowManager {
         flowsMap.forEach((flowId, flowProps) -> {
             try {
                 pauseFlow(flowId);
+                log.info("Paused flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -182,6 +179,7 @@ public class FlowManager {
         flowsMap.forEach((flowId, flowProps) -> {
             try {
                 resumeFlow(flowId, flowProps, sslManager);
+                log.info("Resumed flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -196,6 +194,7 @@ public class FlowManager {
         flowsMap.forEach((flowId, flowProps) -> {
             try {
                 stopFlow(flowId, 250, false);
+                log.info("Stopped flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -296,6 +295,8 @@ public class FlowManager {
                     removeRoute(routeId);
                 }
             }
+
+
 
             if (enableReport) {
                 finishFlowActionReport(flowid, "stop", "Stopped flow successfully", "info");
@@ -811,62 +812,6 @@ public class FlowManager {
         }
 
         return component;
-    }
-
-
-    private void addCustomActiveMQConnection() {
-
-        try {
-
-            Component activemqComp = this.context.getComponent("activemq");
-
-            if (activemqComp == null) {
-
-                String brokerHost = getEnvironmentVariable();
-                int brokerPort = getEnvironmentVariableAsInteger(BROKER_PORT, 61616);
-                String activemqUrl = String.format("tcp://%s:%s", brokerHost, brokerPort);
-
-                log.info("Adding custom ActiveMQ connection. URL: {}", activemqUrl);
-
-                this.context.addComponent("activemq", getJmsComponent(activemqUrl));
-
-            }
-
-        } catch (Exception e) {
-            log.error("Error to add custom ActiveMQ connection", e);
-        }
-
-    }
-
-    private void addCustomRabbitMQConnection(TreeMap<String, String> properties) {
-
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (entry.getKey().startsWith("route") && entry.getValue().contains("rabbitmqConnectionFactory")) {
-
-                String connection = StringUtils.substringBetween(entry.getValue(), "<rabbitmqConnectionFactory>", "</rabbitmqConnectionFactory>");
-                String rabbitMQElement = "<rabbitmqConnectionFactory>" + connection + "</rabbitmqConnectionFactory>";
-
-                if (connection == null) {
-                    connection = StringUtils.substringBetween(entry.getValue(), "<rabbitmqConnectionFactory xmlns=\"http://camel.apache.org/schema/blueprint\">", "</rabbitmqConnectionFactory>");
-                    rabbitMQElement = "<rabbitmqConnectionFactory xmlns=\"http://camel.apache.org/schema/blueprint\">" + connection + "</rabbitmqConnectionFactory>";
-                }
-
-                Map<String, String> connectionMap = stringToMap(connection);
-                String connectionId = connectionMap.get("host") + "-" + connectionMap.get("port") + "-" + connectionMap.get("username");
-
-                props.put("sink.1.connection.id", connectionId);
-                props.put("connection." + connectionId + ".type", "rabbitmq");
-                props.put("connection." + connectionId + ".host", connectionMap.get("host"));
-                props.put("connection." + connectionId + ".vhost", connectionMap.get("vhost"));
-                props.put("connection." + connectionId + ".port", connectionMap.get("port"));
-                props.put("connection." + connectionId + ".username", connectionMap.get("username"));
-                props.put("connection." + connectionId + ".password", connectionMap.get("password"));
-                props.put(entry.getKey(), Strings.CS.replace(entry.getValue(), rabbitMQElement, ""));
-
-
-            }
-        }
-
     }
 
     // Dynamically initializes and registers route-specific SSL contexts for Mutual TLS client authentication.
