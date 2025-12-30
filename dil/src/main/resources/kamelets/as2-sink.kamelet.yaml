@@ -116,23 +116,7 @@ spec:
               - process:
                   ref: "AS2KeyProcessor"
               - to:
-                  uri: >-
-                    as2://client/send?inBody=ediMessage
-                    &targetHostname={{hostName}}
-                    &targetPortNumber={{targetPortNumber}}
-                    &requestUri={{requestUri}}
-                    &as2From={{as2From}}
-                    &as2To={{as2To}}
-                    &subject=RAW({{subject}})
-                    &from={{as2From}}
-                    &dispositionNotificationTo=test
-                    &as2MessageStructure={{as2MessageStructure}}
-                    &ediMessageContentType={{ediMessageContentType}}
-                    &methodName=send&encryptingAlgorithm={{encryptingAlgorithm}}
-                    &signingAlgorithm={{signingAlgorithm}}
-                    &exchangePattern=InOut
-                    &sslContext={{?sslContext}}
-                    &hostnameVerifier=#permissiveHostnameVerifier
+                  uri: "as2://client/send?inBody=ediMessage&targetHostname={{hostName}}&targetPortNumber={{targetPortNumber}}&requestUri={{requestUri}}&as2From={{as2From}}&as2To={{as2To}}&subject=RAW({{subject}})&from={{as2From}}&dispositionNotificationTo=test&as2MessageStructure={{as2MessageStructure}}&ediMessageContentType={{ediMessageContentType}}&methodName=send&encryptingAlgorithm={{encryptingAlgorithm}}&signingAlgorithm={{signingAlgorithm}}&exchangePattern=InOut&sslContext={{?sslContext}}&hostnameVerifier=#permissiveHostnameVerifier"
               - process:
                   ref: "AS2MDNProcessor"
 
