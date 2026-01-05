@@ -55,7 +55,7 @@
         <elasticsearch-rest-client.version>9.2.3</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.4.1</ibmmq-client.version>
-        <informix-jdbc.version>15.0.0.2</informix-jdbc.version>
+        <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
         <jackson.version>2.20.1</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
