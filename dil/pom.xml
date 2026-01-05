@@ -59,12 +59,6 @@
 	  </dependency>
 
 	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>camel-as2-component</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-
-	  <dependency>
 		  <groupId>net.lingala.zip4j</groupId>
 		  <artifactId>zip4j</artifactId>
 		  <version>${zip4j.version}</version>
