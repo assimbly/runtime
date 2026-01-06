@@ -13,9 +13,19 @@ public class JsonAggregateStrategy implements AggregationStrategy {
         JSONArray array;
 
         if (oldExchange == null) {
+            System.out.println("2 json aggregate");
+            String body = newExchange.getIn().getBody(String.class);
+            array = new JSONArray();
+
+            // Wrap the first item immediately
+            wrapInArray(array, body);
+
+            newExchange.getIn().setBody(array.toString(2));
+            newExchange.setProperty("hasBeenAggregated", true);
+
             return newExchange;
         }
-
+        
         if(oldExchange.getProperty("hasBeenAggregated") != null && oldExchange.getProperty("hasBeenAggregated", Boolean.class)) {
             array = new JSONArray(oldExchange.getIn().getBody(String.class));
         }else{
