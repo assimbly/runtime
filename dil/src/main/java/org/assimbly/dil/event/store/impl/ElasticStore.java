@@ -55,7 +55,7 @@ public class ElasticStore {
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.info("Event processor interrupted. Shutting down.");
+                log.debug("Event processor interrupted. Shutting down.");
                 break;
             }
         }
@@ -64,7 +64,7 @@ public class ElasticStore {
     private void ensureConnection() throws InterruptedException {
         while (restClient == null && isRunning) {
             try {
-                log.info("Attempting to establish ElasticSearch connection... (Attempt {} of {})", connectionRetryCount + 1, CONNECTION_MAX_RETRIES);
+                log.debug("Attempting to establish ElasticSearch connection... (Attempt {} of {})", connectionRetryCount + 1, CONNECTION_MAX_RETRIES);
                 String uri = store.getUri();
                 URL url = new URL(uri);
                 String protocol = url.getProtocol();
@@ -81,7 +81,7 @@ public class ElasticStore {
                         .build();
 
                 client.performRequest(new Request("HEAD", "/"));
-                log.info("ElasticSearch client created and responsive.");
+                log.debug("ElasticSearch client created and responsive.");
                 this.restClient = client;
                 connectionRetryCount = 0; // Reset counter on success
                 currentConnectionDelay = CONNECTION_INITIAL_DELAY_SECONDS;
@@ -91,7 +91,7 @@ public class ElasticStore {
                 log.warn("ElasticSearch connection failed", e);
                 if (connectionRetryCount < CONNECTION_MAX_RETRIES) {
                     connectionRetryCount++;
-                    log.info("Retrying connection in {} seconds...", currentConnectionDelay);
+                    log.warn("Retrying connection in {} seconds...", currentConnectionDelay);
                     TimeUnit.SECONDS.sleep(currentConnectionDelay);
                     currentConnectionDelay *= 2;
                 } else {
@@ -125,7 +125,7 @@ public class ElasticStore {
         }
 
         // Log the current attempt number before making the request
-        log.info("Attempting to post event (Attempt {} of {}).", attempt + 1, POST_MAX_RETRIES + 1);
+        log.debug("Attempting to post event (Attempt {} of {}).", attempt + 1, POST_MAX_RETRIES + 1);
 
         Request request = new Request("POST", path);
         request.setJsonEntity(json);
@@ -133,7 +133,7 @@ public class ElasticStore {
         restClient.performRequestAsync(request, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-                log.info("Event inserted into ElasticSearch");
+                log.debug("Event inserted into ElasticSearch");
             }
 
             @Override
