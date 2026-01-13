@@ -44,7 +44,7 @@
         <activemq-artemis.version>2.44.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
-        <camel.version>4.16.0</camel.version>
+        <camel.version>4.17.0</camel.version>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.13.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
@@ -64,13 +64,13 @@
         <jakarta-xml-soap-api.version>3.0.2</jakarta-xml-soap-api.version>
         <jakarta-xml-bind-api.version>4.0.4</jakarta-xml-bind-api.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <json.version>20250517</json.version>
+        <json.version>20251224</json.version>
         <json-path.version>2.10.0</json-path.version>
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.4.2</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
         <kamelet.version>4.16.0</kamelet.version>
-        <logback-classic.version>1.5.23</logback-classic.version>
+        <logback-classic.version>1.5.24</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.5.0</mysql-connector-java.version>
@@ -94,7 +94,7 @@
         <jetty.version>12.1.5</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
-        <junit.version>6.0.1</junit.version>
+        <junit.version>6.0.2</junit.version>
         <mockito.version>5.21.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>

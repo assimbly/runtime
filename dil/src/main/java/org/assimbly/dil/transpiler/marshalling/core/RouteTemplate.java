@@ -510,7 +510,7 @@ public class RouteTemplate {
 
         createCoreMessageComponents();
 
-        createCustomInitialization(type);
+        createSecurityInitialization(type, options);
 
     }
 
@@ -755,14 +755,18 @@ public class RouteTemplate {
 
     }
 
-    private void createCustomInitialization(String type){
+    private void createSecurityInitialization(String type, String options){
 
         String templateName = scheme + "-" + type;
 
         if (templateName.equalsIgnoreCase("as2-inbound")){
-            properties.put(templateName, "true");
-        }else if (templateName.equalsIgnoreCase("https-action") || templateName.equalsIgnoreCase("https-sink")) {
-            properties.put(templateName, "true");
+            properties.put("security.as2", "true");
+        }
+
+        if (templateName.equalsIgnoreCase("https-action") || templateName.equalsIgnoreCase("https-sink") || templateName.equalsIgnoreCase("as2-action") || templateName.equalsIgnoreCase("as2-sink")) {
+            if(options.contains("mutualTls=true")) {
+                properties.put("security.mutualtls", "true");
+            }
         }
 
     }

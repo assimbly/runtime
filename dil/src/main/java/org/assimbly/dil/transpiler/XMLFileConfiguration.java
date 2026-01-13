@@ -140,17 +140,7 @@ public class XMLFileConfiguration {
 
 		DocumentBuilder docBuilder = setDocumentBuilder();
 
-		if(scheme.startsWith("sonicfs")) {
-
-			URL url = uri.toURL();
-
-			InputStream is = url.openStream();
-
-			conf = new BasicConfigurationBuilder<>(XMLConfiguration.class).configure(params.xml()).getConfiguration();
-			fh = new FileHandler(conf);
-			fh.load(is);
-
-		}else if (scheme.startsWith("file")) {
+		if (scheme.startsWith("file")) {
 
 			File xml = new File(uri.getRawPath());
 

@@ -22,7 +22,7 @@ public class FlowLoaderReport {
 	private final long startTime;
 
 	public FlowLoaderReport(String flowId, String flowName) {
-        log.info("initialize flow report | flowid={}", flowId);
+        log.info("Initialize flow report | flowid={}", flowId);
 
 		this.flowId = flowId;
 		this.flowName = flowName;

@@ -85,15 +85,14 @@ public class FlowManager {
 
         try {
 
-            if (properties.containsKey("as2-source") && properties.get("as2-source").equals("true")) {
+            if (properties.containsKey("security.as2")) {
                 log.info("Initialize AS2 Inbound security");
                 initializeAs2InboundSecurity(props);
             }
 
-            if ((properties.containsKey("https-action") && properties.get("as2-action").equals("true")) ||
-                (properties.containsKey("https-sink") && properties.get("as2-sink").equals("true"))) {
-                log.info("Initialize HTTPS mutualSSL");
-                initializeMutualSslContexts(props);
+            if (properties.containsKey("security.mutualtls")){
+                log.info("Initialize Mutual TLS");
+                initializeMutualTLS(props);
             }
 
             //create connections & install dependencies if needed
@@ -814,7 +813,7 @@ public class FlowManager {
     }
 
     // Dynamically initializes and registers route-specific SSL contexts for Mutual TLS client authentication.
-    private void initializeMutualSslContexts(TreeMap<String, String> properties) throws Exception {
+    private void initializeMutualTLS(TreeMap<String, String> properties) throws Exception {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             String key = entry.getKey();
