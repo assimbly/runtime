@@ -10,6 +10,7 @@ import org.w3c.dom.NodeList;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeMap;
 
 // This class unmarshalls an XML file into a Java treemap object
@@ -136,11 +137,13 @@ public class Unmarshall {
 
 		options = getOptions(optionProperties);
 
-		properties.put(type + "." + stepId + ".uri", uri + "?" + options);
 
 		if(type.equals("error")){
-			setErrorHandlerOptions(optionProperties);
-		}
+            setErrorHandlerUri(stepId,index, type, uri, options);
+            setErrorHandlerOptions(optionProperties);
+		}else{
+            properties.put(type + "." + stepId + ".uri", uri + "?" + options);
+        }
 
 	}
 
@@ -165,6 +168,24 @@ public class Unmarshall {
 		return uriOptions.toString();
 
 	}
+
+    private void setErrorHandlerUri(String stepId, int stepIndex, String type, String uri, String options){
+
+        System.out.println("1. setErrorHandlerUri");
+
+        String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + stepIndex + "]/";
+
+        String id = Objects.toString(conf.getProperty(stepXPath + "links/link[1]/id"), null);
+        String bound = Objects.toString(conf.getProperty(stepXPath + "links/link[1]/bound"), null);
+        String transport = Objects.toString(conf.getProperty(stepXPath + "links/link[1]/transport"), null);
+
+        if(id != null && bound != null && transport != null ){
+           properties.put(type + "." + stepId + ".uri", transport + ":" + id);
+        }else{
+           properties.put(type + "." + stepId + ".uri", uri + "?" + options);
+        }
+
+    }
 
 	private void setErrorHandlerOptions(List<String> optionProperties){
 

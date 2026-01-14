@@ -104,7 +104,7 @@ public class FlowLoader extends RouteBuilder {
 			log.info("ErrorHandler is set. uri={}",errorUri);
 			setErrorHandler(id, errorUri);
 		}else{
-			log.warn("ErrorHandler is not set");
+			log.warn("ErrorHandler is not set (errors are only logged)");
 		}
 
 	}
