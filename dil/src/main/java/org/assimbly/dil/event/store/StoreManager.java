@@ -50,7 +50,11 @@ public class StoreManager {
                     fileStore = new FileStore(collectorId, store);
                     break;
                 case "elastic":
-                    elasticStore = new ElasticStore(collectorId, store);
+                    try {
+                        elasticStore = new ElasticStore(store);
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Failed to initialize ElasticStore for " + store.getUri(), e);
+                    }
                     break;
                 case "console":
                     consoleStore = new ConsoleStore(collectorId, store);
