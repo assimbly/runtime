@@ -779,11 +779,11 @@ public class StatsManager {
 
     }
 
-    public String countFlows(String filter) {
+    public int countFlows(String filter) {
 
         Set<String> flowIds = flowManager.getListOfFlowIds(filter);
 
-        return Integer.toString(flowIds.size());
+        return flowIds.size();
 
     }
 

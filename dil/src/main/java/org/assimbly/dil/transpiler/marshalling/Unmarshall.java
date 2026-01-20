@@ -8,6 +8,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -242,7 +246,8 @@ public class Unmarshall {
 
 		String[] links = conf.getStringArray(stepXPath + "links/link/id");
 
-		String baseUri = conf.getString(stepXPath + "uri");
+        //use custom xpath evaluation to handle values with namespaces
+        String baseUri = evaluateXpath("//" + stepXPath + "uri");
 
 		String scheme = baseUri;
 		String path = "";
@@ -306,5 +311,12 @@ public class Unmarshall {
 		}
 
 	}
+
+    private String evaluateXpath(String xpathExpression) throws XPathExpressionException {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        XPath xpath = xPathFactory.newXPath();
+
+        return (String) xpath.evaluate(xpathExpression, doc, XPathConstants.STRING);
+    }
 
 }

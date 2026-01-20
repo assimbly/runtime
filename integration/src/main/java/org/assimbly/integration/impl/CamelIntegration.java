@@ -42,7 +42,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
@@ -616,7 +615,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String countFlows(String filter, String mediaType) {
+    public int countFlows(String filter, String mediaType) {
         return statsManager.countFlows(filter);
     }
 

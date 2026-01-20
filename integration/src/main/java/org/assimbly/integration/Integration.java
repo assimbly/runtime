@@ -1,6 +1,5 @@
 package org.assimbly.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
@@ -319,14 +318,14 @@ public interface Integration {
     String getListOfStepTemplates() throws Exception;
 
 	/**
-	 * Count the number of (loaded) flows
-	 *
-	 * @param  filter by status (started, stopped, suspended)
-	 * @param  mediaType (xml or json)
-	 * @throws Exception if flow doesn't start
-	 * @return returns an array of flows with id
-	 */
-    String countFlows(String filter, String mediaType) throws Exception;
+     * Count the number of (loaded) flows
+     *
+     * @param filter    by status (started, stopped, suspended)
+     * @param mediaType (xml or json)
+     * @return returns an array of flows with id
+     * @throws Exception if flow doesn't start
+     */
+    int countFlows(String filter, String mediaType) throws Exception;
 
 	/**
 	 * Counts the number of (loaded) steps

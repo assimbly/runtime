@@ -252,8 +252,8 @@ public class IntegrationRuntime {
     ) {
 
         try {
-            String flowsCount = integration.countFlows(filter, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/count/flows",flowsCount,false);
+            int flowsCount = integration.countFlows(filter, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/count/flows", String.valueOf(flowsCount),false);
         } catch (Exception e) {
             log.error("Count running flows failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/count/flows",e.getMessage());
