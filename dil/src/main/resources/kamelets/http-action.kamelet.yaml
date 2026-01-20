@@ -146,10 +146,20 @@ spec:
             - setHeader:
                 name: "user-agent"
                 constant: "{{customUserAgent}}"
+            - setHeader:
+                name: "CamelHttpUri"
+                simple: "{{path}}"
+            - choice:
+                when:
+                  - simple: "${header.CamelHttpUri} !contains 'http:'"
+                    steps:
+                      - setHeader:
+                          name: "CamelHttpUri"
+                          constant: "http:{{path}}"
             - doTry:
                 steps:
-                - to:
-                    uri: "http://{{path}}?httpMethod={{httpMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&connectTimeout={{connectTimeout}}&soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy"
+                  - to:
+                      uri: "http://dummy.com?httpMethod={{httpMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&connectTimeout={{connectTimeout}}&soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy"
                 doCatch:
                 - exception: "java.net.SocketTimeoutException"
                   disabled: "{{useErrorRoute}}"
@@ -214,6 +224,6 @@ spec:
                         - process:
                             ref: "SetOriginalMessageProcessor"
             - removeHeaders:
-                pattern: "user-agent|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
+                pattern: "user-agent|CamelHttpUri|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
             - to:
                 uri: "{{out}}"
