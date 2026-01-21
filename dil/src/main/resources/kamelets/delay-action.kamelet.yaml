@@ -1,7 +1,7 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: delay-action
+  name: "delay-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
@@ -34,12 +34,9 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - step:
-              id: "{{routeId}}"
-              steps:
-                - delay:
-                    constant: "{{milliseconds}}"
-                - to:
-                    uri: "{{out}}"
+          - delay:
+              constant: "{{milliseconds}}"
+          - to:
+              uri: "{{out}}"

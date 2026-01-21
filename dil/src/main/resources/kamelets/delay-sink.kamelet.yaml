@@ -1,12 +1,12 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: delay-sink
+  name: "delay-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "Delay sink"
+    title: "Delay Sink"
     description: Delay the processing using a specific amount of time
     type: object
     properties:
@@ -34,10 +34,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
-          - step:
-              id: "{{routeId}}"
-              steps:
-                - delay:
-                    constant: "{{milliseconds}}"
+          - delay:
+              constant: "{{milliseconds}}"
