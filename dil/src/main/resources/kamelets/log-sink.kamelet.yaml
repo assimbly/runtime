@@ -15,10 +15,21 @@ spec:
         description: "path of component"
         type: "string"
         default: "dummy"
-      options:
-        title: "options (query parameterS)"
-        description: "Endpoint URI"
-        type: "string"
+      showHeaders:
+        title: "Show Headers"
+        description: "Show all message headers"
+        type: "boolean"
+        default: false
+      showBody:
+        title: "Show Body"
+        description: "Show message body"
+        type: "boolean"
+        default: false
+      showException:
+        title: "Show Exception"
+        description: "Show all exceptions"
+        type: "boolean"
+        default: false
       in:
         title: "Source Endpoint"
         type: "string"
@@ -43,4 +54,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "log://{{routeId}}?{{?options}}"
+                uri: "log:org.assimbly.runtime.{{flowId}}?skipBodyLineSeparator=false&multiline=true&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBody}}&showException={{showException}}&showStackTrace={{showException}}&showCaughtException={{showException}}"

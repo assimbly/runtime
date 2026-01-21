@@ -43,6 +43,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "log://{{routeId}}?{{?options}}"
+                uri: "log:org.assimbly.runtime.{{flowId}}?skipBodyLineSeparator=false&multiline=true&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBody}}&showException={{showException}}&showStackTrace={{showException}}&showCaughtException={{showException}}"
             - to:
                 uri: "{{out}}"

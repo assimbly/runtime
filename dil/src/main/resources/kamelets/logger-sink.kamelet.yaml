@@ -45,10 +45,7 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "{{routeId}}"
-            steps:
-            - log:
-                logName: "{{routeId}}"
-                logLanguage: "{{language}}"
-                message: "{{expression}}"
+          - log:
+              logName: "org.assimbly.runtime.{{flowId}}"
+              logLanguage: "{{language}}"
+              message: "{{expression}}"
