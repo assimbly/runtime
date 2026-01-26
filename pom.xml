@@ -41,7 +41,7 @@
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>5.1.0</assimbly.version>
         <activemq-classic.version>6.2.0</activemq-classic.version>
-        <activemq-artemis.version>2.44.0</activemq-artemis.version>
+        <activemq-artemis.version>2.50.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
         <camel.version>4.17.0</camel.version>
@@ -51,7 +51,7 @@
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>1.15.0</docconverter.version>
-        <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
+        <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
         <elasticsearch-rest-client.version>9.2.4</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.4.1</ibmmq-client.version>
@@ -69,8 +69,8 @@
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.4.3</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <kamelet.version>4.16.0</kamelet.version>
-        <logback-classic.version>1.5.25</logback-classic.version>
+        <kamelet.version>4.17.0</kamelet.version>
+        <logback-classic.version>1.5.26</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.5.0</mysql-connector-java.version>
@@ -87,7 +87,7 @@
         <xpath2.version>1.2.0</xpath2.version>
 
         <!-- Manage the versions of test dependencies here -->
-        <assertj.version>3.27.6</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
