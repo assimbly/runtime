@@ -164,7 +164,7 @@ spec:
                       steps:
                       - to:
                           disabled: "{{!abortMode}}"
-                          uri: "kamelet:sink"
+                          uri: "{{out}}"
                       - removeHeaders:
                           disabled: "{{!abortMode}}"
                           pattern: "CamelFile*"
@@ -174,7 +174,7 @@ spec:
                           simple: "${body}"
                 - to:
                     disabled: "{{abortMode}}"
-                    uri: "kamelet:sink"
+                    uri: "{{out}}"
                 - removeHeaders:
                     disabled: "{{abortMode}}"
                     pattern: "CamelFile*"
