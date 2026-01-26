@@ -14,11 +14,10 @@ spec:
         title: null
         description: "Regex pattern to remove headers"
         type: "string"
-      excludePatterns:
+      excludePattern:
         title: "Exclude Pattern"
         description: "Exclude Pattern"
         type: "string"
-        default: 0
       in:
         title: "Source Endpoint"
         type: "string"
@@ -35,16 +34,16 @@ spec:
         type: "string"
         default: "0"
   dependencies:
-  - "camel:kamelet"
+    - "camel:kamelet"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "{{routeId}}"
-            steps:
-            - removeHeaders:
-                pattern: "{{pattern}}"
-                exclude-pattern: "{{?excludePattern}}"
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - removeHeaders:
+                    pattern: "{{pattern}}"
+                    exclude-pattern: "breadcrumbId|{{?excludePattern}}"

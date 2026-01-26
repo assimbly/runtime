@@ -14,7 +14,7 @@ spec:
         title: null
         description: "Regex pattern to remove headers"
         type: "string"
-      excludePatterns:
+      excludePattern:
         title: "Exclude Pattern"
         description: "Exclude Pattern"
         type: "string"
@@ -46,6 +46,6 @@ spec:
             steps:
             - removeHeaders:
                 pattern: "{{pattern}}"
-                exclude-pattern: "{{?excludePattern}}"
+                exclude-pattern: "breadcrumbId|{{?excludePattern}}"
             - to:
                 uri: "{{out}}"
