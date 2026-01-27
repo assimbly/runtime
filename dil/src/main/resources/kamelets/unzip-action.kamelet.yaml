@@ -33,11 +33,20 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "{{routeId}}"
-            steps:
-            - process:
-                ref: "Unzip"
-            - to:
-                uri: "{{out}}"
-
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - process:
+                    ref: "Unzip"
+                - split:
+                    streaming: true
+                    expression:
+                      simple: "${body}"
+                    steps:
+                      - setHeader:
+                          name: "CamelFileName"
+                          simple: "${body[name]}"
+                      - setBody:
+                          simple: "${body[content]}"
+                      - to:
+                          uri: "{{out}}"

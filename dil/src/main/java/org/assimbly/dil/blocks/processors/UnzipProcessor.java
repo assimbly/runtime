@@ -1,69 +1,62 @@
 package org.assimbly.dil.blocks.processors;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.commons.io.FilenameUtils;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipProcessor implements Processor {
 
+    List<String> textExtensions = Arrays.asList(
+            "txt", "csv", "conf", "cfg", "data", "docx", "edi", "edifact", "edf","log", "ini",
+            "md", "msg", "bat", "sh", "json", "rtf", "tsv", "xml", "html", "yaml"
+    );
+
     public void process(Exchange exchange) throws Exception {
+        InputStream inputStream = exchange.getIn().getBody(InputStream.class);
+        if (inputStream == null) return;
 
-        Message in = exchange.getIn();
-        InputStream inputStream = in.getBody(InputStream.class);
-        ArrayList<byte[]> unzipped = new ArrayList<>();
-        ArrayList<String> unzippedCamelFileName = new ArrayList<>();
-        List<String> fileExtensions = Arrays.asList(
-                "txt", "csv", "conf", "cfg", "data", "docx", "edi", "edifact", "edf","log", "ini",
-                "md", "msg", "bat", "sh", "json", "rtf", "tsv", "xml", "html", "yaml"
-        );
-        boolean textFiles = true;
+        List<Map<String, Object>> filesList = new ArrayList<>();
 
-        ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+        try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    String fileName = entry.getName();
+                    byte[] content = getZipContents(zipInputStream);
 
-        //Get every file from the zip file
-        ZipEntry entry;
-        while ((entry = zipInputStream.getNextEntry()) != null) {
-            String fileExtension = FilenameUtils.getExtension(entry.getName());
-            if (!fileExtensions.contains(fileExtension)) {
-                textFiles = false;
+                    Object finalBody;
+                    String extension = FilenameUtils.getExtension(fileName).toLowerCase();
+
+                    // Convert to String if it's a known text format
+                    if (textExtensions.contains(extension)) {
+                        finalBody = new String(content, StandardCharsets.UTF_8);
+                    } else {
+                        finalBody = content;
+                    }
+
+                    Map<String, Object> fileData = new HashMap<>();
+                    fileData.put("name", fileName);
+                    fileData.put("content", finalBody);
+                    filesList.add(fileData);
+                }
+                zipInputStream.closeEntry();
             }
-            if (!entry.isDirectory()) {
-                unzippedCamelFileName.add(entry.getName());
-                unzipped.add(getZipContents(zipInputStream));
-            }
-            zipInputStream.closeEntry();
         }
 
-        in.removeHeader("Content-Disposition");
-
-        //If the zip file only contains text files than convert the files to utf-8 strings
-        if(textFiles){
-            ArrayList<String> unzippedText = new ArrayList<>();
-            for (byte[] byteArray : unzipped) {
-                unzippedText.add(new String(byteArray, StandardCharsets.UTF_8));
-            }
-            in.setBody(unzippedText);
-            in.setHeader("CamelFileName", unzippedCamelFileName);
-        } else{
-            in.setBody(unzipped);
-        }
-
+        // Set the list as the body for the Splitter to pick up
+        exchange.getIn().setBody(filesList);
     }
 
     private byte[] getZipContents(ZipInputStream zipInputStream) throws IOException {
-        var buff = new byte[1024];
-        var outputStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buff = new byte[4096];
         int l;
         while ((l = zipInputStream.read(buff)) > 0) {
             outputStream.write(buff, 0, l);
