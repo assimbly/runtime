@@ -46,6 +46,7 @@ import org.assimbly.mail.component.mail.AttachmentAttacher;
 import org.assimbly.mail.component.mail.MailComponent;
 import org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat;
 import org.assimbly.multipart.processor.MultipartProcessor;
+import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
 import org.json.JSONArray;
 import org.slf4j.Logger;
@@ -133,10 +134,14 @@ public class ConfigManager {
         jettyHttpComponent12.setResponseHeaderSize(80000);
         jettyHttpComponent12.setUseXForwardedForHeader(true);
 
+        MailComponent smtp = context.getComponent("smtp", MailComponent.class);
+        smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
+
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
         context.addComponent("activemq", new SjmsComponent());
+
 
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());
