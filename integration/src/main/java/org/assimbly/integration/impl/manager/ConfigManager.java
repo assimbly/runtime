@@ -20,10 +20,8 @@ import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
-import org.apache.camel.spi.PropertyConfigurer;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.RoutesLoader;
-import org.apache.camel.spi.Tracer;
+import org.apache.camel.jsonpath.JsonPathLanguage;
+import org.apache.camel.spi.*;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.SimpleRegistry;
@@ -137,11 +135,13 @@ public class ConfigManager {
         MailComponent smtp = context.getComponent("smtp", MailComponent.class);
         smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
 
+        JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
+        jsonpath.setWriteAsString(true);
+
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
         context.addComponent("activemq", new SjmsComponent());
-
 
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());
