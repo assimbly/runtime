@@ -70,17 +70,17 @@ spec:
                   language: "{{language}}"
                   expression: "{{expression}}"
                 steps:
-                - setHeader:
-                    name: "CamelSplitIndex"
-                    simple: "${exchangeProperty.CamelSplitIndex}"
-                - setHeader:
-                    name: "CamelSplitSize"
-                    simple: "${exchangeProperty.CamelSplitSize}"
-                - setHeader:
-                    name: "CamelSplitComplete"
-                    simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
-                - convertBodyTo:
-                    type: "java.lang.String"
-                - to: "{{out_split}}"
+                  - setHeader:
+                      name: "CamelSplitIndex"
+                      simple: "${exchangeProperty.CamelSplitIndex}"
+                  - setHeader:
+                      name: "CamelSplitSize"
+                      simple: "${exchangeProperty.CamelSplitSize}"
+                  - setHeader:
+                      name: "CamelSplitComplete"
+                      simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
+                  - convertBodyTo:
+                      type: "java.lang.String"
+                  - to: "{{out_split}}"
             - to:
                 uri: "{{out_default}}"

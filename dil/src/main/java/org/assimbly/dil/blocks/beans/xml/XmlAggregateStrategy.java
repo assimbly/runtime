@@ -22,6 +22,9 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             String splitXml = getBody(splitExchange);
             String newXml = getBody(newExchange);
 
+            System.out.println("splitXml=" + splitXml);
+            System.out.println("1. newXml=" + newXml);
+
             boolean isSplitXmlNull = splitXml == null;
             boolean isNewXmlNull = newXml == null;
 
@@ -36,6 +39,8 @@ public class XmlAggregateStrategy implements AggregationStrategy {
             }
 
             newXml = buildAggregateBody(newXml, splitXml);
+
+            System.out.println("2. newXml=" + newXml);
 
             newExchange.getIn().setBody(newXml);
 

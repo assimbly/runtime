@@ -31,8 +31,8 @@ spec:
       aggregateType:
         title: "Aggregate Type"
         description: "Content-Type to use for aggregation (XML or JSON)"
-        type: "boolean"
-        default: false
+        type: "string"
+        default: "xml"
       out_rule:
         title: "Out Rule"
         description: "Out Rule"
@@ -59,38 +59,38 @@ spec:
         default: "0"
   dependencies:
   - "camel:kamelet"
-  template:
-    route:
-      routeConfigurationId: "{{routeConfigurationId}}"
-      from:
-        uri: "{{in}}"
-        steps:
+template:
+  route:
+    routeConfigurationId: "{{routeConfigurationId}}"
+    from:
+      uri: "{{in}}"
+      steps:
         - step:
             id: "{{routeId}}"
             steps:
-            - setProperty:
-                name: "Aggregate-Type"
-                constant:
-                  expression: "{{aggregateType}}"
-            - split:
-                aggregationStrategy: "CurrentAggregateStrategy"
-                parallelProcessing: "{{parallelProcessing}}"
-                streaming: "{{streaming}}"
-                language:
-                  language: "{{language}}"
-                  expression: "{{expression}}"
-                steps:
-                - setHeader:
-                    name: "CamelSplitIndex"
-                    simple: "${exchangeProperty.CamelSplitIndex}"
-                - setHeader:
-                    name: "CamelSplitSize"
-                    simple: "${exchangeProperty.CamelSplitSize}"
-                - setHeader:
-                    name: "CamelSplitComplete"
-                    simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
-                - convertBodyTo:
-                    type: "java.lang.String"
-                - to: "{{out_split}}"
-            - to:
-                uri: "{{out_default}}"
+              - setProperty:
+                  name: "Aggregate-Type"
+                  constant:
+                    expression: "{{aggregateType}}"
+              - split:
+                  aggregationStrategy: "CurrentAggregateStrategy"
+                  parallelProcessing: "{{parallelProcessing}}"
+                  streaming: "{{streaming}}"
+                  language:
+                    language: "{{language}}"
+                    expression: "{{expression}}"
+                  steps:
+                    - setHeader:
+                        name: "CamelSplitIndex"
+                        simple: "${exchangeProperty.CamelSplitIndex}"
+                    - setHeader:
+                        name: "CamelSplitSize"
+                        simple: "${exchangeProperty.CamelSplitSize}"
+                    - setHeader:
+                        name: "CamelSplitComplete"
+                        simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
+                    - convertBodyTo:
+                        type: "java.lang.String"
+                    - to: "{{out_split}}"
+              - to:
+                  uri: "{{out_default}}"
