@@ -11,6 +11,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 //set headers for each step
@@ -67,7 +68,12 @@ public class SetHeadersProcessor implements Processor {
 			result = headerValue;
 		} else if (headerLanguage.equalsIgnoreCase("xpath")) {
 			XPathFactory fac = new net.sf.saxon.xpath.XPathFactoryImpl();
-			result = XPathBuilder.xpath(headerValue).factory(fac).evaluate(exchange, String.class);
+
+            result = XPathBuilder.xpath(headerValue)
+                    .factory(fac)
+                    .stringResult()
+                    .evaluate(exchange, String.class);
+
 		} else {
 			Language resolvedLanguage = exchange.getContext().resolveLanguage(headerLanguage);
 			Expression expression = resolvedLanguage.createExpression(headerValue);

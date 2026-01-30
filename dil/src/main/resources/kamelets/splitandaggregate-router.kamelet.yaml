@@ -73,7 +73,7 @@ template:
                   constant:
                     expression: "{{aggregateType}}"
               - split:
-                  aggregationStrategy: "CurrentAggregateStrategy"
+                  aggregationStrategy: "AggregateStrategy"
                   parallelProcessing: "{{parallelProcessing}}"
                   streaming: "{{streaming}}"
                   language:

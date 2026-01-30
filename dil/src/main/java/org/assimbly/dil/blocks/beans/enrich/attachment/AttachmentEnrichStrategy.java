@@ -6,12 +6,14 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.tika.io.IOUtils;
+import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class AttachmentEnrichStrategy implements AggregationStrategy {
 
@@ -19,6 +21,7 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
+
         if (original == null) {
             throw new RuntimeException("Original exchange is null, cannot add resource as attachment.");
         }
@@ -53,11 +56,11 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         try {
             data = IOUtils.toByteArray(body);
-        } catch (IOException e) { log.error(e.getMessage()); }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
 
-        log.info("Adding attachment '{}' with mime type: '{}'", attachmentName, mimeType);
-        log.info("Attachment details");
-        log.info("\tsize: {}", data.length);
+        log.info("[Enrich] Adding attachment. key={} mime-type={} size={}", attachmentName, mimeType, data.length);
 
         dataHandler = new DataHandler(data,mimeType);
 
@@ -65,6 +68,9 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         am.addAttachment(attachmentName, dataHandler);
 
+        original.getMessage().setBody("Hallo");
+
         return original;
+
     }
 }
