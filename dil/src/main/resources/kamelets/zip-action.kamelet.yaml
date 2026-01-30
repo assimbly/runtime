@@ -41,6 +41,9 @@ spec:
                 zipFile:
                   id: "zipFile-{{routeId}}"
             - setHeader:
+                name: "Content-Type"
+                simple: " application/zip"
+            - setHeader:
                 name: "Content-Disposition"
                 simple: "attachment; filename=\"${header.CamelFileName}\""
             - to:
