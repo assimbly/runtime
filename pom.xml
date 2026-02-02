@@ -70,10 +70,10 @@
         <jolokia.version>2.4.3</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
         <kamelet.version>4.17.0</kamelet.version>
-        <logback-classic.version>1.5.26</logback-classic.version>
+        <logback-classic.version>1.5.27</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
-        <mysql-connector-java.version>9.5.0</mysql-connector-java.version>
+        <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
         <netty.version>4.2.9.Final</netty.version>
         <oracle.version>23.26.0.0.0</oracle.version>
         <postgresql.version>42.7.9</postgresql.version>
@@ -91,7 +91,7 @@
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <jetty.version>12.1.5</jetty.version>
+        <jetty.version>12.1.6</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
         <junit.version>6.0.2</junit.version>
