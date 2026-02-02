@@ -186,6 +186,9 @@ public class ConfigManager {
 
     public void setGlobalOptions() {
 
+        //enable allow original message
+        context.setAllowUseOriginalMessage(true);
+
         //enable breadcrumb for tracing
         context.setUseBreadcrumb(true);
 

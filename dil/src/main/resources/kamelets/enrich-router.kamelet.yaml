@@ -25,6 +25,10 @@ spec:
         description: "Type of enrichment"
         type: "string"
         default: "xml"
+      fileName:
+        title: "FileName"
+        description: "Name of the attachement"
+        type: "string"
       useErrorRoute:
         title: "Use Error Route"
         description: "Error Route"
@@ -62,6 +66,9 @@ spec:
             - setProperty:
                 name: "Error-Route"
                 constant: "{{useErrorRoute}}"
+            - setProperty:
+                name: "Enrich-FileName"
+                constant: "{{?fileName}}"
             - enrich:
                 constant: "{{out_enrich}}"
                 aggregation-strategy: "#class:org.assimbly.dil.blocks.beans.enrich.EnrichStrategy"

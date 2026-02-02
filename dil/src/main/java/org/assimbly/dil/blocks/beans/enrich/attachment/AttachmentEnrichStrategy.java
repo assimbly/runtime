@@ -38,7 +38,9 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
         // Default attachment name == message id of incoming resource
         String attachmentName = resourceMessage.getMessageId();
 
-        if (resourceMessage.getHeader(Exchange.FILE_NAME) != null) {
+        if (resource.getProperty("Enrich-FileName") != null) {
+            attachmentName = resource.getProperty("Enrich-FileName", String.class);
+        }else if (resourceMessage.getHeader(Exchange.FILE_NAME) != null) {
             attachmentName = resourceMessage.getHeader(Exchange.FILE_NAME, String.class);
         }
 
@@ -67,8 +69,6 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
 
         am.addAttachment(attachmentName, dataHandler);
-
-        original.getMessage().setBody("Hallo");
 
         return original;
 
