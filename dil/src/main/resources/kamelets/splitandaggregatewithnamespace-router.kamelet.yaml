@@ -1,7 +1,7 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "splitandaggregate-router"
+  name: "splitandaggregatewithnamespace-router"
   labels:
     camel.apache.org/kamelet.type: "router"
 spec:
@@ -10,10 +10,6 @@ spec:
     description: "Splits message by an expression and aggregate result by XML or JSON"
     type: "object"
     properties:
-      language:
-        title: "Language"
-        description: "Language"
-        type: "string"
       expression:
         title: "Expression"
         description: "Expression"
@@ -28,6 +24,14 @@ spec:
         description: "Use Streaming"
         type: "boolean"
         default: false
+      nsprefix:
+        title: "NSprefix"
+        description: "Namespace prefix"
+        type: "string"
+      namespace:
+        title: "Namespace"
+        description: "Namespace for xpath"
+        type: "string"
       aggregateType:
         title: "Aggregate Type"
         description: "Content-Type to use for aggregation (XML or JSON)"
@@ -77,9 +81,11 @@ spec:
                     aggregationStrategy: "AggregateStrategy"
                     parallelProcessing: "{{parallelProcessing}}"
                     streaming: "{{streaming}}"
-                    language:
-                      language: "{{language}}"
+                    xpath:
                       expression: "{{expression}}"
+                      namespace:
+                        - key: "{{nsprefix}}"
+                          value: "{{namespace}}"
                     steps:
                       - setHeader:
                           name: "CamelSplitIndex"

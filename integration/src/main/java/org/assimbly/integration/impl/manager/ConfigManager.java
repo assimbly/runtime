@@ -21,6 +21,7 @@ import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.jsonpath.JsonPathLanguage;
+import org.apache.camel.language.xpath.XPathLanguage;
 import org.apache.camel.spi.*;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
@@ -138,6 +139,9 @@ public class ConfigManager {
 
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
         jsonpath.setWriteAsString(true);
+
+        XPathLanguage xPathLanguage = (XPathLanguage) context.resolveLanguage("xpath");
+        xPathLanguage.setSaxon(true);
 
         context.addComponent("jetty-nossl", jettyHttpComponent12);
         context.addComponent("jetty", jettyHttpComponent12);
