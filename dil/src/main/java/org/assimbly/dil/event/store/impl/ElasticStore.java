@@ -22,14 +22,14 @@ public final class ElasticStore {
     private static final Logger log = LoggerFactory.getLogger(ElasticStore.class);
 
     // Background scheduler for retries (prevents blocking main threads)
-    private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newScheduledThreadPool(2);
 
     // Concurrency control
     private static final int MAX_IN_FLIGHT = 100;
     private static final Semaphore IN_FLIGHT = new Semaphore(MAX_IN_FLIGHT);
 
     // Retry Configuration
-    private static final int MAX_RETRIES = 5;
+    private static final int MAX_RETRIES = 10;
     private static final long INITIAL_DELAY_MS = 1000;
 
     private final String path;
@@ -41,11 +41,14 @@ public final class ElasticStore {
                     URL url = new URL(store.getUri());
                     client = RestClient.builder(new HttpHost(url.getHost(), url.getPort(), url.getProtocol()))
                             .setRequestConfigCallback(c -> c
-                                    .setConnectTimeout(3000)   // 3s to connect
-                                    .setSocketTimeout(10000))  // 10s for data
+                                    .setConnectTimeout(1000)
+                                    .setSocketTimeout(3000))
                             .setHttpClientConfigCallback(b -> b
                                     .setMaxConnTotal(MAX_IN_FLIGHT)
-                                    .setMaxConnPerRoute(MAX_IN_FLIGHT))
+                                    .setMaxConnPerRoute(MAX_IN_FLIGHT)
+                            .setDefaultIOReactorConfig(org.apache.http.impl.nio.reactor.IOReactorConfig.custom()
+                                    .setIoThreadCount(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
+                                    .build()))
                             .build();
                 }
             }
@@ -54,39 +57,39 @@ public final class ElasticStore {
     }
 
     public void store(String json) {
-        // Step 1: Try to get a permit. If full, don't wait (don't stuck).
-        if (!IN_FLIGHT.tryAcquire()) {
-            log.warn("Dropping event: ES overloaded");
+        storeInternal(json, 0);
+    }
+
+    private void storeInternal(String json, int attempt) {
+        try {
+            // Change from tryAcquire() to acquire()
+            // This makes the background thread wait until a permit is free
+            IN_FLIGHT.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return;
         }
 
-        // Step 2: Start the async request chain
-        sendToElasticWithRetry(json, 0);
-    }
-
-    private void sendToElasticWithRetry(String json, int attempt) {
         Request req = new Request("POST", path);
         req.setJsonEntity(json);
 
         client.performRequestAsync(req, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-                // Success: Release the slot and we are done
                 IN_FLIGHT.release();
             }
 
             @Override
             public void onFailure(Exception ex) {
-                if (attempt < MAX_RETRIES) {
-                    // Exponential Backoff: 1000 * 2^attempt (1s, 2s, 4s, 8s, 16s)
-                    long delay = INITIAL_DELAY_MS * (long) Math.pow(2, attempt);
+                // RELEASE IMMEDIATELY so the slot is available for others
+                IN_FLIGHT.release();
 
-                    // Schedule retry on background thread
-                    RETRY_SCHEDULER.schedule(() -> sendToElasticWithRetry(json, attempt + 1), delay, TimeUnit.MILLISECONDS);
+                if (attempt < MAX_RETRIES) {
+                    long delay = INITIAL_DELAY_MS * (long) Math.pow(2, attempt);
+                    // Schedule retry - it will call storeInternal and try to get a new permit
+                    RETRY_SCHEDULER.schedule(() -> storeInternal(json, attempt + 1), delay, TimeUnit.MILLISECONDS);
                 } else {
-                    // All retries failed: Release slot so others can use it
-                    IN_FLIGHT.release();
-                    log.error("[ES-GIVEUP] Failed after " + (MAX_RETRIES + 1) + " attempts. Event lost.");
+                    log.error("[ES-GIVEUP] Failed after " + (MAX_RETRIES + 1) + " attempts.");
                 }
             }
         });
