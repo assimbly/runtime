@@ -105,8 +105,13 @@ public class StepCollector extends EventNotifierSupport {
 
             if(stepId!= null && !isBlackListed(stepId)){
                 if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
-                    // Get the message exchange from exchange event
+                    // materialize body BEFORE async
+                    byte[] body = stepEvent.getExchange().getMessage().getBody(byte[].class);
+                    // create a copy of the exchange for async processing
                     Exchange exchange = stepEvent.getExchange().copy();
+                    // replace the body in the copied exchange with the materialized byte[]
+                    exchange.getMessage().setBody(body);
+
                     long stepTimestamp = stepEvent.getTimestamp();
 
                     // Hand off the HEAVY processing to a background thread
