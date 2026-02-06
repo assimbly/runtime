@@ -130,6 +130,7 @@ public class StatsManager {
     private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats) {
 
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        ManagedCamelContext managed = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
 
         FlowStatistics stats = new FlowStatistics();
         if(managedRouteGroup==null){
@@ -137,10 +138,30 @@ public class StatsManager {
         }
 
         stats.status = managedRouteGroup.getState().toLowerCase();
-        stats.totalMessages = managedRouteGroup.getExchangesTotal();
-        stats.completedMessages = managedRouteGroup.getExchangesCompleted();
-        stats.failedMessages = managedRouteGroup.getExchangesFailed();
-        stats.pendingMessages = managedRouteGroup.getExchangesInflight();
+
+        stats.totalTransactions = managedRouteGroup.getExchangesTotal();
+        stats.completedTransactions = managedRouteGroup.getExchangesCompleted();
+        stats.failedTransactions = managedRouteGroup.getExchangesFailed();
+        stats.pendingTransactions = managedRouteGroup.getExchangesInflight();
+
+        long total = 0, completed = 0, failed = 0, pending = 0;
+        List<Route> routes = context.getRoutesByGroup(flowId);
+
+        for (Route route : routes) {
+
+            ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
+
+            total += managedRoute.getExchangesTotal();
+            completed += managedRoute.getExchangesCompleted();
+            failed += managedRoute.getExchangesFailed();
+            pending += managedRoute.getExchangesInflight();
+
+        }
+
+        stats.totalMessages = total;
+        stats.completedMessages = completed;
+        stats.failedMessages = failed;
+        stats.pendingMessages = pending;
 
         if (fullStats) {
             stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
@@ -157,6 +178,10 @@ public class StatsManager {
         flow.put("completed", stats.completedMessages);
         flow.put("failed", stats.failedMessages);
         flow.put("pending", stats.pendingMessages);
+        flow.put("totalTransactions", stats.totalTransactions);
+        flow.put("completedTransactions", stats.completedTransactions);
+        flow.put("failedTransactions", stats.failedTransactions);
+        flow.put("pendingTransactions", stats.pendingTransactions);
     }
 
     private void populateDetailedStats(JSONObject flow, FlowStatistics stats) {
@@ -193,6 +218,10 @@ public class StatsManager {
 
     // Helper class to store statistics
     private static class FlowStatistics {
+        long totalTransactions = 0;
+        long completedTransactions = 0;
+        long failedTransactions = 0;
+        long pendingTransactions = 0;
         long totalMessages = 0;
         long completedMessages = 0;
         long failedMessages = 0;
@@ -301,6 +330,7 @@ public class StatsManager {
         flow.put("completed", completedMessages);
         flow.put("failed", failedMessages);
         flow.put("pending", pendingMessages);
+
         if (includeSteps) {
             flow.put("steps", steps);
         }
