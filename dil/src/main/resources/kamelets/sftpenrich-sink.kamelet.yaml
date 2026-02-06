@@ -1,0 +1,180 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "sftpenrich-sink"
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "sftp enrich sink"
+    description: "Enrich a file from a SFTP directory"
+    type: "object"
+    properties:
+      path:
+        title: "path"
+        description: "Path of the FTP directory"
+        type: "string"
+      userName:
+        title: "Username"
+        description: "Username to login"
+        type: "string"
+      password:
+        title: "Password"
+        description: "Password to login"
+        type: "string"
+      fileName:
+        title: "FileName"
+        description: "Name of the file"
+        type: "string"
+        default: "missing"
+      include:
+        title: "Include"
+        description: "Include files by filename pattern"
+        type: "string"
+      exclude:
+        title: "Exclude"
+        description: "Exclude files by filename pattern"
+        type: "string"
+      move:
+        title: "Move"
+        description: "Directory to move processed file to"
+        type: "string"
+      moveFailed:
+        title: "MoveFailed"
+        description: "Directory to move failed file to"
+        type: "string"
+      charset:
+        title: "Charset"
+        description: "Character set"
+        type: "string"
+        default: "utf-8"
+      readLock:
+        title: "ReadLock"
+        description: "ReadLock"
+        type: "string"
+        default: "none"
+      timeout:
+        title: "TimeOut"
+        description: "Time Out"
+        type: "integer"
+        default: 5000
+      maxMessagesPerPoll:
+        title: "MaxMessagesPerPoll"
+        description: "Maximum Messages to pick up per poll"
+        type: "string"
+        default: -1
+      disconnect:
+        title: "Disconnect"
+        description: "Disconnect"
+        type: "boolean"
+        default: true
+      autoCreate:
+        title: "AutoCreate"
+        description: "Auto create the directory (path)"
+        type: "boolean"
+        default: true
+      passiveMode:
+        title: "PassiveMode"
+        description: "Sets passive mode connections"
+        type: "boolean"
+        default: true
+      binary:
+        title: "Binary"
+        description: "Specifies the file transfer mode, BINARY or ASCII"
+        type: "boolean"
+        default: false
+      delete:
+        title: "Delete"
+        description: "If true, the file will be deleted after it is processed successfully"
+        type: "boolean"
+        default: false
+      recursive:
+        title: "Recursive"
+        description: "Check subdirectories recursively"
+        type: "boolean"
+        default: false
+      abortMode:
+        title: "AbortMode"
+        description: "Abort when no files are found (not an endpoint parameter)"
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - setProperty:
+                name: "Enrich-Type"
+                constant: "application/override"
+            - setProperty:
+                name: "Enrich-MaxMessagesPerPoll"
+                constant: "{{maxMessagesPerPoll}}"
+            - loop:
+                doWhile: true
+                expression:
+                  simple: "${exchangeProperty.Enrich-MaxMessagesPerPoll} != 0"
+                steps:
+                - choice:
+                    when:
+                    - simple: "'{{fileName}}' != 'missing'"
+                      steps:
+                      - pollEnrich:
+                          timeout: "{{timeout}}"
+                          aggregationStrategy: "#CurrentEnrichStrategy"
+                          simple: "sftp:{{path}}?userName={{userName}}&password={{password}}&fileName={{?fileName}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&serverHostKeys=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&publicKeyAcceptedAlgorithms=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&keyExchangeProtocols=curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1"
+                    otherwise:
+                      steps:
+                      - pollEnrich:
+                          timeout: "{{timeout}}"
+                          aggregationStrategy: "#CurrentEnrichStrategy"
+                          simple: "sftp:{{path}}?userName={{userName}}&password={{password}}&include={{?include}}&exclude={{?exclude}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&serverHostKeys=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&publicKeyAcceptedAlgorithms=ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa&keyExchangeProtocols=curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group1-sha1,diffie-hellman-group14-sha1"
+                - setProperty:
+                    name: "Enrich-MaxMessagesPerPoll"
+                    simple: "${exchangeProperty.Enrich-MaxMessagesPerPoll}--"
+                - choice:
+                    when:
+                    - simple: "${body} == null"
+                      steps:
+                      - setProperty:
+                          name: "Enrich-MaxMessagesPerPoll"
+                          constant: "0"
+                    otherwise:
+                      disabled: "{{!abortMode}}"
+                      steps:
+                      - removeHeaders:
+                          disabled: "{{!abortMode}}"
+                          pattern: "CamelFile*"
+                      - setProperty:
+                          disabled: "{{!abortMode}}"
+                          name: "Enrich-Response"
+                          simple: "${body}"
+                - removeHeaders:
+                    disabled: "{{abortMode}}"
+                    pattern: "CamelFile*"
+                - setProperty:
+                    disabled: "{{abortMode}}"
+                    name: "Enrich-Response"
+                    simple: "${body}"
+            - setBody:
+                simple: "${exchangeProperty.Enrich-Response}"

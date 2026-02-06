@@ -21,6 +21,7 @@ import java.util.*;
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
 public class StepCollector extends EventNotifierSupport {
+
     private final StoreManager storeManager;
     private final String expiryInHours;
     private final ArrayList<Filter> filters;

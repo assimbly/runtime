@@ -640,6 +640,7 @@ public class StatsManager {
         for (Route route : routes) {
             String routeId = route.getId();
             String flowId = StringUtils.substringBefore(routeId, "-");
+
             if (flowId != null && !flowId.isEmpty()) {
                 flowIds.add(flowId);
             }
