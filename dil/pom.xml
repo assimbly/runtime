@@ -57,6 +57,11 @@
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>sandbox</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
 
 	  <dependency>
 		  <groupId>net.lingala.zip4j</groupId>
