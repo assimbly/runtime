@@ -1,0 +1,45 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "deadletter-sink"
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "deadletter sink"
+    description: "Sends message to the deadletterqueue"
+    type: "object"
+    properties:
+      deadLetterQueue:
+        title: "DeadLetterQueue"
+        description: "Custom DeadLetterQueue"
+        type: "string"
+        default: "ActiveMQ.DLQ"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+              - to:
+                  uri: "activemq:{{deadLetterQueue}}?exchangePattern=InOnly&connectionFactory=#activemq-connection"
