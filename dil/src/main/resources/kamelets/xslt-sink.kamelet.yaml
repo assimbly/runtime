@@ -18,10 +18,6 @@ spec:
         title: "Source Endpoint"
         type: "string"
         default: "kamelet:source"
-      out:
-        title: "Sink Endpoint"
-        type: "string"
-        default: "kamelet:sink"
       routeId:
         title: "Route ID"
         type: "string"

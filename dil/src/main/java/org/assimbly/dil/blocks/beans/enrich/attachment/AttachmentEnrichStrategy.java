@@ -5,72 +5,80 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.attachment.AttachmentMessage;
-import org.apache.tika.io.IOUtils;
-import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 public class AttachmentEnrichStrategy implements AggregationStrategy {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger log = LoggerFactory.getLogger(AttachmentEnrichStrategy.class);
+    private static final String UNDEFINED_FILE_NAME = "UndefinedFileName";
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
 
         if (original == null) {
-            throw new RuntimeException("Original exchange is null, cannot add resource as attachment.");
+            throw new IllegalArgumentException("Original exchange is null, cannot add resource as attachment.");
         }
 
-        Message resourceMessage;
-
-        if(resource != null){
-            resourceMessage = resource.getIn();
-        }else{
-            log.error("Could not get a response from your requested resource.");
+        if (resource == null) {
+            log.error("Resource (enriched message) exchange is null, cannot add resource as attachment.");
             return original;
         }
 
-        // Default attachment name == message id of incoming resource
-        String attachmentName = resourceMessage.getMessageId();
+        Message resourceMessage = resource.getIn();
 
-        if (resource.getProperty("Enrich-FileName") != null) {
-            attachmentName = resource.getProperty("Enrich-FileName", String.class);
-        }else if (resourceMessage.getHeader(Exchange.FILE_NAME) != null) {
-            attachmentName = resourceMessage.getHeader(Exchange.FILE_NAME, String.class);
-        }
-
-        InputStream body = resourceMessage.getBody(InputStream.class);
-
-        String mimeType = MimeTypeHelper.detectMimeType(body).toString();
-
-        if (resourceMessage.getHeader(Exchange.CONTENT_TYPE) != null) {
-            mimeType = resourceMessage.getHeader(Exchange.CONTENT_TYPE, String.class);
-        }
-
-        DataHandler dataHandler;
-
-        byte[] data = new byte[0];
-
-        try {
-            data = IOUtils.toByteArray(body);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
+        String attachmentName = resolveAttachmentName(resource, resourceMessage);
+        String mimeType = resolveMimeType(resourceMessage);
+        byte[] data = readBodyAsBytes(resourceMessage, mimeType);
 
         log.info("[Enrich] Adding attachment. key={} mime-type={} size={}", attachmentName, mimeType, data.length);
 
-        dataHandler = new DataHandler(data,mimeType);
-
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
-
-        am.addAttachment(attachmentName, dataHandler);
+        am.addAttachment(attachmentName, new DataHandler(data, mimeType));
+        original.getMessage().setHeader(Exchange.FILE_NAME, attachmentName);
 
         return original;
 
     }
+
+    private String resolveMimeType(Message resourceMessage) {
+        String contentTypeHeader = resourceMessage.getHeader(Exchange.CONTENT_TYPE, String.class);
+        if (contentTypeHeader != null) {
+            return contentTypeHeader;
+        }
+        InputStream body = resourceMessage.getBody(InputStream.class);
+        return MimeTypeHelper.detectMimeType(body).toString();
+    }
+
+    private byte[] readBodyAsBytes(Message resourceMessage, String mimeType) {
+        // Re-fetch the body since stream may have been consumed during MIME detection
+        InputStream body = resourceMessage.getBody(InputStream.class);
+        if (body == null) {
+            log.warn("[Enrich] Resource body is null, attaching empty byte array.");
+            return new byte[0];
+        }
+        try {
+            return body.readAllBytes();
+        } catch (IOException e) {
+            log.error("[Enrich] Failed to read resource body for mime-type={}: {}", mimeType, e.getMessage(), e);
+            return new byte[0];
+        }
+    }
+
+    private String resolveAttachmentName(Exchange resource, Message resourceMessage) {
+        String enrichName = resource.getProperty("Enrich-AttachmentName", String.class);
+        if (enrichName != null) {
+            return enrichName;
+        }
+        String fileName = resourceMessage.getHeader(Exchange.FILE_NAME, String.class);
+        if (fileName != null) {
+            return fileName;
+        }
+        return UNDEFINED_FILE_NAME;
+    }
+
 }

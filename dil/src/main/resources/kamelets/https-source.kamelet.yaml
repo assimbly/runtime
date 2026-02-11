@@ -25,10 +25,11 @@ spec:
         description: "Whether to keep the CamelHttp* headers."
         type: "boolean"
         default: false
-      in:
-        title: "Source Endpoint"
+      removeHeaders:
+        title: "RemoveHeaders"
+        description: "Whether to remove incoming http headers. (By default only remove CamelHttp headers)"
         type: "string"
-        default: "kamelet:source"
+        default: "CamelHttp*"
       out:
         title: "Sink Endpoint"
         type: "string"
@@ -52,8 +53,8 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - removeHeaders:
-                pattern: "CamelHttp*"
-                disabled: "{{preserveHttpHeaders}}"
+            #- removeHeaders:
+            #    pattern: "{{removeHeaders}}"
+            #    disabled: "{{preserveHttpHeaders}}"
             - to:
                 uri: "{{out}}"
