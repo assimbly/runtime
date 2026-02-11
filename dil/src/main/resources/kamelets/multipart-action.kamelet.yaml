@@ -51,7 +51,7 @@ spec:
                   steps:
                   - setHeader:
                       name: "MultipartFieldName"
-                      constant: "{{fname}}"
+                      simple: "{{fname}}"
                 otherwise:
                   steps:
                   - setHeader:
@@ -59,7 +59,7 @@ spec:
                       constant: "{{contentType}}"
                   - setHeader:
                       name: "MultipartFieldName"
-                      constant: "{{fname}}"
+                      simple: "{{fname}}"
             - process:
                 ref: "multipartProcessor"
             - to:
