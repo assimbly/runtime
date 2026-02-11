@@ -9,10 +9,10 @@ public class ScriptDto {
     @SuppressWarnings("unused")
     protected ScriptDto() {}
 
-    public ScriptDto(String language, String script, boolean secureSandbox) {
+    public ScriptDto(String language, String script, boolean strictSecureMode) {
         this.language = language;
         this.script = script;
-        this.strictSecureMode = secureSandbox;
+        this.strictSecureMode = strictSecureMode;
     }
 
     public String getLanguage() {
