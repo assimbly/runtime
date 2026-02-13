@@ -759,7 +759,7 @@ public class RouteTemplate {
 
         String templateName = scheme + "-" + type;
 
-        if (templateName.equalsIgnoreCase("as2-inbound")){
+        if (templateName.equalsIgnoreCase("as2-source")){
             properties.put("security.as2", "true");
         }
 
