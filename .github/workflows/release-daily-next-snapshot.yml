@@ -32,7 +32,7 @@ jobs:
 
   call-release:
     needs: getversion 
-    uses: ./.github/workflows/release.yml
+    uses: ./.github/workflows/release-next.yml
     secrets: inherit
     with:
       branch: 'next'
