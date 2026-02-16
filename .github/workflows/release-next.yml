@@ -94,7 +94,14 @@ jobs:
                   "id": "maven",
                   "name": "Maven Central",
                   "url": "https://repo1.maven.org/maven2"
-                }
+                },
+                {
+                  "id": "github",
+                  "name": "Assimbly Custom Components Repository",
+                  "url": "https://maven.pkg.github.com/assimbly/custom-components",
+                  "snapshots": {
+                    "enabled": "true"
+                 }
             ]
           servers: >
             [
