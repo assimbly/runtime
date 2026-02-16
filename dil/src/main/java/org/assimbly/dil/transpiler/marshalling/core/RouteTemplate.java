@@ -473,8 +473,10 @@ public class RouteTemplate {
     }
 
     private void createTemplateParameter(String name, String value){
-        Element param = createParameter(templateDoc,name,value);
-        templatedRoute.appendChild(param);
+        if (value != null && !value.isEmpty()) {
+            Element param = createParameter(templateDoc, name, value);
+            templatedRoute.appendChild(param);
+        }
     }
 
 
