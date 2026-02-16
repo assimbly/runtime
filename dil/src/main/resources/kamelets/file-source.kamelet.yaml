@@ -40,7 +40,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "file://{{path}}?bridgeErrorHandler=true&{{?options}}"
+        uri: "file:{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
         - step:
             id: "{{routeId}}"
