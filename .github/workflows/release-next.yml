@@ -101,7 +101,8 @@ jobs:
                   "url": "https://maven.pkg.github.com/assimbly/custom-components",
                   "snapshots": {
                     "enabled": "true"
-                 }
+                   }
+                }   
             ]
           servers: >
             [
