@@ -14,7 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -63,6 +67,8 @@ public abstract class BaseIntegration implements Integration {
 
 	@SuppressWarnings("unchecked")
 	public void initFlowDB() {
+
+		createCacheDirectory();
 
 		File dbFile = new File(BaseDirectory.getInstance().getBaseDirectory() + "/cache/flowsMap.db");
 
@@ -154,6 +160,15 @@ public abstract class BaseIntegration implements Integration {
 
 	}
 
+	private void createCacheDirectory() {
+		Path path = Paths.get(BaseDirectory.getInstance().getBaseDirectory(), "cache");
+
+		try {
+			Files.createDirectories(path);
+		} catch (IOException e) {
+			log.error("Error to create cache directory", e);
+		}
+	}
 
 
 	public String getLastError() {
