@@ -44,7 +44,7 @@
         <activemq-artemis.version>2.51.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
-        <camel.version>4.17.0</camel.version>
+        <camel.version>4.18.0</camel.version>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.13.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
@@ -70,7 +70,7 @@
         <jolokia.version>2.4.3</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
         <kamelet.version>4.17.0</kamelet.version>
-        <logback-classic.version>1.5.31</logback-classic.version>
+        <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
