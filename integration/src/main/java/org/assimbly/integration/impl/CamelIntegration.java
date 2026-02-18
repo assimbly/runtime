@@ -1,5 +1,8 @@
 package org.assimbly.integration.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.camel.*;
@@ -167,6 +170,26 @@ public class CamelIntegration extends BaseIntegration {
 
     public String uninstallFlow(String flowId, long timeout) {
         return flowManager.stopFlow(flowId, timeout);
+    }
+
+    public String testFlow(String flowId, long timeout, String mediaType, String configuration) {
+
+        try {
+            super.setFlowConfiguration(flowId, mediaType, configuration);
+
+            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), sslManager, timeout);
+            String testReport = flowManager.testFlow(flowId);
+            flowManager.stopFlow(flowId, timeout);
+
+            return mergeJson(flowReport, testReport);
+
+        } catch (Exception e) {
+            log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
+            flowManager.initFlowActionReport(flowId);
+            flowManager.finishFlowActionReport(flowId, "error", e.getMessage(), "error");
+            return flowManager.getFlowReport();
+        }
+
     }
 
     public void setCaching() {
@@ -828,6 +851,23 @@ public class CamelIntegration extends BaseIntegration {
 
         FastFlowLoader fastFlowLoader = new FastFlowLoader();
         return fastFlowLoader.load(flowId, configuration, context);
+
+    }
+
+    private String mergeJson(String flowJson, String testJson) throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Parse both strings into JsonNode trees
+        JsonNode flowNode = mapper.readTree(flowJson);
+        JsonNode testNode = mapper.readTree(testJson);
+
+        // Create a new container and merge the fields
+        ObjectNode merged = mapper.createObjectNode();
+        merged.setAll((ObjectNode) flowNode);
+        merged.setAll((ObjectNode) testNode);
+
+        return mapper.writeValueAsString(merged);
 
     }
 

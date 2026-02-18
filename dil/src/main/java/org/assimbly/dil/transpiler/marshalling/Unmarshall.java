@@ -175,8 +175,6 @@ public class Unmarshall {
 
     private void setErrorHandlerUri(String stepId, int stepIndex, String type, String uri, String options){
 
-        System.out.println("1. setErrorHandlerUri");
-
         String stepXPath = "integrations/integration/flows/flow[id='" + flowId + "']/steps/step[" + stepIndex + "]/";
 
         String id = Objects.toString(conf.getProperty(stepXPath + "links/link[1]/id"), null);
@@ -220,12 +218,13 @@ public class Unmarshall {
 			Node blockId = blockElement.getElementsByTagName("id").item(0);
 			Node blockType = blockElement.getElementsByTagName("type").item(0);
 
+
 			if(blockId!=null && blockType!=null){
 
 				String blockTypeValue = blockType.getTextContent();
 
 				if(blockTypeValue.equalsIgnoreCase("message")){
-					properties =  new Message(properties, conf).setHeader(type, stepId, blockId.getTextContent());
+					properties =  new Message(properties, conf).setMessage(blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
 					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("route")) {
