@@ -571,7 +571,7 @@ public interface Integration {
     String installRoute(String routeId, String route) throws Exception;
 
 	/**
-	* Configure and Starts a flow (for testing)
+	* Configure and Starts a flow
 	*
 	* @param  flowId the id of the flow
 	* @param  timeout the timeout in milliseconds
@@ -595,13 +595,25 @@ public interface Integration {
 	String fastInstallFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception;
 
 	/**
-	 * Configure and Starts a flow (for testing)
+	 * Uninstall a flow
 	 *
 	 * @param  flowId the id of the flow
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
     String uninstallFlow(String flowId, long timeout) throws Exception;
+
+	/**
+	 * Installs and test a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  timeout the timeout in milliseconds
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  configuration (the XML, JSON or YAML file)
+	 * @return returns a confirmation message
+	 * @throws Exception if flow doesn't start
+	 */
+	String testFlow(String flowId, long timeout, String mediaType, String configuration);
 
 	/**
 	* Checks if a flow is started

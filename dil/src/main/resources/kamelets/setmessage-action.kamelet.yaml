@@ -20,6 +20,11 @@ spec:
         description: "Language"
         type: "string"
         default: "constant"
+      body:
+        title: "Body"
+        description: "Message Body"
+        type: "string"
+        default: ""
       path:
         title: "Path"
         description: "Path"
@@ -52,7 +57,7 @@ spec:
             steps:
             - setProperty:
                 name: "assimbly.body"
-                constant: "{{path}}"
+                constant: "{{body}}"
             - setProperty:
                 name: "assimbly.language"
                 constant: "{{language}}"

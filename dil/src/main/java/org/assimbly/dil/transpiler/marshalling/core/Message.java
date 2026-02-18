@@ -1,16 +1,18 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.assimbly.util.IntegrationUtil;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeMap;
 
 public class Message {
 
     private final TreeMap<String, String> properties;
     private final XMLConfiguration conf;
-    private String headerXPath;
     private String messageId;
 
     public Message(TreeMap<String, String> properties, XMLConfiguration conf) {
@@ -18,52 +20,67 @@ public class Message {
         this.conf = conf;
     }
 
-    public TreeMap<String, String> setHeader(String type, String stepId, String messageId) {
+    public TreeMap<String, String> setMessage(String messageId) {
 
         this.messageId = messageId;
 
-        headerXPath = "core/messages/message[id='" + messageId + "']/headers";
+        setId();
 
-        List<String> headerProporties = IntegrationUtil.getXMLParameters(conf, headerXPath);
+        setName();
 
-        if(!headerProporties.isEmpty()){
+        setBody();
 
-            setId(type, stepId);
-
-            setName();
-
-            setHeaders(headerProporties);
-        }
+        setHeaders();
 
         return properties;
     }
 
-    private void setId(String type, String stepId){
-        properties.put(type + "." + stepId + ".message.id", messageId);
+    private void setId(){
+        properties.put("message." + messageId + ".id", messageId);
     }
 
     private void setName(){
-        String headerName = conf.getString("core/messages/message[id='" + messageId + "']/name");
-        if(!headerName.isEmpty()) {
-            properties.put("message." + messageId + ".name", headerName);
+        String messageName = conf.getString("core/messages/message[id='" + messageId + "']/name");
+        if(messageName != null && !messageName.isEmpty()) {
+            properties.put("message." + messageId + ".name", messageName);
         }
     }
 
-    private void setHeaders(List<String> headerProporties){
+    private void setBody(){
 
-        for(String headerProperty : headerProporties){
-            if(!headerProperty.endsWith("type")) {
+        String bodycontentXPath = "core/messages/message[id='" + messageId + "'  or name='" + messageId + "']/body/content";
+        String bodylanguageXPath = "core/messages/message[id='" + messageId + "'  or name='" + messageId + "']/body/language";
 
-                String key = headerProperty.substring(headerXPath.length() + 1);
-                String value = conf.getProperty(headerProperty).toString();
-                String type = conf.getString(headerProperty + "/@type");
-
-                if(type==null){
-                    type = conf.getString(headerProperty + "/type");
-                }
-                properties.put("message." + messageId + "." + type + "." + key, value);
-            }
+        String bodyContent = conf.getString(bodycontentXPath);
+        if(bodyContent != null && !bodyContent.isEmpty()) {
+            properties.put("message." + messageId + ".body.content", bodyContent);
         }
+
+        String bodyLanguage = conf.getString(bodylanguageXPath);
+        if(bodyLanguage != null && !bodyLanguage.isEmpty()) {
+            properties.put("message." + messageId + ".body.language", bodyLanguage);
+        }
+
+    }
+
+    private void setHeaders(){
+
+        String headersXPath = "core/messages/message[id='" + messageId + "'  or name='" + messageId + "']/headers/header";
+
+        List<HierarchicalConfiguration<ImmutableNode>> headers = conf.configurationsAt(headersXPath);
+
+        for (HierarchicalConfiguration<ImmutableNode> header : headers) {
+
+            String headerType = header.getString("type");
+            String language   = header.getString("language");
+            String name       = header.getString("name");
+            String value      = header.getString("value");
+
+            properties.put("message." + messageId + "." + headerType + "." + name, value);
+            properties.put("message." + messageId + "." + headerType + "." + name + ".language", language);
+
+        }
+
     }
 
 }

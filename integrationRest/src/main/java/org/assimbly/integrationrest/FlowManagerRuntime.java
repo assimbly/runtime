@@ -344,6 +344,44 @@ public class FlowManagerRuntime {
 
     }
 
+    @Schema(description = "Flows", example = "")
+    @PostMapping(
+            path = "/integration/flow/{flowId}/test",
+            consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> testFlow(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    ) {
+
+        log.info("Test flowId: {}. Configuration:\n\n{}", flowId, configuration);
+
+        try {
+
+            status = integration.testFlow(flowId, timeout, contentType, configuration);
+
+            if(mediaType.equals("application/xml")){
+                status = DocConverter.convertJsonToXml(status);
+            }
+
+            if (status.contains("Started flow successfully")) {
+                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/test",status,true);
+            } else {
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/test", status, true);
+            }
+        } catch (Exception e) {
+            log.error("Test flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/test", e.getMessage(), "unable to test flow " + flowId, flowId);
+        }
+
+    }
+
+
+
     @GetMapping(
             path = "/integration/flow/{flowId}/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

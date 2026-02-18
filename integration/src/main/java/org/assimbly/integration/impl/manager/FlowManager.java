@@ -2,20 +2,18 @@ package org.assimbly.integration.impl.manager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
-import org.apache.camel.CamelContext;
-import org.apache.camel.Component;
-import org.apache.camel.Route;
-import org.apache.camel.ServiceStatus;
+import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
+import org.apache.camel.clock.Clock;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.RouteController;
 import org.apache.camel.spi.RouteStartupOrder;
+import org.apache.camel.spi.UnitOfWork;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.AS2KeyProcessor;
 import org.assimbly.dil.loader.FlowLoader;
@@ -398,6 +396,41 @@ public class FlowManager {
         }
 
         return loadReport;
+
+    }
+
+    public String testFlow(String flowId) {
+
+        JSONObject json = new JSONObject();
+        JSONObject test = new JSONObject();
+
+        try(FluentProducerTemplate template = context.createFluentProducerTemplate()) {
+
+            Message message = template
+                    .to("sync:" + flowId)
+                    .request(Message.class);
+
+            JSONObject headers = new JSONObject();
+            Map<String, Object> headersMap = message.getHeaders();
+            for (Map.Entry<String, Object> header : headersMap.entrySet()) {
+                headers.put(header.getKey(),header.getValue());
+            }
+
+            test.put("body",message.getBody(String.class));
+            test.put("headers",headers);
+            test.put("passed ",true);
+
+
+        } catch (Exception e) {
+            test.put("passed ",false);
+            test.put("message ",e.getMessage());
+            log.error("Test flow failed. | flowid={}", flowId, e);
+        }
+
+        // Build final response
+        json.put("test", test);
+
+        return json.toString(2);
 
     }
 

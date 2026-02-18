@@ -313,6 +313,7 @@ public class RouteTemplate {
     }
 
     public void createStepByType(String type, String stepId, String flowId, String stepXPath, int stepIndex, List<String> optionProperties, String[] links) throws Exception {
+
         if(blockType.equalsIgnoreCase("routeTemplate")){
             defineRouteTemplate(templateId, type, stepId);
             createStep(optionProperties, links, stepXPath, stepIndex, type, flowId, stepId);
@@ -774,9 +775,10 @@ public class RouteTemplate {
     }
 
     private void setCoreMessageBody(String messageName) throws XPathExpressionException {
+
         String resourceAsString = getBodyResource(messageName);
 
-        String language = Objects.toString(conf.getProperty("core/messages/message[name='" + messageName + "']/body/@language"), null);
+        String language = Objects.toString(conf.getProperty("core/messages/message[name='" + messageName + "']/body/language"), null);
         if (language == null) {
             language = Objects.toString(conf.getProperty("core/messages/message[id='" + messageName + "']/body/@language"), "constant");
         }
@@ -785,7 +787,7 @@ public class RouteTemplate {
         Element parameter = createParameter(templateDoc, "language", language);
         templatedRoute.appendChild(parameter);
 
-        parameter = createParameter(templateDoc, "path", resourceAsString);
+        parameter = createParameter(templateDoc, "body", resourceAsString);
         templatedRoute.appendChild(parameter);
 
         // Assuming 'path' is an instance variable being updated
@@ -793,10 +795,7 @@ public class RouteTemplate {
     }
 
     private String getBodyResource(String messageName) throws XPathExpressionException {
-        String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[name='" + messageName + "']/body"), null);
-        if (resourceAsString == null) {
-            resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + messageName + "']/body"), null);
-        }
+        String resourceAsString = Objects.toString(conf.getProperty("core/messages/message[id='" + messageName + "' or name='" + messageName + "']/body/content"), null);
 
         if (resourceAsString == null) {
             Node node = IntegrationUtil.getNode(conf, "/dil/core/messages/message[name='" + messageName + "']/body/*");
@@ -805,9 +804,10 @@ public class RouteTemplate {
             }
             resourceAsString = DocConverter.convertNodeToString(node);
         }
-        return resourceAsString;
-    }
 
+        return resourceAsString;
+
+    }
 
     private void setCoreMessageHeaders(String messageName) {
         // Assuming 'conf' is an instance variable and getDocument() exists
