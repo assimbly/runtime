@@ -117,8 +117,6 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setHealthChecks(true, statsManager);
 
-        setCaching();
-
     }
 
     public void start() throws Exception {
@@ -343,6 +341,12 @@ public class CamelIntegration extends BaseIntegration {
 
         registry.bind("encryptableProperties", encryptableProperties);
         registry.bind("encryptionUtil", EncryptionUtil.class, encryptionUtil);
+
+        try {
+            setCaching();
+        } catch (Exception e) {
+            log.error("Failed to load cached flows after setting encryption", e);
+        }
 
     }
 
