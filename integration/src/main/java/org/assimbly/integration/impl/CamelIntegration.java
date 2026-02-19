@@ -164,8 +164,14 @@ public class CamelIntegration extends BaseIntegration {
             return flowManager.getFlowReport();
         }
 
-        return flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), sslManager, timeout);
+        String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), sslManager, timeout);
 
+        if (result == null || result.contains("\"event\": \"error\"")) {
+            log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
+            super.removeFlowConfigurationIfExist(flowId);
+        }
+
+        return result;
     }
 
     public String uninstallFlow(String flowId, long timeout) {
