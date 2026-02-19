@@ -1,0 +1,86 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "split-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "split-action"
+    description: "Splits message by an expression"
+    type: "object"
+    properties:
+      language:
+        title: "Language"
+        description: "Language"
+        type: "string"
+      expression:
+        title: "Expression"
+        description: "Expression"
+        type: "string"
+      nsprefix:
+        title: "NSprefix"
+        description: "Namespace prefix"
+        type: "string"
+      namespace:
+        title: "Namespace"
+        description: "Namespace for xpath"
+        type: "string"
+      parallelProcessing:
+        title: "Parallel Processing"
+        description: "Parallel Processing of split"
+        type: "boolean"
+        default: false
+      streaming:
+        title: "Streaming"
+        description: "Use Streaming"
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - split:
+                parallelProcessing: "{{parallelProcessing}}"
+                streaming: "{{streaming}}"
+                xpath:
+                  expression: "{{expression}}"
+                  namespace:
+                    - key: "{{nsprefix}}"
+                      value: "{{namespace}}"
+                steps:
+                - setHeader:
+                    name: "CamelSplitIndex"
+                    simple: "${exchangeProperty.CamelSplitIndex}"
+                - setHeader:
+                    name: "CamelSplitSize"
+                    simple: "${exchangeProperty.CamelSplitSize}"
+                - setHeader:
+                    name: "CamelSplitComplete"
+                    simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
+                - convertBodyTo:
+                    type: "java.lang.String"
+                - to:
+                    uri: "{{out}}"
