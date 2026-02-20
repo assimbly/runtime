@@ -15,7 +15,7 @@ spec:
         description: "path of component"
         type: "string"
       options:
-        title: "options (query parameterS)"
+        title: "options (query parameters)"
         description: "Endpoint URI"
         type: "string"
       in:

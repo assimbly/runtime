@@ -93,7 +93,7 @@ spec:
                 simple:
                   expression: "application/override"
             - setProperty:
-                name: "DovetailAggregateNoExceptionOnNull"
+                name: "AggregateNoExceptionOnNull"
                 simple:
                   expression: true
                   resultType: "java.lang.Boolean"

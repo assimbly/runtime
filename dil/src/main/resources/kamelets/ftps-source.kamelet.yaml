@@ -16,7 +16,7 @@ spec:
         type: "string"
         default: "dummy"
       options:
-        title: "options (query parameterS)"
+        title: "options (query parameters)"
         description: "Endpoint URI"
         type: "string"
       in:

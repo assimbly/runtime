@@ -126,9 +126,9 @@
         </systemUsage>
 
         <sslContext>
-            <sslContext keyStore="file:${dovetail.keyStore}"
-                        keyStorePassword="${dovetail.keyStorePassword}" trustStore="file:${dovetail.trustStore}"
-                        trustStorePassword="${dovetail.trustStorePassword}" />
+            <sslContext keyStore="file:${assimbly.keyStore}"
+                        keyStorePassword="${assimbly.keyStorePassword}" trustStore="file:${assimbly.trustStore}"
+                        trustStorePassword="${assimbly.trustStorePassword}" />
         </sslContext>
         <!--
             The transport connectors expose ActiveMQ over a given protocol to

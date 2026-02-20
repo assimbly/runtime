@@ -12,8 +12,8 @@ public class FlowLogger implements Processor {
     @Override
     public void process(Exchange exchange) throws Exception {
 
-        String messageToLog = exchange.getProperty("DovetailLogMessage", String.class);
-        String logLevel = exchange.getProperty("DovetailLogLevel", String.class);
+        String messageToLog = exchange.getProperty("AssimblyLogMessage", String.class);
+        String logLevel = exchange.getProperty("AssimblyLogLevel", String.class);
 
         switch (logLevel) {
             case "WARNING":
@@ -27,8 +27,8 @@ public class FlowLogger implements Processor {
                 break;
         }
 
-        exchange.removeProperty("DovetailLogMessage");
-        exchange.removeProperty("DovetailLogLevel");
+        exchange.removeProperty("AssimblyLogMessage");
+        exchange.removeProperty("AssimblyLogLevel");
 
     }
 

@@ -34,9 +34,8 @@ public class StepCollector extends EventNotifierSupport {
     
     private static final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
-    public static final String FLOW_ID_HEADER = "DOVETAIL_FlowId";
-    public static final String FLOW_VERSION_HEADER = "DOVETAIL_FlowVersion";
-
+    public static final String FLOW_ID_HEADER = "TRACING_FLOWID";
+    public static final String FLOW_VERSION_HEADER = "TRACING_FLOWVERSION";
     public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
     public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";

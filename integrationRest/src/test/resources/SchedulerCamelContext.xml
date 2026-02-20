@@ -26,5 +26,5 @@
             <simple>${header.test}</simple>
         </setBody>
     </route>
-    <property key="frontend.engine" value="dovetail" />
+    <property key="frontend.engine" value="fluxyge" />
 </camelContext>

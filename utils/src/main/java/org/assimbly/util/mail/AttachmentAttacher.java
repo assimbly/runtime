@@ -27,7 +27,7 @@ public class AttachmentAttacher implements Processor {
 
         if (fileName == null)
             in.setHeader(Exchange.FILE_NAME,
-                    new SimpleDateFormat("'Dovetail'-yyyy-MM-dd-HH-mm-ss-SSS")
+                    new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS")
                     .format(new Date()) + MimeTypeHelper.findFileExtension(mimeType));
 
         String emailBody = in.getHeader("EmailBody", String.class);
