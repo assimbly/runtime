@@ -1,8 +1,8 @@
 name: Release Daily Next Snapshot
 
 on:
-  #schedule:
-  #  - cron: '0 2 * * *'
+  schedule:
+    - cron: '0 2 * * *'
   
   workflow_dispatch:
 
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: next
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -32,7 +32,7 @@ jobs:
 
   call-release:
     needs: getversion 
-    uses: ./.github/workflows/release.yml
+    uses: ./.github/workflows/release-next.yml
     secrets: inherit
     with:
       branch: 'next'

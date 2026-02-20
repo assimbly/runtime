@@ -18,8 +18,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
@@ -36,7 +36,7 @@ public class StepCollector extends EventNotifierSupport {
 
     private final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
-    
+
     private final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
     public static final String FLOW_ID_HEADER = "DOVETAIL_FlowId";
@@ -52,6 +52,13 @@ public class StepCollector extends EventNotifierSupport {
     private static String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
+
+    // Add this to StepCollector class
+    private static final ThreadPoolExecutor collectionPool = new ThreadPoolExecutor(
+            10, 10, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(5000),
+            new ThreadPoolExecutor.DiscardPolicy()
+    );
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -71,6 +78,9 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
+    public static boolean isQueueReady() {
+        return collectionPool.getQueue().remainingCapacity() > 200; // Keep a 10% buffer
+    }
 
     @Override
     public void notify(CamelEvent event) throws Exception {
@@ -81,23 +91,41 @@ public class StepCollector extends EventNotifierSupport {
         //filter only the configured events
         if (isSuccessEvent || isFailedEvent) {
 
+            if (!isQueueReady()) {
+                log.warn("Skipping event processing: ElasticStore is at capacity.");
+                return;
+            }
+
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
-            // Get the message exchange from exchange event
-            Exchange exchange = stepEvent.getExchange();
 
             // Get the stepid
             String routeId = stepEvent.getStepId();
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
-            long stepTimestamp = stepEvent.getTimestamp();
 
             if(stepId!= null && !isBlackListed(stepId)){
                 if (filters == null || EventUtil.isFilteredEquals(filters, stepId)) {
-                    //process and store the exchange
-                    processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
+                    // materialize body BEFORE async
+                    byte[] body = stepEvent.getExchange().getMessage().getBody(byte[].class);
+                    // create a copy of the exchange for async processing
+                    Exchange exchange = stepEvent.getExchange().copy();
+                    // replace the body in the copied exchange with the materialized byte[]
+                    exchange.getMessage().setBody(body);
+
+                    long stepTimestamp = stepEvent.getTimestamp();
+
+                    // Hand off the HEAVY processing to a background thread
+                    collectionPool.submit(() -> {
+                            processEvent(exchange, stepId, stepTimestamp, isSuccessEvent);
+                    });
                 }
             }
         }
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
     }
 
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp, boolean isSuccessEvent){
