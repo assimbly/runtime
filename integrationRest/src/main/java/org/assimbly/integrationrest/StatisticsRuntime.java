@@ -174,6 +174,8 @@ public class StatisticsRuntime {
             @RequestHeader(defaultValue = "false", value = "FullStats") boolean fullStats
     ) {
 
+        System.out.println("--> FullStats=" + fullStats);
+
         plainResponse = true;
 
         try {

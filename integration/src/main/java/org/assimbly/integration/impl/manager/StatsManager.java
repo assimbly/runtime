@@ -265,9 +265,11 @@ public class StatsManager {
         if(route == null) {
             step.put("status", "unconfigured");
         }else {
-            step.put("status", route.getState());
 
-            if (route.getState().equals("started")) {
+            String status = route.getState();
+            step.put("status", status);
+
+            if (status.equalsIgnoreCase("started")) {
 
                 if (fullStats) {
                     String stepUptime = route.getUptime();
@@ -280,6 +282,7 @@ public class StatsManager {
 
                 String statsAsXml = route.dumpStatsAsXml(fullStats);
                 String statsAsJson = DocConverter.convertXmlToJson(statsAsXml);
+
                 JSONObject stepStatsObject = new JSONObject(statsAsJson);
                 step.put("stats", stepStatsObject.get("stats"));
             }
