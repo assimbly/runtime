@@ -492,7 +492,7 @@ public class FlowManagerRuntime {
     ) {
 
         try {
-            String alertsLog = integration.getFlowAlertsLog(flowId,100);
+            String alertsLog = integration.getFlowAlertsLog(flowId);
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts",alertsLog,alertsLog,flowId);
         } catch (Exception e) {
             log.error("Get alerts for flow {} failed", flowId, e);
@@ -511,7 +511,7 @@ public class FlowManagerRuntime {
 
         try {
 
-            String numberOfEntries = integration.getFlowAlertsCount(flowId);
+            String numberOfEntries = Long.toString(integration.getFlowAlertsCount(flowId));
 
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/alerts/count",numberOfEntries,numberOfEntries,flowId);
         } catch (Exception e) {

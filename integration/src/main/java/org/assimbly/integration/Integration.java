@@ -722,11 +722,10 @@ public interface Integration {
 	* Gets the failure log for the specified flow
 	*
 	* @param  flowId the id of the flow
-	* @param  numberOfEntries (maximum number of entries to return)
 	* @throws Exception if log cannot be retrieved
 	* @return failure log events (comma separated)
 	*/
-    String getFlowAlertsLog(String flowId, Integer numberOfEntries) throws Exception;
+    String getFlowAlertsLog(String flowId);
 
 	/**
 	* Gets number of entries in (todays) failed log of flow
@@ -735,7 +734,7 @@ public interface Integration {
 	* @throws Exception if log cannot be retrieved
 	* @return number of flow failures
 	*/
-    String getFlowAlertsCount(String flowId) throws Exception;
+    long getFlowAlertsCount(String flowId) throws Exception;
 
 	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows

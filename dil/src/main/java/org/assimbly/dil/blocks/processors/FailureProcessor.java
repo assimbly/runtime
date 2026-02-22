@@ -34,7 +34,7 @@ public class FailureProcessor implements Processor {
 		File file = new File(baseDir + "/alerts/" + flowId  + "/" + today + "_alerts.log");
 		List<String> line = List.of(timestamp + " : " + flowEvent.getError());
 		FileUtils.writeLines(file, line, true);
-		
+
 	}
 	
 }

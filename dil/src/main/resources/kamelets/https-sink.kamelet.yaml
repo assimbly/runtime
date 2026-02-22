@@ -172,7 +172,7 @@ spec:
                     steps:
                       - setHeader:
                           name: "CamelHttpUri"
-                          constant: "https:{{path}}"
+                          constant: "https://{{path}}"
             - doTry:
                 steps:
                   - to:

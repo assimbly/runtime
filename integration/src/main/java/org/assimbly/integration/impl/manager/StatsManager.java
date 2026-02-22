@@ -140,8 +140,8 @@ public class StatsManager {
         stats.status = managedRouteGroup.getState().toLowerCase();
 
         stats.totalTransactions = managedRouteGroup.getExchangesTotal();
-        stats.completedTransactions = managedRouteGroup.getExchangesCompleted();
-        stats.failedTransactions = managedRouteGroup.getExchangesFailed();
+        stats.completedTransactions = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();
+        stats.failedTransactions = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
         stats.pendingTransactions = managedRouteGroup.getExchangesInflight();
 
         long total = 0, completed = 0, failed = 0, pending = 0;
@@ -152,8 +152,8 @@ public class StatsManager {
             ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
 
             total += managedRoute.getExchangesTotal();
-            completed += managedRoute.getExchangesCompleted();
-            failed += managedRoute.getExchangesFailed();
+            completed += managedRoute.getExchangesCompleted() - managedRoute.getFailuresHandled();
+            failed += managedRoute.getExchangesFailed() + managedRoute.getFailuresHandled();
             pending += managedRoute.getExchangesInflight();
 
         }
@@ -280,11 +280,13 @@ public class StatsManager {
 
                 }
 
-                String statsAsXml = route.dumpStatsAsXml(fullStats);
-                String statsAsJson = DocConverter.convertXmlToJson(statsAsXml);
+                String statsAsJson = route.dumpStatsAsJSon(true);
 
                 JSONObject stepStatsObject = new JSONObject(statsAsJson);
-                step.put("stats", stepStatsObject.get("stats"));
+
+                System.out.println("statsAsJson\n\n" + statsAsJson);
+
+                step.put("stats", stepStatsObject);
             }
         }
 
@@ -310,8 +312,8 @@ public class StatsManager {
         for (ManagedRouteMBean route : routes) {
 
             totalMessages += route.getExchangesTotal();
-            completedMessages += route.getExchangesCompleted();
-            failedMessages += route.getExchangesFailed();
+            completedMessages += route.getExchangesCompleted() - route.getFailuresHandled();
+            failedMessages += route.getExchangesFailed() + route.getFailuresHandled();
             pendingMessages += route.getExchangesInflight();
 
             if (includeSteps) {
@@ -320,8 +322,8 @@ public class StatsManager {
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
                 step.put("id", stepId);
                 step.put("total", route.getExchangesTotal());
-                step.put("completed", route.getExchangesCompleted());
-                step.put("failed", route.getExchangesFailed());
+                step.put("completed", route.getExchangesCompleted() - route.getFailuresHandled());
+                step.put("failed", route.getExchangesFailed() + route.getFailuresHandled());
                 step.put("pending", route.getExchangesInflight());
                 steps.put(step);
             }
@@ -355,13 +357,17 @@ public class StatsManager {
 
     public String getFlowCompletedMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        return Long.toString(managedRouteGroup.getExchangesCompleted());
+        long completedMessages = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();
+        return Long.toString(completedMessages);
 
     }
 
     public String getFlowFailedMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        return Long.toString(managedRouteGroup.getExchangesFailed());
+        long failedMessages = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
+
+        return Long.toString(failedMessages);
+
     }
 
     public String getFlowPendingMessages(String flowId) {
@@ -381,8 +387,8 @@ public class StatsManager {
         ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
         if (route != null) {
             totalMessages += route.getExchangesTotal();
-            completedMessages += route.getExchangesCompleted();
-            failedMessages += route.getExchangesFailed();
+            completedMessages += route.getExchangesCompleted() - route.getFailuresHandled();
+            failedMessages += route.getExchangesFailed() + route.getFailuresHandled();
             pendingMessages += route.getExchangesInflight();
         }
 
@@ -567,9 +573,9 @@ public class StatsManager {
         json.put("startedFlows", countFlows("started"));
         json.put("startedSteps", managedCamelContext.getStartedRoutes());
         json.put("exchangesTotal", managedCamelContext.getExchangesTotal());
-        json.put("exchangesCompleted", managedCamelContext.getExchangesCompleted());
+        json.put("exchangesCompleted", managedCamelContext.getExchangesCompleted() - managedCamelContext.getFailuresHandled());
         json.put("exchangesInflight", managedCamelContext.getExchangesInflight());
-        json.put("exchangesFailed", managedCamelContext.getExchangesFailed());
+        json.put("exchangesFailed", managedCamelContext.getExchangesFailed() + managedCamelContext.getFailuresHandled());
         json.put("cpuLoadLastMinute", managedCamelContext.getLoad01());
         json.put("cpuLoadLast5Minutes", managedCamelContext.getLoad05());
         json.put("cpuLoadLast15Minutes", managedCamelContext.getLoad15());

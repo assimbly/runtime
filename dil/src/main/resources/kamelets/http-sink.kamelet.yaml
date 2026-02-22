@@ -59,7 +59,7 @@ spec:
         title: "ThrowExceptionOnFailure"
         description: "ThrowExceptionOnFailure"
         type: "boolean"
-        default: true
+        default: false
       lazyStartProducer:
         title: "LazyStartProducer"
         description: "LazyStartProducer"
@@ -155,7 +155,7 @@ spec:
                     steps:
                       - setHeader:
                           name: "CamelHttpUri"
-                          constant: "http:{{path}}"
+                          constant: "http://{{path}}"
             - doTry:
                 steps:
                 - to:
