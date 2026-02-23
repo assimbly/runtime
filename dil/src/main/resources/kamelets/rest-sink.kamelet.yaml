@@ -18,6 +18,7 @@ spec:
         title: "Path"
         description: "Path"
         type: "string"
+        default: "*"
       options:
         title: "Options"
         description: "Endpoint options"

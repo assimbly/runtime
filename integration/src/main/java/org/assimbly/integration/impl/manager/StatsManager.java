@@ -284,8 +284,6 @@ public class StatsManager {
 
                 JSONObject stepStatsObject = new JSONObject(statsAsJson);
 
-                System.out.println("statsAsJson\n\n" + statsAsJson);
-
                 step.put("stats", stepStatsObject);
             }
         }

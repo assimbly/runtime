@@ -12,9 +12,9 @@ spec:
     properties:
       method:
         title: "Method"
-        description: "HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH,\
-          \ CONNECT)"
+        description: "HTTP Method (GET, POST, PUT, DELETE, TRACE, OPTIONS, PATCH, CONNECT)"
         type: "string"
+        default: "get"
       path:
         title: "Path"
         description: "Path"
