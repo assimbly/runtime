@@ -40,7 +40,7 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>5.1.0</assimbly.version>
-        <activemq-classic.version>6.2.0</activemq-classic.version>
+        <activemq-classic.version>6.2.1</activemq-classic.version>
         <activemq-artemis.version>2.51.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
@@ -56,7 +56,7 @@
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
-        <jackson.version>2.21.0</jackson.version>
+        <jackson.version>2.21.1</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
         <jakarta-json-api.version>2.1.3</jakarta-json-api.version>
@@ -69,7 +69,7 @@
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.4.3</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <kamelet.version>4.17.0</kamelet.version>
+        <kamelet.version>4.18.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
