@@ -4,20 +4,16 @@ import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.impl.ConsoleStore;
 import org.assimbly.dil.event.store.impl.ElasticStore;
 import org.assimbly.dil.event.store.impl.FileStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
 public class StoreManager {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
-
     private FileStore fileStore;
     private ElasticStore elasticStore;
     private ConsoleStore consoleStore;
-    private final String collectorId;
-    private final ArrayList<Store> stores;
+    private String collectorId;
+    private ArrayList<Store> stores;
 
     public StoreManager(String collectorId, ArrayList<Store> stores){
         this.collectorId = collectorId;
@@ -39,8 +35,6 @@ public class StoreManager {
                 case "console":
                     consoleStore.store(json);
                     break;
-                default:
-                    log.warn("Unknown store type: {}", store.getType());
             }
 
         }
@@ -56,13 +50,15 @@ public class StoreManager {
                     fileStore = new FileStore(collectorId, store);
                     break;
                 case "elastic":
-                    elasticStore = new ElasticStore(store);
+                    try {
+                        elasticStore = new ElasticStore(store);
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Failed to initialize ElasticStore for " + store.getUri(), e);
+                    }
                     break;
                 case "console":
                     consoleStore = new ConsoleStore(collectorId, store);
                     break;
-                default:
-                    log.warn("Unknown store type: {}", store.getType());
             }
 
         }

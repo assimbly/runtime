@@ -11,12 +11,17 @@ import org.assimbly.dil.event.domain.MessageEvent;
 import org.assimbly.dil.event.domain.Store;
 import org.assimbly.dil.event.store.StoreManager;
 import org.assimbly.dil.event.util.EventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 //Check following page for all Event instances: https://www.javadoc.io/doc/org.apache.camel/camel-api/latest/org/apache/camel/spi/CamelEvent.html
 
@@ -47,6 +52,15 @@ public class StepCollector extends EventNotifierSupport {
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
+    // Add this to StepCollector class
+    private static final ThreadPoolExecutor collectionPool = new ThreadPoolExecutor(
+            10, 10, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(5000),
+            new ThreadPoolExecutor.DiscardPolicy()
+    );
+
+    protected Logger log = LoggerFactory.getLogger(getClass());
+
     public StepCollector(String collectorId, String flowId, String flowVersion, ArrayList<String> events, ArrayList<Filter> filters, ArrayList<org.assimbly.dil.event.domain.Store> stores) {
         this.flowId = flowId;
         this.flowVersion = flowVersion;
@@ -61,6 +75,10 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
+    public static boolean isQueueReady() {
+        return collectionPool.getQueue().remainingCapacity() > 200; // Keep a 10% buffer
+    }
+
 
     @Override
     public void notify(CamelEvent event) {
@@ -68,21 +86,41 @@ public class StepCollector extends EventNotifierSupport {
         //filter only the configured events
         if (events != null && events.contains(event.getType().name())) {
 
+            if (!isQueueReady()) {
+                log.warn("Skipping event processing: ElasticStore is at capacity.");
+                return;
+            }
+
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
-            // Get the message exchange from exchange event
-            Exchange exchange = stepEvent.getExchange();
 
             // Get the stepid
             String routeId = stepEvent.getStepId();
             String stepId = StringUtils.substringAfter(routeId, flowId + "-");
-            long stepTimestamp = stepEvent.getTimestamp();
 
             if(stepId!= null && !isBlackListed(stepId) && (filters == null || EventUtil.isFilteredEquals(filters, stepId))){
-                processEvent(exchange, stepId, stepTimestamp);
+
+                // materialize body BEFORE async
+                byte[] body = stepEvent.getExchange().getMessage().getBody(byte[].class);
+                // create a copy of the exchange for async processing
+                Exchange exchange = stepEvent.getExchange().copy();
+                // replace the body in the copied exchange with the materialized byte[]
+                exchange.getMessage().setBody(body);
+
+                long stepTimestamp = stepEvent.getTimestamp();
+
+                // Hand off the HEAVY processing to a background thread
+                collectionPool.submit(() -> {
+                    processEvent(exchange, stepId, stepTimestamp);
+                });
             }
 
         }
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
     }
 
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp){

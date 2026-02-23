@@ -74,6 +74,11 @@
 		  <artifactId>xmltojson</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>
+	  <dependency>
+		  <groupId>org.assimbly</groupId>
+		  <artifactId>sandbox</artifactId>
+		  <version>${assimbly.version}</version>
+	  </dependency>
 
   </dependencies>
 
