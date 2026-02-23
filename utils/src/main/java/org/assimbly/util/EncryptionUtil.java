@@ -5,6 +5,7 @@ import org.jasypt.iv.RandomIvGenerator;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -136,9 +137,12 @@ public final class EncryptionUtil {
     private byte[] encryptWithIv(SecretKeySpec secretKey, byte[] iv, String plainText) {
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            IvParameterSpec ivParams = new IvParameterSpec(iv);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParams);
-            return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8)); // Use UTF-8 encoding
+            // Use GCMParameterSpec instead of IvParameterSpec
+            // 128 is the authentication tag length in bits
+            GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec);
+            return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new RuntimeException("Encryption failed.", e);
         }
@@ -147,13 +151,16 @@ public final class EncryptionUtil {
     private String decryptWithIv(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) {
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            IvParameterSpec ivParams = new IvParameterSpec(iv);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParams);
+            // Must match the tag length used during encryption (128)
+            GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, spec);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-            return new String(decryptedBytes, StandardCharsets.UTF_8); // Use UTF-8 encoding
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Decryption failed.", e);
         }
     }
+
     
 }
