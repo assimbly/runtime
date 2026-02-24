@@ -2,11 +2,11 @@ package org.assimbly.util;
 
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
+import org.jspecify.annotations.NonNull;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +16,8 @@ import java.util.Base64;
 public final class EncryptionUtil {
 
     private final StandardPBEStringEncryptor textEncryptor = new StandardPBEStringEncryptor();
+    private final SecureRandom secureRandom = new SecureRandom();
+
     private static final int SALT_LENGTH = 16;
     private static final int IV_LENGTH = 16;
 
@@ -74,11 +76,11 @@ public final class EncryptionUtil {
 
         // Generate random salt
         byte[] salt = new byte[SALT_LENGTH];
-        new SecureRandom().nextBytes(salt);
+        secureRandom.nextBytes(salt);
 
         // Generate random IV
         byte[] iv = new byte[IV_LENGTH];
-        new SecureRandom().nextBytes(iv);
+        secureRandom.nextBytes(iv);
 
         // Generate key from password and salt
         SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), "AES");
@@ -97,6 +99,21 @@ public final class EncryptionUtil {
     }
 
     public String decrypt(String encryptedText) {
+        String[] parts = getStrings(encryptedText);
+
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] salt = decoder.decode(parts[0]);
+        byte[] iv = decoder.decode(parts[1]);
+        byte[] encryptedBytes = decoder.decode(parts[2]);
+
+        // Generate key from password and salt
+        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), "AES");
+
+        // Decrypt the encrypted text
+        return decryptWithIv(secretKey, iv, encryptedBytes);
+    }
+
+    private static String @NonNull [] getStrings(String encryptedText) {
         if (encryptedText == null) {
             throw new IllegalArgumentException("Encrypted text cannot be null");
         }
@@ -111,17 +128,7 @@ public final class EncryptionUtil {
         if (parts.length != 3) {
             throw new IllegalArgumentException("Invalid encrypted text format.");
         }
-
-        Base64.Decoder decoder = Base64.getDecoder();
-        byte[] salt = decoder.decode(parts[0]);
-        byte[] iv = decoder.decode(parts[1]);
-        byte[] encryptedBytes = decoder.decode(parts[2]);
-
-        // Generate key from password and salt
-        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), "AES");
-
-        // Decrypt the encrypted text
-        return decryptWithIv(secretKey, iv, encryptedBytes);
+        return parts;
     }
 
     private byte[] generateKey(String password, byte[] salt) {

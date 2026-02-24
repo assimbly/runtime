@@ -277,8 +277,10 @@ public final class CertificatesUtil {
 
 	public static String convertX509CertificateToPem(X509Certificate certificate) throws CertificateEncodingException {
 
-		org.apache.commons.codec.binary.Base64 encoder = new org.apache.commons.codec.binary.Base64(64);
 		byte[] derCertificate = certificate.getEncoded();
+
+		java.util.Base64.Encoder encoder = java.util.Base64.getMimeEncoder(64, new byte[]{'\r', '\n'});
+
 		String pemCertificate = new String(encoder.encode(derCertificate), StandardCharsets.UTF_8);
 
 		return "-----BEGIN CERTIFICATE-----\n" + pemCertificate + "-----END CERTIFICATE-----";
@@ -287,7 +289,7 @@ public final class CertificatesUtil {
 
 	public static X509Certificate convertPemToX509Certificate(String pemCertificate) throws CertificateException {
 
-		org.apache.commons.codec.binary.Base64 decoder = new org.apache.commons.codec.binary.Base64(64);
+		java.util.Base64.Decoder decoder = java.util.Base64.getMimeDecoder();
 		CertificateFactory cf = CertificateFactory.getInstance("X509");
 		X509Certificate certificate = null;
 
