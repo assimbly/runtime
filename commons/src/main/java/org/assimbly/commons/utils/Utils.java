@@ -72,7 +72,7 @@ public class Utils {
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
             return Files.readString(path, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.error(String.format("Error to load %s file from resources", fileName), e);
+            log.error("Error to load {} file from resources", fileName, e);
             return null;
         }
     }
@@ -83,8 +83,8 @@ public class Utils {
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
             return Files.readAllBytes(path);
         } catch (Exception e) {
-            log.error(String.format("Error to load %s file from resources", fileName), e);
-            return null;
+            log.error("Error to load {} file from resources", fileName, e);
+            return new byte[0];
         }
     }
 

@@ -32,9 +32,8 @@ public class StoreManager {
                 case "elastic":
                     elasticStore.store(json);
                     break;
-                case "console":
+                default:
                     consoleStore.store(json);
-                    break;
             }
 
         }
@@ -56,7 +55,7 @@ public class StoreManager {
                         throw new IllegalStateException("Failed to initialize ElasticStore for " + store.getUri(), e);
                     }
                     break;
-                case "console":
+                default:
                     consoleStore = new ConsoleStore(collectorId, store);
                     break;
             }

@@ -80,8 +80,9 @@ public class ConfigManager {
     }
 
     public void setStreamCaching(boolean streamCaching) {
+        long factor = 16;
         context.setStreamCaching(streamCaching);
-        context.getStreamCachingStrategy().setSpoolThreshold(16 * 1024);
+        context.getStreamCachingStrategy().setSpoolThreshold(factor * 1024);
         context.getStreamCachingStrategy().setBufferSize(32 * 1024);
     }
 

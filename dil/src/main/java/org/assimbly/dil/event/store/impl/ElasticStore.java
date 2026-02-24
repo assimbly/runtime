@@ -9,6 +9,7 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,7 +39,7 @@ public final class ElasticStore {
         if (client == null) {
             synchronized (ElasticStore.class) {
                 if (client == null) {
-                    URL url = new URL(store.getUri());
+                    URL url = URI.create(store.getUri()).toURL();
                     client = RestClient.builder(new HttpHost(url.getHost(), url.getPort(), url.getProtocol()))
                             .setRequestConfigCallback(c -> c
                                     .setConnectTimeout(1000)
@@ -53,7 +54,7 @@ public final class ElasticStore {
                 }
             }
         }
-        this.path = new URL(store.getUri()).getPath();
+        this.path = URI.create(store.getUri()).getPath();
     }
 
     public void store(String json) {

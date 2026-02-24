@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -113,7 +113,7 @@ public class SSLConfiguration {
 
 		// Load the keystore from resource
 		KeyStore ks = KeyStore.getInstance("JKS");
-		try (InputStream is = new URL(keystoreResource).openStream()) {
+		try (InputStream is = URI.create(keystoreResource).toURL().openStream()) {
 			ks.load(is, keystorePassword.toCharArray());
 		}
 

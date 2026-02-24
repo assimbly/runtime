@@ -110,17 +110,11 @@ public class StepCollector extends EventNotifierSupport {
                 long stepTimestamp = stepEvent.getTimestamp();
 
                 // Hand off the HEAVY processing to a background thread
-                collectionPool.submit(() -> {
-                    processEvent(exchange, stepId, stepTimestamp);
-                });
+                collectionPool.submit(() -> processEvent(exchange, stepId, stepTimestamp));
+
             }
 
         }
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        super.doStop();
     }
 
     private void processEvent(Exchange exchange, String stepId, long stepTimestamp){

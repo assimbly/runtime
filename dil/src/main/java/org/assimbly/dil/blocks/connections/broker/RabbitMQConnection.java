@@ -1,14 +1,11 @@
 package org.assimbly.dil.blocks.connections.broker;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-
 import java.util.Objects;
-
 
 public class RabbitMQConnection {
 
@@ -96,8 +93,7 @@ public class RabbitMQConnection {
 
         connectionFactory.start();
         context.getRegistry().bind(connectionId, connectionFactory);
-        //SpringRabbitMQComponent rabbitmqComponent = context.getComponent("spring-rabbitmq", SpringRabbitMQComponent.class);
-        //rabbitmqComponent.setConnectionFactory(connectionFactory);
+
     }
 
 }

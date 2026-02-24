@@ -766,10 +766,8 @@ public class RouteTemplate {
             properties.put("security.as2", "true");
         }
 
-        if (templateName.equalsIgnoreCase("https-action") || templateName.equalsIgnoreCase("https-sink") || templateName.equalsIgnoreCase("as2-action") || templateName.equalsIgnoreCase("as2-sink")) {
-            if(options.contains("mutualTls=true")) {
-                properties.put("security.mutualtls", "true");
-            }
+        if ((templateName.equalsIgnoreCase("https-action") || templateName.equalsIgnoreCase("https-sink") || templateName.equalsIgnoreCase("as2-action") || templateName.equalsIgnoreCase("as2-sink")) && options.contains("mutualTls=true")) {
+            properties.put("security.mutualtls", "true");
         }
 
     }

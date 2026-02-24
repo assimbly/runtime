@@ -1,6 +1,6 @@
 package org.assimbly.dil.event.collect;
 
-import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.LogEvent;
@@ -14,10 +14,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
-public class LogCollector extends AppenderBase {
+public class LogCollector extends AppenderBase<ILoggingEvent> {
 
     private final StoreManager storeManager;
-    private final String collectorId;
     private final String flowId;
     private final ArrayList<Filter> filters;
 
@@ -29,7 +28,6 @@ public class LogCollector extends AppenderBase {
     );
 
     public LogCollector(String collectorId, String flowId, ArrayList<Filter> filters, ArrayList<Store> stores) {
-        this.collectorId = collectorId;
         this.flowId = flowId;
         this.filters = filters;
         this.storeManager = new StoreManager(collectorId, stores);
@@ -41,17 +39,16 @@ public class LogCollector extends AppenderBase {
     }
 
     @Override
-    protected void append(Object o) {
-        if (o == null) return;
+    protected void append(ILoggingEvent loggingEvent) {
+        if (loggingEvent == null) return;
 
         // FAST-FAIL: If the store is full, don't even look at the log event
         if (!isQueueReady()) {
             return;
         }
 
-        LoggingEvent event = (LoggingEvent) o;
-        String message = event.getFormattedMessage();
-        String loggerName = event.getLoggerName();
+        String message = loggingEvent.getFormattedMessage();
+        String loggerName = loggingEvent.getLoggerName();
 
         // Filter check happens on the calling thread (fast)
         if (filters == null || EventUtil.isFiltered(filters, message + loggerName)) {
@@ -59,7 +56,7 @@ public class LogCollector extends AppenderBase {
             // Hand off the JSON creation and storage to background
             logCollectionPool.submit(() -> {
                 try {
-                    processEvent(event, message);
+                    processEvent(loggingEvent, message);
                 } catch (Exception e) {
                     // Use standard syserr to avoid recursive logging loops!
                     System.err.println("LogCollector background failed: " + e.getMessage());
@@ -68,7 +65,7 @@ public class LogCollector extends AppenderBase {
         }
     }
 
-    private void processEvent(LoggingEvent event, String message){
+    private void processEvent(ILoggingEvent event, String message){
 
         //set fields
         long timestamp = event.getTimeStamp();

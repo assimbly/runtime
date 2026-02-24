@@ -69,8 +69,8 @@ public class SSLManager {
         SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(null, null, trustStorePath, getKeystorePassword());
 
         registry.bind("default", sslContextParameters);
-        registry.bind("sslContext", sslContextParameters); // TODO - rename to sslContextParameters
-        registry.bind("sslContextObj", sslContextParameters.createSSLContext(context)); // TODO - rename to sslContext
+        registry.bind("sslContext", sslContextParameters);
+        registry.bind("sslContextObj", sslContextParameters.createSSLContext(context));
         registry.bind("keystore", sslContextParametersKeystoreOnly);
         registry.bind("truststore", sslContextParametersTruststoreOnly);
 

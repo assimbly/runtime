@@ -144,7 +144,11 @@ public class StatsManager {
         stats.failedTransactions = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
         stats.pendingTransactions = managedRouteGroup.getExchangesInflight();
 
-        long total = 0, completed = 0, failed = 0, pending = 0;
+        long total = 0;
+        long completed = 0;
+        long failed = 0;
+        long pending = 0;
+
         List<Route> routes = context.getRoutesByGroup(flowId);
 
         for (Route route : routes) {

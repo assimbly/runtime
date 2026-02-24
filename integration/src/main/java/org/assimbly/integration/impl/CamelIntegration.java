@@ -17,7 +17,6 @@ import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.dil.loader.FastFlowLoader;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -850,18 +849,6 @@ public class CamelIntegration extends BaseIntegration {
     public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
         XsltValidator xsltValidator = new XsltValidator();
         return xsltValidator.validate(url, xsltBody);
-    }
-
-    //Experimental installation using Java records
-    public String fastInstallFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
-
-        if(hasFlow(flowId)){
-            flowManager.stopFlow(flowId, timeout);
-        }
-
-        FastFlowLoader fastFlowLoader = new FastFlowLoader();
-        return fastFlowLoader.load(flowId, configuration, context);
-
     }
 
     private String mergeJson(String flowJson, String testJson) throws Exception {

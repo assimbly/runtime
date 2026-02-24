@@ -1,5 +1,6 @@
 package org.assimbly.commons.utils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -33,8 +34,7 @@ public class HttpUtil {
             String url, String method, Object body, Map<String,String> params, Map<String,String> headers
     ) {
 
-        try {
-            HttpClient client = HttpClient.newHttpClient();
+        try(HttpClient client = HttpClient.newHttpClient()) {
 
             // build query string
             String queryString = buildQueryString(params);
@@ -49,13 +49,12 @@ public class HttpUtil {
             }
 
             HttpRequest.BodyPublisher bodyPublisher;
-            if (body instanceof String bodyString) {
-                bodyPublisher = HttpRequest.BodyPublishers.ofString(bodyString);
-            } else if (body instanceof byte[] bodyByteArr) {
-                bodyPublisher = HttpRequest.BodyPublishers.ofByteArray(bodyByteArr);
-            } else {
-                bodyPublisher = HttpRequest.BodyPublishers.noBody();
-            }
+
+            bodyPublisher = switch (body) {
+                case String s  -> HttpRequest.BodyPublishers.ofString(s);
+                case byte[] b  -> HttpRequest.BodyPublishers.ofByteArray(b);
+                case null, default -> HttpRequest.BodyPublishers.noBody();
+            };
 
             // set method and body dynamically
             switch (method.toUpperCase()) {
@@ -68,8 +67,11 @@ public class HttpUtil {
 
             return client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

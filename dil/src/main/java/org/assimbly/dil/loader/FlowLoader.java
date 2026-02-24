@@ -81,7 +81,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void setErrorHandlers() throws Exception{
+	private void setErrorHandlers() {
 
 		String errorUri = "";
 		String id = "0";
@@ -217,7 +217,7 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
-	private void setErrorHandler(String id, String errorUri) throws Exception {
+	private void setErrorHandler(String id, String errorUri) {
 
 		DeadLetterChannelBuilder routeErrorHandler;
 		if (errorUri!=null && !errorUri.isEmpty() && !errorUri.startsWith("failedexchange")) {

@@ -3,10 +3,8 @@ package org.assimbly.dil.transpiler.marshalling.core;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.assimbly.util.IntegrationUtil;
 
 import java.util.List;
-import java.util.Properties;
 import java.util.TreeMap;
 
 public class Message {

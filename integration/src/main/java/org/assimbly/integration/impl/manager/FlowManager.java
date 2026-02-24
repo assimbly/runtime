@@ -71,8 +71,6 @@ public class FlowManager {
     private final ManagedCamelContext managedContext;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
-    private static final String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
-    private static final String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
     private static final long STOP_TIMEOUT = 300;
 
     public FlowManager(CamelContext context) {
@@ -612,7 +610,7 @@ public class FlowManager {
 
     }
 
-    public long getFlowAlertsCount(String flowId) throws Exception {
+    public long getFlowAlertsCount(String flowId) {
 
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
@@ -795,28 +793,6 @@ public class FlowManager {
 
     }
 
-    private static String getEnvironmentVariable() {
-        String environmentVariable = System.getenv(BROKER_HOST);
-        String value = "localhost";
-        if (environmentVariable != null && !environmentVariable.isEmpty()) {
-            value = environmentVariable;
-        }
-        return value;
-    }
-
-    private static int getEnvironmentVariableAsInteger(String envName, int defaultValue) {
-        String environmentVariable = System.getenv(envName);
-        int value = defaultValue;
-        if (environmentVariable != null && !environmentVariable.isEmpty()) {
-            try {
-                value = Integer.parseInt(environmentVariable);
-            } catch (NumberFormatException e) {
-                log.error("Invalid value for {}: {}", envName, value);
-            }
-        }
-        return value;
-    }
-
     public List<Route> getRoutesByFlowId(String id) {
 
         List<Route> routes = context.getRoutesByGroup(id);
@@ -877,8 +853,7 @@ public class FlowManager {
             String key = entry.getKey();
             String value = entry.getValue();
 
-            if (key.startsWith("route")) {
-                if (value.contains("<setProperty name=\"httpMutualSSL\">") &&
+            if (key.startsWith("route") && value.contains("<setProperty name=\"httpMutualSSL\">") &&
                         value.contains("<constant>true</constant>")) {
 
                     String routeId = extractRouteIdFromKey(key);
@@ -896,7 +871,7 @@ public class FlowManager {
                         sslManager.setMutualSsl(keystoreResource, keystorePassword, contextId, this.context.getRegistry());
                     }
                 }
-            }
+
         }
     }
 
@@ -1094,44 +1069,6 @@ public class FlowManager {
             value = value.substring(4, value.length() - 1);
         }
         return URLDecoder.decode(value, "UTF-8");
-    }
-
-    private Map<String, String> stringToMap(String input) {
-        Map<String, String> map = new LinkedHashMap<>();
-        String[] pairs = StringUtils.split(input, ',');
-
-        for (String pair : pairs) {
-            if (StringUtils.contains(pair, '=')) {
-                String key = StringUtils.substringBefore(pair, "=");
-                String value = StringUtils.substringAfter(pair, "=");
-                if (value.startsWith("RAW")) {
-                    value = StringUtils.substringBetween(value, "RAW(", ")");
-                }
-                map.put(key, value);
-            }
-        }
-
-        return map;
-
-    }
-
-    private static SjmsComponent getJmsComponent(String activemqUrl) {
-
-        int maxConnections = getEnvironmentVariableAsInteger("AMQ_MAXIMUM_CONNECTIONS", 500);
-        int idleTimeout = getEnvironmentVariableAsInteger("AMQ_IDLE_TIMEOUT", 5000);
-
-        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
-
-        PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
-        pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-        pooledConnectionFactory.setMaxConnections(maxConnections);
-        pooledConnectionFactory.setIdleTimeout(idleTimeout);
-
-        SjmsComponent sjmsComponent = new SjmsComponent();
-        sjmsComponent.setConnectionFactory(pooledConnectionFactory);
-        sjmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-
-        return sjmsComponent;
     }
 
     public void setConnection(TreeMap<String, String> props, String key) throws Exception {

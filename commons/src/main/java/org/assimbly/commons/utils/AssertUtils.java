@@ -42,7 +42,9 @@ public final class AssertUtils {
     // generic
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg, boolean messageFlag) {
+
         assertThat(responseJson.get(DETAILS).asText()).isEqualTo("successful");
+
         if(messageFlag) {
             assertMessage(responseJson, msg);
         }

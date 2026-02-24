@@ -1,6 +1,5 @@
 package org.assimbly.integrationrest;
 
-import groovy.lang.Lazy;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
