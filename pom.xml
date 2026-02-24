@@ -50,7 +50,7 @@
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
-        <docconverter.version>1.15.0</docconverter.version>
+        <docconverter.version>1.16.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
         <elasticsearch-rest-client.version>9.3.0</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
@@ -65,7 +65,7 @@
         <jakarta-xml-bind-api.version>4.0.5</jakarta-xml-bind-api.version>
         <jasypt.version>1.9.3</jasypt.version>
         <json.version>20251224</json.version>
-        <json-path.version>2.10.0</json-path.version>
+        <json-path.version>3.0.0</json-path.version>
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.4.3</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
