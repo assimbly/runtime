@@ -130,7 +130,6 @@ public class StatsManager {
     private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats) {
 
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        ManagedCamelContext managed = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
 
         FlowStatistics stats = new FlowStatistics();
         if(managedRouteGroup==null){
@@ -153,7 +152,7 @@ public class StatsManager {
 
         for (Route route : routes) {
 
-            ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
+            ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
 
             total += managedRoute.getExchangesTotal();
             completed += managedRoute.getExchangesCompleted() - managedRoute.getFailuresHandled();
@@ -344,28 +343,35 @@ public class StatsManager {
         json.put("flow", flow);
 
         String flowStats = json.toString(4);
-        if (mediaType.contains("xml")) {
-            flowStats = DocConverter.convertJsonToXml(flowStats);
-        }
 
-        return flowStats;
+        return applyMediaType(flowStats, mediaType);
 
     }
 
     public String getFlowTotalMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        if(managedRouteGroup==null){
+            return "0";
+        }
         return Long.toString(managedRouteGroup.getExchangesTotal());
     }
 
     public String getFlowCompletedMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        if(managedRouteGroup==null){
+            return "0";
+        }
         long completedMessages = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();
+
         return Long.toString(completedMessages);
 
     }
 
     public String getFlowFailedMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        if(managedRouteGroup==null){
+            return "0";
+        }
         long failedMessages = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
 
         return Long.toString(failedMessages);
@@ -374,6 +380,9 @@ public class StatsManager {
 
     public String getFlowPendingMessages(String flowId) {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+        if(managedRouteGroup==null){
+            return "0";
+        }
         return Long.toString(managedRouteGroup.getExchangesInflight());
     }
 
@@ -387,6 +396,7 @@ public class StatsManager {
         String routeId = flowId + "-" + stepId;
 
         ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
+
         if (route != null) {
             totalMessages += route.getExchangesTotal();
             completedMessages += route.getExchangesCompleted() - route.getFailuresHandled();
@@ -397,7 +407,7 @@ public class StatsManager {
         JSONObject json = new JSONObject();
         JSONObject step = new JSONObject();
 
-        step.put("id", flowId);
+        step.put("id", stepId);
         step.put("total", totalMessages);
         step.put("completed", completedMessages);
         step.put("failed", failedMessages);
@@ -405,29 +415,22 @@ public class StatsManager {
         json.put("step", step);
 
         String flowStats = json.toString(4);
-        if (mediaType.contains("xml")) {
-            flowStats = DocConverter.convertJsonToXml(flowStats);
-        }
 
-        return flowStats;
+        return applyMediaType(flowStats, mediaType);
 
     }
 
 
-    public String getHealth(String type, String mediaType) throws Exception {
+    public String getHealth(String type, String mediaType) {
 
         Set<String> flowIds = flowManager.getListOfFlowIds(null);
 
         String result = getHealthFromList(flowIds, type);
 
-        if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
     }
 
-    public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception {
+    public String getHealthByFlowIds(String flowIds, String type, String mediaType) {
 
         String[] values = flowIds.split(",");
 
@@ -435,22 +438,18 @@ public class StatsManager {
 
         String result = getHealthFromList(flowSet, type);
 
-        if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
 
     }
 
 
-    private String getHealthFromList(Set<String> flowIds, String type) throws Exception {
+    private String getHealthFromList(Set<String> flowIds, String type) {
 
         JSONArray flows = new JSONArray();
 
         for (String flowId : flowIds) {
-            String flowHealth = getFlowHealth(flowId, type, false, false, false, "application/json");
-            JSONObject flow = new JSONObject(flowHealth);
+            JSONObject flow = getFlowHealthObject(flowId, type, false, false, false);
+
             flows.put(flow);
         }
 
@@ -460,6 +459,15 @@ public class StatsManager {
 
     public String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
 
+        JSONObject json = getFlowHealthObject(flowId, type, includeSteps, includeError, includeDetails);
+
+        String flowStats = json.toString(4);
+
+        return applyMediaType(flowStats, mediaType);
+
+    }
+
+    private JSONObject getFlowHealthObject(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails){
         JSONObject json = new JSONObject();
         JSONObject flow = new JSONObject();
         JSONArray steps = new JSONArray();
@@ -490,14 +498,7 @@ public class StatsManager {
         }
         json.put("flow", flow);
 
-        String flowStats = json.toString(4);
-
-        if (mediaType.contains("xml")) {
-            flowStats = DocConverter.convertJsonToXml(flowStats);
-        }
-
-        return flowStats;
-
+        return json;
     }
 
     public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
@@ -506,12 +507,10 @@ public class StatsManager {
         String healthCheckId = type + ":" + routeid;
 
         JSONObject json = getStepHealth(routeid, healthCheckId, includeError, includeDetails);
-        String stepHealth = json.toString(4);
-        if (mediaType.contains("xml")) {
-            stepHealth = DocConverter.convertJsonToXml(stepHealth);
-        }
 
-        return stepHealth;
+        String result = json.toString(4);
+
+        return applyMediaType(result, mediaType);
     }
 
     private JSONObject getStepHealth(String routeid, String healthCheckId, boolean includeError, boolean includeDetails) {
@@ -585,11 +584,8 @@ public class StatsManager {
         json.put("totalThreads", ManagementFactory.getThreadMXBean().getThreadCount());
 
         String stats = json.toString(4);
-        if (mediaType.contains("xml")) {
-            stats = DocConverter.convertJsonToXml(stats);
-        }
 
-        return stats;
+        return applyMediaType(stats, mediaType);
 
     }
 
@@ -633,11 +629,7 @@ public class StatsManager {
         JSONArray jsonArray = new JSONArray(sortedList);
         String result = jsonArray.toString();
 
-        if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
 
     }
 
@@ -664,11 +656,7 @@ public class StatsManager {
 
         String result = managedCamelContext.dumpRoutesStatsAsXml(true, false);
 
-        if (mediaType.contains("json")) {
-            result = DocConverter.convertXmlToJson(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
 
     }
 
@@ -689,11 +677,7 @@ public class StatsManager {
 
         String result = getStatsFromList(flowIds, true, flowsMap);
 
-        if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
 
     }
 
@@ -755,11 +739,7 @@ public class StatsManager {
 
         String result = getStatsFromList(flowIds, false, flowsMap);
 
-        if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
-        }
-
-        return result;
+        return applyMediaType(result, mediaType);
 
     }
 
@@ -812,12 +792,9 @@ public class StatsManager {
 
         json.put("info", info);
 
-        String integrationInfo = json.toString(4);
-        if (mediaType.contains("xml")) {
-            integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
-        }
+        String result = json.toString(4);
 
-        return integrationInfo;
+        return applyMediaType(result, mediaType);
 
     }
 
@@ -851,6 +828,17 @@ public class StatsManager {
 
         return Integer.toString(stepIds.size());
 
+    }
+
+    private String applyMediaType(String json, String mediaType) {
+        if (mediaType != null && mediaType.contains("xml")) {
+            try {
+                return DocConverter.convertJsonToXml(json);
+            } catch (Exception e) {
+                log.warn("Failed to convert to XML, returning JSON", e);
+            }
+        }
+        return json;
     }
 
 }
