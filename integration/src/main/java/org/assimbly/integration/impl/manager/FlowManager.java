@@ -1,18 +1,12 @@
 package org.assimbly.integration.impl.manager;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
-import org.apache.camel.clock.Clock;
-import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
-import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.spi.RouteController;
 import org.apache.camel.spi.RouteStartupOrder;
-import org.apache.camel.spi.UnitOfWork;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.connections.Connection;
@@ -47,24 +41,18 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FlowManager {
 
     protected static final Logger log = LoggerFactory.getLogger(FlowManager.class);
 
-    private TreeMap<String, String> props;
-    private String loadReport;
-    private FlowLoaderReport flowLoaderReport;
     private ServiceStatus status;
 
     private final CamelContext context;
@@ -74,48 +62,48 @@ public class FlowManager {
     private static final long STOP_TIMEOUT = 300;
 
     public FlowManager(CamelContext context) {
-
         this.context = context;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
-
     }
 
-    public String loadFlow(TreeMap<String, String> properties, SSLManager sslManager) {
+    public String loadFlow(String flowId, TreeMap<String, String> properties) {
 
-        this.props = properties;
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
 
         try {
 
-            if (properties.containsKey("security.as2")) {
-                log.info("Initialize AS2 Inbound security");
-                initializeAs2InboundSecurity(props);
-            }
-
-            if (properties.containsKey("security.mutualtls")){
-                log.info("Initialize Mutual TLS");
-                initializeMutualTLS(props);
-            }
+            //initialize security for AS2
+            initializeSecurity(properties);
 
             //create connections & install dependencies if needed
             createConnections(properties);
 
-            FlowLoader flow = new FlowLoader(properties, flowLoaderReport);
+            FlowLoader flow = new FlowLoader(properties, report);
 
             flow.addRoutesToCamelContext(context);
 
-            loadReport = flow.getReport();
-
-            if (!flow.isFlowLoaded()) {
-                return "error";
+            if(flow.isFlowLoaded()){
+                return finishReport(report, flowId, "start", "Started flow successfully", "info","success");
+            }else{
+                return finishReport(report, flowId, "error", "Start flow failed", "error","failed");
             }
 
-            return "started";
-
         } catch (Exception e) {
-            log.error("add flow failed: ", e);
-            return "error reason: " + e.getMessage();
+            log.error("Load flow failed: ", e);
+            return finishReport(report, flowId, "error", e.getMessage(), "error","failed");
         }
 
+    }
+
+    private void initializeSecurity(TreeMap<String, String> properties) throws Exception {
+        if (properties.containsKey("security.as2")) {
+            log.info("Initialize AS2 Inbound security");
+            initializeAs2InboundSecurity(properties);
+        }
+        if (properties.containsKey("security.mutualtls")) {
+            log.info("Initialize Mutual TLS");
+            initializeMutualTLS(properties);
+        }
     }
 
     public boolean hasFlow(String flowId) {
@@ -126,13 +114,13 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+
         log.info("Starting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                flowLoaderReport = new FlowLoaderReport(flowId, flowId);
-                loadFlow(flowProps, sslManager);
+                loadFlow(flowId, flowProps);
                 log.info("Started flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -141,13 +129,13 @@ public class FlowManager {
 
     }
 
-    public String restartAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public String restartAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+
         log.info("Restarting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                flowLoaderReport = new FlowLoaderReport(flowId, flowId);
-                loadFlow(props, sslManager);
+                loadFlow(flowId, flowProps);
                 log.info("Restarted flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -169,22 +157,22 @@ public class FlowManager {
             }
         });
 
-        return "paused";
+        return FlowStatus.STARTED.toString();
     }
 
-    public String resumeAllFlows(SSLManager sslManager, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public String resumeAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Resume all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                resumeFlow(flowId, flowProps, sslManager);
+                resumeFlow(flowId, flowProps);
                 log.info("Resumed flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
 
-        return "started";
+        return FlowStatus.RESUMED.toString();
     }
 
     public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -199,73 +187,46 @@ public class FlowManager {
             }
         });
 
-        return "stopped";
+        return FlowStatus.STOPPED.toString();
     }
 
-    public String installRoute(String routeId, String route) throws Exception {
+    public String installRoute(String routeId, String route) {
 
-        initFlowActionReport(routeId);
+        FlowLoaderReport report = new FlowLoaderReport(routeId, routeId);
 
-        if (!route.startsWith("<route")) {
-            route = new XMLFileConfiguration().getRouteConfiguration(route);
-        }
+        try{
+            if (!route.startsWith("<route")) {
+                route = new XMLFileConfiguration().getRouteConfiguration(route);
+            }
 
-        try {
-
-            RouteLoader routeLoader = new RouteLoader(routeId, route, flowLoaderReport);
+            RouteLoader routeLoader = new RouteLoader(routeId, route, report);
 
             routeLoader.addRoutesToCamelContext(context);
 
-            loadReport = routeLoader.getReport();
+            String result = routeLoader.getReport();
 
-            finishFlowActionReport(routeId, "start", "Started flow successfully", "info");
-        } catch (Exception e) {
-            finishFlowActionReport(routeId, "error", "Failed starting flow", e.getMessage());
+            return finishReport(report, routeId, "start", result, "info","success");
+
+        }catch (Exception e){
+            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error","failed");
         }
 
-        return loadReport;
 
     }
 
-    public String startFlow(String flowId, TreeMap<String, String> flowProperties, SSLManager sslManager, long timeout) {
-
-        initFlowActionReport(flowId);
+    public String startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
 
         if (hasFlow(flowId)) {
             stopFlow(flowId, timeout, false);
         }
 
-        try {
-
-            String result = loadFlow(flowProperties, sslManager);
-
-            if (result.equals("started")) {
-                finishFlowActionReport(flowId, "start", "Started flow successfully", "info");
-            } else {
-                stopFlow(flowId, timeout, false);
-                finishFlowActionReport(flowId, "error", result, "error");
-            }
-
-        } catch (Exception e) {
-            stopFlow(flowId, STOP_TIMEOUT, false);
-            finishFlowActionReport(flowId, "error", "Start flow failed | error=" + e.getMessage(), "error");
-            log.error("Start flow failed. | flowid={}", flowId, e);
-        }
-
-        return loadReport;
+        return loadFlow(flowId, flowProperties);
 
     }
 
-    public String restartFlow(String flowId, TreeMap<String, String> flowProperties, SSLManager sslManager, long timeout) {
+    public String restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
 
-        try {
-            startFlow(flowId, flowProperties, sslManager, timeout);
-        } catch (Exception e) {
-            log.error("Restart flow failed. | flowid={}", flowId, e);
-            finishFlowActionReport(flowId, "error", e.getMessage(), "error");
-        }
-
-        return loadReport;
+        return startFlow(flowId, flowProperties, timeout);
 
     }
 
@@ -273,42 +234,47 @@ public class FlowManager {
         return stopFlow(flowid, timeout, true);
     }
 
-    public String stopFlow(String flowid, long timeout, boolean enableReport) {
+    public String stopFlow(String flowId, long timeout, boolean enableReport) {
 
-        if (enableReport) {
-            initFlowActionReport(flowid);
+        if (!hasFlow(flowId)) {
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            String errorMessage = "Flow is not installed";
+            return  finishReport(report, flowId, "stop", errorMessage, "error","failed");
         }
 
         try {
             // gracefully shutdown routes using startup order
-            List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(flowid);
+            List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(flowId);
             context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
             for (RouteStartupOrder routeStartupOrder : routeStartupOrders) {
                 context.removeRoute(routeStartupOrder.getRoute().getId());
             }
 
             // remove leftover routes
-            List<String> leftoverRoutes = getAllRoutesByFlowId(flowid);
+            List<String> leftoverRoutes = getAllRoutesByFlowId(flowId);
             if (!leftoverRoutes.isEmpty()) {
                 for (String routeId : leftoverRoutes) {
                     removeRoute(routeId);
                 }
             }
 
-
-
             if (enableReport) {
-                finishFlowActionReport(flowid, "stop", "Stopped flow successfully", "info");
+                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+                return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success");
             }
 
         } catch (Exception e) {
+
+            log.error("Stop flow failed. | flowid={}", flowId, e);
+
             if (enableReport) {
-                finishFlowActionReport(flowid, "error", "Stop flow failed | error=" + e.getMessage(), "error");
+                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+                return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed");
             }
-            log.error("Stop flow failed. | flowid={}", flowid, e);
+
         }
 
-        return loadReport;
+        return FlowStatus.STOPPED.toString();
 
     }
 
@@ -323,82 +289,76 @@ public class FlowManager {
         }
     }
 
+    public String pauseFlow(String flowId) {
 
-    public String pauseFlow(String flowid) {
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
 
-        initFlowActionReport(flowid);
+        if (!hasFlow(flowId)) {
+            String errorMessage = "Flow is not installed";
+            return  finishReport(report, flowId, "pause", errorMessage, "error","failed");
+        }
 
         RouteController routeController = context.getRouteController();
+        List<Route> routeList = getRoutesByFlowId(flowId);
+        status = routeController.getRouteStatus(routeList.getFirst().getId());
+
+        for (Route route : routeList) {
+            if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
+                return finishReport(report, flowId, "error", "Flow isn't suspendable (Step " + route.getId() + ")", "error","failed");
+            }
+        }
 
         try {
 
-            if (hasFlow(flowid)) {
-
-                List<Route> routeList = getRoutesByFlowId(flowid);
-                status = routeController.getRouteStatus(routeList.getFirst().getId());
-
-                for (Route route : routeList) {
-                    if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
-                        finishFlowActionReport(flowid, "error", "Flow isn't suspendable (Step " + route.getId() + ")", "error");
-                        return loadReport;
-                    }
-                }
-
-                for (Route route : routeList) {
-                    String routeId = route.getId();
-                    routeController.suspendRoute(routeId);
-                }
-                finishFlowActionReport(flowid, "pause", "Paused flow successfully", "info");
-            } else {
-                String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
-                finishFlowActionReport(flowid, "error", errorMessage, "error");
+            for (Route route : routeList) {
+                String routeId = route.getId();
+                routeController.suspendRoute(routeId);
             }
-        } catch (Exception e) {
-            log.error("Pause flow failed. | flowid={}", flowid, e);
-            stopFlow(flowid, STOP_TIMEOUT); //Stop flow if one of the routes cannot be paused.
-            finishFlowActionReport(flowid, "error", e.getMessage(), "error");
-        }
 
-        return loadReport;
+            return finishReport(report, flowId, "pause", "Paused flow successfully", "info","success");
+
+        } catch (Exception e) {
+            log.error("Pause flow failed. | flowid={}", flowId, e);
+            stopFlow(flowId, STOP_TIMEOUT); //Stop flow if one of the routes cannot be paused.
+            return finishReport(report, flowId, "pause", e.getMessage(), "error","failed");
+        }
 
     }
 
-    public String resumeFlow(String flowId, TreeMap<String, String> flowProperties, SSLManager sslManager) {
+    public String resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
 
-        initFlowActionReport(flowId);
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
 
         RouteController routeController = context.getRouteController();
 
+        if (!hasFlow(flowId)) {
+            String errorMessage = "Flow is not installed";
+            return  finishReport(report, flowId, "resume", errorMessage, "error","failed");
+        }
+
         try {
 
-            if (hasFlow(flowId)) {
+            List<Route> routeList = getRoutesByFlowId(flowId);
+            for (Route route : routeList) {
+                String routeId = route.getId();
+                status = routeController.getRouteStatus(routeId);
 
-                List<Route> routeList = getRoutesByFlowId(flowId);
-                for (Route route : routeList) {
-                    String routeId = route.getId();
-                    status = routeController.getRouteStatus(routeId);
-
-                    if (status.isSuspended()) {
-                        routeController.resumeRoute(routeId);
-                        log.info("Resumed flow  | flowid={} | stepid={}", flowId, routeId);
-                    } else if (status.isStopped()) {
-                        log.info("Starting route as route {} is currently stopped (not suspended)", flowId);
-                        startFlow(routeId, flowProperties, sslManager, STOP_TIMEOUT);
-                    }
-
+                if (status.isSuspended()) {
+                    routeController.resumeRoute(routeId);
+                    log.info("Resumed flow  | flowid={} | stepid={}", flowId, routeId);
+                } else if (status.isStopped()) {
+                    log.info("Starting route as route {} is currently stopped (not suspended)", flowId);
+                    startFlow(routeId, flowProperties, STOP_TIMEOUT);
                 }
-                finishFlowActionReport(flowId, "resume", "Resumed flow successfully", "info");
-            } else {
-                String errorMessage = "Configuration is not set (use setConfiguration or setFlowConfiguration)";
-                finishFlowActionReport(flowId, "error", errorMessage, "error");
+
             }
+
+            return finishReport(report, flowId, "resume", "Resumed flow successfully", "info","success");
 
         } catch (Exception e) {
             log.error("Resume flow {} failed.", flowId, e);
-            finishFlowActionReport(flowId, "error", e.getMessage(), "error");
+            return finishReport(report, flowId, "resume", e.getMessage(), "error", "failed");
         }
-
-        return loadReport;
 
     }
 
@@ -437,26 +397,21 @@ public class FlowManager {
 
     }
 
-    public void initFlowActionReport(String flowid) {
-        flowLoaderReport = new FlowLoaderReport(flowid, flowid);
-    }
-
-    public void finishFlowActionReport(String flowid, String event, String message, String messageType) {
+    public String finishReport(FlowLoaderReport report, String flowid, String event, String message, String messageType, String status) {
 
         String eventCapitalized = StringUtils.capitalize(event);
 
-        //logs event to
         if (messageType.equalsIgnoreCase("error")) {
-            log.error("{} flow {} failed | flowid={} message={}", eventCapitalized, flowid, flowid, message);
-        } else if (messageType.equalsIgnoreCase("warning"))
-            log.warn("{} flow{} failed | flowid={} message={}", eventCapitalized, flowid, flowid, message);
-        else {
+            log.error("{} flow failed | flowid={} message={}", eventCapitalized, flowid, message);
+        } else if (messageType.equalsIgnoreCase("warning")) {
+            log.warn("{} flow failed | flowid={} message={}", eventCapitalized, flowid, message);
+        } else {
             log.info("{} | flowid={}", message, flowid);
         }
 
-        flowLoaderReport.finishReport(event, "0", message);
+        report.finishReport(event, "0", message, status);
 
-        loadReport = flowLoaderReport.getReport();
+        return report.getReport();
 
     }
 
@@ -490,7 +445,7 @@ public class FlowManager {
             try {
                 List<Route> routesList = getRoutesByFlowId(id);
                 if (routesList.isEmpty()) {
-                    flowStatus = "unconfigured";
+                    flowStatus = FlowStatus.UNCONFIGURED.toString();
                 } else {
                     String flowId = routesList.getFirst().getId();
                     ServiceStatus serviceStatus = routeController.getRouteStatus(flowId);
@@ -499,11 +454,11 @@ public class FlowManager {
             } catch (Exception e) {
                 log.error("Get status flow {} failed.", id, e);
 
-                flowStatus = "error: " + e.getMessage();
+                flowStatus = FlowStatus.ERROR.toString();
             }
 
         } else {
-            flowStatus = "unconfigured";
+            flowStatus = FlowStatus.UNCONFIGURED.toString();
         }
 
         return flowStatus;
@@ -649,6 +604,7 @@ public class FlowManager {
                     return flowId;
                 })
                 .filter(flowId -> flowId != null && !flowId.isEmpty())
+                .distinct()
                 .filter(flowId -> filter == null || filter.isEmpty() || getFlowStatus(flowId).equalsIgnoreCase(filter))
                 .collect(Collectors.toSet());
     }
@@ -776,21 +732,19 @@ public class FlowManager {
 
     }
 
-    public boolean removeFlow(String id) throws Exception {
+    public boolean removeFlow(String flowId) throws Exception {
 
-        boolean removed = false;
-        List<Route> routes = getRoutesByFlowId(id);
+        List<Route> routes = getRoutesByFlowId(flowId);
 
-        if (routes != null && !routes.isEmpty()) {
-            for (Route route : routes) {
-                route.getId();
-                context.removeRoute(id);
-                removed = true;
-            }
+        if (routes == null || routes.isEmpty()) {
+            return false;
         }
 
-        return removed;
+        for (Route route : routes) {
+            context.removeRoute(route.getId()); // ← use actual route ID
+        }
 
+        return true;
     }
 
     public List<Route> getRoutesByFlowId(String id) {
@@ -1063,12 +1017,12 @@ public class FlowManager {
         }
     }
 
-    private String cleanRaw(String value) throws Exception {
+    private String cleanRaw(String value) {
         if (value == null) return "";
         if (value.startsWith("RAW(") && value.endsWith(")")) {
             value = value.substring(4, value.length() - 1);
         }
-        return URLDecoder.decode(value, "UTF-8");
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     public void setConnection(TreeMap<String, String> props, String key) throws Exception {
@@ -1089,8 +1043,22 @@ public class FlowManager {
 
     }
 
-    public String getFlowReport() {
-        return loadReport;
+    // Add as a nested enum or a separate file
+    public enum FlowStatus {
+        STARTED("started"),
+        STOPPED("stopped"),
+        PAUSED("paused"),
+        RESUMED("started"),
+        RESTARTED("restarted"),
+        UNCONFIGURED("unconfigured"),
+        ERROR("error");
+
+        private final String value;
+
+        FlowStatus(String value) { this.value = value; }
+
+        @Override
+        public String toString() { return value; }
     }
 
 }

@@ -53,8 +53,8 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            #- removeHeaders:
-            #    pattern: "{{removeHeaders}}"
-            #    disabled: "{{preserveHttpHeaders}}"
+            - removeHeaders:
+                pattern: "{{removeHeaders}}"
+                disabled: "{{preserveHttpHeaders}}"
             - to:
                 uri: "{{out}}"

@@ -1,5 +1,8 @@
 package org.assimbly.integrationrest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,11 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 
-import java.util.List;
 
-/**
- * Resource to return information about the currently running Spring profiles.
- */
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -26,10 +25,6 @@ public class FlowManagerRuntime {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private String flowId;
-
-    private boolean plainResponse;
-
-    private String status;
 
     private final Integration integration;
 
@@ -48,26 +43,9 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        plainResponse = true;
+        String report = integration.startFlow(flowId, timeout);
 
-        try {
-
-            status = integration.startFlow(flowId, timeout);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/start",status,plainResponse);
-            } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/start", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("FlowManager Report:\n\n{}", status);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/start/{flowId}", e.getMessage(), "unable to start flow " + flowId, flowId);
-        }
+        return response(mediaType, "start",report);
 
     }
 
@@ -81,26 +59,9 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        plainResponse = true;
+        String report = integration.stopFlow(flowId, timeout);
 
-        try {
-
-            status = integration.stopFlow(flowId, timeout);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Stopped flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/stop",status,plainResponse);
-            } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/stop/", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("Stop flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/stop",e.getMessage(),"unable to stop flow " + flowId,flowId);
-        }
+        return response(mediaType, "stop",report);
 
     }
 
@@ -114,26 +75,9 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        plainResponse = true;
+        String report = integration.restartFlow(flowId, timeout);
 
-        try {
-
-            status = integration.restartFlow(flowId, timeout);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Started flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/restart",status,plainResponse);
-            } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/restart", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("Restart flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/restart",e.getMessage(),"unable to restart flow " + flowId,flowId);
-        }
+        return response(mediaType, "restart",report);
 
     }
 
@@ -146,26 +90,9 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        String report = integration.pauseFlow(flowId);
 
-        try {
-
-            status = integration.pauseFlow(flowId);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Paused flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/pause",status,plainResponse);
-            } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/pause", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("Paused flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/pause",e.getMessage(),"unable to pause flow " + flowId,flowId);
-        }
+        return response(mediaType, "pause",report);
 
     }
 
@@ -178,26 +105,10 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        String report = integration.resumeFlow(flowId);
 
-        try {
+        return response(mediaType, "resume",report);
 
-            status = integration.resumeFlow(flowId);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Resumed flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/resume",status,plainResponse);
-            } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/resume", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("Resume flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/resume",e.getMessage(),"unable to resume flow " + flowId,flowId);
-        }
     }
 
     @PostMapping(
@@ -212,8 +123,6 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
-
         log.info("Install routeId: {}. Configuration:\n\n{}", routeId, route);
 
         try {
@@ -222,18 +131,19 @@ public class FlowManagerRuntime {
                 route = DocConverter.convertJsonToXml(route);
             }
 
-            status = integration.installRoute(routeId, route);
+            String report = integration.installRoute(routeId, route);
 
             if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
+                report = DocConverter.convertJsonToXml(report);
             }
 
-            if (status.contains("successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/route/{flowId}/install",status,plainResponse);
+            if (report.contains("successfully")) {
+                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/route/{flowId}/install",report,true);
             } else {
-                log.error("FlowManager Report:\n\n{}", status);
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/route/{routeId}/install", status, plainResponse);
+                log.error("FlowManager Report:\n\n{}", report);
+                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/route/{routeId}/install", report, true);
             }
+
         } catch (Exception e) {
             log.error("Test flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/route/{routeId}/install", e.getMessage(), "unable to run route " + routeId, routeId);
@@ -257,23 +167,9 @@ public class FlowManagerRuntime {
 
         log.info("Install flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
-        try {
+        String report = integration.installFlow(flowId, timeout, contentType, configuration);
 
-            status = integration.installFlow(flowId, timeout, contentType, configuration);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Started flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/install",status,true);
-            } else {
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/install", status, true);
-            }
-        } catch (Exception e) {
-            log.error("Test flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/install", e.getMessage(), "unable to test flow " + flowId, flowId);
-        }
+        return response(mediaType, "install",report);
 
     }
 
@@ -287,25 +183,9 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        plainResponse = true;
+        String report = integration.uninstallFlow(flowId, timeout);
 
-        try {
-
-            status = integration.uninstallFlow(flowId, timeout);
-
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Stopped flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/uninstall",status,plainResponse);
-            } else {
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/uninstall", status, plainResponse);
-            }
-        } catch (Exception e) {
-            log.error("Stop flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/uninstall",e.getMessage(),"unable to stop flow " + flowId,flowId);
-        }
+        return response(mediaType, "uninstall",report);
 
     }
 
@@ -325,27 +205,12 @@ public class FlowManagerRuntime {
 
         log.info("Test flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
-        try {
+        String report = integration.testFlow(flowId, timeout, contentType, configuration);
 
-            status = integration.testFlow(flowId, timeout, contentType, configuration);
+        return response(mediaType, "test",report);
 
-            if(mediaType.equals("application/xml")){
-                status = DocConverter.convertJsonToXml(status);
-            }
-
-            if (status.contains("Started flow successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/test",status,true);
-            } else {
-                return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/flow/{flowId}/test", status, true);
-            }
-        } catch (Exception e) {
-            log.error("Test flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/flow/{flowId}/test", e.getMessage(), "unable to test flow " + flowId, flowId);
-        }
 
     }
-
-
 
     @GetMapping(
             path = "/integration/flow/{flowId}/isstarted",
@@ -362,7 +227,7 @@ public class FlowManagerRuntime {
             return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/isstarted",isStarted,isStarted,flowId);
         } catch (Exception e) {
             log.error("Get if flow {} is started failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/isstarted",e.getMessage(),"unable to get status for flow " + flowId,flowId);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/isstarted",e.getMessage(),"unable to get report for flow " + flowId,flowId);
         }
 
     }
@@ -378,34 +243,13 @@ public class FlowManagerRuntime {
 
         log.info("Get flow info for flowId: {}", flowId);
 
-        plainResponse = true;
-
         try {
 
             String info = integration.getFlowInfo(flowId, mediaType);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/info",info,true);
         } catch (Exception e) {
-            log.error("Get status of flow {} failed", flowId, e);
+            log.error("Get report of flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/info",e.getMessage(),false);
-        }
-
-    }
-
-    @GetMapping(
-            path = "/integration/flow/{flowId}/status",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> getFlowStatus(
-            @PathVariable(value = "flowId") String flowId,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-    ) {
-
-        try {
-            status = integration.getFlowStatus(flowId);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/status",status,status,flowId);
-        } catch (Exception e) {
-            log.error("Get status of flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/status",e.getMessage(),"unable to get status for flow " + flowId,flowId);
         }
 
     }
@@ -503,58 +347,24 @@ public class FlowManagerRuntime {
         }
     }
 
-    @PostMapping(
-            path = "/integration/flow/maintenance/{time}",
-            consumes = {MediaType.APPLICATION_JSON_VALUE},
+    @GetMapping(
+            path = "/integration/flow/{flowId}/status",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> setMaintenance(
-            @PathVariable(value = "time") Long time,
-            @RequestBody List<String> ids,
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
+    public ResponseEntity<String> getFlowStatus(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-
-            Thread thread = new Thread(() -> {
-
-                try {
-                    for(String id : ids) {
-                        flowId = id;
-                        status = integration.getFlowStatus(flowId);
-                        if(status.equals("started")) {
-                            integration.pauseFlow(flowId);
-                        }
-                    }
-
-                    Thread.sleep(time);
-
-                    for(String id : ids) {
-
-                        flowId = id;
-                        status = integration.getFlowStatus(flowId);
-                        if(status.equals("suspended")) {
-                            integration.startFlow(flowId, timeout);
-                        }
-                    }
-
-                } catch (Exception e) {
-                    log.error("Set maintenance failed",e);
-                    Thread.currentThread().interrupt();
-                }
-            });
-
-            // start the thread
-            thread.start();
-
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/maintenance/{time}","Set flows into maintenance mode for " + time + " miliseconds");
+            String status = integration.getFlowStatus(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/status",status,status,flowId);
         } catch (Exception e) {
-            log.error("Set maintenance failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/maintenance/{time}",e.getMessage());
+            log.error("Get status of flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/status",e.getMessage(),"unable to get status for flow " + flowId,flowId);
         }
-    }
 
+    }
 
     // Generates a generic error response (exceptions outside try catch):
     @ExceptionHandler({Exception.class})
@@ -568,6 +378,42 @@ public class FlowManagerRuntime {
         String message = error.getMessage();
 
         return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
+    }
+    private ResponseEntity<String> response(String mediaType, String endpoint, String response) {
+
+        String path = "/integration/flow/{flowId}/" + endpoint;
+
+        try {
+
+            boolean isuccessfully = isSuccessResponse(response);
+
+            if (mediaType.equals("application/xml")) {
+                response = DocConverter.convertJsonToXml(response);
+            }
+
+            if (isuccessfully) {
+                return ResponseUtil.createSuccessResponse(1L, mediaType, path, response, true);
+            }
+
+        }catch (Exception e) {
+            log.error("FlowManager Report failed:\n\n{}", response);
+            return ResponseUtil.createFailureResponse(1L, mediaType, path, response, true);
+        }
+
+        log.error("FlowManager Report:\n\n{}", response);
+        return ResponseUtil.createFailureResponse(1L, mediaType, path, response, true);
+
+    }
+
+    private boolean isSuccessResponse(String response) throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(response);
+
+        String status = root.path("flow").path("status").asText();
+
+        return status.equals("success");
+
     }
 
 }

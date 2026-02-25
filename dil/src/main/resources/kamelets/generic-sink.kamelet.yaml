@@ -49,5 +49,5 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - toD:
+            - to:
                 uri: "{{scheme}}://{{path}}?{{?options}}"

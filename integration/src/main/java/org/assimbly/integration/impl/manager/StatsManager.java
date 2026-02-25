@@ -420,7 +420,6 @@ public class StatsManager {
 
     }
 
-
     public String getHealth(String type, String mediaType) {
 
         Set<String> flowIds = flowManager.getListOfFlowIds(null);

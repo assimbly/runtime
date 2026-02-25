@@ -522,7 +522,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String startFlow(String flowId, long timeout) throws Exception;
+    String startFlow(String flowId, long timeout);
 
 	/**
 	* Restarts a flow
@@ -531,7 +531,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String restartFlow(String flowId, long timeout) throws Exception;
+    String restartFlow(String flowId, long timeout);
 	
 	/**
 	* Stops a flow
@@ -540,7 +540,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String stopFlow(String flowId, long timeout) throws Exception;
+    String stopFlow(String flowId, long timeout);
 	
 	/**
 	* Resumes a flow if paused
@@ -549,7 +549,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String resumeFlow(String flowId) throws Exception;
+    String resumeFlow(String flowId);
 
 	/**
 	* Pauses a flow if started
@@ -558,7 +558,7 @@ public interface Integration {
 	* @return returns a confirmation message
 	* @throws Exception if flow doesn't start
 	*/
-    String pauseFlow(String flowId) throws Exception;
+    String pauseFlow(String flowId);
 
 	/**
 	 * Configure and Starts a flow (for testing)
@@ -568,7 +568,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-    String installRoute(String routeId, String route) throws Exception;
+    String installRoute(String routeId, String route);
 
 	/**
 	* Configure and Starts a flow
@@ -589,7 +589,7 @@ public interface Integration {
 	 * @return returns a confirmation message
 	 * @throws Exception if flow doesn't start
 	 */
-    String uninstallFlow(String flowId, long timeout) throws Exception;
+    String uninstallFlow(String flowId, long timeout);
 
 	/**
 	 * Installs and test a flow

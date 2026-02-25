@@ -17,6 +17,7 @@ import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -156,12 +157,11 @@ public class CamelIntegration extends BaseIntegration {
             super.setFlowConfiguration(flowId, mediaType, configuration);
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            flowManager.initFlowActionReport(flowId);
-            flowManager.finishFlowActionReport(flowId, "error", e.getMessage(), "error");
-            return flowManager.getFlowReport();
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
-        String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), sslManager, timeout);
+        String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
 
         if (result == null || result.contains("\"event\": \"error\"")) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
@@ -172,6 +172,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String uninstallFlow(String flowId, long timeout) {
+        removeFlowConfigurationIfExist(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -180,7 +181,7 @@ public class CamelIntegration extends BaseIntegration {
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
 
-            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), sslManager, timeout);
+            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
             String testReport = flowManager.testFlow(flowId);
             flowManager.stopFlow(flowId, timeout);
 
@@ -188,9 +189,8 @@ public class CamelIntegration extends BaseIntegration {
 
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            flowManager.initFlowActionReport(flowId);
-            flowManager.finishFlowActionReport(flowId, "error", e.getMessage(), "error");
-            return flowManager.getFlowReport();
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
     }
@@ -204,7 +204,7 @@ public class CamelIntegration extends BaseIntegration {
             initFlowDB();
             if(!flowsMap.isEmpty()) {
                 log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-                flowManager.startAllFlows(sslManager, flowsMap);
+                flowManager.startAllFlows(flowsMap);
                 log.info("Restored flows from cache.");
             }else {
                 log.info("No active flows found in cache. Cache is ready.");
@@ -374,7 +374,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getListOfStepTemplates() throws Exception {
+    public String getListOfStepTemplates() {
         return configManager.getListOfStepTemplates();
     }
 
@@ -597,7 +597,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public long getFlowAlertsCount(String flowId) throws Exception {
+    public long getFlowAlertsCount(String flowId) {
         return flowManager.getFlowAlertsCount(flowId);
     }
 
@@ -622,12 +622,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getHealth(String type, String mediaType) throws Exception {
+    public String getHealth(String type, String mediaType) {
         return statsManager.getHealth(type, mediaType);
     }
 
     @Override
-    public String getHealthByFlowIds(String flowIds, String type, String mediaType) throws Exception {
+    public String getHealthByFlowIds(String flowIds, String type, String mediaType) {
         return statsManager.getHealthByFlowIds(flowIds, type, mediaType);
     }
 
@@ -698,12 +698,12 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(sslManager, flowsMap);
+        flowManager.startAllFlows(flowsMap);
     }
 
     @Override
     public String restartAllFlows() {
-        return flowManager.restartAllFlows(sslManager, flowsMap);
+        return flowManager.restartAllFlows(flowsMap);
     }
 
     @Override
@@ -713,7 +713,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String resumeAllFlows() {
-        return flowManager.resumeAllFlows(sslManager, flowsMap);
+        return flowManager.resumeAllFlows(flowsMap);
     }
 
     @Override
@@ -724,25 +724,31 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String startFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.startFlow(flowId, flowProperties, sslManager, timeout);
+        if(flowProperties.isEmpty()){
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            String errorMessage = "XXX Flow is not installed";
+            return  flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed");
+        }
+
+
+        return flowManager.startFlow(flowId, flowProperties, timeout);
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.restartFlow(flowId, flowProperties, sslManager, timeout);
+        return flowManager.restartFlow(flowId, flowProperties, timeout);
     }
 
     @Override
     public String stopFlow(String flowId, long timeout) {
-        removeFlowConfigurationIfExist(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
     @Override
     public String resumeFlow(String flowId) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.resumeFlow(flowId, flowProperties, sslManager);
+        return flowManager.resumeFlow(flowId, flowProperties);
     }
 
     @Override
@@ -751,7 +757,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String installRoute(String routeId, String route) throws Exception {
+    public String installRoute(String routeId, String route) {
         return flowManager.installRoute(routeId, route);
     }
 

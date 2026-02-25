@@ -33,23 +33,24 @@ public class FlowLoaderReport {
 		steps = new JSONArray();
 	}
 
-	public void finishReport(String event, String version, String message){
+	public void finishReport(String event, String version, String message, String status){
 
 		long time = System.currentTimeMillis() - startTime;
 
 		flow.put("id",flowId);
 		flow.put("name",flowName);
-		flow.put("event",event);
-		flow.put("message",message);
 		flow.put("version",version);
+		flow.put("event",event);
 		flow.put("time",time + " milliseconds");
+		flow.put("message",message);
+		flow.put("status",status);
 
 		if(stepsLoaded!=null && loaded > 0){
 			stepsLoaded.put("total", loaded);
-			stepsLoaded.put("successfully", loadedSuccess);
+			stepsLoaded.put("success", loadedSuccess);
 			stepsLoaded.put("failed", loadedError);
 
-			flow.put("stepsLoaded",stepsLoaded);
+			flow.put("installed",stepsLoaded);
 			flow.put("steps", steps);
 		}
 
@@ -84,8 +85,10 @@ public class FlowLoaderReport {
 		step.put("type", stepType);
 
 		if(stepStatus.equalsIgnoreCase("error")){
+
+			step.put("message", message);
 			step.put("status", "error");
-			step.put("errorMessage", message);
+
 			if(trace!=null){
 				step.put("trace", trace);
 			}

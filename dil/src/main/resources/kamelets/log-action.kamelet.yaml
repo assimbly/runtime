@@ -15,10 +15,21 @@ spec:
         description: "path of component"
         type: "string"
         default: "dummy"
-      options:
-        title: "options (query parameterS)"
-        description: "Endpoint URI"
-        type: "string"
+      showHeaders:
+        title: "Show Headers"
+        description: "Show all message headers"
+        type: "boolean"
+        default: false
+      showBody:
+        title: "Show Body"
+        description: "Show message body"
+        type: "boolean"
+        default: false
+      showException:
+        title: "Show Exception"
+        description: "Show all exceptions"
+        type: "boolean"
+        default: false
       in:
         title: "Source Endpoint"
         type: "string"
