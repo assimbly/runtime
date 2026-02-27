@@ -85,12 +85,13 @@ public class FlowManager {
             if(flow.isFlowLoaded()){
                 return finishReport(report, flowId, "start", "Started flow successfully", "info","success");
             }else{
-                return finishReport(report, flowId, "error", "Start flow failed", "error","failed");
+                stopFlow(flowId, STOP_TIMEOUT);
+                return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
             }
 
         } catch (Exception e) {
             log.error("Load flow failed: ", e);
-            return finishReport(report, flowId, "error", e.getMessage(), "error","failed");
+            return finishReport(report, flowId, "start", e.getMessage(), "error","failed");
         }
 
     }
@@ -225,9 +226,7 @@ public class FlowManager {
     }
 
     public String restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
-
         return startFlow(flowId, flowProperties, timeout);
-
     }
 
     public String stopFlow(String flowid, long timeout) {
@@ -304,7 +303,7 @@ public class FlowManager {
 
         for (Route route : routeList) {
             if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
-                return finishReport(report, flowId, "error", "Flow isn't suspendable (Step " + route.getId() + ")", "error","failed");
+                return finishReport(report, flowId, "pause", "Flow isn't suspendable (Step " + route.getId() + ")", "error","failed");
             }
         }
 
