@@ -508,44 +508,21 @@ public class FlowManager {
         return flowInfo;
     }
 
-    //Needs some work, because lastError doesn't return handled errors
-    public String getFlowAlertsLog(String flowId) {
+    public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception {
 
-        List<Route> routeList = getRoutesByFlowId(flowId);
-        Date lastErrorDate = new Date();
-        String lastErrorMessage = "0";
+        Date date = new Date();
+        String today = new SimpleDateFormat("yyyyMMdd").format(date);
+        File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
 
-        for (Route r : routeList) {
-            String routeId = r.getId();
-
-            System.out.println("RouteId=" + routeId);
-
-            ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
-
-            if (route != null) {
-                System.out.println("2 RouteId=" + routeId);
-
-                RouteError lastError = route.getLastError();
-
-                System.out.println("Failure timestamp: " + route.getLastExchangeFailureTimestamp());
-
-
-                if(lastError != null){
-                    System.out.println("2b error=" + lastError.getException().getMessage());
-                    System.out.println("2b error date=" + lastError.getDate().toString());
-                    System.out.println("2b date=" + lastErrorDate);
-                }
-
-                if (lastError != null && lastError.getDate().after(lastErrorDate)) {
-                    System.out.println("3 RouteId=" + routeId);
-                    lastErrorDate = lastError.getDate();
-                    lastErrorMessage = lastError.getException().getMessage();
-                }
+        if (file.exists()) {
+            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
+            if (numberOfEntries != null && numberOfEntries < lines.size()) {
+                lines = lines.subList(lines.size() - numberOfEntries, lines.size());
             }
+            return StringUtils.join(lines, ',');
+        } else {
+            return "0";
         }
-
-        return lastErrorMessage;
-
     }
 
     public TreeMap<String, String> getIntegrationAlertsCount(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {

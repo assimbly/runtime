@@ -47,6 +47,7 @@ public class Unmarshall {
 		addProperty(flowElement, "name");
 		addProperty(flowElement, "type");
 		addProperty(flowElement, "version");
+		addProperty(flowElement, "failureProcessor");
 
 		createResources();
 

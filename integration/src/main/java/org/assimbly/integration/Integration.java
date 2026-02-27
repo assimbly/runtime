@@ -713,7 +713,7 @@ public interface Integration {
 	* @throws Exception if log cannot be retrieved
 	* @return failure log events (comma separated)
 	*/
-    String getFlowAlertsLog(String flowId);
+    String getFlowAlertsLog(String flowId) throws Exception;
 
 	/**
 	* Gets number of entries in (todays) failed log of flow

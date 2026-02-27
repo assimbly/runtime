@@ -592,8 +592,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowAlertsLog(String flowId) {
-        return flowManager.getFlowAlertsLog(flowId);
+    public String getFlowAlertsLog(String flowId) throws Exception {
+        return flowManager.getFlowAlertsLog(flowId, 3);
     }
 
     @Override
