@@ -52,7 +52,7 @@
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>1.16.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.3.0</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.3.1</elasticsearch-rest-client.version>
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
@@ -67,7 +67,7 @@
         <json.version>20251224</json.version>
         <json-path.version>3.0.0</json-path.version>
         <jwt.version>0.13.0</jwt.version>
-        <jolokia.version>2.4.3</jolokia.version>
+        <jolokia.version>2.5.1</jolokia.version>
         <httpclient.version>4.5.14</httpclient.version>
         <kamelet.version>4.18.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
@@ -95,7 +95,7 @@
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
         <junit.version>6.0.3</junit.version>
-        <mockito.version>5.21.0</mockito.version>
+        <mockito.version>5.22.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
