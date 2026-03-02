@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
@@ -99,7 +99,7 @@ class HealthRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(stepJson, String.format("%s-%s", schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())));
+            AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

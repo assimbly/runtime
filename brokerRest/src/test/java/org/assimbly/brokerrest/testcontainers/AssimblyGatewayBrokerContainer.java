@@ -9,7 +9,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.net.URL;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class AssimblyGatewayBrokerContainer {
 
@@ -45,7 +45,7 @@ public class AssimblyGatewayBrokerContainer {
     private static String getResourcePath() {
         URL resource = AssimblyGatewayBrokerContainer.class.getClassLoader().getResource("container");
         try {
-            return Paths.get(resource.toURI()).toString();
+            return Path.of(resource.toURI()).toString();
         } catch (Exception e) {
             log.error("Error to copy files to container", e);
             return null;

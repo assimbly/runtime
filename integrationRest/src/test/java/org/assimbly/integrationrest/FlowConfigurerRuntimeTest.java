@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.commons.utils.Utils;
@@ -183,7 +183,7 @@ class FlowConfigurerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode componentJson = responseJson.get(0);
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertComponentFieldsResponse(fieldNames);
@@ -234,7 +234,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -305,7 +305,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -330,7 +330,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -355,7 +355,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowStepFieldsResponse(fieldNames);

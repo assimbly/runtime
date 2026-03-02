@@ -20,7 +20,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class FtpValidator {
 
@@ -64,7 +64,7 @@ public class FtpValidator {
 
             if (privateKeyFileData != null && !privateKeyFileData.isEmpty()) {
                 tempFile = File.createTempFile("temp", "");
-                try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(tempFile.toURI()), StandardCharsets.UTF_8)){
+                try (BufferedWriter writer = Files.newBufferedWriter(Path.of(tempFile.toURI()), StandardCharsets.UTF_8)){
                     writer.write(privateKeyFileData);
                 }
                 jsch.addIdentity(tempFile.getAbsolutePath());

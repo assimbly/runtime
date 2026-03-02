@@ -10,7 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +57,7 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
     }
 
     private void writeZipEntry(ZipOutputStream zos, byte[] data, String filepath) throws IOException {
-        Iterator<Path> elements = Paths.get(filepath).iterator();
+        Iterator<Path> elements = Path.of(filepath).iterator();
 
         StringBuilder sb = new StringBuilder();
 

@@ -5,12 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.mongodb.MongoDBContainer;
 
 import java.net.URL;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 
 public class AssimblyGatewayHeadlessContainer {
@@ -60,7 +60,7 @@ public class AssimblyGatewayHeadlessContainer {
     private static String getResourceSecurityPath() {
         URL resource = AssimblyGatewayHeadlessContainer.class.getClassLoader().getResource("security");
         try {
-            return Paths.get(resource.toURI()).toString();
+            return Path.of(resource.toURI()).toString();
         } catch (Exception e) {
             log.error("Error to copy files to container", e);
             return null;

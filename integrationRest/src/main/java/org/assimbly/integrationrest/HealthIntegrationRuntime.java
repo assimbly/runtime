@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;

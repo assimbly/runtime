@@ -1,13 +1,11 @@
 package org.assimbly.dil.event.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.dil.event.collect.StepCollector;
 import org.quartz.impl.StdScheduler;
+import tools.jackson.core.JacksonException;
 
-import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.util.*;
@@ -167,13 +165,10 @@ public class MessageEvent {
     }
 
     public String toJson() {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         try {
             return mapper.writeValueAsString(this);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

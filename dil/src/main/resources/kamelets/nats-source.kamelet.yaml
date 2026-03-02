@@ -73,7 +73,5 @@ spec:
         steps:
         - step:
             id: "{{routeId}}"
-            steps:          
-            - marshal:
-                json: {}
+            steps:
             - to: "{out}}"

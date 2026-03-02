@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
@@ -96,7 +96,7 @@ class MessageBrokerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode messageJson = responseJson.get("messages").get("message").get(0);
 
-            return messageJson.get("messageid").asText();
+            return messageJson.get("messageid").asString();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -251,7 +251,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertBrokerMessagesResponse(messageJson, BODY);
 
-            messageIdOnQueue1 = messageJson.get("messageid").asText();
+            messageIdOnQueue1 = messageJson.get("messageid").asString();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

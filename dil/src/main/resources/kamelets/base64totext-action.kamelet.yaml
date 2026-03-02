@@ -36,7 +36,5 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - unmarshal:
-                base64: {}
             - to:
                 uri: "{{out}}"

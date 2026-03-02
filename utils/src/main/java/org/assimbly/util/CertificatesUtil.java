@@ -1,17 +1,22 @@
 package org.assimbly.util;
-
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.DateUtils;
-import org.apache.http.conn.ManagedHttpClientConnection;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.client5.http.utils.DateUtils;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.message.RequestLine;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.ssl.SSLContexts;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -31,6 +36,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import java.io.*;
 import java.math.BigInteger;
@@ -49,8 +55,8 @@ import java.util.regex.Pattern;
 public final class CertificatesUtil {
 
 	private static final Logger log = LoggerFactory.getLogger("org.assimbly.util.CertificatesUtil");
-	
-    public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
+
+	public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
 
@@ -58,31 +64,49 @@ public final class CertificatesUtil {
 
 		Certificate[] peercertificates;
 
-        // create http response certificate interceptor
-        HttpResponseInterceptor certificateInterceptor = (httpResponse, context) -> {
-            ManagedHttpClientConnection routedConnection = (ManagedHttpClientConnection)context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
-            SSLSession sslSession = routedConnection.getSSLSession();
-            if (sslSession != null) {
+		// create http response certificate interceptor
+		HttpResponseInterceptor certificateInterceptor = (HttpResponse response, EntityDetails entity, HttpContext context) -> {
 
-                // get the server certificates from the SSLSession
-                java.security.cert.Certificate[] certificates = sslSession.getPeerCertificates();
+			// Cast to HttpClientContext to access high-level helper methods
+			HttpClientContext clientContext = HttpClientContext.adapt(context);
 
-                // add the certificates to the context, where we can later grab it from
-                context.setAttribute(PEER_CERTIFICATES, certificates);
-            }
-        };
+			// In HC5, the SSL session is directly accessible via the context
+			SSLSession sslSession = clientContext.getSSLSession();
 
-        try (CloseableHttpClient httpClient = HttpClients
-                .custom()
-                .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build())
-                .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                .addInterceptorLast(certificateInterceptor)
-                .build()) {
+			if (sslSession != null) {
+				// Get the server certificates
+				Certificate[] certificates = sslSession.getPeerCertificates();
+
+				// Set the attribute on the original context
+				context.setAttribute("PEER_CERTIFICATES", certificates);
+			}
+		};
+
+        // 1. Build the SSLContext with TrustAllStrategy
+		SSLContext sslContext = SSLContexts.custom()
+				.loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
+				.build();
+
+		// 2. Create the SSL Socket Factory with the NoopHostnameVerifier
+		SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+				.setSslContext(sslContext)
+				.setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+				.build();
+
+        // 3. Create the Connection Manager using the factory
+		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setSSLSocketFactory(sslSocketFactory)
+				.build();
+
+		try (CloseableHttpClient httpClient = HttpClients.custom()
+				.setConnectionManager(connectionManager)
+				.addResponseInterceptorLast(certificateInterceptor)
+				.build()) {
 
 			// make HTTP GET request to resource server
 			HttpGet httpget = new HttpGet(url);
 
-			log.info("Executing request {}", httpget.getRequestLine());
+			log.info("Executing request {}", new RequestLine(httpget));
 
 			// create http context where the certificate will be added
 			HttpContext context = new BasicHttpContext();
@@ -101,40 +125,39 @@ public final class CertificatesUtil {
 					System.out.println("Signing Algorithm: " + real.getSigAlgName());
 					System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
 					System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-					System.out.println("Not After: " + DateUtils.formatDate(real.getNotAfter(), "dd-MM-yyyy"));
-					System.out.println("Not Before: " + DateUtils.formatDate(real.getNotBefore(), "dd-MM-yyyy"));
-				}
+					System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+					System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				}
 
 			} else {
 				log.error("Certificates not found. URL: {})", url);
 			}
 
-        }
+		}
 
-        return peercertificates;
-		
+		return peercertificates;
+
 	}
 
 
 	public Certificate getCertificate(String keyStorePath, String keystorePassword, String certificateName) {
 
-    	try {
-    		//load keystore
+		try {
+			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
 			Certificate certificate = keystore.getCertificate(certificateName);
 
 			storeKeystore(keyStorePath,keystorePassword,keystore);
 
-	        return certificate;
-	        
+			return certificate;
+
 		}catch (Exception e) {
 			log.error("Get certificate for keystore {} with name {} failed", keyStorePath, certificateName, e);
 		}
-		return null;   	
+		return null;
 
 	}
-	
+
 
 	public String importCertificate(String keyStorePath, String keystorePassword, String certificateName, Certificate certificate) {
 
@@ -144,18 +167,17 @@ public final class CertificatesUtil {
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
 			// Add the certificate to the store
-            X509Certificate real = (X509Certificate) certificate;
-            System.out.println("----------------------------------------");
-            System.out.println("Type: " + real.getType());
-            System.out.println("Signing Algorithm: " + real.getSigAlgName());
-            System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-            System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-            System.out.println("Not After: " + DateUtils.formatDate(real.getNotAfter(), "dd-MM-yyyy"));
-            System.out.println("Not Before: " + DateUtils.formatDate(real.getNotBefore(), "dd-MM-yyyy"));
-
-            keystore.setCertificateEntry(certificateName, certificate);
-            System.out.println("original alias:" + certificateName);
-            System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
+			X509Certificate real = (X509Certificate) certificate;
+			System.out.println("----------------------------------------");
+			System.out.println("Type: " + real.getType());
+			System.out.println("Signing Algorithm: " + real.getSigAlgName());
+			System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+			System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+			System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+			System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
+			keystore.setCertificateEntry(certificateName, certificate);
+			System.out.println("original alias:" + certificateName);
+			System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
 
 			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
@@ -167,37 +189,36 @@ public final class CertificatesUtil {
 		return certificateName;
 
 	}
-	
+
 	public Map<String,Certificate> importCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
-        System.out.println("Importing certificates");
-        Map<String,Certificate> certificateMap = new HashMap<>();
+		System.out.println("Importing certificates");
+		Map<String,Certificate> certificateMap = new HashMap<>();
 
-    	try {
-    		//load keystore
+		try {
+			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-	        // Add the certificate to the store
-            for (Certificate certificate : certificates){            	
-                X509Certificate real = (X509Certificate) certificate;
-                System.out.println("----------------------------------------");
-                System.out.println("Type: " + real.getType());
-                System.out.println("Signing Algorithm: " + real.getSigAlgName());
-                System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-                System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-                System.out.println("Not After: " + DateUtils.formatDate(real.getNotAfter(), "dd-MM-yyyy"));
-                System.out.println("Not Before: " + DateUtils.formatDate(real.getNotBefore(), "dd-MM-yyyy"));
-                String alias = UUID.randomUUID().toString();
-                certificateMap.put(alias, certificate);
-                keystore.setCertificateEntry(alias, certificate);
-                System.out.println("original alias:" + alias);
-                System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
-                
-            }
-			
-	        // Save the new keystore contents
+			// Add the certificate to the store
+			for (Certificate certificate : certificates){
+				X509Certificate real = (X509Certificate) certificate;
+				System.out.println("----------------------------------------");
+				System.out.println("Type: " + real.getType());
+				System.out.println("Signing Algorithm: " + real.getSigAlgName());
+				System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+				System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+				System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+				System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				String alias = UUID.randomUUID().toString();
+				certificateMap.put(alias, certificate);
+				keystore.setCertificateEntry(alias, certificate);
+				System.out.println("original alias:" + alias);
+				System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
+
+			}
+
+			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
-	        
+
 		}catch (Exception e) {
 			log.error("Import certificates for keystore {} failed", keyStorePath, e);
 		}
@@ -243,13 +264,13 @@ public final class CertificatesUtil {
 
 	public void deleteCertificate(String keyStorePath, String keystorePassword) {
 
-    	try {
-    		//load keystore
+		try {
+			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword,null);
 
 			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
-	        
+
 		}catch (Exception e) {
 			log.error("Delete certificate for keystore {} failed", keyStorePath, e);
 		}
@@ -390,8 +411,8 @@ public final class CertificatesUtil {
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		InputStream is = classloader.getResourceAsStream("keystore.jks");
-        if (is != null) {
-            Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+		if (is != null) {
+			Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 			is.close();
 		}
 
@@ -412,9 +433,9 @@ public final class CertificatesUtil {
 	 * @throws CertificateException on getting certificate from provider
 	 */
 	public static X509Certificate selfsignCertificate(final KeyPair keyPair,
-										   final String hashAlgorithm,
-										   final String cn,
-										   final int days)
+													  final String hashAlgorithm,
+													  final String cn,
+													  final int days)
 			throws OperatorCreationException, CertificateException, CertIOException
 	{
 		final Instant now = Instant.now();
@@ -508,5 +529,3 @@ public final class CertificatesUtil {
 	}
 
 }
-
-

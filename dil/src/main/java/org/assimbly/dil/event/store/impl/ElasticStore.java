@@ -1,16 +1,11 @@
 package org.assimbly.dil.event.store.impl;
 
-import org.apache.http.HttpHost;
 import org.assimbly.dil.event.domain.Store;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseListener;
-import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
@@ -39,17 +34,21 @@ public final class ElasticStore {
         if (client == null) {
             synchronized (ElasticStore.class) {
                 if (client == null) {
-                    URL url = URI.create(store.getUri()).toURL();
-                    client = RestClient.builder(new HttpHost(url.getHost(), url.getPort(), url.getProtocol()))
-                            .setRequestConfigCallback(c -> c
+                    URI uri = URI.create(store.getUri());
+
+                    // 1. Create the Node (this is the safest way to avoid HttpHost version conflicts)
+                    Node node = new Node(new org.apache.http.HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()));
+
+                    client = RestClient.builder(node)
+                            .setRequestConfigCallback(builder -> builder
                                     .setConnectTimeout(1000)
                                     .setSocketTimeout(3000))
-                            .setHttpClientConfigCallback(b -> b
-                                    .setMaxConnTotal(MAX_IN_FLIGHT)
-                                    .setMaxConnPerRoute(MAX_IN_FLIGHT)
-                                    .setDefaultIOReactorConfig(org.apache.http.impl.nio.reactor.IOReactorConfig.custom()
-                                            .setIoThreadCount(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
-                                            .build()))
+                            .setHttpClientConfigCallback(httpClientBuilder -> {
+                                // If you need to add your certificateInterceptor here:
+                                return httpClientBuilder
+                                        .setMaxConnTotal(MAX_IN_FLIGHT)
+                                        .setMaxConnPerRoute(MAX_IN_FLIGHT);
+                            })
                             .build();
                 }
             }

@@ -1,7 +1,7 @@
 package org.assimbly.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -11,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import tools.jackson.core.JacksonException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -50,10 +51,10 @@ public final class IntegrationUtil {
 
 	public static boolean isYaml(String yaml){
 		try {
-			final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			final ObjectMapper mapper = new YAMLMapper();
 			mapper.readTree(yaml);
 			return true;
-		 } catch (IOException e) {
+		 } catch (JacksonException e) {
 			return false;
 		 }
 	}
@@ -63,7 +64,7 @@ public final class IntegrationUtil {
 			final ObjectMapper mapper = new ObjectMapper();
 			mapper.readTree(json);
 			return true;
-		 } catch (IOException e) {
+		 } catch (JacksonException e) {
 			return false;
 		 }
 	}

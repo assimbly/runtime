@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -161,7 +160,7 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	private void createCacheDirectory() {
-		Path path = Paths.get(BaseDirectory.getInstance().getBaseDirectory(), "cache");
+		Path path = Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache");
 
 		try {
 			Files.createDirectories(path);

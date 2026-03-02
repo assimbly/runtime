@@ -1,7 +1,7 @@
 package org.assimbly.brokerrest;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;

@@ -54,6 +54,12 @@
             <artifactId>xmlunit-legacy</artifactId>
             <version>${xmlunit.version}</version>
             <scope>compile</scope>
+   <exclusions>
+    <exclusion>
+     <groupId>junit</groupId>
+     <artifactId>junit</artifactId>
+    </exclusion>
+   </exclusions>
         </dependency>
         <dependency>
             <groupId>org.xmlunit</groupId>
@@ -83,20 +89,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- is this need as powermock isn't available for junit5? -->
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito2</artifactId>
-            <version>${powermock.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-core</artifactId>
-            <version>${powermock.version}</version>
             <scope>compile</scope>
         </dependency>
 

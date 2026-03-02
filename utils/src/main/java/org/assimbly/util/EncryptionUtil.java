@@ -95,7 +95,7 @@ public final class EncryptionUtil {
         String encodedEncryptedText = encoder.encodeToString(encryptedBytes);
 
         // Concatenate and return
-        return String.format("ENC(%s|%s|%s)", encodedSalt, encodedIv, encodedEncryptedText);
+        return "ENC(%s|%s|%s)".formatted(encodedSalt, encodedIv, encodedEncryptedText);
     }
 
     public String decrypt(String encryptedText) {

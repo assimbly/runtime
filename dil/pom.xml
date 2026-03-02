@@ -41,6 +41,12 @@
 			<groupId>org.assimbly</groupId>
 			<artifactId>test-base</artifactId>
 			<version>${assimbly.version}</version>
+   <exclusions>
+    <exclusion>
+     <groupId>junit</groupId>
+     <artifactId>junit</artifactId>
+    </exclusion>
+   </exclusions>
 		</dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>

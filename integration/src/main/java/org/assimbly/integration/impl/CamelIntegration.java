@@ -1,8 +1,8 @@
 package org.assimbly.integration.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.camel.*;

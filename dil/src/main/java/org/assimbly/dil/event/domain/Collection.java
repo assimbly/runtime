@@ -1,11 +1,9 @@
 package org.assimbly.dil.event.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class Collection {
@@ -82,16 +80,15 @@ public class Collection {
         this.filters = filters;
     }
 
-    public Collection fromJson(String json) throws JsonProcessingException {
+    public Collection fromJson(String json) throws JacksonException {
         return mapper.readValue(json, Collection.class);
     }
 
     public String toJson() {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
         try {
             return mapper.writeValueAsString(this);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

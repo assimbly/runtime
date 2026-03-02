@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
@@ -31,7 +31,7 @@ public class FileBasedTrustStore {
         try {
             KeyStore trustStore = KeyStore.getInstance(type);
 
-            try (InputStream inputStream = Files.newInputStream(Paths.get(path))) {
+            try (InputStream inputStream = Files.newInputStream(Path.of(path))) {
                 trustStore.load(inputStream, password.toCharArray());
             }
 
@@ -49,7 +49,7 @@ public class FileBasedTrustStore {
 
         try {
             synchronized (this) {
-                try (OutputStream out = Files.newOutputStream(Paths.get(path))) {
+                try (OutputStream out = Files.newOutputStream(Path.of(path))) {
                     trustStore.store(out, password.toCharArray());
                 }
             }

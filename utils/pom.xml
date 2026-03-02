@@ -49,6 +49,12 @@
             <artifactId>test-base</artifactId>
             <version>${assimbly.version}</version>
             <scope>test</scope>
+           <exclusions>
+            <exclusion>
+             <groupId>junit</groupId>
+             <artifactId>junit</artifactId>
+            </exclusion>
+           </exclusions>
         </dependency>
 
         <dependency>

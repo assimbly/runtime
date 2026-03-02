@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -96,7 +96,7 @@ class JDBCResourceTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText())
+            assertThat(responseJson.get("error").asString())
                     .startsWith("Access denied for user 'rfamro'@")
                     .endsWith("(using password: YES)");
 

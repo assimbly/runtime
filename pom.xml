@@ -56,7 +56,7 @@
         <groovy-script.version>4.0.29</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
-        <jackson.version>2.21.1</jackson.version>
+        <jackson.version>3.0.4</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
         <jakarta-json-api.version>2.1.3</jakarta-json-api.version>
@@ -78,10 +78,10 @@
         <oracle.version>23.26.1.0.0</oracle.version>
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <spring.version>6.2.15</spring.version>
-        <spring-boot.version>3.5.10</spring-boot.version>
+        <spring.version>7.0.5</spring.version>
+        <spring-boot.version>4.0.3</spring-boot.version>
         <spring-data.version>3.5.9</spring-data.version>
-        <springdoc.version>2.8.14</springdoc.version>
+        <springdoc.version>3.0.2</springdoc.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
         <xpath2.version>1.2.0</xpath2.version>
@@ -99,7 +99,7 @@
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
-        <testcontainers.version>1.21.4</testcontainers.version>
+        <testcontainers.version>2.0.3</testcontainers.version>
         <xmlunit.version>2.11.0</xmlunit.version>
 
     </properties>
@@ -114,7 +114,7 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
+                <groupId>tools.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
                 <scope>import</scope>
@@ -171,7 +171,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.1</version>
+                    <version>3.15.0</version>
                     <configuration>
                         <encoding>UTF-8</encoding>
                         <compilerArgs>
@@ -261,6 +261,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.15.0</version>
                 <configuration>
                     <source>21</source>
                     <target>21</target>
@@ -280,5 +281,15 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>

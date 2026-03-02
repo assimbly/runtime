@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.commons.utils.AssertUtils;
 import org.assimbly.commons.utils.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
@@ -514,7 +514,7 @@ class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, String.format("flow %s saved in the deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s saved in the deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -569,7 +569,7 @@ class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, String.format("flow %s deleted from deploy directory", inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s deleted from deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

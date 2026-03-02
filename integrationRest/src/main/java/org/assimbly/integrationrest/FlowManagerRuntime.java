@@ -1,8 +1,7 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
+import tools.jackson.core.JacksonException;
 
 
 @ControllerAdvice
@@ -405,12 +405,12 @@ public class FlowManagerRuntime {
 
     }
 
-    private boolean isSuccessResponse(String response) throws JsonProcessingException {
+    private boolean isSuccessResponse(String response) throws JacksonException {
 
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(response);
 
-        String status = root.path("flow").path("status").asText();
+        String status = root.path("flow").path("status").asString();
 
         return status.equals("success");
 

@@ -1,7 +1,7 @@
 package org.assimbly.commons.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,14 +43,14 @@ public final class AssertUtils {
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String msg, boolean messageFlag) {
 
-        assertThat(responseJson.get(DETAILS).asText()).isEqualTo("successful");
+        assertThat(responseJson.get(DETAILS).asString()).isEqualTo("successful");
 
         if(messageFlag) {
             assertMessage(responseJson, msg);
         }
         assertThat(responseJson.get(STATUS).asInt()).isEqualTo(200);
-        assertThat(responseJson.get(TIMESTAMP).asText()).isNotEmpty();
-        boolean isValid = Utils.isValidDate(responseJson.get(TIMESTAMP).asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+        assertThat(responseJson.get(TIMESTAMP).asString()).isNotEmpty();
+        boolean isValid = Utils.isValidDate(responseJson.get(TIMESTAMP).asString(), "yyyy-MM-dd HH:mm:ss.SSS");
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
     }
 
@@ -64,7 +64,7 @@ public final class AssertUtils {
 
     public static void assertSuccessfulGenericResponse(JsonNode responseJson, String startsWithMsg, String endsWithMsg) {
         assertSuccessfulGenericResponse(responseJson, null);
-        assertThat(responseJson.get(MESSAGE).asText()).startsWith(startsWithMsg).endsWith(endsWithMsg);
+        assertThat(responseJson.get(MESSAGE).asString()).startsWith(startsWithMsg).endsWith(endsWithMsg);
     }
 
     public static void assertSuccessfulGenericResponseWithoutMsg(JsonNode responseJson) {
@@ -73,22 +73,22 @@ public final class AssertUtils {
 
     private static void assertMessage(JsonNode responseJson, String msg) {
         if(msg != null) {
-            assertThat(responseJson.get(MESSAGE).asText()).isEqualTo(msg);
+            assertThat(responseJson.get(MESSAGE).asString()).isEqualTo(msg);
         } else {
-            assertThat(responseJson.get(MESSAGE).asText()).isNotEmpty();
+            assertThat(responseJson.get(MESSAGE).asString()).isNotEmpty();
         }
     }
 
     public static void assertErrorGenericResponse(JsonNode responseJson, String msg) {
-        assertThat(responseJson.get(DETAILS).asText()).isEqualTo("failed. See the log for a complete stack trace");
+        assertThat(responseJson.get(DETAILS).asString()).isEqualTo("failed. See the log for a complete stack trace");
         if(msg != null) {
-            assertThat(responseJson.get(MESSAGE).asText()).isEqualTo(msg);
+            assertThat(responseJson.get(MESSAGE).asString()).isEqualTo(msg);
         } else {
-            assertThat(responseJson.get(MESSAGE).asText()).isNotEmpty();
+            assertThat(responseJson.get(MESSAGE).asString()).isNotEmpty();
         }
         assertThat(responseJson.get(STATUS).asInt()).isEqualTo(400);
-        assertThat(responseJson.get(TIMESTAMP).asText()).isNotEmpty();
-        boolean isValid = Utils.isValidDate(responseJson.get(TIMESTAMP).asText(), "yyyy-MM-dd HH:mm:ss.SSS");
+        assertThat(responseJson.get(TIMESTAMP).asString()).isNotEmpty();
+        boolean isValid = Utils.isValidDate(responseJson.get(TIMESTAMP).asString(), "yyyy-MM-dd HH:mm:ss.SSS");
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
     }
 
@@ -99,8 +99,8 @@ public final class AssertUtils {
     // health
 
     public static void assertSuccessfulHealthResponse(JsonNode flowJson, String id) {
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
-        assertThat(flowJson.get(STATE).asText()).isEqualTo("UP");
+        assertThat(flowJson.get("id").asString()).isEqualTo(id);
+        assertThat(flowJson.get(STATE).asString()).isEqualTo("UP");
     }
 
     public static void assertJvmHealthResponse(JsonNode jvmJson) {
@@ -126,18 +126,18 @@ public final class AssertUtils {
         assertThat(responseJson.get("startedSteps").asInt()).isNotNegative();
         assertThat(responseJson.get("memoryUsage").asDouble()).isPositive();
         assertThat(responseJson.get(EXCHANGES_IN_FLIGHT).asInt()).isNotNegative();
-        assertThat(responseJson.get("camelVersion").asText()).isNotEmpty();
+        assertThat(responseJson.get("camelVersion").asString()).isNotEmpty();
         assertThat(responseJson.get(EXCHANGES_COMPLETED).asInt()).isNotNegative();
-        assertThat(responseJson.get("camelId").asText()).isNotEmpty();
-        assertThat(responseJson.get(UPTIME).asText()).isNotEmpty();
-        assertThat(responseJson.get("startedFlows").asText()).isNotEmpty();
+        assertThat(responseJson.get("camelId").asString()).isNotEmpty();
+        assertThat(responseJson.get(UPTIME).asString()).isNotEmpty();
+        assertThat(responseJson.get("startedFlows").asString()).isNotEmpty();
         assertThat(responseJson.get("totalThreads").asInt()).isPositive();
-        assertThat(responseJson.get("cpuLoadLastMinute").asText()).isNotEmpty();
-        assertThat(responseJson.get("cpuLoadLast15Minutes").asText()).isNotEmpty();
+        assertThat(responseJson.get("cpuLoadLastMinute").asString()).isNotEmpty();
+        assertThat(responseJson.get("cpuLoadLast15Minutes").asString()).isNotEmpty();
         assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
         assertThat(responseJson.get(EXCHANGES_FAILED).asInt()).isNotNegative();
-        assertThat(responseJson.get("cpuLoadLast5Minutes").asText()).isNotEmpty();
-        assertThat(responseJson.get(STATUS).asText()).isEqualTo(status);
+        assertThat(responseJson.get("cpuLoadLast5Minutes").asString()).isNotEmpty();
+        assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
     }
 
     // flow manager
@@ -148,23 +148,23 @@ public final class AssertUtils {
     }
 
     public static void assertSuccessfulEventResponseWithoutVersion(JsonNode flowJson, String id, String event, String message) {
-        assertThat(flowJson.get("name").asText()).isEqualTo(id);
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
-        assertThat(flowJson.get("time").asText()).matches("\\d+ milliseconds");
-        assertThat(flowJson.get("event").asText()).isEqualTo(event);
-        assertThat(flowJson.get(MESSAGE).asText()).isEqualTo(message);
+        assertThat(flowJson.get("name").asString()).isEqualTo(id);
+        assertThat(flowJson.get("id").asString()).isEqualTo(id);
+        assertThat(flowJson.get("time").asString()).matches("\\d+ milliseconds");
+        assertThat(flowJson.get("event").asString()).isEqualTo(event);
+        assertThat(flowJson.get(MESSAGE).asString()).isEqualTo(message);
     }
 
     public static void assertSuccessfulEventResponse(JsonNode flowJson, String id, String event, String message) {
         assertSuccessfulEventResponseWithoutVersion(flowJson, id, event, message);
-        assertThat(flowJson.get(VERSION).asText()).matches("\\d+");
+        assertThat(flowJson.get(VERSION).asString()).matches("\\d+");
     }
 
     // flow configurer
 
     public static void assertFlowRouteResponse(JsonNode routeJson) {
-        assertThat(routeJson.get("id").asText()).isNotNull();
-        assertThat(routeJson.get("routeConfigurationId").asText()).isNotNull();
+        assertThat(routeJson.get("id").asString()).isNotNull();
+        assertThat(routeJson.get("routeConfigurationId").asString()).isNotNull();
         assertThat(routeJson.get("from")).isNotNull();
         assertThat(routeJson.get("step")).isNotNull();
     }
@@ -193,20 +193,20 @@ public final class AssertUtils {
     // statistics
 
     public static void assertStepStatsResponse(JsonNode stepJson, JsonNode statsJson, String id, String status) {
-        assertThat(stepJson.get("id").asText()).isEqualTo(id);
-        assertThat(stepJson.get(STATUS).asText()).isEqualTo(status);
-        assertThat(statsJson.get("externalRedeliveries").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("idleSince").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("maxProcessingTime").asText()).matches("-?\\d+");
-        assertThat(statsJson.get(EXCHANGES_FAILED).asText()).matches("-?\\d+");
-        assertThat(statsJson.get("redeliveries").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("minProcessingTime").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("lastProcessingTime").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("meanProcessingTime").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("failuresHandled").asText()).matches("-?\\d+");
-        assertThat(statsJson.get("totalProcessingTime").asText()).matches("-?\\d+");
-        assertThat(statsJson.get(EXCHANGES_COMPLETED).asText()).matches("-?\\d+");
-        assertThat(statsJson.get("deltaProcessingTime").asText()).matches("-?\\d+");
+        assertThat(stepJson.get("id").asString()).isEqualTo(id);
+        assertThat(stepJson.get(STATUS).asString()).isEqualTo(status);
+        assertThat(statsJson.get("externalRedeliveries").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("idleSince").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("maxProcessingTime").asString()).matches("-?\\d+");
+        assertThat(statsJson.get(EXCHANGES_FAILED).asString()).matches("-?\\d+");
+        assertThat(statsJson.get("redeliveries").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("minProcessingTime").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("lastProcessingTime").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("meanProcessingTime").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("failuresHandled").asString()).matches("-?\\d+");
+        assertThat(statsJson.get("totalProcessingTime").asString()).matches("-?\\d+");
+        assertThat(statsJson.get(EXCHANGES_COMPLETED).asString()).matches("-?\\d+");
+        assertThat(statsJson.get("deltaProcessingTime").asString()).matches("-?\\d+");
     }
 
     public static void assertStatsResponse(JsonNode responseJson, String status) {
@@ -222,7 +222,7 @@ public final class AssertUtils {
         assertThat(responseJson.get("totalThreads").isInt()).isTrue();
         assertThat(responseJson.get("exchangesTotal").isInt()).isTrue();
         assertThat(responseJson.get(EXCHANGES_FAILED).isInt()).isTrue();
-        assertThat(responseJson.get(STATUS).asText()).isEqualTo(status);
+        assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
         assertCpuLoadStatsResponse(responseJson);
     }
 
@@ -237,7 +237,7 @@ public final class AssertUtils {
         assertThat(flowJson.get(TOTAL).isInt()).isTrue();
         assertThat(flowJson.get("lastCompleted")).isNotNull();
         assertThat(flowJson.get("id")).isNotNull();
-        assertThat(flowJson.get(STATUS).asText()).isEqualTo(status);
+        assertThat(flowJson.get(STATUS).asString()).isEqualTo(status);
         assertCpuLoadStatsResponse(flowJson);
     }
 
@@ -250,7 +250,7 @@ public final class AssertUtils {
     public static void assertEmptyFlowStatsResponse(JsonNode flowJson, String id) {
         assertThat(flowJson.get(TOTAL).asInt()).isZero();
         assertThat(flowJson.get(PENDING).asInt()).isZero();
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
+        assertThat(flowJson.get("id").asString()).isEqualTo(id);
         assertThat(flowJson.get(COMPLETED).asInt()).isZero();
         assertThat(flowJson.get(FAILED).asInt()).isZero();
     }
@@ -258,7 +258,7 @@ public final class AssertUtils {
     public static void assertMessageStatFieldsResponse(JsonNode flowJson, String id) {
         assertThat(flowJson.get(TOTAL).asInt()).isNotNegative();
         assertThat(flowJson.get(PENDING).asInt()).isNotNegative();
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
+        assertThat(flowJson.get("id").asString()).isEqualTo(id);
         assertThat(flowJson.get(COMPLETED).asInt()).isNotNegative();
         assertThat(flowJson.get(FAILED).asInt()).isZero();
     }
@@ -285,10 +285,10 @@ public final class AssertUtils {
     // flow manager
 
     public static void assertFlowInfoResponse(JsonNode flowJson, String id, String status, String isRunning) {
-        assertThat(flowJson.get("isRunning").asText()).isEqualTo(isRunning);
-        assertThat(flowJson.get("name").asText()).isEqualTo(id);
-        assertThat(flowJson.get("id").asText()).isEqualTo(id);
-        assertThat(flowJson.get(STATUS).asText()).isEqualTo(status);
+        assertThat(flowJson.get("isRunning").asString()).isEqualTo(isRunning);
+        assertThat(flowJson.get("name").asString()).isEqualTo(id);
+        assertThat(flowJson.get("id").asString()).isEqualTo(id);
+        assertThat(flowJson.get(STATUS).asString()).isEqualTo(status);
     }
 
     public static void assertStepsLoadedResponse(JsonNode stepsLoadedJson, int total, int successfully, int failed) {
@@ -304,45 +304,45 @@ public final class AssertUtils {
     }
 
     public static void assertStepResponse(JsonNode stepJson, String type, String status) {
-        assertThat(stepJson.get("id").asText()).isNotNull();
-        assertThat(stepJson.get("type").asText()).isEqualTo(type);
-        assertThat(stepJson.get(STATUS).asText()).isEqualTo(status);
+        assertThat(stepJson.get("id").asString()).isNotNull();
+        assertThat(stepJson.get("type").asString()).isEqualTo(type);
+        assertThat(stepJson.get(STATUS).asString()).isEqualTo(status);
     }
 
     // integration
 
     public static void assertIntegrationInfoResponse(JsonNode infoJson, String startupType) {
         assertThat(infoJson.get("numberOfRunningSteps").asInt()).isPositive();
-        assertThat(infoJson.get("startupType").asText()).isEqualTo(startupType);
+        assertThat(infoJson.get("startupType").asString()).isEqualTo(startupType);
         assertThat(infoJson.get("uptimeMiliseconds").asInt()).isPositive();
-        assertThat(infoJson.get("name").asText()).isNotEmpty();
-        assertThat(infoJson.get(VERSION).asText()).isNotEmpty();
-        assertThat(infoJson.get(UPTIME).asText()).isNotEmpty();
-        assertThat(infoJson.get("startDate").asText()).isNotEmpty();
-        boolean isValid = Utils.isValidDate(infoJson.get("startDate").asText(), "EEE MMM dd HH:mm:ss zzz yyyy");
+        assertThat(infoJson.get("name").asString()).isNotEmpty();
+        assertThat(infoJson.get(VERSION).asString()).isNotEmpty();
+        assertThat(infoJson.get(UPTIME).asString()).isNotEmpty();
+        assertThat(infoJson.get("startDate").asString()).isNotEmpty();
+        boolean isValid = Utils.isValidDate(infoJson.get("startDate").asString(), "EEE MMM dd HH:mm:ss zzz yyyy");
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
     }
 
     public static void assertFlowsDetailsResponse(JsonNode flowJson, String id, String status, String isRunning) {
         assertFlowInfoResponse(flowJson, id, status, isRunning);
-        assertThat(flowJson.get(UPTIME).asText()).matches("\\d+s");
+        assertThat(flowJson.get(UPTIME).asString()).matches("\\d+s");
     }
 
     public static void assertThreadsResponse(JsonNode threadJson) {
         assertThat(threadJson.get("cpuTime").asLong()).isPositive();
-        assertThat(threadJson.get("name").asText()).isNotEmpty();
+        assertThat(threadJson.get("name").asString()).isNotEmpty();
         assertThat(threadJson.get("id").asInt()).isPositive();
-        assertThat(threadJson.get(STATUS).asText()).isNotEmpty();
+        assertThat(threadJson.get(STATUS).asString()).isNotEmpty();
     }
 
     public static void assertSoapListResponse(JsonNode responseJson) {
         assertThat(responseJson.size()).isEqualTo(4);
         assertThat(responseJson).allMatch(element -> {
             boolean hasValidName = element.has("name") && (
-                    element.get("name").asText().equals("Add") ||
-                            element.get("name").asText().equals("Subtract") ||
-                            element.get("name").asText().equals("Multiply") ||
-                            element.get("name").asText().equals("Divide")
+                    element.get("name").asString().equals("Add") ||
+                            element.get("name").asString().equals("Subtract") ||
+                            element.get("name").asString().equals("Multiply") ||
+                            element.get("name").asString().equals("Divide")
             );
             boolean hasEmptyHeaders = element.has(HEADERS) && element.get(HEADERS).isArray() && element.get(HEADERS).isEmpty();
             return hasValidName && hasEmptyHeaders;
@@ -352,30 +352,30 @@ public final class AssertUtils {
     // validations
 
     public static void assertCertificateResponse(JsonNode responseJson, String status, String containsMsg) {
-        assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo(status);
-        assertThat(responseJson.get(MESSAGE).asText().toLowerCase()).contains(containsMsg);
+        assertThat(responseJson.get("validationResultStatus").asString()).isEqualTo(status);
+        assertThat(responseJson.get(MESSAGE).asString().toLowerCase()).contains(containsMsg);
     }
 
     public static void assertCertificateResponseWithoutMessage(JsonNode responseJson, String status) {
-        assertThat(responseJson.get("validationResultStatus").asText()).isEqualTo(status);
+        assertThat(responseJson.get("validationResultStatus").asString()).isEqualTo(status);
     }
 
     public static void assertConnectionResponse(JsonNode responseJson, String details, String msg) {
-        assertThat(responseJson.get(DETAILS).asText()).isEqualTo(details);
-        assertThat(responseJson.get(MESSAGE).asText()).isEqualTo(msg);
+        assertThat(responseJson.get(DETAILS).asString()).isEqualTo(details);
+        assertThat(responseJson.get(MESSAGE).asString()).isEqualTo(msg);
     }
 
     public static void assertXsltErrorResponse(JsonNode responseJson) {
         assertThat(responseJson.isArray()).isTrue();
         assertThat(responseJson.size()).isPositive();
         for (JsonNode errorNode : responseJson) {
-            assertThat(errorNode.get("error").asText().toLowerCase()).contains("error reported by xml parser");
+            assertThat(errorNode.get("error").asString().toLowerCase()).contains("error reported by xml parser");
         }
     }
 
     public static void assertScriptResponse(JsonNode responseJson, int code, String result) {
         assertThat(responseJson.get("code").asInt()).isEqualTo(code);
-        assertThat(responseJson.get("result").asText()).isEqualTo(result);
+        assertThat(responseJson.get("result").asString()).isEqualTo(result);
     }
 
     public static void assertScriptErrorResponse(String msg) {
@@ -386,7 +386,7 @@ public final class AssertUtils {
         assertThat(json.isArray()).isTrue();
         assertThat(json.size()).isGreaterThan(0);
         for (JsonNode error : json) {
-            assertThat(error.get("error").asText().toLowerCase())
+            assertThat(error.get("error").asString().toLowerCase())
                     .contains("could not compile")
                     .contains("checkinvoice");
         }
@@ -402,15 +402,15 @@ public final class AssertUtils {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.valueToTree(outputMap);
 
-        assertThat(responseJson.get(UPTIME).asText().trim()).matches("\\d+(\\.\\d+)? seconds");
+        assertThat(responseJson.get(UPTIME).asString().trim()).matches("\\d+(\\.\\d+)? seconds");
         assertThat(responseJson.get("totalConnections").asInt()).isZero();
         assertThat(responseJson.get("currentConnections").asInt()).isZero();
         assertThat(responseJson.get("totalConsumers").asInt()).isZero();
         assertThat(responseJson.get("totalMessages").asInt()).isZero();
-        assertThat(responseJson.get("nodeId").asText()).isNotNull();
+        assertThat(responseJson.get("nodeId").asString()).isNotNull();
         assertThat(responseJson.get(STATE).asBoolean()).isTrue();
-        assertThat(responseJson.get(VERSION).asText()).isNotNull();
-        assertThat(responseJson.get("type").asText()).isEqualTo(type);
+        assertThat(responseJson.get(VERSION).asString()).isNotNull();
+        assertThat(responseJson.get("type").asString()).isEqualTo(type);
     }
 
     // broker health
@@ -430,33 +430,33 @@ public final class AssertUtils {
 
     public static void assertBrokerMessagesResponse(JsonNode messageJson, String body) {
         assertThat(messageJson.get(HEADERS)).isNotNull();
-        assertThat(messageJson.get("body").asText()).isEqualTo(body);
+        assertThat(messageJson.get("body").asString()).isEqualTo(body);
         assertBrokerMessagesResponse(messageJson);
     }
 
     public static void assertBrokerMessagesResponse(JsonNode messageJson) {
         assertThat(messageJson.get("jmsHeaders")).isNotNull();
-        assertThat(messageJson.get("messageid").asText()).isNotNull();
-        assertThat(messageJson.get(TIMESTAMP).asText()).isNotEmpty();
-        boolean isValid = Utils.isValidDate(messageJson.get(TIMESTAMP).asText(), "E MMM dd HH:mm:ss z yyyy");
+        assertThat(messageJson.get("messageid").asString()).isNotNull();
+        assertThat(messageJson.get(TIMESTAMP).asString()).isNotEmpty();
+        boolean isValid = Utils.isValidDate(messageJson.get(TIMESTAMP).asString(), "E MMM dd HH:mm:ss z yyyy");
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
     }
 
     // broker queue manager
 
     public static void assertBrokerQueueResponse(JsonNode queueJson, String temporary, String address, String name) {
-        assertThat(queueJson.get("temporary").asText()).isEqualTo(temporary);
-        assertThat(queueJson.get("address").asText()).isEqualTo(address);
+        assertThat(queueJson.get("temporary").asString()).isEqualTo(temporary);
+        assertThat(queueJson.get("address").asString()).isEqualTo(address);
         assertThat(queueJson.get("numberOfConsumers").asInt()).isZero();
-        assertThat(queueJson.get("name").asText()).isEqualTo(name);
+        assertThat(queueJson.get("name").asString()).isEqualTo(name);
         assertThat(queueJson.get("numberOfMessages").asInt()).isGreaterThanOrEqualTo(0);
     }
 
     public static void assertBrokerQueueResponse(JsonNode queueJson, String temporary) {
-        assertThat(queueJson.get("temporary").asText()).isEqualTo(temporary);
-        assertThat(queueJson.get("address").asText()).isNotNull();
+        assertThat(queueJson.get("temporary").asString()).isEqualTo(temporary);
+        assertThat(queueJson.get("address").asString()).isNotNull();
         assertThat(queueJson.get("numberOfConsumers").asInt()).isZero();
-        assertThat(queueJson.get("name").asText()).isNotNull();
+        assertThat(queueJson.get("name").asString()).isNotNull();
         assertThat(queueJson.get("numberOfMessages").asInt()).isZero();
     }
 
