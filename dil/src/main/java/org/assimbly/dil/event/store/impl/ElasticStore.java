@@ -17,7 +17,7 @@ public final class ElasticStore {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticStore.class);
 
-    // Background scheduler for retries (prevents blocking main threads)
+    // Background scheduler for retries
     private static final ScheduledExecutorService RETRY_SCHEDULER = Executors.newScheduledThreadPool(2);
 
     // Concurrency control
@@ -36,15 +36,16 @@ public final class ElasticStore {
                 if (client == null) {
                     URI uri = URI.create(store.getUri());
 
-                    // 1. Create the Node (this is the safest way to avoid HttpHost version conflicts)
-                    Node node = new Node(new org.apache.http.HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()));
+                    // FIX 1: Use the legacy HttpHost (org.apache.http.HttpHost)
+                    // Most ES RestClient versions are still bound to the 4.x HttpHost type.
+                    org.apache.http.HttpHost host = new org.apache.http.HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
 
-                    client = RestClient.builder(node)
+                    client = RestClient.builder(host)
                             .setRequestConfigCallback(builder -> builder
+                                    // FIX 2: Use int (milliseconds) instead of (int, TimeUnit)
                                     .setConnectTimeout(1000)
                                     .setSocketTimeout(3000))
                             .setHttpClientConfigCallback(httpClientBuilder -> {
-                                // If you need to add your certificateInterceptor here:
                                 return httpClientBuilder
                                         .setMaxConnTotal(MAX_IN_FLIGHT)
                                         .setMaxConnPerRoute(MAX_IN_FLIGHT);
@@ -62,11 +63,10 @@ public final class ElasticStore {
 
     private void storeInternal(String json, int attempt) {
         try {
-            // Change from tryAcquire() to acquire()
-            // This makes the background thread wait until a permit is free
             IN_FLIGHT.acquire();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            log.error("Store operation interrupted", e);
             return;
         }
 
@@ -81,15 +81,13 @@ public final class ElasticStore {
 
             @Override
             public void onFailure(Exception ex) {
-                // RELEASE IMMEDIATELY so the slot is available for others
                 IN_FLIGHT.release();
 
                 if (attempt < MAX_RETRIES) {
                     long delay = INITIAL_DELAY_MS * (long) Math.pow(2, attempt);
-                    // Schedule retry - it will call storeInternal and try to get a new permit
                     RETRY_SCHEDULER.schedule(() -> storeInternal(json, attempt + 1), delay, TimeUnit.MILLISECONDS);
                 } else {
-                    log.error("[ES-GIVEUP] Failed after " + (MAX_RETRIES + 1) + " attempts.");
+                    log.error("[ES-GIVEUP] Failed after " + (MAX_RETRIES + 1) + " attempts.", ex);
                 }
             }
         });
