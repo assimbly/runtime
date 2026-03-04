@@ -106,7 +106,7 @@ public class HealthIntegrationRuntime {
             if (unixOS.isInstance(operatingSystemMXBean))
                 return unixOS.getMethod(methodName).invoke(operatingSystemMXBean);
 
-        } catch (Exception e) {
+        } catch (Exception _) {
             // ignored
         }
 

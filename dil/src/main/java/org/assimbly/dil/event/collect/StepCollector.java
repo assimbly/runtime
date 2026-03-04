@@ -163,7 +163,7 @@ public class StepCollector extends EventNotifierSupport {
         if (inputStream != null && exchange.getMessage().getBody() != null) {
             try {
                 body = IOUtils.toByteArray(inputStream);
-            } catch (Exception e) {
+            } catch (Exception _) {
                 // Ignoring exception intentionally
             }
         }
@@ -204,7 +204,7 @@ public class StepCollector extends EventNotifierSupport {
                 return "<binary content>";
             }
 
-        } catch (Exception e) {
+        } catch (Exception _) {
             String typeName = exchange.getMessage().getBody().getClass().getTypeName();
             if(!typeName.isEmpty()){
                 return "<" + typeName + ">";
@@ -221,7 +221,7 @@ public class StepCollector extends EventNotifierSupport {
             decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
             decoder.decode(ByteBuffer.wrap(data));
             return true;
-        } catch (CharacterCodingException e) {
+        } catch (CharacterCodingException _) {
             return false;
         }
     }
@@ -235,7 +235,7 @@ public class StepCollector extends EventNotifierSupport {
         try {
             String bodyLength = System.getenv(MSG_COLLECTOR_LIMIT_BODY_LENGTH);
             return Integer.parseInt(bodyLength);
-        } catch (Exception e) {
+        } catch (Exception _) {
             return MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH;
         }
     }
@@ -291,7 +291,7 @@ public class StepCollector extends EventNotifierSupport {
             }
             return blacklistedRoutesParts;
 
-        } catch (Exception e) {
+        } catch (Exception _) {
             return blacklistedRoutesParts;
         }
     }

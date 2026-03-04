@@ -395,7 +395,7 @@ public class FlowManagerRuntime {
                 return ResponseUtil.createSuccessResponse(1L, mediaType, path, response, true);
             }
 
-        }catch (Exception e) {
+        }catch (Exception _) {
             log.error("FlowManager Report failed:\n\n{}", response);
             return ResponseUtil.createFailureResponse(1L, mediaType, path, response, true);
         }

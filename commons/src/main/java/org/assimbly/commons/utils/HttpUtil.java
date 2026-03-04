@@ -67,7 +67,7 @@ public class HttpUtil {
 
             return client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
-        } catch (InterruptedException e) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             return null;
         } catch (IOException e) {
@@ -100,7 +100,7 @@ public class HttpUtil {
                 params.put(keyValue[0], keyValue[1]);
             }
             return params.get("secret");
-        } catch (Exception e) {
+        } catch (Exception _) {
             throw new URISyntaxException(url, "Cannot extract secret");
         }
     }

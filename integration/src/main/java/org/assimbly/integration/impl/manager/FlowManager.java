@@ -149,7 +149,7 @@ public class FlowManager {
     public String pauseAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Pause all flows");
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 pauseFlow(flowId);
                 log.info("Paused flow: {}", flowId);
@@ -179,7 +179,7 @@ public class FlowManager {
     public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Stopping all flows");
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 stopFlow(flowId, 250, false);
                 log.info("Stopped flow: {}", flowId);
@@ -528,7 +528,7 @@ public class FlowManager {
 
         TreeMap<String, String> numberOfEntriesList = new TreeMap<>();
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 long numberOfEntries = getFlowAlertsCount(flowId);
                 numberOfEntriesList.put(flowId, Long.toString(numberOfEntries));

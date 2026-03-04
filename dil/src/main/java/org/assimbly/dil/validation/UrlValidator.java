@@ -33,7 +33,7 @@ public class UrlValidator {
             httpUrlConn.connect();
             //need to trigger exception when no connection can be established
             httpUrlConn.getResponseMessage();
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException _) {
             return UNREACHABLE_ERROR;
         } catch (Exception e) {
             return new ValidationErrorMessage(e.getMessage());

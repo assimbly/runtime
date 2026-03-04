@@ -249,7 +249,7 @@ public class FlowLoader extends RouteBuilder {
 			try {
 				modelContext.removeRouteConfiguration(routeConfig);
 				log.info("Removed routeConfiguration: {}", routeConfig.getId());
-			} catch (Exception e) {
+			} catch (Exception _) {
 				log.warn("Failed to remove route configuration: {}", routeConfig.getId());
 			}
 		});

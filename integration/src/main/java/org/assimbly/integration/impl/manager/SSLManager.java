@@ -147,7 +147,7 @@ public class SSLManager {
             Document doc = builder.parse(new InputSource(new StringReader(xml)));
             String expression = "//setProperty[@name='%s']/constant/text()".formatted(propName);
             return xpath.evaluate(expression, doc);
-        } catch (Exception e) {
+        } catch (Exception _) {
             return null;
         }
 

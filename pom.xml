@@ -32,8 +32,8 @@
     <properties>
 
         <maven-api.version>3.9.12</maven-api.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
@@ -206,7 +206,7 @@
                                         <version>[3.9.9,)</version>
                                     </requireMavenVersion>
                                     <requireJavaVersion>
-                                        <version>21</version>
+                                        <version>25</version>
                                     </requireJavaVersion>
                                 </rules>
                             </configuration>
@@ -248,7 +248,7 @@
                             <configuration>
                                 <toolchains>
                                     <jdk>
-                                        <version>21</version>
+                                        <version>25</version>
                                     </jdk>
                                 </toolchains>
                             </configuration>
@@ -261,10 +261,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-    <version>3.15.0</version>
+                <version>3.15.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>25</release>
                 </configuration>
             </plugin>
             <plugin>

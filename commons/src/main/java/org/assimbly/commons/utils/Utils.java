@@ -46,7 +46,7 @@ public class Utils {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
             formatter.parse(normalizedDateStr);
             return true;
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException _) {
             return false;
         }
     }

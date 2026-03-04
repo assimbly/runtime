@@ -85,7 +85,7 @@ public class SetOriginalMessageProcessor implements Processor {
 
 		try {
 			return HttpMethod.valueOf(methodStr);
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException _) {
             log.error("Invalid HTTP method: {}. Using default: {}", methodStr, HttpMethod.GET);
 			return HttpMethod.GET;
 		}

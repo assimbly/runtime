@@ -60,12 +60,12 @@ public final class CertificatesUtil {
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
 
-		System.out.println("Start downloading certificates (url=" + url + ")");
+        IO.println("Start downloading certificates (url=" + url + ")");
 
 		Certificate[] peercertificates;
 
 		// create http response certificate interceptor
-		HttpResponseInterceptor certificateInterceptor = (HttpResponse response, EntityDetails entity, HttpContext context) -> {
+		HttpResponseInterceptor certificateInterceptor = (HttpResponse _, EntityDetails _, HttpContext context) -> {
 
 			// Cast to HttpClientContext to access high-level helper methods
 			HttpClientContext clientContext = HttpClientContext.adapt(context);
@@ -120,13 +120,13 @@ public final class CertificatesUtil {
 				// loop over certificates and print meta-data
 				for (Certificate certificate : peercertificates) {
 					X509Certificate real = (X509Certificate) certificate;
-					System.out.println("----------------------------------------");
-					System.out.println("Type: " + real.getType());
-					System.out.println("Signing Algorithm: " + real.getSigAlgName());
-					System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-					System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-					System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-					System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				}
+                    IO.println("----------------------------------------");
+                    IO.println("Type: " + real.getType());
+                    IO.println("Signing Algorithm: " + real.getSigAlgName());
+                    IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+                    IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+                    IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+                    IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				}
 
 			} else {
 				log.error("Certificates not found. URL: {})", url);
@@ -168,16 +168,16 @@ public final class CertificatesUtil {
 
 			// Add the certificate to the store
 			X509Certificate real = (X509Certificate) certificate;
-			System.out.println("----------------------------------------");
-			System.out.println("Type: " + real.getType());
-			System.out.println("Signing Algorithm: " + real.getSigAlgName());
-			System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-			System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-			System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-			System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
+            IO.println("----------------------------------------");
+            IO.println("Type: " + real.getType());
+            IO.println("Signing Algorithm: " + real.getSigAlgName());
+            IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+            IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+            IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+            IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
 			keystore.setCertificateEntry(certificateName, certificate);
-			System.out.println("original alias:" + certificateName);
-			System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
+            IO.println("original alias:" + certificateName);
+            IO.println("cert alias" + keystore.getCertificateAlias(certificate));
 
 			// Save the new keystore contents
 			storeKeystore(keyStorePath,keystorePassword,keystore);
@@ -192,7 +192,7 @@ public final class CertificatesUtil {
 
 	public Map<String,Certificate> importCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
-		System.out.println("Importing certificates");
+        IO.println("Importing certificates");
 		Map<String,Certificate> certificateMap = new HashMap<>();
 
 		try {
@@ -202,17 +202,17 @@ public final class CertificatesUtil {
 			// Add the certificate to the store
 			for (Certificate certificate : certificates){
 				X509Certificate real = (X509Certificate) certificate;
-				System.out.println("----------------------------------------");
-				System.out.println("Type: " + real.getType());
-				System.out.println("Signing Algorithm: " + real.getSigAlgName());
-				System.out.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-				System.out.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-				System.out.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-				System.out.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				String alias = UUID.randomUUID().toString();
+                IO.println("----------------------------------------");
+                IO.println("Type: " + real.getType());
+                IO.println("Signing Algorithm: " + real.getSigAlgName());
+                IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+                IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+                IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+                IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				String alias = UUID.randomUUID().toString();
 				certificateMap.put(alias, certificate);
 				keystore.setCertificateEntry(alias, certificate);
-				System.out.println("original alias:" + alias);
-				System.out.println("cert alias" + keystore.getCertificateAlias(certificate));
+                IO.println("original alias:" + alias);
+                IO.println("cert alias" + keystore.getCertificateAlias(certificate));
 
 			}
 
@@ -242,7 +242,7 @@ public final class CertificatesUtil {
 			String alias = aliases.nextElement();
 
 			if (p12Store.isKeyEntry(alias)) {
-				System.out.println("Adding key for alias " + alias);
+                IO.println("Adding key for alias " + alias);
 				Key key = p12Store.getKey(alias, p12Password.toCharArray());
 
 				Certificate[] chain = p12Store.getCertificateChain(alias);
@@ -400,13 +400,13 @@ public final class CertificatesUtil {
 		if (!securityPath.exists()) {
 			boolean dirsCreated = securityPath.mkdirs();
 			if(!dirsCreated){
-				System.out.println("Keystore Directory: " + securityPath.getAbsolutePath() + " couldn't be created.");
+                IO.println("Keystore Directory: " + securityPath.getAbsolutePath() + " couldn't be created.");
 			}
 		}
 
 		boolean newFile = file.createNewFile();
 		if(!newFile){
-			System.out.println("Keystore File: " + file.getAbsolutePath() + " couldn't be created.");
+            IO.println("Keystore File: " + file.getAbsolutePath() + " couldn't be created.");
 		}
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();

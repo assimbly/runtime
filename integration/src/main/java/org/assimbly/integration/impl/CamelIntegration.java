@@ -245,7 +245,7 @@ public class CamelIntegration extends BaseIntegration {
                 template.sendBody(uri, messageBody);
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
-                IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.sendBody(uri, messageBody));
             }
         }
     }
@@ -264,7 +264,7 @@ public class CamelIntegration extends BaseIntegration {
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
                 Exchange finalExchange = exchange;
-                IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, finalExchange));
             }
         }
 

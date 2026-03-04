@@ -17,17 +17,17 @@
     <artifactId>common-base</artifactId>
 
     <properties>
-  	  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
         <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
     </properties>
 
-    <distributionManagement> 
+    <distributionManagement>
         <repository>
-            <id>github</id> 
-            <name>Temporary Staging Repository</name> 
-            <url>https://maven.pkg.github.com/assimbly/base</url> 
-        </repository> 
+            <id>github</id>
+            <name>Temporary Staging Repository</name>
+            <url>https://maven.pkg.github.com/assimbly/base</url>
+        </repository>
     </distributionManagement>
 
     <dependencies>

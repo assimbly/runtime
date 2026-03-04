@@ -43,7 +43,7 @@ public final class IntegrationUtil {
 
             return uri.getScheme() != null;
 
-		} catch (URISyntaxException e) {
+		} catch (URISyntaxException _) {
 			return false;
 		}
 
@@ -54,7 +54,7 @@ public final class IntegrationUtil {
 			final ObjectMapper mapper = new YAMLMapper();
 			mapper.readTree(yaml);
 			return true;
-		 } catch (JacksonException e) {
+		 } catch (JacksonException _) {
 			return false;
 		 }
 	}
@@ -64,7 +64,7 @@ public final class IntegrationUtil {
 			final ObjectMapper mapper = new ObjectMapper();
 			mapper.readTree(json);
 			return true;
-		 } catch (JacksonException e) {
+		 } catch (JacksonException _) {
 			return false;
 		 }
 	}
@@ -114,9 +114,9 @@ public final class IntegrationUtil {
 
 		try (Socket socket = new Socket()) {
 			socket.connect(socketAddress, timeOut);
-		} catch (SocketTimeoutException stex) {
+		} catch (SocketTimeoutException _) {
 			return "Connection error: Timed out";
-		} catch (IOException ioException) {
+		} catch (IOException _) {
 			return "Connection error: IOException";
 		}
 
@@ -186,9 +186,9 @@ public final class IntegrationUtil {
 
 	public static void printTreemap(TreeMap<String, String> treeMap) {
 
-		System.out.println("print treemap: \n");
+        IO.println("print treemap: \n");
 		for (Map.Entry<String,String> entry : treeMap.entrySet()) {
-			System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
+            IO.println("key: " + entry.getKey() + "; value: " + entry.getValue());
 		}
 
 	}
@@ -199,7 +199,7 @@ public final class IntegrationUtil {
 
 		String configuration = convertTreemapToString(treeMap, items);
 
-		System.out.println(configuration);
+        IO.println(configuration);
 
 	}
 

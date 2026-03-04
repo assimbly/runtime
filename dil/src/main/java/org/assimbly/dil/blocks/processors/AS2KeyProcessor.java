@@ -163,7 +163,7 @@ public class AS2KeyProcessor implements Processor {
 
         try {
             return new URI(value);
-        } catch (Exception e) {
+        } catch (Exception _) {
             return null;
         }
     }

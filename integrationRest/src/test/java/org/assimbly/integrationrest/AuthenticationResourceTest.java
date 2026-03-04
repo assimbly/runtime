@@ -91,7 +91,7 @@ public class AuthenticationResourceTest {
             assertThat(response.headers().map()).containsKey("location");
 
             // totpSecret to be used on other unit tests
-            String location = response.headers().map().get("location").get(0);
+            String location = response.headers().map().get("location").getFirst();
             location = URLDecoder.decode(location, "UTF-8");
             totpSecret = HttpUtil.extractSecret(location);
 

@@ -150,9 +150,9 @@ public class FtpValidator {
 
                 return UNREACHABLE_ERROR;
             }
-        } catch (ConnectException e){
+        } catch (ConnectException _){
             return new ValidationErrorMessage("Connection refused");
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException _) {
             return new ValidationErrorMessage("Host name could not be resolved");
         } catch (Exception e) {
             return new ValidationErrorMessage(e.getMessage());
@@ -160,7 +160,7 @@ public class FtpValidator {
             if (ftp != null && ftp.isConnected()) {
                 try {
                     ftp.disconnect();
-                } catch (IOException ioe) {
+                } catch (IOException _) {
                     // Do nothing
                 }
             }

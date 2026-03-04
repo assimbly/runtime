@@ -33,7 +33,7 @@ public class LogUtil {
 	        }
 
 	        return sb.reverse().toString();
-	    } catch( IOException e ) {
+	    } catch( IOException _ ) {
 	        return null;
 	    }
 	}	

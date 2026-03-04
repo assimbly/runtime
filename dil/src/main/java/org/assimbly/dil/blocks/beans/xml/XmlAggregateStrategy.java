@@ -71,7 +71,7 @@ public class XmlAggregateStrategy implements AggregationStrategy {
 
         try {
             return exchange.getIn().getBody(String.class);
-        } catch (Exception e) {
+        } catch (Exception _) {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to get data from the route to the Aggregate component.");
             }

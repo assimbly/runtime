@@ -5,6 +5,6 @@ public class ConsoleStore {
     }
 
     public void store(String json){
-        System.out.println(json);
+        IO.println(json);
     }
 }

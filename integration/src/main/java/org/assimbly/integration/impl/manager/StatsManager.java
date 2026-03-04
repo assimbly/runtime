@@ -243,7 +243,7 @@ public class StatsManager {
 
             ManagedCamelContextMBean managedCamelContextMBean = JMX.newMBeanProxy(ManagementFactory.getPlatformMBeanServer(), objectName, ManagedCamelContextMBean.class);
             return managedCamelContextMBean.getTimeout();
-        } catch (Exception e) {
+        } catch (Exception _) {
             return 0L;
         }
     }
