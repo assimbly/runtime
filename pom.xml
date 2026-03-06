@@ -41,7 +41,7 @@
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>5.1.0</assimbly.version>
         <activemq-classic.version>6.2.1</activemq-classic.version>
-        <activemq-artemis.version>2.51.0</activemq-artemis.version>
+        <activemq-artemis.version>2.52.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
         <camel.version>4.18.0</camel.version>
@@ -91,7 +91,7 @@
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <jetty.version>12.1.6</jetty.version>
+        <jetty.version>12.1.7</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
         <junit.version>6.0.3</junit.version>
