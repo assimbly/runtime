@@ -195,24 +195,22 @@ public class FlowManager {
 
         FlowLoaderReport report = new FlowLoaderReport(routeId, routeId);
 
-        try{
-            if (!route.startsWith("<route")) {
-                route = new XMLFileConfiguration().getRouteConfiguration(route);
-            }
+        try {
+            String routeXml = route.startsWith("<route")
+                    ? route
+                    : new XMLFileConfiguration().getRouteConfiguration(route);
 
-            RouteLoader routeLoader = new RouteLoader(routeId, route, report);
+            RouteLoader routeLoader = new RouteLoader(routeId, routeXml, report);
 
             routeLoader.addRoutesToCamelContext(context);
 
             String result = routeLoader.getReport();
 
-            return finishReport(report, routeId, "start", result, "info","success");
+            return finishReport(report, routeId, "start", result, "info", "success");
 
-        }catch (Exception e){
-            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error","failed");
+        } catch (Exception e) {
+            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed");
         }
-
-
     }
 
     public String startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
@@ -988,7 +986,7 @@ public class FlowManager {
                 entry.setValue(sw.toString());
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("initializeAs2InboundSecurity failed.", e);
             }
         }
     }

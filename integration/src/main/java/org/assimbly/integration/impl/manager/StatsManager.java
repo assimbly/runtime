@@ -614,9 +614,10 @@ public class StatsManager {
         // Filter by top entries
         if (topEntries >= 1) {
             if (topEntries > jsonObjectList.size()) {
-                topEntries = jsonObjectList.size();
+                jsonObjectList = jsonObjectList.subList(0, jsonObjectList.size());
+            }else{
+                jsonObjectList = jsonObjectList.subList(0, topEntries);
             }
-            jsonObjectList = jsonObjectList.subList(0, topEntries);
         }
 
         // Sort by cpuTime
