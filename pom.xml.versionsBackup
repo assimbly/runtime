@@ -39,7 +39,7 @@
         <main.basedir>${project.basedir}</main.basedir>
 
         <!-- Manage the versions of all main dependencies here -->
-        <assimbly.version>6.0.0</assimbly.version>
+        <assimbly.version>5.1.0</assimbly.version>
         <activemq-classic.version>6.2.1</activemq-classic.version>
         <activemq-artemis.version>2.52.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
