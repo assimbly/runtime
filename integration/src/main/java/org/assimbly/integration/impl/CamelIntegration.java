@@ -1,11 +1,15 @@
 package org.assimbly.integration.impl;
 
+import org.apache.camel.*;
+import org.apache.camel.spi.*;
+import org.assimbly.dil.validation.*;
+import java.util.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
-import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
@@ -13,12 +17,10 @@ import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.loader.FlowLoaderReport;
-import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.ValidationExpression;
@@ -44,7 +46,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
-import java.util.*;
 import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
@@ -157,7 +158,7 @@ public class CamelIntegration extends BaseIntegration {
             super.setFlowConfiguration(flowId, mediaType, configuration);
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
             return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
@@ -189,7 +190,7 @@ public class CamelIntegration extends BaseIntegration {
 
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
             return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
@@ -725,7 +726,7 @@ public class CamelIntegration extends BaseIntegration {
     public String startFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         if(flowProperties.isEmpty()){
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "XXX Flow is not installed";
             return  flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed");
         }

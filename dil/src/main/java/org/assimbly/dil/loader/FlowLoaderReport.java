@@ -11,6 +11,7 @@ public class FlowLoaderReport {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private final String flowId;
 	private final String flowName;
+	private final String flowVersion;
 	private String report;
 	private final JSONObject json;
 	private final JSONArray steps;
@@ -21,25 +22,28 @@ public class FlowLoaderReport {
 	private final JSONObject stepsLoaded;
 	private final long startTime;
 
-	public FlowLoaderReport(String flowId, String flowName) {
-        log.info("Initialize flow report | flowid={}", flowId);
+	public FlowLoaderReport(String flowId, String flowName, String flowVersion) {
+
+		log.info("Initialize flow report | flowid={}", flowId);
 
 		this.flowId = flowId;
 		this.flowName = flowName;
+		this.flowVersion = flowVersion;
 		startTime = System.currentTimeMillis();
 		json = new JSONObject();
 		flow = new JSONObject();
 		stepsLoaded = new JSONObject();
 		steps = new JSONArray();
+
 	}
 
-	public void finishReport(String event, String version, String message, String status){
+	public void finishReport(String event, String message, String status){
 
 		long time = System.currentTimeMillis() - startTime;
 
 		flow.put("id",flowId);
 		flow.put("name",flowName);
-		flow.put("version",version);
+		flow.put("version",flowVersion);
 		flow.put("event",event);
 		flow.put("time",time + " milliseconds");
 		flow.put("message",message);

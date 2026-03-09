@@ -67,9 +67,9 @@ public class RouteLoader extends RouteBuilder {
 	private void finish() {
 
 		if (isFlowLoaded){
-			flowLoaderReport.finishReport("start", "", "Route installed successfully", "success");
+			flowLoaderReport.finishReport("start", "Route installed successfully", "success");
 		}else{
-			flowLoaderReport.finishReport("error", "","Route installed failed", "failed");
+			flowLoaderReport.finishReport("error", "Route installed failed", "failed");
 		}
 
 	}

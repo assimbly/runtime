@@ -1,7 +1,8 @@
 package org.assimbly.dil.transpiler.marshalling;
 
-import org.apache.commons.configuration2.XMLConfiguration;
 import org.assimbly.dil.transpiler.marshalling.core.*;
+
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -47,6 +48,8 @@ public class Unmarshall {
 		addProperty(flowElement, "name");
 		addProperty(flowElement, "type");
 		addProperty(flowElement, "version");
+		addProperty(flowElement, "tenant");
+		addProperty(flowElement, "environment");
 		addProperty(flowElement, "failureProcessor");
 
 		createResources();

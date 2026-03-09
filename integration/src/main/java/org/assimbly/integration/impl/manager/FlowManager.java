@@ -1,6 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
 import org.apache.camel.*;
+import java.util.*;
+
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
@@ -44,7 +46,6 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -68,7 +69,9 @@ public class FlowManager {
 
     public String loadFlow(String flowId, TreeMap<String, String> properties) {
 
-        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+        String version = setProperty(properties,"flow.version","0");
+
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, version);
 
         try {
 
@@ -193,7 +196,7 @@ public class FlowManager {
 
     public String installRoute(String routeId, String route) {
 
-        FlowLoaderReport report = new FlowLoaderReport(routeId, routeId);
+        FlowLoaderReport report = new FlowLoaderReport(routeId, routeId, "0");
 
         try{
             if (!route.startsWith("<route")) {
@@ -236,7 +239,7 @@ public class FlowManager {
     public String stopFlow(String flowId, long timeout, boolean enableReport) {
 
         if (!hasFlow(flowId)) {
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "Flow is not installed";
             return  finishReport(report, flowId, "stop", errorMessage, "error","failed");
         }
@@ -258,7 +261,7 @@ public class FlowManager {
             }
 
             if (enableReport) {
-                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
                 return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success");
             }
 
@@ -267,7 +270,7 @@ public class FlowManager {
             log.error("Stop flow failed. | flowid={}", flowId, e);
 
             if (enableReport) {
-                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+                FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
                 return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed");
             }
 
@@ -290,7 +293,7 @@ public class FlowManager {
 
     public String pauseFlow(String flowId) {
 
-        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
 
         if (!hasFlow(flowId)) {
             String errorMessage = "Flow is not installed";
@@ -326,7 +329,7 @@ public class FlowManager {
 
     public String resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
 
-        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
 
         RouteController routeController = context.getRouteController();
 
@@ -408,7 +411,7 @@ public class FlowManager {
             log.info("{} | flowid={}", message, flowid);
         }
 
-        report.finishReport(event, "0", message, status);
+        report.finishReport(event, message, status);
 
         return report.getReport();
 
@@ -623,8 +626,9 @@ public class FlowManager {
             flow.put("name", flowProperties.get("flow.name"));
             flow.put("isRunning", isFlowStarted(flowId));
             flow.put("status", getFlowStatus(flowId));
-            flow.put("version", flowProperties.get("flow.version"));
-            flow.put("environment", flowProperties.get("environment"));
+            flow.put("version", setProperty(flowProperties,"flow.version","0"));
+            flow.put("environment", setProperty(flowProperties,"flow.environment",null));
+            flow.put("tenant", setProperty(flowProperties,"flow.tenant",null));
             flow.put("uptime", getFlowUptime(flowId));
         } else {
             flow.put("id", flowId);
@@ -1016,6 +1020,16 @@ public class FlowManager {
             }
 
         }
+
+    }
+
+    private String setProperty(TreeMap<String, String> properties,String propertyKey, String defaultValue){
+
+        if(properties.containsKey(propertyKey)){
+            return properties.get(propertyKey);
+        }
+
+        return defaultValue;
 
     }
 
