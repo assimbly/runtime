@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.net.URISyntaxException;
+import java.util.AbstractMap;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -414,6 +415,28 @@ public class IntegrationRuntime {
         } catch (Exception e) {
             log.error("Remove collector {} failed", collectorId, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/{collectorId}/remove", e.getMessage());
+        }
+
+    }
+
+    @GetMapping(
+            path = "/integration/list/flows/endpoint",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getInstalledFlowsByEndpointName(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, value = "name") String name,
+            @RequestHeader(required = false, value = "scheme") String scheme,
+            @RequestHeader(required = false, value = "tenant") String tenant
+    ) {
+
+        try {
+            String flows = integration.getCachedInstalledFlows(name, scheme, tenant);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows/endpoint",flows,true);
+        } catch (Exception e) {
+            log.error("Error to get flows by endpoint name",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/flows/endpoint",e.getMessage());
         }
 
     }
