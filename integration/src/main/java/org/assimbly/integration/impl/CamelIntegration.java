@@ -165,7 +165,7 @@ public class CamelIntegration extends BaseIntegration {
             super.setFlowConfiguration(flowId, mediaType, configuration);
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
             return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
@@ -197,7 +197,7 @@ public class CamelIntegration extends BaseIntegration {
 
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
             return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
         }
 
@@ -754,7 +754,7 @@ public class CamelIntegration extends BaseIntegration {
     public String startFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         if(flowProperties.isEmpty()){
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId);
+            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "XXX Flow is not installed";
             return  flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed");
         }
@@ -791,7 +791,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStats(String mediaType) {
+    public String getStats(String mediaType) throws Exception {
         return statsManager.getStats(mediaType);
     }
 
@@ -801,12 +801,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) {
+    public String getFlowsStats(String mediaType) throws Exception {
         return statsManager.getFlowsStats(mediaType, flowsMap);
     }
 
     @Override
-    public String getMessages(String mediaType) {
+    public String getMessages(String mediaType) throws Exception {
         return statsManager.getMessages(mediaType, flowsMap);
     }
 
