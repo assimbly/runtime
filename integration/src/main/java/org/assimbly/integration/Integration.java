@@ -971,4 +971,21 @@ public interface Integration {
 	 */
     List<ValidationErrorMessage> validateXslt(String url, String xsltBody);
 
+	/**
+	 * Returns list of installed flows
+	 *
+	 * @param  name the name of the endpoint
+	 * @param  scheme the scheme of the endpoint
+	 * @param  tenant the tenant name used on db
+	 * @return list of installed flows
+	 */
+	String getCachedInstalledFlows(String name, String scheme, String tenant);
+
+	/**
+	 * Deletes cache entry
+	 *
+	 * @param  flowId to be deleted
+	 */
+	void deleteCacheEntry(String flowId);
+
 }

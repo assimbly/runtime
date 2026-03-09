@@ -3,6 +3,8 @@ package org.assimbly.integration.impl;
 import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
+
+import java.net.URI;
 import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,6 +37,7 @@ import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.JsonHelper;
 import org.jasypt.properties.EncryptableProperties;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -164,9 +167,21 @@ public class CamelIntegration extends BaseIntegration {
 
         String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
 
-        if (result == null || result.contains("\"event\": \"error\"")) {
+        if (result == null) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
             super.removeFlowConfigurationIfExist(flowId);
+            return null;
+        }
+
+        try {
+            JsonNode root = new ObjectMapper().readTree(result);
+            int failed = root.path("flow").path("installed").path("failed").asInt(0);
+            if (failed > 0) {
+                log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
+                super.removeFlowConfigurationIfExist(flowId);
+            }
+        } catch (Exception e) {
+            // do nothing
         }
 
         return result;
@@ -856,6 +871,74 @@ public class CamelIntegration extends BaseIntegration {
     public List<ValidationErrorMessage> validateXslt(String url, String xsltBody) {
         XsltValidator xsltValidator = new XsltValidator();
         return xsltValidator.validate(url, xsltBody);
+    }
+
+    @Override
+    public String getCachedInstalledFlows(String name, String scheme, String tenant) {
+
+        List<Map<String, String>> result = new ArrayList<>();
+
+        flowsMap.forEach((flowId, config) -> {
+            config.forEach((key, value) -> {
+
+                // filter by tenant if provided
+                if (tenant != null) {
+                    String flowTenant = config.get("flow.tenant");
+                    if (!tenant.equalsIgnoreCase(flowTenant)) {
+                        return;
+                    }
+                }
+
+                // return all flows if no filters are provided
+                if (name == null && scheme == null) {
+                    Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                    result.add(flow);
+                    return;
+                }
+
+                if (key.startsWith("source.") && key.endsWith(".uri")) {
+                    try {
+                        URI uri = new URI(value);
+
+                        // filter by scheme
+                        if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
+                            return;
+                        }
+
+                        String path = uri.getPath();
+                        String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
+
+                        if (endpoint.equals(name.toLowerCase())) {
+                            Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                            result.add(flow);
+                        }
+
+                    } catch (Exception e) {
+                        // ignore malformed URI
+                    }
+                }
+            });
+        });
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(result);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @NotNull
+    private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
+        Map<String, String> flow = new HashMap<>();
+        flow.put("id", flowId);
+        flow.put("name", config.getOrDefault("flow.name", flowId));
+        return flow;
+    }
+
+    @Override
+    public void deleteCacheEntry(String flowId) {
+        super.removeFlowConfigurationIfExist(flowId);
     }
 
     private String mergeJson(String flowJson, String testJson) throws Exception {
