@@ -31,7 +31,7 @@
 
     <properties>
 
-        <maven-api.version>3.9.12</maven-api.version>
+        <maven-api.version>3.9.13</maven-api.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
