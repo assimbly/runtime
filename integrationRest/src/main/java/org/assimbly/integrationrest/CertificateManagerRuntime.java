@@ -26,6 +26,7 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -215,7 +216,7 @@ public class CertificateManagerRuntime {
 
             importCertificateInKeystore(keystoreName, keystorePassword, cn, cert);
 
-            Map<String,Certificate> certificateMap = new HashMap<>();
+            Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
             certificateMap.put("Self-Signed (" + cn + ")",cert);
 
             String result = certificatesAsJSon(certificateMap, null, keystoreName);

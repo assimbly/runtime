@@ -37,7 +37,7 @@ class UserJWTControllerTest {
     void shouldAuthenticateAndGetToken() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("db", TestApplicationContext.db);
 

@@ -6,22 +6,19 @@ public class OSUtil {
         WINDOWS, LINUX, MAC, SOLARIS
     }
 
-    private static OS os = null;
+    private static final OS os = detectOS();
 
     public static OS getOS() {
-        if (os == null) {
-            String operSys = System.getProperty("os.name").toLowerCase();
-            if (operSys.contains("win")) {
-                os = OS.WINDOWS;
-            } else if (operSys.contains("nix") || operSys.contains("nux")
-                    || operSys.contains("aix")) {
-                os = OS.LINUX;
-            } else if (operSys.contains("mac")) {
-                os = OS.MAC;
-            } else if (operSys.contains("sunos")) {
-                os = OS.SOLARIS;
-            }
-        }
         return os;
     }
+
+    private static OS detectOS() {
+        String operSys = System.getProperty("os.name").toLowerCase();
+        if (operSys.contains("win"))       return OS.WINDOWS;
+        if (operSys.contains("nix") || operSys.contains("nux") || operSys.contains("aix")) return OS.LINUX;
+        if (operSys.contains("mac"))       return OS.MAC;
+        if (operSys.contains("sunos"))     return OS.SOLARIS;
+        throw new IllegalStateException("Unknown OS: " + operSys);
+    }
+
 }

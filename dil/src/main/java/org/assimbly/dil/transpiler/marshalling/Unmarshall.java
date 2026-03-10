@@ -165,9 +165,9 @@ public class Unmarshall {
 			String value = conf.getProperty(optionProperty).toString();
 
 			if (i > 0) {
-				uriOptions.append("&");
+				uriOptions.append('&');
 			}
-			uriOptions.append(name).append("=").append(value);
+			uriOptions.append(name).append('=').append(value);
 		}
 
 		return uriOptions.toString();

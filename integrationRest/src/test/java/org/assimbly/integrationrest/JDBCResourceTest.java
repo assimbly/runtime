@@ -34,7 +34,7 @@ class JDBCResourceTest {
     void shouldValidateJdbcConnection() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
             params.put("user", "rfamro");
             params.put("host", "mysql-rfam-public.ebi.ac.uk");
@@ -47,7 +47,7 @@ class JDBCResourceTest {
             params.put("database", "Rfam");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
@@ -69,7 +69,7 @@ class JDBCResourceTest {
     void shouldValidateJdbcConnectionWithError() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
             params.put("user", "rfamro");
             params.put("host", "mysql-rfam-public.ebi.ac.uk");
@@ -82,7 +82,7 @@ class JDBCResourceTest {
             params.put("database", "Rfam");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 

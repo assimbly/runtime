@@ -1,17 +1,12 @@
 package org.assimbly.dil.validation;
 
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpHead;
-import javax.net.ssl.SSLContext;
+import org.apache.hc.core5.util.Timeout;
+
 import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 
 public class HttpsCertificateValidator {
@@ -27,60 +22,33 @@ public class HttpsCertificateValidator {
      * @return ValidationResult. If a certificate is found invalid or it cannot be determined a message will be included.
      */
     public ValidationResult validate(String httpsUrlString) {
-
-        if (!httpsUrlString.startsWith("https://")) {
-            throw new IllegalArgumentException("Provided url " + httpsUrlString + "is not a HTTPS url");
-        }
-
-        if (httpClient == null){
-            buildHttpClient();
-        }
-
+        // 1. URL cleanup (HttpClient 5 still likes clean URIs)
         httpsUrlString = httpsUrlString.replace(" ", "%20");
 
+        // 2. Define Request-specific config (Response timeout is the new "Socket Timeout")
         RequestConfig reqConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(15000, TimeUnit.MILLISECONDS)
-                .setConnectTimeout(15000, TimeUnit.MILLISECONDS)
-                .setResponseTimeout(15000, TimeUnit.MILLISECONDS)
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(15000))
+                .setResponseTimeout(Timeout.ofMilliseconds(15000))
                 .build();
 
-        HttpHead req = new HttpHead(httpsUrlString);
-        req.setConfig(reqConfig);
+        // 3. Use the ResponseHandler pattern for automatic resource management
+        HttpHead request = new HttpHead(httpsUrlString);
+        request.setConfig(reqConfig);
 
         try {
-            httpClient.execute(req);
+            // execute(request, responseHandler) handles the connection release automatically
+            return httpClient.execute(request, response -> {
+                // Check status code (e.g., 200 OK)
+                if (response.getCode() >= 200 && response.getCode() < 300) {
+                    return new ValidationResult(ValidationResultStatus.VALID, null);
+                }
+                return new ValidationResult(ValidationResultStatus.INVALID, "Status: " + response.getCode());
+            });
         } catch (SSLException e) {
-            return new ValidationResult(ValidationResultStatus.INVALID, getRootCause(e).getMessage());
+            return new ValidationResult(ValidationResultStatus.INVALID, e.getMessage());
         } catch (IOException e) {
-            return new ValidationResult(ValidationResultStatus.UNKNOWN, getRootCause(e).getMessage());
+            return new ValidationResult(ValidationResultStatus.UNKNOWN, e.getMessage());
         }
-
-        return new ValidationResult(ValidationResultStatus.VALID, null);
-
-    }
-
-    private static void buildHttpClient() {
-
-        // This uses the default Java truststore
-        SSLContext sslContext = SSLContexts.createSystemDefault();
-
-        // 1. Create a TLS Strategy instead of a Socket Factory
-        // This handles the SSLContext and HostnameVerifier
-        DefaultClientTlsStrategy tlsStrategy = new DefaultClientTlsStrategy(
-                sslContext,
-                NoopHostnameVerifier.INSTANCE
-        );
-
-        // 2. Use setTlsSocketStrategy on the Connection Manager
-        var connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-                .setTlsSocketStrategy(tlsStrategy)
-                .build();
-
-        // 3. Build the client
-        HttpClients.custom()
-                .setConnectionManager(connectionManager)
-                .build();
-
     }
 
     private Throwable getRootCause(Throwable throwable) {

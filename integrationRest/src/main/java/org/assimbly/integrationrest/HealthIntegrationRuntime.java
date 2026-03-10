@@ -18,6 +18,7 @@ import java.lang.management.ThreadMXBean;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Resource to return information about the currently running Spring profiles.
@@ -113,11 +114,11 @@ public class HealthIntegrationRuntime {
         return "Unknown";
     }
 
-    private static class BackendResponse {
+    private static final class BackendResponse {
 
-        private Map<String, Object> jvm = new HashMap<>();
-        private Map<String, Long> memory = new HashMap<>();
-        private Map<String, Integer> threads = new HashMap<>();
+        private Map<String, Object> jvm = new ConcurrentHashMap<>();
+        private Map<String, Long> memory = new ConcurrentHashMap<>();
+        private Map<String, Integer> threads = new ConcurrentHashMap<>();
 
         public Map<String, Long> getMemory() {
             return memory;

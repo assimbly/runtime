@@ -26,8 +26,8 @@ class MessageBrokerRuntimeTest {
 
     private static final String BODY = "Hello world!";
 
-    private static boolean messageSentOnQueue1 = false;
-    private static boolean messageMovedFromQueue1 = false;
+    private static boolean messageSentOnQueue1;
+    private static boolean messageMovedFromQueue1;
 
     private static String messageIdOnQueue1;
 
@@ -76,7 +76,7 @@ class MessageBrokerRuntimeTest {
 
     private static void createQueue(String queueName) {
         // headers
-        HashMap<String, String> headers = new HashMap();
+        HashMap<String, String> headers = new HashMap<>();
         headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
         // endpoint call

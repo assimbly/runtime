@@ -167,8 +167,8 @@ public class JMSConnection {
         if(jmsComponent != null){
             jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
             jmsComponent.setIncludeCorrelationIDAsBytes(false);
-            jmsComponent.setConcurrentConsumers(10);
-            jmsComponent.setMaxConcurrentConsumers(50);
+            jmsComponent.setConcurrentConsumers(1);
+            jmsComponent.setMaxConcurrentConsumers(8);
             jmsComponent.setTestConnectionOnStartup(true);
         }
 

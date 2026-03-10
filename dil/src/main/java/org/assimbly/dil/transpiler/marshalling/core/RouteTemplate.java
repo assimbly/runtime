@@ -1,5 +1,7 @@
 package org.assimbly.dil.transpiler.marshalling.core;
 
+import javax.xml.xpath.*;
+
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
@@ -13,7 +15,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.xpath.*;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
@@ -338,7 +339,7 @@ public class RouteTemplate {
             String routeConfiguration = DocConverter.convertNodeToString(routeNode);
 
             String updatedRouteConfigurationId = baseUri + "_" + timestamp;
-            String updatedRouteConfiguration = StringUtils.replace(routeConfiguration,routeConfigurationId,updatedRouteConfigurationId);
+            String updatedRouteConfiguration = routeConfiguration.replace(routeConfigurationId,updatedRouteConfigurationId);
 
             if (updatedRouteConfiguration.contains("<dataFormats>")){
                 updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.\\n)*)</dataFormats>", "");

@@ -27,7 +27,7 @@ class FlowConfigurerRuntimeTest {
 
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
@@ -46,7 +46,7 @@ class FlowConfigurerRuntimeTest {
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -64,7 +64,7 @@ class FlowConfigurerRuntimeTest {
     void shouldSetFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
@@ -94,7 +94,7 @@ class FlowConfigurerRuntimeTest {
     void checkIfFlowIsConfigured() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -119,7 +119,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
@@ -142,7 +142,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowRoutesByFlowId() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -170,7 +170,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetComponents() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("IncludeCustomComponents", "false");
 
@@ -199,7 +199,7 @@ class FlowConfigurerRuntimeTest {
     void shouldRemoveFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -223,7 +223,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowDocumentationByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -248,7 +248,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetDocumentationVersion() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -269,7 +269,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowSteps() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -294,7 +294,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowOptionsByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -319,7 +319,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowSchemaByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -344,7 +344,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowStepByTemplateName() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

@@ -41,7 +41,7 @@ class CertificateManagerRuntimeTest {
     void shouldGenerateCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("cn", "example.com");
             headers.put("keystoreName", "myKeystore.jks");
@@ -69,7 +69,7 @@ class CertificateManagerRuntimeTest {
     void shouldUploadCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("FileType", "pem");
@@ -101,7 +101,7 @@ class CertificateManagerRuntimeTest {
     void shouldUploadP12Certificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("FileType", "pem");
@@ -135,7 +135,7 @@ class CertificateManagerRuntimeTest {
     void shouldImportCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -163,7 +163,7 @@ class CertificateManagerRuntimeTest {
     void shouldSetCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -191,11 +191,11 @@ class CertificateManagerRuntimeTest {
     void shouldUpdateCertificate() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("url", "https://www.google.com");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -230,7 +230,7 @@ class CertificateManagerRuntimeTest {
     void shouldDeleteCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("keystoreName", "myKeystore.jks");
             headers.put("keystorePassword", "changeit");

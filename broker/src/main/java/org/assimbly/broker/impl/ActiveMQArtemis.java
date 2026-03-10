@@ -30,9 +30,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -194,13 +194,13 @@ public class ActiveMQArtemis implements Broker {
 		if(!brokerFile.exists()) {
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 			
-    		try {
-    			FileUtils.touch(brokerFile);
-    			InputStream is = classloader.getResourceAsStream("broker.xml");
+    		try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
+
+				FileUtils.touch(brokerFile);
+
                 assert is != null;
                 Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        		is.close();
-				
+
 			} catch (IOException e) {
 				log.error("event=GetFileConfiguration status=failed config=broker.xml reason={}", e.getMessage(), e);
 			}
@@ -652,7 +652,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) {
-		Map<String, Long> destinationMessageCounts = new HashMap<>();
+		Map<String, Long> destinationMessageCounts = new ConcurrentHashMap<>();
 
 		try {
 			ActiveMQServer activeBroker = broker.getActiveMQServer();

@@ -8,11 +8,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class HttpUtil {
+public final class HttpUtil {
 
     private HttpUtil() {
         throw new UnsupportedOperationException("Utility class");
@@ -93,7 +93,7 @@ public class HttpUtil {
             String[] queryArr = query.split("\\?", 2);
             query = queryArr[1];
 
-            Map<String, String> params = new HashMap<>();
+            Map<String, String> params = new ConcurrentHashMap<>();
             String[] pairs = query.split("&");
             for (String pair : pairs) {
                 String[] keyValue = pair.split("=");

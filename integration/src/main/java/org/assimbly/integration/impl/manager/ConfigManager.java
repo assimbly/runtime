@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
@@ -403,7 +404,7 @@ public class ConfigManager {
     }
 
     private static Map<String, String> getRouteMap(Map<String, Object> yamlRoute) {
-        Map<String, String> routeMap = new HashMap<>();
+        Map<String, String> routeMap = new ConcurrentHashMap<>();
         Object value = yamlRoute.get("route");
 
         if (value instanceof Map<?, ?> map) {

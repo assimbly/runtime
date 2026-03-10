@@ -1,11 +1,16 @@
 package org.assimbly.integration.impl;
 
+import org.apache.camel.*;
+import org.apache.camel.spi.*;
+import org.assimbly.dil.validation.*;
+import java.util.*;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
-import org.apache.camel.*;
+
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
@@ -13,12 +18,11 @@ import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
-import org.apache.camel.spi.*;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
+
 import org.assimbly.dil.loader.FlowLoaderReport;
-import org.assimbly.dil.validation.*;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
 import org.assimbly.dil.validation.beans.ValidationExpression;
@@ -44,7 +48,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
-import java.util.*;
 import java.util.stream.IntStream;
 
 public class CamelIntegration extends BaseIntegration {
@@ -72,7 +75,7 @@ public class CamelIntegration extends BaseIntegration {
         init(useDefaultSettings);
     }
 
-    public final void init(boolean useDefaultSettings) throws Exception {
+    private void init(boolean useDefaultSettings) throws Exception {
 
         //set the name of the runtime
         context.setNameStrategy(new ExplicitCamelContextNameStrategy("assimbly"));

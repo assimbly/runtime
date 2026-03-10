@@ -43,13 +43,17 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public final class CertificatesUtil {
@@ -193,7 +197,7 @@ public final class CertificatesUtil {
 	public Map<String,Certificate> importCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
         IO.println("Importing certificates");
-		Map<String,Certificate> certificateMap = new HashMap<>();
+		Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
 
 		try {
 			//load keystore
@@ -234,7 +238,7 @@ public final class CertificatesUtil {
 
 		Enumeration<String> aliases = p12Store.aliases();
 
-		Map<String,Certificate> certificateMap = new HashMap<>();
+		Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
 
 
 		while (aliases.hasMoreElements()) {
@@ -290,7 +294,7 @@ public final class CertificatesUtil {
 				temp.insert(0, "0");
 			}
 
-			bString.append(temp).append(" ");
+			bString.append(temp).append(' ');
 		}
 
 		return bString.toString();
@@ -345,7 +349,7 @@ public final class CertificatesUtil {
 		}
 
 		if (file.exists()) {
-			FileInputStream is = new FileInputStream(file);
+			InputStream is = Files.newInputStream(file.toPath());
 			keystore.load(is, keystorePassword.toCharArray());
 			is.close();
 		} else {
@@ -353,7 +357,7 @@ public final class CertificatesUtil {
 			createKeystoreFile(file);
 			keystore.load(null, keystorePassword.toCharArray());
 
-			FileOutputStream os = new FileOutputStream(file);
+			OutputStream os = Files.newOutputStream(file.toPath());
 			keystore.store(os, keystorePassword.toCharArray());
 			os.close();
 		}
@@ -386,7 +390,7 @@ public final class CertificatesUtil {
 
 		// Save the new keystore contents
 		File file = new File(keyStorePath);
-		FileOutputStream out = new FileOutputStream(file);
+		OutputStream out = Files.newOutputStream(file.toPath());
 		keystore.store(out, keystorePassword.toCharArray());
 		out.close();
 
@@ -470,11 +474,12 @@ public final class CertificatesUtil {
 		X500Name dnName = new X500Name("CN=" + subjectDN);
 		BigInteger certSerialNumber = new BigInteger(Long.toString(now)); // <-- Using the current timestamp as the certificate serial number
 
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(startDate);
-		calendar.add(Calendar.YEAR, 2); // <-- 2 Yr validity
-
-		Date endDate = calendar.getTime();
+		Date endDate = Date.from(startDate.toInstant()
+				.atZone(ZoneId.systemDefault())
+				.toLocalDate()
+				.plusYears(2)
+				.atStartOfDay(ZoneId.systemDefault())
+				.toInstant());
 
 		String signatureAlgorithm = "SHA256WithRSA"; // <-- Use appropriate signature algorithm based on your keyPair algorithm.
 

@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -710,7 +711,7 @@ public class ActiveMQClassic implements Broker {
     }
 
     private Map<String, Long> getFlowIdsMessageCountMap(String destinationType, boolean excludeEmptyQueues) {
-        Map<String, Long> destinationMessageCounts = new HashMap<>();
+        Map<String, Long> destinationMessageCounts = new ConcurrentHashMap<>();
 
         try {
             // Get all destinations

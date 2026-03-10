@@ -220,20 +220,20 @@ public class StatsManager {
     }
 
     // Helper class to store statistics
-    private static class FlowStatistics {
-        long totalTransactions = 0;
-        long completedTransactions = 0;
-        long failedTransactions = 0;
-        long pendingTransactions = 0;
-        long totalMessages = 0;
-        long completedMessages = 0;
-        long failedMessages = 0;
-        long pendingMessages = 0;
-        long uptimeMillis = 0;
-        long lastFailed = 0;
-        long lastCompleted = 0;
-        String uptime = null;
-        String status = null;
+    private static final class FlowStatistics {
+        long totalTransactions;
+        long completedTransactions;
+        long failedTransactions;
+        long pendingTransactions;
+        long totalMessages;
+        long completedMessages;
+        long failedMessages;
+        long pendingMessages;
+        long uptimeMillis;
+        long lastFailed;
+        long lastCompleted;
+        String uptime;
+        String status;
     }
 
     private long getTimeout(CamelContext context) {

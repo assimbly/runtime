@@ -56,17 +56,19 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
     private byte[] readBodyAsBytes(Message resourceMessage, String mimeType) {
         // Re-fetch the body since stream may have been consumed during MIME detection
-        InputStream body = resourceMessage.getBody(InputStream.class);
-        if (body == null) {
-            log.warn("[Enrich] Resource body is null, attaching empty byte array.");
-            return new byte[0];
-        }
-        try {
+        try (InputStream body = resourceMessage.getBody(InputStream.class)){
+
+            if (body == null) {
+                log.warn("[Enrich] Resource body is null, attaching empty byte array.");
+                return new byte[0];
+            }
+
             return body.readAllBytes();
         } catch (IOException e) {
             log.error("[Enrich] Failed to read resource body for mime-type={}: {}", mimeType, e.getMessage(), e);
             return new byte[0];
         }
+
     }
 
     private String resolveAttachmentName(Exchange resource, Message resourceMessage) {

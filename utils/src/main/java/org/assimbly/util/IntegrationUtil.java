@@ -168,7 +168,7 @@ public final class IntegrationUtil {
 	public static Iterable<Node> iterable(final NodeList nodeList) {
 		return () -> new Iterator<>() {
 
-            private int index = 0;
+            private int index;
 
             @Override
             public boolean hasNext() {
@@ -207,9 +207,7 @@ public final class IntegrationUtil {
 
 		StringBuilder string = new StringBuilder();
 
-		string.append("\n");
-		string.append("Flow Configuration\n");
-		string.append("-----------------------------------------------------------------\n");
+		string.append("\nFlow Configuration\n-----------------------------------------------------------------\n");
 
 		Map<String, String> subMap;
 
@@ -222,7 +220,7 @@ public final class IntegrationUtil {
 
 			if(!subMap.isEmpty()) {
 
-				string.append("\n").append(item.toUpperCase()).append("\n");
+				string.append('\n').append(item.toUpperCase()).append('\n');
 
 				for(Map.Entry<String,String> entry : subMap.entrySet()) {
 
@@ -233,13 +231,13 @@ public final class IntegrationUtil {
 						value = "***********";
 					}
 
-					string.append(key).append(":").append(value).append("\n");
+					string.append(key).append(':').append(value).append('\n');
 				}
 			}
 
 		}
 
-		string.append("\n");
+		string.append('\n');
 
 		return string.toString();
 	}

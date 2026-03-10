@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class ElasticStore {
 
-    private static volatile RestClient client;
+    private static RestClient client;
 
     private static final Logger log = LoggerFactory.getLogger(ElasticStore.class);
 

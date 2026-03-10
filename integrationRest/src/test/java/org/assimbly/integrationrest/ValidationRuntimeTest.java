@@ -39,11 +39,11 @@ class ValidationRuntimeTest {
     void shouldValidateCronWithSuccess() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("expression", "0 0/5 * * * ?");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -64,11 +64,11 @@ class ValidationRuntimeTest {
     void shouldValidateCronWithError() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("expression", "0 0/5 * * *");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -148,7 +148,7 @@ class ValidationRuntimeTest {
     void shouldValidateConnection() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

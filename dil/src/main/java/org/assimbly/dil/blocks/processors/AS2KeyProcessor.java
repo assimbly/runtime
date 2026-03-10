@@ -15,9 +15,9 @@ import java.security.cert.X509Certificate;
 
 public class AS2KeyProcessor implements Processor {
 
-    boolean isToEncrypt = false;
-    boolean isToDecrypt = false;
-    boolean isSigned = false;
+    boolean isToEncrypt;
+    boolean isToDecrypt;
+    boolean isSigned;
 
     @Override
     public void process(Exchange exchange) throws Exception {

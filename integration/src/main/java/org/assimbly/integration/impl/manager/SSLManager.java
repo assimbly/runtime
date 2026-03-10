@@ -109,15 +109,11 @@ public class SSLManager {
 
     // get mutual ssl info from props
     public Map<String, String> getMutualSSLInfoFromProps(TreeMap<String, String> props) {
-        for (Map.Entry<String, String> entry : props.entrySet()) {
-            String xml = entry.getValue();
-            if (!xml.startsWith("<")) {
-                // skip prop if it's not an xml
-                continue;
-            }
-            return getMutualSSLInfoFromXml(xml);
-        }
-        return Collections.emptyMap();
+        return props.values().stream()
+                .filter(xml -> xml.startsWith("<"))
+                .findFirst()
+                .map(this::getMutualSSLInfoFromXml)
+                .orElseGet(HashMap::new);
     }
 
     // get mutual ssl info from xml

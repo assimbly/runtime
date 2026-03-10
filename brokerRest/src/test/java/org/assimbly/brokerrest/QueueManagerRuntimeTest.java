@@ -23,8 +23,8 @@ class QueueManagerRuntimeTest {
 
     private static final String QUEUE_TEST = "queue_test";
 
-    private static boolean queueCreated = false;
-    private static boolean messageSentToQueue = false;
+    private static boolean queueCreated;
+    private static boolean messageSentToQueue;
 
     private static AssimblyGatewayBrokerContainer container;
 
@@ -45,11 +45,11 @@ class QueueManagerRuntimeTest {
 
             if (testInfo.getTags().contains("NeedsMessageOnQueue") && !messageSentToQueue) {
                 // params
-                HashMap<String, String> params = new HashMap();
+                HashMap<String, String> params = new HashMap<>();
                 params.put("messageHeaders", "{\"test\":\"1234\"}");
 
                 // headers
-                HashMap<String, String> headers = new HashMap();
+                HashMap<String, String> headers = new HashMap<>();
                 headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
@@ -69,7 +69,7 @@ class QueueManagerRuntimeTest {
     void shouldCreateQueue() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -100,7 +100,7 @@ class QueueManagerRuntimeTest {
             assumeTrue(queueCreated, "Skipping shouldGetQueue test because shouldCreateQueue test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -129,7 +129,7 @@ class QueueManagerRuntimeTest {
             assumeTrue(queueCreated, "Skipping shouldGetQueues test because shouldCreateQueue test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -161,7 +161,7 @@ class QueueManagerRuntimeTest {
             assumeTrue(queueCreated, "Skipping shouldClearQueue test because shouldCreateQueue test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -190,7 +190,7 @@ class QueueManagerRuntimeTest {
             assumeTrue(queueCreated, "Skipping shouldClearQueues test because shouldCreateQueue test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -218,7 +218,7 @@ class QueueManagerRuntimeTest {
             assumeTrue(queueCreated, "Skipping shouldDeleteQueue test because shouldCreateQueue test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

@@ -23,7 +23,7 @@ class HealthRuntimeTest {
 
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
@@ -42,7 +42,7 @@ class HealthRuntimeTest {
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -59,7 +59,7 @@ class HealthRuntimeTest {
     void shouldGetFlowHealthById() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -85,7 +85,7 @@ class HealthRuntimeTest {
     void shouldGetFlowStepHealthById() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -111,7 +111,7 @@ class HealthRuntimeTest {
     void shouldGetHealth() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -137,7 +137,7 @@ class HealthRuntimeTest {
     void shouldGetHealthByFlowIds() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

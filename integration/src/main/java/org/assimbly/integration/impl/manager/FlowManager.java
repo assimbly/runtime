@@ -487,11 +487,11 @@ public class FlowManager {
             if (route != null) {
                 RouteError lastError = route.getLastError();
                 if (lastError != null) {
-                    sb.append("RouteID: ");
-                    sb.append(routeId);
-                    sb.append("Error: ");
-                    sb.append(lastError);
-                    sb.append(";");
+                    sb.append("RouteID: ")
+                    .append(routeId)
+                    .append("Error: ")
+                    .append(lastError)
+                    .append(';');
                 }
             }
         }
@@ -941,8 +941,8 @@ public class FlowManager {
                         continue;
                     }
 
-                    if (!first) newQuery.append("&");
-                    newQuery.append(key).append("=").append(e.getValue());
+                    if (!first) newQuery.append('&');
+                    newQuery.append(key).append('=').append(e.getValue());
                     first = false;
                 }
 

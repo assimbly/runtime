@@ -1,5 +1,8 @@
 package org.assimbly.dil.event.collect;
 
+import java.nio.charset.*;
+import java.util.*;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.spi.CamelEvent;
@@ -16,9 +19,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -247,10 +251,7 @@ public class StepCollector extends EventNotifierSupport {
         }
 
         // set timestamp property
-        Calendar calNow = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
-        exchange.setProperty(TIMESTAMP_PROPERTY, sdf.format(calNow.getTime()));
-
+        exchange.setProperty(TIMESTAMP_PROPERTY, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss.SSS")));
         // set BodyType property
         exchange.setProperty(MESSAGE_BODY_TYPE_PROPERTY, bodyType);
 

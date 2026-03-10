@@ -32,7 +32,7 @@ public class CustomHttpHeaderFilterStrategy extends DefaultHeaderFilterStrategy 
         initialize();
     }
 
-    protected void initialize() {
+    private void initialize() {
 
         getOutFilter().add("content-length");
         getOutFilter().add("content-type");

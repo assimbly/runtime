@@ -59,12 +59,12 @@ class BrokerConfigureRuntimeTest {
     void shouldSetBrokerConfiguration() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("brokerType", "classic");
             params.put("brokerConfigurationType", ""); // the following param is not used internally
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
             // body

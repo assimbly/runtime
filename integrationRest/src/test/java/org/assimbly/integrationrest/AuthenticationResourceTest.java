@@ -49,7 +49,7 @@ public class AuthenticationResourceTest {
             MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Authorization", Utils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
             headers.put("db", TestApplicationContext.db);
 
@@ -75,7 +75,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("db", TestApplicationContext.db);
             headers.put("domainName", TestApplicationContext.domainName);
@@ -108,7 +108,7 @@ public class AuthenticationResourceTest {
             assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
@@ -138,7 +138,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Authorization", authToken);
 

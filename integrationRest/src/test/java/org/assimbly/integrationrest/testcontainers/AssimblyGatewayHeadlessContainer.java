@@ -60,6 +60,7 @@ public class AssimblyGatewayHeadlessContainer {
     private static String getResourceSecurityPath() {
         URL resource = AssimblyGatewayHeadlessContainer.class.getClassLoader().getResource("security");
         try {
+            assert resource != null;
             return Path.of(resource.toURI()).toString();
         } catch (Exception e) {
             log.error("Error to copy files to container", e);

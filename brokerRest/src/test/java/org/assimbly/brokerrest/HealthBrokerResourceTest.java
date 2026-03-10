@@ -34,7 +34,7 @@ class HealthBrokerResourceTest {
     void shouldGetEngineDataInfo() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

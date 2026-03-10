@@ -30,7 +30,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.Objects;
 
-public class Utils {
+public final class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 

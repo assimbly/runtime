@@ -27,7 +27,7 @@ class StatisticsRuntimeTest {
     private final Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
