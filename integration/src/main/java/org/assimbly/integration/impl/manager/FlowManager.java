@@ -886,8 +886,6 @@ public class FlowManager {
                 String uniqueId = UUID.randomUUID().toString();
                 Map<String, String> boundParams = new LinkedHashMap<>();
 
-                AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
-
                 for (Map.Entry<String, String> e : allParams.entrySet()) {
                     String key = e.getKey();
                     String value = e.getValue();
@@ -900,26 +898,26 @@ public class FlowManager {
 
                         switch (key) {
                             case "signingCertificateChain":
-                                keyObject = as2KeyProcessor.getSigningCertificateChain(
+                                keyObject = AS2KeyProcessor.getSigningCertificateChain(
                                         new URI(cleanedValue), password, alias);
                                 boundParams.put(
                                         "signingAlgorithm",
-                                        as2KeyProcessor.getSigningAlgorithm(
+                                        AS2KeyProcessor.getSigningAlgorithm(
                                                 (java.security.cert.Certificate[]) keyObject));
                                 break;
 
                             case "signingPrivateKey":
-                                keyObject = as2KeyProcessor.getSigningPrivateKey(
+                                keyObject = AS2KeyProcessor.getSigningPrivateKey(
                                         new URI(cleanedValue), password, alias);
                                 break;
 
                             case "decryptingPrivateKey":
-                                keyObject = as2KeyProcessor.getDecryptingPrivateKey(
+                                keyObject = AS2KeyProcessor.getDecryptingPrivateKey(
                                         new URI(cleanedValue), password, alias);
                                 break;
 
                             default:
-                                keyObject = as2KeyProcessor.getValidateSigningCertificateChain(
+                                keyObject = AS2KeyProcessor.getValidateSigningCertificateChain(
                                         new URI(cleanedValue));
                         }
 

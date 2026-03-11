@@ -663,18 +663,7 @@ public class StatsManager {
 
     public String getFlowsStats(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
-        Set<String> flowIds = new HashSet<>();
-
-        List<Route> routes = context.getRoutes();
-
-        for (Route route : routes) {
-            String routeId = route.getId();
-            String flowId = StringUtils.substringBefore(routeId, "-");
-
-            if (flowId != null && !flowId.isEmpty()) {
-                flowIds.add(flowId);
-            }
-        }
+        Set<String> flowIds = context.getRouteGroupIds();
 
         String result = getStatsFromList(flowIds, true, flowsMap);
 
