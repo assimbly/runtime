@@ -29,7 +29,9 @@ public class AS2KeyProcessor implements Processor {
         String password = exchange.getProperty("keyPassword", String.class);
         String alias = exchange.getProperty("keyAlias", String.class);
 
-        URI encryptCertificateUri = null, decryptCertificateUri = null, signingCertificateUri = null;
+        URI encryptCertificateUri = null;
+        URI decryptCertificateUri = null;
+        URI signingCertificateUri = null;
 
         // certificateForEncrypt
         String encryptCertificate = exchange.getProperty("certificateForEncrypt", String.class);
@@ -143,7 +145,7 @@ public class AS2KeyProcessor implements Processor {
         try (InputStream is = url.openStream()) {
             Certificate cert = factory.generateCertificate(is);
 
-            if (cert == null || !(cert instanceof X509Certificate)) {
+            if (!(cert instanceof X509Certificate)) {
                 throw new IllegalStateException("Could not load a valid X.509 certificate from URI: " + certUri);
             }
 

@@ -2,7 +2,6 @@ package org.assimbly.util;
 
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -16,11 +15,9 @@ public final class ConfigHelper {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger("org.assimbly.util.ConfigHelper");
 
     private final String fileName;
-    private final Class<?> originClass;
 
-    public ConfigHelper(String fileName, Class<?> originClass) {
+    public ConfigHelper(String fileName) {
         this.fileName = fileName;
-        this.originClass = originClass;
     }
 
     /**
@@ -52,7 +49,7 @@ public final class ConfigHelper {
         Properties props = new Properties();
 
         try (
-            InputStream fileInputStream = Files.newInputStream(Paths.get("/opt/karaf/etc/" + fileName));
+            InputStream fileInputStream = Files.newInputStream(Paths.get("/opt/karaf/etc/" + fileName))
         ) {
             props.load(fileInputStream);
         } catch (IOException e) {

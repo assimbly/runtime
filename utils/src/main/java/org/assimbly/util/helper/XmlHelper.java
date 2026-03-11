@@ -85,6 +85,7 @@ public final class XmlHelper {
 
 
     public static Document mergeIn(Document original, Document addition) {
+
         Node copy = original.importNode(addition.getFirstChild(), true);
 
         original.getFirstChild().appendChild(copy);

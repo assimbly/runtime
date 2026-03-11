@@ -1,27 +1,29 @@
 package org.assimbly.util;
+
+import java.io.*;
+import java.security.*;
+import java.security.cert.*;
+import java.util.*;
+import org.apache.hc.client5.http.ssl.*;
+import org.bouncycastle.asn1.x509.*;
+
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.client5.http.utils.DateUtils;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.core5.http.message.RequestLine;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509ExtensionUtils;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -37,23 +39,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
-import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.*;
 import java.security.cert.Certificate;
-import java.security.cert.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 public final class CertificatesUtil {
@@ -64,84 +62,78 @@ public final class CertificatesUtil {
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
 
-        IO.println("Start downloading certificates (url=" + url + ")");
+		IO.println("Start downloading certificates (url=" + url + ")");
 
-		Certificate[] peercertificates;
+		Certificate[] peerCertificates;
 
-		// create http response certificate interceptor
-		HttpResponseInterceptor certificateInterceptor = (HttpResponse _, EntityDetails _, HttpContext context) -> {
+		// Use an atomic reference to capture certificates from the response handler
+		AtomicReference<Certificate[]> certificateHolder = new AtomicReference<>();
 
-			// Cast to HttpClientContext to access high-level helper methods
-			HttpClientContext clientContext = HttpClientContext.adapt(context);
-
-			// In HC5, the SSL session is directly accessible via the context
-			SSLSession sslSession = clientContext.getSSLSession();
-
-			if (sslSession != null) {
-				// Get the server certificates
-				Certificate[] certificates = sslSession.getPeerCertificates();
-
-				// Set the attribute on the original context
-				context.setAttribute("PEER_CERTIFICATES", certificates);
-			}
-		};
-
-        // 1. Build the SSLContext with TrustAllStrategy
+		// 1. Build the SSLContext with TrustAllStrategy
 		SSLContext sslContext = SSLContexts.custom()
 				.loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
 				.build();
 
-		// 2. Create the SSL Socket Factory with the NoopHostnameVerifier
-		SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-				.setSslContext(sslContext)
-				.setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+		// 2. Create the TLS Strategy using the modern API (replaces deprecated SSLConnectionSocketFactory)
+		TlsSocketStrategy tlsSocketStrategy = new DefaultClientTlsStrategy(
+				sslContext,
+				NoopHostnameVerifier.INSTANCE
+		);
+
+		// 3. Create the Connection Manager using the modern TLS strategy
+		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setTlsSocketStrategy(tlsSocketStrategy)
 				.build();
 
-        // 3. Create the Connection Manager using the factory
-		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setSSLSocketFactory(sslSocketFactory)
-				.build();
+		// 4. Create the response interceptor to capture SSL certificates
+		//    Uses the modern non-deprecated HttpClientContext.cast() instead of adapt()
+		HttpResponseInterceptor certificateInterceptor = (HttpResponse response, EntityDetails entityDetails, HttpContext context) -> {
+			HttpClientContext clientContext = HttpClientContext.cast(context);
+			SSLSession sslSession = clientContext.getSSLSession();
+			if (sslSession != null) {
+				try {
+					certificateHolder.set(sslSession.getPeerCertificates());
+				} catch (SSLPeerUnverifiedException e) {
+					log.warn("Could not retrieve peer certificates from SSL session", e);
+				}
+			}
+		};
 
 		try (CloseableHttpClient httpClient = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.addResponseInterceptorLast(certificateInterceptor)
 				.build()) {
 
-			// make HTTP GET request to resource server
-			HttpGet httpget = new HttpGet(url);
+			HttpGet httpGet = new HttpGet(url);
+			log.info("Executing request {} {}", httpGet.getMethod(), httpGet.getUri());
 
-			log.info("Executing request {}", new RequestLine(httpget));
+			// 5. Use the modern execute() with a response handler — no HttpContext needed
+			httpClient.execute(httpGet, response -> {
+				// Consume the response entity to ensure the connection is properly released
+				EntityUtils.consume(response.getEntity());
+				return null;
+			});
 
-			// create http context where the certificate will be added
-			HttpContext context = new BasicHttpContext();
-			httpClient.execute(httpget, context);
+			peerCertificates = certificateHolder.get();
 
-			// obtain the server certificates from the context
-			peercertificates = (Certificate[]) context.getAttribute(PEER_CERTIFICATES);
-
-			if (peercertificates != null) {
-
-				// loop over certificates and print meta-data
-				for (Certificate certificate : peercertificates) {
+			if (peerCertificates != null) {
+				for (Certificate certificate : peerCertificates) {
 					X509Certificate real = (X509Certificate) certificate;
-                    IO.println("----------------------------------------");
-                    IO.println("Type: " + real.getType());
-                    IO.println("Signing Algorithm: " + real.getSigAlgName());
-                    IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-                    IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-                    IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-                    IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				}
-
+					IO.println("----------------------------------------");
+					IO.println("Type: " + real.getType());
+					IO.println("Signing Algorithm: " + real.getSigAlgName());
+					IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
+					IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
+					IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
+					IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
+				}
 			} else {
-				log.error("Certificates not found. URL: {})", url);
+				log.error("Certificates not found. URL: {}", url);
 			}
-
 		}
 
-		return peercertificates;
-
+		return peerCertificates;
 	}
-
 
 	public Certificate getCertificate(String keyStorePath, String keystorePassword, String certificateName) {
 
@@ -321,7 +313,7 @@ public final class CertificatesUtil {
 		try {
 			if (pemCertificate != null && !pemCertificate.trim().isEmpty()) {
 
-				Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN.*---*$(.*)^---*END.*---*$.*");
+				Pattern parse = Pattern.compile("(?m)(?s)^--+BEGIN.*--+$(.*)^--+END.*--+$.*");
 				pemCertificate = parse.matcher(pemCertificate).replaceFirst("$1");
 
 				byte[] derCertificate = decoder.decode(pemCertificate);

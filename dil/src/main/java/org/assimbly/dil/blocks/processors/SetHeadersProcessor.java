@@ -11,7 +11,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 //set headers for each step

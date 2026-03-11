@@ -565,7 +565,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception {
+    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
         return statsManager.getFlowMessages(flowId, includeSteps, mediaType);
     }
 
@@ -590,7 +590,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception {
+    public String getStepMessages(String flowId, String stepId, String mediaType) {
         return statsManager.getStepMessages(flowId, stepId, mediaType);
     }
 
@@ -615,12 +615,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
+    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) {
         return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, flowsMap);
     }
 
     @Override
-    public String getFlowStepStats(String flowId, String stepId, boolean fullStats) throws Exception {
+    public String getFlowStepStats(String flowId, String stepId, boolean fullStats) {
         return statsManager.getFlowStepStats(flowId, stepId, fullStats);
     }
 
@@ -635,17 +635,17 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) {
         return statsManager.getFlowHealth(flowId, type, includeError, includeSteps, includeDetails, mediaType);
     }
 
     @Override
-    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) {
         return statsManager.getFlowStepHealth(flowId, stepId, type, includeError, includeDetails, mediaType);
     }
 
     @Override
-    public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+    public String getThreads(String mediaType, String filter, int topEntries) {
         return statsManager.getThreads(mediaType, filter, topEntries);
     }
 
@@ -765,7 +765,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStats(String mediaType) throws Exception {
+    public String getStats(String mediaType) {
         return statsManager.getStats(mediaType);
     }
 
@@ -775,12 +775,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) throws Exception {
+    public String getFlowsStats(String mediaType) {
         return statsManager.getFlowsStats(mediaType, flowsMap);
     }
 
     @Override
-    public String getMessages(String mediaType) throws Exception {
+    public String getMessages(String mediaType) {
         return statsManager.getMessages(mediaType, flowsMap);
     }
 
@@ -860,7 +860,7 @@ public class CamelIntegration extends BaseIntegration {
         return xsltValidator.validate(url, xsltBody);
     }
 
-    private String mergeJson(String flowJson, String testJson) throws Exception {
+    private String mergeJson(String flowJson, String testJson) {
 
         ObjectMapper mapper = new ObjectMapper();
 

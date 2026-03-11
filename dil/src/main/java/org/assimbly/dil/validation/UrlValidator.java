@@ -1,8 +1,8 @@
 package org.assimbly.dil.validation;
 
-import org.assimbly.util.error.ValidationErrorMessage;
-
 import java.net.*;
+
+import org.assimbly.util.error.ValidationErrorMessage;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

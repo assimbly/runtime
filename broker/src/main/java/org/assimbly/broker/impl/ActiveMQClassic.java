@@ -1,12 +1,14 @@
 package org.assimbly.broker.impl;
 
+import org.apache.activemq.broker.jmx.*;
+import java.util.*;
+
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.net.UrlEscapers;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.jmx.*;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +32,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -162,16 +163,14 @@ public class ActiveMQClassic implements Broker {
         if(!brokerFile.exists()) {
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-            try {
+            try(InputStream is = classloader.getResourceAsStream("activemq.xml")) {
                 FileUtils.touch(brokerFile);
-                InputStream is = classloader.getResourceAsStream("activemq.xml");
                 assert is != null;
                 Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                is.close();
-
             } catch (IOException e) {
                 log.error("event=GetFileConfiguration status=failed config=activemq.xml reason={}", e.getMessage(), e);
             }
+
         }
 
         return FileUtils.readFileToString(brokerFile, StandardCharsets.UTF_8);
@@ -181,29 +180,30 @@ public class ActiveMQClassic implements Broker {
     public String setFileConfiguration(String brokerConfiguration) throws IOException {
 
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        String resolvedConfiguration;
 
-        if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
+        if (brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 
             URL schemaFile = classloader.getResource("spring-beans.xsd");
             String xmlValidation = IntegrationUtil.isValidXML(schemaFile, brokerConfiguration);
-            if(!xmlValidation.equals("xml is valid")) {
+            if (!xmlValidation.equals("xml is valid")) {
                 return xmlValidation;
             }
+            resolvedConfiguration = brokerConfiguration;
 
-        }else {
+        } else {
             FileUtils.touch(brokerFile);
-            InputStream inputStream = classloader.getResourceAsStream("activemq.xml");
-
-            assert inputStream != null;
-            brokerConfiguration = DocConverter.convertStreamToString(inputStream);
-
-            inputStream.close();
-
+            try(InputStream inputStream = classloader.getResourceAsStream("activemq.xml")) {
+                assert inputStream != null;
+                resolvedConfiguration = DocConverter.convertStreamToString(inputStream);
+            }
         }
-        brokerConfiguration = StringUtils.replace(brokerConfiguration, "${activemq.data}", baseDir + "/broker");
-        FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
+
+        resolvedConfiguration = resolvedConfiguration.replace("${activemq.data}", baseDir + "/broker");
+        FileUtils.writeStringToFile(brokerFile, resolvedConfiguration, StandardCharsets.UTF_8);
 
         return "success";
+
     }
 
 
@@ -577,7 +577,7 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+    public String getFlowMessageCountsList(boolean excludeEmptyQueues) {
 
         Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(endpointType, excludeEmptyQueues);
 

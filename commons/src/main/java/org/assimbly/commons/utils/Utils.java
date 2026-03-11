@@ -17,7 +17,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +65,7 @@ public final class Utils {
         return Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(format));
     }
 
-    public static String readFileAsStringFromResources(String fileName) throws IOException {
+    public static String readFileAsStringFromResources(String fileName) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
@@ -77,7 +76,7 @@ public final class Utils {
         }
     }
 
-    public static byte[] readFileAsBytesFromResources(String fileName) throws IOException {
+    public static byte[] readFileAsBytesFromResources(String fileName) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());

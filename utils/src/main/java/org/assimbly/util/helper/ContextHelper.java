@@ -7,4 +7,5 @@ public final class ContextHelper {
     public static String getFlowId(String contextName){
         return contextName.split(FLOW_ID_PREFIX)[1];
     }
+
 }

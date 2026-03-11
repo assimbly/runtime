@@ -1,5 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
+import javax.management.*;
+import java.util.*;
+
 import com.codahale.metrics.MetricRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -25,13 +28,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
 import java.text.DecimalFormat;
-import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 public class StatsManager {
@@ -87,7 +88,7 @@ public class StatsManager {
         }
     }
 
-    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         JSONObject json = new JSONObject();
         JSONObject flow = createBasicFlowJson(flowId);
@@ -208,7 +209,7 @@ public class StatsManager {
         }
     }
 
-    private JSONArray collectStepStatistics(String flowId) throws Exception {
+    private JSONArray collectStepStatistics(String flowId) {
         JSONArray steps = new JSONArray();
         List<Route> routes = context.getRoutesByGroup(flowId);
         for (Route route : routes) {
@@ -248,7 +249,7 @@ public class StatsManager {
         }
     }
 
-    public String getFlowStepStats(String flowId, String stepid, boolean fullStats) throws Exception {
+    public String getFlowStepStats(String flowId, String stepid, boolean fullStats) {
 
         String routeid = flowId + "-" + stepid;
 
@@ -257,7 +258,7 @@ public class StatsManager {
 
     }
 
-    private JSONObject getStepStats(String routeid, boolean fullStats) throws Exception {
+    private JSONObject getStepStats(String routeid, boolean fullStats) {
 
         JSONObject json = new JSONObject();
         JSONObject step = new JSONObject();
@@ -297,7 +298,7 @@ public class StatsManager {
 
     }
 
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception {
+    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
 
         JSONObject json = new JSONObject();
         JSONObject flow = new JSONObject();
@@ -386,7 +387,7 @@ public class StatsManager {
         return Long.toString(managedRouteGroup.getExchangesInflight());
     }
 
-    public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception {
+    public String getStepMessages(String flowId, String stepId, String mediaType) {
 
         long totalMessages = 0;
         long completedMessages = 0;
@@ -456,7 +457,7 @@ public class StatsManager {
 
     }
 
-    public String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowHealth(String flowId, String type, boolean includeSteps, boolean includeError, boolean includeDetails, String mediaType) {
 
         JSONObject json = getFlowHealthObject(flowId, type, includeSteps, includeError, includeDetails);
 
@@ -500,7 +501,7 @@ public class StatsManager {
         return json;
     }
 
-    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) {
 
         String routeid = flowId + "-" + stepId;
         String healthCheckId = type + ":" + routeid;
@@ -559,7 +560,7 @@ public class StatsManager {
         return json;
     }
 
-    public String getStats(String mediaType) throws Exception {
+    public String getStats(String mediaType) {
 
         JSONObject json = new JSONObject();
 
@@ -588,7 +589,7 @@ public class StatsManager {
 
     }
 
-    public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+    public String getThreads(String mediaType, String filter, int topEntries) {
 
         List<JSONObject> jsonObjectList = new ArrayList<>();
         ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
@@ -660,7 +661,7 @@ public class StatsManager {
 
     }
 
-    public String getFlowsStats(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getFlowsStats(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         Set<String> flowIds = new HashSet<>();
 
@@ -709,7 +710,7 @@ public class StatsManager {
 
     }
 
-    private String getStatsFromList(Set<String> flowIds, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    private String getStatsFromList(Set<String> flowIds, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         JSONArray flows = new JSONArray();
 
@@ -723,7 +724,7 @@ public class StatsManager {
 
     }
 
-    public String getMessages(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getMessages(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         Set<String> flowIds = new HashSet<>();
 

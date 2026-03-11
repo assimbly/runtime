@@ -1,5 +1,7 @@
 package org.assimbly.integrationrest;
 
+import org.springframework.web.bind.annotation.*;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -18,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.ByteArrayOutputStream;

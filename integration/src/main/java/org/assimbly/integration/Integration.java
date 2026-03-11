@@ -1,5 +1,7 @@
 package org.assimbly.integration;
 
+import java.util.*;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
@@ -18,7 +20,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.*;
+
 
 /**
  * <pre>
@@ -520,7 +522,6 @@ public interface Integration {
 	*
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String startFlow(String flowId, long timeout);
 
@@ -529,7 +530,6 @@ public interface Integration {
 	*
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String restartFlow(String flowId, long timeout);
 	
@@ -538,7 +538,6 @@ public interface Integration {
 	*
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String stopFlow(String flowId, long timeout);
 	
@@ -547,7 +546,6 @@ public interface Integration {
 	*
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String resumeFlow(String flowId);
 
@@ -556,7 +554,6 @@ public interface Integration {
 	*
 	* @param  flowId the id of the flow
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String pauseFlow(String flowId);
 
@@ -566,7 +563,6 @@ public interface Integration {
 	 * @param  routeId the id of the flow
 	 * @param  route (the XML of the route)
 	 * @return returns a confirmation message
-	 * @throws Exception if flow doesn't start
 	 */
     String installRoute(String routeId, String route);
 
@@ -578,7 +574,6 @@ public interface Integration {
 	* @param  mediaType (XML,JSON,YAML)
 	* @param  configuration (the XML, JSON or YAML file)
 	* @return returns a confirmation message
-	* @throws Exception if flow doesn't start
 	*/
     String installFlow(String flowId, long timeout, String mediaType, String configuration);
 
@@ -587,7 +582,6 @@ public interface Integration {
 	 *
 	 * @param  flowId the id of the flow
 	 * @return returns a confirmation message
-	 * @throws Exception if flow doesn't start
 	 */
     String uninstallFlow(String flowId, long timeout);
 
@@ -599,7 +593,6 @@ public interface Integration {
 	 * @param  mediaType (XML,JSON,YAML)
 	 * @param  configuration (the XML, JSON or YAML file)
 	 * @return returns a confirmation message
-	 * @throws Exception if flow doesn't start
 	 */
 	String testFlow(String flowId, long timeout, String mediaType, String configuration);
 

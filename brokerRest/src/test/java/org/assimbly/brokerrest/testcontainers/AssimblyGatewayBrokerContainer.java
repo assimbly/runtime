@@ -43,7 +43,9 @@ public class AssimblyGatewayBrokerContainer {
     }
 
     private static String getResourcePath() {
-        URL resource = AssimblyGatewayBrokerContainer.class.getClassLoader().getResource("container");
+
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("container");
+
         try {
             assert resource != null;
             return Path.of(resource.toURI()).toString();
@@ -51,6 +53,7 @@ public class AssimblyGatewayBrokerContainer {
             log.error("Error to copy files to container", e);
             return null;
         }
+
     }
 
     public String getBrokerBaseUrl() {

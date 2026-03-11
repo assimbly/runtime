@@ -1,15 +1,18 @@
 package org.assimbly.integration.impl.manager;
 
+import java.util.*;
+import org.apache.camel.spi.*;
+import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.processors.*;
+
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
-
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.apache.camel.CamelContext;
@@ -23,7 +26,6 @@ import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.jsonpath.JsonPathLanguage;
 import org.apache.camel.language.xpath.XPathLanguage;
-import org.apache.camel.spi.*;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.SimpleRegistry;
@@ -33,11 +35,9 @@ import org.apache.commons.lang3.Strings;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.assimbly.cookies.CookieStore;
-import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
-import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;

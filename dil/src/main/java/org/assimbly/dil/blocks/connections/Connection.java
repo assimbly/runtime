@@ -1,8 +1,9 @@
 package org.assimbly.dil.blocks.connections;
 
+import org.assimbly.dil.blocks.connections.broker.*;
+
 import org.apache.camel.CamelContext;
 import org.apache.commons.collections4.MapUtils;
-import org.assimbly.dil.blocks.connections.broker.*;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
 import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;

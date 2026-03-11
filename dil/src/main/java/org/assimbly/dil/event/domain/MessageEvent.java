@@ -1,5 +1,7 @@
 package org.assimbly.dil.event.domain;
 
+import java.util.*;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.databind.ObjectMapper;
 import org.assimbly.dil.event.collect.StepCollector;
@@ -8,7 +10,6 @@ import tools.jackson.core.JacksonException;
 
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;

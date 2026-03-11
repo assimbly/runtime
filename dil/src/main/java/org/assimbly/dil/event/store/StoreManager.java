@@ -12,8 +12,8 @@ public class StoreManager {
     private FileStore fileStore;
     private ElasticStore elasticStore;
     private ConsoleStore consoleStore;
-    private String collectorId;
-    private ArrayList<Store> stores;
+    private final String collectorId;
+    private final ArrayList<Store> stores;
 
     public StoreManager(String collectorId, ArrayList<Store> stores){
         this.collectorId = collectorId;

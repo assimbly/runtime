@@ -7,9 +7,6 @@ import org.apache.camel.http.common.DefaultHttpBinding;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.assimbly.util.helper.XmlHelper;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -146,35 +143,29 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                                 padding: 20px;
                                 background: #f5f5f5;
                             }
-                    
                             .report {
                                 background: white;
                                 padding: 30px;
                                 border-radius: 8px;
                                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                             }
-                    
                             h1 {
                                 color: #d32f2f;
                                 margin-bottom: 30px;
                             }
-                    
                             .section {
                                 margin-bottom: 20px;
                             }
-                    
                             .label {
                                 font-weight: bold;
                                 margin-bottom: 5px;
                                 color: #555;
                             }
-                    
                             .value {
                                 padding: 10px;
                                 background: #f9f9f9;
                                 border-left: 3px solid #d32f2f;
                             }
-                    
                             .code {
                                 font-family: monospace;
                                 font-size: 13px;
@@ -185,17 +176,14 @@ public class CustomHttpBinding extends DefaultHttpBinding {
                     <body>
                         <div class="report">
                             <h1>Error Report</h1>
-                
                             <div class="section">
                                 <div class="label">Info</div>
                                 <div class="value">%s</div>
-                            </div>                
-                            
+                            </div>
                             <div class="section">
                                 <div class="label">Code</div>
                                 <div class="value">%s</div>
                             </div>
-                            
                             <div class="section">
                                 <div class="label">Error</div>
                                 <div class="value code">%s</div>

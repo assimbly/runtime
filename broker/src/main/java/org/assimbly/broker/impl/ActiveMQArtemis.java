@@ -39,7 +39,8 @@ import static java.util.Arrays.stream;
 
 public class ActiveMQArtemis implements Broker {
 
-	static final Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
+
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final File brokerFile = new File(baseDir + "/broker/broker.xml");
@@ -60,7 +61,6 @@ public class ActiveMQArtemis implements Broker {
 
 			broker = new EmbeddedActiveMQ();
 
-			//
 			if (brokerFile.exists()) {
 				log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				broker.setConfigResourcePath(fileConfig);
@@ -81,7 +81,7 @@ public class ActiveMQArtemis implements Broker {
 			return status();
 
 		} catch (Exception e) {
-			
+
             log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
 
 			return "failed";
@@ -89,7 +89,6 @@ public class ActiveMQArtemis implements Broker {
 		}
 
 	}
-
 
 
 	public String startEmbedded() throws Exception {
@@ -224,10 +223,10 @@ public class ActiveMQArtemis implements Broker {
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
 			FileUtils.touch(brokerFile);
-			InputStream is = classloader.getResourceAsStream("broker.xml");
-            assert is != null;
-            Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			is.close();
+			try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
+                assert is != null;
+                Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
 		return "success";
@@ -236,12 +235,11 @@ public class ActiveMQArtemis implements Broker {
 
 	public void setAIO() throws IOException {
 
-		if (OSUtil.getOS().equals(OSUtil.OS.LINUX)) {
-
+		if (OSUtil.getOS() == OSUtil.OS.LINUX) {
 			checkIfNativeLibraryExists();
 			loadNativeLibrary();
-
 		}
+
 	}
 
 	private void checkIfNativeLibraryExists() throws IOException {
@@ -258,14 +256,13 @@ public class ActiveMQArtemis implements Broker {
 
 			// Copy file from resources into empty file
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-			InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
-
-			if (is != null) {
-				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				is.close();
-				log.info("event=SetAIO status=success path={}", aioFile.getParent());
-			} else {
-				log.warn("event=SetAIO status=failed reason=Native library resource not found");
+			try(InputStream is = classloader.getResourceAsStream("libartemis-native-64.so")) {
+				if (is != null) {
+					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					log.info("event=SetAIO status=success path={}", aioFile.getParent());
+				} else {
+					log.warn("event=SetAIO status=failed reason=Native library resource not found");
+				}
 			}
 		}
 
@@ -595,7 +592,7 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
-	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+	public String getFlowMessageCountsList(boolean excludeEmptyQueues) {
 
 		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
 

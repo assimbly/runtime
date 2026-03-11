@@ -1,5 +1,7 @@
 package org.assimbly.integration.impl.manager;
 
+import java.util.*;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.support.SimpleRegistry;
@@ -27,7 +29,6 @@ import java.net.URI;
 import java.net.URL;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
-import java.util.*;
 
 public class SSLManager {
 
