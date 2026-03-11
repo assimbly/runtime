@@ -90,12 +90,12 @@ spec:
                 uri: "{{scheme}}:{{path}}"
                 parameters:
                   username: "RAW({{username}})"
-                  password: "RAW({{password}})"
+                  password: "RAW({{?password}})"
+                  accessToken: "RAW({{?accessToken}})"
                   from: "RAW({{?from}})"
                   to: "RAW({{to}})"
                   replyTo: "RAW({{?replyTo}})"
                   subject: "RAW({{subject}})"
-                  accessToken: "RAW({{?accessToken}})"
                   authenticationType: "RAW({{?authenticationType}})"
                   tenantDbName: "RAW({{?tenantDbName}})"
                   mail.smtp.starttls.enable: true
