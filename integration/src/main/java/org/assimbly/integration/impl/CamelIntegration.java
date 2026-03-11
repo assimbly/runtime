@@ -1109,7 +1109,8 @@ public class CamelIntegration extends BaseIntegration {
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
 				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 				jmsComponent.setIncludeCorrelationIDAsBytes(false);
-
+                jmsComponent.setMaxConcurrentConsumers(8);
+				
 				this.context.addComponent(activemqName, jmsComponent);
 			}
 
