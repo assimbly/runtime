@@ -43,7 +43,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
-            <version>4.0.3</version>
+            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

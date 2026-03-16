@@ -1,13 +1,13 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "flowlink-source"
+  name: "asyncflowlink-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "flowlink source"
-    description: "Links messages to another flow (inbound) using an endpoint like sync (direct)"
+    title: "Async flowlink source"
+    description: "Links messages to another flow (inbound) using an endpoint like async (seda)"
     type: "object"
     properties:
       transport:
@@ -39,7 +39,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}"
+        uri: "{{transport}}:{{flowId}}?concurrentConsumers=8"
         steps:
         - step:
             id: "{{routeId}}"

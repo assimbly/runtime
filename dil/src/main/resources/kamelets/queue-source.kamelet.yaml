@@ -1,13 +1,13 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "flowlink-source"
+  name: "queue-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "flowlink source"
-    description: "Links messages to another flow (inbound) using an endpoint like sync (direct)"
+    title: "queue source"
+    description: "Links messages to another flow (inbound) using a queue like activemq"
     type: "object"
     properties:
       transport:
@@ -17,6 +17,10 @@ spec:
       flowId:
         title: "FlowID"
         description: "Flow ID of the flow"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -39,7 +43,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
         steps:
         - step:
             id: "{{routeId}}"

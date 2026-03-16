@@ -7,8 +7,7 @@ metadata:
 spec:
   definition:
     title: "flowlink sink"
-    description: "Links messages to another flow (outbound) using an endpoint like\
-      \ sync (direct), async (seda), activemq"
+    description: "Links messages to another flow (outbound) using an endpoint like sync (direct)"
     type: "object"
     properties:
       transport:
@@ -18,10 +17,6 @@ spec:
       targetFlowId:
         title: "TargetFlowID"
         description: "Flow ID of the target flow"
-        type: "string"
-      connectionFactory:
-        title: "Connection Factory"
-        description: "Connection Factory"
         type: "string"
       exchangePattern:
         title: "Exchange Pattern"
@@ -55,4 +50,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{?connectionFactory}}"
+                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}"

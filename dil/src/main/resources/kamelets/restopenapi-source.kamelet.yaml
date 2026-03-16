@@ -14,9 +14,9 @@ spec:
         title: "Path"
         description: "Path"
         type: "string"
-      options:
-        title: "Options"
-        description: "Endpoint options"
+      operationId:
+        title: "OperationID"
+        description: "OperatonID"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -39,7 +39,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "rest-openapi:{{path}}?{{?options}}"
+        uri: "rest-openapi:{{path}}#{{operationId}}"
         steps:
         - step:
             id: "{{routeId}}"

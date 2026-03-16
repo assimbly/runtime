@@ -31,7 +31,7 @@
 
     <properties>
 
-        <maven-api.version>3.9.13</maven-api.version>
+        <maven-api.version>3.9.14</maven-api.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
@@ -50,9 +50,10 @@
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
-        <docconverter.version>1.16.0</docconverter.version>
+        <docconverter.version>2.0.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
         <elasticsearch-rest-client.version>9.3.1</elasticsearch-rest-client.version>
+        <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
         <groovy-script.version>5.0.4</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
         <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
@@ -72,15 +73,15 @@
         <kamelet.version>4.18.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
-        <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
+        <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
         <netty.version>4.2.10.Final</netty.version>
         <oracle.version>23.26.1.0.0</oracle.version>
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <spring.version>7.0.5</spring.version>
+        <spring.version>7.0.6</spring.version>
         <spring-boot.version>4.0.3</spring-boot.version>
-        <spring-data.version>4.0.3</spring-data.version>
+        <spring-data.version>4.0.4</spring-data.version>
         <springdoc.version>3.0.2</springdoc.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
@@ -93,9 +94,9 @@
         <hamcrest.version>3.0</hamcrest.version>
         <jetty.version>12.1.7</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
-        <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
+        <json-unit-assertj.version>5.1.1</json-unit-assertj.version>
         <junit.version>6.0.3</junit.version>
-        <mockito.version>5.22.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
