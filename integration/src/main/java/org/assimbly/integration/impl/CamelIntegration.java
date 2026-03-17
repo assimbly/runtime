@@ -1840,7 +1840,7 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 
 			if(hasFlow(id)) {
-				boolean resumed = true;
+				boolean resumed = false;
 				List<Route> routeList = getRoutesByFlowId(id);
 				for(Route route : routeList){
 					String routeId = route.getId();
@@ -1863,13 +1863,13 @@ public class CamelIntegration extends BaseIntegration {
 
 					}
 					else if (status.isStopped()){
-
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
-						startFlow(routeId, stopTimeout);
+						routeController.startRoute(routeId);
 						resumed = true;
 					}
 				}
 				if(resumed){
+					startFlow(id, stopTimeout);
 					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 				}else {
 					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
