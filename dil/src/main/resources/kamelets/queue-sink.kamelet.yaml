@@ -54,4 +54,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{connectionFactory}}"
+                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{connectionFactory}}&synchronous=true"
