@@ -47,7 +47,8 @@ public class ManagedBrokerRuntime {
             }else if (brokerConfigurationType.equals("embedded")) {
                 status = broker.startEmbedded();
             }
-            log.info("Started ActiveMQ {} broker", brokerType);
+
+            log.info("ActiveMQ {} broker {}", brokerType, status);
 
         }
 

@@ -2,8 +2,8 @@ package org.assimbly.integrationrest;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;

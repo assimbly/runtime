@@ -1,8 +1,8 @@
 package org.assimbly.brokerrest;
 
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +48,7 @@ class BrokerConfigureRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             // asserts contents
-            assertThat(response.body()).isEqualTo(Utils.readFileAsStringFromResources("container/broker/activemq.xml"));
+            assertThat(response.body()).isEqualTo(ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml"));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -68,7 +68,7 @@ class BrokerConfigureRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
             // body
-            String brokerConfig = Utils.readFileAsStringFromResources("container/broker/activemq.xml");
+            String brokerConfig = ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), brokerConfig, params, headers);

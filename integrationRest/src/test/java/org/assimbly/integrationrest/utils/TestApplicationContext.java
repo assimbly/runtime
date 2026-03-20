@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest.utils;
 
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.ApiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = ApiUtils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67921474ecaafe0007000000");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "3d01e43c-6e86-4c9e-9972-7c872ecc37f6");
@@ -59,13 +59,13 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = Utils.readFileAsStringFromResources("SchedulerCamelContext.xml");
+            String camelContext = ApiUtils.readFileAsStringFromResources("SchedulerCamelContext.xml");
 
             props.setProperty(CamelContextField.ID.name(), "67c740bc349ced00070004a9");
             props.setProperty(CamelContextField.ROUTE_ID_1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
             props.setProperty(CamelContextField.ROUTE_ID_2.name(), "9aa3aff8-e37c-4059-b9fd-4321454fd9ab");
             props.setProperty(CamelContextField.ROUTE_ID_3.name(), "979912f6-f6a1-43c8-9aa9-f8b480d31237");
-            props.setProperty(CamelContextField.ROUTE_1.name(), Utils.extractRouteFromXmlByRouteId(camelContext, "0df9d084-4783-492b-a9d4-488f2ee298a5"));
+            props.setProperty(CamelContextField.ROUTE_1.name(), ApiUtils.extractRouteFromXmlByRouteId(camelContext, "0df9d084-4783-492b-a9d4-488f2ee298a5"));
             props.setProperty(CamelContextField.CAMEL_CONTEXT.name(), camelContext);
         } catch (Exception e) {
             log.error("Error to build scheduler camel context example", e);
@@ -78,7 +78,7 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String collector = Utils.readFileAsStringFromResources("CollectorExample.json");
+            String collector = ApiUtils.readFileAsStringFromResources("CollectorExample.json");
 
             props.setProperty(CollectorField.FLOW_ID_LOG.name(), "67c740bc349ced00070004a9_log");
             props.setProperty(CollectorField.FLOW_ID_ROUTE.name(), "67c740bc349ced00070004a9_route");

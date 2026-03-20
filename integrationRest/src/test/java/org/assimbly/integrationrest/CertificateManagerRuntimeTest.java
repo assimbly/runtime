@@ -2,9 +2,9 @@ package org.assimbly.integrationrest;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -77,7 +77,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "changeit");
 
             // body
-            String certificate = Utils.readFileAsStringFromResources("certificates/certificate.pem");
+            String certificate = ApiUtils.readFileAsStringFromResources("certificates/certificate.pem");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/upload"), certificate, null, headers);
@@ -110,7 +110,7 @@ class CertificateManagerRuntimeTest {
             headers.put("password", "changeit");
 
             // body
-            byte[] certificateBytes = Utils.readFileAsBytesFromResources("certificates/keystore.p12");
+            byte[] certificateBytes = ApiUtils.readFileAsBytesFromResources("certificates/keystore.p12");
             String base64Encoded = Base64.getEncoder().encodeToString(certificateBytes);
 
             // endpoint call
@@ -204,7 +204,7 @@ class CertificateManagerRuntimeTest {
             // body
             JSONObject certificate = new JSONObject();
             certificate.put("certificateName", "example.com");
-            certificate.put("certificateFile", Utils.readFileAsStringFromResources("certificates/certificate.pem"));
+            certificate.put("certificateFile", ApiUtils.readFileAsStringFromResources("certificates/certificate.pem"));
             certificate.put("certificateExpiry", "2000-12-31T12:00:00.123Z");
             JSONArray certificateArray = new JSONArray();
             certificateArray.put(certificate);

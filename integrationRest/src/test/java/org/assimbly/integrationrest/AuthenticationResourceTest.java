@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.GoogleTOTPUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
@@ -50,7 +50,7 @@ public class AuthenticationResourceTest {
 
             // headers
             HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", Utils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
+            headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
             headers.put("db", TestApplicationContext.db);
 
             // endpoint call

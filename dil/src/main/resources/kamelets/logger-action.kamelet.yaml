@@ -20,6 +20,11 @@ spec:
         description: "Set the expression language"
         type: "string"
         default: "constant"
+      loggingLevel:
+        title: "Logging Level"
+        description: "Set the logging level"
+        type: "string"
+        default: "INFO"
       expression:
         title: "Expression"
         description: "Set the content of the body"
@@ -48,6 +53,7 @@ spec:
           - log:
               logName: "org.assimbly.runtime.{{flowId}}"
               logLanguage: "{{language}}"
+              loggingLevel: "{{loggingLevel}}"
               message: "{{expression}}"
           - to:
               uri: "{{out}}"

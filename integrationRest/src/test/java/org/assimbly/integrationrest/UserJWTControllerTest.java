@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;

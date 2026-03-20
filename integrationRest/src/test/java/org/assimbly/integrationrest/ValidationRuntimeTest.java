@@ -2,9 +2,9 @@ package org.assimbly.integrationrest;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -203,7 +203,7 @@ class ValidationRuntimeTest {
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String xslt = Utils.readFileAsStringFromResources("example.xsl");
+            String xslt = ApiUtils.readFileAsStringFromResources("example.xsl");
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("xsltBody", xslt);
 

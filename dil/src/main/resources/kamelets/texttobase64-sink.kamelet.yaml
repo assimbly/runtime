@@ -31,3 +31,6 @@ spec:
         steps:
         - step:
             id: "{{routeId}}"
+            steps:
+              - marshal:
+                  base64: {}

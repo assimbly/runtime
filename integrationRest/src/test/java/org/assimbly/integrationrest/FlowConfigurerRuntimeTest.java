@@ -2,9 +2,9 @@ package org.assimbly.integrationrest;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -69,7 +69,7 @@ class FlowConfigurerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // body
-            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = ApiUtils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), camelContext, null, headers);

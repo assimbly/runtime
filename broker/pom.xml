@@ -30,33 +30,93 @@
     </distributionManagement>
 
     <dependencies>
+
+        <!-- activemq classic dependencies -->
         <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>activemq-base</artifactId>
-            <version>${assimbly.version}</version>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>${activemq-classic.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>spring-base</artifactId>
-            <version>${assimbly.version}</version>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+            <version>${activemq-classic.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-amqp</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-client</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-artemis-native</artifactId>
+            <version>${activemq-artemis-native.version}</version>
+        </dependency>
+
+        <!-- activemq artemis dependencies -->
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-server</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-server</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-commons</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-ra</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-dto</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-amqp-protocol</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-openwire-protocol</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-client-all</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>utils</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>test-base</artifactId>
-            <version>${assimbly.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+
     </dependencies>
 
     <build>

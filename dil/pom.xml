@@ -34,22 +34,6 @@
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
-		  <artifactId>camel-components</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-     	<dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>test-base</artifactId>
-			<version>${assimbly.version}</version>
-   <exclusions>
-    <exclusion>
-     <groupId>junit</groupId>
-     <artifactId>junit</artifactId>
-    </exclusion>
-   </exclusions>
-		</dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
 		  <artifactId>utils</artifactId>
 		  <version>${assimbly.version}</version>
 	  </dependency>

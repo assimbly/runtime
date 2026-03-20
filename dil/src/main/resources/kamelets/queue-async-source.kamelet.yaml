@@ -1,15 +1,27 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "texttobase64-action"
+  name: "queue-source"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "texttobase64 action"
-    description: "Converts text to a base64 encoded string"
+    title: "queue source"
+    description: "Links messages to another flow (inbound) using a queue like activemq"
     type: "object"
     properties:
+      transport:
+        title: "Transport"
+        description: "Transport"
+        type: "string"
+      flowId:
+        title: "FlowID"
+        description: "Flow ID of the flow"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory"
+        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -31,12 +43,10 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{in}}"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}&asyncConsumer"
         steps:
         - step:
             id: "{{routeId}}"
             steps:
-            - marshal:
-                base64: {}
             - to:
                 uri: "{{out}}"

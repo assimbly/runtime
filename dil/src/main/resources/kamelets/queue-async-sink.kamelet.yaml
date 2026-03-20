@@ -1,7 +1,7 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "queue-sink"
+  name: "queue-async-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
 spec:
@@ -26,7 +26,7 @@ spec:
         title: "Exchange Pattern"
         description: "Exchange Pattern"
         type: "string"
-        default: "InOut"
+        default: "InOnly"
       in:
         title: "Source Endpoint"
         type: "string"

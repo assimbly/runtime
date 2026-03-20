@@ -1,15 +1,23 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "texttobase64-action"
+  name: "flowlink-source"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "texttobase64 action"
-    description: "Converts text to a base64 encoded string"
+    title: "Async flowlink source"
+    description: "Links messages to another flow (inbound) using an endpoint like async (seda)"
     type: "object"
     properties:
+      transport:
+        title: "Transport"
+        description: "Transport"
+        type: "string"
+      flowId:
+        title: "FlowID"
+        description: "Flow ID of the flow"
+        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -31,12 +39,10 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{in}}"
+        uri: "{{transport}}:{{flowId}}?concurrentConsumers=8"
         steps:
         - step:
             id: "{{routeId}}"
             steps:
-            - marshal:
-                base64: {}
             - to:
                 uri: "{{out}}"

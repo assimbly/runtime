@@ -1,15 +1,28 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "texttobase64-action"
+  name: "flowlink-async-sink"
   labels:
-    camel.apache.org/kamelet.type: "action"
+    camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "texttobase64 action"
-    description: "Converts text to a base64 encoded string"
+    title: "Async flowlink sink"
+    description: "Links messages to another flow (outbound) using an endpoint like async (seda)"
     type: "object"
     properties:
+      transport:
+        title: "Transport"
+        description: "Transport"
+        type: "string"
+      targetFlowId:
+        title: "TargetFlowID"
+        description: "Flow ID of the target flow"
+        type: "string"
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern"
+        type: "string"
+        default: "InOut"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -36,7 +49,5 @@ spec:
         - step:
             id: "{{routeId}}"
             steps:
-            - marshal:
-                base64: {}
-            - to:
-                uri: "{{out}}"
+            - toD:
+                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}"
