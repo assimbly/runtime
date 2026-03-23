@@ -36,7 +36,7 @@
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
         <activemq-classic.version>6.2.1</activemq-classic.version>
-        <activemq-artemis.version>2.52.0</activemq-artemis.version>
+        <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
         <camel.version>4.18.0</camel.version>
@@ -47,7 +47,7 @@
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
         <docconverter.version>2.0.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.3.1</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.3.2</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
         <groovy-script.version>5.0.4</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
@@ -75,7 +75,7 @@
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
         <spring.version>7.0.6</spring.version>
-        <spring-boot.version>4.0.3</spring-boot.version>
+        <spring-boot.version>4.0.4</spring-boot.version>
         <spring-data.version>4.0.4</spring-data.version>
         <springdoc.version>3.0.2</springdoc.version>
         <tika.version>1.28.5</tika.version>
@@ -95,7 +95,7 @@
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
-        <testcontainers.version>2.0.3</testcontainers.version>
+        <testcontainers.version>2.0.4</testcontainers.version>
         <xmlunit.version>2.11.0</xmlunit.version>
 
     </properties>
