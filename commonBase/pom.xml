@@ -12,7 +12,7 @@
     </parent>
 
     <name>common-base</name>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <artifactId>common-base</artifactId>
 

@@ -48,4 +48,4 @@ spec:
             steps:
             - setHeader:
                 name: "{{headerName}}"
-                constant: "${uuid({{generator}})}"
+                simple: "${uuid({{generator}})}"

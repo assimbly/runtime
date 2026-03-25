@@ -31,6 +31,7 @@
 		  <groupId>org.assimbly</groupId>
 		  <artifactId>camel-base</artifactId>
 		  <version>${assimbly.version}</version>
+		  <type>pom</type>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.assimbly</groupId>
@@ -43,32 +44,6 @@
           <version>${activemq-classic.version}</version>
           <scope>compile</scope>
       </dependency>
-
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>cookies</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>mail</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>multipart</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>xmltojson</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>sandbox</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
 
   </dependencies>
 

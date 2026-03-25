@@ -35,7 +35,7 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
-        <activemq-classic.version>6.2.1</activemq-classic.version>
+        <activemq-classic.version>6.2.2</activemq-classic.version>
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
@@ -70,7 +70,7 @@
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
-        <netty.version>4.2.10.Final</netty.version>
+        <netty.version>4.2.11.Final</netty.version>
         <oracle.version>23.26.1.0.0</oracle.version>
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>

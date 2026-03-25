@@ -12,7 +12,7 @@
     </parent>
 
     <name>camel-base</name>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <artifactId>camel-base</artifactId>
 
@@ -243,10 +243,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-micrometer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
             <artifactId>camel-netty</artifactId>
         </dependency>
         <dependency>
@@ -294,8 +290,156 @@
             <artifactId>camel-validator</artifactId>
         </dependency>
 
+        <!-- Custom Camel Components -->
         <dependency>
-            <groupId>org.apache.activemq</groupId>
+            <groupId>org.assimbly</groupId>
+            <artifactId>aggregate</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>csvtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>cookies</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>docconverter</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>edi</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>edifact</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>encoder</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>enrich</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>exceltoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>flv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>formtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>googledrive</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>jsontoxmllegacy</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>mail</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>multipart</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>oauth2token</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>pdf</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>pdftotext</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>replace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>sandbox</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>simplereplace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>smb</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>soap</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>sql</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>tenantvariables</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltocsv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltoexcel</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltojson</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltojsonlegacy</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client-all</artifactId>
             <version>${activemq-artemis.version}</version>
         </dependency>

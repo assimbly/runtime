@@ -429,7 +429,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		endpoint.put("name",endpointName);
 		endpoint.put("address",queueControl.getAddress());
@@ -466,7 +466,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + sourceQueueName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + sourceQueueName);
 
 		boolean result = queueControl.moveMessage(Long.parseLong(messageId),targetQueueName);
 
@@ -480,7 +480,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + sourceQueueName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + sourceQueueName);
 
 		int result = queueControl.moveMessages("", targetQueueName);
 
@@ -494,7 +494,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		boolean result = queueControl.removeMessage(Long.parseLong(messageId));
 
@@ -509,7 +509,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		int result = queueControl.removeAllMessages();
 
@@ -523,7 +523,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		JSONObject messagesInfo = new JSONObject();
 		JSONObject messageInfo = new JSONObject();
@@ -553,7 +553,7 @@ public class ActiveMQArtemis implements Broker {
 		for(String endpointName: endpointNames){
 
 			if(endpointExist(endpointName)){
-				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 				numberOfMessages = queueControl.getMessageCount();
 			}
 
@@ -570,7 +570,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		long numberOfMessages = queueControl.getMessageCount();
 
@@ -584,7 +584,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		long numberOfMessages = queueControl.getScheduledCount();
 
@@ -608,7 +608,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		queueControl.getFirstMessageAsJSON();
 
@@ -626,7 +626,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		CompositeData[] messages;
 
@@ -664,7 +664,7 @@ public class ActiveMQArtemis implements Broker {
 
 				// extract flowId
 				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
-				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(ResourceNames.QUEUE + queueName);
+				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + queueName);
 
 				// Get the message count for the current queue
 				long messageCount = queueControl.getMessageCount();
@@ -699,7 +699,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		return queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
 

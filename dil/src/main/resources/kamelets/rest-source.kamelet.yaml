@@ -39,6 +39,10 @@ spec:
         default: "0"
   dependencies:
   - "camel:kamelet"
+  restConfiguration:
+    component: "jetty"
+    port: "9002"
+    scheme: "https"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"

@@ -12,7 +12,7 @@
     </parent>
 
     <name>spring-base</name>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <artifactId>spring-base</artifactId>
 
