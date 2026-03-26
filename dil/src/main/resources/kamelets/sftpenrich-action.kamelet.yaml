@@ -162,7 +162,7 @@ spec:
                     otherwise:
                       disabled: "{{!abortMode}}"
                       steps:
-                      - to:
+                      - toD:
                           disabled: "{{!abortMode}}"
                           uri: "{{out}}"
                       - removeHeaders:
@@ -172,7 +172,7 @@ spec:
                           disabled: "{{!abortMode}}"
                           name: "Enrich-Response"
                           simple: "${body}"
-                - to:
+                - toD:
                     disabled: "{{abortMode}}"
                     uri: "{{out}}"
                 - removeHeaders:
