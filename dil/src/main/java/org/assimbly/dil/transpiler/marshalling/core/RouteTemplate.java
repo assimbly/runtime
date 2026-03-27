@@ -18,6 +18,7 @@ import org.w3c.dom.NodeList;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import static org.assimbly.util.IntegrationUtil.iterable;
@@ -29,7 +30,7 @@ public class RouteTemplate {
     private final XMLConfiguration conf;
     private final Document templateDoc;
     private String uri;
-    private Document contentRouteDoc;
+    private Document customRouteDoc;
     private Element templatedRoutes;
     private Element templatedRoute;
     private String routeId;
@@ -71,10 +72,15 @@ public class RouteTemplate {
         createTemplateId(baseUri, type);
 
         if(baseUri.equalsIgnoreCase("content") && type.equalsIgnoreCase("router") ) {
-            if (contentRouteDoc == null) {
-                contentRouteDoc = new DocumentImpl();
+            if (customRouteDoc == null) {
+                customRouteDoc = new DocumentImpl();
             }
-            createContentRouter(links, stepXPath, type, stepId);
+            createCustomRoute(links, stepXPath, type, stepId,"contentrouter");
+        }if(baseUri.startsWith("setheaders")) {
+            if (customRouteDoc == null) {
+                customRouteDoc = new DocumentImpl();
+            }
+            createCustomRoute(links, stepXPath, type, stepId,"setheaders");
         }else if(baseUri.startsWith("block")){
             createCustomStep(optionProperties, links, type, stepXPath, stepIndex, flowId, stepId);
         }else{
@@ -85,50 +91,58 @@ public class RouteTemplate {
 
     }
 
-    private void createContentRouter(String[] links, String stepXPath, String type, String stepId)  throws Exception {
+    private void createCustomRoute(String[] links, String stepXPath, String type, String stepId, String customType)  throws Exception {
 
-        createContentRoute(links, stepXPath);
+        createRoutes(links, stepXPath, customType, type);
 
-        String route = DocConverter.convertDocToString(contentRouteDoc);
+        String route = DocConverter.convertDocToString(customRouteDoc);
 
         properties.put(type + "." + stepId + ".route", route);
         properties.put(type + "." + stepId + ".route.id",  routeId);
 
     }
 
-    private void createContentRoute(String[] links, String stepXPath){
+    private void createRoutes(String[] links, String stepXPath, String customType, String type){
 
-        Element contentRoutes = contentRouteDoc.createElement("routes");
-        contentRouteDoc.appendChild(contentRoutes);
+        Element routes = customRouteDoc.createElement("routes");
+        customRouteDoc.appendChild(routes);
 
-        Element contentRoute = createRoute(links, stepXPath);
-        contentRoutes.appendChild(contentRoute);
+        Element route = createRoute(links, stepXPath, customType, type);
+        routes.appendChild(route);
 
     }
 
+    private Element createRoute(String[] links, String stepXPath, String customType, String type) {
 
-    private Element createRoute(String[] links, String stepXPath){
-
-        Element route = contentRouteDoc.createElement("route");
+        Element route = customRouteDoc.createElement("route");
         route.setAttribute("id", routeId);
 
         Element fromEndpoint = createFrom(links, stepXPath);
         route.appendChild(fromEndpoint);
 
-        Element choice = contentRouteDoc.createElement("choice");
-        choice = createNamespace(stepXPath, choice);
-        choice = createWhens(links, stepXPath, choice);
-        choice = createOtherwise(links, stepXPath, choice);
-        route.appendChild(choice);
+        if (customType.equalsIgnoreCase("contentrouter")){
+            Element choice = customRouteDoc.createElement("choice");
+            choice = createNamespace(stepXPath, choice);
+            choice = createWhens(links, stepXPath, choice);
+            choice = createOtherwise(links, stepXPath, choice);
+            route.appendChild(choice);
+        }else if (customType.equalsIgnoreCase("setheaders")){
+            Element setHeaders = customRouteDoc.createElement("setHeaders");
+            setHeaders = createHeaders(stepXPath, setHeaders);
+            route.appendChild(setHeaders);
+            if(type.equals("action")){
+                Element toEndpoint = createTo(links, stepXPath);
+                route.appendChild(toEndpoint);
+            }
+        }
 
         return route;
 
     }
 
-
     public Element createFrom(String[] links, String stepXPath) {
 
-        Element fromEndpoint = contentRouteDoc.createElement("from");
+        Element fromEndpoint = customRouteDoc.createElement("from");
 
         int index = 1;
         int linksLength = links.length;
@@ -156,6 +170,37 @@ public class RouteTemplate {
         return fromEndpoint;
     }
 
+    public Element createTo(String[] links, String stepXPath) {
+
+        Element toEndpoint = customRouteDoc.createElement("to");
+
+        int index = 1;
+        int linksLength = links.length;
+
+        for(int i = 0; i < linksLength; i++) {
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            //get values from configuration
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String linkTransport = createLinkTransport(linkXPath);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+            String endpoint = createLinkEndpoint(linkTransport, id);
+
+            if(bound!=null && bound.equalsIgnoreCase("out") ){
+                toEndpoint.setAttribute("uri", endpoint);
+            }
+
+            index++;
+
+        }
+
+        return toEndpoint;
+    }
+
+
     public Element createNamespace( String stepXPath, Element choice) {
 
         String namespace = Objects.toString(conf.getProperty(stepXPath + "options/namespace"), null);
@@ -176,7 +221,7 @@ public class RouteTemplate {
 
         for(int i = 0; i < links.length; i++) {
 
-            Element when = contentRouteDoc.createElement("when");
+            Element when = customRouteDoc.createElement("when");
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
@@ -192,11 +237,11 @@ public class RouteTemplate {
 
             if(bound!=null && bound.equalsIgnoreCase("out") && language != null && expression != null) {
 
-                Element elementRule = contentRouteDoc.createElement(language);
+                Element elementRule = customRouteDoc.createElement(language);
                 elementRule.setTextContent(expression);
                 when.appendChild(elementRule);
 
-                Element toEndpoint = contentRouteDoc.createElement("to");
+                Element toEndpoint = customRouteDoc.createElement("to");
                 toEndpoint.setAttribute("uri",endpoint);
                 when.appendChild(toEndpoint);
 
@@ -216,7 +261,7 @@ public class RouteTemplate {
 
         for(int index = 1; index < links.length; index++) {
 
-            Element otherwise = contentRouteDoc.createElement("otherwise");
+            Element otherwise = customRouteDoc.createElement("otherwise");
 
             String linkXPath = stepXPath + "links/link[" + index + "]/";
 
@@ -232,7 +277,7 @@ public class RouteTemplate {
 
             if(bound!=null && bound.equalsIgnoreCase("out") && language == null && expression == null) {
 
-                Element toEndpoint = contentRouteDoc.createElement("to");
+                Element toEndpoint = customRouteDoc.createElement("to");
                 toEndpoint.setAttribute("uri",endpoint);
                 otherwise.appendChild(toEndpoint);
 
@@ -243,6 +288,41 @@ public class RouteTemplate {
         }
 
         return choice;
+    }
+
+    public Element createHeaders( String stepXPath, Element setHeaders) {
+
+        String setHeadersUri = Objects.toString(conf.getProperty(stepXPath + "uri"), null);
+
+        if(setHeadersUri==null){
+            return setHeaders;
+        }
+
+        String messageId = StringUtils.substringAfter(setHeadersUri,"message:");
+        String headersXpath = "core/messages/message[name='" + messageId + "']/headers/header";
+        String[] headers = conf.getStringArray(headersXpath + "/name");
+
+        for(int i = 1; i < headers.length + 1; i++) {
+
+            String headerXPath = headersXpath + "[" + i + "]/";
+
+            //get values from configuration
+            String language = Objects.toString(conf.getProperty(headerXPath + "language"), "simple");
+            String name = Objects.toString(conf.getProperty(headerXPath + "name"), null);
+            String value = Objects.toString(conf.getProperty(headerXPath + "value"), null);
+
+            if(name != null && value != null) {
+                Element setHeader = customRouteDoc.createElement("setHeader");
+                setHeader.setAttribute("name", name);
+                Element languageElement = customRouteDoc.createElement(language);
+                languageElement.setTextContent(value);
+                setHeader.appendChild(languageElement);
+                setHeaders.appendChild(setHeader);
+            }
+
+        }
+
+        return setHeaders;
     }
 
     private void createStep(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId, String stepId) throws Exception {
