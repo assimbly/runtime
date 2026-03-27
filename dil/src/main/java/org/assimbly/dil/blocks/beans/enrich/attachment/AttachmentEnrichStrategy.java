@@ -26,9 +26,9 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         Message resourceMessage;
 
-        if(resource != null){
+        if (resource != null) {
             resourceMessage = resource.getIn();
-        }else{
+        } else {
             log.error("Could not get a response from your requested resource.");
             return original;
         }
@@ -42,30 +42,32 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
 
         InputStream body = resourceMessage.getBody(InputStream.class);
 
-        String mimeType = MimeTypeHelper.detectMimeType(body).toString();
+        byte[] data = new byte[0];
+
+        try {
+            // read ONCE
+            data = IOUtils.toByteArray(body);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+
+        // detect using fresh stream
+        String mimeType = MimeTypeHelper
+                .detectMimeType(new java.io.ByteArrayInputStream(data))
+                .toString();
 
         if (resourceMessage.getHeader(Exchange.CONTENT_TYPE) != null) {
             mimeType = resourceMessage.getHeader(Exchange.CONTENT_TYPE, String.class);
         }
 
-        DataHandler dataHandler;
-
-        byte[] data = new byte[0];
-
-        try {
-            data = IOUtils.toByteArray(body);
-        } catch (IOException e) { log.error(e.getMessage()); }
-
         ByteArrayDataSource byteArrayDataSource = new ByteArrayDataSource(data, mimeType);
-        dataHandler = new DataHandler(byteArrayDataSource);
+        DataHandler dataHandler = new DataHandler(byteArrayDataSource);
 
         log.info(String.format("Adding attachment '%s' with mime type: '%s'", attachmentName, mimeType));
-
         log.info("Attachment details");
         log.info(String.format("\tsize: %s", data.length));
 
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
-
         am.addAttachment(attachmentName, dataHandler);
 
         return original;
