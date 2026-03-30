@@ -39,7 +39,7 @@
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
-        <camel.version>4.18.0</camel.version>
+        <camel.version>4.18.1</camel.version>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.13.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
@@ -49,10 +49,10 @@
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
         <elasticsearch-rest-client.version>9.3.2</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
-        <groovy-script.version>5.0.4</groovy-script.version>
+        <groovy-script.version>5.0.5</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
-        <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
-        <jackson.version>3.1.0</jackson.version>
+        <informix-jdbc.version>15.0.1.1</informix-jdbc.version>
+        <jackson.version>3.1.1</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
         <jakarta-json-api.version>2.1.3</jakarta-json-api.version>
@@ -70,12 +70,12 @@
         <mapdb.version>3.1.0</mapdb.version>
         <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
-        <netty.version>4.2.11.Final</netty.version>
+        <netty.version>4.2.12.Final</netty.version>
         <oracle.version>23.26.1.0.0</oracle.version>
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
         <spring.version>7.0.6</spring.version>
-        <spring-boot.version>4.0.4</spring-boot.version>
+        <spring-boot.version>4.0.5</spring-boot.version>
         <spring-data.version>4.0.4</spring-data.version>
         <springdoc.version>3.0.2</springdoc.version>
         <tika.version>1.28.5</tika.version>
