@@ -1,5 +1,9 @@
 package org.assimbly.integration.impl.manager;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import org.apache.camel.component.jms.JmsComponent;
@@ -7,6 +11,10 @@ import org.apache.camel.spi.*;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
+import org.assimbly.util.BaseDirectory;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
@@ -16,6 +24,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
@@ -24,7 +33,6 @@ import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.seda.SedaComponent;
-import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.jsonpath.JsonPathLanguage;
 import org.apache.camel.language.xpath.XPathLanguage;
@@ -62,9 +70,13 @@ public class ConfigManager {
     private final CamelContext context;
     private final SimpleRegistry registry;
 
+    DB db;
+    ConcurrentMap<String, String> collectorsMap;
+
     public ConfigManager(CamelContext context, SimpleRegistry registry) {
         this.context = context;
         this.registry = registry;
+
     }
 
     public void setDebugging(boolean debugging) {
@@ -418,6 +430,55 @@ public class ConfigManager {
         }
 
         return routeMap;
+    }
+
+    private void createCacheDirectory() {
+        Path path = Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache");
+
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            log.error("Error to create cache directory", e);
+        }
+    }
+
+    public void initCollectorDB() {
+
+        createCacheDirectory();
+
+        File dbFile = new File(BaseDirectory.getInstance().getBaseDirectory() + "/cache/collectors.db");
+
+        db = DBMaker.fileDB(dbFile)
+                .fileMmapEnable()
+                .transactionEnable() // Enable crash safety
+                .make();
+
+        // Create or open the map
+        collectorsMap = db.hashMap("collectorsMap")
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(Serializer.STRING)
+                .createOrOpen();
+    }
+
+    public void closeCollectorDB() {
+        if (db != null && !db.isClosed()) {
+            db.commit();
+            db.close();
+        }
+    }
+
+    public void putCollection(String collectorId, String configuration) {
+        collectorsMap.put(collectorId, configuration);
+        db.commit(); // commit the transaction
+    }
+
+    public String getCollection(String collectorId) {
+        return collectorsMap.get(collectorId);
+    }
+
+    public void removeCollection(String collectorId) {
+        collectorsMap.remove(collectorId);
+        db.commit();
     }
 
 }

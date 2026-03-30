@@ -3,8 +3,12 @@ package org.assimbly.integration.impl;
 import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
+import org.assimbly.util.BaseDirectory;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -48,7 +52,9 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.IntStream;
+
 
 public class CamelIntegration extends BaseIntegration {
 
@@ -64,6 +70,7 @@ public class CamelIntegration extends BaseIntegration {
     private RouteController routeController;
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
+    private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -122,7 +129,7 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    public void start() throws Exception {
+    public void start() {
 
         // start Camel context
         if (!started) {
@@ -203,8 +210,12 @@ public class CamelIntegration extends BaseIntegration {
         String assimblyFlowCacheVar = System.getenv("ASSIMBLY_FLOWCACHE");
         boolean assimblyFlowCache = "true".equalsIgnoreCase(assimblyFlowCacheVar);
 
+        initStore();
+
         if (assimblyFlowCache) {
-            initFlowDB();
+
+            flowsMap = dilStore.getFlowsMap();
+
             if(!flowsMap.isEmpty()) {
                 log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
                 flowManager.startAllFlows(flowsMap);
@@ -212,8 +223,6 @@ public class CamelIntegration extends BaseIntegration {
             }else {
                 log.info("No active flows found in cache. Cache is ready.");
             }
-        }else{
-            initFlowMap();
         }
 
     }
@@ -499,7 +508,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getComponentParameters(String componentType, String mediaType) throws Exception {
+    public String getComponentParameters(String componentType, String mediaType) {
 
         DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
@@ -875,6 +884,17 @@ public class CamelIntegration extends BaseIntegration {
 
         return mapper.writeValueAsString(merged);
 
+    }
+
+
+    private void createCacheDirectory() {
+        Path path = Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache");
+
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            log.error("Error to create cache directory", e);
+        }
     }
 
 }
