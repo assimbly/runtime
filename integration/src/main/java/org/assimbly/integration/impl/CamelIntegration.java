@@ -1106,10 +1106,9 @@ public class CamelIntegration extends BaseIntegration {
 			Component activemqComp = this.context.getComponent(activemqName);
 
 			if (activemqComp == null) {
+
+
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-				jmsComponent.setIncludeCorrelationIDAsBytes(false);
-				jmsComponent.setMaxConcurrentConsumers(8);
 
 				this.context.addComponent(activemqName, jmsComponent);
 			}
@@ -1359,18 +1358,23 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 50);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 5000);
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections);
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+
+		// Cache the consumer to prevent object churn
+		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
+		jmsComponent.setConcurrentConsumers(4);
+		jmsComponent.setMaxConcurrentConsumers(4);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
