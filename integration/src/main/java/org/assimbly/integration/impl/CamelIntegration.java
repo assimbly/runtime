@@ -1373,8 +1373,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		// Cache the consumer to prevent object churn
 		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
-		jmsComponent.setConcurrentConsumers(4);
-		jmsComponent.setMaxConcurrentConsumers(4);
+		jmsComponent.setConcurrentConsumers(1);
+		jmsComponent.setMaxConcurrentConsumers(8);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
