@@ -966,7 +966,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void deleteCacheEntry(String flowId) {
-        super.removeFlowConfigurationIfExist(flowId);
+        super.removeFlowConfiguration(flowId);
     }
 
     private String mergeJson(String flowJson, String testJson) throws Exception {
