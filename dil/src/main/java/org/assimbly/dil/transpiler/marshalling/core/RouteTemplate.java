@@ -18,7 +18,6 @@ import org.w3c.dom.NodeList;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.TreeMap;
 
 import static org.assimbly.util.IntegrationUtil.iterable;
@@ -76,7 +75,7 @@ public class RouteTemplate {
                 customRouteDoc = new DocumentImpl();
             }
             createCustomRoute(links, stepXPath, type, stepId,"contentrouter");
-        }if(baseUri.startsWith("setheaders")) {
+        }else if(baseUri.startsWith("setheaders")) {
             if (customRouteDoc == null) {
                 customRouteDoc = new DocumentImpl();
             }
