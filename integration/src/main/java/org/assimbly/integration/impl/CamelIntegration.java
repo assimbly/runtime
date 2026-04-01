@@ -3,9 +3,6 @@ package org.assimbly.integration.impl;
 import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
-
-
-import java.net.URI;
 import java.util.*;
 
 import tools.jackson.databind.JsonNode;
@@ -49,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
@@ -187,7 +185,7 @@ public class CamelIntegration extends BaseIntegration {
                 log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
                 super.removeFlowConfiguration(flowId);
             }
-        } catch (Exception e) {
+        } catch (Exception _) {
             // do nothing
         }
 
@@ -806,7 +804,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStats(String mediaType) throws Exception {
+    public String getStats(String mediaType) {
         return statsManager.getStats(mediaType);
     }
 
@@ -816,12 +814,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) throws Exception {
+    public String getFlowsStats(String mediaType) {
         return statsManager.getFlowsStats(mediaType, flowsMap);
     }
 
     @Override
-    public String getMessages(String mediaType) throws Exception {
+    public String getMessages(String mediaType) {
         return statsManager.getMessages(mediaType, flowsMap);
     }
 
@@ -831,12 +829,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getMetrics(String mediaType) throws Exception {
+    public String getMetrics(String mediaType) {
         return statsManager.getMetrics(mediaType);
     }
 
     @Override
-    public String getHistoryMetrics(String mediaType) throws Exception {
+    public String getHistoryMetrics(String mediaType) {
         return statsManager.getHistoryMetrics(mediaType);
     }
 
@@ -906,47 +904,45 @@ public class CamelIntegration extends BaseIntegration {
 
         List<Map<String, String>> result = new ArrayList<>();
 
-        flowsMap.forEach((flowId, config) -> {
-            config.forEach((key, value) -> {
+        flowsMap.forEach((flowId, config) -> config.forEach((key, value) -> {
 
-                // filter by tenant if provided
-                if (tenant != null) {
-                    String flowTenant = config.get("flow.tenant");
-                    if (!tenant.equalsIgnoreCase(flowTenant)) {
-                        return;
-                    }
-                }
-
-                // return all flows if no filters are provided
-                if (name == null && scheme == null) {
-                    Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                    result.add(flow);
+            // filter by tenant if provided
+            if (tenant != null) {
+                String flowTenant = config.get("flow.tenant");
+                if (!tenant.equalsIgnoreCase(flowTenant)) {
                     return;
                 }
+            }
 
-                if (key.startsWith("source.") && key.endsWith(".uri")) {
-                    try {
-                        URI uri = new URI(value);
+            // return all flows if no filters are provided
+            if (name == null && scheme == null) {
+                Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                result.add(flow);
+                return;
+            }
 
-                        // filter by scheme
-                        if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
-                            return;
-                        }
+            if (key.startsWith("source.") && key.endsWith(".uri")) {
+                try {
+                    URI uri = new URI(value);
 
-                        String path = uri.getPath();
-                        String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
-
-                        if (endpoint.equals(name.toLowerCase())) {
-                            Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                            result.add(flow);
-                        }
-
-                    } catch (Exception e) {
-                        // ignore malformed URI
+                    // filter by scheme
+                    if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
+                        return;
                     }
+
+                    String path = uri.getPath();
+                    String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
+
+                    if (name!=null && endpoint.equals(name.toLowerCase())) {
+                        Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                        result.add(flow);
+                    }
+
+                } catch (Exception _) {
+                    // ignore malformed URI
                 }
-            });
-        });
+            }
+        }));
 
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -969,7 +965,7 @@ public class CamelIntegration extends BaseIntegration {
         super.removeFlowConfiguration(flowId);
     }
 
-    private String mergeJson(String flowJson, String testJson) throws Exception {
+    private String mergeJson(String flowJson, String testJson) {
 
         ObjectMapper mapper = new ObjectMapper();
 
