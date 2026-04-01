@@ -60,7 +60,5 @@ spec:
              - setHeader:
                  name: ce-chatid
                  simple: "${header[CamelTelegramChatId]}"
-             - marshal:
-                 json: {}
              - to: "{out}}"
        

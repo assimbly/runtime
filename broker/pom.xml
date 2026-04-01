@@ -1,78 +1,145 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <artifactId>runtime</artifactId>
-    <groupId>org.assimbly</groupId>
-	<version>5.1.0</version>
-  </parent>
+    <parent>
+        <artifactId>runtime</artifactId>
+        <groupId>org.assimbly</groupId>
+        <version>6.0.0</version>
+    </parent>
 
-  <name>broker</name>
-  <packaging>jar</packaging>
+    <name>broker</name>
+    <packaging>jar</packaging>
 
-  <artifactId>broker</artifactId>
+    <artifactId>broker</artifactId>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>21</maven.compiler.release>
-    <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+        <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
+    </properties>
 
-  <distributionManagement> 
+    <distributionManagement>
         <repository>
-            <id>github</id> 
-            <name>Temporary Staging Repository</name> 
-            <url>https://maven.pkg.github.com/assimbly/runtime</url> 
-        </repository> 
+            <id>github</id>
+            <name>Temporary Staging Repository</name>
+            <url>https://maven.pkg.github.com/assimbly/runtime</url>
+        </repository>
     </distributionManagement>
 
-  <dependencies>
-      	<dependency>
-			<groupId>org.assimbly</groupId>
-			<artifactId>activemq-base</artifactId>
-			<version>${assimbly.version}</version>
-		</dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>spring-base</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.assimbly</groupId>
-		  <artifactId>utils</artifactId>
-		  <version>${assimbly.version}</version>
-	  </dependency>	  
-     <dependency>
-	    	<groupId>org.assimbly</groupId>
-			<artifactId>test-base</artifactId>
-			<version>${assimbly.version}</version>
-			<scope>test</scope>
-	  </dependency>
-  </dependencies>
+    <dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-toolchains-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>toolchain</goal>
-						</goals>
-						<configuration>
-							<toolchains>
-								<jdk>
-									<version>21</version>
-								</jdk>
-							</toolchains>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+        <!-- activemq classic dependencies -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-amqp</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-client</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+            <version>${activemq-classic.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-artemis-native</artifactId>
+            <version>${activemq-artemis-native.version}</version>
+        </dependency>
+
+        <!-- activemq artemis dependencies -->
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-server</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-server</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-commons</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-ra</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-dto</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-amqp-protocol</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-openwire-protocol</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-client-all</artifactId>
+            <version>${activemq-artemis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>utils</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                        <configuration>
+                            <toolchains>
+                                <jdk>
+                                    <version>25</version>
+                                </jdk>
+                            </toolchains>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

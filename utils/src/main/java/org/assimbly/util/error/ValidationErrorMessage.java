@@ -1,5 +1,7 @@
 package org.assimbly.util.error;
 
+import java.util.Objects;
+
 public class ValidationErrorMessage {
 
     private String error;
@@ -26,7 +28,7 @@ public class ValidationErrorMessage {
 
         ValidationErrorMessage that = (ValidationErrorMessage) o;
 
-        return (error != null ? !error.equals(that.error) : that.error != null);
+        return (!Objects.equals(error, that.error));
 
     }
 

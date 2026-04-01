@@ -2,7 +2,6 @@ package org.assimbly.dil.event;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.event.collect.LogCollector;
@@ -13,6 +12,7 @@ import org.assimbly.dil.event.domain.Filter;
 import org.assimbly.dil.event.domain.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 
@@ -39,7 +39,7 @@ public class EventConfigurer {
 
         try {
             configuration = new Collection().fromJson(jsonConfiguration);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             return e.getMessage();
         }
 

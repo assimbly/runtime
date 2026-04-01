@@ -1,7 +1,7 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.GoogleTOTPUtil;
 import org.assimbly.integrationrest.utils.MongoUtil;
@@ -49,8 +49,8 @@ public class AuthenticationResourceTest {
             MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
             // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Authorization", Utils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
             headers.put("db", TestApplicationContext.db);
 
             // endpoint call
@@ -75,7 +75,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("db", TestApplicationContext.db);
             headers.put("domainName", TestApplicationContext.domainName);
@@ -91,7 +91,7 @@ public class AuthenticationResourceTest {
             assertThat(response.headers().map()).containsKey("location");
 
             // totpSecret to be used on other unit tests
-            String location = response.headers().map().get("location").get(0);
+            String location = response.headers().map().get("location").getFirst();
             location = URLDecoder.decode(location, "UTF-8");
             totpSecret = HttpUtil.extractSecret(location);
 
@@ -108,7 +108,7 @@ public class AuthenticationResourceTest {
             assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
@@ -138,7 +138,7 @@ public class AuthenticationResourceTest {
             assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Authorization", authToken);
 

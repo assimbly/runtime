@@ -61,7 +61,7 @@ public class ExpressionsValidator {
     }
 
     private boolean isBlank(String str) {
-        return str == null || str.trim().isEmpty();
+        return str.chars().allMatch(c -> c <= 0x20);
     }
 
     private String validateXpathExpression(String expression){

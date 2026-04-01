@@ -4,7 +4,7 @@ import org.assimbly.util.exception.FlowNotFoundException;
 
 import java.util.HashMap;
 
-public class FlowRegistry {
+public final class FlowRegistry {
 
     private static final FlowRegistry INSTANCE = new FlowRegistry();
 

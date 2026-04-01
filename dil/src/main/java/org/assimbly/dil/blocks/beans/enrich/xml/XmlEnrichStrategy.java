@@ -78,7 +78,7 @@ public class XmlEnrichStrategy implements AggregationStrategy {
 
             return document;
 
-        } catch (Exception e) {
+        } catch (Exception _) {
             log.warn("Unable to get data from the {} route to the Enrich component.", route);
         }
 

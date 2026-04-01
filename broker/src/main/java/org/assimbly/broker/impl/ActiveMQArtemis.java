@@ -1,6 +1,6 @@
 package org.assimbly.broker.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.api.core.management.ResourceNames;
@@ -30,16 +30,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
 public class ActiveMQArtemis implements Broker {
 
-	static final Logger log = LoggerFactory.getLogger(ActiveMQArtemis.class);
+	protected Logger log = LoggerFactory.getLogger(getClass());
+
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final File brokerFile = new File(baseDir + "/broker/broker.xml");
@@ -60,7 +61,6 @@ public class ActiveMQArtemis implements Broker {
 
 			broker = new EmbeddedActiveMQ();
 
-			//
 			if (brokerFile.exists()) {
 				log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
 				broker.setConfigResourcePath(fileConfig);
@@ -81,7 +81,7 @@ public class ActiveMQArtemis implements Broker {
 			return status();
 
 		} catch (Exception e) {
-			
+
             log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
 
 			return "failed";
@@ -89,7 +89,6 @@ public class ActiveMQArtemis implements Broker {
 		}
 
 	}
-
 
 
 	public String startEmbedded() throws Exception {
@@ -194,13 +193,13 @@ public class ActiveMQArtemis implements Broker {
 		if(!brokerFile.exists()) {
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 			
-    		try {
-    			FileUtils.touch(brokerFile);
-    			InputStream is = classloader.getResourceAsStream("broker.xml");
+    		try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
+
+				FileUtils.touch(brokerFile);
+
                 assert is != null;
                 Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        		is.close();
-				
+
 			} catch (IOException e) {
 				log.error("event=GetFileConfiguration status=failed config=broker.xml reason={}", e.getMessage(), e);
 			}
@@ -224,10 +223,10 @@ public class ActiveMQArtemis implements Broker {
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
 			FileUtils.touch(brokerFile);
-			InputStream is = classloader.getResourceAsStream("broker.xml");
-            assert is != null;
-            Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			is.close();
+			try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
+                assert is != null;
+                Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
 		return "success";
@@ -236,12 +235,11 @@ public class ActiveMQArtemis implements Broker {
 
 	public void setAIO() throws IOException {
 
-		if (OSUtil.getOS().equals(OSUtil.OS.LINUX)) {
-
+		if (OSUtil.getOS() == OSUtil.OS.LINUX) {
 			checkIfNativeLibraryExists();
 			loadNativeLibrary();
-
 		}
+
 	}
 
 	private void checkIfNativeLibraryExists() throws IOException {
@@ -258,14 +256,13 @@ public class ActiveMQArtemis implements Broker {
 
 			// Copy file from resources into empty file
 			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-			InputStream is = classloader.getResourceAsStream("libartemis-native-64.so");
-
-			if (is != null) {
-				Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				is.close();
-				log.info("event=SetAIO status=success path={}", aioFile.getParent());
-			} else {
-				log.warn("event=SetAIO status=failed reason=Native library resource not found");
+			try(InputStream is = classloader.getResourceAsStream("libartemis-native-64.so")) {
+				if (is != null) {
+					Files.copy(is, aioFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					log.info("event=SetAIO status=success path={}", aioFile.getParent());
+				} else {
+					log.warn("event=SetAIO status=failed reason=Native library resource not found");
+				}
 			}
 		}
 
@@ -432,7 +429,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		endpoint.put("name",endpointName);
 		endpoint.put("address",queueControl.getAddress());
@@ -469,7 +466,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + sourceQueueName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + sourceQueueName);
 
 		boolean result = queueControl.moveMessage(Long.parseLong(messageId),targetQueueName);
 
@@ -483,7 +480,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + sourceQueueName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + sourceQueueName);
 
 		int result = queueControl.moveMessages("", targetQueueName);
 
@@ -497,7 +494,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		boolean result = queueControl.removeMessage(Long.parseLong(messageId));
 
@@ -512,7 +509,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		int result = queueControl.removeAllMessages();
 
@@ -526,7 +523,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		JSONObject messagesInfo = new JSONObject();
 		JSONObject messageInfo = new JSONObject();
@@ -556,7 +553,7 @@ public class ActiveMQArtemis implements Broker {
 		for(String endpointName: endpointNames){
 
 			if(endpointExist(endpointName)){
-				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 				numberOfMessages = queueControl.getMessageCount();
 			}
 
@@ -573,7 +570,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		long numberOfMessages = queueControl.getMessageCount();
 
@@ -587,7 +584,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		long numberOfMessages = queueControl.getScheduledCount();
 
@@ -595,7 +592,7 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
-	public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
+	public String getFlowMessageCountsList(boolean excludeEmptyQueues) {
 
 		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
 
@@ -611,7 +608,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		queueControl.getFirstMessageAsJSON();
 
@@ -629,7 +626,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		CompositeData[] messages;
 
@@ -652,7 +649,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) {
-		Map<String, Long> destinationMessageCounts = new HashMap<>();
+		Map<String, Long> destinationMessageCounts = new ConcurrentHashMap<>();
 
 		try {
 			ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -667,7 +664,7 @@ public class ActiveMQArtemis implements Broker {
 
 				// extract flowId
 				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
-				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(ResourceNames.QUEUE + queueName);
+				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + queueName);
 
 				// Get the message count for the current queue
 				long messageCount = queueControl.getMessageCount();
@@ -702,7 +699,7 @@ public class ActiveMQArtemis implements Broker {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
-		QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(org.apache.activemq.artemis.api.core.management.ResourceNames.QUEUE + endpointName);
+		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + endpointName);
 
 		return queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
 

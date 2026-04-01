@@ -1,6 +1,6 @@
 package org.assimbly.integrationrest;
 
-import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -37,7 +37,7 @@ class UserJWTControllerTest {
     void shouldAuthenticateAndGetToken() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
             headers.put("db", TestApplicationContext.db);
 

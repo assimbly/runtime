@@ -1,9 +1,11 @@
 package org.assimbly.brokerrest;
 
+import org.springframework.web.bind.annotation.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+
 
 /**
  * REST controller for configuring the broker.
@@ -64,7 +66,7 @@ public class BrokerConfigurerRuntime {
         log.debug("event=setConfigurationBroker type=POST message=Request to set the configuration of Broker id={} type={}", id, brokerType);
 
        	try {
-       		String result = broker.setConfiguration(brokerType, brokerConfiguration);
+       		final String result = broker.setConfiguration(brokerType, brokerConfiguration);
             if(result.equals("success")) {
             	return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/configure", result);
             }else {

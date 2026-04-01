@@ -20,7 +20,6 @@ public class AS2MDNProcessor implements Processor {
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        System.out.println(" > AS2MDNProcessor");
 
         // Get the body of the exchange, which is the MDN entity
         Object body = exchange.getIn().getBody();

@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 public class JsonEnrichStrategy implements AggregationStrategy {
 
-    static final Logger logger = Logger.getLogger(JsonEnrichStrategy.class);
+    static final Logger log = Logger.getLogger(JsonEnrichStrategy.class);
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
@@ -64,7 +64,7 @@ public class JsonEnrichStrategy implements AggregationStrategy {
                 // Convert Object to String using Camel's typeconverter
                return exchange.getContext().getTypeConverter().convertTo(String.class, body);
             } catch (TypeConversionException e) {
-               logger.error("Failed to enrich message body of type: " + body.getClass().getName() + " | Error:" + e.getMessage());
+               log.error("Failed to enrich message body of type: " + body.getClass().getName() + " | Error:" + e.getMessage());
                throw e;
             }
         }

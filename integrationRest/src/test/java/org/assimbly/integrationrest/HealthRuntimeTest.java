@@ -1,9 +1,9 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -23,7 +23,7 @@ class HealthRuntimeTest {
 
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
@@ -42,7 +42,7 @@ class HealthRuntimeTest {
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -59,7 +59,7 @@ class HealthRuntimeTest {
     void shouldGetFlowHealthById() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -85,7 +85,7 @@ class HealthRuntimeTest {
     void shouldGetFlowStepHealthById() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -99,7 +99,7 @@ class HealthRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(stepJson, String.format("%s-%s", schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())));
+            AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -111,7 +111,7 @@ class HealthRuntimeTest {
     void shouldGetHealth() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -137,7 +137,7 @@ class HealthRuntimeTest {
     void shouldGetHealthByFlowIds() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

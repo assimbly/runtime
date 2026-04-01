@@ -1,11 +1,12 @@
 package org.assimbly.brokerrest;
 
+import org.springframework.web.bind.annotation.*;
+
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * REST controller for managing queues on the broker.
@@ -44,7 +45,7 @@ public class QueueManagerRuntime {
         log.debug("event=createQueue type=POST message=Create a new queue name={} type={}", queueName, brokerType);
 
         try {
-            String result = broker.createQueue(brokerType,queueName);
+            final String result = broker.createQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("event=createQueue type=POST name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
@@ -73,7 +74,7 @@ public class QueueManagerRuntime {
         log.debug("event=deleteQueue type=DELETE message=Delete a queue name={} type={}", queueName, brokerType);
 
         try {
-            String result = broker.deleteQueue(brokerType,queueName);
+            final String result = broker.deleteQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("event=deleteQueue type=DELETE name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
@@ -102,7 +103,7 @@ public class QueueManagerRuntime {
         log.debug("event=getQueue type=GET message=Get queue info name={} type={}", queueName, brokerType);
 
         try {
-            String result = broker.getQueue(brokerType,queueName, mediaType);
+            final String result = broker.getQueue(brokerType,queueName, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queue/{queueName}", result);
         } catch (Exception e) {
             log.error("event=getQueue type=GET name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
@@ -129,7 +130,7 @@ public class QueueManagerRuntime {
         log.debug("event=getQueues type=GET message=Get queues info type={}", brokerType);
 
         try {
-            String result = broker.getQueues(brokerType, mediaType);
+            final String result = broker.getQueues(brokerType, mediaType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/queues", result);
         } catch (Exception e) {
             log.error("event=getQueues type=GET type={} reason={}", brokerType, e.getMessage(), e);
@@ -158,7 +159,7 @@ public class QueueManagerRuntime {
         log.debug("event=clearQueue type=POST message=Deletes messages on the queue name={} type={}", queueName, brokerType);
 
         try {
-            String result = broker.clearQueue(brokerType,queueName);
+            final String result = broker.clearQueue(brokerType,queueName);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}/clear", result);
         } catch (Exception e) {
             log.error("event=clearQueue type=POST name={} type={} reason={}", queueName, brokerType, e.getMessage(), e);
@@ -185,7 +186,7 @@ public class QueueManagerRuntime {
         log.debug("event=clearQueues type=POST message=Deletes messages on all queue type={}", brokerType);
 
         try {
-            String result = broker.clearQueues(brokerType);
+            final String result = broker.clearQueues(brokerType);
             return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queues/clear", result);
         } catch (Exception e) {
             log.error("event=clearQueues type=POST type={} reason={}", brokerType, e.getMessage(), e);

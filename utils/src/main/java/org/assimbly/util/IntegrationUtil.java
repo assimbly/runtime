@@ -1,7 +1,11 @@
 package org.assimbly.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import javax.xml.xpath.*;
+import java.net.*;
+import java.util.*;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -11,6 +15,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import tools.jackson.core.JacksonException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,14 +26,11 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import javax.xml.xpath.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -42,7 +44,7 @@ public final class IntegrationUtil {
 
             return uri.getScheme() != null;
 
-		} catch (URISyntaxException e) {
+		} catch (URISyntaxException _) {
 			return false;
 		}
 
@@ -50,10 +52,10 @@ public final class IntegrationUtil {
 
 	public static boolean isYaml(String yaml){
 		try {
-			final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+			final ObjectMapper mapper = new YAMLMapper();
 			mapper.readTree(yaml);
 			return true;
-		 } catch (IOException e) {
+		 } catch (JacksonException _) {
 			return false;
 		 }
 	}
@@ -63,7 +65,7 @@ public final class IntegrationUtil {
 			final ObjectMapper mapper = new ObjectMapper();
 			mapper.readTree(json);
 			return true;
-		 } catch (IOException e) {
+		 } catch (JacksonException _) {
 			return false;
 		 }
 	}
@@ -113,9 +115,9 @@ public final class IntegrationUtil {
 
 		try (Socket socket = new Socket()) {
 			socket.connect(socketAddress, timeOut);
-		} catch (SocketTimeoutException stex) {
+		} catch (SocketTimeoutException _) {
 			return "Connection error: Timed out";
-		} catch (IOException ioException) {
+		} catch (IOException _) {
 			return "Connection error: IOException";
 		}
 
@@ -167,7 +169,7 @@ public final class IntegrationUtil {
 	public static Iterable<Node> iterable(final NodeList nodeList) {
 		return () -> new Iterator<>() {
 
-            private int index = 0;
+            private int index;
 
             @Override
             public boolean hasNext() {
@@ -185,9 +187,9 @@ public final class IntegrationUtil {
 
 	public static void printTreemap(TreeMap<String, String> treeMap) {
 
-		System.out.println("print treemap: \n");
+        IO.println("print treemap: \n");
 		for (Map.Entry<String,String> entry : treeMap.entrySet()) {
-			System.out.println("key: " + entry.getKey() + "; value: " + entry.getValue());
+            IO.println("key: " + entry.getKey() + "; value: " + entry.getValue());
 		}
 
 	}
@@ -198,7 +200,7 @@ public final class IntegrationUtil {
 
 		String configuration = convertTreemapToString(treeMap, items);
 
-		System.out.println(configuration);
+        IO.println(configuration);
 
 	}
 
@@ -206,9 +208,7 @@ public final class IntegrationUtil {
 
 		StringBuilder string = new StringBuilder();
 
-		string.append("\n");
-		string.append("Flow Configuration\n");
-		string.append("-----------------------------------------------------------------\n");
+		string.append("\nFlow Configuration\n-----------------------------------------------------------------\n");
 
 		Map<String, String> subMap;
 
@@ -221,7 +221,7 @@ public final class IntegrationUtil {
 
 			if(!subMap.isEmpty()) {
 
-				string.append("\n").append(item.toUpperCase()).append("\n");
+				string.append('\n').append(item.toUpperCase()).append('\n');
 
 				for(Map.Entry<String,String> entry : subMap.entrySet()) {
 
@@ -232,13 +232,13 @@ public final class IntegrationUtil {
 						value = "***********";
 					}
 
-					string.append(key).append(":").append(value).append("\n");
+					string.append(key).append(':').append(value).append('\n');
 				}
 			}
 
 		}
 
-		string.append("\n");
+		string.append('\n');
 
 		return string.toString();
 	}

@@ -1,5 +1,9 @@
 package org.assimbly.integration.impl;
 
+import java.util.*;
+
+import org.assimbly.dil.store.DILStore;
+import org.assimbly.dil.store.DILStoreFactory;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.YAMLFileConfiguration;
@@ -8,27 +12,16 @@ import org.assimbly.integration.Integration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 
 public abstract class BaseIntegration implements Integration {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	ConcurrentMap<String, TreeMap<String, String>> flowsMap;
+	DILStore dilStore;
 
 	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
 
@@ -46,47 +39,24 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	public Collection<TreeMap<String,String>> getFlowConfigurations() {
-		return flowsMap.values();
+		return dilStore.getAllFlows();
 	}
 
 	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) {
 
-		removeFlowConfigurationIfExist(flowId);
+		removeFlowConfiguration(flowId);
 
-		flowsMap.put(flowId, configuration);
-
-		if(db != null) {
-			db.commit();
-		}
+		dilStore.putFlow(flowId, configuration);
 
 	}
 
-	public void initFlowMap(){
-		flowsMap = new ConcurrentHashMap<>();
+	public void initDilStore() {
+		dilStore = DILStoreFactory.create();
 	}
 
-	@SuppressWarnings("unchecked")
-	public void initFlowDB() {
-
-		createCacheDirectory();
-
-		File dbFile = new File(BaseDirectory.getInstance().getBaseDirectory() + "/cache/flowsMap.db");
-
-		db = DBMaker.fileDB(dbFile)
-				.transactionEnable() // Enable crash safety
-				.make();
-
-		flowsMap = db.hashMap("flowsDB", Serializer.STRING, Serializer.JAVA).createOrOpen();
-
+	public void removeFlowConfiguration(String flowId) {
+		dilStore.removeFlow(flowId);
 	}
-
-	public void removeFlowConfigurationIfExist(String flowId) {
-		this.flowsMap.remove(flowId);
-        if(db != null) {
-            db.commit();
-        }
-	}	
-	
 	
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
@@ -125,7 +95,7 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 
-	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) throws Exception {
+	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) {
 
 		if(mediaType.toLowerCase().contains("json")) {
 			flowConfiguration = DocConverter.convertJsonToXml(flowConfiguration);
@@ -159,17 +129,6 @@ public abstract class BaseIntegration implements Integration {
 		return flowConfiguration;
 
 	}
-
-	private void createCacheDirectory() {
-		Path path = Paths.get(BaseDirectory.getInstance().getBaseDirectory(), "cache");
-
-		try {
-			Files.createDirectories(path);
-		} catch (IOException e) {
-			log.error("Error to create cache directory", e);
-		}
-	}
-
 
 	public String getLastError() {
 		
@@ -207,7 +166,6 @@ public abstract class BaseIntegration implements Integration {
 	public List<TreeMap<String, String>> convertYAMLToConfiguration(String integrationid, String configuration) throws Exception {
 		return new YAMLFileConfiguration().getFlowConfigurations(integrationid, configuration);
 	}	
-
 
 	public TreeMap<String, String> convertYAMLToFlowConfiguration(String flowId, String configuration) throws Exception {
 		return new YAMLFileConfiguration().getFlowConfiguration(flowId, configuration);

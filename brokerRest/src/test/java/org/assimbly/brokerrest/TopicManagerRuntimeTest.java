@@ -1,10 +1,10 @@
 package org.assimbly.brokerrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -23,8 +23,8 @@ class TopicManagerRuntimeTest {
 
     private static final String TOPIC_TEST = "topic_test";
 
-    private static boolean topicCreated = false;
-    private static boolean messageSentToTopic = false;
+    private static boolean topicCreated;
+    private static boolean messageSentToTopic;
 
     private static AssimblyGatewayBrokerContainer container;
 
@@ -45,11 +45,11 @@ class TopicManagerRuntimeTest {
 
             if (testInfo.getTags().contains("NeedsMessageOnTopic") && !messageSentToTopic) {
                 // params
-                HashMap<String, String> params = new HashMap();
+                HashMap<String, String> params = new HashMap<>();
                 params.put("messageHeaders", "{\"test\":\"1234\"}");
 
                 // headers
-                HashMap<String, String> headers = new HashMap();
+                HashMap<String, String> headers = new HashMap<>();
                 headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
                 headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
@@ -69,7 +69,7 @@ class TopicManagerRuntimeTest {
     void shouldCreateTopic() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -99,7 +99,7 @@ class TopicManagerRuntimeTest {
             assumeTrue(topicCreated, "Skipping shouldGetTopic test because shouldCreateTopic test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -128,7 +128,7 @@ class TopicManagerRuntimeTest {
             assumeTrue(topicCreated, "Skipping shouldGetTopics test because shouldCreateTopic test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -158,7 +158,7 @@ class TopicManagerRuntimeTest {
             assumeTrue(topicCreated, "Skipping shouldClearTopic test because shouldCreateTopic test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -186,7 +186,7 @@ class TopicManagerRuntimeTest {
             assumeTrue(topicCreated, "Skipping shouldClearTopics test because shouldCreateTopic test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -214,7 +214,7 @@ class TopicManagerRuntimeTest {
             assumeTrue(topicCreated, "Skipping shouldDeleteTopic test because shouldCreateTopic test did not run.");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call

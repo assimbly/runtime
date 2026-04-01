@@ -1,6 +1,8 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -8,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.management.ManagementFactory;
@@ -16,8 +17,8 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Resource to return information about the currently running Spring profiles.
@@ -106,18 +107,18 @@ public class HealthIntegrationRuntime {
             if (unixOS.isInstance(operatingSystemMXBean))
                 return unixOS.getMethod(methodName).invoke(operatingSystemMXBean);
 
-        } catch (Exception e) {
+        } catch (Exception _) {
             // ignored
         }
 
         return "Unknown";
     }
 
-    private static class BackendResponse {
+    private static final class BackendResponse {
 
-        private Map<String, Object> jvm = new HashMap<>();
-        private Map<String, Long> memory = new HashMap<>();
-        private Map<String, Integer> threads = new HashMap<>();
+        private Map<String, Object> jvm = new ConcurrentHashMap<>();
+        private Map<String, Long> memory = new ConcurrentHashMap<>();
+        private Map<String, Integer> threads = new ConcurrentHashMap<>();
 
         public Map<String, Long> getMemory() {
             return memory;

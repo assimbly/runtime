@@ -7,8 +7,7 @@ metadata:
 spec:
   definition:
     title: "flowlink source"
-    description: "Links messages to another flow (inbound) using an endpoint like\
-      \ sync (direct), async (seda), activemq"
+    description: "Links messages to another flow (inbound) using an endpoint like sync (direct)"
     type: "object"
     properties:
       transport:
@@ -18,10 +17,6 @@ spec:
       flowId:
         title: "FlowID"
         description: "Flow ID of the flow"
-        type: "string"
-      connectionFactory:
-        title: "Connection Factory"
-        description: "Connection Factory"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -44,7 +39,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}"
+        uri: "{{transport}}:{{flowId}}"
         steps:
         - step:
             id: "{{routeId}}"

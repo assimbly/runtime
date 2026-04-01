@@ -1,10 +1,10 @@
 package org.assimbly.brokerrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
@@ -26,8 +26,8 @@ class MessageBrokerRuntimeTest {
 
     private static final String BODY = "Hello world!";
 
-    private static boolean messageSentOnQueue1 = false;
-    private static boolean messageMovedFromQueue1 = false;
+    private static boolean messageSentOnQueue1;
+    private static boolean messageMovedFromQueue1;
 
     private static String messageIdOnQueue1;
 
@@ -76,7 +76,7 @@ class MessageBrokerRuntimeTest {
 
     private static void createQueue(String queueName) {
         // headers
-        HashMap<String, String> headers = new HashMap();
+        HashMap<String, String> headers = new HashMap<>();
         headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
         // endpoint call
@@ -96,7 +96,7 @@ class MessageBrokerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode messageJson = responseJson.get("messages").get("message").get(0);
 
-            return messageJson.get("messageid").asText();
+            return messageJson.get("messageid").asString();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -251,7 +251,7 @@ class MessageBrokerRuntimeTest {
             // asserts contents
             AssertUtils.assertBrokerMessagesResponse(messageJson, BODY);
 
-            messageIdOnQueue1 = messageJson.get("messageid").asText();
+            messageIdOnQueue1 = messageJson.get("messageid").asString();
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

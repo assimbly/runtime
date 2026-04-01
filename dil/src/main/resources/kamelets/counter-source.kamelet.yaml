@@ -24,6 +24,21 @@ spec:
         title: Numbers
         description: How many numbers to generate
         type: integer
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
   dependencies:
     - "camel:timer"
     - "camel:core"
@@ -32,7 +47,7 @@ spec:
   template:
     beans:
       - name: counter
-        type: java.util.concurrent.atomic.AtomicInteger
+        type: "#class:java.util.concurrent.atomic.AtomicInteger"
         constructors:
           "0": "{{start}}"
     route:
@@ -44,7 +59,7 @@ spec:
           repeatCount: "{{?numbers}}"
         steps:
           - bean:
-              ref: "{{counter}}"
+              ref: counter
               method: getAndIncrement
           - setHeader:
               name: "Content-Type"

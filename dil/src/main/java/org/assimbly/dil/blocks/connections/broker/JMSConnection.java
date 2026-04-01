@@ -86,8 +86,8 @@ public class JMSConnection {
         }
 
         switch (componentName) {
-            case "jms", "artemis" -> createJmsComponent(connectionFactory);
-            case "sjms", "activemq", "amazonmq" -> createSjmsComponent(connectionFactory);
+            case "jms", "activemq", "artemis" -> createJmsComponent(connectionFactory);
+            case "sjms", "amazonmq" -> createSjmsComponent(connectionFactory);
             case "sjms2" -> createSjms2Component(connectionFactory);
             default -> throw new Exception("Unknown component name: " + componentName);
         }
@@ -99,8 +99,10 @@ public class JMSConnection {
         ConnectionFactory connectionFactory;
 
         if (jmsProvider.equalsIgnoreCase("amq") || jmsProvider.equalsIgnoreCase("artemis") || jmsProvider.equalsIgnoreCase("activemq artemis")) {
+            
             connectionFactory = setActiveMQArtemisConnectionFactory();
         } else {
+            
             connectionFactory = setActiveMQClassicConnectionFactory();
         }
 
@@ -167,8 +169,9 @@ public class JMSConnection {
         if(jmsComponent != null){
             jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
             jmsComponent.setIncludeCorrelationIDAsBytes(false);
-            jmsComponent.setConcurrentConsumers(10);
-            jmsComponent.setMaxConcurrentConsumers(50);
+            jmsComponent.setConcurrentConsumers(1);
+            jmsComponent.setMaxConcurrentConsumers(8);
+            jmsComponent.setReplyToMaxConcurrentConsumers(8);
             jmsComponent.setTestConnectionOnStartup(true);
         }
 

@@ -1,10 +1,10 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -27,7 +27,7 @@ class FlowConfigurerRuntimeTest {
 
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
@@ -46,7 +46,7 @@ class FlowConfigurerRuntimeTest {
     void setUp(TestInfo testInfo) {
         if (testInfo.getTags().contains("NeedsSchedulerFlowInstalled") && !schedulerFlowInstalled) {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
@@ -64,12 +64,12 @@ class FlowConfigurerRuntimeTest {
     void shouldSetFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // body
-            String camelContext = Utils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String camelContext = ApiUtils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/configure"), camelContext, null, headers);
@@ -94,7 +94,7 @@ class FlowConfigurerRuntimeTest {
     void checkIfFlowIsConfigured() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -119,7 +119,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
@@ -142,7 +142,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowRoutesByFlowId() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -170,7 +170,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetComponents() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("IncludeCustomComponents", "false");
 
@@ -183,7 +183,7 @@ class FlowConfigurerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode componentJson = responseJson.get(0);
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(componentJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertComponentFieldsResponse(fieldNames);
@@ -199,7 +199,7 @@ class FlowConfigurerRuntimeTest {
     void shouldRemoveFlowConfiguration() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -223,7 +223,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowDocumentationByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -234,7 +234,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -248,7 +248,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetDocumentationVersion() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -269,7 +269,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowSteps() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -294,7 +294,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowOptionsByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -305,7 +305,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -319,7 +319,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowSchemaByComponentType() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -330,7 +330,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowDocumentationFieldsResponse(fieldNames);
@@ -344,7 +344,7 @@ class FlowConfigurerRuntimeTest {
     void shouldGetFlowStepByTemplateName() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -355,7 +355,7 @@ class FlowConfigurerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertFlowStepFieldsResponse(fieldNames);

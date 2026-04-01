@@ -1,9 +1,9 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
@@ -27,7 +27,7 @@ class StatisticsRuntimeTest {
     private final Properties inboundHttpsCamelContextProp = TestApplicationContext.buildInboundHttpsExample();
     private final Properties schedulerCamelContextProp = TestApplicationContext.buildSchedulerExample();
 
-    private static boolean schedulerFlowInstalled = false;
+    private static boolean schedulerFlowInstalled;
 
     private static AssimblyGatewayHeadlessContainer container;
 
@@ -228,7 +228,7 @@ class StatisticsRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode stepJson = responseJson.get("step");
             JsonNode statsJson = stepJson.get("stats");
-            String id = String.format("%s-%s",
+            String id = "%s-%s".formatted(
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
                     schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
             );
@@ -257,7 +257,7 @@ class StatisticsRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertHistoryMetricStatFieldsResponse(fieldNames);
@@ -309,7 +309,7 @@ class StatisticsRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.fieldNames(), 0), false).toList();
+            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
             // asserts contents
             AssertUtils.assertMetricStatFieldsResponse(fieldNames);
@@ -336,7 +336,7 @@ class StatisticsRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode camelContextStatJson = responseJson.get("camelContextStat");
-            List<String> fieldNames = List.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(camelContextStatJson.fieldNames(), 0), false).toList());
+            List<String> fieldNames = List.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(camelContextStatJson.propertyNames().iterator(), 0), false).toList());
 
             // asserts contents
             AssertUtils.assertStepStatFieldsResponse(fieldNames);

@@ -1,5 +1,7 @@
 package org.assimbly.dil.blocks.processors;
 
+import java.util.*;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.commons.io.FilenameUtils;
@@ -7,7 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -41,7 +43,7 @@ public class UnzipProcessor implements Processor {
                         finalBody = content;
                     }
 
-                    Map<String, Object> fileData = new HashMap<>();
+                    Map<String, Object> fileData = new ConcurrentHashMap<>();
                     fileData.put("name", fileName);
                     fileData.put("content", finalBody);
                     filesList.add(fileData);

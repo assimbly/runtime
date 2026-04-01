@@ -3,15 +3,14 @@ package org.assimbly.integration.impl;
 import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
-
-import java.net.URI;
 import java.util.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
+
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
@@ -22,6 +21,7 @@ import org.apache.camel.language.xpath.XPathBuilder;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
+
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.validation.beans.FtpSettings;
 import org.assimbly.dil.validation.beans.Regex;
@@ -46,10 +46,13 @@ import org.slf4j.LoggerFactory;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.IntStream;
+
 
 public class CamelIntegration extends BaseIntegration {
 
@@ -65,6 +68,8 @@ public class CamelIntegration extends BaseIntegration {
     private RouteController routeController;
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
+    private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
+    private ConcurrentMap<String, String> collectorsMap;
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -76,7 +81,7 @@ public class CamelIntegration extends BaseIntegration {
         init(useDefaultSettings);
     }
 
-    public final void init(boolean useDefaultSettings) throws Exception {
+    private void init(boolean useDefaultSettings) throws Exception {
 
         //set the name of the runtime
         context.setNameStrategy(new ExplicitCamelContextNameStrategy("assimbly"));
@@ -123,7 +128,7 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    public void start() throws Exception {
+    public void start() {
 
         // start Camel context
         if (!started) {
@@ -169,7 +174,7 @@ public class CamelIntegration extends BaseIntegration {
 
         if (result == null) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
-            super.removeFlowConfigurationIfExist(flowId);
+            super.removeFlowConfiguration(flowId);
             return null;
         }
 
@@ -178,9 +183,9 @@ public class CamelIntegration extends BaseIntegration {
             int failed = root.path("flow").path("installed").path("failed").asInt(0);
             if (failed > 0) {
                 log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
-                super.removeFlowConfigurationIfExist(flowId);
+                super.removeFlowConfiguration(flowId);
             }
-        } catch (Exception e) {
+        } catch (Exception _) {
             // do nothing
         }
 
@@ -188,7 +193,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        removeFlowConfigurationIfExist(flowId);
+        removeFlowConfiguration(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -213,20 +218,28 @@ public class CamelIntegration extends BaseIntegration {
 
     public void setCaching() {
 
-        String assimblyFlowCacheVar = System.getenv("ASSIMBLY_FLOWCACHE");
-        boolean assimblyFlowCache = "true".equalsIgnoreCase(assimblyFlowCacheVar);
+        log.info("Init DIL Store (Storing collectors and flows)");
+        initDilStore();
 
-        if (assimblyFlowCache) {
-            initFlowDB();
-            if(!flowsMap.isEmpty()) {
-                log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-                flowManager.startAllFlows(flowsMap);
-                log.info("Restored flows from cache.");
-            }else {
-                log.info("No active flows found in cache. Cache is ready.");
+        collectorsMap = dilStore.getCollectorsMap();
+
+        if(!collectorsMap.isEmpty()) {
+            log.info("Found {} cached collectors. Restoring collectors...", collectorsMap.size());
+            try {
+                addAllCollectors();
+                log.info("Restored collectors from cache.");
+            } catch (Exception e) {
+                log.error("Failed to restore collectors from cache.",e);
             }
-        }else{
-            initFlowMap();
+
+        }
+
+        flowsMap = dilStore.getFlowsMap();
+
+        if(!flowsMap.isEmpty()) {
+            log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
+            flowManager.startAllFlows(flowsMap);
+            log.info("Restored flows from cache.");
         }
 
     }
@@ -261,7 +274,7 @@ public class CamelIntegration extends BaseIntegration {
                 template.sendBody(uri, messageBody);
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
-                IntStream.range(0, numberOfTimes).forEach(i -> template.sendBody(uri, messageBody));
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.sendBody(uri, messageBody));
             }
         }
     }
@@ -280,7 +293,7 @@ public class CamelIntegration extends BaseIntegration {
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
                 Exchange finalExchange = exchange;
-                IntStream.range(0, numberOfTimes).forEach(i -> template.send(uri, finalExchange));
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, finalExchange));
             }
         }
 
@@ -369,6 +382,17 @@ public class CamelIntegration extends BaseIntegration {
         return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
     }
 
+    public void addAllCollectors() {
+        collectorsMap.forEach((collectorId,configuration) -> {
+            try {
+                configManager.addCollectorConfiguration(collectorId, "application/json", configuration);
+                log.info("Started collector: {}", collectorId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     @Override
     public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
         return configManager.addCollectorsConfiguration(mediaType, configuration);
@@ -376,11 +400,13 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception {
+        dilStore.putCollector(collectorId,configuration);
         return configManager.addCollectorConfiguration(collectorId, mediaType, configuration);
     }
 
     @Override
     public String removeCollectorConfiguration(String collectorId) {
+        dilStore.removeCollector(collectorId);
         return configManager.removeCollectorConfiguration(collectorId);
     }
 
@@ -512,7 +538,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getComponentParameters(String componentType, String mediaType) throws Exception {
+    public String getComponentParameters(String componentType, String mediaType) {
 
         DefaultCamelCatalog catalog = new DefaultCamelCatalog();
 
@@ -538,7 +564,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowInfo(String flowId, String mediaType) throws Exception {
+    public String getFlowInfo(String flowId, String mediaType) {
         return flowManager.getFlowInfo(flowId, mediaType, flowsMap);
     }
 
@@ -558,12 +584,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getListOfFlows(String filter, String mediaType) throws Exception {
+    public String getListOfFlows(String filter, String mediaType) {
         return flowManager.getListOfFlows(filter, mediaType);
     }
 
     @Override
-    public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
+    public String getListOfFlowsDetails(String filter, String mediaType) {
         return flowManager.getListOfFlowsDetails(filter, mediaType, flowsMap);
     }
 
@@ -578,7 +604,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception {
+    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
         return statsManager.getFlowMessages(flowId, includeSteps, mediaType);
     }
 
@@ -603,7 +629,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStepMessages(String flowId, String stepId, String mediaType) throws Exception {
+    public String getStepMessages(String flowId, String stepId, String mediaType) {
         return statsManager.getStepMessages(flowId, stepId, mediaType);
     }
 
@@ -628,12 +654,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) throws Exception {
+    public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, String filter) {
         return statsManager.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, flowsMap);
     }
 
     @Override
-    public String getFlowStepStats(String flowId, String stepId, boolean fullStats) throws Exception {
+    public String getFlowStepStats(String flowId, String stepId, boolean fullStats) {
         return statsManager.getFlowStepStats(flowId, stepId, fullStats);
     }
 
@@ -648,17 +674,17 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowHealth(String flowId, String type, boolean includeError, boolean includeSteps, boolean includeDetails, String mediaType) {
         return statsManager.getFlowHealth(flowId, type, includeError, includeSteps, includeDetails, mediaType);
     }
 
     @Override
-    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) throws Exception {
+    public String getFlowStepHealth(String flowId, String stepId, String type, boolean includeError, boolean includeDetails, String mediaType) {
         return statsManager.getFlowStepHealth(flowId, stepId, type, includeError, includeDetails, mediaType);
     }
 
     @Override
-    public String getThreads(String mediaType, String filter, int topEntries) throws Exception {
+    public String getThreads(String mediaType, String filter, int topEntries) {
         return statsManager.getThreads(mediaType, filter, topEntries);
     }
 
@@ -778,7 +804,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getStats(String mediaType) throws Exception {
+    public String getStats(String mediaType) {
         return statsManager.getStats(mediaType);
     }
 
@@ -788,12 +814,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) throws Exception {
+    public String getFlowsStats(String mediaType) {
         return statsManager.getFlowsStats(mediaType, flowsMap);
     }
 
     @Override
-    public String getMessages(String mediaType) throws Exception {
+    public String getMessages(String mediaType) {
         return statsManager.getMessages(mediaType, flowsMap);
     }
 
@@ -803,12 +829,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getMetrics(String mediaType) throws Exception {
+    public String getMetrics(String mediaType) {
         return statsManager.getMetrics(mediaType);
     }
 
     @Override
-    public String getHistoryMetrics(String mediaType) throws Exception {
+    public String getHistoryMetrics(String mediaType) {
         return statsManager.getHistoryMetrics(mediaType);
     }
 
@@ -878,47 +904,45 @@ public class CamelIntegration extends BaseIntegration {
 
         List<Map<String, String>> result = new ArrayList<>();
 
-        flowsMap.forEach((flowId, config) -> {
-            config.forEach((key, value) -> {
+        flowsMap.forEach((flowId, config) -> config.forEach((key, value) -> {
 
-                // filter by tenant if provided
-                if (tenant != null) {
-                    String flowTenant = config.get("flow.tenant");
-                    if (!tenant.equalsIgnoreCase(flowTenant)) {
-                        return;
-                    }
-                }
-
-                // return all flows if no filters are provided
-                if (name == null && scheme == null) {
-                    Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                    result.add(flow);
+            // filter by tenant if provided
+            if (tenant != null) {
+                String flowTenant = config.get("flow.tenant");
+                if (!tenant.equalsIgnoreCase(flowTenant)) {
                     return;
                 }
+            }
 
-                if (key.startsWith("source.") && key.endsWith(".uri")) {
-                    try {
-                        URI uri = new URI(value);
+            // return all flows if no filters are provided
+            if (name == null && scheme == null) {
+                Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                result.add(flow);
+                return;
+            }
 
-                        // filter by scheme
-                        if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
-                            return;
-                        }
+            if (key.startsWith("source.") && key.endsWith(".uri")) {
+                try {
+                    URI uri = new URI(value);
 
-                        String path = uri.getPath();
-                        String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
-
-                        if (endpoint.equals(name.toLowerCase())) {
-                            Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                            result.add(flow);
-                        }
-
-                    } catch (Exception e) {
-                        // ignore malformed URI
+                    // filter by scheme
+                    if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
+                        return;
                     }
+
+                    String path = uri.getPath();
+                    String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
+
+                    if (name!=null && endpoint.equals(name.toLowerCase())) {
+                        Map<String, String> flow = buildFlowInfoMap(flowId, config);
+                        result.add(flow);
+                    }
+
+                } catch (Exception _) {
+                    // ignore malformed URI
                 }
-            });
-        });
+            }
+        }));
 
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -938,10 +962,10 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void deleteCacheEntry(String flowId) {
-        super.removeFlowConfigurationIfExist(flowId);
+        super.removeFlowConfiguration(flowId);
     }
 
-    private String mergeJson(String flowJson, String testJson) throws Exception {
+    private String mergeJson(String flowJson, String testJson) {
 
         ObjectMapper mapper = new ObjectMapper();
 

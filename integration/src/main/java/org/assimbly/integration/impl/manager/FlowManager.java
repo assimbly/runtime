@@ -152,7 +152,7 @@ public class FlowManager {
     public String pauseAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Pause all flows");
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 pauseFlow(flowId);
                 log.info("Paused flow: {}", flowId);
@@ -182,7 +182,7 @@ public class FlowManager {
     public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         log.info("Stopping all flows");
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 stopFlow(flowId, 250, false);
                 log.info("Stopped flow: {}", flowId);
@@ -198,24 +198,22 @@ public class FlowManager {
 
         FlowLoaderReport report = new FlowLoaderReport(routeId, routeId, "0");
 
-        try{
-            if (!route.startsWith("<route")) {
-                route = new XMLFileConfiguration().getRouteConfiguration(route);
-            }
+        try {
+            String routeXml = route.startsWith("<route")
+                    ? route
+                    : new XMLFileConfiguration().getRouteConfiguration(route);
 
-            RouteLoader routeLoader = new RouteLoader(routeId, route, report);
+            RouteLoader routeLoader = new RouteLoader(routeId, routeXml, report);
 
             routeLoader.addRoutesToCamelContext(context);
 
             String result = routeLoader.getReport();
 
-            return finishReport(report, routeId, "start", result, "info","success");
+            return finishReport(report, routeId, "start", result, "info", "success");
 
-        }catch (Exception e){
-            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error","failed");
+        } catch (Exception e) {
+            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed");
         }
-
-
     }
 
     public String startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
@@ -492,11 +490,11 @@ public class FlowManager {
             if (route != null) {
                 RouteError lastError = route.getLastError();
                 if (lastError != null) {
-                    sb.append("RouteID: ");
-                    sb.append(routeId);
-                    sb.append("Error: ");
-                    sb.append(lastError);
-                    sb.append(";");
+                    sb.append("RouteID: ")
+                    .append(routeId)
+                    .append("Error: ")
+                    .append(lastError)
+                    .append(';');
                 }
             }
         }
@@ -531,7 +529,7 @@ public class FlowManager {
 
         TreeMap<String, String> numberOfEntriesList = new TreeMap<>();
 
-        flowsMap.forEach((flowId, flowProps) -> {
+        flowsMap.forEach((flowId, _) -> {
             try {
                 long numberOfEntries = getFlowAlertsCount(flowId);
                 numberOfEntriesList.put(flowId, Long.toString(numberOfEntries));
@@ -588,7 +586,7 @@ public class FlowManager {
                 .collect(Collectors.toSet());
     }
 
-    public String getListOfFlows(String filter, String mediaType) throws Exception {
+    public String getListOfFlows(String filter, String mediaType) {
 
         Set<String> flowIds = getListOfFlowIds(filter);
 
@@ -614,7 +612,7 @@ public class FlowManager {
 
     }
 
-    public String getFlowInfo(String flowId, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getFlowInfo(String flowId, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         TreeMap<String, String> flowProperties = flowsMap.get(flowId);
 
@@ -647,7 +645,7 @@ public class FlowManager {
 
     }
 
-    public String getListOfFlowsDetails(String filter, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getListOfFlowsDetails(String filter, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         Set<String> flowIds = getListOfFlowIds(filter);
 
@@ -891,8 +889,6 @@ public class FlowManager {
                 String uniqueId = UUID.randomUUID().toString();
                 Map<String, String> boundParams = new LinkedHashMap<>();
 
-                AS2KeyProcessor as2KeyProcessor = new AS2KeyProcessor();
-
                 for (Map.Entry<String, String> e : allParams.entrySet()) {
                     String key = e.getKey();
                     String value = e.getValue();
@@ -905,26 +901,26 @@ public class FlowManager {
 
                         switch (key) {
                             case "signingCertificateChain":
-                                keyObject = as2KeyProcessor.getSigningCertificateChain(
+                                keyObject = AS2KeyProcessor.getSigningCertificateChain(
                                         new URI(cleanedValue), password, alias);
                                 boundParams.put(
                                         "signingAlgorithm",
-                                        as2KeyProcessor.getSigningAlgorithm(
+                                        AS2KeyProcessor.getSigningAlgorithm(
                                                 (java.security.cert.Certificate[]) keyObject));
                                 break;
 
                             case "signingPrivateKey":
-                                keyObject = as2KeyProcessor.getSigningPrivateKey(
+                                keyObject = AS2KeyProcessor.getSigningPrivateKey(
                                         new URI(cleanedValue), password, alias);
                                 break;
 
                             case "decryptingPrivateKey":
-                                keyObject = as2KeyProcessor.getDecryptingPrivateKey(
+                                keyObject = AS2KeyProcessor.getDecryptingPrivateKey(
                                         new URI(cleanedValue), password, alias);
                                 break;
 
                             default:
-                                keyObject = as2KeyProcessor.getValidateSigningCertificateChain(
+                                keyObject = AS2KeyProcessor.getValidateSigningCertificateChain(
                                         new URI(cleanedValue));
                         }
 
@@ -947,8 +943,8 @@ public class FlowManager {
                         continue;
                     }
 
-                    if (!first) newQuery.append("&");
-                    newQuery.append(key).append("=").append(e.getValue());
+                    if (!first) newQuery.append('&');
+                    newQuery.append(key).append('=').append(e.getValue());
                     first = false;
                 }
 
@@ -992,7 +988,7 @@ public class FlowManager {
                 entry.setValue(sw.toString());
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("initializeAs2InboundSecurity failed.", e);
             }
         }
     }

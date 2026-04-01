@@ -1,0 +1,53 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "flowlink-async-sink"
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "Async flowlink sink"
+    description: "Links messages to another flow (outbound) using an endpoint like async (seda)"
+    type: "object"
+    properties:
+      transport:
+        title: "Transport"
+        description: "Transport"
+        type: "string"
+      targetFlowId:
+        title: "TargetFlowID"
+        description: "Flow ID of the target flow"
+        type: "string"
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern"
+        type: "string"
+        default: "InOut"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}"

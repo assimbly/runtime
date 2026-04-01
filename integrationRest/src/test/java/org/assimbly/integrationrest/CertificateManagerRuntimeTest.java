@@ -1,10 +1,10 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -41,7 +41,7 @@ class CertificateManagerRuntimeTest {
     void shouldGenerateCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("cn", "example.com");
             headers.put("keystoreName", "myKeystore.jks");
@@ -69,7 +69,7 @@ class CertificateManagerRuntimeTest {
     void shouldUploadCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("FileType", "pem");
@@ -77,7 +77,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "changeit");
 
             // body
-            String certificate = Utils.readFileAsStringFromResources("certificates/certificate.pem");
+            String certificate = ApiUtils.readFileAsStringFromResources("certificates/certificate.pem");
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/upload"), certificate, null, headers);
@@ -101,7 +101,7 @@ class CertificateManagerRuntimeTest {
     void shouldUploadP12Certificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("FileType", "pem");
@@ -110,7 +110,7 @@ class CertificateManagerRuntimeTest {
             headers.put("password", "changeit");
 
             // body
-            byte[] certificateBytes = Utils.readFileAsBytesFromResources("certificates/keystore.p12");
+            byte[] certificateBytes = ApiUtils.readFileAsBytesFromResources("certificates/keystore.p12");
             String base64Encoded = Base64.getEncoder().encodeToString(certificateBytes);
 
             // endpoint call
@@ -135,7 +135,7 @@ class CertificateManagerRuntimeTest {
     void shouldImportCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -163,7 +163,7 @@ class CertificateManagerRuntimeTest {
     void shouldSetCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -191,11 +191,11 @@ class CertificateManagerRuntimeTest {
     void shouldUpdateCertificate() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("url", "https://www.google.com");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
             headers.put("keystoreName", "keystore");
@@ -204,7 +204,7 @@ class CertificateManagerRuntimeTest {
             // body
             JSONObject certificate = new JSONObject();
             certificate.put("certificateName", "example.com");
-            certificate.put("certificateFile", Utils.readFileAsStringFromResources("certificates/certificate.pem"));
+            certificate.put("certificateFile", ApiUtils.readFileAsStringFromResources("certificates/certificate.pem"));
             certificate.put("certificateExpiry", "2000-12-31T12:00:00.123Z");
             JSONArray certificateArray = new JSONArray();
             certificateArray.put(certificate);
@@ -230,7 +230,7 @@ class CertificateManagerRuntimeTest {
     void shouldDeleteCertificate() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("keystoreName", "myKeystore.jks");
             headers.put("keystorePassword", "changeit");

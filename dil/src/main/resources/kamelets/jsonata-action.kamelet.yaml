@@ -41,6 +41,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - to:
-                uri: "jsonata:{{path}}"
+                uri: "jsonata:{{path}}?outputType=JsonString&prettyPrint=true"
             - to:
                 uri: "{{out}}"

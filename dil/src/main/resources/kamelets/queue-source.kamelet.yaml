@@ -1,0 +1,52 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "queue-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "queue source"
+    description: "Links messages to another flow (inbound) using a queue like activemq"
+    type: "object"
+    properties:
+      transport:
+        title: "Transport"
+        description: "Transport"
+        type: "string"
+      flowId:
+        title: "FlowID"
+        description: "Flow ID of the flow"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}&synchronous=true"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

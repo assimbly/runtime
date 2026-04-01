@@ -7,9 +7,6 @@ import org.apache.camel.http.common.DefaultHttpBinding;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.assimbly.util.helper.XmlHelper;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -119,91 +116,82 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     private String generateXmlResponse(int code, String info, String error) {
 
-        return String.format("""
-            <Response>
-               <Code>%s</Code>
-               <Info>%s</Info>
-               <Error>%s</Error>
-            </Response>
-            """, code, info, error);
+        return """
+                <Response>
+                   <Code>%s</Code>
+                   <Info>%s</Info>
+                   <Error>%s</Error>
+                </Response>
+                """.formatted(code, info, error);
 
     }
 
     private String generateHtmlResponse(int code, String info, String error) {
 
-        return String.format("""
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Error Report</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            max-width: 800px;
-                            margin: 50px auto;
-                            padding: 20px;
-                            background: #f5f5f5;
-                        }
-                
-                        .report {
-                            background: white;
-                            padding: 30px;
-                            border-radius: 8px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                        }
-                
-                        h1 {
-                            color: #d32f2f;
-                            margin-bottom: 30px;
-                        }
-                
-                        .section {
-                            margin-bottom: 20px;
-                        }
-                
-                        .label {
-                            font-weight: bold;
-                            margin-bottom: 5px;
-                            color: #555;
-                        }
-                
-                        .value {
-                            padding: 10px;
-                            background: #f9f9f9;
-                            border-left: 3px solid #d32f2f;
-                        }
-                
-                        .code {
-                            font-family: monospace;
-                            font-size: 13px;
-                            line-height: 1.5;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="report">
-                        <h1>Error Report</h1>
-
-                        <div class="section">
-                            <div class="label">Info</div>
-                            <div class="value">%s</div>
-                        </div>                
-                        
-                        <div class="section">
-                            <div class="label">Code</div>
-                            <div class="value">%s</div>
+        return """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Error Report</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                max-width: 800px;
+                                margin: 50px auto;
+                                padding: 20px;
+                                background: #f5f5f5;
+                            }
+                            .report {
+                                background: white;
+                                padding: 30px;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            }
+                            h1 {
+                                color: #d32f2f;
+                                margin-bottom: 30px;
+                            }
+                            .section {
+                                margin-bottom: 20px;
+                            }
+                            .label {
+                                font-weight: bold;
+                                margin-bottom: 5px;
+                                color: #555;
+                            }
+                            .value {
+                                padding: 10px;
+                                background: #f9f9f9;
+                                border-left: 3px solid #d32f2f;
+                            }
+                            .code {
+                                font-family: monospace;
+                                font-size: 13px;
+                                line-height: 1.5;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report">
+                            <h1>Error Report</h1>
+                            <div class="section">
+                                <div class="label">Info</div>
+                                <div class="value">%s</div>
+                            </div>
+                            <div class="section">
+                                <div class="label">Code</div>
+                                <div class="value">%s</div>
+                            </div>
+                            <div class="section">
+                                <div class="label">Error</div>
+                                <div class="value code">%s</div>
+                            </div>
                         </div>
-                        
-                        <div class="section">
-                            <div class="label">Error</div>
-                            <div class="value code">%s</div>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            """, info, code, error);
+                    </body>
+                    </html>
+                """.formatted(info, code, error);
 
 
 

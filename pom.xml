@@ -10,53 +10,49 @@
     <packaging>pom</packaging>
     <groupId>org.assimbly</groupId>
     <artifactId>runtime</artifactId>
-    <version>5.1.0</version>
+    <version>6.0.0</version>
 
     <modules>
-        <module>activemqBase</module>
-        <module>camelBase</module>
-        <module>camelComponents</module>
-        <module>databaseDrivers</module>
         <module>commonBase</module>
+        <module>camelBase</module>
         <module>springBase</module>
-        <module>testBase</module>
         <module>utils</module>
+        <module>dil</module>
         <module>broker</module>
         <module>brokerRest</module>
-        <module>commons</module>
-        <module>dil</module>
         <module>integration</module>
         <module>integrationRest</module>
     </modules>
 
     <properties>
 
-        <maven-api.version>3.9.12</maven-api.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven-api.version>3.9.14</maven-api.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
 
         <!-- Manage the versions of all main dependencies here -->
-        <assimbly.version>5.1.0</assimbly.version>
-        <activemq-classic.version>6.2.1</activemq-classic.version>
-        <activemq-artemis.version>2.51.0</activemq-artemis.version>
+        <assimbly.version>6.0.0</assimbly.version>
+        <activemq-classic.version>6.2.3</activemq-classic.version>
+        <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.83</bouncycastle.version>
-        <camel.version>4.18.0</camel.version>
+        <camel.version>4.18.1</camel.version>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.13.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <db2-jdbc.version>db2jcc4</db2-jdbc.version>
-        <docconverter.version>1.16.0</docconverter.version>
+        <docconverter.version>2.0.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.3.1</elasticsearch-rest-client.version>
-        <groovy-script.version>4.0.29</groovy-script.version>
+        <elasticsearch-rest-client.version>9.3.2</elasticsearch-rest-client.version>
+        <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
+        <groovy-script.version>5.0.5</groovy-script.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
-        <informix-jdbc.version>15.0.1.0</informix-jdbc.version>
-        <jackson.version>2.21.1</jackson.version>
+        <informix-jdbc.version>15.0.1.1</informix-jdbc.version>
+        <jackson.version>3.1.1</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
         <jakarta-json-api.version>2.1.3</jakarta-json-api.version>
@@ -72,16 +68,16 @@
         <kamelet.version>4.18.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
-        <mssql-jdbc.version>13.2.1.jre11</mssql-jdbc.version>
+        <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
         <mysql-connector-java.version>9.6.0</mysql-connector-java.version>
-        <netty.version>4.2.10.Final</netty.version>
+        <netty.version>4.2.12.Final</netty.version>
         <oracle.version>23.26.1.0.0</oracle.version>
         <postgresql.version>42.7.10</postgresql.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <spring.version>6.2.15</spring.version>
-        <spring-boot.version>3.5.10</spring-boot.version>
-        <spring-data.version>3.5.9</spring-data.version>
-        <springdoc.version>2.8.14</springdoc.version>
+        <spring.version>7.0.6</spring.version>
+        <spring-boot.version>4.0.5</spring-boot.version>
+        <spring-data.version>4.0.4</spring-data.version>
+        <springdoc.version>3.0.2</springdoc.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
         <xpath2.version>1.2.0</xpath2.version>
@@ -91,15 +87,15 @@
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <jetty.version>12.1.6</jetty.version>
+        <jetty.version>12.1.7</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
-        <json-unit-assertj.version>5.1.0</json-unit-assertj.version>
+        <json-unit-assertj.version>5.1.1</json-unit-assertj.version>
         <junit.version>6.0.3</junit.version>
-        <mockito.version>5.22.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
-        <testcontainers.version>1.21.4</testcontainers.version>
+        <testcontainers.version>2.0.4</testcontainers.version>
         <xmlunit.version>2.11.0</xmlunit.version>
 
     </properties>
@@ -114,7 +110,7 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
+                <groupId>tools.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
                 <scope>import</scope>
@@ -171,7 +167,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.1</version>
+                    <version>3.15.0</version>
                     <configuration>
                         <encoding>UTF-8</encoding>
                         <compilerArgs>
@@ -206,7 +202,7 @@
                                         <version>[3.9.9,)</version>
                                     </requireMavenVersion>
                                     <requireJavaVersion>
-                                        <version>21</version>
+                                        <version>25</version>
                                     </requireJavaVersion>
                                 </rules>
                             </configuration>
@@ -248,7 +244,7 @@
                             <configuration>
                                 <toolchains>
                                     <jdk>
-                                        <version>21</version>
+                                        <version>25</version>
                                     </jdk>
                                 </toolchains>
                             </configuration>
@@ -261,9 +257,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>25</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -280,5 +276,15 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>

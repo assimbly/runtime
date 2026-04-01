@@ -1,8 +1,8 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.HttpUtil;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.HttpUtil;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
@@ -34,7 +34,7 @@ class JDBCResourceTest {
     void shouldValidateJdbcConnection() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
             params.put("user", "rfamro");
             params.put("host", "mysql-rfam-public.ebi.ac.uk");
@@ -47,7 +47,7 @@ class JDBCResourceTest {
             params.put("database", "Rfam");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
@@ -69,7 +69,7 @@ class JDBCResourceTest {
     void shouldValidateJdbcConnectionWithError() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
             params.put("user", "rfamro");
             params.put("host", "mysql-rfam-public.ebi.ac.uk");
@@ -82,7 +82,7 @@ class JDBCResourceTest {
             params.put("database", "Rfam");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
@@ -96,7 +96,7 @@ class JDBCResourceTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText())
+            assertThat(responseJson.get("error").asString())
                     .startsWith("Access denied for user 'rfamro'@")
                     .endsWith("(using password: YES)");
 

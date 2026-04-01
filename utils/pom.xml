@@ -5,7 +5,7 @@
     <parent>
         <artifactId>runtime</artifactId>
         <groupId>org.assimbly</groupId>
-        <version>5.1.0</version>
+        <version>6.0.0</version>
     </parent>
 
     <name>utils</name>
@@ -15,7 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>25</maven.compiler.release>
         <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
     </properties>
 
@@ -33,22 +33,31 @@
             <groupId>org.assimbly</groupId>
             <artifactId>camel-base</artifactId>
             <version>${assimbly.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>common-base</artifactId>
             <version>${assimbly.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>spring-base</artifactId>
             <version>${assimbly.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>test-base</artifactId>
             <version>${assimbly.version}</version>
             <scope>test</scope>
+           <exclusions>
+            <exclusion>
+             <groupId>junit</groupId>
+             <artifactId>junit</artifactId>
+            </exclusion>
+           </exclusions>
         </dependency>
 
         <dependency>
@@ -84,6 +93,22 @@
             <version>${docconverter.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-assertj</artifactId>
+            <version>${json-unit-assertj.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -99,7 +124,7 @@
                         <configuration>
                             <toolchains>
                                 <jdk>
-                                    <version>21</version>
+                                    <version>25</version>
                                 </jdk>
                             </toolchains>
                         </configuration>

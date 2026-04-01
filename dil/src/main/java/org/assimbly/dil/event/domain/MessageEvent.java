@@ -1,16 +1,16 @@
 package org.assimbly.dil.event.domain;
 
+import java.util.*;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.dil.event.collect.StepCollector;
 import org.quartz.impl.StdScheduler;
+import tools.jackson.core.JacksonException;
 
-import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
@@ -145,7 +145,7 @@ public class MessageEvent {
             Object value = entry.getValue();
             String unit = getUnit(name);
 
-            Map<String, Object> item = new HashMap<>();
+            Map<String, Object> item = new ConcurrentHashMap<>();
             item.put(PROPERTY_NAME, name);
             item.put(PROPERTY_VALUE, value);
             item.put(PROPERTY_UNIT, unit);
@@ -167,13 +167,10 @@ public class MessageEvent {
     }
 
     public String toJson() {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         try {
             return mapper.writeValueAsString(this);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

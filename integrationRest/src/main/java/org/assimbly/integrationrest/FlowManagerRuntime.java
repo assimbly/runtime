@@ -1,8 +1,9 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
+import tools.jackson.core.JacksonException;
 
 
 @ControllerAdvice
@@ -151,7 +152,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows", example = "")
+    @Schema(description = "Flows")
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -189,7 +190,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows", example = "")
+    @Schema(description = "Flows")
     @PostMapping(
             path = "/integration/flow/{flowId}/test",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -395,7 +396,7 @@ public class FlowManagerRuntime {
                 return ResponseUtil.createSuccessResponse(1L, mediaType, path, response, true);
             }
 
-        }catch (Exception e) {
+        }catch (Exception _) {
             log.error("FlowManager Report failed:\n\n{}", response);
             return ResponseUtil.createFailureResponse(1L, mediaType, path, response, true);
         }
@@ -405,12 +406,12 @@ public class FlowManagerRuntime {
 
     }
 
-    private boolean isSuccessResponse(String response) throws JsonProcessingException {
+    private boolean isSuccessResponse(String response) throws JacksonException {
 
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(response);
 
-        String status = root.path("flow").path("status").asText();
+        String status = root.path("flow").path("status").asString();
 
         return status.equals("success");
 

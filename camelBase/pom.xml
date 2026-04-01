@@ -8,28 +8,28 @@
     <parent>
         <artifactId>runtime</artifactId>
         <groupId>org.assimbly</groupId>
-        <version>5.1.0</version>
+        <version>6.0.0</version>
     </parent>
 
     <name>camel-base</name>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <artifactId>camel-base</artifactId>
 
     <properties>
-  	  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
         <maven.versions.rules>file:///${project.basedir}/../rules.xml</maven.versions.rules>
     </properties>
 
-    <distributionManagement> 
+    <distributionManagement>
         <repository>
-            <id>github</id> 
-            <name>Temporary Staging Repository</name> 
-            <url>https://maven.pkg.github.com/assimbly/base</url> 
-        </repository> 
+            <id>github</id>
+            <name>Temporary Staging Repository</name>
+            <url>https://maven.pkg.github.com/assimbly/base</url>
+        </repository>
     </distributionManagement>
-  
+
     <dependencies>
 
         <!-- camel core dependencies in alphabetic order-->
@@ -121,7 +121,7 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-micrometer</artifactId>
         </dependency>
-      <dependency>
+        <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-quartz</artifactId>
         </dependency>
@@ -196,10 +196,272 @@
             <artifactId>camel-xslt-saxon</artifactId>
         </dependency>
 
+        <!-- list of Camel components in alphabetic order -->
         <dependency>
-            <groupId>org.apache.activemq</groupId>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-as2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-elasticsearch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-ftp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-javascript</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jetty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jslt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jsonata</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-json-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-kamelet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-netty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-rest-openapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-scheduler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-seda</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-slack</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring-rabbitmq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-timer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-velocity</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-xslt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-validator</artifactId>
+        </dependency>
+
+        <!-- Custom Camel Components -->
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>aggregate</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>csvtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>cookies</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>docconverter</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>edi</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>edifact</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>encoder</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>enrich</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>exceltoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>flv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>formtoxml</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>googledrive</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>jsontoxmllegacy</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>mail</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>multipart</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>oauth2token</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>pdf</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>pdftotext</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>replace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>sandbox</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>simplereplace</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>smb</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>soap</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>sql</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>tenantvariables</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltocsv</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltoexcel</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltojson</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>xmltojsonlegacy</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client-all</artifactId>
             <version>${activemq-artemis.version}</version>
+        </dependency>
+
+        <!-- observability services -->
+        <!--<dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-observability-services</artifactId>
+        </dependency>-->
+
+        <!-- kamelets -->
+        <!-- Exclude the kamelets to avoid double kamelets -->
+        <dependency>
+            <groupId>org.apache.camel.kamelets</groupId>
+            <artifactId>camel-kamelets-catalog</artifactId>
+            <version>${kamelet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.camel.kamelets</groupId>
+                    <artifactId>camel-kamelets</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>

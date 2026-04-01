@@ -2,9 +2,10 @@ package org.assimbly.util;
 
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,11 +15,9 @@ public final class ConfigHelper {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger("org.assimbly.util.ConfigHelper");
 
     private final String fileName;
-    private final Class<?> originClass;
 
-    public ConfigHelper(String fileName, Class<?> originClass) {
+    public ConfigHelper(String fileName) {
         this.fileName = fileName;
-        this.originClass = originClass;
     }
 
     /**
@@ -46,12 +45,11 @@ public final class ConfigHelper {
      * @throws IOException when something went wrong while loading the file.
      */
     private Properties loadFile(String fileName) throws IOException {
-        ClassLoader loader = originClass.getClassLoader();
+
         Properties props = new Properties();
 
         try (
-            InputStream resourceStream = loader.getResourceAsStream(fileName);
-            FileInputStream fileInputStream = new FileInputStream("/opt/karaf/etc/" + fileName)
+            InputStream fileInputStream = Files.newInputStream(Paths.get("/opt/karaf/etc/" + fileName))
         ) {
             props.load(fileInputStream);
         } catch (IOException e) {

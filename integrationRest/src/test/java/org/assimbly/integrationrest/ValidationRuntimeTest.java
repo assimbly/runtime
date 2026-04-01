@@ -1,10 +1,10 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assimbly.commons.utils.AssertUtils;
-import org.assimbly.commons.utils.HttpUtil;
-import org.assimbly.commons.utils.Utils;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import org.assimbly.util.api.AssertUtils;
+import org.assimbly.util.api.HttpUtil;
+import org.assimbly.util.api.ApiUtils;
 import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContainer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -39,11 +39,11 @@ class ValidationRuntimeTest {
     void shouldValidateCronWithSuccess() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("expression", "0 0/5 * * * ?");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -64,11 +64,11 @@ class ValidationRuntimeTest {
     void shouldValidateCronWithError() {
         try {
             // params
-            HashMap<String, String> params = new HashMap();
+            HashMap<String, String> params = new HashMap<>();
             params.put("expression", "0 0/5 * * *");
 
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -81,7 +81,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText()).isEqualTo("Cron Validation error: Unexpected end of expression.");
+            assertThat(responseJson.get("error").asString()).isEqualTo("Cron Validation error: Unexpected end of expression.");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -148,7 +148,7 @@ class ValidationRuntimeTest {
     void shouldValidateConnection() {
         try {
             // headers
-            HashMap<String, String> headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
@@ -203,7 +203,7 @@ class ValidationRuntimeTest {
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String xslt = Utils.readFileAsStringFromResources("example.xsl");
+            String xslt = ApiUtils.readFileAsStringFromResources("example.xsl");
             JSONObject bodyJson = new JSONObject();
             bodyJson.put("xsltBody", xslt);
 
@@ -392,7 +392,7 @@ class ValidationRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            String msg = responseJson.get("message").asText().toLowerCase();
+            String msg = responseJson.get("message").asString().toLowerCase();
 
             // asserts contents
             AssertUtils.assertScriptErrorResponse(msg);
@@ -450,8 +450,9 @@ class ValidationRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
 
             String actual = response.body();
-            String expected = "Unclosed group near index 4\n" +
-                    "(a-z";
+            String expected = """
+                    Unclosed group near index 4
+                    (a-z""";
 
             // asserts contents
             assertThat(actual).isEqualTo(expected);
@@ -516,7 +517,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText().toLowerCase()).contains("host name could not be resolved");
+            assertThat(responseJson.get("error").asString().toLowerCase()).contains("host name could not be resolved");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -632,7 +633,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            assertThat(responseJson.get("error").asText()).isEqualTo("Url is not reachable from the server!");
+            assertThat(responseJson.get("error").asString()).isEqualTo("Url is not reachable from the server!");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -657,7 +658,7 @@ class ValidationRuntimeTest {
             JsonNode body = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(body.get("message").asText().toLowerCase()).contains("valid");
+            assertThat(body.get("message").asString().toLowerCase()).contains("valid");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -682,7 +683,7 @@ class ValidationRuntimeTest {
             JsonNode body = mapper.readTree(response.body());
 
             // asserts contents
-            assertThat(body.get("message").asText().toLowerCase()).contains("invalid");
+            assertThat(body.get("message").asString().toLowerCase()).contains("invalid");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

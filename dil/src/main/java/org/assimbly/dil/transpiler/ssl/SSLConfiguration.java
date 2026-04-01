@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.KeyStore;
 
@@ -127,7 +128,7 @@ public class SSLConfiguration {
 
 		// Load truststore from file
 		KeyStore ts = KeyStore.getInstance("JKS");
-		try (InputStream is = new FileInputStream(truststorePath)) {
+		try (InputStream is = Files.newInputStream(Paths.get(truststorePath))) {
 			ts.load(is, truststorePassword.toCharArray());
 		}
 

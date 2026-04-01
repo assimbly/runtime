@@ -10,7 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -58,33 +57,21 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
     }
 
     private void writeZipEntry(ZipOutputStream zos, byte[] data, String filepath) throws IOException {
-        Iterator<Path> elements = Paths.get(filepath).iterator();
-
+        Iterator<Path> elements = Path.of(filepath).iterator();
         StringBuilder sb = new StringBuilder();
 
         while (elements.hasNext()) {
-            Path path = elements.next();
-            String element = path.toString();
+            String element = elements.next().toString();
+            boolean isLast = !elements.hasNext();
 
-            // If there are more elements to come this element is a directory
-            // The "/" at the end tells the ZipEntry it is a folder
-            if(elements.hasNext()) {
-                element += "/";
+            sb.append(isLast ? element : element + "/");
+            elementNames.add(sb.toString());
+            zos.putNextEntry(new ZipEntry(sb.toString()));
+
+            if (isLast) {
+                zos.write(data);
+                zos.closeEntry();
             }
-
-            elementNames.add(sb + element);
-
-            // Each entry needs the complete path, including previous created folders.
-            zos.putNextEntry(new ZipEntry(sb + element));
-
-            sb.append(element);
-
-            if(elements.hasNext()) {
-                continue;
-            }
-
-            zos.write(data);
-            zos.closeEntry();
         }
     }
 

@@ -1,5 +1,7 @@
 package org.assimbly.integrationrest;
 
+import org.springframework.web.bind.annotation.*;
+
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
@@ -9,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
 import java.util.AbstractMap;

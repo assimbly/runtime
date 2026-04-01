@@ -1,14 +1,15 @@
 package org.assimbly.brokerrest;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -52,7 +53,7 @@ public class MessageBrokerRuntime {
         log.debug("event=listMessages type=GET message=Get a list of messages by endpoint name={} type={}", endpointName, brokerType);
 
         try {
-            String result = broker.listMessages(brokerType, endpointName, filter, mediaType);
+            final String result = broker.listMessages(brokerType, endpointName, filter, mediaType);
             return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}", result);
         } catch (Exception e) {
             log.error("event=listMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -81,7 +82,7 @@ public class MessageBrokerRuntime {
         log.debug("event=countMessagesFromList type=POST message=Count number of messages names={} type={}", endpointNames, brokerType);
 
         try {
-            String result = broker.countMessagesFromList(brokerType, endpointNames);
+            final String result = broker.countMessagesFromList(brokerType, endpointNames);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", result);
         } catch (Exception e) {
             log.error("event=countMessagesFromList type=POST names={} type={} reason={}", endpointNames, brokerType, e.getMessage(), e);
@@ -109,7 +110,7 @@ public class MessageBrokerRuntime {
         log.debug("event=getFlowsMessageCountList type=GET message=Get a list of number of messages for each flow excludeEmptyQueues={} type={}", excludeEmptyQueues, brokerType);
 
         try {
-            String result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues.orElse(false));
+            final String result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues.orElse(false));
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result);
         } catch (Exception e) {
             log.error("event=getFlowsMessageCountList type=POST type={} reason={}", brokerType, e.getMessage(), e);
@@ -138,7 +139,7 @@ public class MessageBrokerRuntime {
         log.debug("event=countMessages type=GET message=Count the number of messages on an endpoint name={} type={}", endpointName, brokerType);
 
         try {
-            String result = broker.countMessages(brokerType, endpointName);
+            final String result = broker.countMessages(brokerType, endpointName);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
         } catch (Exception e) {
             log.error("event=countMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -167,7 +168,7 @@ public class MessageBrokerRuntime {
         log.debug("event=countDelayedMessages type=GET message=Count the number of delayed messages on an endpoint name={} type={}", endpointName, brokerType);
 
         try {
-            String result = broker.countDelayedMessages(brokerType, endpointName);
+            final String result = broker.countDelayedMessages(brokerType, endpointName);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", result);
         } catch (Exception e) {
             log.error("event=countDelayedMessagesByEndpoint type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -199,7 +200,7 @@ public class MessageBrokerRuntime {
         log.debug("event=browseMessage type=GET message=Browse message name={} messageId={} type={}", endpointName, messageId, brokerType);
 
         try {
-            String result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody.orElse(false));
+            final String result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody.orElse(false));
             return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
         } catch (Exception e) {
             log.error("event=browseMessage type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -231,7 +232,7 @@ public class MessageBrokerRuntime {
         log.debug("event=browseMessages type=GET message=List of messages on the specified endpoint name={} type={}", endpointName, brokerType);
 
         try {
-            String result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody.orElse(false));
+            final String result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody.orElse(false));
             return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
         } catch (Exception e) {
             log.error("event=browseMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -259,7 +260,7 @@ public class MessageBrokerRuntime {
             @RequestBody String messageBody,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestParam(value = "messageHeaders", required = false) String messageHeaders
-    ) throws Exception {
+    ) {
 
         log.debug("event=sendMessageToEndpoint type=POST message=Send message specified endpoint name={} type={}", endpointName, brokerType);
 
@@ -269,7 +270,7 @@ public class MessageBrokerRuntime {
         }
 
         try {
-            String result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
+            final String result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
         } catch (Exception e) {
             log.error("event=sendMessages type=POST name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -299,7 +300,7 @@ public class MessageBrokerRuntime {
         log.debug("event=removeMessage type=DELETE message=Remove message on an endpoint name={} messageId={} type={}", endpointName, messageId, brokerType);
 
         try {
-            String result = broker.removeMessage(brokerType,endpointName, messageId);
+            final String result = broker.removeMessage(brokerType,endpointName, messageId);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", result);
         } catch (Exception e) {
             log.error("event=removeMessage type=DELETE name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -328,7 +329,7 @@ public class MessageBrokerRuntime {
         log.debug("event=removeMessages type=DELETE message=Remove all messages on a endpoint name={} type={}", endpointName, brokerType);
 
         try {
-            String result = broker.removeMessages(brokerType,endpointName);
+            final String result = broker.removeMessages(brokerType,endpointName);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", result);
         } catch (Exception e) {
             log.error("event=removeMessages type=DELETE name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
@@ -360,7 +361,7 @@ public class MessageBrokerRuntime {
         log.debug("event=moveMessage type=POST message=Move messages by id sourceName={} targetName={} messageId={} type={}", sourceQueueName, targetQueueName, messageId, brokerType);
 
         try {
-            String result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
+            final String result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
         } catch (Exception e) {
             log.error("event=moveMessage type=POST sourceName={} targetName={} messageId={} type={} reason={}", sourceQueueName, targetQueueName, messageId, brokerType, e.getMessage(), e);
@@ -391,7 +392,7 @@ public class MessageBrokerRuntime {
         log.debug("event=moveMessages type=POST message=Move all messages sourceName={} targetName={} type={}", sourceQueueName, targetQueueName, brokerType);
 
         try {
-            String result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
+            final String result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
         } catch (Exception e) {
             log.error("event=moveMessages type=POST sourceName={} targetName={} type={} reason={}", sourceQueueName, targetQueueName, brokerType, e.getMessage(), e);

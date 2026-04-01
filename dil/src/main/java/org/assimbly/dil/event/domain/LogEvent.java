@@ -1,10 +1,8 @@
 package org.assimbly.dil.event.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
-import java.io.IOException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
 
 /*
 Note sometimes different names are used to be in sync with Karaf indices in Elastic
@@ -87,11 +85,10 @@ public class LogEvent {
     }
 
     public String toJson() {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 
         try {
             return mapper.writeValueAsString(this);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }

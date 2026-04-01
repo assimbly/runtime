@@ -27,7 +27,7 @@ public class AMQPConnection {
     private String username;
     private String password;
 
-    private boolean sslEnabled = false;
+    private boolean sslEnabled;
 
     public AMQPConnection(CamelContext context, EncryptableProperties properties, String connectionId, String componentName) {
         this.context = context;
@@ -111,12 +111,14 @@ public class AMQPConnection {
                 if(i == 0){
                     modifiedUrl = new StringBuilder(addSSLParameterToUrl(failoverUrlSplitted[i]));
                 }else{
-                    modifiedUrl.append(",").append(addSSLParameterToUrl(failoverUrlSplitted[i]));
+                    modifiedUrl.append(',').append(addSSLParameterToUrl(failoverUrlSplitted[i]));
                 }
             }
 
             if (url.indexOf('(') != -1) {
-                modifiedUrl = new StringBuilder("failover:(" + modifiedUrl + ")");
+                modifiedUrl = new StringBuilder("failover:(")
+                        .append( modifiedUrl)
+                        .append(')');
             }
 
         }

@@ -1,8 +1,9 @@
 package org.assimbly.integrationrest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
@@ -11,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
+import tools.jackson.core.JacksonException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -151,7 +152,7 @@ public class MessageManagerRuntime {
         return ResponseUtil.createFailureResponse(1L, mediaType, path, message);
     }
 
-    private  TreeMap<String, Object> getMap(String message) throws JsonProcessingException {
+    private  TreeMap<String, Object> getMap(String message) throws JacksonException {
 
         return new ObjectMapper().readValue(message, new TypeReference<>() {
         });

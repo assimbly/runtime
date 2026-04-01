@@ -23,7 +23,7 @@ public class INetUtil {
 
             return true;
         }
-        catch(UnknownHostException unknownHost)
+        catch(UnknownHostException _)
         {
             return false;
         }

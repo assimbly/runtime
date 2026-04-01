@@ -5,10 +5,10 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.DefaultExchange;
 import org.assimbly.dil.validation.beans.script.ExchangeDto;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class ExchangeMarshaller {
+public final class ExchangeMarshaller {
 
     private ExchangeMarshaller() {
         throw new IllegalStateException("Utility class");
@@ -42,14 +42,14 @@ public class ExchangeMarshaller {
             body = exchange.getIn().getBody(String.class);
         }
 
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new ConcurrentHashMap<>();
         if (exchange.getIn().getHeaders() != null) {
             for (String key : exchange.getIn().getHeaders().keySet()) {
                 headers.put(key, exchange.getIn().getHeader(key, String.class));
             }
         }
 
-        Map<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new ConcurrentHashMap<>();
         if (exchange.getProperties() != null) {
             for (String key : exchange.getProperties().keySet()) {
                 properties.put(key, exchange.getProperty(key, String.class));

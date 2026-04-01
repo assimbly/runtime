@@ -116,8 +116,6 @@ spec:
                   - setHeader:
                       name: "indexName"
                       simple: "${header[ce-indexname]}"
-            - unmarshal:
-                json: {}
             - to:
                 uri: "{{local-es}}:{{clusterName}}"
                 parameters:

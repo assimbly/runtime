@@ -20,7 +20,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class FtpValidator {
 
@@ -64,7 +64,7 @@ public class FtpValidator {
 
             if (privateKeyFileData != null && !privateKeyFileData.isEmpty()) {
                 tempFile = File.createTempFile("temp", "");
-                try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(tempFile.toURI()), StandardCharsets.UTF_8)){
+                try (BufferedWriter writer = Files.newBufferedWriter(Path.of(tempFile.toURI()), StandardCharsets.UTF_8)){
                     writer.write(privateKeyFileData);
                 }
                 jsch.addIdentity(tempFile.getAbsolutePath());
@@ -150,9 +150,9 @@ public class FtpValidator {
 
                 return UNREACHABLE_ERROR;
             }
-        } catch (ConnectException e){
+        } catch (ConnectException _){
             return new ValidationErrorMessage("Connection refused");
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException _) {
             return new ValidationErrorMessage("Host name could not be resolved");
         } catch (Exception e) {
             return new ValidationErrorMessage(e.getMessage());
@@ -160,7 +160,7 @@ public class FtpValidator {
             if (ftp != null && ftp.isConnected()) {
                 try {
                     ftp.disconnect();
-                } catch (IOException ioe) {
+                } catch (IOException _) {
                     // Do nothing
                 }
             }
