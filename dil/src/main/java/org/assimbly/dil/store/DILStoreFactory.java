@@ -1,6 +1,8 @@
 package org.assimbly.dil.store;
 
 import org.assimbly.util.BaseDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +11,14 @@ import java.nio.file.Path;
 
 public class DILStoreFactory {
 
-    private static final String PERSISTENT_STORE_PROPERTY = "dil.persistent.store";
+    private static final Logger log = LoggerFactory.getLogger(DILStoreFactory.class);
+
+    private static final String ASSIMBLY_CACHE_PROPERTY = System.getenv("ASSIMBLY_CACHE");
 
     public static DILStore create() {
-        if (Boolean.getBoolean(PERSISTENT_STORE_PROPERTY)) {
+
+        if (Boolean.parseBoolean(ASSIMBLY_CACHE_PROPERTY)) {
+            log.info("Create persistent store. Storing DIL objects like flows and collectors");
             return createPersistentStore();
         }
         return new DILMemoryStore();
@@ -30,6 +36,7 @@ public class DILStoreFactory {
         } catch (IOException e) {
             throw new RuntimeException("Failed to create cache directory: " + cacheDir, e);
         }
-        return cacheDir.resolve("flowsMap.db").toFile();
+        return cacheDir.resolve("dil.db").toFile();
     }
+
 }

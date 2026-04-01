@@ -16,6 +16,7 @@ public class DILPersistentStore implements DILStore {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final DB db;
+
     private final ConcurrentMap<String, TreeMap<String, String>> flowsMap;
     private final ConcurrentMap<String, String> collectorsMap;
 
@@ -41,11 +42,6 @@ public class DILPersistentStore implements DILStore {
     }
 
     @Override
-    public ConcurrentMap<String, TreeMap<String, String>> getFlowsMap() {
-        return flowsMap;
-    }
-
-    @Override
     public void putFlow(String flowId, TreeMap<String, String> configuration) {
         flowsMap.put(flowId, configuration);
         db.commit();
@@ -68,6 +64,11 @@ public class DILPersistentStore implements DILStore {
     }
 
     @Override
+    public ConcurrentMap<String, TreeMap<String, String>> getFlowsMap() {
+        return flowsMap;
+    }
+
+    @Override
     public void putCollector(String collectorId, String configuration) {
         collectorsMap.put(collectorId, configuration);
         db.commit();
@@ -82,6 +83,11 @@ public class DILPersistentStore implements DILStore {
     public void removeCollector(String collectorId) {
         collectorsMap.remove(collectorId);
         db.commit();
+    }
+
+    @Override
+    public ConcurrentMap<String, String> getCollectorsMap() {
+        return collectorsMap;
     }
 
     @Override

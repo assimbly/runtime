@@ -152,7 +152,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows", example = "")
+    @Schema(description = "Flows")
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -190,7 +190,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows", example = "")
+    @Schema(description = "Flows")
     @PostMapping(
             path = "/integration/flow/{flowId}/test",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},

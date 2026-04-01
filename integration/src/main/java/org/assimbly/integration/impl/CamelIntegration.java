@@ -4,11 +4,8 @@ import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
-import org.assimbly.util.BaseDirectory;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -71,6 +68,7 @@ public class CamelIntegration extends BaseIntegration {
     private ManagedCamelContext managed;
     private Properties encryptionProperties;
     private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
+    private ConcurrentMap<String, String> collectorsMap;
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -175,14 +173,14 @@ public class CamelIntegration extends BaseIntegration {
 
         if (result == null || result.contains("\"event\": \"error\"")) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
-            super.removeFlowConfigurationIfExist(flowId);
+            super.removeFlowConfiguration(flowId);
         }
 
         return result;
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        removeFlowConfigurationIfExist(flowId);
+        removeFlowConfiguration(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -207,22 +205,28 @@ public class CamelIntegration extends BaseIntegration {
 
     public void setCaching() {
 
-        String assimblyFlowCacheVar = System.getenv("ASSIMBLY_FLOWCACHE");
-        boolean assimblyFlowCache = "true".equalsIgnoreCase(assimblyFlowCacheVar);
+        log.info("Init DIL Store (Storing collectors and flows)");
+        initDilStore();
 
-        initStore();
+        collectorsMap = dilStore.getCollectorsMap();
 
-        if (assimblyFlowCache) {
-
-            flowsMap = dilStore.getFlowsMap();
-
-            if(!flowsMap.isEmpty()) {
-                log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-                flowManager.startAllFlows(flowsMap);
-                log.info("Restored flows from cache.");
-            }else {
-                log.info("No active flows found in cache. Cache is ready.");
+        if(!collectorsMap.isEmpty()) {
+            log.info("Found {} cached collectors. Restoring collectors...", collectorsMap.size());
+            try {
+                addAllCollectors();
+                log.info("Restored collectors from cache.");
+            } catch (Exception e) {
+                log.error("Failed to restore collectors from cache.",e);
             }
+
+        }
+
+        flowsMap = dilStore.getFlowsMap();
+
+        if(!flowsMap.isEmpty()) {
+            log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
+            flowManager.startAllFlows(flowsMap);
+            log.info("Restored flows from cache.");
         }
 
     }
@@ -365,6 +369,17 @@ public class CamelIntegration extends BaseIntegration {
         return new EncryptionUtil(encryptionProperties.getProperty("password"), encryptionProperties.getProperty("algorithm"));
     }
 
+    public void addAllCollectors() {
+        collectorsMap.forEach((collectorId,configuration) -> {
+            try {
+                configManager.addCollectorConfiguration(collectorId, "application/json", configuration);
+                log.info("Started collector: {}", collectorId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     @Override
     public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
         return configManager.addCollectorsConfiguration(mediaType, configuration);
@@ -372,11 +387,13 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception {
+        dilStore.putCollector(collectorId,configuration);
         return configManager.addCollectorConfiguration(collectorId, mediaType, configuration);
     }
 
     @Override
     public String removeCollectorConfiguration(String collectorId) {
+        dilStore.removeCollector(collectorId);
         return configManager.removeCollectorConfiguration(collectorId);
     }
 
@@ -534,7 +551,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowInfo(String flowId, String mediaType) throws Exception {
+    public String getFlowInfo(String flowId, String mediaType) {
         return flowManager.getFlowInfo(flowId, mediaType, flowsMap);
     }
 
@@ -554,12 +571,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getListOfFlows(String filter, String mediaType) throws Exception {
+    public String getListOfFlows(String filter, String mediaType) {
         return flowManager.getListOfFlows(filter, mediaType);
     }
 
     @Override
-    public String getListOfFlowsDetails(String filter, String mediaType) throws Exception {
+    public String getListOfFlowsDetails(String filter, String mediaType) {
         return flowManager.getListOfFlowsDetails(filter, mediaType, flowsMap);
     }
 
@@ -884,17 +901,6 @@ public class CamelIntegration extends BaseIntegration {
 
         return mapper.writeValueAsString(merged);
 
-    }
-
-
-    private void createCacheDirectory() {
-        Path path = Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache");
-
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            log.error("Error to create cache directory", e);
-        }
     }
 
 }

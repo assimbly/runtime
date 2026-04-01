@@ -11,11 +11,6 @@ public class DILMemoryStore implements DILStore {
     private final ConcurrentMap<String, String> collectorsMap = new ConcurrentHashMap<>();
 
     @Override
-    public ConcurrentMap<String, TreeMap<String, String>> getFlowsMap() {
-        return flowsMap;
-    }
-
-    @Override
     public void putFlow(String flowId, TreeMap<String, String> configuration) {
         flowsMap.put(flowId, configuration);
     }
@@ -36,6 +31,12 @@ public class DILMemoryStore implements DILStore {
     }
 
     @Override
+    public ConcurrentMap<String, TreeMap<String, String>> getFlowsMap() {
+        return flowsMap;
+    }
+
+
+    @Override
     public void putCollector(String collectorId, String configuration) {
         collectorsMap.put(collectorId, configuration);
     }
@@ -51,7 +52,13 @@ public class DILMemoryStore implements DILStore {
     }
 
     @Override
-    public void close() {
-        // nothing to do
+    public ConcurrentMap<String, String> getCollectorsMap() {
+        return collectorsMap;
     }
+
+    @Override
+    public void close() {
+        // As not persistent nothing to do
+    }
+
 }

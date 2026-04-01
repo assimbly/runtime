@@ -733,7 +733,7 @@ public class StatsManager {
 
     }
 
-    public String getMetrics(String mediaType) throws Exception {
+    public String getMetrics(String mediaType) {
 
         String integrationStats = "0";
         MetricsRegistryService metricsService = context.hasService(MetricsRegistryService.class);
@@ -750,7 +750,7 @@ public class StatsManager {
     }
 
 
-    public String getHistoryMetrics(String mediaType) throws Exception {
+    public String getHistoryMetrics(String mediaType) {
 
         String integrationStats = "0";
 

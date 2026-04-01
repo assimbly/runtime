@@ -16,9 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 
 public abstract class BaseIntegration implements Integration {
 
@@ -47,21 +44,19 @@ public abstract class BaseIntegration implements Integration {
 
 	public void setFlowConfiguration(String flowId, TreeMap<String,String> configuration) {
 
-		removeFlowConfigurationIfExist(flowId);
+		removeFlowConfiguration(flowId);
 
 		dilStore.putFlow(flowId, configuration);
 
 	}
 
-	public void initStore() {
+	public void initDilStore() {
 		dilStore = DILStoreFactory.create();
 	}
 
-
-	public void removeFlowConfigurationIfExist(String flowId) {
+	public void removeFlowConfiguration(String flowId) {
 		dilStore.removeFlow(flowId);
 	}
-	
 	
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
@@ -100,7 +95,7 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 
-	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) throws Exception {
+	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) {
 
 		if(mediaType.toLowerCase().contains("json")) {
 			flowConfiguration = DocConverter.convertJsonToXml(flowConfiguration);

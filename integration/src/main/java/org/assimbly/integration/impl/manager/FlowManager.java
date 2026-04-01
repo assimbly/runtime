@@ -584,7 +584,7 @@ public class FlowManager {
                 .collect(Collectors.toSet());
     }
 
-    public String getListOfFlows(String filter, String mediaType) throws Exception {
+    public String getListOfFlows(String filter, String mediaType) {
 
         Set<String> flowIds = getListOfFlowIds(filter);
 
@@ -610,7 +610,7 @@ public class FlowManager {
 
     }
 
-    public String getFlowInfo(String flowId, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getFlowInfo(String flowId, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         TreeMap<String, String> flowProperties = flowsMap.get(flowId);
 
@@ -642,7 +642,7 @@ public class FlowManager {
 
     }
 
-    public String getListOfFlowsDetails(String filter, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) throws Exception {
+    public String getListOfFlowsDetails(String filter, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         Set<String> flowIds = getListOfFlowIds(filter);
 
