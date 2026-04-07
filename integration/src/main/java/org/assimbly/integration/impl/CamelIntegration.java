@@ -383,10 +383,13 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public void addAllCollectors() {
-        collectorsMap.forEach((collectorId,configuration) -> {
+        // Snapshot first to release the read lock before any writes happen
+        Map<String, String> snapshot = new HashMap<>(collectorsMap);
+
+        snapshot.forEach((collectorsId,configuration) -> {
             try {
-                configManager.addCollectorConfiguration(collectorId, "application/json", configuration);
-                log.info("Started collector: {}", collectorId);
+                addCollectorsConfiguration(collectorsId, "application/json", configuration);
+                log.info("Started collectors: {}", collectorsId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -394,7 +397,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
+    public String addCollectorsConfiguration(String collectorsId, String mediaType, String configuration) throws Exception {
+        dilStore.putCollector(collectorsId,configuration);
         return configManager.addCollectorsConfiguration(mediaType, configuration);
     }
 

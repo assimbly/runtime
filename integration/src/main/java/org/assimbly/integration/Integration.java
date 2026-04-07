@@ -98,11 +98,12 @@ public interface Integration {
 	/**
 	 * Add configuration for multiple collectors from a JSON Configuration File.
 	 *
+	 * @param  collectorsId (collectorsId)
 	 * @param  mediaType (JSON)
 	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
 	 * @throws Exception if configuration can't be set
 	 */
-    String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
+    String addCollectorsConfiguration(String collectorsId, String mediaType, String configuration) throws Exception;
 
 
 	/**
