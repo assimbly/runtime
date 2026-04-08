@@ -1,0 +1,51 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "sql2-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "sql2 action"
+    description: "SQL (Default Camel component) to connect to a database and execute\
+      \ queries"
+    type: "object"
+    properties:
+      path:
+        title: "Path"
+        description: "Query or Path to the query "
+        type: "string"
+      options:
+        title: "options"
+        description: "Options"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - toD:
+                uri: "sql:{{path}}?{{options}}"
+            - to:
+                uri: "{{out}}"

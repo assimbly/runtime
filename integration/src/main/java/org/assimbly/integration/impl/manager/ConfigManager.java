@@ -7,6 +7,7 @@ import org.apache.camel.spi.*;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
@@ -140,6 +141,9 @@ public class ConfigManager {
         jettyHttpComponent12.setRequestHeaderSize(80000);
         jettyHttpComponent12.setResponseHeaderSize(80000);
         jettyHttpComponent12.setUseXForwardedForHeader(true);
+        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+        customizer.setSniHostCheck(false);
+        jettyHttpComponent12.setSecureRequestCustomizer(customizer);
 
         MailComponent smtp = context.getComponent("smtp", MailComponent.class);
         smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
