@@ -144,6 +144,7 @@ public class ConfigManager {
         jettyHttpComponent12.setSendServerVersion(false);
         SecureRequestCustomizer customizer = new SecureRequestCustomizer();
         customizer.setSniHostCheck(false);
+        customizer.setSniRequired(false);
         jettyHttpComponent12.setSecureRequestCustomizer(customizer);
 
         MailComponent smtp = context.getComponent("smtp", MailComponent.class);
