@@ -141,6 +141,7 @@ public class ConfigManager {
         jettyHttpComponent12.setRequestHeaderSize(80000);
         jettyHttpComponent12.setResponseHeaderSize(80000);
         jettyHttpComponent12.setUseXForwardedForHeader(true);
+        jettyHttpComponent12.setSendServerVersion(false);
         SecureRequestCustomizer customizer = new SecureRequestCustomizer();
         customizer.setSniHostCheck(false);
         jettyHttpComponent12.setSecureRequestCustomizer(customizer);
