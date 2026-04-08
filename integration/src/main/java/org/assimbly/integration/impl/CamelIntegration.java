@@ -71,6 +71,7 @@ import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
 import org.assimbly.util.helper.JsonHelper;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -299,6 +300,12 @@ public class CamelIntegration extends BaseIntegration {
 		jettyHttpComponent12.setRequestHeaderSize(80000);
 		jettyHttpComponent12.setResponseHeaderSize(80000);
 		jettyHttpComponent12.setBridgeErrorHandler(true);
+		jettyHttpComponent12.setSendServerVersion(false);
+		SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+		customizer.setSniHostCheck(false);
+		customizer.setSniRequired(false);
+		jettyHttpComponent12.setSecureRequestCustomizer(customizer);
+
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
 		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
