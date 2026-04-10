@@ -22,7 +22,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class XmlHelper {
@@ -140,46 +139,5 @@ public final class XmlHelper {
         // Check for invalid starting patterns
         return Pattern.compile(INVALID_START_REGEX).matcher(input).matches();
     }
-
-    public static String fixInvalidXml(String input) {
-        String result = input;
-
-        result = result.replaceAll(INVALID_CHAR_REGEX, "");
-
-        Pattern startPattern = Pattern.compile(INVALID_START_REGEX);
-        Matcher startMatcher = startPattern.matcher(result);
-
-        if (startMatcher.matches() || result.isEmpty()) {
-            String stripped = result.replaceAll("^([0-9.-]+|(?i)xml)", "");
-
-            if (stripped.isEmpty()) {
-                result = "element-" + result; // nothing usable remains, e.g. "789" → "element-789"
-            } else {
-                result = stripped; // valid remainder, e.g. "xmlCreateOrderAW" → "CreateOrderAW"
-            }
-        }
-
-        return result;
-    }
-
-    /*
-    public static String fixInvalidXml(String input) {
-        String result = input;
-
-        result = result.replaceAll(INVALID_CHAR_REGEX, "");
-
-        Pattern startPattern = Pattern.compile(INVALID_START_REGEX);
-        Matcher startMatcher = startPattern.matcher(result);
-
-        if (startMatcher.matches() || result.isEmpty()) { // If it starts with an invalid pattern or is now empty
-            if (result.isEmpty()) {
-                result = "element-" + input; // Use original input to ensure some content
-            } else {
-                result = "element-" + result;
-            }
-        }
-
-        return result;
-    }*/
 
 }

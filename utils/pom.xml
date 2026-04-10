@@ -30,37 +30,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>camel-base</artifactId>
-            <version>${assimbly.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>common-base</artifactId>
-            <version>${assimbly.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>spring-base</artifactId>
-            <version>${assimbly.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.assimbly</groupId>
-            <artifactId>test-base</artifactId>
-            <version>${assimbly.version}</version>
-            <scope>test</scope>
-           <exclusions>
-            <exclusion>
-             <groupId>junit</groupId>
-             <artifactId>junit</artifactId>
-            </exclusion>
-           </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.jasypt</groupId>
             <artifactId>jasypt</artifactId>
             <version>${jasypt.version}</version>
@@ -69,7 +38,10 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-jasypt</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-attachments</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
@@ -80,23 +52,40 @@
             <artifactId>bcpkix-jdk18on</artifactId>
             <version>${bouncycastle.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-bundle</artifactId>
-            <version>${tika.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>${commons-configuration2.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.github.assimbly</groupId>
             <artifactId>docconverter</artifactId>
             <version>${docconverter.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>${httpClient5.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <version>${spring-boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${spring-data.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-bundle</artifactId>
+            <version>${tika.version}</version>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

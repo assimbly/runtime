@@ -48,6 +48,11 @@
             <artifactId>broker</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger-v3.version}</version>
+        </dependency>
 
         <!-- tests -->
         <dependency>

@@ -290,6 +290,7 @@
             <artifactId>camel-validator</artifactId>
         </dependency>
 
+
         <!-- Custom Camel Components -->
         <dependency>
             <groupId>org.assimbly</groupId>
@@ -436,7 +437,6 @@
             <artifactId>xmltojsonlegacy</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.artemis</groupId>

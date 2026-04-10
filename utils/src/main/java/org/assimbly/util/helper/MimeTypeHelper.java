@@ -14,7 +14,7 @@ import java.io.InputStream;
 
 public final class MimeTypeHelper {
 
-    private static final Logger log = LoggerFactory.getLogger("org.assimbly.util.helper.MimeTypeHelper");
+    private static final Logger log = LoggerFactory.getLogger("org.assimbly.mail.helper.MimeTypeHelper");
 
     private MimeTypeHelper() {}
 

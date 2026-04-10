@@ -1,10 +1,11 @@
 package org.assimbly.broker.impl;
 
 import org.apache.activemq.broker.jmx.*;
+
+import java.net.URLEncoder;
 import java.util.*;
 
 import tools.jackson.databind.ObjectMapper;
-import com.google.common.net.UrlEscapers;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
@@ -60,8 +61,9 @@ public class ActiveMQClassic implements Broker {
             broker = new BrokerService();
 
             String brokerPath = brokerFile.getCanonicalPath();
+            String encodedPath = URLEncoder.encode(brokerPath, StandardCharsets.UTF_8).replace("+", "%20");
 
-            String brokerUrl = "xbean:file:" + UrlEscapers.urlFragmentEscaper().escape(brokerPath);
+            String brokerUrl = "xbean:file:" +  encodedPath;
 
             if(brokerFile.exists()) {
                 log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
@@ -74,7 +76,8 @@ public class ActiveMQClassic implements Broker {
 
                 log.warn("No config file 'activemq.xml' found.");
 
-                brokerUrl = "xbean:" + UrlEscapers.urlFragmentEscaper().escape(brokerFile.getCanonicalPath());
+                String encodedCanonicalPath = URLEncoder.encode(brokerFile.getCanonicalPath(), StandardCharsets.UTF_8).replace("+", "%20");
+                brokerUrl = "xbean:" + encodedCanonicalPath;
                 URI urlConfig = new URI(brokerUrl);
                 broker = BrokerFactory.createBroker(urlConfig);
             }
