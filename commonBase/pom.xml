@@ -85,7 +85,7 @@
         </dependency>
 
         <!-- JSON Web Tokens -->
-       <!-- <dependency>
+       <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>${jwt.version}</version>
@@ -99,7 +99,7 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>${jwt.version}</version>
-        </dependency>-->
+        </dependency>
 
         <!-- Netty depedencies-->
         <dependency>

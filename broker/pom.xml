@@ -116,6 +116,11 @@
             <artifactId>utils</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.assimbly</groupId>
+            <artifactId>common-base</artifactId>
+            <version>${assimbly.version}</version>
+        </dependency>
 
     </dependencies>
 

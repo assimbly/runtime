@@ -63,7 +63,7 @@
         <jasypt.version>1.9.3</jasypt.version>
         <json.version>20251224</json.version>
         <json-path.version>3.0.0</json-path.version>
-        <!--<jwt.version>0.13.0</jwt.version>-->
+        <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.5.1</jolokia.version>
         <kamelet.version>4.18.1</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
