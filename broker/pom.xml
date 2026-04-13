@@ -120,6 +120,7 @@
             <groupId>org.assimbly</groupId>
             <artifactId>common-base</artifactId>
             <version>${assimbly.version}</version>
+            <type>pom</type>
         </dependency>
 
     </dependencies>
