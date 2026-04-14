@@ -1,7 +1,7 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "flowlink-source"
+  name: "flowlink-async-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
