@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public abstract class BaseIntegration implements Integration {
@@ -35,6 +36,7 @@ public abstract class BaseIntegration implements Integration {
 	private TreeMap<String, String> flowProperties;
 
 	private TreeMap<String, String> configuredFlows = new TreeMap<>();
+	private final ConcurrentHashMap<String, String> endpointRegistry = new ConcurrentHashMap<>();
 
 	private String flowConfiguration;
 
@@ -117,6 +119,47 @@ public abstract class BaseIntegration implements Integration {
 		
 	}
 
+	public Optional<String> registerEndpointAndDetectConflict(String flowId) {
+
+		try {
+			for (Map.Entry<String, String> entry : this.flowProperties.entrySet()) {
+
+				String key = entry.getKey();
+				String value = entry.getValue();
+
+				if (!key.startsWith("route.") || !key.endsWith(".route")) {
+					continue;
+				}
+
+				String uri = extractUri(value);
+				if (uri == null) continue;
+
+				String endpointKey = buildEndpointKey(uri);
+				if (endpointKey == null) continue;
+
+				final String[] duplicateHolder = new String[1];
+
+				endpointRegistry.compute(endpointKey, (k, existingFlow) -> {
+
+					if (existingFlow != null && !existingFlow.equals(flowId)) {
+						duplicateHolder[0] = existingFlow;
+						return existingFlow; // keep original owner
+					}
+
+					return flowId; // register owner
+				});
+
+				if (duplicateHolder[0] != null) {
+					return Optional.of(duplicateHolder[0]);
+				}
+			}
+
+		} catch (Exception e) {
+			log.error("ERROR registering endpoint and detecting conflict", e);
+		}
+
+		return Optional.empty();
+	}
 
 	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) throws Exception {
 
@@ -166,6 +209,89 @@ public abstract class BaseIntegration implements Integration {
 		
 		return error;
 	}
+
+
+	// endpointRegistry
+
+	private String extractUri(String routeXml) {
+
+		java.util.regex.Pattern p =
+				java.util.regex.Pattern.compile("uri=\"([^\"]+)\"");
+
+		java.util.regex.Matcher m = p.matcher(routeXml);
+
+		return m.find() ? m.group(1) : null;
+	}
+
+	private String buildEndpointKey(String uri) {
+
+		if (uri.startsWith("jetty:") || uri.startsWith("http:")) {
+			return "http:" + normalizeHttp(uri);
+		}
+
+		if (uri.startsWith("as2:")) {
+
+			String requestUri = extractParam(uri, "requestUriPattern");
+
+			if (requestUri == null) return null;
+
+			return "as2:" + normalizeAs2(requestUri);
+		}
+
+		return null;
+	}
+
+	private String normalizeHttp(String uri) {
+
+		// remove protocol prefix
+		String cleaned = uri.replaceFirst("^jetty:", "")
+				.replaceFirst("^http:", "");
+
+		// remove query params
+		int idx = cleaned.indexOf('?');
+		if (idx != -1) {
+			cleaned = cleaned.substring(0, idx);
+		}
+
+		// extract path AFTER host:port
+		int slashAfterHost = cleaned.indexOf('/', cleaned.indexOf("://") + 3);
+
+		if (slashAfterHost != -1) {
+			cleaned = cleaned.substring(slashAfterHost);
+		}
+
+		return cleaned.toLowerCase(Locale.ROOT)
+				.replaceAll("/+$", "");
+	}
+
+	private String normalizeAs2(String requestUriPattern) {
+		return requestUriPattern
+				.toLowerCase()
+				.replaceAll("/+$", "");
+	}
+
+	private String extractParam(String uri, String param) {
+
+		java.util.regex.Matcher m =
+				java.util.regex.Pattern.compile(param + "=([^&]+)")
+						.matcher(uri);
+
+		return m.find() ? m.group(1) : null;
+	}
+
+	public void unregisterFlowEndpoints(String flowId) {
+
+		Iterator<Map.Entry<String, String>> it = endpointRegistry.entrySet().iterator();
+
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+
+			if (flowId.equals(entry.getValue())) {
+				it.remove();
+			}
+		}
+	}
+
 	
 	//--> convert methods (XML)
 	/*
