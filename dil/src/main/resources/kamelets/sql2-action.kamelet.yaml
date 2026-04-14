@@ -11,14 +11,17 @@ spec:
       \ queries"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Query or Path to the query "
+      query:
+        title: "SQL Query"
+        description: "SQL Query"
         type: "string"
-      options:
-        title: "options"
-        description: "Options"
+      dataSource:
+        title: "DataSource"
+        description: "DataSource, ID of the connection"
         type: "string"
+      outputHeader:
+        title: "OutputHeader"
+        description: "Set query output to a header"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -46,6 +49,6 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "sql:{{path}}?{{options}}"
+                uri: "sql:{{query}}?dataSource=#{{dataSource}}&outputHeader={{?outputHeader}}"
             - to:
                 uri: "{{out}}"
