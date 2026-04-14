@@ -4,6 +4,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.model.FlowConfigurationResult;
+import org.assimbly.dil.transpiler.model.EndpointDefinition;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
@@ -37,6 +39,8 @@ public abstract class BaseIntegration implements Integration {
 
 	private TreeMap<String, String> configuredFlows = new TreeMap<>();
 	private final ConcurrentHashMap<String, String> endpointRegistry = new ConcurrentHashMap<>();
+
+	private FlowConfigurationResult flowConfigurationResult;
 
 	private String flowConfiguration;
 
@@ -84,7 +88,8 @@ public abstract class BaseIntegration implements Integration {
 		try {
 
 			if(mediaType.toLowerCase().contains("xml")) {
-	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
+				flowConfigurationResult = convertXMLToFlowConfiguration(flowId, configuration);
+				flowProperties = flowConfigurationResult.getProperties();
 			}else if(mediaType.toLowerCase().contains("json")) {
 	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
 			}else {
@@ -119,23 +124,17 @@ public abstract class BaseIntegration implements Integration {
 		
 	}
 
-	public Optional<String> registerEndpointAndDetectConflict(String flowId) {
+	public Optional<String> registerEndpointAndDetectConflict() {
 
 		try {
-			for (Map.Entry<String, String> entry : this.flowProperties.entrySet()) {
+			String flowId = flowConfigurationResult.getProperties().get("id");
 
-				String key = entry.getKey();
-				String value = entry.getValue();
+			for (EndpointDefinition ep : flowConfigurationResult.getEntryPoints()) {
 
-				if (!key.startsWith("route.") || !key.endsWith(".route")) {
-					continue;
-				}
-
-				String uri = extractUri(value);
-				if (uri == null) continue;
-
-				String endpointKey = buildEndpointKey(uri);
+				String endpointKey = ep.getKey();
 				if (endpointKey == null) continue;
+
+				endpointKey = ep.getType().name().toLowerCase() + ":" + ep.getKey().toLowerCase();
 
 				final String[] duplicateHolder = new String[1];
 
@@ -143,7 +142,7 @@ public abstract class BaseIntegration implements Integration {
 
 					if (existingFlow != null && !existingFlow.equals(flowId)) {
 						duplicateHolder[0] = existingFlow;
-						return existingFlow; // keep original owner
+						return existingFlow; // keep owner
 					}
 
 					return flowId; // register owner
@@ -211,74 +210,6 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 
-	// endpointRegistry
-
-	private String extractUri(String routeXml) {
-
-		java.util.regex.Pattern p =
-				java.util.regex.Pattern.compile("uri=\"([^\"]+)\"");
-
-		java.util.regex.Matcher m = p.matcher(routeXml);
-
-		return m.find() ? m.group(1) : null;
-	}
-
-	private String buildEndpointKey(String uri) {
-
-		if (uri.startsWith("jetty:") || uri.startsWith("http:")) {
-			return "http:" + normalizeHttp(uri);
-		}
-
-		if (uri.startsWith("as2:")) {
-
-			String requestUri = extractParam(uri, "requestUriPattern");
-
-			if (requestUri == null) return null;
-
-			return "as2:" + normalizeAs2(requestUri);
-		}
-
-		return null;
-	}
-
-	private String normalizeHttp(String uri) {
-
-		// remove protocol prefix
-		String cleaned = uri.replaceFirst("^jetty:", "")
-				.replaceFirst("^http:", "");
-
-		// remove query params
-		int idx = cleaned.indexOf('?');
-		if (idx != -1) {
-			cleaned = cleaned.substring(0, idx);
-		}
-
-		// extract path AFTER host:port
-		int slashAfterHost = cleaned.indexOf('/', cleaned.indexOf("://") + 3);
-
-		if (slashAfterHost != -1) {
-			cleaned = cleaned.substring(slashAfterHost);
-		}
-
-		return cleaned.toLowerCase(Locale.ROOT)
-				.replaceAll("/+$", "");
-	}
-
-	private String normalizeAs2(String requestUriPattern) {
-		return requestUriPattern
-				.toLowerCase()
-				.replaceAll("/+$", "");
-	}
-
-	private String extractParam(String uri, String param) {
-
-		java.util.regex.Matcher m =
-				java.util.regex.Pattern.compile(param + "=([^&]+)")
-						.matcher(uri);
-
-		return m.find() ? m.group(1) : null;
-	}
-
 	public void unregisterFlowEndpoints(String flowId) {
 
 		Iterator<Map.Entry<String, String>> it = endpointRegistry.entrySet().iterator();
@@ -309,7 +240,7 @@ public abstract class BaseIntegration implements Integration {
 		return new XMLFileConfiguration().getFlowConfigurations(integrationid, configurationUri);
 	}
 	
-	public TreeMap<String, String> convertXMLToFlowConfiguration(String integrationId, String configuration) throws Exception {
+	public FlowConfigurationResult convertXMLToFlowConfiguration(String integrationId, String configuration) throws Exception {
 		return new XMLFileConfiguration().getFlowConfiguration(integrationId, configuration);
 	}
 

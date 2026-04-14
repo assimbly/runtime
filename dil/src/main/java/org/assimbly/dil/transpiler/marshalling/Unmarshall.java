@@ -1,20 +1,21 @@
 package org.assimbly.dil.transpiler.marshalling;
 
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
+import org.assimbly.dil.model.FlowConfigurationResult;
 import org.assimbly.dil.transpiler.marshalling.core.*;
-import org.assimbly.dil.transpiler.marshalling.core.Message;
+import org.assimbly.dil.transpiler.model.EndpointDefinition;
 import org.assimbly.util.IntegrationUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.xpath.*;
-import java.util.*;
+import javax.xml.xpath.XPathFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeMap;
 
 // This class unmarshalls an XML file into a Java treemap object
 // The XML file must be in DIL (Data Integration Language) format
@@ -22,10 +23,25 @@ public class Unmarshall {
 
 	private Document doc;
 	private TreeMap<String, String> properties;
+	private List<EndpointDefinition> endpoints = new ArrayList<>();
 	private XMLConfiguration conf;
 	private String flowId;
 	XPathFactory xf = new XPathFactoryImpl();
 	List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
+
+	public FlowConfigurationResult parse(XMLConfiguration configuration, String flowId) throws Exception {
+
+		this.flowId = flowId;
+		doc = configuration.getDocument();
+		conf = configuration;
+
+		properties = new TreeMap<>();
+		endpoints = new ArrayList<>();
+
+		setFlow();
+
+		return new FlowConfigurationResult(properties, endpoints);
+	}
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
 
@@ -196,7 +212,7 @@ public class Unmarshall {
 				}else if (blockTypeValue.equalsIgnoreCase("connection")) {
 					properties = new Connection(properties, conf).setConnection(type, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("route")) {
-					properties = new Route(properties, conf, doc).setRoute(type, flowId, stepId, blockId.getTextContent());
+					properties = new Route(properties, conf, doc, endpoints, flowId).setRoute(type, flowId, stepId, blockId.getTextContent());
 				}else if (blockTypeValue.equalsIgnoreCase("routeconfiguration")) {
 					properties = new RouteConfiguration(properties, conf).setRouteConfiguration(type, stepId, blockId.getTextContent());
 				}
@@ -217,11 +233,7 @@ public class Unmarshall {
 
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
-		if(baseUri.startsWith("blocks") || baseUri.startsWith("component")){
-			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}else{
-			properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
-		}
+		properties =  routeTemplate.setRouteTemplate(type,flowId, stepId, optionProperties, links, stepXPath, baseUri, options);
 
 	}
 

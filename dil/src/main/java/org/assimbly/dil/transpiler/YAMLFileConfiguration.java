@@ -46,7 +46,7 @@ public class YAMLFileConfiguration {
 
 		xmlConfiguration = DocConverter.convertYamlToXml(configuration);
 		
-		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
+		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration).getProperties();
 		
 		return flowproperties;
 	}

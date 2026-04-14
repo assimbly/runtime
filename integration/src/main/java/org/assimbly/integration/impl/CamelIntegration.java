@@ -1640,7 +1640,7 @@ public class CamelIntegration extends BaseIntegration {
 
 			}
 
-			Optional<String> dupEndpoint = registerEndpointAndDetectConflict(id);
+			Optional<String> dupEndpoint = registerEndpointAndDetectConflict();
 
 			if(addFlow && !dupEndpoint.isPresent()) {
 				result = addFlow(props);
