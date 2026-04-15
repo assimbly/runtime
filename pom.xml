@@ -35,26 +35,26 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
-        <activemq-classic.version>6.2.3</activemq-classic.version>
+        <activemq-classic.version>6.2.4</activemq-classic.version>
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
-        <bouncycastle.version>1.83</bouncycastle.version>
+        <bouncycastle.version>1.84</bouncycastle.version>
         <camel.version>4.18.1</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-codec.version>1.21.0</commons-codec.version>
-        <commons-configuration2.version>2.13.0</commons-configuration2.version>
+        <commons-configuration2.version>2.14.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>2.0.0</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.3.2</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.3.3</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
         <groovy-script.version>5.0.5</groovy-script.version>
         <httpClient5.version>5.6</httpClient5.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
-        <jackson.version>3.1.1</jackson.version>
+        <jackson.version>3.1.2</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
         <jakarta-json-api.version>2.1.3</jakarta-json-api.version>
@@ -74,8 +74,8 @@
         <spring.version>7.0.6</spring.version>
         <spring-boot.version>4.0.5</spring-boot.version>
         <spring-data.version>4.0.4</spring-data.version>
-        <springdoc.version>3.0.2</springdoc.version>
-        <swagger-v3.version>2.2.47</swagger-v3.version>
+        <springdoc.version>3.0.3</springdoc.version>
+        <swagger-v3.version>2.2.48</swagger-v3.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
         <xpath2.version>1.2.0</xpath2.version>
