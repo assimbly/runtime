@@ -3,6 +3,8 @@ package org.assimbly.dil.transpiler.marshalling.core;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.transpiler.model.EndpointDefinition;
+import org.assimbly.dil.transpiler.model.EndpointType;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.TreeMap;
 
 public class Route {
@@ -23,10 +28,15 @@ public class Route {
     private XMLConfiguration conf;
     XPathFactory xf = new XPathFactoryImpl();
 
-    public Route(TreeMap<String, String> properties, XMLConfiguration conf, Document doc) {
+    private final List<EndpointDefinition> endpoints;
+    private final String flowId;
+
+    public Route(TreeMap<String, String> properties, XMLConfiguration conf, Document doc, List<EndpointDefinition> endpoints, String flowId) {
         this.properties = properties;
         this.conf = conf;
         this.doc = doc;
+        this.endpoints = endpoints;
+        this.flowId = flowId;
     }
 
     public TreeMap<String, String> setRoute(String type, String flowId, String stepId, String routeId) throws Exception {
@@ -46,12 +56,11 @@ public class Route {
 
         Node node = getRoute(routeId);
 
+        extractFromEndpoints(node);
 
         String routeAsString = DocConverter.convertNodeToString(node);
 
         routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
-        routeAsString = StringUtils.replace(routeAsString,"id=\"" + routeId +"\"" ,"id=\"" + flowId + "-" + routeId +"\"");
-
 
 
         return routeAsString;
@@ -107,5 +116,91 @@ public class Route {
 
         return null;
     }
+
+    private void extractFromEndpoints(Node routeNode) {
+
+        if (routeNode == null) return;
+
+        NodeList children = routeNode.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+
+            if (child instanceof Element) {
+                Element el = (Element) child;
+
+                if ("from".equals(el.getTagName())) {
+
+                    String uri = el.getAttribute("uri");
+
+                    if (uri != null && !uri.isEmpty()) {
+                        registerEndpoint(uri);
+                    }
+                }
+
+                // 🔁 still recurse (important for nested EIPs)
+                extractFromEndpoints(child);
+            }
+        }
+    }
+
+    private void registerEndpoint(String uri) {
+
+        if (uri == null) return;
+
+        if (uri.startsWith("jetty:")) {
+            String path = extractJettyPath(uri);
+            endpoints.add(new EndpointDefinition(flowId, EndpointType.JETTY, path));
+        }
+
+        else if (uri.startsWith("as2:")) {
+            String pattern = extractAs2Pattern(uri);
+            if (pattern != null) {
+                endpoints.add(new EndpointDefinition(flowId, EndpointType.AS2, pattern));
+            }
+        }
+    }
+
+    private String extractJettyPath(String uri) {
+        if (uri == null) return null;
+
+        // remove scheme + host
+        String cleaned = uri.replaceFirst("^jetty:(https?|ssl)://[^/]+(:\\d+)?", "");
+
+        // remove query params
+        int idx = cleaned.indexOf("?");
+        String path = (idx != -1) ? cleaned.substring(0, idx) : cleaned;
+
+        // normalize
+        if (path == null || path.isEmpty()) {
+            path = "/"; // root endpoint
+        }
+
+        // remove trailing slash (except root)
+        if (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        return path.toLowerCase();
+    }
+
+    private String extractAs2Pattern(String uri) {
+        if (uri == null) return null;
+
+        String[] parts = uri.split("\\?");
+        if (parts.length < 2) return null;
+
+        String query = parts[1];
+
+        for (String param : query.split("&")) {
+            if (param.startsWith("requestUriPattern=")) {
+                String value = param.substring("requestUriPattern=".length());
+                return value.toLowerCase();
+            }
+        }
+
+        return null;
+    }
+
 
 }

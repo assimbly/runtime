@@ -1,12 +1,28 @@
 package org.assimbly.dil.transpiler;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URL;
-import java.util.*;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.BasicConfigurationBuilder;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
+import org.assimbly.dil.model.FlowConfigurationResult;
+import org.assimbly.dil.transpiler.marshalling.Marshall;
+import org.assimbly.dil.transpiler.marshalling.Unmarshall;
+import org.assimbly.dil.transpiler.transform.Transform;
+import org.assimbly.docconverter.DocConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -20,29 +36,12 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
-
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.builder.BasicConfigurationBuilder;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.io.FileHandler;
-import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
-import org.assimbly.dil.transpiler.marshalling.Marshall;
-import org.assimbly.dil.transpiler.marshalling.Unmarshall;
-import org.assimbly.dil.transpiler.transform.Transform;
-import org.assimbly.docconverter.DocConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import java.io.File;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.URI;
+import java.net.URL;
+import java.util.*;
 
 public class XMLFileConfiguration {
 
@@ -66,7 +65,7 @@ public class XMLFileConfiguration {
 
 		for(String flowId : flowIds){
 
-			TreeMap<String, String> flowConfiguration = getFlowConfiguration(flowId, xml);
+			TreeMap<String, String> flowConfiguration = getFlowConfiguration(flowId, xml).getProperties();
 
 			if(flowConfiguration!=null) {
 				propertiesList.add(flowConfiguration);
@@ -96,7 +95,7 @@ public class XMLFileConfiguration {
 
 	}
 
-	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
+	public FlowConfigurationResult getFlowConfiguration(String flowId, String xml) throws Exception {
 
 		log.info("Configuration File: " + xml);
 
@@ -121,11 +120,10 @@ public class XMLFileConfiguration {
 
 		fh.load(is);
 
-		properties = new Unmarshall().getProperties(conf,flowId);
+		FlowConfigurationResult flowConfigurationResult = new Unmarshall().parse(conf,flowId);
+		properties = flowConfigurationResult.getProperties();
 
-		//IntegrationUtil.printTreemap(properties);
-
-		return properties;
+		return flowConfigurationResult;
 
 	}
 

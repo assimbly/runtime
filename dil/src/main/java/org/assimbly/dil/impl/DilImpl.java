@@ -62,7 +62,7 @@ public abstract class DilImpl implements Dil {
 
 	//--> convert methods
 	public TreeMap<String, String> convertXMLToFlowConfiguration(String flowId, String configuration) throws Exception {
-		return new XMLFileConfiguration().getFlowConfiguration(flowId, configuration);
+		return new XMLFileConfiguration().getFlowConfiguration(flowId, configuration).getProperties();
 	}
 
 	public TreeMap<String, String> convertJSONToFlowConfiguration(String flowId, String configuration) throws Exception {

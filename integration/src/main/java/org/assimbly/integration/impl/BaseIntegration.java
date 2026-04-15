@@ -4,6 +4,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
+import org.assimbly.dil.model.FlowConfigurationResult;
+import org.assimbly.dil.transpiler.model.EndpointDefinition;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public abstract class BaseIntegration implements Integration {
@@ -35,6 +38,9 @@ public abstract class BaseIntegration implements Integration {
 	private TreeMap<String, String> flowProperties;
 
 	private TreeMap<String, String> configuredFlows = new TreeMap<>();
+	private final ConcurrentHashMap<String, String> endpointRegistry = new ConcurrentHashMap<>();
+
+	private FlowConfigurationResult flowConfigurationResult;
 
 	private String flowConfiguration;
 
@@ -82,7 +88,8 @@ public abstract class BaseIntegration implements Integration {
 		try {
 
 			if(mediaType.toLowerCase().contains("xml")) {
-	        	flowProperties = convertXMLToFlowConfiguration(flowId, configuration);
+				flowConfigurationResult = convertXMLToFlowConfiguration(flowId, configuration);
+				flowProperties = flowConfigurationResult.getProperties();
 			}else if(mediaType.toLowerCase().contains("json")) {
 	        	flowProperties = convertJSONToFlowConfiguration(flowId, configuration);
 			}else {
@@ -117,6 +124,41 @@ public abstract class BaseIntegration implements Integration {
 		
 	}
 
+	public Optional<String> registerEndpointAndDetectConflict() {
+
+		try {
+			String flowId = flowConfigurationResult.getProperties().get("id");
+
+			for (EndpointDefinition ep : flowConfigurationResult.getEntryPoints()) {
+
+				String endpointKey = ep.getKey();
+				if (endpointKey == null) continue;
+
+				endpointKey = ep.getType().name().toLowerCase() + ":" + ep.getKey().toLowerCase();
+
+				final String[] duplicateHolder = new String[1];
+
+				endpointRegistry.compute(endpointKey, (k, existingFlow) -> {
+
+					if (existingFlow != null && !existingFlow.equals(flowId)) {
+						duplicateHolder[0] = existingFlow;
+						return existingFlow; // keep owner
+					}
+
+					return flowId; // register owner
+				});
+
+				if (duplicateHolder[0] != null) {
+					return Optional.of(duplicateHolder[0]);
+				}
+			}
+
+		} catch (Exception e) {
+			log.error("ERROR registering endpoint and detecting conflict", e);
+		}
+
+		return Optional.empty();
+	}
 
 	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) throws Exception {
 
@@ -166,6 +208,21 @@ public abstract class BaseIntegration implements Integration {
 		
 		return error;
 	}
+
+
+	public void unregisterFlowEndpoints(String flowId) {
+
+		Iterator<Map.Entry<String, String>> it = endpointRegistry.entrySet().iterator();
+
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+
+			if (flowId.equals(entry.getValue())) {
+				it.remove();
+			}
+		}
+	}
+
 	
 	//--> convert methods (XML)
 	/*
@@ -183,7 +240,7 @@ public abstract class BaseIntegration implements Integration {
 		return new XMLFileConfiguration().getFlowConfigurations(integrationid, configurationUri);
 	}
 	
-	public TreeMap<String, String> convertXMLToFlowConfiguration(String integrationId, String configuration) throws Exception {
+	public FlowConfigurationResult convertXMLToFlowConfiguration(String integrationId, String configuration) throws Exception {
 		return new XMLFileConfiguration().getFlowConfiguration(integrationId, configuration);
 	}
 

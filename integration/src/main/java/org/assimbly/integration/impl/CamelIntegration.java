@@ -71,6 +71,7 @@ import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.file.DirectoryWatcher;
 import org.assimbly.util.helper.JsonHelper;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -299,6 +300,12 @@ public class CamelIntegration extends BaseIntegration {
 		jettyHttpComponent12.setRequestHeaderSize(80000);
 		jettyHttpComponent12.setResponseHeaderSize(80000);
 		jettyHttpComponent12.setBridgeErrorHandler(true);
+		jettyHttpComponent12.setSendServerVersion(false);
+		SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+		customizer.setSniHostCheck(false);
+		customizer.setSniRequired(false);
+		jettyHttpComponent12.setSecureRequestCustomizer(customizer);
+
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
 		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
@@ -1106,11 +1113,10 @@ public class CamelIntegration extends BaseIntegration {
 			Component activemqComp = this.context.getComponent(activemqName);
 
 			if (activemqComp == null) {
+
+
 				JmsComponent jmsComponent = getJmsComponent(activemqUrl);
-				jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-				jmsComponent.setIncludeCorrelationIDAsBytes(false);
-                jmsComponent.setMaxConcurrentConsumers(8);
-				
+
 				this.context.addComponent(activemqName, jmsComponent);
 			}
 
@@ -1359,18 +1365,23 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS",500);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT",5000);
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 50);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 5000);
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(maxConnections); // Max connections in the pool
-		pooledConnectionFactory.setIdleTimeout(idleTimeout);  // Idle timeout in milliseconds
+		pooledConnectionFactory.setMaxConnections(maxConnections);
+		pooledConnectionFactory.setIdleTimeout(idleTimeout);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
+
+		// Cache the consumer to prevent object churn
+		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
+		jmsComponent.setConcurrentConsumers(1);
+		jmsComponent.setMaxConcurrentConsumers(8);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
@@ -1629,11 +1640,21 @@ public class CamelIntegration extends BaseIntegration {
 
 			}
 
-			if(addFlow){
+			Optional<String> dupEndpoint = registerEndpointAndDetectConflict();
+
+			if(addFlow && !dupEndpoint.isPresent()) {
 				result = addFlow(props);
-			}else{
-				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
-				finishFlowActionReport(id, "error",errorMessage,"error");
+			} else {
+				String errorMessage = "Starting flow failed | Flow ID: " + id;
+
+				if(dupEndpoint.isPresent()) {
+					errorMessage += " entry endpoint is already in use on Flow ID: "+dupEndpoint.get();
+				} else {
+					errorMessage += " does not match Flow ID in configuration";
+				}
+
+				finishFlowActionReport(id, "error", errorMessage,"error");
+				return loadReport;
 			}
 
 			if (!result.equals("loaded") && !result.equals("started")){
@@ -1761,6 +1782,9 @@ public class CamelIntegration extends BaseIntegration {
 				}
 			}
 
+			// unregister flow endpoints
+			unregisterFlowEndpoints(id);
+
 			if(enableReport) {
 				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");
 			}
@@ -1840,7 +1864,7 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 
 			if(hasFlow(id)) {
-				boolean resumed = true;
+				int actions = 0;
 				List<Route> routeList = getRoutesByFlowId(id);
 				for(Route route : routeList){
 					String routeId = route.getId();
@@ -1856,20 +1880,32 @@ public class CamelIntegration extends BaseIntegration {
 							Thread.sleep(10);
 							count++;
 
-						} while (status.isStarting() || count < 3000);
+						} while (status.isStarting() && count < 3000);
 
-						resumed = true;
+						actions++;
 						log.info("Resumed flow  | flowid=" + id + " | stepid=" + routeId);
 
 					}
 					else if (status.isStopped()){
-
 						log.info("Starting route as route " + id + " is currently stopped (not suspended)");
-						startFlow(routeId, stopTimeout);
-						resumed = true;
+						routeController.startRoute(routeId);
+
+						int count = 1;
+
+						do {
+							status = routeController.getRouteStatus(routeId);
+							if (status.isStarted()) { break; }
+							Thread.sleep(10);
+							count++;
+
+						} while (status.isStarting() && count < 3000);
+
+						actions++;
 					}
 				}
-				if(resumed){
+				if(actions > 0){
+					Thread.sleep(200);
+					startFlow(id, stopTimeout);
 					finishFlowActionReport(id, "resume","Resumed flow successfully","info");
 				}else {
 					finishFlowActionReport(id, "error","Flow isn't suspended (nothing to resume)","error");
