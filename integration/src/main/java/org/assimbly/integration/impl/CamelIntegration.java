@@ -1640,11 +1640,21 @@ public class CamelIntegration extends BaseIntegration {
 
 			}
 
-			if(addFlow){
+			Optional<String> dupEndpoint = registerEndpointAndDetectConflict();
+
+			if(addFlow && !dupEndpoint.isPresent()) {
 				result = addFlow(props);
-			}else{
-				String errorMessage = "Starting flow failed | Flow ID: " + id + " does not match Flow ID in configuration";
-				finishFlowActionReport(id, "error",errorMessage,"error");
+			} else {
+				String errorMessage = "Starting flow failed | Flow ID: " + id;
+
+				if(dupEndpoint.isPresent()) {
+					errorMessage += " entry endpoint is already in use on Flow ID: "+dupEndpoint.get();
+				} else {
+					errorMessage += " does not match Flow ID in configuration";
+				}
+
+				finishFlowActionReport(id, "error", errorMessage,"error");
+				return loadReport;
 			}
 
 			if (!result.equals("loaded") && !result.equals("started")){
@@ -1771,6 +1781,9 @@ public class CamelIntegration extends BaseIntegration {
 					}
 				}
 			}
+
+			// unregister flow endpoints
+			unregisterFlowEndpoints(id);
 
 			if(enableReport) {
 				finishFlowActionReport(id, "stop", "Stopped flow successfully", "info");

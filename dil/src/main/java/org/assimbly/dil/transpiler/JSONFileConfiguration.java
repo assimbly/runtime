@@ -41,7 +41,7 @@ public class JSONFileConfiguration {
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String jsonConfiguration) throws Exception {
 
 		xmlConfiguration = DocConverter.convertJsonToXml(jsonConfiguration);
-		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration);
+		flowproperties =  new XMLFileConfiguration().getFlowConfiguration(flowId, xmlConfiguration).getProperties();
 		
 		return flowproperties;
 	}
