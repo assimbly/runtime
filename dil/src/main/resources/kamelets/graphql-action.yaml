@@ -1,0 +1,61 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "graphql-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "GraphQL Action"
+    description: Forward data to a GraphQL endpoint.
+    required:
+      - url
+    type: object
+    properties:
+      url:
+        title: GraphQL Server URL
+        description: The URL to which you want to send data.
+        type: string
+        example: "http://example.com/graphql"
+        pattern: "^(http|https)://.*"
+      accessToken:
+        title: GraphQL Access Token
+        description: The access Token to use to access GraphQL server
+        type: string
+        format: password
+        x-descriptors:
+          - urn:camel:group:credentials
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:graphql"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "{{routeId}}"
+              steps:
+              - to:
+                  uri: "graphql://{{url}}"
+                  parameters:
+                    accessToken: "{{?accessToken}}"
+              - to:
+                  uri: "{{out}}"
