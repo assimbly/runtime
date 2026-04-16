@@ -315,6 +315,12 @@ public class RouteTemplate {
                 setHeader.setAttribute("name", name);
                 Element languageElement = customRouteDoc.createElement(language);
                 languageElement.setTextContent(value);
+                if(language.equals("jsonpath")){
+                    languageElement.setAttribute("resultType","java.lang.String");
+                } else if (language.equals("xpath")) {
+                    languageElement.setAttribute("resultType","java.lang.String");
+                    languageElement.setAttribute("saxon","true");
+                }
                 setHeader.appendChild(languageElement);
                 setHeaders.appendChild(setHeader);
             }
@@ -322,6 +328,7 @@ public class RouteTemplate {
         }
 
         return setHeaders;
+
     }
 
     private void createStep(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId, String stepId) throws Exception {
