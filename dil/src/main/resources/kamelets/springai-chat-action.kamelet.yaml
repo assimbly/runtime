@@ -1,0 +1,54 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "ai-model-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "ai model action"
+    description: "Send a prompt to a chat model and get a response"
+    type: "object"
+    properties:
+      apiKey:
+        title: "API Key"
+        description: "The AI API Key"
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      modelName:
+        title: "Model Name"
+        description: "The name of the model to use (default: gemini-pro)"
+        type: "string"
+        default: "gemini-pro"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                # Hier voegen we de parameters toe aan de URI
+                uri: "spring-ai-chat:chat?modelName={{modelName}}&apiKey={{apiKey}}"
+            - to:
+                uri: "{{out}}"
