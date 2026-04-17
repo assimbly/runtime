@@ -26,7 +26,7 @@
 
     <properties>
 
-        <maven-api.version>3.9.14</maven-api.version>
+        <maven-api.version>3.9.15</maven-api.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
@@ -39,7 +39,7 @@
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <bouncycastle.version>1.84</bouncycastle.version>
-        <camel.version>4.18.1</camel.version>
+        <camel.version>4.19.0</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-codec.version>1.21.0</commons-codec.version>
@@ -52,7 +52,7 @@
         <elasticsearch-rest-client.version>9.3.3</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
         <groovy-script.version>5.0.5</groovy-script.version>
-        <httpClient5.version>5.6</httpClient5.version>
+        <httpClient5.version>5.5.2</httpClient5.version>
         <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
         <jackson.version>3.1.2</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
@@ -71,7 +71,7 @@
         <mapdb.version>3.1.0</mapdb.version>
         <netty.version>4.2.12.Final</netty.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <spring.version>7.0.6</spring.version>
+        <spring.version>7.0.7</spring.version>
         <spring-boot.version>4.0.5</spring-boot.version>
         <spring-data.version>4.0.4</spring-data.version>
         <springdoc.version>3.0.3</springdoc.version>

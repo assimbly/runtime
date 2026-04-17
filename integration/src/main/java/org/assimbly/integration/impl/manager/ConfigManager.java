@@ -2,8 +2,15 @@ package org.assimbly.integration.impl.manager;
 
 import java.util.*;
 
+import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
@@ -136,6 +143,9 @@ public class ConfigManager {
 
         KameletComponent kameletComponent = new KameletComponent();
         context.addComponent("function", kameletComponent);
+
+        HttpComponent httpComponent =  context.getComponent("https", HttpComponent.class);
+        httpComponent.setHttpClientConfigurer(HttpClientBuilder::disableAutomaticRetries);
 
         JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
         jettyHttpComponent12.setRequestHeaderSize(80000);
