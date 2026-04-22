@@ -1,0 +1,75 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4j-chat-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "Google Gemini Chat"
+    description: "Send a prompt to Google Gemini and get a response"
+    type: "object"
+    properties:
+      chatModelBean:
+        title: "Chat Model Bean"
+        description: "The chat model bean reference"
+        type: "string"
+        default: "myGeminiModel"
+      apiKey:
+        title: "API Key"
+        description: "The Google AI API Key"
+        type: "string"
+        x-descriptors:
+        - "urn:camel:group:credentials"
+      modelName:
+        title: "Model Name"
+        description: "The name of the model to use (default: gemini-pro)"
+        type: "string"
+        default: "gemini-pro"
+      in:
+        title: "Source Endpoint"
+        description: "In endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        description: "Out endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+        default: "dummy"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  - "camel:http"
+  - "camel:jsonpath"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - removeHeaders:
+                pattern: "*"
+            - setHeader:
+                name: "Exchange.HTTP_METHOD"
+                constant: "POST"
+            - setHeader:
+                name: "Content-Type"
+                constant: "application/json"
+            - setBody:
+                simple: "{\"contents\":[{\"parts\":[{\"text\":\"${body}\"}]}]}"
+            - to:
+                uri: "https://generativelanguage.googleapis.com/v1beta/models/{{modelName}}:generateContent?key={{apiKey}}"
+            - setBody:
+                jsonpath: "$.candidates[0].content.parts[0].text"
+            - to:
+                uri: "{{out}}"
