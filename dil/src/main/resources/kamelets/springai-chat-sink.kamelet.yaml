@@ -1,0 +1,55 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "springai-chat-sink"
+  labels:
+    camel.apache.org/kamelet.type: "sink"
+spec:
+  definition:
+    title: "springai chat sink"
+    description: "Send a prompt to a chat model and get a response"
+    type: "object"
+    properties:
+      prompt:
+        title: "Chat prompt"
+        description: "The prompt to send to the AI model"
+        type: "string"
+      api-key:
+        title: "API Key"
+        description: "The AI API Key"
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      model-name:
+        title: "Model Name"
+        description: "The name of the model to use (default: gemini-pro)"
+        type: "string"
+        default: "gemini-pro"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "{{routeId}}"
+            steps:
+            - to:
+                uri: "spring-ai-chat:chat?model-name={{model-name}}&api-key={{api-key}}"
