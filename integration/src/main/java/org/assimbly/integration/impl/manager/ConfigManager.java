@@ -12,6 +12,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel;
 import org.assimbly.dil.blocks.processors.*;
 
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -196,6 +197,8 @@ public class ConfigManager {
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
+
+        registry.bind("geminiChatModel", new GoogleAiGeminiChatModel().create());
 
     }
 
