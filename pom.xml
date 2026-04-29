@@ -35,15 +35,15 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
-        <activemq-classic.version>6.2.4</activemq-classic.version>
+        <activemq-classic.version>6.2.5</activemq-classic.version>
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <axiom.version>2.0.0</axiom.version>
         <bouncycastle.version>1.84</bouncycastle.version>
-        <camel.version>4.19.0</camel.version>
+        <camel.version>4.20.0</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
-        <commons-codec.version>1.21.0</commons-codec.version>
+        <commons-codec.version>1.22.0</commons-codec.version>
         <commons-configuration2.version>2.14.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
@@ -73,8 +73,8 @@
         <netty.version>4.2.12.Final</netty.version>
         <slf4j.version>2.0.17</slf4j.version>
         <spring.version>7.0.7</spring.version>
-        <spring-boot.version>4.0.5</spring-boot.version>
-        <spring-data.version>4.0.4</spring-data.version>
+        <spring-boot.version>4.0.6</spring-boot.version>
+        <spring-data.version>4.0.5</spring-data.version>
         <springdoc.version>3.0.3</springdoc.version>
         <swagger-v3.version>2.2.48</swagger-v3.version>
         <tika.version>1.28.5</tika.version>
@@ -95,7 +95,7 @@
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
         <powermock.version>2.0.9</powermock.version>
-        <testcontainers.version>2.0.4</testcontainers.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <xmlunit.version>2.11.0</xmlunit.version>
 
     </properties>
