@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.net.URISyntaxException;
-import java.util.AbstractMap;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -223,6 +222,24 @@ public class IntegrationRuntime {
 
     }
 
+    @GetMapping(
+            path = "/integration/list/errors",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getErrors(
+            @RequestHeader(defaultValue = "100", value = "maxNumberOfEntries") int maxNumberOfEntries,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String errors = integration.getErrors(maxNumberOfEntries, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/errors",errors,true);
+        } catch (Exception e) {
+            log.error("Get list of errors",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/errors",e.getMessage());
+        }
+
+    }
 
     @PostMapping(
             path = "/integration/list/soap/action",
@@ -242,6 +259,7 @@ public class IntegrationRuntime {
         }
 
     }
+
 
     @GetMapping(
             path = "/integration/count/flows",

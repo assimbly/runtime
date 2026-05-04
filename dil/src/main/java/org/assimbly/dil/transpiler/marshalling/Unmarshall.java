@@ -30,7 +30,7 @@ public class Unmarshall {
 	private final List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
 	private final String[] connectionTypes = {
 			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
-			"amqp", "amqps", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
+			"amqp", "amqps", "queue", "queue-async", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
 	};
 
 

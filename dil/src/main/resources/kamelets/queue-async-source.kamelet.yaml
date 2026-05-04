@@ -1,12 +1,12 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "queue-source"
+  name: "queue-async-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "queue source"
+    title: "queue async source"
     description: "Links messages to another flow (inbound) using a queue like activemq"
     type: "object"
     properties:
@@ -14,6 +14,7 @@ spec:
         title: "Transport"
         description: "Transport"
         type: "string"
+        default: "activemq"
       flowId:
         title: "FlowID"
         description: "Flow ID of the flow"
@@ -43,7 +44,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}&asyncConsumer"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{connectionFactory}}&asyncConsumer=true"
         steps:
         - step:
             id: "{{routeId}}"

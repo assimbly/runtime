@@ -14,6 +14,7 @@ spec:
         title: "Transport"
         description: "Transport"
         type: "string"
+        default: "activemq"
       flowId:
         title: "FlowID"
         description: "Flow ID of the flow"
@@ -43,7 +44,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}?connectionFactory={{?connectionFactory}}&synchronous=true"
+        uri: "{{transport}}:{{flowId}}?connectionFactory={{connectionFactory}}&synchronous=true"
         steps:
         - step:
             id: "{{routeId}}"
