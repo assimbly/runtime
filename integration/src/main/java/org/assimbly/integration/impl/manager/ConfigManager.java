@@ -1,16 +1,12 @@
 package org.assimbly.integration.impl.manager;
 
+import java.time.Duration;
 import java.util.*;
 
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
-import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.core5.http.io.SocketConfig;
-import org.apache.hc.core5.util.Timeout;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
@@ -125,6 +121,15 @@ public class ConfigManager {
 
     public void setHealthChecks(boolean enable, StatsManager statsManager) {
         statsManager.setHealthChecks(enable);
+    }
+
+    public void setErrorRegistry(boolean enable){
+        if(enable){
+            ErrorRegistry errorRegistry = context.getErrorRegistry();
+            errorRegistry.setEnabled(true);
+            errorRegistry.setMaximumEntries(1000);
+            errorRegistry.setTimeToLive(Duration.ofMinutes(24));
+        }
     }
 
     public void setDefaultBlocks() throws Exception {

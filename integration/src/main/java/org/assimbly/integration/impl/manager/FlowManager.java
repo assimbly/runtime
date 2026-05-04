@@ -1,5 +1,6 @@
 package org.assimbly.integration.impl.manager;
 
+import net.sf.saxon.trans.Err;
 import org.apache.camel.*;
 import java.util.*;
 
@@ -7,9 +8,7 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
-import org.apache.camel.spi.ErrorRegistryEntry;
-import org.apache.camel.spi.RouteController;
-import org.apache.camel.spi.RouteStartupOrder;
+import org.apache.camel.spi.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.connections.Connection;
@@ -670,6 +669,36 @@ public class FlowManager {
         return result;
 
     }
+
+    public String getErrors(int maxNumberOfEntries, String mediaType) {
+
+        JSONArray errors = new JSONArray();
+
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+        Collection<ErrorRegistryEntry> errorRegistryEntries = errorRegistry.browse(maxNumberOfEntries);
+
+        for(ErrorRegistryEntry errorRegistryEntry: errorRegistryEntries){
+            JSONObject error = new JSONObject();
+
+            error.put("stepId",errorRegistryEntry.routeId());
+            error.put("exchangeId",errorRegistryEntry.exchangeId());
+            error.put("timestamp",errorRegistryEntry.timestamp());
+            error.put("endpointUri",errorRegistryEntry.endpointUri());
+            error.put("exceptionMessage",errorRegistryEntry.exceptionMessage());
+            error.put("exceptionType",errorRegistryEntry.exceptionType());
+
+            errors.put(error);
+        }
+
+        String errorJson = errors.toString(4);
+        if (mediaType.contains("xml")) {
+            errorJson = DocConverter.convertJsonToXml(errorJson);
+        }
+
+        return errorJson;
+
+    }
+
 
     public String setFlowId(String filename, String configuration) throws Exception {
 

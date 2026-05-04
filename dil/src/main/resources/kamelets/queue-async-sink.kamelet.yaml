@@ -6,7 +6,7 @@ metadata:
     camel.apache.org/kamelet.type: "sink"
 spec:
   definition:
-    title: "queue sink"
+    title: "queue async sink"
     description: "Links messages to another flow (outbound) using a queue like activemq"
     type: "object"
     properties:
@@ -14,6 +14,7 @@ spec:
         title: "Transport"
         description: "Transport"
         type: "string"
+        default: "activemq"
       targetFlowId:
         title: "TargetFlowID"
         description: "Flow ID of the target flow"
@@ -54,4 +55,4 @@ spec:
             id: "{{routeId}}"
             steps:
             - toD:
-                uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&connectionFactory={{connectionFactory}}"
+                uri: "{{transport}}:{{targetFlowId}}?connectionFactory={{connectionFactory}}&exchangePattern={{exchangePattern}}"
