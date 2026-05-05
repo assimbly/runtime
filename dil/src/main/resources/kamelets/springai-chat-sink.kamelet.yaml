@@ -14,6 +14,7 @@ spec:
         title: "Path"
         description: "Path"
         type: "string"
+        default: "chat"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -37,4 +38,4 @@ spec:
               id: "{{routeId}}"
               steps:
                 - to:
-                    uri: "spring-ai-chat://{{path}}?chatModel=#chatModel"
+                    uri: "spring-ai-chat:chat"
