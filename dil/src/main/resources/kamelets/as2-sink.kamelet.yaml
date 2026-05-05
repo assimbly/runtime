@@ -54,9 +54,9 @@ spec:
         title: SslContext
         description: SslContext
         type: "string"
-      alias:
-        title: Alias
-        description: Alias
+      keyAlias:
+        title: KeyAlias
+        description: Key alias
         type: "string"
       password:
         title: Password
@@ -106,7 +106,7 @@ spec:
                   constant: "{{password}}"
               - setProperty:
                   name: "keyAlias"
-                  constant: "{{alias}}"
+                  constant: "{{keyAlias}}"
               - setProperty:
                   name: "certificateForSigning"
                   constant: "RAW({{certificateForSigning}})"
