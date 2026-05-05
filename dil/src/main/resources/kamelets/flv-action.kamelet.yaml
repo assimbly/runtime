@@ -40,7 +40,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - to:
                 uri: "flv:{{routeId}}?{{?options}}"

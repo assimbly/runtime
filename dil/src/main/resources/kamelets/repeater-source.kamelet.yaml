@@ -34,6 +34,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -47,7 +50,7 @@ spec:
         uri: "timer:{{path}}?repeatCount={{repeatCount}}&period={{period}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

@@ -53,6 +53,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -66,7 +69,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - to:
                 uri: "soap://{{path}}?action={{action}}&extract={{extract}}&smart={{smart}}&params={{?params}}&auth={{?auth}}&headers={{?headers}}&httpHeaders={{?httpHeaders}}"

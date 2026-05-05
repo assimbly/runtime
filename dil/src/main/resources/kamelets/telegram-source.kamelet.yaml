@@ -31,6 +31,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -52,7 +55,7 @@ spec:
           authorizationToken: "{{authorizationToken}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:         
              - setHeader:
                  name: chat-id

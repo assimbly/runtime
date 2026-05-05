@@ -66,6 +66,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -79,7 +82,7 @@ spec:
         uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

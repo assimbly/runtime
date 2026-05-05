@@ -91,6 +91,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -122,7 +125,7 @@ spec:
           topicIsPattern: "{{topicIsPattern}}"
         steps:
         - step:
-            id: "{{routeId}}"      
+            id: "{{stepId}}"      
             steps:
               - process:
                   ref: "{{kafkaHeaderDeserializer}}"

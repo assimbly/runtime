@@ -69,6 +69,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -97,7 +100,7 @@ spec:
           period: "{{period}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - setBody:            
                 constant: "{{query?nested=false}}"

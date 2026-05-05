@@ -47,7 +47,7 @@ public class Route {
         assert node != null;
         String routeAsString = DocConverter.convertNodeToString(node);
 
-        return routeAsString.replace("id=\"" + routeId + "\"", "id=\"" + flowId + "-" + routeId + "\" group=\"" + flowId + "\"");
+        return routeAsString.replace("<route id=\"" + routeId + "\"", "<route id=\"" + flowId + "-" + routeId + "\" group=\"" + flowId + "\"");
 
     }
 

@@ -37,6 +37,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -51,7 +54,7 @@ spec:
         uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - removeHeaders:
                 pattern: "{{removeHeaders}}"

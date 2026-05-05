@@ -66,6 +66,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -79,7 +82,7 @@ spec:
         uri: "as2://server/listen?serverPortNumber={{serverPortNumber}}&requestUriPattern={{requestUriPattern}}&as2From={{as2From}}&as2To={{as2To}}&serverFqdn={{serverFqdn}}&as2MessageStructure={{as2MessageStructure}}&signingPrivateKey=RAW({{?signingPrivateKey}})&decryptingPrivateKey=RAW({{?decryptingPrivateKey}})&signingCertificateChain=RAW({{?signingCertificateChain}})&validateSigningCertificateChain=RAW({{?validateSigningCertificateChain}})"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

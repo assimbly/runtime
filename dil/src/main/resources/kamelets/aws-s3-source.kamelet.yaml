@@ -134,6 +134,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -222,6 +225,6 @@ spec:
           maxMessagesPerPoll: "{{maxMessagesPerPoll}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:          
             - to: "{out}}"

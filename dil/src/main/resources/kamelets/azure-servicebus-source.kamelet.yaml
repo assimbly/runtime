@@ -57,6 +57,9 @@ spec:
       routeId:
         title: "Route ID"
         type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -81,7 +84,7 @@ spec:
           credentialType: "{{credentialType}}"
         steps:
         - step:
-            id: "{{routeId}}"
+            id: "{{stepId}}"
             steps:          
             - setBody:
                 simple: "${body.toBytes()}"

@@ -33,6 +33,7 @@ public class RouteTemplate {
     private Element templatedRoutes;
     private Element templatedRoute;
     private String routeId;
+    private String stepId;
     private String templateId;
     private String path;
     private String scheme;
@@ -55,12 +56,15 @@ public class RouteTemplate {
 
     public TreeMap<String, String> setRouteTemplate(String flowId, String stepId, String type, String baseUri, String scheme, String path, String options,List<String> optionProperties, String[] links, String stepXPath, int stepIndex) throws Exception {
 
+        System.out.println("StepXpath=" + stepXPath);
+
         this.baseUri = baseUri;
         this.options = options;
         this.scheme = scheme;
         this.path = path;
 
         routeId = flowId + "-" + stepId;
+        this.stepId = stepId;
 
         templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
         templatedRoute.setAttribute("routeTemplateRef", templateId);
@@ -119,19 +123,23 @@ public class RouteTemplate {
         Element fromEndpoint = createFrom(links, stepXPath);
         route.appendChild(fromEndpoint);
 
+        Element step = customRouteDoc.createElement("step");
+        step.setAttribute("id", stepId);
+        route.appendChild(step);
+
         if (customType.equalsIgnoreCase("contentrouter")){
             Element choice = customRouteDoc.createElement("choice");
             choice = createNamespace(stepXPath, choice);
             choice = createWhens(links, stepXPath, choice);
             choice = createOtherwise(links, stepXPath, choice);
-            route.appendChild(choice);
+            step.appendChild(choice);
         }else if (customType.equalsIgnoreCase("setheaders")){
             Element setHeaders = customRouteDoc.createElement("setHeaders");
             setHeaders = createHeaders(stepXPath, setHeaders);
-            route.appendChild(setHeaders);
+            step.appendChild(setHeaders);
             if(type.equals("action")){
                 Element toEndpoint = createTo(links, stepXPath);
-                route.appendChild(toEndpoint);
+                step.appendChild(toEndpoint);
             }
         }
 
@@ -419,21 +427,23 @@ public class RouteTemplate {
 
         }else if(blockType.equalsIgnoreCase("routeConfiguration")){
 
-            String routeConfigurationId = baseUri;
-            String timestamp = getTimestamp();
-            Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + routeConfigurationId + "']");
+            String stepRouteConfigurationId = baseUri;
+
+            Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + stepRouteConfigurationId + "']");
             String routeConfiguration = DocConverter.convertNodeToString(routeNode);
 
+            String timestamp = getTimestamp();
             String updatedRouteConfigurationId = baseUri + "_" + timestamp;
-            String updatedRouteConfiguration = routeConfiguration.replace(routeConfigurationId,updatedRouteConfigurationId);
+            String updatedRouteConfiguration = routeConfiguration.replace(stepRouteConfigurationId,updatedRouteConfigurationId);
 
             if (updatedRouteConfiguration.contains("<dataFormats>")){
                 updatedRouteConfiguration = updatedRouteConfiguration.replaceAll("<dataFormats>((.\\n)*)</dataFormats>", "");
             }
 
-            properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfiguration);
+            properties.put(type + "." + stepId + ".routeconfiguration.id", updatedRouteConfigurationId);
             properties.put(type + "." + stepId + ".routeconfiguration", updatedRouteConfiguration);
         }
+
     }
 
 
@@ -480,11 +490,14 @@ public class RouteTemplate {
         templatedRoute.setAttribute("routeId", routeId);
         templatedRoutes.appendChild(templatedRoute);
 
-        Element param = createParameter(templateDoc,"routeId", routeId);
-        templatedRoute.appendChild(param);
-
         Element flowIdParam = createParameter(templateDoc,"flowId", flowId);
         templatedRoute.appendChild(flowIdParam);
+
+        Element stepIdparam = createParameter(templateDoc,"stepId", stepId);
+        templatedRoute.appendChild(stepIdparam);
+
+        Element routeIdparam = createParameter(templateDoc,"routeId", routeId);
+        templatedRoute.appendChild(routeIdparam);
 
         try {
             createPathValues(routeId);
@@ -500,8 +513,6 @@ public class RouteTemplate {
         createTransport(flowId);
 
         createLinks(links, stepXPath, stepIndex, type, flowId);
-
-        createConfigurationId();
 
     }
 
@@ -816,15 +827,6 @@ public class RouteTemplate {
         properties.put(type + "." + stepId + ".routetemplatedefinition.id", templateId);
         properties.put(type + "." + stepId + ".routetemplatedefinition", routeTemplateAsString);
 
-    }
-
-    private void createConfigurationId(){
-        String routeConfigurationID = Objects.toString(conf.getProperty("integration/flows/flow/steps/step[type='error']/routeconfiguration_id"), null);
-
-        if(routeConfigurationID!=null){
-            Element param = createParameter(templateDoc, "routeconfigurationid", routeConfigurationID);
-            templatedRoute.appendChild(param);
-        }
     }
 
     private void createCoreMessageComponents() throws XPathExpressionException {
