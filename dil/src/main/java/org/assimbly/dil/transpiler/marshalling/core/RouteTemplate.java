@@ -124,7 +124,7 @@ public class RouteTemplate {
         route.appendChild(fromEndpoint);
 
         Element step = customRouteDoc.createElement("step");
-        step.setAttribute("id", stepId);
+        step.setAttribute("id", "step-"+stepId);
         route.appendChild(step);
 
         if (customType.equalsIgnoreCase("contentrouter")){

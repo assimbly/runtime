@@ -75,6 +75,6 @@ spec:
           jetstreamAsync: "{{?jetstreamAsync}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to: "{out}}"

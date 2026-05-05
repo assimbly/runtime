@@ -46,7 +46,7 @@ spec:
         uri: "ftp:{{path}}?bridgeErrorHandler=true&{{?options}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

@@ -125,7 +125,7 @@ spec:
           topicIsPattern: "{{topicIsPattern}}"
         steps:
         - step:
-            id: "{{stepId}}"      
+            id: "step-{{stepId}}"      
             steps:
               - process:
                   ref: "{{kafkaHeaderDeserializer}}"

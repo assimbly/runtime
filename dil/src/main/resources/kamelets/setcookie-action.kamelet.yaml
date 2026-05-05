@@ -61,7 +61,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})"

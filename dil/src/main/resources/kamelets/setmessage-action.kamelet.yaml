@@ -56,7 +56,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - setProperty:
                 name: "assimbly.body"

@@ -53,7 +53,7 @@ spec:
         uri: "quartz:{{path}}?cron={{cron}}&trigger.timeZone={{timeZone}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

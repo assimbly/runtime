@@ -82,7 +82,7 @@ spec:
         uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&autoDeclare={{autoDeclare}}&bridgeErrorHandler={{useErrorRoute}}&exchangePattern={{exchangePattern}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

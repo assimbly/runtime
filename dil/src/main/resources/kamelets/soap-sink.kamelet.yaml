@@ -69,7 +69,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "soap://{{path}}?action={{action}}&extract={{extract}}&smart={{smart}}&params={{?params}}&auth={{?auth}}&headers={{?headers}}&httpHeaders={{?httpHeaders}}"

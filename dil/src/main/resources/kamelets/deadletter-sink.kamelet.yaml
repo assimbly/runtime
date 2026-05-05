@@ -42,7 +42,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
               - to:
                   uri: "activemq:{{deadLetterQueue}}?exchangePattern=InOnly&connectionFactory=#activemq-connection"

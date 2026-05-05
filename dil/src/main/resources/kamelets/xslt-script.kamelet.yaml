@@ -41,7 +41,7 @@ spec:
         uri: "kamelet:source"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
