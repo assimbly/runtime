@@ -43,7 +43,7 @@ spec:
         - step:
             id: "{{stepId}}"
             steps:
-            - setBody:
-                groovy: "resource:{{path}}"
+            - to:
+                uri: "sandbox:groovy?script={{path}}"
             - to:
                 uri: "{{out}}"
