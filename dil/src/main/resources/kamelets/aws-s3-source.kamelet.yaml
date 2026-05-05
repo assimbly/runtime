@@ -225,6 +225,6 @@ spec:
           maxMessagesPerPoll: "{{maxMessagesPerPoll}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:          
             - to: "{out}}"

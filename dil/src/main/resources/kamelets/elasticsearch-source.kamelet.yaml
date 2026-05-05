@@ -100,7 +100,7 @@ spec:
           period: "{{period}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - setBody:            
                 constant: "{{query?nested=false}}"

@@ -84,7 +84,7 @@ spec:
           credentialType: "{{credentialType}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:          
             - setBody:
                 simple: "${body.toBytes()}"

@@ -51,7 +51,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - toD:
                 uri: "log:org.assimbly.runtime.{{flowId}}?skipBodyLineSeparator=false&multiline=true&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBody}}&showException={{showException}}&showStackTrace={{showException}}&showCaughtException={{showException}}"

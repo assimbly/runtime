@@ -41,7 +41,7 @@ spec:
         uri: "jetty-nossl:http:{{path}}?jettyHttpBinding=#customHttpBinding"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - removeHeaders:
                 pattern: "CamelHttp*"

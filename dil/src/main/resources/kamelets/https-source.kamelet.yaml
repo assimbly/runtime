@@ -54,7 +54,7 @@ spec:
         uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - removeHeaders:
                 pattern: "{{removeHeaders}}"

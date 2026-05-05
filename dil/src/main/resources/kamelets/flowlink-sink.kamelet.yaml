@@ -50,7 +50,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - toD:
                 uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}"

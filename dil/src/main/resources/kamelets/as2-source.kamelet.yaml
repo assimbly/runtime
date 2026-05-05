@@ -82,7 +82,7 @@ spec:
         uri: "as2://server/listen?serverPortNumber={{serverPortNumber}}&requestUriPattern={{requestUriPattern}}&as2From={{as2From}}&as2To={{as2To}}&serverFqdn={{serverFqdn}}&as2MessageStructure={{as2MessageStructure}}&signingPrivateKey=RAW({{?signingPrivateKey}})&decryptingPrivateKey=RAW({{?decryptingPrivateKey}})&signingCertificateChain=RAW({{?signingCertificateChain}})&validateSigningCertificateChain=RAW({{?validateSigningCertificateChain}})"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - to:
                 uri: "{{out}}"

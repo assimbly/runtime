@@ -49,7 +49,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - toD:
                 uri: "sql:{{query}}?dataSource=#{{dataSource}}&outputHeader={{?outputHeader}}"

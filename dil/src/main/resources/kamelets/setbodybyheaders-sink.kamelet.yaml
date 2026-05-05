@@ -37,7 +37,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - setBody:
                 groovy: "headers.collect { k, v -> \"$k=$v\" }.join(',')"

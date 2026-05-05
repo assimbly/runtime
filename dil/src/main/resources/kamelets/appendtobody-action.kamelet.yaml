@@ -41,7 +41,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - transform:
                 method: "body().append(\"{{path}}\")"

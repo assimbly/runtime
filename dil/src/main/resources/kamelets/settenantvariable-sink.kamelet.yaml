@@ -69,7 +69,7 @@ spec:
         uri: "{{in}}"
         steps:
         - step:
-            id: "{{stepId}}"
+            id: "step-{{stepId}}"
             steps:
             - toD:
                 uri: "tenantvariables://{{path}}?operation=SET&language={{language}}&value=RAW({{value}})&encrypt={{encrypt}}&groupName=RAW({{groupName}})&flowName=RAW({{flowName}})&tenantDbName=RAW({{tenantDbName}})"
