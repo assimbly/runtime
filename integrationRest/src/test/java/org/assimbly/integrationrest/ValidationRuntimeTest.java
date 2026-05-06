@@ -93,7 +93,7 @@ class ValidationRuntimeTest {
         try {
             // params
             HashMap<String, String> params = new HashMap<>();
-            params.put("httpsUrl", "https://authenticationtest.com/HTTPAuth/");
+            params.put("httpsUrl", "https://www.google.com/");
 
             // headers
             HashMap<String, String> headers = new HashMap<>();
@@ -537,7 +537,7 @@ class ValidationRuntimeTest {
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + 1");
-            expression.put("expressionType", "groovy");
+            expression.put("language", "groovy");
             expression.put("nextNode", "nextStep");
 
             JSONArray expressions = new JSONArray();
@@ -567,7 +567,7 @@ class ValidationRuntimeTest {
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + "); // error
-            expression.put("expressionType", "groovy");
+            expression.put("language", "groovy");
             expression.put("nextNode", "nextStep");
 
             JSONArray expressions = new JSONArray();

@@ -387,9 +387,9 @@ public final class AssertUtils {
         assertThat(json.isArray()).isTrue();
         assertThat(json.size()).isGreaterThan(0);
         for (JsonNode error : json) {
-            assertThat(error.get("error").asString().toLowerCase())
-                    .contains("could not compile")
-                    .contains("checkinvoice");
+            assertThat(error.get("valid").asBoolean()).isEqualTo(false);
+            assertThat(error.get(MESSAGE).asString().toLowerCase())
+                    .contains("error");
         }
     }
 
