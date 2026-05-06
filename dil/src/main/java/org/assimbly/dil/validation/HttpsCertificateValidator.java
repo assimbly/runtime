@@ -3,6 +3,7 @@ package org.assimbly.dil.validation;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.util.Timeout;
 
 import javax.net.ssl.SSLException;
@@ -21,7 +22,12 @@ public class HttpsCertificateValidator {
      *
      * @return ValidationResult. If a certificate is found invalid or it cannot be determined a message will be included.
      */
-    public ValidationResult validate(String httpsUrlString) {
+    public static ValidationResult validate(String httpsUrlString) {
+
+        if (httpClient == null){
+            httpClient = HttpClients.createSystem();
+        }
+
         // 1. URL cleanup (HttpClient 5 still likes clean URIs)
         httpsUrlString = httpsUrlString.replace(" ", "%20");
 
