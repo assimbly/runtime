@@ -1,6 +1,7 @@
 package org.assimbly.dil.blocks.models;
 
 import dev.langchain4j.model.chat.ChatModel;
+import java.time.Duration;
 
 public class GoogleAiGeminiChatModel {
 
@@ -9,6 +10,7 @@ public class GoogleAiGeminiChatModel {
         return dev.langchain4j.model.googleai.GoogleAiGeminiChatModel.builder()
                 .apiKey(System.getenv("GEMINI_API_KEY"))
                 .modelName(System.getenv("GEMINI_MODEL_NAME"))
+                .timeout(Duration.ofSeconds(10))
                 .build();
     }
 

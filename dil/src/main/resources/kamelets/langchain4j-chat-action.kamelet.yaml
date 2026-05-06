@@ -7,7 +7,7 @@ metadata:
 spec:
   definition:
     title: "langchain4j-chat action"
-    description: "blabla"
+    description: "chat component for langchain4j"
     type: "object"
     properties:
       path:
@@ -29,18 +29,41 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
+      apiKey:
+        title: "API Key"
+        type: "string"
+        default: "AIzaSyBYU3k4uTv92cGsgYW4afJiKKu6FtRYfK0"
+      modelName:
+        title: "Model Name"
+        type: "string"
+        default: "gemini-3-flash-preview"
+      prompt:
+        title: "Prompt"
+        type: "string"
+        default: "Vertel me een leuke grap over programmeurs."
   dependencies:
     - "camel:kamelet"
   template:
+    beans:
+      - name: "GeminiChatModel2"
+        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
+        factoryMethod: "create"
     route:
-      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - step:
-              id: "{{routeId}}"
-              steps:
-                - to:
-                    uri: "langchain4j-chat://{{path}}?chatModel=#geminiChatModel"
-                - to:
-                    uri: "{{out}}"
+          - convertBodyTo:
+              type: String
+          - setHeader:
+              name: "CamelLangChain4jChatPromptTemplate"
+              expression:
+                 constant:
+                    expression: "maak een grapje"
+          - to:
+              uri: "log:langchain4jin?showAll=true&multiline=true"
+          - to:
+              uri: "langchain4j-chat://{{routeId}}?chatModel=#bean:geminiChatModel"
+          - to:
+              uri: "log:langchain4jout?showAll=true&multiline=true"
+          - to:
+              uri: "{{out}}"

@@ -12,7 +12,6 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 import org.assimbly.dil.blocks.beans.*;
-import org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel;
 import org.assimbly.dil.blocks.processors.*;
 
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -63,6 +62,9 @@ import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+import java.time.Duration;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import dev.langchain4j.model.chat.ChatModel;
 
 public class ConfigManager {
 
@@ -198,7 +200,13 @@ public class ConfigManager {
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
-        registry.bind("geminiChatModel", new GoogleAiGeminiChatModel().create());
+        ChatModel model = GoogleAiGeminiChatModel.builder()
+                .apiKey(System.getenv("GEMINI_API_KEY"))
+                .modelName(System.getenv("GEMINI_MODEL_NAME"))
+                .timeout(Duration.ofSeconds(10))
+                .build();
+
+        registry.bind("geminiChatModel", model);
 
     }
 
