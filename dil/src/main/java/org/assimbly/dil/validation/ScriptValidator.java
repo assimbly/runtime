@@ -35,9 +35,7 @@ public class ScriptValidator {
         try {
             return switch (scriptDto.getLanguage()) {
                 case "js" -> validateJavaScript(evaluationRequest.getExchange(), scriptDto.getScript());
-                case "groovy" -> scriptDto.isStrictSecureMode()
-                        ? validateStrictGroovyScript(evaluationRequest.getExchange(), scriptDto.getScript())
-                        : validateGroovyScript(evaluationRequest.getExchange(), scriptDto.getScript());
+                case "groovy" -> validateGroovyScript(evaluationRequest.getExchange(), scriptDto.getScript());
                 default -> createBadRequestResponse(evaluationRequest.getExchange(), "Unsupported scripting language");
             };
         } catch (Exception e) {
@@ -46,7 +44,7 @@ public class ScriptValidator {
         }
     }
 
-    private EvaluationResponse validateStrictGroovyScript(ExchangeDto exchangeDto, String script) {
+    private EvaluationResponse validateGroovyScript(ExchangeDto exchangeDto, String script) {
         try {
             // 1. Unmarshall the test data
             Exchange exchangeRequest = ExchangeMarshaller.unmarshall(exchangeDto);
@@ -75,19 +73,6 @@ public class ScriptValidator {
         } catch (Exception e) {
             log.error("Execution error during validation: ", e);
             return createBadRequestResponse(exchangeDto, "Execution Error: " + e.getMessage());
-        }
-    }
-
-    private EvaluationResponse validateGroovyScript(ExchangeDto exchangeDto, String script) {
-        try {
-            GroovyExpression groovyExpression = new GroovyExpression(script);
-            Exchange exchangeRequest = ExchangeMarshaller.unmarshall(exchangeDto);
-            Object response = groovyExpression.evaluate(exchangeRequest, String.class);
-            ExchangeDto exchangeDtoResponse = ExchangeMarshaller.marshall(exchangeRequest);
-            return createOKRequestResponse(exchangeDtoResponse, String.valueOf(response));
-        } catch (Exception e) {
-            log.error("Invalid groovy script: '", e);
-            return createBadRequestResponse(exchangeDto, e.getMessage());
         }
     }
 
