@@ -7,14 +7,13 @@ metadata:
 spec:
   definition:
     title: "springai-chat action"
-    description: "Send messages to a Spring AI chat model and receive the response"
+    description: "chat component for springai"
     type: "object"
     properties:
       path:
         title: "Path"
         description: "Path"
         type: "string"
-        default: "chat"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -30,18 +29,43 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
+      apiKey:
+        title: "API Key"
+        type: "string"
+        default: "insertapikeyhere"
+      modelName:
+        title: "Model Name"
+        type: "string"
+        default: "gemini-3-flash-preview"
+      prompt:
+        title: "Prompt"
+        type: "string"
+        default: "Vertel me een leuke grap over programmeurs."
   dependencies:
     - "camel:kamelet"
   template:
+    beans:
+      - name: "springChatModel"
+        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
+        factoryMethod: "create"
     route:
-      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - step:
-              id: "{{routeId}}"
-              steps:
-                - to:
-                    uri: "spring-ai-chat:chat"
-                - to:
-                    uri: "{{out}}"
+          - convertBodyTo:
+              type: String
+          - setHeader:
+              name: "SpringaiChatPromptTemplate"
+              expression:
+                constant:
+                  expression: "maak een grapje"
+          - to:
+              uri: "log:springaiin?showAll=true&multiline=true"
+          - to:
+              #              uri: "langchain4j-chat://{{routeId}}?chatModel=#bean:geminiChatModel"
+              uri: "spring-ai-chat://{{routeId}}?chatModel=#bean:springChatModel"
+          - to:
+              uri: "log:springaiout?showAll=true&multiline=true"
+          - to:
+              uri: "{{out}}"
+
