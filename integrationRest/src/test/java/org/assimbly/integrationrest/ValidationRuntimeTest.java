@@ -137,7 +137,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = mapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "notafter");
+            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "validity check failed");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

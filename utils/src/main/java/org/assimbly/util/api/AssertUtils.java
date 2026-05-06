@@ -380,7 +380,7 @@ public final class AssertUtils {
     }
 
     public static void assertScriptErrorResponse(String msg) {
-        assertThat(msg).contains("startup failed");
+        assertThat(msg).contains("failed to compile groovy script");
     }
 
     public static void assertExpressionErrorResponse(JsonNode json) {
