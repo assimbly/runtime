@@ -27,7 +27,6 @@ public class TestApplicationContext {
         STEP_ID_1,
         STEP_ID_2,
         STEP_ID_3,
-        STEP_1,
         DIL
     }
 

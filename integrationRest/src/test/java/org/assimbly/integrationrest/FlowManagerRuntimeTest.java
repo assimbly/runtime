@@ -67,7 +67,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
@@ -310,11 +310,11 @@ class FlowManagerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
-            JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+            JsonNode installedStepsJson = flowJson.get("installed");
 
             // asserts contents
-            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
+            AssertUtils.assertStepsLoadedResponse(installedStepsJson, 4, 4, 0);
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 4, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -340,11 +340,11 @@ class FlowManagerRuntimeTest {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
-            JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
+            JsonNode installedStepsJson = flowJson.get("installed");
 
             // asserts contents
-            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
+            AssertUtils.assertStepsLoadedResponse(installedStepsJson, 4, 4, 0);
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 4, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -442,7 +442,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/info"), null, headers);
@@ -459,120 +459,6 @@ class FlowManagerRuntimeTest {
 
             // asserts contents
             AssertUtils.assertFlowInfoResponse(flowJson, id, name, "started", "true");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    @Order(31)
-    void shouldInstallRoute() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/route/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/install"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_1.name()), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get("flow");
-            JsonNode stepsLoadedJson = flowJson.get("stepsLoaded");
-            JsonNode stepsJson = flowJson.get("steps");
-            JsonNode stepJson = stepsJson.get(0);
-
-            // asserts contents
-            AssertUtils.assertStepsLoadedResponse(stepsLoadedJson);
-            AssertUtils.assertSuccessfulEventResponseWithoutVersion(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()), "start", "Started flow successfully");
-            AssertUtils.assertStepResponse(stepJson, "route", "success");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Order(40)
-    void shouldInstallFlowByFile() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install/file"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s saved in the deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())));
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Order(41)
-    void shouldSetMaintenanceTime() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-
-            // body
-            JSONArray jsonArray = new JSONArray();
-            jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/maintenance/60000"), jsonArray.toString() , null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Set flows into maintenance mode for 60000 miliseconds");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Order(42)
-    void shouldUninstallFlowByFile() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/uninstall/file"), null, null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s deleted from deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

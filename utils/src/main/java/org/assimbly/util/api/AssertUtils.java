@@ -29,6 +29,7 @@ public final class AssertUtils {
     private static final String STATUS = "status";
     private static final String TIMESTAMP = "timestamp";
     private static final String TOTAL = "total";
+    private static final String SUCCESS = "success";
     private static final String UPTIME_MILLIS = "uptimeMillis";
     private static final String UPTIME = "uptime";
     private static final String VERSION = "version";
@@ -286,13 +287,13 @@ public final class AssertUtils {
 
     public static void assertStepsLoadedResponse(JsonNode stepsLoadedJson, int total, int successfully, int failed) {
         assertThat(stepsLoadedJson.get(TOTAL).asInt()).isEqualTo(total);
-        assertThat(stepsLoadedJson.get("successfully").asInt()).isEqualTo(successfully);
+        assertThat(stepsLoadedJson.get(SUCCESS).asInt()).isEqualTo(successfully);
         assertThat(stepsLoadedJson.get(FAILED).asInt()).isEqualTo(failed);
     }
 
     public static void assertStepsLoadedResponse(JsonNode stepsLoadedJson) {
         assertThat(stepsLoadedJson.get(TOTAL).asInt()).isPositive();
-        assertThat(stepsLoadedJson.get("successfully").asInt()).isPositive();
+        assertThat(stepsLoadedJson.get(SUCCESS).asInt()).isPositive();
         assertThat(stepsLoadedJson.get(FAILED).asInt()).isZero();
     }
 
