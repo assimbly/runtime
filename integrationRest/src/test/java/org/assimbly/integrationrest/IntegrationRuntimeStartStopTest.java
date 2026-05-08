@@ -45,7 +45,7 @@ class IntegrationRuntimeStartStopTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);

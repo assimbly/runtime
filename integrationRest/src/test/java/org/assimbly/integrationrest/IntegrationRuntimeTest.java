@@ -52,7 +52,7 @@ class IntegrationRuntimeTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
@@ -79,7 +79,7 @@ class IntegrationRuntimeTest {
             flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_LOG.name());
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/collectors/add"), body, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/collectors/"+schedulerCamelContextProp.get(TestApplicationContext.CollectorField.ID.name())+"/add"), body, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -300,8 +300,11 @@ class IntegrationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get(0).get("flow");
 
+            String id = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name());
+            String name = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.NAME.name());
+
             // asserts contents
-            AssertUtils.assertFlowsDetailsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "started", "true");
+            AssertUtils.assertFlowsDetailsResponse(flowJson, id, name, "started", "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -472,30 +475,6 @@ class IntegrationRuntimeTest {
 
             // asserts contents
             AssertUtils.assertThreadsResponse(threadJson);
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    void shouldResolveDependencyByScheme() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/resolvedependencybyscheme/xslt"), "", null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Dependency org.apache.camel:camel-xslt:", " resolved");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

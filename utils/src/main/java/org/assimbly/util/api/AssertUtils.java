@@ -277,9 +277,9 @@ public final class AssertUtils {
 
     // flow manager
 
-    public static void assertFlowInfoResponse(JsonNode flowJson, String id, String status, String isRunning) {
+    public static void assertFlowInfoResponse(JsonNode flowJson, String id, String name, String status, String isRunning) {
         assertThat(flowJson.get("isRunning").asString()).isEqualTo(isRunning);
-        assertThat(flowJson.get("name").asString()).isEqualTo(id);
+        assertThat(flowJson.get("name").asString()).isEqualTo(name);
         assertThat(flowJson.get("id").asString()).isEqualTo(id);
         assertThat(flowJson.get(STATUS).asString()).isEqualTo(status);
     }
@@ -316,8 +316,8 @@ public final class AssertUtils {
         assertThat(isValid).as(TIMESTAMP_IS_VALID).isTrue();
     }
 
-    public static void assertFlowsDetailsResponse(JsonNode flowJson, String id, String status, String isRunning) {
-        assertFlowInfoResponse(flowJson, id, status, isRunning);
+    public static void assertFlowsDetailsResponse(JsonNode flowJson, String id, String name, String status, String isRunning) {
+        assertFlowInfoResponse(flowJson, id, name, status, isRunning);
         assertThat(flowJson.get(UPTIME).asString()).matches("\\d+s");
     }
 

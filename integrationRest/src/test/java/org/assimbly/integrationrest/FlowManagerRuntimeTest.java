@@ -50,7 +50,7 @@ class FlowManagerRuntimeTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
@@ -454,8 +454,11 @@ class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
             JsonNode flowJson = responseJson.get("flow");
 
+            String id = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name());
+            String name = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.NAME.name());
+
             // asserts contents
-            AssertUtils.assertFlowInfoResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "started", "true");
+            AssertUtils.assertFlowInfoResponse(flowJson, id, name, "started", "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
