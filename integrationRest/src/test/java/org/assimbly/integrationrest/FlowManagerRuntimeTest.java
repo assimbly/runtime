@@ -53,7 +53,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -70,7 +70,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -91,7 +91,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/isstarted"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/isstarted"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -116,7 +116,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/lasterror"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/lasterror"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -141,7 +141,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/alerts"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/alerts"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -166,7 +166,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/alerts/count"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/alerts/count"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -191,7 +191,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/events"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/events"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -218,7 +218,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/pause"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/pause"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -228,7 +228,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "pause", "Paused flow successfully");
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "pause", "Paused flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -246,7 +246,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/resume"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/resume"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -256,7 +256,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "resume", "Resumed flow successfully");
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "resume", "Resumed flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -274,7 +274,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/stop"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/stop"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -284,7 +284,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "stop", "Stopped flow successfully");
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "stop", "Stopped flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -302,7 +302,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/start"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/start"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -314,7 +314,7 @@ class FlowManagerRuntimeTest {
 
             // asserts contents
             AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "start", "Started flow successfully");
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -332,7 +332,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/restart"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/restart"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -344,7 +344,7 @@ class FlowManagerRuntimeTest {
 
             // asserts contents
             AssertUtils.assertStepsLoadedResponse(stepsLoadedJson, 5, 5, 0);
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "start", "Started flow successfully");
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, 5, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "start", "Started flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -362,7 +362,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/status"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/status"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -389,7 +389,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uptime"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/uptime"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -416,7 +416,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uninstall"), null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/uninstall"), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -426,7 +426,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "stop", "Stopped flow successfully");
+            AssertUtils.assertSuccessfulEventResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "stop", "Stopped flow successfully");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -445,7 +445,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/info"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/info"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -455,7 +455,7 @@ class FlowManagerRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertFlowInfoResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), "started", "true");
+            AssertUtils.assertFlowInfoResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), "started", "true");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -473,7 +473,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/route/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/install"), (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_1.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/route/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/install"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_1.name()), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -487,7 +487,7 @@ class FlowManagerRuntimeTest {
 
             // asserts contents
             AssertUtils.assertStepsLoadedResponse(stepsLoadedJson);
-            AssertUtils.assertSuccessfulEventResponseWithoutVersion(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()), "start", "Started flow successfully");
+            AssertUtils.assertSuccessfulEventResponseWithoutVersion(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()), "start", "Started flow successfully");
             AssertUtils.assertStepResponse(stepJson, "route", "success");
 
         } catch (Exception e) {
@@ -505,7 +505,7 @@ class FlowManagerRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install/file"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install/file"), (String) inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -514,7 +514,7 @@ class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s saved in the deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s saved in the deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -532,10 +532,10 @@ class FlowManagerRuntimeTest {
 
             // body
             JSONArray jsonArray = new JSONArray();
-            jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            jsonArray.put(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/maintenance/60000"), jsonArray.toString() , null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/maintenance/60000"), jsonArray.toString() , null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -560,7 +560,7 @@ class FlowManagerRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/uninstall/file"), null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/uninstall/file"), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -569,7 +569,7 @@ class FlowManagerRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s deleted from deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())));
+            AssertUtils.assertSuccessfulGenericResponse(responseJson, "flow %s deleted from deploy directory".formatted(inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

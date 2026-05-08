@@ -68,7 +68,7 @@ public class AssimblyGatewayHeadlessContainer {
         }
     }
 
-    public String buildBrokerApiPath(String path) {
+    public String buildGatewayHeadlessApiPath(String path) {
         if (gatewayHeadlessContainer == null) {
             throw new IllegalStateException("Container has not been initialized. Call init() first.");
         }

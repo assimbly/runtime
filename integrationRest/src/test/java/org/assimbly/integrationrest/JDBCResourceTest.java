@@ -52,7 +52,7 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -87,7 +87,7 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);

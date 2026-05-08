@@ -49,10 +49,10 @@ class StatisticsRuntimeTest {
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - install scheduler flow
-            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -67,7 +67,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/messages"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -77,7 +77,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -93,7 +93,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/completed"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/messages/completed"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -118,7 +118,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/failed"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/messages/failed"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -143,7 +143,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/pending"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/messages/pending"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -168,7 +168,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/messages/total"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/messages/total"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -193,7 +193,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/messages"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/messages"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -203,7 +203,7 @@ class StatisticsRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
 
             // asserts contents
-            AssertUtils.assertEmptyFlowStatsResponse(stepJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertEmptyFlowStatsResponse(stepJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -219,7 +219,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()) + "/step/" + schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name()) + "/stats"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()) + "/step/" + schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()) + "/stats"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -229,8 +229,8 @@ class StatisticsRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
             JsonNode statsJson = stepJson.get("stats");
             String id = "%s-%s".formatted(
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()),
-                    schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())
+                    schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()),
+                    schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())
             );
 
             // asserts contents
@@ -250,7 +250,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/historymetrics"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/historymetrics"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -276,7 +276,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/messages"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/messages"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -286,7 +286,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            AssertUtils.assertMessageStatFieldsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertMessageStatFieldsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -302,7 +302,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/metrics"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/metrics"), null, headers);
 
             // asserts
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -328,7 +328,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats/steps"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/steps"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -356,7 +356,7 @@ class StatisticsRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/stats"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/stats"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -366,7 +366,7 @@ class StatisticsRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -381,7 +381,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -406,7 +406,7 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/stats/flows"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/flows"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -432,10 +432,10 @@ class StatisticsRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String body = (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name());
+            String body = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name());
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/statsbyflowids"), body, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/statsbyflowids"), body, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);

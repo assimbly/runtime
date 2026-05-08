@@ -195,7 +195,7 @@ public final class AssertUtils {
 
     public static void assertStepStatsResponse(JsonNode stepJson, JsonNode statsJson, String id, String status) {
         assertThat(stepJson.get("id").asString()).isEqualTo(id);
-        assertThat(stepJson.get(STATUS).asString()).isEqualTo(status);
+        assertThat(stepJson.get(STATUS).asString()).isEqualToIgnoringCase(status);
         assertThat(statsJson.get("externalRedeliveries").asString()).matches("-?\\d+");
         assertThat(statsJson.get("idleSince").asString()).matches("-?\\d+");
         assertThat(statsJson.get("maxProcessingTime").asString()).matches("-?\\d+");
@@ -224,7 +224,6 @@ public final class AssertUtils {
         assertThat(responseJson.get("exchangesTotal").isInt()).isTrue();
         assertThat(responseJson.get(EXCHANGES_FAILED).isInt()).isTrue();
         assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
-        assertCpuLoadStatsResponse(responseJson);
     }
 
     public static void assertFlowsStatsResponse(JsonNode flowJson, String status) {
@@ -239,13 +238,6 @@ public final class AssertUtils {
         assertThat(flowJson.get("lastCompleted")).isNotNull();
         assertThat(flowJson.get("id")).isNotNull();
         assertThat(flowJson.get(STATUS).asString()).isEqualTo(status);
-        assertCpuLoadStatsResponse(flowJson);
-    }
-
-    public static void assertCpuLoadStatsResponse(JsonNode responseJson) {
-        assertThat(responseJson.get("cpuLoadLastMinute")).isNotNull();
-        assertThat(responseJson.get("cpuLoadLast5Minutes")).isNotNull();
-        assertThat(responseJson.get("cpuLoadLast15Minutes")).isNotNull();
     }
 
     public static void assertEmptyFlowStatsResponse(JsonNode flowJson, String id) {

@@ -48,7 +48,7 @@ class HealthRuntimeTest {
             headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
             // endpoint call
-            HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.CAMEL_CONTEXT.name()), null, headers);
+            HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/install"), (String) schedulerCamelContextProp.get(TestApplicationContext.DILField.DIL.name()), null, headers);
 
             schedulerFlowInstalled = true;
         }
@@ -63,7 +63,7 @@ class HealthRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/health"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/health"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -73,7 +73,7 @@ class HealthRuntimeTest {
             JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -89,7 +89,7 @@ class HealthRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())+"/health"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/health"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -99,7 +99,7 @@ class HealthRuntimeTest {
             JsonNode stepJson = responseJson.get("step");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ROUTE_ID_1.name())));
+            AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -115,7 +115,7 @@ class HealthRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/integration/health"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/health"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -125,7 +125,7 @@ class HealthRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -141,7 +141,7 @@ class HealthRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/integration/healthbyflowids"), (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/healthbyflowids"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -151,7 +151,7 @@ class HealthRuntimeTest {
             JsonNode flowJson = responseJson.get(0).get("flow");
 
             // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.CamelContextField.ID.name()));
+            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
