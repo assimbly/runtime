@@ -365,13 +365,13 @@ public class IntegrationRuntime {
             String result = integration.addCollectorsConfiguration(collectorsId, mediaType, configuration);
             if(!result.equalsIgnoreCase("configured")){
                 log.error("Add collector failed. Message: {}", result);
-                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/add",result);
+                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",result);
             }
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/add",result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",result);
         } catch (Exception e) {
             log.error("Add collector failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/add",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",e.getMessage());
         }
 
     }
