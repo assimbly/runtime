@@ -101,7 +101,7 @@ public final class AssertUtils {
 
     public static void assertSuccessfulHealthResponse(JsonNode flowJson, String id) {
         assertThat(flowJson.get("id").asString()).isEqualTo(id);
-        assertThat(flowJson.get(STATE).asString()).isEqualTo("UP");
+        assertThat(flowJson.get(STATUS).asString()).isEqualTo("UP");
     }
 
     public static void assertJvmHealthResponse(JsonNode jvmJson) {
