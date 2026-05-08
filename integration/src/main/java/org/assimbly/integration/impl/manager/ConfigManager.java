@@ -3,6 +3,9 @@ package org.assimbly.integration.impl.manager;
 import java.time.Duration;
 import java.util.*;
 
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
@@ -201,6 +204,33 @@ public class ConfigManager {
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
+
+        // Register Spring AI chat model (OpenAI-compatible, works with Gemini, OpenAI, etc.)
+
+        String springAiApiKey = System.getenv("SPRING_AI_API_KEY") != null
+                ? System.getenv("SPRING_AI_API_KEY")
+                : (System.getenv("GEMINI_API_KEY") != null ? System.getenv("GEMINI_API_KEY") : "AIzaSyAYdMUN2F5jN62iS7R3xX0KvddrbOyNq5w");
+        String springAiBaseUrl = System.getenv("SPRING_AI_BASE_URL") != null
+                ? System.getenv("SPRING_AI_BASE_URL")
+                : "https://generativelanguage.googleapis.com/v1beta/openai";
+        String springAiModelName = System.getenv("SPRING_AI_MODEL_NAME") != null
+                ? System.getenv("SPRING_AI_MODEL_NAME")
+                : (System.getenv("GEMINI_MODEL_NAME") != null ? System.getenv("GEMINI_MODEL_NAME") : "gemini-3-flash-preview");
+
+        if (springAiApiKey != null && !springAiApiKey.isBlank()) {
+            OpenAiApi openAiApi = new OpenAiApi(springAiBaseUrl, springAiApiKey);
+
+            OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
+                    .withModel(springAiModelName)
+                    .build();
+
+            org.springframework.ai.chat.model.ChatModel springAiChatModel = new OpenAiChatModel(openAiApi, chatOptions);
+
+            registry.bind("springAiChatModel", springAiChatModel);
+            log.info("Spring AI chat model registered as 'springAiChatModel' (model: {}, baseUrl: {})", springAiModelName, springAiBaseUrl);
+        } else {
+            log.warn("Spring AI chat model NOT registered: SPRING_AI_API_KEY and GEMINI_API_KEY are both unset.");
+        }
 
     }
 

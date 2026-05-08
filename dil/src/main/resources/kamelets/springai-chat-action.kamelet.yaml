@@ -4,68 +4,53 @@ metadata:
   name: "springai-chat-action"
   labels:
     camel.apache.org/kamelet.type: "action"
+
 spec:
   definition:
-    title: "springai-chat action"
-    description: "chat component for springai"
+    title: "Spring AI Chat Action"
+    description: "Send a prompt to a Spring AI chat model and receive the AI response"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
-        type: "string"
       in:
-        title: "Source Endpoint"
         type: "string"
         default: "kamelet:source"
       out:
-        title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
       routeId:
-        title: "Route ID"
         type: "string"
-      routeConfigurationId:
-        title: "Route Configuration ID"
+        default: "springai-chat"
+      chatModel:
+        title: "Chat Model Bean Name"
+        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #springAiChatModel)"
         type: "string"
-        default: "0"
-      apiKey:
-        title: "API Key"
+        default: "#springAiChatModel"
+      systemMessage:
+        title: "System Message"
+        description: "Optional system message (instructions) to prepend to every chat request"
         type: "string"
-        default: "insertapikeyhere"
-      modelName:
-        title: "Model Name"
-        type: "string"
-        default: "gemini-3-flash-preview"
-      prompt:
-        title: "Prompt"
-        type: "string"
-        default: "Vertel me een leuke grap over programmeurs."
+        default: ""
+
   dependencies:
     - "camel:kamelet"
+    - "camel:spring-ai"
+
   template:
-    beans:
-      - name: "springChatModel"
-        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
-        factoryMethod: "create"
     route:
       from:
         uri: "{{in}}"
         steps:
           - convertBodyTo:
               type: String
-          - setHeader:
-              name: "SpringaiChatPromptTemplate"
-              expression:
-                constant:
-                  expression: "maak een grapje"
+
           - to:
-              uri: "log:springaiin?showAll=true&multiline=true"
+              uri: "log:springai-in?showAll=true&multiline=true"
+
           - to:
-              #              uri: "langchain4j-chat://{{routeId}}?chatModel=#bean:geminiChatModel"
-              uri: "spring-ai-chat://{{routeId}}?chatModel=#bean:springChatModel"
+              uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&systemMessage={{systemMessage}}"
+
           - to:
-              uri: "log:springaiout?showAll=true&multiline=true"
+              uri: "log:springai-out?showAll=true&multiline=true"
+
           - to:
               uri: "{{out}}"
-

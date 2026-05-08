@@ -4,38 +4,40 @@ metadata:
   name: "springai-chat-sink"
   labels:
     camel.apache.org/kamelet.type: "sink"
+
 spec:
   definition:
-    title: "springai-chat sink"
+    title: "Spring AI Chat Sink"
     description: "Send messages to a Spring AI chat model"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
-        type: "string"
-        default: "chat"
       in:
-        title: "Source Endpoint"
         type: "string"
         default: "kamelet:source"
       routeId:
-        title: "Route ID"
         type: "string"
-      routeConfigurationId:
-        title: "Route Configuration ID"
+        default: "springai-chat-sink"
+      chatModel:
+        title: "Chat Model Bean Name"
+        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #springAiChatModel)"
         type: "string"
-        default: "0"
+        default: "#springAiChatModel"
+      systemMessage:
+        title: "System Message"
+        description: "Optional system message (instructions) to prepend to every chat request"
+        type: "string"
+        default: ""
+
   dependencies:
     - "camel:kamelet"
+    - "camel:spring-ai"
+
   template:
     route:
-      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - step:
-              id: "{{routeId}}"
-              steps:
-                - to:
-                    uri: "spring-ai-chat:chat"
+          - convertBodyTo:
+              type: String
+          - to:
+              uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&systemMessage={{systemMessage}}"

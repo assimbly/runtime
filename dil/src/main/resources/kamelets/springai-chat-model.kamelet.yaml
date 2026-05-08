@@ -1,0 +1,65 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "springai-chat-model"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+
+spec:
+  definition:
+    title: "Spring AI Chat Model"
+    description: "Configures and binds a Spring AI ChatModel bean to the registry. This model can then be used by the springai-chat-action."
+    type: "object"
+    required:
+      - "apiKey"
+    properties:
+      beanName:
+        title: "Bean Name"
+        description: "The name to use when binding the ChatModel to the registry"
+        type: "string"
+        default: "springAiChatModel"
+      apiKey:
+        title: "API Key"
+        description: "The API key for the AI provider"
+        type: "string"
+        format: password
+        default: "M9AqSHaYbAq0WucznxJhJFnvqAOC4LhQ"
+      baseUrl:
+        title: "Base URL"
+        description: "The base URL for the AI provider"
+        type: "string"
+        default: "https://generativelanguage.googleapis.com/v1beta/openai"
+      modelName:
+        title: "Model Name"
+        description: "The name of the model to use (e.g. gemini-2.0-flash)"
+        type: "string"
+        default: "gemini-2.0-flash"
+
+  dependencies:
+    - "camel:kamelet"
+    - "camel:groovy"
+
+  template:
+    route:
+      from:
+        uri: "kamelet:source"
+        steps:
+          - script:
+              language: groovy
+              script: |
+                // Resolve properties correctly
+                def resolvedApiKey = exchange.context.resolvePropertyPlaceholders("{{apiKey}}")
+                def resolvedBaseUrl = exchange.context.resolvePropertyPlaceholders("{{baseUrl}}")
+                def resolvedModelName = exchange.context.resolvePropertyPlaceholders("{{modelName}}")
+                def resolvedBeanName = exchange.context.resolvePropertyPlaceholders("{{beanName}}")
+
+                // Create Spring AI model
+                def openAiApi = new org.springframework.ai.openai.api.OpenAiApi(resolvedBaseUrl, resolvedApiKey)
+                def chatOptions = org.springframework.ai.openai.OpenAiChatOptions.builder()
+                    .withModel(resolvedModelName)
+                    .build()
+                def chatModel = new org.springframework.ai.openai.OpenAiChatModel(openAiApi, chatOptions)
+
+                // Bind to registry
+                exchange.context.registry.bind(resolvedBeanName, chatModel)
+          - to: "kamelet:sink"
