@@ -1,0 +1,64 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "openai-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "OpenAI Action"
+    description: "Stuurt een bericht naar een AI model via het OpenAI protocol"
+    type: "object"
+    properties:
+      apiKey:
+        title: "API Key"
+        type: "string"
+        format: "password"
+      baseUrl:
+        title: "Base URL"
+        type: "string"
+      model:
+        title: "Model"
+        type: "string"
+      systemMessage:
+        title: "System Message"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:openai"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "openai:chat-completion"
+                parameters:
+                  apiKey: "{{apiKey}}"
+                  baseUrl: "{{?baseUrl}}"
+                  model: "{{?model}}"
+                  systemMessage: "{{?systemMessage}}"
+            - to:
+                uri: "{{out}}"
