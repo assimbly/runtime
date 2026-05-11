@@ -50,11 +50,11 @@
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>2.0.1</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.3.4</elasticsearch-rest-client.version>
-        <glassfish.jaxb.version>4.0.7</glassfish.jaxb.version>
-        <groovy-script.version>5.0.5</groovy-script.version>
+        <elasticsearch-rest-client.version>9.4.0</elasticsearch-rest-client.version>
+        <glassfish.jaxb.version>4.0.8</glassfish.jaxb.version>
+        <groovy-script.version>5.0.6</groovy-script.version>
         <httpClient5.version>5.6.1</httpClient5.version>
-        <ibmmq-client.version>9.4.5.0</ibmmq-client.version>
+        <ibmmq-client.version>9.4.5.1</ibmmq-client.version>
         <jackson.version>3.1.3</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
@@ -67,10 +67,10 @@
         <json-path.version>3.0.0</json-path.version>
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.6.0</jolokia.version>
-        <kamelet.version>4.18.1</kamelet.version>
+        <kamelet.version>4.20.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
-        <netty.version>4.2.12.Final</netty.version>
+        <netty.version>4.2.13.Final</netty.version>
         <slf4j.version>2.0.17</slf4j.version>
         <spring.version>7.0.7</spring.version>
         <spring-boot.version>4.0.6</spring-boot.version>
@@ -87,7 +87,7 @@
         <googleauth.version>1.5.0</googleauth.version>
         <h2database.version>2.4.240</h2database.version>
         <hamcrest.version>3.0</hamcrest.version>
-        <jetty.version>12.1.8</jetty.version>
+        <jetty.version>12.1.9</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.1</json-unit-assertj.version>
         <junit.version>6.0.3</junit.version>

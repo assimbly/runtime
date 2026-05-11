@@ -30,7 +30,7 @@ public class JDBCConnection {
 
     public void start(String direction, Object stepId) throws Exception {
 
-        log.info("Setting up jms client connection for ActiveMQ.");
+        log.info("Setting up database client connection.");
 
         setFields();
 

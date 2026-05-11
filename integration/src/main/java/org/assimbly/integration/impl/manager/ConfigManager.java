@@ -149,7 +149,7 @@ public class ConfigManager {
         KameletComponent kameletComponent = new KameletComponent();
         context.addComponent("function", kameletComponent);
 
-        HttpComponent httpComponent =  context.getComponent("https", HttpComponent.class);
+        HttpComponent httpComponent = context.getComponent("https", HttpComponent.class);
         httpComponent.setHttpClientConfigurer(HttpClientBuilder::disableAutomaticRetries);
 
         JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
@@ -201,6 +201,7 @@ public class ConfigManager {
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
+        registry.bind("SqlProcessor", new SqlProcessor());
 
     }
 

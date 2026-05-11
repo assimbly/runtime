@@ -22,6 +22,10 @@ spec:
       outputHeader:
         title: "OutputHeader"
         description: "Set query output to a header"
+      contentType:
+        title: "Content-Type"
+        type: "string"
+        default: "text/xml"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -51,7 +55,32 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
-            - toD:
-                uri: "sql:{{query}}?dataSource=#{{dataSource}}&outputHeader={{?outputHeader}}"
+            - doTry:
+                steps:
+                - setHeader:
+                    name: "Content-Type"
+                    constant: "{{contentType}}"
+                - setHeader:
+                   name: "CamelSqlRetrieveGeneratedKeys"
+                   constant: true
+                - toD:
+                    uri: "sql:{{query}}?dataSource=#{{dataSource}}&outputHeader={{?outputHeader}}"
+                - setHeader:
+                    name: "hasErrors"
+                    constant: false
+                - doCatch:
+                    exception:
+                      - java.lang.Exception
+                    steps:
+                    - setHeader:
+                        name: "hasErrors"
+                        constant: true
+                    - setHeader:
+                        name: "errorMessage"
+                        simple: "${exception.message}"
+                - doFinally:
+                    steps:
+                    - process:
+                        ref: "SqlProcessor"
             - to:
                 uri: "{{out}}"

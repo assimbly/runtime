@@ -95,7 +95,7 @@ public class StepCollector extends EventNotifierSupport {
                 return;
             }
 
-            // Cast to exchange event
+            // Cast to Camel event to retrieve the StepEvent
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
 
             // Get the stepId
