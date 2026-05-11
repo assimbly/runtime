@@ -7,38 +7,28 @@ metadata:
 spec:
   definition:
     title: "OpenAI Action"
-    description: "Stuurt een bericht naar een AI model via het OpenAI protocol"
     type: "object"
     properties:
+      operation:
+        type: "string"
+        default: "chat-completion"
       apiKey:
-        title: "API Key"
         type: "string"
         format: "password"
-      baseUrl:
-        title: "Base URL"
-        type: "string"
       model:
-        title: "Model"
         type: "string"
-      systemMessage:
-        title: "System Message"
-        type: "string"
+        default: "gpt-4o-mini"
       in:
-        title: "Source Endpoint"
         type: "string"
         default: "kamelet:source"
       out:
-        title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
-      routeId:
-        title: "Route ID"
-        type: "string"
       stepId:
-        title: "Step ID"
+        type: "string"
+      routeId:
         type: "string"
       routeConfigurationId:
-        title: "Route Configuration ID"
         type: "string"
         default: "0"
   dependencies:
@@ -50,15 +40,15 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "step-{{stepId}}"
-            steps:
-            - to:
-                uri: "openai:chat-completion"
-                parameters:
-                  apiKey: "{{apiKey}}"
-                  baseUrl: "{{?baseUrl}}"
-                  model: "{{?model}}"
-                  systemMessage: "{{?systemMessage}}"
-            - to:
-                uri: "{{out}}"
+          - convertBodyTo:
+              type: String
+          - setHeader:
+              name: "CamelOpenAIUserMessage"
+              constant: "maak een grapje"
+          - to:
+              uri: "openai:{{operation}}"
+              parameters:
+                apiKey: "{{apiKey}}"
+                model: "{{model}}"
+          - to:
+              uri: "{{out}}"
