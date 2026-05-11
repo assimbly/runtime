@@ -1,0 +1,99 @@
+{
+  "dil": {
+    "integrations": {
+      "integration": {
+        "flows": {
+          "flow": {
+            "id": "69fc98bed4e0d00010000071",
+            "name": "InboundHttps",
+            "type": "esb",
+            "steps": {
+              "step": [
+                {
+                  "id": "e1ae2f77-d5ee-4803-bf09-c07a8a1bc709",
+                  "type": "source",
+                  "uri": "https://0.0.0.0:9001/_new2/SimpleTest",
+                  "options": {
+                    "matchOnUriPrefix": false,
+                    "preserveHttpHeaders": false
+                  },
+                  "links": {
+                    "link": {
+                      "id": "3035fb1f-acdf-4f12-89ec-a0ade7fd72bc",
+                      "bound": "out",
+                      "transport": "sync"
+                    }
+                  }
+                },
+                {
+                  "id": "3035fb1f-acdf-4f12-89ec-a0ade7fd72bc",
+                  "type": "action",
+                  "uri": "setheaders:message:3035fb1f-acdf-4f12-89ec-a0ade7fd72bc",
+                  "links": {
+                    "link": [
+                      {
+                        "id": "3035fb1f-acdf-4f12-89ec-a0ade7fd72bc",
+                        "bound": "in",
+                        "transport": "sync"
+                      },
+                      {
+                        "id": "9545677a-edec-4776-ab98-3bf19fef6842",
+                        "bound": "out",
+                        "transport": "sync"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "9545677a-edec-4776-ab98-3bf19fef6842",
+                  "type": "sink",
+                  "uri": "setbody",
+                  "options": {
+                    "language": "simple",
+                    "expression": "${header.test}"
+                  },
+                  "links": {
+                    "link": {
+                      "id": "9545677a-edec-4776-ab98-3bf19fef6842",
+                      "bound": "in",
+                      "transport": "sync"
+                    }
+                  }
+                },
+                {
+                  "id": "69fc98bed4e0d00010000073",
+                  "type": "error",
+                  "uri": "failedexchange",
+                  "options": {
+                    "maximumRedeliveries": 0,
+                    "redeliveryDelay": 0
+                  }
+                }
+              ]
+            },
+            "options": {
+              "environment": "Test",
+              "tenant": "_new2",
+              "version": 1
+            }
+          }
+        }
+      }
+    },
+    "core": {
+      "messages": {
+        "message": {
+          "name": "3035fb1f-acdf-4f12-89ec-a0ade7fd72bc",
+          "headers": {
+            "header": {
+              "type": "header",
+              "language": "constant",
+              "name": "test",
+              "value": "test header content"
+            }
+          }
+        }
+      }
+    }
+  }
+}

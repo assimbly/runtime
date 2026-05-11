@@ -36,15 +36,15 @@ class JDBCResourceTest {
             // params
             HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
-            params.put("user", "rfamro");
-            params.put("host", "mysql-rfam-public.ebi.ac.uk");
+            params.put("user", "anonymous");
+            params.put("host", "ensembldb.ensembl.org");
             params.put("instance", "");
             params.put("pwd", "");
-            params.put("port", "4497");
+            params.put("port", "3306");
             params.put("useSSL", "false");
             params.put("enabledTLSProtocols", "false");
             params.put("escapeChars", "false");
-            params.put("database", "Rfam");
+            params.put("database", "PERCONA_SCHEMA");
 
             // headers
             HashMap<String, String> headers = new HashMap<>();
@@ -52,7 +52,7 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -71,15 +71,15 @@ class JDBCResourceTest {
             // params
             HashMap<String, String> params = new HashMap<>();
             params.put("type", "MYSQL");
-            params.put("user", "rfamro");
-            params.put("host", "mysql-rfam-public.ebi.ac.uk");
+            params.put("user", "anonymous");
+            params.put("host", "ensembldb.ensembl.org");
             params.put("instance", "");
             params.put("pwd", "123");
-            params.put("port", "4497");
+            params.put("port", "3306");
             params.put("useSSL", "false");
             params.put("enabledTLSProtocols", "false");
             params.put("escapeChars", "false");
-            params.put("database", "Rfam");
+            params.put("database", "PERCONA_SCHEMA");
 
             // headers
             HashMap<String, String> headers = new HashMap<>();
@@ -87,7 +87,7 @@ class JDBCResourceTest {
             headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/jdbc"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -97,7 +97,7 @@ class JDBCResourceTest {
 
             // asserts contents
             assertThat(responseJson.get("error").asString())
-                    .startsWith("Access denied for user 'rfamro'@")
+                    .startsWith("Access denied for user")
                     .endsWith("(using password: YES)");
 
         } catch (Exception e) {

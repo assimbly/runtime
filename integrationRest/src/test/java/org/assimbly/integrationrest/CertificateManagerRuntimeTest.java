@@ -48,7 +48,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "changeit");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/certificates/generate"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/certificates/generate"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -80,7 +80,7 @@ class CertificateManagerRuntimeTest {
             String certificate = ApiUtils.readFileAsStringFromResources("certificates/certificate.pem");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/upload"), certificate, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/upload"), certificate, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -114,7 +114,7 @@ class CertificateManagerRuntimeTest {
             String base64Encoded = Base64.getEncoder().encodeToString(certificateBytes);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/uploadp12"), base64Encoded, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/uploadp12"), base64Encoded, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -142,7 +142,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "supersecret");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/import"), "https://www.google.com", null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/import"), "https://www.google.com", null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -170,7 +170,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "supersecret");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/set"), "https://www.google.com", null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/set"), "https://www.google.com", null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -212,7 +212,7 @@ class CertificateManagerRuntimeTest {
             bodyJson.put("certificate", certificateArray);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/certificates/update"), bodyJson.toString(), params, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/update"), bodyJson.toString(), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -236,7 +236,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "changeit");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/certificates/delete/example"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/certificates/delete/example"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
