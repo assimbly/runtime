@@ -31,20 +31,12 @@ spec:
       routeConfigurationId:
         type: "string"
         default: "0"
-  dependencies:
-    - "camel:kamelet"
-    - "camel:openai"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - convertBodyTo:
-              type: String
-          - setHeader:
-              name: "CamelOpenAIUserMessage"
-              constant: "maak een grapje"
           - to:
               uri: "openai:{{operation}}"
               parameters:
