@@ -19,6 +19,7 @@ import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.jms.ReplyToType;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
@@ -1365,8 +1366,8 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 100);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 5000);
+		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 20);
+		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 10000);
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
@@ -1378,13 +1379,18 @@ public class CamelIntegration extends BaseIntegration {
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
 
-		jmsComponent.setConcurrentConsumers(4);
+		jmsComponent.setConcurrentConsumers(1);
 		jmsComponent.setMaxConcurrentConsumers(4);
-		jmsComponent.setReplyToMaxConcurrentConsumers(4);
+
+		jmsComponent.setCacheLevelName("CACHE_SESSION");
+		jmsComponent.setReplyTo("AMQ.SHARED.REPLY");
+		jmsComponent.setReplyToType(ReplyToType.Shared);
+		jmsComponent.setReplyToMaxConcurrentConsumers(16);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
 		return jmsComponent;
+
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
