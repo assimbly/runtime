@@ -1366,26 +1366,21 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 20);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 10000);
-
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(maxConnections);
-		pooledConnectionFactory.setIdleTimeout(idleTimeout);
+		pooledConnectionFactory.setMaxConnections(20);
+		pooledConnectionFactory.setMaximumActiveSessionPerConnection(100);
+		pooledConnectionFactory.setIdleTimeout(10000);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
 
+		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
 		jmsComponent.setConcurrentConsumers(1);
 		jmsComponent.setMaxConcurrentConsumers(4);
 
-		jmsComponent.setCacheLevelName("CACHE_SESSION");
-		jmsComponent.setReplyTo("AMQ.SHARED.REPLY");
-		jmsComponent.setReplyToType(ReplyToType.Shared);
-		jmsComponent.setReplyToMaxConcurrentConsumers(16);
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
