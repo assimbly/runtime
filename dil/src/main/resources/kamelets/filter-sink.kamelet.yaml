@@ -44,10 +44,10 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "step-{{stepId}}"
-            steps:
-            - filter:
-                language:
-                  language: "{{language}}"
-                  expression: "{{expression}}"
+          - choice:
+              id: "step-{{stepId}}"
+              when:
+                - expression:
+                    language:
+                      language: "{{language}}"
+                      expression: "{{expression}}"
