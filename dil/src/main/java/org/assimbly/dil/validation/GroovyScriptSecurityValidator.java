@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GroovyScriptSecurityValidator {
 
@@ -127,6 +128,13 @@ public class GroovyScriptSecurityValidator {
 
     private static class SecurityCheckCustomizer extends CompilationCustomizer {
 
+        private static final Map<String, Set<String>> FORBIDDEN_STATIC_CALLS = Map.of(
+                "java.lang.System",   Set.of("exit"),
+                "java.util.TimeZone", Set.of("setDefault")
+        );
+
+        private static final Set<String> FORBIDDEN_METHOD_NAMES = Set.of("getClass", "class");
+
         public SecurityCheckCustomizer() {
             super(CompilePhase.SEMANTIC_ANALYSIS);
         }
@@ -136,41 +144,30 @@ public class GroovyScriptSecurityValidator {
             classNode.getMethods().forEach(method ->
                     method.getCode().visit(new CodeVisitorSupport() {
 
-                        // Catches fully-qualified static calls: java.lang.System.exit()
                         @Override
                         public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
-                            String owner = call.getOwnerType().getName();
-                            String name  = call.getMethod();
-
-                            if ("java.lang.System".equals(owner) && "exit".equals(name)) {
-                                throw new SecurityException("Sandbox Denial: System.exit() is not allowed.");
-                            }
-                            if ("java.util.TimeZone".equals(owner) && "setDefault".equals(name)) {
-                                throw new SecurityException("Sandbox Denial: Cannot change global TimeZone.");
-                            }
+                            checkForbiddenCall(call.getOwnerType().getName(), call.getMethod());
                             super.visitStaticMethodCallExpression(call);
                         }
 
-                        // Catches both instance/dynamic calls AND unqualified static calls
-                        // e.g. TimeZone.setDefault(), System.exit(), obj.getClass()
                         @Override
                         public void visitMethodCallExpression(MethodCallExpression call) {
-                            String name     = call.getMethodAsString();
-                            String receiver = call.getObjectExpression().getText();
-
-                            if ("getClass".equals(name) || "class".equals(name)) {
+                            String name = call.getMethodAsString();
+                            if (FORBIDDEN_METHOD_NAMES.contains(name)) {
                                 throw new SecurityException("Sandbox Denial: Reflection is forbidden.");
                             }
-                            if ("java.lang.System".equals(receiver) && "exit".equals(name)) {
-                                throw new SecurityException("Sandbox Denial: System.exit() is not allowed.");
-                            }
-                            if ("java.util.TimeZone".equals(receiver) && "setDefault".equals(name)) {
-                                throw new SecurityException("Sandbox Denial: Cannot change global TimeZone.");
-                            }
+                            checkForbiddenCall(call.getObjectExpression().getText(), name);
                             super.visitMethodCallExpression(call);
                         }
                     })
             );
+        }
+
+        private static void checkForbiddenCall(String receiver, String method) {
+            Set<String> forbidden = FORBIDDEN_STATIC_CALLS.get(receiver);
+            if (forbidden != null && forbidden.contains(method)) {
+                throw new SecurityException("Sandbox Denial: " + receiver + "." + method + "() is not allowed.");
+            }
         }
     }
 }
