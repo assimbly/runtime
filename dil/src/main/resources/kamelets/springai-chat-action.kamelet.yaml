@@ -61,5 +61,5 @@ spec:
                 - to:
                     uri: "log:springai-out?showAll=true&multiline=true"
 
-          - to:
-              uri: "{{out}}"
+                - to:
+                    uri: "{{out}}"
