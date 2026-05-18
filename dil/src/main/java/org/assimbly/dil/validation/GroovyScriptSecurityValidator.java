@@ -52,6 +52,7 @@ public class GroovyScriptSecurityValidator {
     private static List<String> extractFromXml(String xml) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // disabling DOCTYPE - Classic XXE (XML External Entity) vulnerability warning
         Document doc = factory.newDocumentBuilder()
                 .parse(new ByteArrayInputStream(xml.getBytes()));
 
