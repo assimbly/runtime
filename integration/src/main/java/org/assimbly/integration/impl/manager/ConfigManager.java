@@ -3,9 +3,7 @@ package org.assimbly.integration.impl.manager;
 import java.time.Duration;
 import java.util.*;
 
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
+
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
@@ -61,6 +59,10 @@ import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+
+import com.google.genai.Client;
+import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 
 public class ConfigManager {
 
@@ -205,33 +207,26 @@ public class ConfigManager {
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
-        // Register Spring AI chat model (OpenAI-compatible, works with Gemini, OpenAI, etc.)
+        GoogleGenAiChatModel springAiChatModel = googleGenAiChatModel();
+        registry.bind("SpringAiChatModel", springAiChatModel);
 
-        String springAiApiKey = System.getenv("SPRING_AI_API_KEY") != null
-                ? System.getenv("SPRING_AI_API_KEY")
-                : (System.getenv("GEMINI_API_KEY") != null ? System.getenv("GEMINI_API_KEY") : "AIzaSyAYdMUN2F5jN62iS7R3xX0KvddrbOyNq5w");
-        String springAiBaseUrl = System.getenv("SPRING_AI_BASE_URL") != null
-                ? System.getenv("SPRING_AI_BASE_URL")
-                : "https://generativelanguage.googleapis.com/v1beta/openai";
-        String springAiModelName = System.getenv("SPRING_AI_MODEL_NAME") != null
-                ? System.getenv("SPRING_AI_MODEL_NAME")
-                : (System.getenv("GEMINI_MODEL_NAME") != null ? System.getenv("GEMINI_MODEL_NAME") : "gemini-3-flash-preview");
+    }
 
-        if (springAiApiKey != null && !springAiApiKey.isBlank()) {
-            OpenAiApi openAiApi = new OpenAiApi(springAiBaseUrl, springAiApiKey);
+    public GoogleGenAiChatModel googleGenAiChatModel() {
 
-            OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
-                    .withModel(springAiModelName)
-                    .build();
+        Client genAiClient = Client.builder()
+                .apiKey("APIKEY_HERE")
+                .build();
 
-            org.springframework.ai.chat.model.ChatModel springAiChatModel = new OpenAiChatModel(openAiApi, chatOptions);
+        var options = GoogleGenAiChatOptions.builder()
+                .model(GoogleGenAiChatModel.ChatModel.GEMINI_3_FLASH_PREVIEW)
+                .temperature(0.7)
+                .build();
 
-            registry.bind("springAiChatModel", springAiChatModel);
-            log.info("Spring AI chat model registered as 'springAiChatModel' (model: {}, baseUrl: {})", springAiModelName, springAiBaseUrl);
-        } else {
-            log.warn("Spring AI chat model NOT registered: SPRING_AI_API_KEY and GEMINI_API_KEY are both unset.");
-        }
-
+        return GoogleGenAiChatModel.builder()
+                .genAiClient(genAiClient)
+                .defaultOptions(options)
+                .build();
     }
 
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {

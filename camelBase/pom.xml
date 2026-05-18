@@ -419,6 +419,13 @@
             <artifactId>soap</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-starter-model-google-genai -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-google-genai</artifactId>
+            <version>1.1.6</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>sql</artifactId>

@@ -18,18 +18,23 @@ spec:
         type: "string"
         default: "kamelet:sink"
       routeId:
+        title: "Route ID"
         type: "string"
         default: "springai-chat"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
       chatModel:
         title: "Chat Model Bean Name"
-        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #springAiChatModel)"
+        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #SpringAiChatModel)"
         type: "string"
-        default: "#springAiChatModel"
+        default: "#SpringAiChatModel"
       systemMessage:
         title: "System Message"
         description: "Optional system message (instructions) to prepend to every chat request"
         type: "string"
-        default: ""
+        default: "Wat is de hoofdstad van Frankrijk?"
 
   dependencies:
     - "camel:kamelet"
@@ -37,20 +42,24 @@ spec:
 
   template:
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - convertBodyTo:
-              type: String
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - convertBodyTo:
+                    type: String
 
-          - to:
-              uri: "log:springai-in?showAll=true&multiline=true"
+                - to:
+                    uri: "log:springai-in?showAll=true&multiline=true"
 
-          - to:
-              uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&systemMessage={{systemMessage}}"
+                - to:
+                    uri: "spring-ai-chat://{{routeId}}?chatModel=#SpringAiChatModel&systemMessage={{systemMessage}}"
 
-          - to:
-              uri: "log:springai-out?showAll=true&multiline=true"
+                - to:
+                    uri: "log:springai-out?showAll=true&multiline=true"
 
           - to:
               uri: "{{out}}"
