@@ -56,7 +56,7 @@ spec:
                     uri: "log:springai-in?showAll=true&multiline=true"
 
                 - to:
-                    uri: "spring-ai-chat://{{routeId}}?chatModel=#SpringAiChatModel&systemMessage={{systemMessage}}"
+                    uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&systemMessage={{systemMessage}}"
 
                 - to:
                     uri: "log:springai-out?showAll=true&multiline=true"

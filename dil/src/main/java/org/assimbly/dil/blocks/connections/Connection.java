@@ -68,6 +68,9 @@ public class Connection {
             case "rabbitmq", "spring-rabbitmq" ->
                     new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
 
+            case "springai" ->
+                    new SpringAiConnection(context, decryptedProperties, connectionId).start();
+
             case "ibmq" ->
                     new IBMMQConnection(context, decryptedProperties, connectionId, connectionType).start();
 
