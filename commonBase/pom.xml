@@ -106,13 +106,6 @@
             <version>${jwt.version}</version>
         </dependency>
 
-        <!-- Netty depedencies-->
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -131,6 +124,12 @@
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
             <version>${jakarta-activation-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>${angus.mail.version}</version>
         </dependency>
 
         <!-- Groovy - expression validator -->

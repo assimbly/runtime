@@ -26,7 +26,7 @@
 
     <properties>
 
-        <maven-api.version>3.9.15</maven-api.version>
+        <maven-api.version>3.9.16</maven-api.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <maven.versions.rules>file:///${project.basedir}/rules.xml</maven.versions.rules>
@@ -38,19 +38,20 @@
         <activemq-classic.version>6.2.5</activemq-classic.version>
         <activemq-artemis.version>2.53.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
+        <angus.mail.version>2.0.5</angus.mail.version>
         <axiom.version>2.0.0</axiom.version>
         <bouncycastle.version>1.84</bouncycastle.version>
         <camel.version>4.20.0</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-codec.version>1.22.0</commons-codec.version>
-        <commons-configuration2.version>2.14.0</commons-configuration2.version>
+        <commons-configuration2.version>2.15.0</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>2.0.1</docconverter.version>
         <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.4.0</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.4.1</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.8</glassfish.jaxb.version>
         <groovy-script.version>5.0.6</groovy-script.version>
         <httpClient5.version>5.6.1</httpClient5.version>
@@ -70,13 +71,12 @@
         <kamelet.version>4.20.0</kamelet.version>
         <logback-classic.version>1.5.32</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
-        <netty.version>4.2.13.Final</netty.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <spring.version>7.0.7</spring.version>
         <spring-boot.version>4.0.6</spring-boot.version>
         <spring-data.version>4.0.5</spring-data.version>
         <springdoc.version>3.0.3</springdoc.version>
-        <swagger-v3.version>2.2.49</swagger-v3.version>
+        <swagger-v3.version>2.2.50</swagger-v3.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
         <xpath2.version>1.2.0</xpath2.version>
@@ -275,7 +275,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>2.19.1</version>
+                <version>2.21.0</version>
                 <configuration>
                     <rulesUri>${maven.versions.rules}</rulesUri>
                 </configuration>

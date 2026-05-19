@@ -86,16 +86,6 @@ public interface Integration {
     TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
 	
 	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @param  flowId ID of the flow (String)
-	* @param  mediaType (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediaType)
-	* @throws Exception if configuration can't be retrieved or is not available
-	*/
-    String getFlowConfiguration(String flowId, String mediaType) throws Exception;
-
-	/**
 	 * Add configuration for multiple collectors from a JSON Configuration File.
 	 *
 	 * @param  collectorsId (collectorsId)

@@ -471,7 +471,7 @@ public class RouteTemplate {
     }
 
     private boolean templateExists(String templateName) {
-        String fullTemplateName = "kamelets/" + templateName + ".kamelet.yaml";
+        String fullTemplateName = templateName + ".kamelet.yaml";
         return CustomKameletCatalog.getNames().contains(fullTemplateName);
     }
 

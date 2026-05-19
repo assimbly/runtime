@@ -1,5 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.*;
 
@@ -14,9 +17,6 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
@@ -147,6 +147,7 @@ public class ConfigManager {
         context.addComponent("async", new SedaComponent());
 
         KameletComponent kameletComponent = new KameletComponent();
+        kameletComponent.setLocation("classpath:kamelets");
         context.addComponent("function", kameletComponent);
 
         HttpComponent httpComponent = context.getComponent("https", HttpComponent.class);
@@ -163,6 +164,7 @@ public class ConfigManager {
         jettyHttpComponent12.setSecureRequestCustomizer(customizer);
 
         MailComponent smtp = context.getComponent("smtp", MailComponent.class);
+        smtp.setLazyStartProducer(true);
         smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
 
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
@@ -243,32 +245,21 @@ public class ConfigManager {
         }
     }
 
-    //loads templates in the template package
-    public void setRouteTemplates() throws Exception {
-
-        //load kamelets into Camel Context
-        RoutesLoader loader = PluginHelper.getRoutesLoader(context);
+    public void setRouteTemplates() {
 
         List<String> resourceNames = getKamelets();
 
         //Set to use the list globally
         CustomKameletCatalog.addAllNames(resourceNames);
 
+        RoutesLoader routesLoader = PluginHelper.getRoutesLoader(context);
+
         for (String resourceName : resourceNames) {
 
-            URL url;
-            if (resourceName.startsWith("file:")) {
-                url = URI.create(resourceName).toURL();
-            } else {
-                url = Resources.getResource(resourceName);
-            }
-
-            resourceName = StringUtils.substringAfter(resourceName, "kamelets/");
-            String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
-            Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
+            Resource resource = ResourceHelper.resolveResource(context,"classpath:kamelets/" + resourceName);
 
             try {
-                loader.loadRoutes(resource);
+                routesLoader.loadRoutes(resource);
             } catch (Exception e) {
                 log.warn("Could not load Kamelet: {}. Reason: {}", resourceName, e.getMessage());
             }
@@ -278,21 +269,15 @@ public class ConfigManager {
     }
 
     private List<String> getKamelets() {
+        try (InputStream is = getClass().getResourceAsStream("/kamelets/index.txt")) {
+            assert is != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
-        List<String> kamelets = new ArrayList<>();
-
-        // Add resource paths from classpath (/kamelets under resources)
-        List<String> classpathNames;
-        try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
-            classpathNames = scanResult.getAllResources().getPaths();
+                return reader.lines().toList();
+            }
+        } catch (Exception _) {
+            return Collections.emptyList();
         }
-
-        if (classpathNames != null && !classpathNames.isEmpty()) {
-            kamelets.addAll(classpathNames);
-        }
-
-        return kamelets;
-
     }
 
     public String getListOfStepTemplates() {

@@ -365,7 +365,7 @@
             <artifactId>jsontoxmllegacy</artifactId>
             <version>${assimbly.version}</version>
         </dependency>
-        <dependency>
+       <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>mail</artifactId>
             <version>${assimbly.version}</version>

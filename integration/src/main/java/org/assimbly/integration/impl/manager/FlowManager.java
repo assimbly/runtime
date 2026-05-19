@@ -1,6 +1,5 @@
 package org.assimbly.integration.impl.manager;
 
-import net.sf.saxon.trans.Err;
 import org.apache.camel.*;
 import java.util.*;
 

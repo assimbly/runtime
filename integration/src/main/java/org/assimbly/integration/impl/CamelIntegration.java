@@ -195,7 +195,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        removeFlowConfiguration(flowId);
+        super.removeFlowConfiguration(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -870,8 +870,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
-        HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
-        return httpsCertificateValidator.validate(httpsUrl);
+        return HttpsCertificateValidator.validate(httpsUrl);
     }
 
     @Override
