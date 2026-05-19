@@ -57,7 +57,7 @@ public class GroovyScriptSecurityValidator {
                 .parse(new ByteArrayInputStream(xml.getBytes()));
 
         NodeList nodes = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("//*[local-name()='script']/*[local-name()='groovy']")
+                .compile("//*[local-name()='setBody']/*[local-name()='groovy']")
                 .evaluate(doc, XPathConstants.NODESET);
 
         List<String> scripts = new ArrayList<>();
