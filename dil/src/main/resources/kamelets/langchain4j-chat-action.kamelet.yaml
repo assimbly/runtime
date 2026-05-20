@@ -37,6 +37,10 @@ spec:
         title: "Model Name"
         type: "string"
         default: "gemini-3-flash-preview"
+      chatModel:
+        title: "Chat Model Bean Name"
+        type: "string"
+        default: "#bean:GeminiChatModel2"
       prompt:
         title: "Prompt"
         type: "string"
@@ -62,7 +66,7 @@ spec:
           - to:
               uri: "log:langchain4jin?showAll=true&multiline=true"
           - to:
-              uri: "langchain4j-chat://{{routeId}}?chatModel=#bean:geminiChatModel"
+              uri: "langchain4j-chat://{{routeId}}?chatModel={{chatModel}}"
           - to:
               uri: "log:langchain4jout?showAll=true&multiline=true"
           - to:
