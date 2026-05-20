@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.*;
 
+import org.apache.camel.ManagementMBeansLevel;
+import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
@@ -227,8 +229,15 @@ public class ConfigManager {
         //enable breadcrumb for tracing
         context.setUseBreadcrumb(true);
 
-        //enable performance stats
-        context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
+        //JMX settings
+        ManagementAgent managementAgent = context.getManagementStrategy().getManagementAgent();
+        managementAgent.setRegisterAlways(false);
+        managementAgent.setRegisterNewRoutes(true);
+        managementAgent.setOnlyRegisterProcessorWithCustomId(true);
+        managementAgent.setEndpointRuntimeStatisticsEnabled(false);
+        managementAgent.setLoadStatisticsEnabled(false);
+        managementAgent.setStatisticsLevel(ManagementStatisticsLevel.RoutesOnly);
+        managementAgent.setMBeansLevel(ManagementMBeansLevel.RoutesOnly);
 
         //enable timestamp in the eventNotifier (log, route and step collectors)
         context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
