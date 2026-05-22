@@ -133,6 +133,7 @@ public class JMSConnection {
     private ConnectionFactory setActiveMQClassicConnectionFactory() {
 
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
+        connectionFactory.setOptimizeAcknowledge(true);
 
         if (username != null && !username.isEmpty()){
             connectionFactory.setUserName(username);
@@ -154,7 +155,7 @@ public class JMSConnection {
         pooledConnectionFactory.setConnectionFactory(connectionFactory);
         pooledConnectionFactory.setCreateConnectionOnStartup(true);
         pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
-        pooledConnectionFactory.setMaxConnections(500);
+        pooledConnectionFactory.setMaxConnections(25);
         pooledConnectionFactory.setMaximumActiveSessionPerConnection(500);
         pooledConnectionFactory.setIdleTimeout(30000);
 
@@ -169,9 +170,10 @@ public class JMSConnection {
         if(jmsComponent != null){
             jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
             jmsComponent.setIncludeCorrelationIDAsBytes(false);
+            jmsComponent.setCacheLevelName("CACHE_CONSUMER");
             jmsComponent.setConcurrentConsumers(1);
-            jmsComponent.setMaxConcurrentConsumers(8);
-            jmsComponent.setReplyToMaxConcurrentConsumers(8);
+            jmsComponent.setMaxConcurrentConsumers(4);
+            jmsComponent.setReplyToMaxConcurrentConsumers(1);
             jmsComponent.setTestConnectionOnStartup(true);
         }
 
