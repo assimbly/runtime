@@ -358,8 +358,15 @@ public class CamelIntegration extends BaseIntegration {
 
 		context.setUseBreadcrumb(true);
 
-		//enable performance stats
-		context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
+        //JMX settings
+        ManagementAgent managementAgent = context.getManagementStrategy().getManagementAgent();
+        managementAgent.setRegisterAlways(false);
+        managementAgent.setRegisterNewRoutes(true);
+        managementAgent.setOnlyRegisterProcessorWithCustomId(true);
+        managementAgent.setEndpointRuntimeStatisticsEnabled(false);
+        managementAgent.setLoadStatisticsEnabled(false);
+        managementAgent.setStatisticsLevel(ManagementStatisticsLevel.RoutesOnly);
+        managementAgent.setMBeansLevel(ManagementMBeansLevel.RoutesOnly);
 
 		// Enable Jackson JSON type converter for more types.
 //		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
