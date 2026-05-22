@@ -16,7 +16,7 @@ public class JDBCConnection {
     private final EncryptableProperties properties;
     private final String connectionId;
 
-    private String database;
+    private String dbtype;
     private String url;
     private String username;
     private String password;
@@ -47,8 +47,7 @@ public class JDBCConnection {
 
         username = properties.getProperty("connection." + connectionId + ".username");
         password = properties.getProperty("connection." + connectionId + ".password");
-
-        database = properties.getProperty("connection." + connectionId + ".database");
+        dbtype = properties.getProperty("connection." + connectionId + ".dbtype");
 
         setDriverName();
         setUrl();
@@ -63,7 +62,7 @@ public class JDBCConnection {
             return;
         }
 
-        switch (database.toLowerCase()) {
+        switch (dbtype.toLowerCase()) {
             case "mysql":
                 driver = "com.mysql.jdbc.Driver";
                 break;
@@ -78,7 +77,7 @@ public class JDBCConnection {
                 break;
             case "db2":
                 driver = "com.ibm.db2.jcc.DB2Driver";
-                 break;
+                break;
             case "informix","informix-sqli":
                 driver = "com.informix.jdbc.IfxDriver";
                 break;
@@ -86,7 +85,7 @@ public class JDBCConnection {
                 driver = "org.sqlite.JDBC";
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported database=" + database);
+                throw new IllegalArgumentException("Unsupported database=" + dbtype);
         }
     }
 
@@ -100,8 +99,9 @@ public class JDBCConnection {
 
         String host = properties.getProperty("connection." + connectionId + ".host");
         String port = properties.getProperty("connection." + connectionId + ".port");
+        String dbName = properties.getProperty("connection." + connectionId + ".dbname");
 
-        switch (database.toLowerCase()) {
+        switch (dbtype.toLowerCase()) {
             case "mysql":
                 url = (host != null && port != null)
                         ? "jdbc:mysql://" + host + ":" + port + "/"
@@ -119,8 +119,8 @@ public class JDBCConnection {
                 break;
             case "sqlserver":
                 url = (host != null && port != null)
-                        ? "jdbc:sqlserver://" + host + ":" + port
-                        : "jdbc:sqlserver://localhost:1433;";
+                        ? "jdbc:sqlserver://" + host + ":" + port + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true;"
+                        : "jdbc:sqlserver://localhost:1433;databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true;";
                 break;
             case "db2":
                 url = (host != null && port != null)
@@ -138,7 +138,7 @@ public class JDBCConnection {
                         : "jdbc:sqlite://localhost/";
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported database: " + database);
+                throw new IllegalArgumentException("Unsupported database: " + dbtype);
         }
     }
 
@@ -162,7 +162,7 @@ public class JDBCConnection {
         Registry registry = context.getRegistry();
         registry.bind(connectionIdValue, ds);
 
-        log.info("Datasource has been created for {} with connection ID: {}", database, connectionIdValue);
+        log.info("Datasource has been created for {} with connection ID: {}", dbtype, connectionIdValue);
 
     }
 

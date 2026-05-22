@@ -101,9 +101,11 @@ public class SqlProcessor implements Processor {
         Node result = doc.createElement("Result");
 
         row.forEach((key, value) -> {
-            Node attribute = doc.createElement(key);
-            attribute.setTextContent(value.toString());
-            result.appendChild(attribute);
+            if(value != null) {
+                Node attribute = doc.createElement(key);
+                attribute.setTextContent(value.toString());
+                result.appendChild(attribute);
+            }
         });
 
         return result;
