@@ -1,12 +1,12 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "queue-sink"
+  name: "queue-action"
   labels:
-    camel.apache.org/kamelet.type: "sink"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "queue sink"
+    title: "queue action"
     description: "Links messages to another flow (outbound) using a queue like activemq"
     type: "object"
     properties:
@@ -59,3 +59,5 @@ spec:
             steps:
             - toD:
                 uri: "{{transport}}:{{targetQueueId}}?connectionFactory=#{{connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous=true"
+            - to:
+                uri: "{{out}}"
