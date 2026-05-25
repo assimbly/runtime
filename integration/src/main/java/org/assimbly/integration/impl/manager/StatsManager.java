@@ -1,8 +1,5 @@
 package org.assimbly.integration.impl.manager;
 
-import javax.management.*;
-import java.util.*;
-
 import com.codahale.metrics.MetricRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -21,6 +18,7 @@ import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.processors.LastFailureProcessor;
 import org.assimbly.dil.event.collect.MicrometerTimestampRoutePolicyFactory;
 import org.assimbly.docconverter.DocConverter;
 import org.json.JSONArray;
@@ -28,11 +26,14 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.JMX;
+import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
 import java.text.DecimalFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 public class StatsManager {
@@ -170,7 +171,9 @@ public class StatsManager {
         if (fullStats) {
             stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
             stats.uptime = managedRouteGroup.getUptime();
-            stats.lastFailed = managedRouteGroup.getLastExchangeFailureTimestamp() != null ? managedRouteGroup.getLastExchangeFailureTimestamp().getTime() : 0L;
+            stats.lastFailed = failed > 0 && LastFailureProcessor.lastFailureTimestamp.containsKey(flowId)
+                    ? LastFailureProcessor.lastFailureTimestamp.get(flowId)
+                    : 0L;
             stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0L;
         }
 

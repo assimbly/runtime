@@ -5,6 +5,8 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.processors.FailureProcessor;
+import org.assimbly.dil.blocks.processors.LastFailureProcessor;
+
 import java.util.TreeMap;
 
 
@@ -45,6 +47,8 @@ public class ErrorHandler {
 				.logExhausted(true)
 				.logExhaustedMessageBody(true)
 				.logExhaustedMessageHistory(true);
+
+		deadLetterChannelBuilder.onExceptionOccurred(new LastFailureProcessor());
 
 		if(failureProcessorEnabled) {
 			Processor failureProcessor = new FailureProcessor();
