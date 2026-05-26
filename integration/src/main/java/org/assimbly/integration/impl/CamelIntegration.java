@@ -318,6 +318,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+		registry.bind("saxonXPathFactory", new net.sf.saxon.xpath.XPathFactoryImpl());
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
