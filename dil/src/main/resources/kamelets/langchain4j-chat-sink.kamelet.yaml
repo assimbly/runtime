@@ -7,7 +7,7 @@ metadata:
 spec:
   definition:
     title: "langchain4j-chat sink"
-    description: "blabla"
+    description: "chat component for langchain4j"
     type: "object"
     properties:
       path:
@@ -29,9 +29,17 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
+      chatModel:
+        title: "Chat Model Bean Name"
+        type: "string"
+        default: "#bean:GeminiChatModel2"
   dependencies:
     - "camel:kamelet"
   template:
+    beans:
+      - name: "GeminiChatModel2"
+        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
+        factoryMethod: "create"
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
@@ -40,5 +48,7 @@ spec:
           - step:
               id: "{{routeId}}"
               steps:
+                - convertBodyTo:
+                    type: String
                 - to:
-                    uri: "langchain4j-chat://{{path}}?chatModel=#geminiChatModel"
+                    uri: "langchain4j-chat://{{routeId}}?chatModel={{chatModel}}"

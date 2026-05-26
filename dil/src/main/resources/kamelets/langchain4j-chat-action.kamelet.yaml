@@ -41,12 +41,16 @@ spec:
         type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
         factoryMethod: "create"
     route:
+      routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - convertBodyTo:
-              type: String
-          - to:
-              uri: "langchain4j-chat://{{routeId}}?chatModel={{chatModel}}"
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - convertBodyTo:
+                    type: String
+                - to:
+                    uri: "langchain4j-chat://{{routeId}}?chatModel={{chatModel}}"
           - to:
               uri: "{{out}}"
