@@ -33,8 +33,12 @@ public class MessageEvent {
     private static final String UNIT_MILLISECONDS = "milliseconds";
     private static final String UNIT_BYTES = "bytes";
 
+    private static final Set<String> PROPERTIES_FLOW_INFO_SET = Set.of(
+            StepCollector.FLOW_ID_PROPERTY,
+            StepCollector.FLOW_VERSION_PROPERTY
+    );
     private static final Set<String> PROPERTIES_MILLISECONDS_UNIT_SET = Set.of(
-            StepCollector.RESPONSE_TIME_PROPERTY
+            StepCollector.PROCESSING_TIME_PROPERTY
     );
     private static final Set<String> PROPERTIES_BYTES_UNIT_SET = Set.of(
             StepCollector.MESSAGE_BODY_SIZE_PROPERTY,
@@ -49,6 +53,7 @@ public class MessageEvent {
 
     static {
         PROPERTIES_FILTER_SET = new HashSet<>();
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_FLOW_INFO_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_MILLISECONDS_UNIT_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_BYTES_UNIT_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_NO_UNIT_SET);
