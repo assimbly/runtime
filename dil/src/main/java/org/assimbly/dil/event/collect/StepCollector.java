@@ -43,14 +43,16 @@ public class StepCollector extends EventNotifierSupport {
     
     private static final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
-    public static final String FLOW_ID_HEADER = "TRACING_FLOWID";
-    public static final String FLOW_VERSION_HEADER = "TRACING_FLOWVERSION";
-    public static final String RESPONSE_TIME_PROPERTY = "ResponseTime";
+
+    public static final String FLOW_ID_PROPERTY = "FlowId";
+    public static final String FLOW_VERSION_PROPERTY = "FlowVersion";
+    public static final String PROCESSING_TIME_PROPERTY = "ProcessingTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
     public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
+
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static final String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
 
@@ -103,24 +105,26 @@ public class StepCollector extends EventNotifierSupport {
 
             if(!isBlackListed(stepId) && EventUtil.isFilteredEquals(filters, stepId)){
 
+                Exchange originalExchange = stepEvent.getExchange();
+
+                long processingTime = calculateAndUpdateComponentResponseTime(originalExchange, stepEvent);
+
                 // materialize body BEFORE async
-                byte[] body = stepEvent.getExchange().getMessage().getBody(byte[].class);
+                byte[] body = originalExchange.getMessage().getBody(byte[].class);
                 // create a copy of the exchange for async processing
-                Exchange exchange = stepEvent.getExchange().copy();
+                Exchange exchange = originalExchange.copy();
                 // replace the body in the copied exchange with the materialized byte[]
                 exchange.getMessage().setBody(body);
 
-                long stepTimestamp = stepEvent.getTimestamp();
-
                 // Hand off the HEAVY processing to a background thread
-                collectionPool.submit(() -> processEvent(exchange, stepId, stepTimestamp));
+                collectionPool.submit(() -> processEvent(exchange, stepId, processingTime));
 
             }
 
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId, long stepTimestamp){
+    private void processEvent(Exchange exchange, String stepId, long processingTime){
 
         //set fields
         Message message = exchange.getMessage();
@@ -135,17 +139,17 @@ public class StepCollector extends EventNotifierSupport {
         }
 
         // get previous flowId and flowVersion
-        String previousFlowId = exchange.getMessage().getHeader(FLOW_ID_HEADER, String.class);
-        String previousFlowVersion = exchange.getMessage().getHeader(FLOW_VERSION_HEADER, String.class);
+        String previousFlowId = exchange.getProperty(FLOW_ID_PROPERTY, String.class);
+        String previousFlowVersion = exchange.getProperty(FLOW_VERSION_PROPERTY, String.class);
         // set flowId and flowVersion
-        exchange.getMessage().setHeader(FLOW_ID_HEADER, flowId);
-        exchange.getMessage().setHeader(FLOW_VERSION_HEADER, flowVersion);
+        exchange.setProperty(FLOW_ID_PROPERTY, flowId);
+        exchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
 
         //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
+        String timestamp = EventUtil.getCreatedTimestamp(processingTime);
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
-        MessageEvent messageEvent = getMessageEvent(exchange, stepId, stepTimestamp, timestamp, transactionId, previousFlowId,
+        MessageEvent messageEvent = getMessageEvent(exchange, stepId, processingTime, timestamp, transactionId, previousFlowId,
                 previousFlowVersion, headers, properties, expiryDate, isExceptionCaught(exchange));
 
         String json = messageEvent.toJson();
@@ -155,7 +159,7 @@ public class StepCollector extends EventNotifierSupport {
     }
 
     private MessageEvent getMessageEvent(
-            Exchange exchange, String stepId, long stepTimestamp, String timestamp, String transactionId,
+            Exchange exchange, String stepId, long processingTime, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
             Object> properties, String expiryDate, boolean isFailedExchange
     ) {
@@ -175,7 +179,7 @@ public class StepCollector extends EventNotifierSupport {
         String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
 
         // set custom properties
-        setCustomProperties(exchange, bodyType, bodyLength, stepId, stepTimestamp);
+        setCustomProperties(exchange, bodyType, bodyLength, stepId, processingTime);
 
         // body to store
         String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
@@ -243,10 +247,9 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private void setCustomProperties(Exchange exchange, String bodyType, int bodyLength, String stepId, long stepTimestamp) {
+    private void setCustomProperties(Exchange exchange, String bodyType, int bodyLength, String stepId, long processingTime) {
         if (EventUtil.isFilteredEquals(filters, stepId)) {
-            // set response time property
-            setResponseTimeProperty(exchange, stepTimestamp);
+            exchange.setProperty(PROCESSING_TIME_PROPERTY, processingTime);
         }
 
         // set timestamp property
@@ -266,17 +269,6 @@ public class StepCollector extends EventNotifierSupport {
 
     }
 
-    private void setResponseTimeProperty(Exchange exchange, long stepTimestamp){
-        //Set default headers for the response time
-
-        Object initTime = exchange.getIn().getHeader(COMPONENT_INIT_TIME_HEADER, Long.class);
-        exchange.getIn().setHeader(COMPONENT_INIT_TIME_HEADER, stepTimestamp);
-        if (initTime != null) {
-            long duration = stepTimestamp - (long) initTime;
-            exchange.setProperty(RESPONSE_TIME_PROPERTY, Long.toString(duration));
-        }
-    }
-
     private boolean isBlackListed(String routeId) {
         return Arrays.stream(blacklistedRoutesParts).anyMatch(routeId::contains);
     }
@@ -294,6 +286,18 @@ public class StepCollector extends EventNotifierSupport {
         } catch (Exception _) {
             return blacklistedRoutesParts;
         }
+    }
+
+    private static long calculateAndUpdateComponentResponseTime(Exchange originalExchange, CamelEvent.StepEvent stepEvent) {
+        Long initTime = originalExchange.getIn().getHeader(COMPONENT_INIT_TIME_HEADER, Long.class);
+        long stepTime = stepEvent.getTimestamp();
+        // set componentInitTime for this new component
+        originalExchange.getIn().setHeader(COMPONENT_INIT_TIME_HEADER, stepTime);
+
+        if (initTime == null) {
+            return 0L;
+        }
+        return stepTime - initTime;
     }
 
 }
