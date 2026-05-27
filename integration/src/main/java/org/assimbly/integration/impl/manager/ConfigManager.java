@@ -60,9 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import com.google.genai.Client;
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
-import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 
 public class ConfigManager {
 
@@ -207,26 +204,6 @@ public class ConfigManager {
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
 
-        GoogleGenAiChatModel springAiChatModel = googleGenAiChatModel();
-        registry.bind("SpringAiChatModel", springAiChatModel);
-
-    }
-
-    public GoogleGenAiChatModel googleGenAiChatModel() {
-
-        Client genAiClient = Client.builder()
-                .apiKey("APIKEY_HERE")
-                .build();
-
-        var options = GoogleGenAiChatOptions.builder()
-                .model(GoogleGenAiChatModel.ChatModel.GEMINI_3_FLASH_PREVIEW)
-                .temperature(0.7)
-                .build();
-
-        return GoogleGenAiChatModel.builder()
-                .genAiClient(genAiClient)
-                .defaultOptions(options)
-                .build();
     }
 
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
