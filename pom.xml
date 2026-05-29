@@ -36,7 +36,7 @@
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
         <activemq-classic.version>6.2.5</activemq-classic.version>
-        <activemq-artemis.version>2.53.0</activemq-artemis.version>
+        <activemq-artemis.version>2.54.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <angus.mail.version>2.0.5</angus.mail.version>
         <axiom.version>2.0.0</axiom.version>
@@ -50,7 +50,7 @@
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>2.0.1</docconverter.version>
-        <dropwizard-metrics.version>4.2.38</dropwizard-metrics.version>
+        <dropwizard-metrics.version>4.2.39</dropwizard-metrics.version>
         <elasticsearch-rest-client.version>9.4.1</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.8</glassfish.jaxb.version>
         <groovy-script.version>5.0.6</groovy-script.version>
@@ -64,7 +64,7 @@
         <jakarta-xml-soap-api.version>3.0.2</jakarta-xml-soap-api.version>
         <jakarta-xml-bind-api.version>4.0.5</jakarta-xml-bind-api.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <json.version>20251224</json.version>
+        <json.version>20260522</json.version>
         <json-path.version>3.0.0</json-path.version>
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.6.0</jolokia.version>
@@ -90,7 +90,7 @@
         <jetty.version>12.1.9</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.1</json-unit-assertj.version>
-        <junit.version>6.0.3</junit.version>
+        <junit.version>6.1.0</junit.version>
         <mockito.version>5.23.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>

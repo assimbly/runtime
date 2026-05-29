@@ -1,5 +1,7 @@
 package org.assimbly.dil.blocks.connections;
 
+import org.assimbly.dil.blocks.connections.auth.BasicAuthentication;
+import org.assimbly.dil.blocks.connections.auth.OAuthAuthentication;
 import org.assimbly.dil.blocks.connections.broker.*;
 
 import org.apache.camel.CamelContext;
@@ -73,6 +75,12 @@ public class Connection {
 
             case "jdbc" ->
                     new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
+
+            case "basic" ->
+                    new BasicAuthentication(context, decryptedProperties, connectionId).start();
+
+            case "oauth" ->
+                    new OAuthAuthentication(context, decryptedProperties, connectionId).start();
 
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");

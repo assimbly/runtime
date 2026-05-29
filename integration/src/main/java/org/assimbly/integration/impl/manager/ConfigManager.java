@@ -13,6 +13,7 @@ import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
+import org.assimbly.dil.blocks.connections.auth.BasicAuthentication;
 import org.assimbly.dil.blocks.processors.*;
 
 import org.eclipse.jetty.server.SecureRequestCustomizer;

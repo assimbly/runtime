@@ -243,6 +243,13 @@
             <version>${jolokia.version}</version>
         </dependency>
 
+        <!-- Jetty dependencies for OAuth -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-openid</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
         <!-- cache -->
         <dependency>
             <groupId>org.mapdb</groupId>
