@@ -50,6 +50,10 @@ spec:
         title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"

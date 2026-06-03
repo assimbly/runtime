@@ -30,6 +30,10 @@ spec:
         title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
