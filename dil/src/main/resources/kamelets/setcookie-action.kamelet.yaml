@@ -66,4 +66,5 @@ spec:
             - to:
                 uri: "bean://flowCookieStore?method=addStringAsCookie(${exchange},'{{path}}','{{value}}','{{domain}}','{{cookiePath}}',{{isSecure}})"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

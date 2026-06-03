@@ -50,4 +50,5 @@ spec:
             - to:
                 uri: "pdf-transform://{{path}}?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

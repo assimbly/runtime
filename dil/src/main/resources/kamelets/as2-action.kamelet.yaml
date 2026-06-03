@@ -123,5 +123,6 @@ spec:
             - process:
                 ref: "AS2MDNProcessor"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
 

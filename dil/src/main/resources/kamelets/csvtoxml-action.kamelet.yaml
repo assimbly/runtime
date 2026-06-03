@@ -61,4 +61,5 @@ spec:
             - to:
                 uri: "csvtoxml://?encoding={{encoding}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

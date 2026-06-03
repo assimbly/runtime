@@ -60,4 +60,5 @@ spec:
             - toD:
                 uri: "{{transport}}:{{targetQueueId}}?connectionFactory=#{{connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous=true"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

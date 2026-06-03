@@ -46,5 +46,6 @@ spec:
             - to:
                 uri: "jsontoxml:path?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
 

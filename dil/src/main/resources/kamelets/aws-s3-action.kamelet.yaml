@@ -154,4 +154,6 @@ spec:
                   overrideEndpoint: "{{overrideEndpoint}}"
                   forcePathStyle: "{{forcePathStyle}}"
                   keyName: "{{?keyName}}"
-            - to: "{out}}"                              
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

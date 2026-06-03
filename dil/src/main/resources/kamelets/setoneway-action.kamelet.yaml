@@ -41,4 +41,5 @@ spec:
             steps:
             - setExchangePattern: "InOnly"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

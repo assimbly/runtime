@@ -47,5 +47,6 @@ spec:
                 name: "Content-Disposition"
                 simple: "attachment; filename=\"${header.CamelFileName}\""
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
       routeConfigurationId: "{{routeConfigurationId}}"

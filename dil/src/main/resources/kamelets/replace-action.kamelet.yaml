@@ -46,4 +46,5 @@ spec:
             - to:
                 uri: "replace://?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

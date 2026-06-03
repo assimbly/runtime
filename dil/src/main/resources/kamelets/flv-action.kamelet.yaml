@@ -45,4 +45,5 @@ spec:
             - to:
                 uri: "flv:{{routeId}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

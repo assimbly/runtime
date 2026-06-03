@@ -77,4 +77,6 @@ spec:
                   serviceBusType: "{{serviceBusType}}"
                   producerOperation: "sendMessages"
                   credentialType: "{{credentialType}}"
-            - to: "{out}}"                              
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

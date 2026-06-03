@@ -51,4 +51,5 @@ spec:
                 pattern: "{{pattern}}"
                 exclude-pattern: "breadcrumbId|{{?excludePattern}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -229,4 +229,5 @@ spec:
             - removeHeaders:
                 pattern: "user-agent|CamelHttpUri|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

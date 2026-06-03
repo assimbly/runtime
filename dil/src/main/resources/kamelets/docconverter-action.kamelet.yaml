@@ -47,4 +47,5 @@ spec:
             - to:
                 uri: "docconverter:{{convert}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

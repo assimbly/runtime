@@ -46,4 +46,5 @@ spec:
             - to:
                 uri: "jslt:{{path}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

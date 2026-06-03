@@ -42,4 +42,5 @@ spec:
             - convertBodyTo:
                 type: "java.lang.String"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -51,4 +51,5 @@ spec:
             - toD:
                 uri: "tenantvariables://{{path}}?operation=DELETE&tenantDbName={{tenantDbName}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

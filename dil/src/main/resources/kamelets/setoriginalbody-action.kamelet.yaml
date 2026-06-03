@@ -46,4 +46,5 @@ spec:
             - setBody:
                 simple: "${originalBody}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -56,4 +56,5 @@ spec:
               loggingLevel: "{{loggingLevel}}"
               message: "{{expression}}"
           - to:
+              disabled: "{{sink}}"
               uri: "{{out}}"

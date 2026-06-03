@@ -56,4 +56,5 @@ spec:
                 otherwise:
                   disabled: true
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

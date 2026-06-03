@@ -50,4 +50,5 @@ spec:
             - to:
                 uri: "encoder://{{originCharset}}?targetCharset={{targetCharset}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

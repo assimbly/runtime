@@ -75,3 +75,6 @@ spec:
                   jetstreamEnabled: "{{?jetstreamEnabled}}"
                   jetstreamName: "{{?jetstreamName}}"
                   jetstreamAsync: "{{?jetstreamAsync}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

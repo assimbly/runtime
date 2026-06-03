@@ -76,4 +76,5 @@ spec:
                 - convertBodyTo:
                     type: "java.lang.String"
                 - to:
+                    disabled: "{{sink}}"
                     uri: "{{out}}"

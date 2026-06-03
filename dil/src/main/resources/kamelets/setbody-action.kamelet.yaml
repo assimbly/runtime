@@ -54,4 +54,5 @@ spec:
                   language: "{{language}}"
                   expression: "{{expression}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

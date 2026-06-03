@@ -46,4 +46,5 @@ spec:
             - to:
                 uri: "dataformat:custom-xmljson:marshal?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

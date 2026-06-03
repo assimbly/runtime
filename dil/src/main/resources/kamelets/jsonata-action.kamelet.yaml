@@ -46,4 +46,5 @@ spec:
             - to:
                 uri: "jsonata:{{path}}?outputType=JsonString&prettyPrint=true"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -55,4 +55,5 @@ spec:
             - to:
                 uri: "rest:{{method}}:{{path}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

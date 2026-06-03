@@ -52,4 +52,5 @@ spec:
             - to:
                 uri: "bean://flowCookieStore?method=removeStringAsCookie(${exchange},'{{name}}','{{domain}}')"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

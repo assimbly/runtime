@@ -47,4 +47,5 @@ spec:
             - to:
                 uri: "velocity:{{path}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

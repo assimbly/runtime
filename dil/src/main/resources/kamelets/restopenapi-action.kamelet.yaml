@@ -50,4 +50,5 @@ spec:
             - to:
                 uri: "rest-openapi:{{path}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -54,4 +54,5 @@ spec:
                     expression: "{{routeId}}"
                 timePeriodMillis: "{{timePeriod}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

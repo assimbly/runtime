@@ -51,4 +51,5 @@ spec:
             - to:
                 uri: "googledrive://{{path}}?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

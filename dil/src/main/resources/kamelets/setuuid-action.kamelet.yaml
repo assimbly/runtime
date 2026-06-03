@@ -53,4 +53,5 @@ spec:
                 name: "{{headerName}}"
                 simple: "${uuid({{generator}})}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

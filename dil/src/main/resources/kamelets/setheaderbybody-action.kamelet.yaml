@@ -48,4 +48,5 @@ spec:
                 name: "{{headerName}}"
                 simple: "${body}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

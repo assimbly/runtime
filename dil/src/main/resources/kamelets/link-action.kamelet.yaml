@@ -44,4 +44,5 @@ spec:
             id: "step-{{stepId}}"
             steps:
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

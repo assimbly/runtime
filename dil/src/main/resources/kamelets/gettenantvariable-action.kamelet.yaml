@@ -55,5 +55,6 @@ spec:
             - toD:
                 uri: "tenantvariables://{{path}}?operation=GET&headerName={{headerName}}&tenantDbName={{tenantDbName}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
 

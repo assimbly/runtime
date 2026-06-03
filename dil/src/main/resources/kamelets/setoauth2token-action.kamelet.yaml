@@ -49,4 +49,5 @@ spec:
             - to:
                 uri: "oauth2token://{{path}}?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

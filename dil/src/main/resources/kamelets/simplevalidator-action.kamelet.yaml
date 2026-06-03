@@ -47,4 +47,5 @@ spec:
                 expression:
                   simple: "{{expression}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -51,4 +51,5 @@ spec:
             - to:
                 uri: "activemq:{{deadLetterQueue}}?exchangePattern=InOnly&connectionFactory=#activemq-connection"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

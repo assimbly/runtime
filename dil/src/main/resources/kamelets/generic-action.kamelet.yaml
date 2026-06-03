@@ -55,5 +55,6 @@ spec:
             - to:
                 uri: "{{scheme}}://{{path}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
 

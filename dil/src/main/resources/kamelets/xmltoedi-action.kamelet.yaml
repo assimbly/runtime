@@ -42,4 +42,5 @@ spec:
             - to:
                 uri: "dataformat:edi:unmarshal"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -50,4 +50,5 @@ spec:
             - toD:
                 uri: "ftps:{{path}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

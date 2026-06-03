@@ -42,4 +42,5 @@ spec:
             - to:
                 uri: "formtoxml://?encoding=utf-8"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -60,4 +60,5 @@ spec:
             - to:
                 uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

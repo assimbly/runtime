@@ -127,4 +127,6 @@ spec:
                   enableSSL: "{{enableSSL}}"
                   indexName: "{{?indexName}}"
                   certificatePath: "base64:{{?certificate}}"
-            - to: "{out}}"                              
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

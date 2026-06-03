@@ -51,4 +51,5 @@ spec:
             - toD:
                 uri: "sftp:{{path}}?{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

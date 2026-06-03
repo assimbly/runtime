@@ -45,4 +45,5 @@ spec:
             steps:
             - log: "{{path}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

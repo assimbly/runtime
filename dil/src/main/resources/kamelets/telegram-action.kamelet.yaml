@@ -107,4 +107,6 @@ spec:
                 parameters:
                   authorizationToken: "{{authorizationToken}}"
                   chatId: "{{?chatId}}"
-            - to: "{out}}"        
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

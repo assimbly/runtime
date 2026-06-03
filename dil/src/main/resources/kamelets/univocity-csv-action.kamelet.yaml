@@ -50,5 +50,6 @@ spec:
             - to:
                 uri: "dataformat:univocityCsv:{{path}}?{{options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	
 

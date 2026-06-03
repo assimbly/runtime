@@ -62,4 +62,5 @@ spec:
                 simple:
                   expression: "file:{{path}}?noop=true&idempotent=false&bridgeErrorHandler=true&{{?options}}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -83,4 +83,5 @@ spec:
                     - process:
                         ref: "SqlProcessor"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

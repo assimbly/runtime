@@ -103,4 +103,5 @@ spec:
                   tenantDbName: "RAW({{?tenantDbName}})"
                   mail.smtp.starttls.enable: true
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

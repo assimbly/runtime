@@ -50,4 +50,5 @@ spec:
             - process:
                 ref: "SetHeadersProcessor"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

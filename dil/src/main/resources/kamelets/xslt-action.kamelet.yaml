@@ -46,4 +46,5 @@ spec:
             - to:
                 uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -68,4 +68,5 @@ spec:
                 correlationExpression:
                   constant: "true"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

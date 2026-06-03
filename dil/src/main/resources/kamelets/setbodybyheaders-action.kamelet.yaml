@@ -44,4 +44,5 @@ spec:
                   \ + e.getValue()).collect(java.util.stream.Collectors.joining(\"\
                   ,\"))}"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

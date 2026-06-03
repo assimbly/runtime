@@ -66,4 +66,5 @@ spec:
             - process:
                 ref: "multipartProcessor"
             - to:
-                uri: "{{out}}"
+                disabled: "{{sink}}"
+                uri: "{{out}}"	

@@ -39,4 +39,5 @@ spec:
           - delay:
               constant: "{{milliseconds}}"
           - to:
+              disabled: "{{sink}}"
               uri: "{{out}}"
