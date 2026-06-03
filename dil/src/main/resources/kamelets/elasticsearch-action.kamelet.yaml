@@ -57,7 +57,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"

@@ -17,7 +17,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
@@ -47,4 +47,4 @@ spec:
                 base64: {}
             - to:
                 disabled: "{{sink}}"
-                uri: "{{out}}"	
+                uri: "{{out}}"

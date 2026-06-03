@@ -49,7 +49,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
@@ -79,4 +79,4 @@ spec:
                 uri: "tenantvariables://{{path}}?operation=SET&language={{language}}&value=RAW({{value}})&encrypt={{encrypt}}&groupName=RAW({{groupName}})&flowName=RAW({{flowName}})&tenantDbName=RAW({{tenantDbName}})"
             - to:
                 disabled: "{{sink}}"
-                uri: "{{out}}"	
+                uri: "{{out}}"

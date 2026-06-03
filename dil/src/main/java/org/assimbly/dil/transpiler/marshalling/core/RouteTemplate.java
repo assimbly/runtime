@@ -56,8 +56,6 @@ public class RouteTemplate {
 
     public TreeMap<String, String> setRouteTemplate(String flowId, String stepId, String type, String baseUri, String scheme, String path, String options,List<String> optionProperties, String[] links, String stepXPath, int stepIndex) throws Exception {
 
-        System.out.println("StepXpath=" + stepXPath);
-
         this.baseUri = baseUri;
         this.options = options;
         this.scheme = scheme;
@@ -65,10 +63,6 @@ public class RouteTemplate {
 
         routeId = flowId + "-" + stepId;
         this.stepId = stepId;
-
-        templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
-        templatedRoute.setAttribute("routeTemplateRef", templateId);
-        templatedRoute.setAttribute("group", flowId);
 
         createTemplatedRoutes();
 
@@ -452,9 +446,12 @@ public class RouteTemplate {
         if(uri==null || uri.isEmpty()){
             templateId = "link-" + type;
         }else{
-            String templateName = scheme + "-" + type;
 
-            templateId = templateName;
+
+            String templateName = scheme + "-" + type;
+            if(type.equals("sink")) {
+                templateName  = scheme + "-action";
+            }
 
             if(templateExists(templateName)){
                 templateId = templateName;
@@ -484,6 +481,7 @@ public class RouteTemplate {
     private void createTemplatedRoute(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId){
 
         templatedRoute = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoute");
+
         templatedRoute.setAttribute("routeTemplateRef", templateId);
         templatedRoute.setAttribute("group", flowId);
 
@@ -498,6 +496,11 @@ public class RouteTemplate {
 
         Element routeIdparam = createParameter(templateDoc,"routeId", routeId);
         templatedRoute.appendChild(routeIdparam);
+
+        if(type.equals("sink")){
+            Element sinkParam = createParameter(templateDoc,"sink", "true");
+            templatedRoute.appendChild(sinkParam);
+        }
 
         try {
             createPathValues(routeId);

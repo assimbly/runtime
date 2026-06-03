@@ -21,7 +21,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
@@ -51,5 +51,5 @@ spec:
                 uri: "jsontoxml:path?{{options}}"
             - to:
                 disabled: "{{sink}}"
-                uri: "{{out}}"	
+                uri: "{{out}}"
 

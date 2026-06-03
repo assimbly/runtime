@@ -26,7 +26,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
@@ -56,4 +56,4 @@ spec:
                 uri: "tenantvariables://{{path}}?operation=DELETE&tenantDbName={{tenantDbName}}"
             - to:
                 disabled: "{{sink}}"
-                uri: "{{out}}"	
+                uri: "{{out}}"

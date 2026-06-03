@@ -37,7 +37,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
@@ -61,4 +61,4 @@ spec:
                 uri: "log:org.assimbly.runtime.{{flowId}}?skipBodyLineSeparator=false&multiline=true&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBody}}&showException={{showException}}&showStackTrace={{showException}}&showCaughtException={{showException}}"
             - to:
                 disabled: "{{sink}}"
-                uri: "{{out}}"	
+                uri: "{{out}}"
