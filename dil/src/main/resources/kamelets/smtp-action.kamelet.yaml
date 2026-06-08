@@ -67,7 +67,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -103,4 +107,5 @@ spec:
                   tenantDbName: "RAW({{?tenantDbName}})"
                   mail.smtp.starttls.enable: true
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

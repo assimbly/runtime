@@ -57,7 +57,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -127,4 +131,6 @@ spec:
                   enableSSL: "{{enableSSL}}"
                   indexName: "{{?indexName}}"
                   certificatePath: "base64:{{?certificate}}"
-            - to: "{out}}"                              
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

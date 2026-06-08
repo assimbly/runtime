@@ -30,7 +30,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -55,5 +59,6 @@ spec:
             - toD:
                 uri: "tenantvariables://{{path}}?operation=GET&headerName={{headerName}}&tenantDbName={{tenantDbName}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"
 

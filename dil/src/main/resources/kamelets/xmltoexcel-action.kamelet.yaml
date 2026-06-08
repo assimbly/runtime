@@ -52,7 +52,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -77,4 +81,5 @@ spec:
             - to:
                 uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?expressions}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

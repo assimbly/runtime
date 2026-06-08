@@ -37,7 +37,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -56,4 +60,5 @@ spec:
             - toD:
                 uri: "log:org.assimbly.runtime.{{flowId}}?skipBodyLineSeparator=false&multiline=true&showHeaders={{showHeaders}}&showBody={{showBody}}&showBodyType={{showBody}}&showException={{showException}}&showStackTrace={{showException}}&showCaughtException={{showException}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

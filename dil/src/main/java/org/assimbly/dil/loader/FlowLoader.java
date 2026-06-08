@@ -185,8 +185,11 @@ public class FlowLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 
-			log.error("Failed loading step | routeid={}", id);
-
+			log.error("""
+        Failed loading step:
+          [Route ID]: {}
+          [Error]  : {}
+        """,  id, e.getMessage());
 			isFlowLoaded = false;
 
 			flowLoaderReport.setStep(id, null, "route", "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
@@ -207,9 +210,13 @@ public class FlowLoader extends RouteBuilder {
 
 		}catch (Exception e) {
 
-			log.error("Failed loading step | stepid={}", id);
-
 			isFlowLoaded = false;
+
+			log.error("""
+        Failed loading step:
+          [Step ID]: {}
+          [Error]  : {}
+        """,  id, e.getMessage());
 
 			flowLoaderReport.setStep(id, uri, type, "error", e.getMessage(), ExceptionUtils.getStackTrace(e));
 

@@ -27,7 +27,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -60,4 +64,5 @@ spec:
             - to:
                 uri: "activemq:{{routeId}}_throttling?exchangePattern=InOnly&timeToLive=86400000"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

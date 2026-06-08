@@ -125,7 +125,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -246,4 +250,5 @@ spec:
                 - removeHeaders:
                     pattern: "user-agent|CamelHttpUri|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
                 - to:
+                    disabled: "{{sink}}"
                     uri: "{{out}}"

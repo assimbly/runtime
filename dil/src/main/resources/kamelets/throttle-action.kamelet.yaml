@@ -29,7 +29,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
@@ -54,4 +58,5 @@ spec:
                     expression: "{{routeId}}"
                 timePeriodMillis: "{{timePeriod}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

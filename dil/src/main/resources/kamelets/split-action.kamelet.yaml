@@ -35,7 +35,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -76,4 +80,5 @@ spec:
                 - convertBodyTo:
                     type: "java.lang.String"
                 - to:
+                    disabled: "{{sink}}"
                     uri: "{{out}}"

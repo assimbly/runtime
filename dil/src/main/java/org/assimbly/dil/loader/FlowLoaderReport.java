@@ -63,9 +63,9 @@ public class FlowLoaderReport {
 		report = json.toString(4);
 
 		if(loaded == loadedSuccess){
-            log.info("Flow loaded successfully | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
+            log.debug("Flow loaded successfully | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}else{
-            log.error("Flow failed to load | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
+            log.debug("Flow failed to load | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}
 
 	}

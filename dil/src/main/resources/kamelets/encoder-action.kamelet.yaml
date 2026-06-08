@@ -25,7 +25,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -50,4 +54,5 @@ spec:
             - to:
                 uri: "encoder://{{originCharset}}?targetCharset={{targetCharset}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

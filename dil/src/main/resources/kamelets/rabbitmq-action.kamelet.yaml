@@ -59,7 +59,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: true
       routeId:
         title: "Route ID"
         type: "string"
@@ -86,4 +90,5 @@ spec:
             - to:
                 uri: "spring-rabbitmq:{{path}}?connectionFactory={{connectionFactory}}&exchangeType={{exchangeType}}&routingKey=RAW({{?routingKey}})&queues=RAW({{?queues}})&arg.queue.durable={{durable}}&arg.queue.autoDelete={{autoDelete}}&bridgeErrorHandler={{useErrorRoute}}&autoDeclareProducer={{autoDeclareProducer}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"
