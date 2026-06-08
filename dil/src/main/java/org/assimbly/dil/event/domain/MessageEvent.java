@@ -33,25 +33,24 @@ public class MessageEvent {
     private static final String UNIT_MILLISECONDS = "milliseconds";
     private static final String UNIT_BYTES = "bytes";
 
+    private static final Set<String> PROPERTIES_FLOW_INFO_SET = Set.of(
+            StepCollector.FLOW_ID_PROPERTY,
+            StepCollector.FLOW_VERSION_PROPERTY
+    );
     private static final Set<String> PROPERTIES_MILLISECONDS_UNIT_SET = Set.of(
-            StepCollector.RESPONSE_TIME_PROPERTY
+            StepCollector.PROCESSING_TIME_PROPERTY
     );
     private static final Set<String> PROPERTIES_BYTES_UNIT_SET = Set.of(
             StepCollector.MESSAGE_BODY_SIZE_PROPERTY,
             StepCollector.MESSAGE_HEADERS_SIZE_PROPERTY
     );
-    private static final Set<String> PROPERTIES_NO_UNIT_SET = Set.of(
-            StepCollector.TIMESTAMP_PROPERTY,
-            StepCollector.MESSAGE_BODY_TYPE_PROPERTY,
-            StepCollector.EXCHANGE_PATTERN_PROPERTY
-    );
     private static final Set<String> PROPERTIES_FILTER_SET;
 
     static {
         PROPERTIES_FILTER_SET = new HashSet<>();
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_FLOW_INFO_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_MILLISECONDS_UNIT_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_BYTES_UNIT_SET);
-        PROPERTIES_FILTER_SET.addAll(PROPERTIES_NO_UNIT_SET);
     }
 
     private final String id;
@@ -213,9 +212,9 @@ public class MessageEvent {
             return UNIT_MILLISECONDS;
         } else if (PROPERTIES_BYTES_UNIT_SET.contains(propertyName)) {
             return UNIT_BYTES;
-        } else if (PROPERTIES_NO_UNIT_SET.contains(propertyName)) {
-            return "";
         }
-        return null; // No matching unit found
+
+        // No matching unit found
+        return "";
     }
 }
