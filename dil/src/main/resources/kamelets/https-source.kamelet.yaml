@@ -30,6 +30,10 @@ spec:
         description: "Whether to remove incoming http headers. (By default only remove CamelHttp headers)"
         type: "string"
         default: "CamelHttp*"
+      handlers:
+        title: "Handlers"
+        description: "Jetty handler that is binded"
+        type: "string"
       out:
         title: "Sink Endpoint"
         type: "string"
@@ -45,19 +49,25 @@ spec:
         type: "string"
         default: "0"
   dependencies:
-  - "camel:kamelet"
+    - "camel:kamelet"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       streamCache: true
       from:
-        uri: "jetty:https:{{path}}?httpBinding=#CustomHttpBinding&sslContextParameters=sslContext&continuationTimeout=0&matchOnUriPrefix={{matchOnUriPrefix}}"
+        uri: "jetty:https:{{path}}"
+        parameters:
+          httpBinding: "#CustomHttpBinding"
+          sslContextParameters: "sslContext"
+          continuationTimeout: 0
+          matchOnUriPrefix: "{{matchOnUriPrefix}}"
+          handlers: "{{?handlers}}"
         steps:
-        - step:
-            id: "step-{{stepId}}"
-            steps:
-            - removeHeaders:
-                pattern: "{{removeHeaders}}"
-                disabled: "{{preserveHttpHeaders}}"
-            - to:
-                uri: "{{out}}"
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - removeHeaders:
+                    pattern: "{{removeHeaders}}"
+                    disabled: "{{preserveHttpHeaders}}"
+                - to:
+                    uri: "{{out}}"

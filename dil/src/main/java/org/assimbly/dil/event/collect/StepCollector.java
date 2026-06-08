@@ -114,6 +114,7 @@ public class StepCollector extends EventNotifierSupport {
                 byte[] body = originalExchange.getMessage().getBody(byte[].class);
                 // create a copy of the exchange for async processing
                 Exchange exchange = originalExchange.copy();
+
                 // replace the body in the copied exchange with the materialized byte[]
                 exchange.getMessage().setBody(body);
 

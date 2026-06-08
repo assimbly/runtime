@@ -25,6 +25,8 @@ import org.assimbly.dil.event.collect.MicrometerTimestampRoutePolicyFactory;
 import org.assimbly.docconverter.DocConverter;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openjdk.jol.info.ClassLayout;
+import org.openjdk.jol.info.GraphLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +153,17 @@ public class StatsManager {
 
         List<Route> routes = context.getRoutesByGroup(flowId);
 
+        System.setProperty("jol.magicFieldOffset", "true");
+
         for (Route route : routes) {
+
+            // 1. SHALLOW SIZE: Just the Route object container itself
+            long shallowSize = ClassLayout.parseInstance(route).instanceSize();
+            System.out.println("Shallow Size: " + shallowSize + " bytes");
+
+            System.out.println(GraphLayout.parseInstance(route).toFootprint());
+
+            System.out.println(GraphLayout.parseInstance(route).toPrintable());
 
             ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
 

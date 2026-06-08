@@ -677,16 +677,18 @@ public class FlowManager {
         Collection<ErrorRegistryEntry> errorRegistryEntries = errorRegistry.browse(maxNumberOfEntries);
 
         for(ErrorRegistryEntry errorRegistryEntry: errorRegistryEntries){
+
             JSONObject error = new JSONObject();
 
-            error.put("stepId",errorRegistryEntry.routeId());
-            error.put("exchangeId",errorRegistryEntry.exchangeId());
-            error.put("timestamp",errorRegistryEntry.timestamp());
-            error.put("endpointUri",errorRegistryEntry.endpointUri());
-            error.put("exceptionMessage",errorRegistryEntry.exceptionMessage());
-            error.put("exceptionType",errorRegistryEntry.exceptionType());
+            error.put("stepId", errorRegistryEntry.routeId());
+            error.put("exchangeId", errorRegistryEntry.exchangeId());
+            error.put("timestamp", errorRegistryEntry.timestamp());
+            error.put("endpointUri", errorRegistryEntry.endpointUri());
+            error.put("exceptionMessage", errorRegistryEntry.exceptionMessage());
+            error.put("exceptionType", errorRegistryEntry.exceptionType());
 
             errors.put(error);
+
         }
 
         String errorJson = errors.toString(4);

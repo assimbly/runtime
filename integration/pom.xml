@@ -30,6 +30,13 @@
     <dependencies>
 
         <dependency>
+            <groupId>org.openjdk.jol</groupId>
+            <artifactId>jol-core</artifactId>
+            <version>0.17</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.assimbly</groupId>
             <artifactId>common-base</artifactId>
             <version>${assimbly.version}</version>
