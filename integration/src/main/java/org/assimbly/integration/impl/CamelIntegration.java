@@ -5,6 +5,7 @@ import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
 import java.util.*;
 
+import org.assimbly.integration.impl.manager.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -29,10 +30,6 @@ import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.impl.manager.ConfigManager;
-import org.assimbly.integration.impl.manager.FlowManager;
-import org.assimbly.integration.impl.manager.SSLManager;
-import org.assimbly.integration.impl.manager.StatsManager;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.JsonHelper;
@@ -64,6 +61,7 @@ public class CamelIntegration extends BaseIntegration {
     private final SSLManager sslManager;
     private final StatsManager statsManager;
     private final ConfigManager configManager;
+    private final StartupManager startupManager = new StartupManager();
     private boolean started;
     private RouteController routeController;
     private ManagedCamelContext managed;
@@ -224,6 +222,11 @@ public class CamelIntegration extends BaseIntegration {
         initDilStore();
 
         collectorsMap = dilStore.getCollectorsMap();
+        flowsMap = dilStore.getFlowsMap();
+
+        if (!collectorsMap.isEmpty() || !flowsMap.isEmpty()) {
+            startupManager.waitForDependencies();
+        }
 
         if(!collectorsMap.isEmpty()) {
             log.info("Found {} cached collectors. Restoring collectors...", collectorsMap.size());
@@ -233,10 +236,7 @@ public class CamelIntegration extends BaseIntegration {
             } catch (Exception e) {
                 log.error("Failed to restore collectors from cache.",e);
             }
-
         }
-
-        flowsMap = dilStore.getFlowsMap();
 
         if(!flowsMap.isEmpty()) {
             log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
