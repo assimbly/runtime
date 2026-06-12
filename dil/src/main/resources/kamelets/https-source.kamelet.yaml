@@ -60,7 +60,7 @@ spec:
           sslContextParameters: "sslContext"
           continuationTimeout: 0
           matchOnUriPrefix: "{{matchOnUriPrefix}}"
-          # handlers: "{{?handlers}}"
+          handlers: "{{?handlers}}"
         steps:
           - step:
               id: "step-{{stepId}}"
