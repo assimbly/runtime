@@ -41,7 +41,7 @@ spec:
       sink:
         title: "Sink"
         type: "boolean"
-        default: true
+        default: false
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
