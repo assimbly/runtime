@@ -57,46 +57,43 @@ public class ActiveMQClassic implements Broker {
 
     public String start() {
 
-        try{
+        try {
             broker = new BrokerService();
 
-            String brokerPath = brokerFile.getCanonicalPath();
-            String encodedPath = URLEncoder.encode(brokerPath, StandardCharsets.UTF_8).replace("+", "%20");
-
-            String brokerUrl = "xbean:file:" +  encodedPath;
-
-            if(brokerFile.exists()) {
+            if (brokerFile.exists()) {
                 log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
-                URI configurationUri = new URI(brokerUrl);
-                broker = BrokerFactory.createBroker(configurationUri);
-            }else {
 
+                // File.toURI() produces: file:///C:/Users/Raymond/.assimbly/broker/activemq.xml
+                URI fileUri = brokerFile.getCanonicalFile().toURI();
+                URI configurationUri = new URI("xbean:" + fileUri.toString());
+
+                broker = BrokerFactory.createBroker(configurationUri);
+            } else {
                 log.info("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path={}", baseDir);
                 this.setFileConfiguration("");
-
                 log.warn("No config file 'activemq.xml' found.");
 
-                String encodedCanonicalPath = URLEncoder.encode(brokerFile.getCanonicalPath(), StandardCharsets.UTF_8).replace("+", "%20");
-                brokerUrl = "xbean:" + encodedCanonicalPath;
-                URI urlConfig = new URI(brokerUrl);
-                broker = BrokerFactory.createBroker(urlConfig);
+                URI fileUri = brokerFile.getCanonicalFile().toURI();
+                URI configurationUri = new URI("xbean:" + fileUri.toString());
+
+                broker = BrokerFactory.createBroker(configurationUri);
             }
 
-            if(!broker.isStarted()) {
+            if (!broker.isStarted()) {
                 broker.start();
             }
 
-            if(broker.isStarted()) {
+            if (broker.isStarted()) {
                 setBrokerViewMBean();
                 log.info("Broker Runtime started");
             }
 
             return status();
-        }catch (Exception e) {
-            log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("event=StartBroker status=failed reason={}", e.getMessage(), e);
             return "failed";
         }
-
+        
     }
 
     public String startEmbedded() throws Exception {
