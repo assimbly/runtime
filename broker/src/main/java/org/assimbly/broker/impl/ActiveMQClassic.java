@@ -93,7 +93,7 @@ public class ActiveMQClassic implements Broker {
             log.error("event=StartBroker status=failed reason={}", e.getMessage(), e);
             return "failed";
         }
-        
+
     }
 
     public String startEmbedded() throws Exception {
