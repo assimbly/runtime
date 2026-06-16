@@ -11,7 +11,6 @@ import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
-import org.apache.camel.support.AcceptAllHeaderFilterStrategy;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
@@ -51,9 +50,6 @@ import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.mail.component.mail.AttachmentAttacher;
-import org.assimbly.mail.component.mail.MailComponent;
-import org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat;
 import org.assimbly.multipart.processor.MultipartProcessor;
 import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
@@ -138,8 +134,6 @@ public class ConfigManager {
     public void setDefaultBlocks() throws Exception {
 
         //Add services
-        context.addService(new MailComponent());
-        context.addService(new MimeMultipartDataFormat());
         context.addService(new CustomXmlJsonDataFormat());
 
         DirectComponent directComponent = new DirectComponent();
@@ -166,10 +160,6 @@ public class ConfigManager {
         customizer.setSniRequired(false);
         jettyHttpComponent12.setSecureRequestCustomizer(customizer);
 
-        MailComponent smtp = context.getComponent("smtp", MailComponent.class);
-        smtp.setLazyStartProducer(true);
-        smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
-
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
         jsonpath.setWriteAsString(true);
 
@@ -185,7 +175,6 @@ public class ConfigManager {
         registry.bind("AggregateStrategy", new AggregateStrategy());
         registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
         registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
-        registry.bind("AttachmentAttacher", new AttachmentAttacher());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
