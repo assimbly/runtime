@@ -58,6 +58,19 @@ public class DILPersistentStore implements DILStore {
     }
 
     @Override
+    public void clearAllFlows() {
+        log.debug("Clearing all flows from the persistent store");
+        try {
+            flowsMap().clear();
+            db.commit();
+        } catch (Exception e) {
+            db.rollback(); // Rollback if something goes wrong to maintain DB integrity
+            log.error("Failed to clear flows map", e);
+            throw e;
+        }
+    }
+
+    @Override
     public Collection<TreeMap<String, String>> getAllFlows() {
         return flowsMap().values();
     }
@@ -82,6 +95,19 @@ public class DILPersistentStore implements DILStore {
     public void removeCollector(String collectorId) {
         collectorsMap().remove(collectorId);
         db.commit();
+    }
+
+    @Override
+    public void clearAllCollectors() {
+        log.debug("Clearing all collectors from the persistent store");
+        try {
+            collectorsMap().clear();
+            db.commit();
+        } catch (Exception e) {
+            db.rollback(); // Rollback if something goes wrong to maintain DB integrity
+            log.error("Failed to clear collectors map", e);
+            throw e;
+        }
     }
 
     @Override

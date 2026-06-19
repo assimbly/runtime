@@ -975,10 +975,22 @@ public interface Integration {
 	String getCachedInstalledFlows(String name, String scheme, String tenant);
 
 	/**
+	 * Returns list of installed flows
+	 *
+	 * @return list of installed flows
+	 */
+	String getInstalledFlowsIndex();
+
+	/**
 	 * Deletes cache entry
 	 *
 	 * @param  flowId to be deleted
 	 */
 	void deleteCacheEntry(String flowId);
+
+	/**
+	 * clear all cache
+	 */
+	void clearAllCache();
 
 }

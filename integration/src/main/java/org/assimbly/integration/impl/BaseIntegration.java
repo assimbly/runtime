@@ -53,6 +53,11 @@ public abstract class BaseIntegration implements Integration {
 		dilStore.removeFlow(flowId);
 	}
 
+	public void removeAllFlowConfiguration() {
+		dilStore.clearAllFlows();
+		dilStore.clearAllCollectors();
+	}
+
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
 		TreeMap<String, String> flowProperties;
