@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.*;
 import org.apache.camel.api.management.ManagedCamelContext;
@@ -205,7 +204,7 @@ public class CamelIntegration extends BaseIntegration {
 		//setTracing(true,"backlog");
 
 		setHealthChecks(true);
-		
+
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -218,7 +217,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
-	
+
 	public void setHealthChecks(boolean enable) {
 
 		HealthCheckRepository routesHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "routes");
@@ -1378,20 +1377,16 @@ public class CamelIntegration extends BaseIntegration {
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
 		activeMQConnectionFactory.setOptimizeAcknowledge(true);
 
-		ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-		prefetchPolicy.setAll(10);  // or even 1 for heavy messages
-		activeMQConnectionFactory.setPrefetchPolicy(prefetchPolicy);
-
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(25);
-		pooledConnectionFactory.setMaximumActiveSessionPerConnection(50);
+		pooledConnectionFactory.setMaxConnections(20);
+		pooledConnectionFactory.setMaximumActiveSessionPerConnection(500);
 		pooledConnectionFactory.setIdleTimeout(10000);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
 
-		jmsComponent.setCacheLevelName("CACHE_SESSION");
+		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
 		jmsComponent.setConcurrentConsumers(1);
 		jmsComponent.setMaxConcurrentConsumers(4);
 		jmsComponent.setReplyToConcurrentConsumers(1);
