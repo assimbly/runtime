@@ -1772,7 +1772,7 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 			// gracefully shutdown routes using startup order
 			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
-			context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
+			context.getShutdownStrategy().shutdown(context, routeStartupOrders, stopTimeout, TimeUnit.MILLISECONDS);
 			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
 				context.removeRoute(routeStartupOrder.getRoute().getId());
 			}
@@ -1783,7 +1783,6 @@ public class CamelIntegration extends BaseIntegration {
 				for (String routeId : leftoverRoutes) {
 					try {
 						if (context.getRoute(routeId) != null) {
-							context.getRouteController().stopRoute(routeId);
 							context.getRouteController().stopRoute(routeId,stopTimeout,TimeUnit.MILLISECONDS);
 							context.removeRoute(routeId);
 						}
