@@ -55,7 +55,7 @@
         <glassfish.jaxb.version>4.0.9</glassfish.jaxb.version>
         <groovy-script.version>5.0.6</groovy-script.version>
         <httpClient5.version>5.6.1</httpClient5.version>
-        <ibmmq-client.version>9.4.5.1</ibmmq-client.version>
+        <ibmmq-client.version>10.0.0.0</ibmmq-client.version>
         <jackson.version>3.2.0</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>
         <jakarta-annotation-api.version>3.0.0</jakarta-annotation-api.version>
@@ -69,14 +69,14 @@
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.6.0</jolokia.version>
         <kamelet.version>4.20.0</kamelet.version>
-        <logback-classic.version>1.5.34</logback-classic.version>
+        <logback-classic.version>1.5.35</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <slf4j.version>2.0.18</slf4j.version>
         <spring.version>7.0.8</spring.version>
         <spring-boot.version>4.1.0</spring-boot.version>
         <spring-data.version>4.1.0</spring-data.version>
         <springdoc.version>3.0.3</springdoc.version>
-        <swagger-v3.version>2.2.51</swagger-v3.version>
+        <swagger-v3.version>2.2.52</swagger-v3.version>
         <tika.version>1.28.5</tika.version>
         <xerces.version>2.12.2</xerces.version>
         <xpath2.version>1.2.0</xpath2.version>

@@ -34,6 +34,11 @@ spec:
         title: "Handlers"
         description: "Jetty handler that is binded"
         type: "string"
+      sslContextParameters:
+        title: "SSLContextParameters"
+        description: "SSLContextParameters (reference to the keystore)"
+        type: "string"
+        default: "sslContext"
       out:
         title: "Sink Endpoint"
         type: "string"
@@ -57,7 +62,7 @@ spec:
         uri: "jetty:https:{{path}}"
         parameters:
           httpBinding: "#CustomHttpBinding"
-          sslContextParameters: "sslContext"
+          sslContextParameters: "#{{sslContextParameters}}"
           continuationTimeout: 0
           matchOnUriPrefix: "{{matchOnUriPrefix}}"
           handlers: "{{?handlers}}"

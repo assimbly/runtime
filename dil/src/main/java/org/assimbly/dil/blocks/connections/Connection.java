@@ -1,6 +1,7 @@
 package org.assimbly.dil.blocks.connections;
 
 import org.assimbly.dil.blocks.connections.auth.BasicAuthentication;
+import org.assimbly.dil.blocks.connections.auth.MutualSSL;
 import org.assimbly.dil.blocks.connections.broker.*;
 
 import org.apache.camel.CamelContext;
@@ -77,6 +78,9 @@ public class Connection {
 
             case "basic" ->
                     new BasicAuthentication(context, decryptedProperties, connectionId).start();
+
+            case "mutualssl" ->
+                    new MutualSSL(context, decryptedProperties, connectionId).start();
 
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");
