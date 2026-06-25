@@ -26,6 +26,7 @@ import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistorySe
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
@@ -55,6 +56,7 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
+import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
@@ -76,6 +78,7 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.quartz.Scheduler;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -235,6 +238,22 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
     }
+
+	public void setTriggerMisfireLoggingListener() {
+		try {
+			QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
+			if (quartzComponent != null) {
+				Scheduler scheduler = quartzComponent.getScheduler();
+				if (scheduler != null) {
+					scheduler.getListenerManager().addTriggerListener(
+							new TriggerMisfireLoggingListener()
+					);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -970,6 +989,8 @@ public class CamelIntegration extends BaseIntegration {
 
 			context.start();
 			started = true;
+
+			setTriggerMisfireLoggingListener();
 
 			log.info("Runtime started");
 
