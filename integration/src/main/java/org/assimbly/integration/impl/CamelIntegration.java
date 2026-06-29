@@ -198,6 +198,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setSuppressLoggingOnTimeout(true);
 
+		setForceShutdownOnTimeout(true);
+
 		setStreamCaching(true);
 
 		setMetrics(true);
@@ -275,6 +277,10 @@ public class CamelIntegration extends BaseIntegration {
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
 		context.getShutdownStrategy().setTimeUnit(TimeUnit.MILLISECONDS);
+	}
+
+	public void setForceShutdownOnTimeout(boolean force) {
+		context.getShutdownStrategy().setShutdownNowOnTimeout(force);
 	}
 
 	public void setCertificateStore(boolean certificateStore) throws Exception {
