@@ -186,8 +186,9 @@ public class CamelIntegration extends BaseIntegration {
                 log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
                 super.removeFlowConfiguration(flowId);
             } else {
-                String versionId = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
-                installedFlowsManager.register(flowId, versionId);
+                String version = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
+                String tenant = super.getFlowConfiguration(flowId).getOrDefault("flow.tenant", "0");
+                installedFlowsManager.register(flowId, version, tenant);
             }
         } catch (Exception _) {
             // do nothing
@@ -808,8 +809,9 @@ public class CamelIntegration extends BaseIntegration {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
         if (flowLoaderReport.getStatus().equalsIgnoreCase("success")) {
-            String versionId = flowProperties.getOrDefault("flow.version", "0");
-            installedFlowsManager.register(flowId, versionId);
+            String version = flowProperties.getOrDefault("flow.version", "0");
+            String tenant = flowProperties.getOrDefault("flow.tenant", "0");
+            installedFlowsManager.register(flowId, version, tenant);
         }
         return flowLoaderReport.getReport();
     }
@@ -980,10 +982,11 @@ public class CamelIntegration extends BaseIntegration {
     public String getInstalledFlowsIndex() {
         try {
             List<Map<String, String>> result = new ArrayList<>();
-            installedFlowsManager.getAll().forEach((flowId, versionId) -> {
+            installedFlowsManager.getAll().forEach((flowId, flowEntry) -> {
                 Map<String, String> entry = new LinkedHashMap<>();
                 entry.put("flowId", flowId);
-                entry.put("versionId", versionId);
+                entry.put("version", flowEntry.getVersion());
+                entry.put("tenant", flowEntry.getTenant());
                 result.add(entry);
             });
             return new ObjectMapper().writeValueAsString(result);

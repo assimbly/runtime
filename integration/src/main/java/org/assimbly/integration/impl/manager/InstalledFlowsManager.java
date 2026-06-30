@@ -15,7 +15,7 @@ import java.util.*;
  * store incompatibilities.
  *
  * File format: JSON Lines, one object per line:
- *   {"flowId":"abc","versionId":"3"}
+ *   {"flowId":"68c7b0cc1e33920007000082","version":"12","tenant":"integrations"}
  */
 public class InstalledFlowsManager {
 
@@ -30,25 +30,39 @@ public class InstalledFlowsManager {
         this.indexFile = Paths.get(cacheDir.toString(), FILE_NAME);
     }
 
-    public synchronized void register(String flowId, String versionId) {
-        Map<String, String> entries = readAll();
-        entries.put(flowId, versionId);
+   public synchronized void register(String flowId, String version, String tenant) {
+        Map<String, FlowEntry> entries = readAll();
+        entries.put(flowId, new FlowEntry(flowId, version, tenant));
         writeAll(entries);
     }
 
     public synchronized void unregister(String flowId) {
-        Map<String, String> entries = readAll();
+        Map<String, FlowEntry> entries = readAll();
         if (entries.remove(flowId) != null) {
             writeAll(entries);
         }
     }
 
-    public synchronized Map<String, String> getAll() {
+    public synchronized Map<String, FlowEntry> getAll() {
         return Collections.unmodifiableMap(readAll());
     }
 
-    private Map<String, String> readAll() {
-        Map<String, String> result = new LinkedHashMap<>();
+    public synchronized FlowEntry get(String flowId) {
+        return readAll().get(flowId);
+    }
+
+    public synchronized Map<String, FlowEntry> getByTenant(String tenant) {
+        Map<String, FlowEntry> result = new LinkedHashMap<>();
+        readAll().forEach((flowId, entry) -> {
+            if (tenant.equals(entry.getTenant())) {
+                result.put(flowId, entry);
+            }
+        });
+        return result;
+    }
+
+    private Map<String, FlowEntry> readAll() {
+        Map<String, FlowEntry> result = new LinkedHashMap<>();
 
         if (!Files.exists(indexFile)) {
             return result;
@@ -68,29 +82,32 @@ public class InstalledFlowsManager {
         return result;
     }
 
-    private void parseLine(String line, Map<String, String> result) {
+    private void parseLine(String line, Map<String, FlowEntry> result) {
         try {
             @SuppressWarnings("unchecked")
             Map<String, String> entry = mapper.readValue(line, Map.class);
             String flowId  = entry.get("flowId");
-            String version = entry.get("versionId");
-            if (flowId != null && version != null) {
-                result.put(flowId, version);
+            String version = entry.get("version");
+            String tenant  = entry.get("tenant");
+
+            if (flowId != null && version != null && tenant != null) {
+                result.put(flowId, new FlowEntry(flowId, version, tenant));
             }
         } catch (Exception _) {
             log.warn("Skipping malformed line in installed-flows index: {}", line);
         }
     }
 
-    private void writeAll(Map<String, String> entries) {
+    private void writeAll(Map<String, FlowEntry> entries) {
         Path tmp = indexFile.resolveSibling(FILE_NAME + ".tmp");
         try {
             Files.createDirectories(indexFile.getParent());
             try (BufferedWriter writer = Files.newBufferedWriter(tmp)) {
-                for (Map.Entry<String, String> e : entries.entrySet()) {
+                for (FlowEntry entry : entries.values()) {
                     Map<String, String> recordMap = new LinkedHashMap<>();
-                    recordMap.put("flowId",    e.getKey());
-                    recordMap.put("versionId", e.getValue());
+                    recordMap.put("flowId", entry.getFlowId());
+                    recordMap.put("version", entry.getVersion());
+                    recordMap.put("tenant", entry.getTenant());
                     writer.write(mapper.writeValueAsString(recordMap));
                     writer.newLine();
                 }
@@ -100,5 +117,24 @@ public class InstalledFlowsManager {
         } catch (IOException e) {
             log.error("Failed to write installed-flows index", e);
         }
+    }
+
+    /**
+     * Simple data class for a flow entry.
+     */
+    public static class FlowEntry {
+        private final String flowId;
+        private final String version;
+        private final String tenant;
+
+        public FlowEntry(String flowId, String version, String tenant) {
+            this.flowId = flowId;
+            this.version = version;
+            this.tenant = tenant;
+        }
+
+        public String getFlowId() { return flowId; }
+        public String getVersion() { return version; }
+        public String getTenant() { return tenant; }
     }
 }
