@@ -217,12 +217,14 @@ public class ConfigManager {
     }
 
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
+
         ThreadPoolProfile threadPoolProfile = context.getExecutorServiceManager().getDefaultThreadPoolProfile();
         threadPoolProfile.setPoolSize(poolSize);
         threadPoolProfile.setMaxPoolSize(maxPoolSize);
         threadPoolProfile.setMaxQueueSize(maxQueueSize);
 
-        System.out.println("---> Thread model:" + ThreadType.current());
+        log.info("Apache Camel Thread model:{}", ThreadType.current());
+
     }
 
     public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {

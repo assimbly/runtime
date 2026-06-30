@@ -71,6 +71,7 @@ public class CamelIntegration extends BaseIntegration {
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
+        System.setProperty("camel.threads.virtual.enabled", "true");
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
         this.flowManager = new FlowManager(context);
