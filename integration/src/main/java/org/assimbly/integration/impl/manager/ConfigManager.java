@@ -11,11 +11,13 @@ import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
+import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
 import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
@@ -51,7 +53,6 @@ import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.multipart.processor.MultipartProcessor;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
 import org.json.JSONArray;
 import org.slf4j.Logger;
@@ -150,15 +151,7 @@ public class ConfigManager {
         HttpComponent httpComponent = context.getComponent("https", HttpComponent.class);
         httpComponent.setHttpClientConfigurer(HttpClientBuilder::disableAutomaticRetries);
 
-        JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
-        jettyHttpComponent12.setRequestHeaderSize(80000);
-        jettyHttpComponent12.setResponseHeaderSize(80000);
-        jettyHttpComponent12.setUseXForwardedForHeader(true);
-        jettyHttpComponent12.setSendServerVersion(false);
-        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-        customizer.setSniHostCheck(false);
-        customizer.setSniRequired(false);
-        jettyHttpComponent12.setSecureRequestCustomizer(customizer);
+        JettyHttpComponent12 jettyHttpComponent12 = getJettyConfiguration();
 
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
         jsonpath.setWriteAsString(true);
@@ -199,10 +192,37 @@ public class ConfigManager {
 
     }
 
+    private JettyHttpComponent12 getJettyConfiguration() {
+
+        JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
+
+        //general settings
+        jettyHttpComponent12.setRequestHeaderSize(80000);
+        jettyHttpComponent12.setResponseHeaderSize(80000);
+        jettyHttpComponent12.setUseXForwardedForHeader(true);
+        jettyHttpComponent12.setSendServerVersion(false);
+
+        //security settings
+        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+        customizer.setSniHostCheck(false);
+        customizer.setSniRequired(false);
+        jettyHttpComponent12.setSecureRequestCustomizer(customizer);
+
+        //virtual threads settings
+        VirtualThreadPool virtualThreadPool = new VirtualThreadPool();
+        virtualThreadPool.setName("CamelJettyVirtual");
+        jettyHttpComponent12.setThreadPool(virtualThreadPool);
+
+        return jettyHttpComponent12;
+    }
+
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setPoolSize(poolSize);
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxPoolSize(maxPoolSize);
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxQueueSize(maxQueueSize);
+        ThreadPoolProfile threadPoolProfile = context.getExecutorServiceManager().getDefaultThreadPoolProfile();
+        threadPoolProfile.setPoolSize(poolSize);
+        threadPoolProfile.setMaxPoolSize(maxPoolSize);
+        threadPoolProfile.setMaxQueueSize(maxQueueSize);
+
+        System.out.println("---> Thread model:" + ThreadType.current());
     }
 
     public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {

@@ -35,7 +35,7 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
-        <activemq-classic.version>6.2.6</activemq-classic.version>
+        <activemq-classic.version>6.2.7</activemq-classic.version>
         <activemq-artemis.version>2.54.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <angus.mail.version>2.0.5</angus.mail.version>
@@ -69,7 +69,7 @@
         <jwt.version>0.13.0</jwt.version>
         <jolokia.version>2.6.0</jolokia.version>
         <kamelet.version>4.20.0</kamelet.version>
-        <logback-classic.version>1.5.35</logback-classic.version>
+        <logback-classic.version>1.5.37</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <slf4j.version>2.0.18</slf4j.version>
         <spring.version>7.0.8</spring.version>
@@ -90,7 +90,7 @@
         <jetty.version>12.1.10</jetty.version>
         <jsonassert.version>1.5.3</jsonassert.version>
         <json-unit-assertj.version>5.1.2</json-unit-assertj.version>
-        <junit.version>6.1.0</junit.version>
+        <junit.version>6.1.1</junit.version>
         <mockito.version>5.23.0</mockito.version>
         <mockserver.version>5.15.0</mockserver.version>
         <mongo.version>4.7.2</mongo.version>
@@ -195,7 +195,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.6.1</version>
+                    <version>3.6.3</version>
                     <executions>
                         <execution>
                             <id>enforce-maven</id>
@@ -217,7 +217,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.2</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-install-plugin</artifactId>
@@ -229,15 +229,15 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.21.0</version>
+                    <version>3.22.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.4</version>
+                    <version>3.5.6</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-toolchains-plugin</artifactId>

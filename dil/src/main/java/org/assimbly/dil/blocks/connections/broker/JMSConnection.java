@@ -156,7 +156,7 @@ public class JMSConnection {
         pooledConnectionFactory.setCreateConnectionOnStartup(true);
         pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
         pooledConnectionFactory.setMaxConnections(25);
-        pooledConnectionFactory.setMaximumActiveSessionPerConnection(500);
+        pooledConnectionFactory.setMaximumActiveSessionPerConnection(100);
         pooledConnectionFactory.setIdleTimeout(30000);
 
         return pooledConnectionFactory;

@@ -106,9 +106,9 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setDefaultBlocks();
 
-        configManager.setDefaultThreadProfile(5, 50, 5000);
+        configManager.setDefaultThreadProfile(10, 50, 5000);
 
-        configManager.setThreadProfile("wiretapProfile", 0, 10, 2500);
+        configManager.setThreadProfile("wiretapProfile", 0, 20, 2500);
 
         configManager.setCertificateStore(true, sslManager);
 
