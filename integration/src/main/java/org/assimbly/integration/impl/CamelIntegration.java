@@ -19,12 +19,14 @@ import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.jms.ReplyToType;
 import org.apache.camel.component.kamelet.KameletComponent;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRegistryService;
 import org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory;
 import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.health.HealthCheck;
@@ -54,6 +56,7 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
+import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
@@ -75,6 +78,7 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.jasypt.properties.EncryptableProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.quartz.Scheduler;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.yaml.snakeyaml.Yaml;
@@ -194,6 +198,8 @@ public class CamelIntegration extends BaseIntegration {
 
 		setSuppressLoggingOnTimeout(true);
 
+		setForceShutdownOnTimeout(true);
+
 		setStreamCaching(true);
 
 		setMetrics(true);
@@ -203,7 +209,7 @@ public class CamelIntegration extends BaseIntegration {
 		//setTracing(true,"backlog");
 
 		setHealthChecks(true);
-		
+
 	}
 
 	public void setTracing(boolean tracing, String traceType) {
@@ -216,7 +222,7 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
 	}
-	
+
 	public void setHealthChecks(boolean enable) {
 
 		HealthCheckRepository routesHealthCheckRepository = HealthCheckHelper.getHealthCheckRepository(context, "routes");
@@ -234,6 +240,22 @@ public class CamelIntegration extends BaseIntegration {
 		}
 
     }
+
+	public void setTriggerMisfireLoggingListener() {
+		try {
+			QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
+			if (quartzComponent != null) {
+				Scheduler scheduler = quartzComponent.getScheduler();
+				if (scheduler != null) {
+					scheduler.getListenerManager().addTriggerListener(
+							new TriggerMisfireLoggingListener()
+					);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void setDebugging(boolean debugging) {
 		context.setDebugging(debugging);
@@ -255,6 +277,10 @@ public class CamelIntegration extends BaseIntegration {
 	public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
 		context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
 		context.getShutdownStrategy().setTimeUnit(TimeUnit.MILLISECONDS);
+	}
+
+	public void setForceShutdownOnTimeout(boolean force) {
+		context.getShutdownStrategy().setShutdownNowOnTimeout(force);
 	}
 
 	public void setCertificateStore(boolean certificateStore) throws Exception {
@@ -317,6 +343,7 @@ public class CamelIntegration extends BaseIntegration {
 		registry.bind("AttachmentAttacher",new org.assimbly.mail.component.mail.AttachmentAttacher());
 		registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
 		registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+		registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());
 		registry.bind("CustomHttpHeaderFilterStrategy",new CustomHttpHeaderFilterStrategy());
 		registry.bind("customHttpBinding", new CustomHttpBinding());
 		registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
@@ -357,8 +384,15 @@ public class CamelIntegration extends BaseIntegration {
 
 		context.setUseBreadcrumb(true);
 
-		//enable performance stats
-		context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
+        //JMX settings
+        ManagementAgent managementAgent = context.getManagementStrategy().getManagementAgent();
+        managementAgent.setRegisterAlways(false);
+        managementAgent.setRegisterNewRoutes(true);
+        managementAgent.setOnlyRegisterProcessorWithCustomId(true);
+        managementAgent.setEndpointRuntimeStatisticsEnabled(false);
+        managementAgent.setLoadStatisticsEnabled(false);
+        managementAgent.setStatisticsLevel(ManagementStatisticsLevel.RoutesOnly);
+        managementAgent.setMBeansLevel(ManagementMBeansLevel.RoutesOnly);
 
 		// Enable Jackson JSON type converter for more types.
 //		context.getGlobalOptions().put("CamelJacksonEnableTypeConverter", "true");
@@ -962,6 +996,8 @@ public class CamelIntegration extends BaseIntegration {
 			context.start();
 			started = true;
 
+			setTriggerMisfireLoggingListener();
+
 			log.info("Runtime started");
 
 		}
@@ -1365,27 +1401,28 @@ public class CamelIntegration extends BaseIntegration {
 
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
-		int maxConnections = getEnvironmentVarAsInteger("AMQ_MAXIMUM_CONNECTIONS", 50);
-		int idleTimeout = getEnvironmentVarAsInteger("AMQ_IDLE_TIMEOUT", 5000);
-
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
+		activeMQConnectionFactory.setOptimizeAcknowledge(true);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
-		pooledConnectionFactory.setMaxConnections(maxConnections);
-		pooledConnectionFactory.setIdleTimeout(idleTimeout);
+		pooledConnectionFactory.setMaxConnections(20);
+		pooledConnectionFactory.setMaximumActiveSessionPerConnection(200);
+		pooledConnectionFactory.setIdleTimeout(10000);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
 
-		// Cache the consumer to prevent object churn
 		jmsComponent.setCacheLevelName("CACHE_CONSUMER");
 		jmsComponent.setConcurrentConsumers(1);
-		jmsComponent.setMaxConcurrentConsumers(8);
+		jmsComponent.setMaxConcurrentConsumers(4);
+		jmsComponent.setReplyToConcurrentConsumers(1);
+
 		jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
 		jmsComponent.setIncludeCorrelationIDAsBytes(false);
 
 		return jmsComponent;
+
 	}
 
 	public void createConnections(TreeMap<String, String> props) throws Exception {
@@ -1762,7 +1799,7 @@ public class CamelIntegration extends BaseIntegration {
 		try {
 			// gracefully shutdown routes using startup order
 			List<RouteStartupOrder> routeStartupOrders = getRoutesStartupOrderByFlowId(id);
-			context.getShutdownStrategy().shutdown(context, routeStartupOrders, timeout, TimeUnit.MILLISECONDS);
+			context.getShutdownStrategy().shutdown(context, routeStartupOrders, stopTimeout, TimeUnit.MILLISECONDS);
 			for(RouteStartupOrder routeStartupOrder : routeStartupOrders){
 				context.removeRoute(routeStartupOrder.getRoute().getId());
 			}
@@ -1773,7 +1810,7 @@ public class CamelIntegration extends BaseIntegration {
 				for (String routeId : leftoverRoutes) {
 					try {
 						if (context.getRoute(routeId) != null) {
-							context.getRouteController().stopRoute(routeId);
+							context.getRouteController().stopRoute(routeId,stopTimeout,TimeUnit.MILLISECONDS);
 							context.removeRoute(routeId);
 						}
 					} catch (Exception e) {

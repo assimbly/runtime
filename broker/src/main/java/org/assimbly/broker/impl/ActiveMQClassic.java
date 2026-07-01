@@ -63,7 +63,8 @@ public class ActiveMQClassic implements Broker {
 
             if(brokerFile.exists()) {
                 log.info("Using config file 'activemq.xml'. Loaded from " + brokerFile.getCanonicalPath());
-                URI configurationUri = new URI(brokerUrl);
+                //URI configurationUri = new URI(brokerUrl);
+                URI configurationUri = new URI("xbean:" + brokerFile.toURI().toString());
                 broker = BrokerFactory.createBroker(configurationUri);
             }else {
                 this.setFileConfiguration("");
@@ -91,7 +92,7 @@ public class ActiveMQClassic implements Broker {
 
             return status();
         }catch (Exception e) {
-            log.error("Failed to start broker. Reason: ", e.getMessage());
+            log.error("Failed to start broker. Reason: {}", e.getMessage());
             e.printStackTrace();
             return "Failed to start broker. Reason: " + e.getMessage();
         }
