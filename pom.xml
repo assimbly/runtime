@@ -36,12 +36,12 @@
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.0.0</assimbly.version>
         <activemq-classic.version>6.2.7</activemq-classic.version>
-        <activemq-artemis.version>2.54.0</activemq-artemis.version>
+        <activemq-artemis.version>2.55.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <angus.mail.version>2.0.5</angus.mail.version>
         <axiom.version>2.0.0</axiom.version>
         <bouncycastle.version>1.84</bouncycastle.version>
-        <camel.version>4.20.0</camel.version>
+        <camel.version>4.21.0</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-codec.version>1.22.0</commons-codec.version>
@@ -51,10 +51,10 @@
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>2.0.1</docconverter.version>
         <dropwizard-metrics.version>4.2.39</dropwizard-metrics.version>
-        <elasticsearch-rest-client.version>9.4.2</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>9.4.3</elasticsearch-rest-client.version>
         <glassfish.jaxb.version>4.0.9</glassfish.jaxb.version>
         <groovy-script.version>5.0.6</groovy-script.version>
-        <httpClient5.version>5.6.1</httpClient5.version>
+        <httpClient5.version>5.6.2</httpClient5.version>
         <ibmmq-client.version>10.0.0.0</ibmmq-client.version>
         <jackson.version>3.2.0</jackson.version>
         <jakarta-activation-api.version>2.1.4</jakarta-activation-api.version>

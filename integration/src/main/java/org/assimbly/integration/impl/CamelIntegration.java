@@ -606,6 +606,21 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
+    public String getFlowErrors(String flowId, int maxNumberOfEntries, String mediaType) {
+        return flowManager.getFlowErrors(flowId, maxNumberOfEntries, mediaType);
+    }
+
+    @Override
+    public String getStepErrors(String flowId, String stepId, int maxNumberOfEntries, String mediaType) {
+        return flowManager.getStepErrors(flowId, stepId, maxNumberOfEntries, mediaType);
+    }
+
+    @Override
+    public String getErrorByUid(String flowId, String stepId, long uid, String mediaType) {
+        return flowManager.getErrorByUid(flowId, stepId, uid, mediaType);
+    }
+
+    @Override
     public void setConnection(TreeMap<String, String> props, String stepType) throws Exception {
         flowManager.setConnection(props, stepType);
     }

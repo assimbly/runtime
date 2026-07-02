@@ -718,6 +718,38 @@ public interface Integration {
 	String getErrors(int numberOfEntries, String mediaType);
 
 	/**
+	 * Gets a list of errors for a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  numberOfEntries the maximum number of errors to return
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getFlowErrors(String flowId, int numberOfEntries, String mediaType);
+
+	/**
+	 * Gets a list of errors for a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step	 *
+	 * @param  numberOfEntries the maximum number of errors to return
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getStepErrors(String flowId, String stepId, int numberOfEntries, String mediaType);
+
+	/**
+	 * Gets an error for a step by uid
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @param  uid uid of the error
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getErrorByUid(String flowId, String stepId, long uid, String mediaType);
+
+	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows
 	*
 	* @throws Exception if log cannot be retrieved

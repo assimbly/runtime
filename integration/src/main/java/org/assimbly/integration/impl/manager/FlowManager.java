@@ -27,6 +27,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -672,33 +677,101 @@ public class FlowManager {
 
     public String getErrors(int maxNumberOfEntries, String mediaType) {
 
-        JSONArray errors = new JSONArray();
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistry.browse(maxNumberOfEntries);
+
+        String result = errorEventMessageToJson(errorEventMessages);
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    public String getFlowErrors(String flowId, int maxNumberOfEntries, String mediaType) {
 
         ErrorRegistry errorRegistry = context.getErrorRegistry();
-        Collection<ErrorRegistryEntry> errorRegistryEntries = errorRegistry.browse(maxNumberOfEntries);
 
-        for(ErrorRegistryEntry errorRegistryEntry: errorRegistryEntries){
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistry.browse();
 
-            JSONObject error = new JSONObject();
+        String result = errorEventMessageToJson(
+                errorEventMessages.stream()
+                        .filter(msg -> flowId.equals(msg.getRouteGroup()))
+                        .limit(maxNumberOfEntries)
+                        .toList()
+        );
 
-            error.put("stepId", errorRegistryEntry.routeId());
-            error.put("exchangeId", errorRegistryEntry.exchangeId());
-            error.put("timestamp", errorRegistryEntry.timestamp());
-            error.put("endpointUri", errorRegistryEntry.endpointUri());
-            error.put("exceptionMessage", errorRegistryEntry.exceptionMessage());
-            error.put("exceptionType", errorRegistryEntry.exceptionType());
-
-            errors.put(error);
-
-        }
-
-        String errorJson = errors.toString(4);
         if (mediaType.contains("xml")) {
-            errorJson = DocConverter.convertJsonToXml(errorJson);
+            result = DocConverter.convertJsonToXml(result);
         }
 
-        return errorJson;
+        return result;
 
+    }
+
+    public String getStepErrors(String flowId, String stepId, int maxNumberOfEntries, String mediaType) {
+
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+        ErrorRegistryView errorRegistryView = errorRegistry.forRoute(flowId + "-" + stepId);
+
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistryView.browse(maxNumberOfEntries);
+
+        String result = errorEventMessageToJson(errorEventMessages);
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    public String getErrorByUid(String flowId, String stepId, long uid, String mediaType) {
+
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+
+        ErrorRegistryView errorRegistryView = errorRegistry.forRoute(flowId + "-" + stepId);
+        
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistryView.browse();
+
+        Optional<BacklogErrorEventMessage> matchingMessage = errorEventMessages.stream()
+                .filter(msg -> uid == msg.getUid())
+                .findFirst();
+
+        String result = matchingMessage
+                .map(msg -> msg.toJSon(4))
+                .orElse("{}");
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    private String errorEventMessageToJson(Collection<BacklogErrorEventMessage> errorEventMessages) {
+
+        JsonMapper mapper = JsonMapper.builder().build();
+        ArrayNode arrayNode = mapper.createArrayNode();
+
+        for (BacklogErrorEventMessage errorEventMessage : errorEventMessages) {
+
+            ObjectNode node = mapper.createObjectNode();
+            node.put("uid", errorEventMessage.getUid());
+            node.put("flowId", errorEventMessage.getRouteGroup());
+            node.put("stepId", errorEventMessage.getRouteId());
+            node.put("timestamp", errorEventMessage.getTimestamp());
+            node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
+            node.put("exceptionType", errorEventMessage.getExceptionType());
+
+            arrayNode.add(node);
+        }
+
+        return mapper.writeValueAsString(arrayNode);
     }
 
 
