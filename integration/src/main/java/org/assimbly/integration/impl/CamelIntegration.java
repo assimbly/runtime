@@ -1402,7 +1402,6 @@ public class CamelIntegration extends BaseIntegration {
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
-		activeMQConnectionFactory.setOptimizeAcknowledge(true);
 
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
