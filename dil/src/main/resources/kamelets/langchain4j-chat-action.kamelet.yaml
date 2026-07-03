@@ -32,14 +32,10 @@ spec:
       chatModel:
         title: "Chat Model Bean Name"
         type: "string"
-        default: "#bean:GeminiChatModel2"
+        default: "#geminiChatModel"
   dependencies:
     - "camel:kamelet"
   template:
-    beans:
-      - name: "GeminiChatModel2"
-        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiChatModel"
-        factoryMethod: "create"
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
