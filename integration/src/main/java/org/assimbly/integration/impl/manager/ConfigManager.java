@@ -58,8 +58,6 @@ import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 
 public class ConfigManager {
 
@@ -203,15 +201,6 @@ public class ConfigManager {
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
-
-
-        ChatLanguageModel model = GoogleAiGeminiChatModel.builder()
-                .apiKey(System.getenv("GEMINI_API_KEY"))
-                .modelName(System.getenv("GEMINI_MODEL_NAME"))
-                .timeout(Duration.ofSeconds(10))
-                .build();
-
-        registry.bind("geminiChatModel", model);
 
     }
 

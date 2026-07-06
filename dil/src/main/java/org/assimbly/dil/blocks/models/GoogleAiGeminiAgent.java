@@ -2,7 +2,7 @@ package org.assimbly.dil.blocks.models;
 
 import java.time.Duration;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.apache.camel.component.langchain4j.agent.api.Agent;
 import org.apache.camel.component.langchain4j.agent.api.AgentConfiguration;
@@ -12,7 +12,7 @@ public class GoogleAiGeminiAgent {
 
     public static Agent create() {
 
-        ChatLanguageModel model = GoogleAiGeminiChatModel.builder()
+        ChatModel model = GoogleAiGeminiChatModel.builder()
                 .apiKey(System.getenv("GEMINI_API_KEY"))
                 .modelName(System.getenv("GEMINI_MODEL_NAME"))
                 .timeout(Duration.ofSeconds(10))

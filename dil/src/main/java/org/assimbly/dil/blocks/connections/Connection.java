@@ -77,6 +77,9 @@ public class Connection {
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");
 
+            case "langchain4j-agent" ->
+                    new LangChain4jAgentConnection(context, decryptedProperties, connectionId).start();
+
             default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
 
         }

@@ -3,8 +3,7 @@ package org.assimbly.dil.blocks.models;
 import org.apache.camel.component.langchain4j.agent.api.Agent;
 import org.apache.camel.component.langchain4j.agent.api.AgentConfiguration;
 import org.apache.camel.component.langchain4j.agent.api.AgentWithoutMemory;
-import org.apache.camel.component.langchain4j.agent.api.Guardrails;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,12 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class GoogleAiGeminiAgentModelConfig {
 
     @Bean("secureAgent")
-    public Agent secureAgent(ChatLanguageModel chatLanguageModel) {
+    public Agent secureAgent(ChatModel chatModel) {
 
         AgentConfiguration config = new AgentConfiguration()
-                .withChatModel(chatLanguageModel)
-                .withInputGuardrailClasses(Guardrails.defaultInputGuardrails())
-                .withOutputGuardrailClasses(Guardrails.defaultOutputGuardrails());
+                .withChatModel(chatModel);
 
         return new AgentWithoutMemory(config);
     }

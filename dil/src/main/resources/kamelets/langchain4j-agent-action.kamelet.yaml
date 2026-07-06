@@ -10,10 +10,6 @@ spec:
     description: "agent component for langchain4j"
     type: "object"
     properties:
-      path:
-        title: "Path"
-        description: "Path"
-        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -32,18 +28,14 @@ spec:
       agent:
         title: "Agent Bean Name"
         type: "string"
-        default: "#bean:GeminiAgent2"
+        default: "#geminiAgent"
   dependencies:
     - "camel:kamelet"
   template:
-    beans:
-      - name: "GeminiAgent2"
-        type: "#class:org.assimbly.dil.blocks.models.GoogleAiGeminiAgent"
-        factoryMethod: "create"
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "kamelet:source?routeId={{routeId}}"
+        uri: "{{in}}"
         steps:
           - step:
               id: "{{routeId}}"
