@@ -90,15 +90,15 @@ public class FlowManager {
             flow.addRoutesToCamelContext(context);
 
             if(flow.isFlowLoaded()){
-                return finishReport(report, flowId, "start", "Started flow successfully", "info","success");
+                return finishReport(report, flowId, "start", "Started flow successfully", "info","success").getReport();
             }else{
                 stopFlow(flowId, STOP_TIMEOUT);
-                return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
+                return finishReport(report, flowId, "start", "Start flow failed", "error","failed").getReport();
             }
 
         } catch (Exception e) {
             log.error("Load flow failed: ", e);
-            return finishReport(report, flowId, "start", e.getMessage(), "error","failed");
+            return finishReport(report, flowId, "start", e.getMessage(), "error","failed").getReport();
         }
 
     }
@@ -122,13 +122,16 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap, Map<String, InstalledFlowsManager.FlowEntry> installedFlowsIndexMap) {
 
         log.info("Starting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                loadFlow(flowId, flowProps);
+                if(installedFlowsIndexMap.containsKey(flowId)) {
+                    // prevent paused flows to be installed on a restart
+                    loadFlow(flowId, flowProps);
+                }
                 log.info("Started flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -213,10 +216,10 @@ public class FlowManager {
 
             String result = routeLoader.getReport();
 
-            return finishReport(report, routeId, "start", result, "info", "success");
+            return finishReport(report, routeId, "start", result, "info", "success").getReport();
 
         } catch (Exception e) {
-            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed");
+            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed").getReport();
         }
     }
 
@@ -243,7 +246,7 @@ public class FlowManager {
         if (!hasFlow(flowId)) {
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "Flow is not installed";
-            return  finishReport(report, flowId, "stop", errorMessage, "error","failed");
+            return  finishReport(report, flowId, "stop", errorMessage, "error","failed").getReport();
         }
 
         try {
@@ -264,7 +267,7 @@ public class FlowManager {
 
             if (enableReport) {
                 FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-                return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success");
+                return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success").getReport();
             }
 
         } catch (Exception e) {
@@ -273,7 +276,7 @@ public class FlowManager {
 
             if (enableReport) {
                 FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
-                return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed");
+                return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed").getReport();
             }
 
         }
@@ -293,7 +296,7 @@ public class FlowManager {
         }
     }
 
-    public String pauseFlow(String flowId) {
+    public FlowLoaderReport pauseFlow(String flowId) {
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
 
@@ -329,7 +332,7 @@ public class FlowManager {
 
     }
 
-    public String resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
+    public FlowLoaderReport resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
 
@@ -401,7 +404,7 @@ public class FlowManager {
 
     }
 
-    public String finishReport(FlowLoaderReport report, String flowid, String event, String message, String messageType, String status) {
+    public FlowLoaderReport finishReport(FlowLoaderReport report, String flowid, String event, String message, String messageType, String status) {
 
         String eventCapitalized = StringUtils.capitalize(event);
 
@@ -415,7 +418,7 @@ public class FlowManager {
 
         report.finishReport(event, message, status);
 
-        return report.getReport();
+        return report;
 
     }
 

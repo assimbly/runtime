@@ -12,6 +12,7 @@ public class FlowLoaderReport {
 	private final String flowId;
 	private final String flowName;
 	private final String flowVersion;
+	private String status;
 	private String report;
 	private final JSONObject json;
 	private final JSONArray steps;
@@ -29,6 +30,7 @@ public class FlowLoaderReport {
 		this.flowId = flowId;
 		this.flowName = flowName;
 		this.flowVersion = flowVersion;
+		this.status = "";
 		startTime = System.currentTimeMillis();
 		json = new JSONObject();
 		flow = new JSONObject();
@@ -48,6 +50,7 @@ public class FlowLoaderReport {
 		flow.put("time",time + " milliseconds");
 		flow.put("message",message);
 		flow.put("status",status);
+		this.status = status;
 
 		if(stepsLoaded!=null && loaded > 0){
 			stepsLoaded.put("total", loaded);
@@ -131,6 +134,10 @@ public class FlowLoaderReport {
             log.error("Event={} | name={} | flowid={}", event, flowName, flowId);
 		}
 
+	}
+
+	public String getStatus(){
+		return status;
 	}
 
 }

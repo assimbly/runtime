@@ -26,6 +26,11 @@ public class DILMemoryStore implements DILStore {
     }
 
     @Override
+    public void clearAllFlows() {
+        flowsMap.clear();
+    }
+
+    @Override
     public Collection<TreeMap<String, String>> getAllFlows() {
         return flowsMap.values();
     }
@@ -49,6 +54,11 @@ public class DILMemoryStore implements DILStore {
     @Override
     public void removeCollector(String collectorId) {
         collectorsMap.remove(collectorId);
+    }
+
+    @Override
+    public void clearAllCollectors() {
+        collectorsMap.clear();
     }
 
     @Override

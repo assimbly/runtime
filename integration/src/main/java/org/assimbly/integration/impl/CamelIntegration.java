@@ -62,6 +62,7 @@ public class CamelIntegration extends BaseIntegration {
     private final StatsManager statsManager;
     private final ConfigManager configManager;
     private final StartupManager startupManager = new StartupManager();
+    private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
     private boolean started;
     private RouteController routeController;
     private ManagedCamelContext managed;
@@ -168,7 +169,7 @@ public class CamelIntegration extends BaseIntegration {
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed").getReport();
         }
 
         String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
@@ -185,6 +186,10 @@ public class CamelIntegration extends BaseIntegration {
             if (failed > 0) {
                 log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
                 super.removeFlowConfiguration(flowId);
+            } else {
+                String version = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
+                String tenant = super.getFlowConfiguration(flowId).getOrDefault("flow.tenant", "0");
+                installedFlowsManager.register(flowId, version, tenant);
             }
         } catch (Exception _) {
             // do nothing
@@ -195,6 +200,7 @@ public class CamelIntegration extends BaseIntegration {
 
     public String uninstallFlow(String flowId, long timeout) {
         super.removeFlowConfiguration(flowId);
+        installedFlowsManager.unregister(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -212,7 +218,7 @@ public class CamelIntegration extends BaseIntegration {
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed").getReport();
         }
 
     }
@@ -241,7 +247,7 @@ public class CamelIntegration extends BaseIntegration {
 
         if(!flowsMap.isEmpty()) {
             log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-            flowManager.startAllFlows(flowsMap);
+            flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
             log.info("Restored flows from cache.");
         }
 
@@ -767,7 +773,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(flowsMap);
+        flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
     }
 
     @Override
@@ -796,7 +802,7 @@ public class CamelIntegration extends BaseIntegration {
         if(flowProperties.isEmpty()){
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "XXX Flow is not installed";
-            return  flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed");
+            return flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed").getReport();
         }
 
 
@@ -817,12 +823,22 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String resumeFlow(String flowId) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.resumeFlow(flowId, flowProperties);
+        FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
+        if (flowLoaderReport.getStatus().equalsIgnoreCase("success")) {
+            String version = flowProperties.getOrDefault("flow.version", "0");
+            String tenant = flowProperties.getOrDefault("flow.tenant", "0");
+            installedFlowsManager.register(flowId, version, tenant);
+        }
+        return flowLoaderReport.getReport();
     }
 
     @Override
     public String pauseFlow(String flowId) {
-        return flowManager.pauseFlow(flowId);
+        FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
+        if(flowLoaderReport.getStatus().equalsIgnoreCase("success")) {
+            installedFlowsManager.unregister(flowId);
+        }
+        return flowLoaderReport.getReport();
     }
 
     @Override
@@ -978,6 +994,24 @@ public class CamelIntegration extends BaseIntegration {
         }
     }
 
+    @Override
+    public String getInstalledFlowsIndex() {
+        try {
+            List<Map<String, String>> result = new ArrayList<>();
+            installedFlowsManager.getAll().forEach((flowId, flowEntry) -> {
+                Map<String, String> entry = new LinkedHashMap<>();
+                entry.put("flowId", flowId);
+                entry.put("version", flowEntry.getVersion());
+                entry.put("tenant", flowEntry.getTenant());
+                result.add(entry);
+            });
+            return new ObjectMapper().writeValueAsString(result);
+        } catch (Exception e) {
+            log.error("Failed to serialize installed flows index", e);
+            return "[]";
+        }
+    }
+
     @NotNull
     private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
         Map<String, String> flow = new HashMap<>();
@@ -989,6 +1023,11 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public void deleteCacheEntry(String flowId) {
         super.removeFlowConfiguration(flowId);
+    }
+
+    @Override
+    public void clearAllCache() {
+        super.removeAllFlowConfiguration();
     }
 
     private String mergeJson(String flowJson, String testJson) {
