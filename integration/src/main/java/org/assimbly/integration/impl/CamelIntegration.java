@@ -181,8 +181,8 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         try {
-            String version = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
-            String tenant = super.getFlowConfiguration(flowId).getOrDefault("flow.tenant", "0");
+            String version = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
+            String tenant = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
             installedFlowsManager.register(flowId, version, tenant);
         } catch (Exception _) {
             // do nothing
@@ -818,8 +818,8 @@ public class CamelIntegration extends BaseIntegration {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
         if (flowLoaderReport.isStatusSuccess()) {
-            String version = flowProperties.getOrDefault("flow.version", "0");
-            String tenant = flowProperties.getOrDefault("flow.tenant", "0");
+            String version = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
+            String tenant = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
             installedFlowsManager.register(flowId, version, tenant);
         }
         return flowLoaderReport.getReport();
@@ -943,7 +943,7 @@ public class CamelIntegration extends BaseIntegration {
 
             // filter by tenant if provided
             if (tenant != null) {
-                String flowTenant = config.get("flow.tenant");
+                String flowTenant = config.get(FlowManager.PROPERTY_FLOW_TENANT);
                 if (!tenant.equalsIgnoreCase(flowTenant)) {
                     return;
                 }
@@ -1009,7 +1009,7 @@ public class CamelIntegration extends BaseIntegration {
     private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
         Map<String, String> flow = new HashMap<>();
         flow.put("id", flowId);
-        flow.put("name", config.getOrDefault("flow.name", flowId));
+        flow.put("name", config.getOrDefault(FlowManager.PROPERTY_FLOW_NAME, flowId));
         return flow;
     }
 

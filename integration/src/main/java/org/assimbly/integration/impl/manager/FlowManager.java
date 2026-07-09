@@ -66,6 +66,12 @@ public class FlowManager {
 
     private static final long STOP_TIMEOUT = 300;
 
+    public static final String PROPERTY_FLOW_ENVIRONMENT = "flow.environment";
+    public static final String PROPERTY_FLOW_NAME = "flow.name";
+    public static final String PROPERTY_FLOW_TENANT = "flow.tenant";
+    public static final String PROPERTY_FLOW_VERSION = "flow.version";
+    public static final String PROPERTY_ID = "id";
+
     public FlowManager(CamelContext context) {
         this.context = context;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
@@ -73,7 +79,7 @@ public class FlowManager {
 
     public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {
 
-        String version = setProperty(properties,"flow.version","0");
+        String version = setProperty(properties,PROPERTY_FLOW_VERSION,"0");
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, version);
 
@@ -628,13 +634,13 @@ public class FlowManager {
         JSONObject flow = new JSONObject();
 
         if (flowProperties != null) {
-            flow.put("id", flowProperties.get("id"));
-            flow.put("name", flowProperties.get("flow.name"));
+            flow.put("id", flowProperties.get(PROPERTY_ID));
+            flow.put("name", flowProperties.get(PROPERTY_FLOW_NAME));
             flow.put("isRunning", isFlowStarted(flowId));
             flow.put("status", getFlowStatus(flowId));
-            flow.put("version", setProperty(flowProperties,"flow.version","0"));
-            flow.put("environment", setProperty(flowProperties,"flow.environment",null));
-            flow.put("tenant", setProperty(flowProperties,"flow.tenant",null));
+            flow.put("version", setProperty(flowProperties,PROPERTY_FLOW_VERSION,"0"));
+            flow.put("environment", setProperty(flowProperties,PROPERTY_FLOW_ENVIRONMENT,null));
+            flow.put("tenant", setProperty(flowProperties,PROPERTY_FLOW_TENANT,null));
             flow.put("uptime", getFlowUptime(flowId));
         } else {
             flow.put("id", flowId);
