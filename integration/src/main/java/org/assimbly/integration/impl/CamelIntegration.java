@@ -174,18 +174,19 @@ public class CamelIntegration extends BaseIntegration {
 
         FlowLoaderReport report = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
 
-        if (report == null || StringUtils.isEmpty(report.getReport()) || report.isStatusFailed()) {
+        if (report == null || StringUtils.isEmpty(report.getReport())) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
             super.removeFlowConfiguration(flowId);
             return null;
         }
 
-        try {
+        if(report.isStatusFailed()) {
+            log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
+            super.removeFlowConfiguration(flowId);
+        } else {
             String version = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
             String tenant = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
             installedFlowsManager.register(flowId, version, tenant);
-        } catch (Exception _) {
-            // do nothing
         }
 
         return report.getReport();
