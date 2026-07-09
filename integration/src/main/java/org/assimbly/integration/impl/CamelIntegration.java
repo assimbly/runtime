@@ -172,30 +172,23 @@ public class CamelIntegration extends BaseIntegration {
             return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed").getReport();
         }
 
-        String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
+        FlowLoaderReport report = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
 
-        if (result == null) {
+        if (report == null || StringUtils.isEmpty(report.getReport()) || report.isStatusFailed()) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
             super.removeFlowConfiguration(flowId);
             return null;
         }
 
         try {
-            JsonNode root = new ObjectMapper().readTree(result);
-            int failed = root.path("flow").path("installed").path("failed").asInt(0);
-            if (failed > 0) {
-                log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
-                super.removeFlowConfiguration(flowId);
-            } else {
-                String version = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
-                String tenant = super.getFlowConfiguration(flowId).getOrDefault("flow.tenant", "0");
-                installedFlowsManager.register(flowId, version, tenant);
-            }
+            String version = super.getFlowConfiguration(flowId).getOrDefault("flow.version", "0");
+            String tenant = super.getFlowConfiguration(flowId).getOrDefault("flow.tenant", "0");
+            installedFlowsManager.register(flowId, version, tenant);
         } catch (Exception _) {
             // do nothing
         }
 
-        return result;
+        return report.getReport();
     }
 
     public String uninstallFlow(String flowId, long timeout) {
@@ -209,7 +202,7 @@ public class CamelIntegration extends BaseIntegration {
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
 
-            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
+            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout).getReport();
             String testReport = flowManager.testFlow(flowId);
             flowManager.stopFlow(flowId, timeout);
 
@@ -806,13 +799,13 @@ public class CamelIntegration extends BaseIntegration {
         }
 
 
-        return flowManager.startFlow(flowId, flowProperties, timeout);
+        return flowManager.startFlow(flowId, flowProperties, timeout).getReport();
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.restartFlow(flowId, flowProperties, timeout);
+        return flowManager.restartFlow(flowId, flowProperties, timeout).getReport();
     }
 
     @Override
@@ -824,7 +817,7 @@ public class CamelIntegration extends BaseIntegration {
     public String resumeFlow(String flowId) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
-        if (flowLoaderReport.getStatus().equalsIgnoreCase("success")) {
+        if (flowLoaderReport.isStatusSuccess()) {
             String version = flowProperties.getOrDefault("flow.version", "0");
             String tenant = flowProperties.getOrDefault("flow.tenant", "0");
             installedFlowsManager.register(flowId, version, tenant);
@@ -835,7 +828,7 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String pauseFlow(String flowId) {
         FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
-        if(flowLoaderReport.getStatus().equalsIgnoreCase("success")) {
+        if(flowLoaderReport.isStatusSuccess()) {
             installedFlowsManager.unregister(flowId);
         }
         return flowLoaderReport.getReport();

@@ -71,7 +71,7 @@ public class FlowManager {
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
     }
 
-    public String loadFlow(String flowId, TreeMap<String, String> properties) {
+    public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {
 
         String version = setProperty(properties,"flow.version","0");
 
@@ -90,15 +90,15 @@ public class FlowManager {
             flow.addRoutesToCamelContext(context);
 
             if(flow.isFlowLoaded()){
-                return finishReport(report, flowId, "start", "Started flow successfully", "info","success").getReport();
+                return finishReport(report, flowId, "start", "Started flow successfully", "info","success");
             }else{
                 stopFlow(flowId, STOP_TIMEOUT);
-                return finishReport(report, flowId, "start", "Start flow failed", "error","failed").getReport();
+                return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
             }
 
         } catch (Exception e) {
             log.error("Load flow failed: ", e);
-            return finishReport(report, flowId, "start", e.getMessage(), "error","failed").getReport();
+            return finishReport(report, flowId, "start", e.getMessage(), "error","failed");
         }
 
     }
@@ -223,7 +223,7 @@ public class FlowManager {
         }
     }
 
-    public String startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
+    public FlowLoaderReport startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
 
         if (hasFlow(flowId)) {
             stopFlow(flowId, timeout, false);
@@ -233,7 +233,7 @@ public class FlowManager {
 
     }
 
-    public String restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
+    public FlowLoaderReport restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
         return startFlow(flowId, flowProperties, timeout);
     }
 

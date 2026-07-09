@@ -23,6 +23,9 @@ public class FlowLoaderReport {
 	private final JSONObject stepsLoaded;
 	private final long startTime;
 
+	private static final String STATUS_FAILED = "failed";
+	private static final String STATUS_SUCCESS = "success";
+
 	public FlowLoaderReport(String flowId, String flowName, String flowVersion) {
 
 		log.info("Initialize flow report | flowid={}", flowId);
@@ -138,6 +141,14 @@ public class FlowLoaderReport {
 
 	public String getStatus(){
 		return status;
+	}
+
+	public boolean isStatusSuccess(){
+		return status != null && status.equalsIgnoreCase(STATUS_SUCCESS);
+	}
+
+	public boolean isStatusFailed(){
+		return status != null && status.equalsIgnoreCase(STATUS_FAILED);
 	}
 
 }
