@@ -174,7 +174,7 @@ public class JMSConnection {
             jmsComponent.setConcurrentConsumers(1);
             jmsComponent.setMaxConcurrentConsumers(4);
             jmsComponent.setReplyToMaxConcurrentConsumers(1);
-            jmsComponent.setTestConnectionOnStartup(true);
+            jmsComponent.setTestConnectionOnStartup(false); // so that can be used on cache flow
         }
 
         context.getRegistry().bind(connectionId, connectionFactory);
