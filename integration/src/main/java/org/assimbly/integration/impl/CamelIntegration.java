@@ -118,6 +118,8 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setSuppressLoggingOnTimeout(true);
 
+        configManager.setForceShutdownOnTimeout(true);
+
         configManager.setStreamCaching(true);
 
         configManager.setMetrics(true, statsManager);
@@ -137,6 +139,8 @@ public class CamelIntegration extends BaseIntegration {
 
             context.start();
             started = true;
+
+            configManager.setTriggerMisfireLoggingListener();
 
             log.info("Integration Runtime started");
         }

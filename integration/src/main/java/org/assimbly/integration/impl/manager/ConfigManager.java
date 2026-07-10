@@ -10,14 +10,17 @@ import org.apache.camel.ManagementMBeansLevel;
 import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.spi.*;
 import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
+import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.util.thread.VirtualThreadPool;
+import org.quartz.Scheduler;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
@@ -74,6 +77,22 @@ public class ConfigManager {
 
     }
 
+    public void setTriggerMisfireLoggingListener() {
+        try {
+            QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
+            if (quartzComponent != null) {
+                Scheduler scheduler = quartzComponent.getScheduler();
+                if (scheduler != null) {
+                    scheduler.getListenerManager().addTriggerListener(
+                            new TriggerMisfireLoggingListener()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void setDebugging(boolean debugging) {
         context.setDebugging(debugging);
     }
@@ -99,6 +118,10 @@ public class ConfigManager {
     public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
         context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
         context.getShutdownStrategy().setTimeUnit(TimeUnit.MILLISECONDS);
+    }
+
+    public void setForceShutdownOnTimeout(boolean force) {
+        context.getShutdownStrategy().setShutdownNowOnTimeout(force);
     }
 
     public void setCertificateStore(boolean certificateStore, SSLManager sslManager) throws Exception {
@@ -170,6 +193,7 @@ public class ConfigManager {
         registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+        registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
         registry.bind("CustomHttpBinding", new CustomHttpBinding());
         registry.bind("flowCookieStore", new CookieStore());

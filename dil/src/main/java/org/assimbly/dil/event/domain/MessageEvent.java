@@ -44,6 +44,11 @@ public class MessageEvent {
             StepCollector.MESSAGE_BODY_SIZE_PROPERTY,
             StepCollector.MESSAGE_HEADERS_SIZE_PROPERTY
     );
+    private static final Set<String> PROPERTIES_NO_UNIT_SET = Set.of(
+            StepCollector.TIMESTAMP_PROPERTY,
+            StepCollector.MESSAGE_BODY_TYPE_PROPERTY,
+            StepCollector.EXCHANGE_PATTERN_PROPERTY
+    );
     private static final Set<String> PROPERTIES_FILTER_SET;
 
     static {
@@ -51,6 +56,7 @@ public class MessageEvent {
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_FLOW_INFO_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_MILLISECONDS_UNIT_SET);
         PROPERTIES_FILTER_SET.addAll(PROPERTIES_BYTES_UNIT_SET);
+        PROPERTIES_FILTER_SET.addAll(PROPERTIES_NO_UNIT_SET);
     }
 
     private final String id;

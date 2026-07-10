@@ -294,7 +294,7 @@ public class FlowManager {
     private void removeRoute(String routeId) {
         try {
             if (context.getRoute(routeId) != null) {
-                context.getRouteController().stopRoute(routeId);
+                context.getRouteController().stopRoute(routeId, STOP_TIMEOUT, TimeUnit.MILLISECONDS);
                 context.removeRoute(routeId);
             }
         } catch (Exception e) {
