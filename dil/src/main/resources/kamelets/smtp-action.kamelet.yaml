@@ -106,6 +106,7 @@ spec:
                   authenticationType: "RAW({{?authenticationType}})"
                   tenantDbName: "RAW({{?tenantDbName}})"
                   mail.smtp.starttls.enable: true
+                  mail.smtp.starttls.required: true
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
