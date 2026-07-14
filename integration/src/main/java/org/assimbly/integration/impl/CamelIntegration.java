@@ -336,6 +336,12 @@ public class CamelIntegration extends BaseIntegration {
 		context.addComponent("jetty", jettyHttpComponent12);
 		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
 
+		QuartzComponent quartz = context.getComponent("quartz", QuartzComponent.class);
+		quartz.setProperties(Map.of(
+				"org.quartz.threadPool.threadCount", System.getenv().getOrDefault("QUARTZ_THREAD_COUNT", "10"),
+				"org.quartz.jobStore.misfireThreshold", System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000")
+		));
+
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
 		registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
