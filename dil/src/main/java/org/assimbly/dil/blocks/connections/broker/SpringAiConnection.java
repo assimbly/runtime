@@ -87,5 +87,9 @@ public class SpringAiConnection {
 
         context.getRegistry().bind(connectionId, chatModel);
         log.info("Successfully bound Spring AI ChatModel bean with id={} to the Camel registry", connectionId);
+
+        org.springframework.ai.chat.memory.ChatMemory chatMemory = org.springframework.ai.chat.memory.MessageWindowChatMemory.builder().build();
+        context.getRegistry().bind(connectionId + "-memory", chatMemory);
+        log.info("Successfully bound Spring AI MessageWindowChatMemory bean with id={}-memory to the Camel registry", connectionId);
     }
 }
