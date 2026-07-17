@@ -48,6 +48,11 @@ spec:
         title: "replyTo email address"
         description: "replyTo email address"
         type: "string"
+      emailBody:
+        title: "Email body"
+        description: "Email body text"
+        type: "string"
+        default: ""
       in:
         title: "Source Endpoint"
         type: "string"
@@ -94,6 +99,15 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - setHeader:
+                name: EmailBody
+                simple: "{{emailBody}}"
+            - choice:
+                when:
+                  - simple: "${header.EmailBody} != null && ${header.EmailBody} != ''"
+                    steps:
+                      - process:
+                          ref: AttachmentAttacher
             - toD:
                 uri: "{{scheme}}:{{path}}"
                 parameters:
