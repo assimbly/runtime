@@ -18,6 +18,7 @@ import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
 import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
+import org.assimbly.util.mail.AttachmentAttacher;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import org.quartz.Scheduler;
@@ -191,6 +192,7 @@ public class ConfigManager {
         registry.bind("AggregateStrategy", new AggregateStrategy());
         registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
         registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
+        registry.bind("AttachmentAttacher",new AttachmentAttacher());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
         registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());
