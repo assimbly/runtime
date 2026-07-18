@@ -15,6 +15,9 @@ spec:
       apiKey:
         type: "string"
         format: "password"
+      conversationMemory:
+        type: "boolean"
+        default: true
       model:
         type: "string"
         default: "gpt-4o-mini"
@@ -41,6 +44,7 @@ spec:
               uri: "openai:{{operation}}"
               parameters:
                 apiKey: "{{apiKey}}"
+                conversationMemory: "{{conversationMemory}}"
                 model: "{{model}}"
           - to:
               uri: "{{out}}"
