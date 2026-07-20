@@ -7,9 +7,11 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
+import org.apache.camel.component.mail.MailAuthenticator;
 import org.apache.camel.spi.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.beans.OAuth2MailAuthenticator;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.AS2KeyProcessor;
 import org.assimbly.dil.loader.FlowLoader;
@@ -85,7 +87,7 @@ public class FlowManager {
 
         try {
 
-            //initialize security for AS2
+            //initialize security
             initializeSecurity(properties);
 
             //create connections & install dependencies if needed
@@ -113,6 +115,10 @@ public class FlowManager {
         if (properties.containsKey("security.as2")) {
             log.info("Initialize AS2 Inbound security");
             initializeAs2InboundSecurity(properties);
+        }
+        if (properties.containsKey("security.email")) {
+            log.info("Initialize oauth2 email authenticator");
+            initializeOAuth2EmailAuthenticator(properties);
         }
         if (properties.containsKey("security.mutualtls")) {
             log.info("Initialize Mutual TLS");
@@ -942,6 +948,102 @@ public class FlowManager {
             return parts[1];
         }
         return null;
+    }
+
+    private void initializeOAuth2EmailAuthenticator(TreeMap<String, String> properties) {
+
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            if (!entry.getKey().endsWith(".routetemplate") ||
+                    (!entry.getValue().contains("routeTemplateRef=\"smtp-action\"") &&
+                    !entry.getValue().contains("routeTemplateRef=\"imaps-source\""))
+            ) {
+                continue;
+            }
+
+            boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
+            String protocol = isConsumer ? "imaps" : "smtp";
+
+            try {
+                // ---------- Parse XML ----------
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                dbf.setNamespaceAware(true);
+                DocumentBuilder db = dbf.newDocumentBuilder();
+
+                Document doc = db.parse(new InputSource(new StringReader(entry.getValue())));
+
+                Element root = doc.getDocumentElement();
+                Element templatedRoute = (Element)
+                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
+
+                if (templatedRoute == null) {
+                    continue;
+                }
+
+                // ---------- Collect parameter elements ----------
+                Map<String, Element> paramElements = new LinkedHashMap<>();
+                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
+
+                for (int i = 0; i < params.getLength(); i++) {
+                    Element p = (Element) params.item(i);
+                    paramElements.put(p.getAttribute("name"), p);
+                }
+
+                Map<String, String> allParams = new LinkedHashMap<>();
+                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
+                    String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
+                    allParams.put(e.getKey(), value);
+                }
+
+                String username = cleanRaw(allParams.get("username"));
+                String accessToken = cleanRaw(allParams.get("accessToken"));
+                String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
+
+                if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
+                    log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
+                    continue;
+                }
+
+                // ---------- Build & bind the Authenticator ----------
+                // Token is resolved lazily (per connection attempt) so refresh works without
+                // rebuilding the bean - see OAuth2MailAuthenticator below.
+                String beanId = "mailAuth-" + UUID.randomUUID();
+
+                MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
+                context.getRegistry().bind(beanId, authenticator);
+
+                // ---------- Wire it in as a real Kamelet property, not into "options" ----------
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
+
+                // ---------- Serialize XML back ----------
+                Transformer tf = TransformerFactory.newInstance().newTransformer();
+                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+                StringWriter sw = new StringWriter();
+                tf.transform(new DOMSource(doc), new StreamResult(sw));
+
+                entry.setValue(sw.toString());
+
+            } catch (Exception e) {
+                log.error("initializeOAuth2EmailAuthenticator failed.", e);
+            }
+        }
+    }
+
+    private void setOrCreateParameter(Document doc, Element templatedRoute,
+                                      Map<String, Element> paramElements,
+                                      String name, String value) {
+        if (paramElements.containsKey(name)) {
+            paramElements.get(name).setAttribute("value", value);
+        } else {
+            Element param = doc.createElementNS(templatedRoute.getNamespaceURI(), "parameter");
+            param.setAttribute("name", name);
+            param.setAttribute("value", value);
+            templatedRoute.appendChild(param);
+            paramElements.put(name, param);
+        }
     }
 
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {

@@ -48,18 +48,11 @@ spec:
         title: "replyTo email address"
         description: "replyTo email address"
         type: "string"
-      tenantDbName:
-        title: "TenantDbName"
-        description: "tenant db name"
+      emailBody:
+        title: "Email body"
+        description: "Email body text"
         type: "string"
-      accessToken:
-        title: "AccessToken"
-        description: "Access token"
-        type: "string"
-      authenticationType:
-        title: "AthenticationType"
-        description: "Which authentication type is used (like oauth)"
-        type: "string"
+        default: ""
       in:
         title: "Source Endpoint"
         type: "string"
@@ -82,6 +75,19 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
+      authenticator:
+        title: "mail authenticator"
+        description: "mail authenticator"
+        type: "string"
+      authMechanisms:
+        title: "mail auth mechanisms"
+        description: "SASL auth mechanisms"
+        type: "string"
+      authEnabled:
+        title: "mail auth enabled"
+        description: "Whether SASL auth is enabled"
+        type: "boolean"
+        default: false
   dependencies:
   - "camel:kamelet"
   template:
@@ -93,20 +99,31 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - setHeader:
+                name: EmailBody
+                simple: "{{emailBody}}"
+            - choice:
+                when:
+                  - simple: "${header.EmailBody} != null && ${header.EmailBody} != ''"
+                    steps:
+                      - process:
+                          ref: AttachmentAttacher
             - toD:
                 uri: "{{scheme}}:{{path}}"
                 parameters:
                   username: "RAW({{username}})"
                   password: "RAW({{?password}})"
-                  accessToken: "RAW({{?accessToken}})"
+                  authenticator: "{{?authenticator}}"
                   from: "RAW({{?from}})"
                   to: "RAW({{to}})"
                   replyTo: "RAW({{?replyTo}})"
                   subject: "RAW({{subject}})"
-                  authenticationType: "RAW({{?authenticationType}})"
-                  tenantDbName: "RAW({{?tenantDbName}})"
                   mail.smtp.starttls.enable: true
                   mail.smtp.starttls.required: true
+                  mail.smtp.auth.mechanisms: "{{?authMechanisms}}"
+                  mail.smtp.auth: "{{authEnabled}}"
+                  mail.smtp.sasl.enable: "{{authEnabled}}"
+                  mail.smtp.sasl.mechanisms: "{{?authMechanisms}}"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
