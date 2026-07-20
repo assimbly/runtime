@@ -265,6 +265,9 @@ public class ConfigManager {
         //enable breadcrumb for tracing
         context.setUseBreadcrumb(true);
 
+        //enable to capture the size of message (body and headers)
+        context.setMessageSize(true);
+
         //JMX settings
         ManagementAgent managementAgent = context.getManagementStrategy().getManagementAgent();
         managementAgent.setRegisterAlways(false);
@@ -288,6 +291,7 @@ public class ConfigManager {
                 }
             }
         }
+
     }
 
     public void setRouteTemplates() {

@@ -40,7 +40,7 @@ public class StepCollector extends EventNotifierSupport {
 
     private static final String MSG_COLLECTOR_LIMIT_BODY_LENGTH = "MSG_COLLECTOR_LIMIT_BODY_LENGTH";
     private static final int MSG_COLLECTOR_DEFAULT_LIMIT_BODY_LENGTH = 250000;
-    
+
     private static final String BREADCRUMB_ID_HEADER = "breadcrumbId";
     public static final String COMPONENT_INIT_TIME_HEADER = "ComponentInitTime";
 
@@ -48,8 +48,8 @@ public class StepCollector extends EventNotifierSupport {
     public static final String FLOW_VERSION_PROPERTY = "FlowVersion";
     public static final String PROCESSING_TIME_PROPERTY = "ProcessingTime";
     public static final String TIMESTAMP_PROPERTY = "Timestamp";
-    public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "HeadersSize";
-    public static final String MESSAGE_BODY_SIZE_PROPERTY = "BodySize";
+    public static final String MESSAGE_HEADERS_SIZE_PROPERTY = "CamelMessageHeadersSize";
+    public static final String MESSAGE_BODY_SIZE_PROPERTY = "CamelMessageBodySize";
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
 
@@ -84,7 +84,6 @@ public class StepCollector extends EventNotifierSupport {
     public static boolean isQueueReady() {
         return collectionPool.getQueue().remainingCapacity() > 200; // Keep a 10% buffer
     }
-
 
     @Override
     public void notify(CamelEvent event) {
@@ -163,28 +162,29 @@ public class StepCollector extends EventNotifierSupport {
     private MessageEvent getMessageEvent(
             Exchange exchange, String stepId, long processingTime, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
-            Object> properties, String expiryDate, boolean isFailedExchange
+                    Object> properties, String expiryDate, boolean isFailedExchange
     ) {
+
+        Message message = exchange.getMessage();
+        String bodyType = "";
         // read body only once
-        InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
+        InputStream inputStream = message.getBody(InputStream.class);
 
         byte[] body = null;
-        if (inputStream != null && exchange.getMessage().getBody() != null) {
+        if (inputStream != null && message.getBody() != null) {
             try {
                 body = IOUtils.toByteArray(inputStream);
+                bodyType = message.getBody().getClass().getSimpleName();
             } catch (Exception _) {
                 // Ignoring exception intentionally
             }
         }
 
-        int bodyLength = body != null ? body.length : 0;
-        String bodyType = body != null ? exchange.getMessage().getBody().getClass().getSimpleName() : "";
-
         // set custom properties
-        setCustomProperties(exchange, bodyType, bodyLength, stepId, processingTime);
+        setCustomProperties(exchange, bodyType, stepId, processingTime);
 
         // body to store
-        String bodyToStoreOnEvent = getBodyToStoreOnEvent(exchange, body);
+        String bodyToStoreOnEvent = getBodyToStoreOnEvent(body, bodyType);
 
         return new MessageEvent(
                 timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
@@ -192,7 +192,7 @@ public class StepCollector extends EventNotifierSupport {
         );
     }
 
-    public String getBodyToStoreOnEvent(Exchange exchange, byte[] body) {
+    public String getBodyToStoreOnEvent(byte[] body,String bodyType) {
 
         try {
             int limitBodyLength = getLimitBodyLength();
@@ -214,12 +214,7 @@ public class StepCollector extends EventNotifierSupport {
             }
 
         } catch (Exception _) {
-            String typeName = exchange.getMessage().getBody().getClass().getTypeName();
-            if(!typeName.isEmpty()){
-                return "<" + typeName + ">";
-            }else{
-                return "<unable to convert>";
-            }
+            return "<" + bodyType + ">";
         }
     }
 
@@ -249,22 +244,17 @@ public class StepCollector extends EventNotifierSupport {
         }
     }
 
-    private void setCustomProperties(Exchange exchange, String bodyType, int bodyLength, String stepId, long processingTime) {
+    private void setCustomProperties(Exchange exchange, String bodyType, String stepId, long processingTime) {
+
         if (EventUtil.isFilteredEquals(filters, stepId)) {
             exchange.setProperty(PROCESSING_TIME_PROPERTY, processingTime);
         }
 
         // set timestamp property
         exchange.setProperty(TIMESTAMP_PROPERTY, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss.SSS")));
+
         // set BodyType property
         exchange.setProperty(MESSAGE_BODY_TYPE_PROPERTY, bodyType);
-
-        // set BodyLength property
-        exchange.setProperty(MESSAGE_BODY_SIZE_PROPERTY, bodyLength);
-
-        // set HeadersLength property
-        Map<String, Object> headersMap = MessageEvent.filterHeaders(exchange.getMessage().getHeaders());
-        exchange.setProperty(MESSAGE_HEADERS_SIZE_PROPERTY, EventUtil.calcMapLength(headersMap));
 
         // set ExchangePattern name
         exchange.setProperty(EXCHANGE_PATTERN_PROPERTY, exchange.getPattern().name());
