@@ -58,8 +58,6 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
-            - convertBodyTo:
-                type: "java.lang.String"
             - setBody:
                 expression:
                   datasonnet:
