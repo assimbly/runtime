@@ -124,6 +124,7 @@ spec:
                   mail.smtp.auth: "{{authEnabled}}"
                   mail.smtp.sasl.enable: "{{authEnabled}}"
                   mail.smtp.sasl.mechanisms: "{{?authMechanisms}}"
+                  useHeaderSubject: true
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
