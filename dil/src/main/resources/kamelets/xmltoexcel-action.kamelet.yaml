@@ -41,7 +41,7 @@ spec:
         description: "Whether to use a CustomWorksheets with expressions"
         type: "boolean"
         default: false
-      expressions:
+      worksheets:
         title: "Worksheet expressions"
         description: "Custom Worksheet expressions"
         type: "string"
@@ -79,7 +79,7 @@ spec:
             id: "step-{{stepId}}"
             steps:
             - to:
-                uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?expressions}}"
+                uri: "xmltoexcel://?includeHeader={{includeHeader}}&includeIndexColumn={{includeIndexColumn}}&indexColumnName={{indexColumnName}}&orderHeaders={{orderHeaders}}&excelFormat={{excelFormat}}&useCustomWorksheets={{useCustomWorksheets}}&worksheets={{?worksheets}}"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
