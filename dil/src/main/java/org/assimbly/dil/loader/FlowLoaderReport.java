@@ -12,6 +12,7 @@ public class FlowLoaderReport {
 	private final String flowId;
 	private final String flowName;
 	private final String flowVersion;
+	private String status;
 	private String report;
 	private final JSONObject json;
 	private final JSONArray steps;
@@ -22,6 +23,9 @@ public class FlowLoaderReport {
 	private final JSONObject stepsLoaded;
 	private final long startTime;
 
+	private static final String STATUS_FAILED = "failed";
+	private static final String STATUS_SUCCESS = "success";
+
 	public FlowLoaderReport(String flowId, String flowName, String flowVersion) {
 
 		log.info("Initialize flow report | flowid={}", flowId);
@@ -29,6 +33,7 @@ public class FlowLoaderReport {
 		this.flowId = flowId;
 		this.flowName = flowName;
 		this.flowVersion = flowVersion;
+		this.status = "";
 		startTime = System.currentTimeMillis();
 		json = new JSONObject();
 		flow = new JSONObject();
@@ -48,6 +53,7 @@ public class FlowLoaderReport {
 		flow.put("time",time + " milliseconds");
 		flow.put("message",message);
 		flow.put("status",status);
+		this.status = status;
 
 		if(stepsLoaded!=null && loaded > 0){
 			stepsLoaded.put("total", loaded);
@@ -63,9 +69,9 @@ public class FlowLoaderReport {
 		report = json.toString(4);
 
 		if(loaded == loadedSuccess){
-            log.info("Flow loaded successfully | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
+            log.debug("Flow loaded successfully | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}else{
-            log.error("Flow failed to load | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
+            log.debug("Flow failed to load | flowid={} | time={} milliseconds\n\n{}", flowId, time, report);
 		}
 
 	}
@@ -131,6 +137,18 @@ public class FlowLoaderReport {
             log.error("Event={} | name={} | flowid={}", event, flowName, flowId);
 		}
 
+	}
+
+	public String getStatus(){
+		return status;
+	}
+
+	public boolean isStatusSuccess(){
+		return status != null && status.equalsIgnoreCase(STATUS_SUCCESS);
+	}
+
+	public boolean isStatusFailed(){
+		return status != null && status.equalsIgnoreCase(STATUS_FAILED);
 	}
 
 }

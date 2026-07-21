@@ -1,22 +1,30 @@
 package org.assimbly.integration.impl.manager;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.*;
 
+import org.apache.camel.ManagementMBeansLevel;
+import org.apache.camel.ManagementStatisticsLevel;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.spi.*;
+import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
+import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
+import org.assimbly.util.mail.AttachmentAttacher;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.util.thread.VirtualThreadPool;
+import org.quartz.Scheduler;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,11 +56,7 @@ import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.mail.component.mail.AttachmentAttacher;
-import org.assimbly.mail.component.mail.MailComponent;
-import org.assimbly.mail.dataformat.mime.multipart.MimeMultipartDataFormat;
 import org.assimbly.multipart.processor.MultipartProcessor;
-import org.assimbly.util.mail.ExtendedHeaderFilterStrategy;
 import org.assimbly.xmltojson.CustomXmlJsonDataFormat;
 import org.json.JSONArray;
 import org.slf4j.Logger;
@@ -74,6 +78,22 @@ public class ConfigManager {
 
     }
 
+    public void setTriggerMisfireLoggingListener() {
+        try {
+            QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
+            if (quartzComponent != null) {
+                Scheduler scheduler = quartzComponent.getScheduler();
+                if (scheduler != null) {
+                    scheduler.getListenerManager().addTriggerListener(
+                            new TriggerMisfireLoggingListener()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void setDebugging(boolean debugging) {
         context.setDebugging(debugging);
     }
@@ -90,15 +110,19 @@ public class ConfigManager {
     }
 
     public void setStreamCaching(boolean streamCaching) {
-        long factor = 16;
+        long factor = 128;
         context.setStreamCaching(streamCaching);
         context.getStreamCachingStrategy().setSpoolThreshold(factor * 1024);
-        context.getStreamCachingStrategy().setBufferSize(32 * 1024);
+        context.getStreamCachingStrategy().setBufferSize(128 * 1024);
     }
 
     public void setSuppressLoggingOnTimeout(boolean suppressLoggingOnTimeout) {
         context.getShutdownStrategy().setSuppressLoggingOnTimeout(suppressLoggingOnTimeout);
         context.getShutdownStrategy().setTimeUnit(TimeUnit.MILLISECONDS);
+    }
+
+    public void setForceShutdownOnTimeout(boolean force) {
+        context.getShutdownStrategy().setShutdownNowOnTimeout(force);
     }
 
     public void setCertificateStore(boolean certificateStore, SSLManager sslManager) throws Exception {
@@ -135,8 +159,6 @@ public class ConfigManager {
     public void setDefaultBlocks() throws Exception {
 
         //Add services
-        context.addService(new MailComponent());
-        context.addService(new MimeMultipartDataFormat());
         context.addService(new CustomXmlJsonDataFormat());
 
         DirectComponent directComponent = new DirectComponent();
@@ -147,23 +169,13 @@ public class ConfigManager {
         context.addComponent("async", new SedaComponent());
 
         KameletComponent kameletComponent = new KameletComponent();
+        kameletComponent.setLocation("classpath:kamelets");
         context.addComponent("function", kameletComponent);
 
-        HttpComponent httpComponent =  context.getComponent("https", HttpComponent.class);
+        HttpComponent httpComponent = context.getComponent("https", HttpComponent.class);
         httpComponent.setHttpClientConfigurer(HttpClientBuilder::disableAutomaticRetries);
 
-        JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
-        jettyHttpComponent12.setRequestHeaderSize(80000);
-        jettyHttpComponent12.setResponseHeaderSize(80000);
-        jettyHttpComponent12.setUseXForwardedForHeader(true);
-        jettyHttpComponent12.setSendServerVersion(false);
-        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-        customizer.setSniHostCheck(false);
-        customizer.setSniRequired(false);
-        jettyHttpComponent12.setSecureRequestCustomizer(customizer);
-
-        MailComponent smtp = context.getComponent("smtp", MailComponent.class);
-        smtp.setHeaderFilterStrategy(new ExtendedHeaderFilterStrategy());
+        JettyHttpComponent12 jettyHttpComponent12 = getJettyConfiguration();
 
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
         jsonpath.setWriteAsString(true);
@@ -180,9 +192,10 @@ public class ConfigManager {
         registry.bind("AggregateStrategy", new AggregateStrategy());
         registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
         registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
-        registry.bind("AttachmentAttacher", new AttachmentAttacher());
+        registry.bind("AttachmentAttacher",new AttachmentAttacher());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
+        registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
         registry.bind("CustomHttpBinding", new CustomHttpBinding());
         registry.bind("flowCookieStore", new CookieStore());
@@ -201,13 +214,43 @@ public class ConfigManager {
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
         registry.bind("FlowLogger", new FlowLogger());
         registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
+        registry.bind("SqlProcessor", new SqlProcessor());
 
     }
 
+    private JettyHttpComponent12 getJettyConfiguration() {
+
+        JettyHttpComponent12 jettyHttpComponent12 = new JettyHttpComponent12();
+
+        //general settings
+        jettyHttpComponent12.setRequestHeaderSize(80000);
+        jettyHttpComponent12.setResponseHeaderSize(80000);
+        jettyHttpComponent12.setUseXForwardedForHeader(true);
+        jettyHttpComponent12.setSendServerVersion(false);
+
+        //security settings
+        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+        customizer.setSniHostCheck(false);
+        customizer.setSniRequired(false);
+        jettyHttpComponent12.setSecureRequestCustomizer(customizer);
+
+        //virtual threads settings
+        VirtualThreadPool virtualThreadPool = new VirtualThreadPool();
+        virtualThreadPool.setName("CamelJettyVirtual");
+        jettyHttpComponent12.setThreadPool(virtualThreadPool);
+
+        return jettyHttpComponent12;
+    }
+
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setPoolSize(poolSize);
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxPoolSize(maxPoolSize);
-        context.getExecutorServiceManager().getDefaultThreadPoolProfile().setMaxQueueSize(maxQueueSize);
+
+        ThreadPoolProfile threadPoolProfile = context.getExecutorServiceManager().getDefaultThreadPoolProfile();
+        threadPoolProfile.setPoolSize(poolSize);
+        threadPoolProfile.setMaxPoolSize(maxPoolSize);
+        threadPoolProfile.setMaxQueueSize(maxQueueSize);
+
+        log.info("Apache Camel Thread model:{}", ThreadType.current());
+
     }
 
     public void setThreadProfile(String name, int poolSize, int maxPoolSize, int maxQueueSize) {
@@ -224,8 +267,18 @@ public class ConfigManager {
         //enable breadcrumb for tracing
         context.setUseBreadcrumb(true);
 
-        //enable performance stats
-        context.getManagementStrategy().getManagementAgent().setLoadStatisticsEnabled(true);
+        //enable to capture the size of message (body and headers)
+        context.setMessageSize(true);
+
+        //JMX settings
+        ManagementAgent managementAgent = context.getManagementStrategy().getManagementAgent();
+        managementAgent.setRegisterAlways(false);
+        managementAgent.setRegisterNewRoutes(true);
+        managementAgent.setOnlyRegisterProcessorWithCustomId(true);
+        managementAgent.setEndpointRuntimeStatisticsEnabled(false);
+        managementAgent.setLoadStatisticsEnabled(false);
+        managementAgent.setStatisticsLevel(ManagementStatisticsLevel.RoutesOnly);
+        managementAgent.setMBeansLevel(ManagementMBeansLevel.RoutesOnly);
 
         //enable timestamp in the eventNotifier (log, route and step collectors)
         context.getManagementStrategy().getEventFactory().setTimestampEnabled(true);
@@ -240,34 +293,24 @@ public class ConfigManager {
                 }
             }
         }
+
     }
 
-    //loads templates in the template package
-    public void setRouteTemplates() throws Exception {
-
-        //load kamelets into Camel Context
-        RoutesLoader loader = PluginHelper.getRoutesLoader(context);
+    public void setRouteTemplates() {
 
         List<String> resourceNames = getKamelets();
 
         //Set to use the list globally
         CustomKameletCatalog.addAllNames(resourceNames);
 
+        RoutesLoader routesLoader = PluginHelper.getRoutesLoader(context);
+
         for (String resourceName : resourceNames) {
 
-            URL url;
-            if (resourceName.startsWith("file:")) {
-                url = URI.create(resourceName).toURL();
-            } else {
-                url = Resources.getResource(resourceName);
-            }
-
-            resourceName = StringUtils.substringAfter(resourceName, "kamelets/");
-            String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
-            Resource resource = ResourceHelper.fromString(resourceName, resourceAsString);
+            Resource resource = ResourceHelper.resolveResource(context,"classpath:kamelets/" + resourceName);
 
             try {
-                loader.loadRoutes(resource);
+                routesLoader.loadRoutes(resource);
             } catch (Exception e) {
                 log.warn("Could not load Kamelet: {}. Reason: {}", resourceName, e.getMessage());
             }
@@ -277,21 +320,15 @@ public class ConfigManager {
     }
 
     private List<String> getKamelets() {
+        try (InputStream is = getClass().getResourceAsStream("/kamelets/index.txt")) {
+            assert is != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
-        List<String> kamelets = new ArrayList<>();
-
-        // Add resource paths from classpath (/kamelets under resources)
-        List<String> classpathNames;
-        try (ScanResult scanResult = new ClassGraph().acceptPaths("kamelets").scan()) {
-            classpathNames = scanResult.getAllResources().getPaths();
+                return reader.lines().toList();
+            }
+        } catch (Exception _) {
+            return Collections.emptyList();
         }
-
-        if (classpathNames != null && !classpathNames.isEmpty()) {
-            kamelets.addAll(classpathNames);
-        }
-
-        return kamelets;
-
     }
 
     public String getListOfStepTemplates() {

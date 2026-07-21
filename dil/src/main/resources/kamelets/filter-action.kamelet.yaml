@@ -25,7 +25,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -44,12 +48,14 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-        - step:
-            id: "step-{{stepId}}"
-            steps:
-            - filter:
-                language:
-                  language: "{{language}}"
-                  expression: "{{expression}}"
-            - to:
-                uri: "{{out}}"
+          - choice:
+              id: "step-{{stepId}}"
+              when:
+                - expression:
+                    language:
+                      language: "{{language}}"
+                      expression: "{{expression}}"
+                  steps:
+                    - to:
+                        disabled: "{{sink}}"
+                        uri: "{{out}}"

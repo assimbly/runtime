@@ -35,7 +35,7 @@ public class FtpValidator {
         if (ftpSettings.getProtocol().equalsIgnoreCase("ftp"))
             return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), false, false);
         else if (ftpSettings.getProtocol().equalsIgnoreCase("ftps"))
-            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), true, !ftpSettings.getExplicitTLS());
+            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), true, ftpSettings.getImplicit());
         else
             return checkSFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), ftpSettings.getPkf(), ftpSettings.getPkfd());
     }

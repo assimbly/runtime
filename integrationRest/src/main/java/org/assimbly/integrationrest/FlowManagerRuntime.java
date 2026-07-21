@@ -275,6 +275,47 @@ public class FlowManagerRuntime {
     }
 
     @GetMapping(
+            path = "/integration/flow/{flowId}/errors",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowErrors(
+            @PathVariable(value = "flowId") String flowId,
+            @RequestHeader(defaultValue = "100", value = "maxNumberOfEntries") int maxNumberOfEntries,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String errors = integration.getFlowErrors(flowId, maxNumberOfEntries, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/errors",errors,true);
+        } catch (Exception e) {
+            log.error("Get list of errors",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/errors",e.getMessage());
+        }
+
+    }
+
+    @GetMapping(
+            path = "/integration/flow/{flowId}/step/{stepId}/errors",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowErrors(
+            @PathVariable(value = "flowId") String flowId,
+            @PathVariable(value = "stepId") String stepId,
+            @RequestHeader(defaultValue = "100", value = "maxNumberOfEntries") int maxNumberOfEntries,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String errors = integration.getStepErrors(flowId, stepId, maxNumberOfEntries, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",errors,true);
+        } catch (Exception e) {
+            log.error("Get list of errors",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",e.getMessage());
+        }
+
+    }
+
+    @GetMapping(
             path = "/integration/flow/{flowId}/lasterror",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
@@ -290,6 +331,27 @@ public class FlowManagerRuntime {
             log.error("Get last error of flow {} failed", flowId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/lasterror",e.getMessage(),"unable to get last error for flow " + flowId,flowId);
         }
+    }
+
+    @GetMapping(
+            path = "/integration/flow/{flowId}/step/{stepId}/error",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getErrorByUid(
+            @PathVariable(value = "flowId") String flowId,
+            @PathVariable(value = "stepId") String stepId,
+            @RequestHeader(value = "uid") long uid,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String error = integration.getErrorByUid(flowId, stepId, uid, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",error,true);
+        } catch (Exception e) {
+            log.error("Get list of errors",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",e.getMessage());
+        }
+
     }
 
     @GetMapping(
