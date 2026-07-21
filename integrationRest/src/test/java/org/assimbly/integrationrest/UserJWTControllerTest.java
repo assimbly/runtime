@@ -48,7 +48,7 @@ class UserJWTControllerTest {
             bodyJson.put("rememberMe", "false");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/authenticate"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authenticate"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);

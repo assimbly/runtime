@@ -21,16 +21,17 @@ public class TestApplicationContext {
     public static String passwordUser = "frankfurt1929";
     public static String emailUser = "anne.frank@assimbly.com";
 
-    public enum CamelContextField {
+    public enum DILField {
         ID,
-        ROUTE_ID_1,
-        ROUTE_ID_2,
-        ROUTE_ID_3,
-        ROUTE_1,
-        CAMEL_CONTEXT
+        NAME,
+        STEP_ID_1,
+        STEP_ID_2,
+        STEP_ID_3,
+        DIL
     }
 
     public enum CollectorField {
+        ID,
         FLOW_ID_LOG,
         FLOW_ID_STEP,
         FLOW_ID_ROUTE,
@@ -41,15 +42,16 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = ApiUtils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String dil = ApiUtils.readFileAsStringFromResources("InboundHttps.json");
 
-            props.setProperty(CamelContextField.ID.name(), "67921474ecaafe0007000000");
-            props.setProperty(CamelContextField.ROUTE_ID_1.name(), "3d01e43c-6e86-4c9e-9972-7c872ecc37f6");
-            props.setProperty(CamelContextField.ROUTE_ID_2.name(), "0e2208f0-3a58-4a9f-a0ae-41a66f184282");
-            props.setProperty(CamelContextField.ROUTE_ID_3.name(), "44ac76a8-a1d1-4b1d-a93c-1c9ce4c615e9");
-            props.setProperty(CamelContextField.CAMEL_CONTEXT.name(), camelContext);
+            props.setProperty(DILField.ID.name(), "69fc98bed4e0d00010000071");
+            props.setProperty(DILField.NAME.name(), "InboundHttps");
+            props.setProperty(DILField.STEP_ID_1.name(), "e1ae2f77-d5ee-4803-bf09-c07a8a1bc709");
+            props.setProperty(DILField.STEP_ID_2.name(), "3035fb1f-acdf-4f12-89ec-a0ade7fd72bc");
+            props.setProperty(DILField.STEP_ID_3.name(), "9545677a-edec-4776-ab98-3bf19fef6842");
+            props.setProperty(DILField.DIL.name(), dil);
         } catch (Exception e) {
-            log.error("Error to build inboundHttps camel context example", e);
+            log.error("Error to build inboundHttps example", e);
         }
 
         return props;
@@ -59,16 +61,16 @@ public class TestApplicationContext {
         Properties props = new Properties();
 
         try {
-            String camelContext = ApiUtils.readFileAsStringFromResources("SchedulerCamelContext.xml");
+            String dil = ApiUtils.readFileAsStringFromResources("Scheduler.json");
 
-            props.setProperty(CamelContextField.ID.name(), "67c740bc349ced00070004a9");
-            props.setProperty(CamelContextField.ROUTE_ID_1.name(), "0df9d084-4783-492b-a9d4-488f2ee298a5");
-            props.setProperty(CamelContextField.ROUTE_ID_2.name(), "9aa3aff8-e37c-4059-b9fd-4321454fd9ab");
-            props.setProperty(CamelContextField.ROUTE_ID_3.name(), "979912f6-f6a1-43c8-9aa9-f8b480d31237");
-            props.setProperty(CamelContextField.ROUTE_1.name(), ApiUtils.extractRouteFromXmlByRouteId(camelContext, "0df9d084-4783-492b-a9d4-488f2ee298a5"));
-            props.setProperty(CamelContextField.CAMEL_CONTEXT.name(), camelContext);
+            props.setProperty(DILField.ID.name(), "69fc94aed4e0d00010000040");
+            props.setProperty(DILField.NAME.name(), "Scheduler");
+            props.setProperty(DILField.STEP_ID_1.name(), "b1c55ffa-2cf0-4135-bfcd-980c57d832d4");
+            props.setProperty(DILField.STEP_ID_2.name(), "37738fd1-53d8-4896-be2a-18b65b7abf6e");
+            props.setProperty(DILField.STEP_ID_3.name(), "1ae7ab8d-3b16-487c-bf9d-49ba9f56b8c7");
+            props.setProperty(DILField.DIL.name(), dil);
         } catch (Exception e) {
-            log.error("Error to build scheduler camel context example", e);
+            log.error("Error to build scheduler example", e);
         }
 
         return props;
@@ -80,9 +82,10 @@ public class TestApplicationContext {
         try {
             String collector = ApiUtils.readFileAsStringFromResources("CollectorExample.json");
 
-            props.setProperty(CollectorField.FLOW_ID_LOG.name(), "67c740bc349ced00070004a9_log");
-            props.setProperty(CollectorField.FLOW_ID_ROUTE.name(), "67c740bc349ced00070004a9_route");
-            props.setProperty(CollectorField.FLOW_ID_STEP.name(), "67c740bc349ced00070004a9_step");
+            props.setProperty(CollectorField.ID.name(), "69fc94aed4e0d00010000040");
+            props.setProperty(CollectorField.FLOW_ID_LOG.name(), "69fc94aed4e0d00010000040_log");
+            props.setProperty(CollectorField.FLOW_ID_ROUTE.name(), "69fc94aed4e0d00010000040_route");
+            props.setProperty(CollectorField.FLOW_ID_STEP.name(), "69fc94aed4e0d00010000040_step");
             props.setProperty(CollectorField.COLLECTOR.name(), collector);
         } catch (Exception e) {
             log.error("Error to load collector example file", e);

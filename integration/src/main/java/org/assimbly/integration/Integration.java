@@ -719,6 +719,15 @@ public interface Integration {
     long getFlowAlertsCount(String flowId) throws Exception;
 
 	/**
+	 * Gets a list of errors
+	 *
+	 * @param  numberOfEntries the maximum number of errors to return
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getErrors(int numberOfEntries, String mediaType);
+
+	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows
 	*
 	* @throws Exception if log cannot be retrieved

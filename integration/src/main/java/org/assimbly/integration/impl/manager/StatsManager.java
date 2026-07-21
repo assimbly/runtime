@@ -345,7 +345,7 @@ public class StatsManager {
 
         String flowStats = json.toString(4);
 
-        return applyMediaType(flowStats, mediaType);
+        return applyMediaType(flowStats, "json", mediaType);
 
     }
 
@@ -417,7 +417,7 @@ public class StatsManager {
 
         String flowStats = json.toString(4);
 
-        return applyMediaType(flowStats, mediaType);
+        return applyMediaType(flowStats, "json", mediaType);
 
     }
 
@@ -427,7 +427,7 @@ public class StatsManager {
 
         String result = getHealthFromList(flowIds, type);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
     }
 
     public String getHealthByFlowIds(String flowIds, String type, String mediaType) {
@@ -438,7 +438,7 @@ public class StatsManager {
 
         String result = getHealthFromList(flowSet, type);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -463,7 +463,7 @@ public class StatsManager {
 
         String flowStats = json.toString(4);
 
-        return applyMediaType(flowStats, mediaType);
+        return applyMediaType(flowStats, "json", mediaType);
 
     }
 
@@ -510,7 +510,7 @@ public class StatsManager {
 
         String result = json.toString(4);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
     }
 
     private JSONObject getStepHealth(String routeid, String healthCheckId, boolean includeError, boolean includeDetails) {
@@ -585,7 +585,7 @@ public class StatsManager {
 
         String stats = json.toString(4);
 
-        return applyMediaType(stats, mediaType);
+        return applyMediaType(stats, "json", mediaType);
 
     }
 
@@ -630,7 +630,7 @@ public class StatsManager {
         JSONArray jsonArray = new JSONArray(sortedList);
         String result = jsonArray.toString();
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -657,7 +657,7 @@ public class StatsManager {
 
         String result = managedCamelContext.dumpRoutesStatsAsXml(true, false);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "xml", mediaType);
 
     }
 
@@ -667,7 +667,7 @@ public class StatsManager {
 
         String result = getStatsFromList(flowIds, true, flowsMap);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -729,7 +729,7 @@ public class StatsManager {
 
         String result = getStatsFromList(flowIds, false, flowsMap);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -784,7 +784,7 @@ public class StatsManager {
 
         String result = json.toString(4);
 
-        return applyMediaType(result, mediaType);
+        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -820,15 +820,55 @@ public class StatsManager {
 
     }
 
-    private String applyMediaType(String json, String mediaType) {
-        if (mediaType != null && mediaType.contains("xml")) {
-            try {
-                return DocConverter.convertJsonToXml(json);
-            } catch (Exception e) {
-                log.warn("Failed to convert to XML, returning JSON", e);
-            }
+    private String applyMediaType(String content, String origMediaType, String destMediaType) {
+
+        if (origMediaType == null || destMediaType == null) {
+            return content;
         }
-        return json;
+
+        String from = normalizeMediaType(origMediaType);
+        String to = normalizeMediaType(destMediaType);
+
+        if (from.isEmpty() || to.isEmpty() || from.equalsIgnoreCase(to)) {
+            return content;
+        }
+
+        try {
+            return convertMediaType(content, from, to);
+        } catch (Exception e) {
+            log.warn("Failed to convert from {} to {}, returning original content", from, to, e);
+            return content;
+        }
+    }
+
+    private String normalizeMediaType(String mediaType) {
+        if (mediaType == null) return "";
+
+        mediaType = mediaType.toLowerCase().trim();
+
+        // strip optional parameters like ";charset=utf-8"
+        int semicolon = mediaType.indexOf(';');
+        if (semicolon != -1) {
+            mediaType = mediaType.substring(0, semicolon);
+        }
+
+        // strip "application/" or "text/"
+        if (mediaType.startsWith("application/")) {
+            return mediaType.substring("application/".length());
+        }
+        if (mediaType.startsWith("text/")) {
+            return mediaType.substring("text/".length());
+        }
+
+        return mediaType;
+    }
+
+    private String convertMediaType(String content, String from, String to) throws Exception{
+        return switch (from + "->" + to) {
+            case "json->xml" -> DocConverter.convertJsonToXml(content);
+            case "xml->json" -> DocConverter.convertXmlToJson(content);
+            default -> content;
+        };
     }
 
 }

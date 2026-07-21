@@ -126,6 +126,8 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setHealthChecks(true, statsManager);
 
+        configManager.setErrorRegistry(true);
+
     }
 
     public void start() {
@@ -595,6 +597,11 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String getListOfFlowsDetails(String filter, String mediaType) {
         return flowManager.getListOfFlowsDetails(filter, mediaType, flowsMap);
+    }
+
+    @Override
+    public String getErrors(int maxNumberOfEntries, String mediaType) {
+        return flowManager.getErrors(maxNumberOfEntries, mediaType);
     }
 
     @Override

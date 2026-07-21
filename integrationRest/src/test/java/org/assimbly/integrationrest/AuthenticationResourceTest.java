@@ -54,7 +54,7 @@ public class AuthenticationResourceTest {
             headers.put("db", TestApplicationContext.db);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/db/authenticate"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/db/authenticate"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -82,7 +82,7 @@ public class AuthenticationResourceTest {
             headers.put("Authorization", authToken);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath( "/api/authentication/register"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath( "/api/authentication/register"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -117,7 +117,7 @@ public class AuthenticationResourceTest {
             bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/authentication/validate"), bodyDoc.toJson(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authentication/validate"), bodyDoc.toJson(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -143,7 +143,7 @@ public class AuthenticationResourceTest {
             headers.put("Authorization", authToken);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/authentication/remove"), null, null, headers);
+            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/authentication/remove"), null, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);

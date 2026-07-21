@@ -47,7 +47,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/cron"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
@@ -72,7 +72,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/cron"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/cron"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -93,14 +93,14 @@ class ValidationRuntimeTest {
         try {
             // params
             HashMap<String, String> params = new HashMap<>();
-            params.put("httpsUrl", "https://authenticationtest.com/HTTPAuth/");
+            params.put("httpsUrl", "https://www.google.com/");
 
             // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/certificate"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -128,7 +128,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // call endpoint
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/certificate"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/certificate"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -137,7 +137,7 @@ class ValidationRuntimeTest {
             JsonNode responseJson = mapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "notafter");
+            AssertUtils.assertCertificateResponse(responseJson, "INVALID", "validity check failed");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
@@ -152,7 +152,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/google.com/443/5000"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/connection/google.com/443/5000"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -176,7 +176,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/connection/192.0.2.1/666/2000"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/connection/192.0.2.1/666/2000"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -208,7 +208,7 @@ class ValidationRuntimeTest {
             bodyJson.put("xsltBody", xslt);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -239,7 +239,7 @@ class ValidationRuntimeTest {
             bodyJson.put("xsltUrl", "https://www.w3schools.com/xml/cdcatalog_client.xsl");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/xslt"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -269,7 +269,7 @@ class ValidationRuntimeTest {
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), body.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/xslt"), body.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -298,7 +298,7 @@ class ValidationRuntimeTest {
             headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/xslt"), body.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/xslt"), body.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -346,7 +346,7 @@ class ValidationRuntimeTest {
             bodyJson.put("exchange", exchangeJson);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -385,7 +385,7 @@ class ValidationRuntimeTest {
             bodyJson.put("exchange", exchangeJson);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/script"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
@@ -415,7 +415,7 @@ class ValidationRuntimeTest {
             bodyJson.put("expression", "^[a-zA-Z0-9]+$");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -444,7 +444,7 @@ class ValidationRuntimeTest {
             bodyJson.put("expression", "(a-z");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/regex"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
@@ -480,7 +480,7 @@ class ValidationRuntimeTest {
             bodyJson.put("explicitTLS", false);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
@@ -508,7 +508,7 @@ class ValidationRuntimeTest {
             bodyJson.put("explicitTLS", false);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/ftp"), bodyJson.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -537,14 +537,14 @@ class ValidationRuntimeTest {
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + 1");
-            expression.put("expressionType", "groovy");
+            expression.put("language", "groovy");
             expression.put("nextNode", "nextStep");
 
             JSONArray expressions = new JSONArray();
             expressions.put(expression);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -567,14 +567,14 @@ class ValidationRuntimeTest {
             JSONObject expression = new JSONObject();
             expression.put("name", "CheckInvoice");
             expression.put("expression", "1 + "); // error
-            expression.put("expressionType", "groovy");
+            expression.put("language", "groovy");
             expression.put("nextNode", "nextStep");
 
             JSONArray expressions = new JSONArray();
             expressions.put(expression);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/validation/expression"), expressions.toString(), null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/validation/expression"), expressions.toString(), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -602,7 +602,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/url"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT_204);
@@ -624,7 +624,7 @@ class ValidationRuntimeTest {
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/url"), params, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/url"), params, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -649,7 +649,7 @@ class ValidationRuntimeTest {
             headers.put("Uri", "direct:teste"); // uri valid on Camel
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/uri"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -674,7 +674,7 @@ class ValidationRuntimeTest {
             headers.put("Uri", "::::uri-invalid::::"); // invalid uri
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/validation/uri"), null, headers);
+            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/uri"), null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
