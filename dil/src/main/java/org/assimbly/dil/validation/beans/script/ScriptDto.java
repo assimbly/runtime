@@ -4,15 +4,13 @@ public class ScriptDto {
 
     private String language;
     private String script;
-    private boolean strictSecureMode;
 
     @SuppressWarnings("unused")
     protected ScriptDto() {}
 
-    public ScriptDto(String language, String script, boolean strictSecureMode) {
+    public ScriptDto(String language, String script) {
         this.language = language;
         this.script = script;
-        this.strictSecureMode = strictSecureMode;
     }
 
     public String getLanguage() {
@@ -31,13 +29,5 @@ public class ScriptDto {
     @SuppressWarnings("unused")
     protected void setScript(String script) {
         this.script = script;
-    }
-
-    public boolean isStrictSecureMode() {
-        return strictSecureMode;
-    }
-
-    public void setStrictSecureMode(boolean strictSecureMode) {
-        this.strictSecureMode = strictSecureMode;
     }
 }

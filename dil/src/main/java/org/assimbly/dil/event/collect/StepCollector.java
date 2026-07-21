@@ -98,11 +98,10 @@ public class StepCollector extends EventNotifierSupport {
             // Cast to exchange event
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
 
-            // Get the stepid
-            String routeId = stepEvent.getStepId();
-            String stepId = StringUtils.substringAfter(routeId, flowId + "-");
+            // Get the stepId
+            String stepId = StringUtils.substringAfter(stepEvent.getStepId(), "step-");
 
-            if(stepId!= null && !isBlackListed(stepId) && (filters == null || EventUtil.isFilteredEquals(filters, stepId))){
+            if(!isBlackListed(stepId) && EventUtil.isFilteredEquals(filters, stepId)){
 
                 // materialize body BEFORE async
                 byte[] body = stepEvent.getExchange().getMessage().getBody(byte[].class);

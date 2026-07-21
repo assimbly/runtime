@@ -3,7 +3,6 @@ package org.assimbly.integration.impl.manager;
 import java.time.Duration;
 import java.util.*;
 
-
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.spi.*;
@@ -59,7 +58,6 @@ import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-
 
 public class ConfigManager {
 
