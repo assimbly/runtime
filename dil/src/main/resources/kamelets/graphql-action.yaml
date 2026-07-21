@@ -61,4 +61,5 @@ spec:
                   parameters:
                     accessToken: "{{?accessToken}}"
               - to:
+                  disabled: "{{sink}}"
                   uri: "{{out}}"

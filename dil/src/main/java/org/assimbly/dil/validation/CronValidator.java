@@ -13,7 +13,7 @@ public class CronValidator {
             return EMPTY_CRON_ERROR;
 
         try {
-            new CronExpression(cronExpression);
+           new CronExpression(cronExpression);
         } catch (Exception e) {
             return new ValidationErrorMessage("Cron Validation error: " + e.getMessage());
         }

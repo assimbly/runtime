@@ -11,6 +11,7 @@ public interface DILStore {
     void putFlow(String flowId, TreeMap<String, String> configuration);
     TreeMap<String, String> getFlow(String flowId);
     void removeFlow(String flowId);
+    void clearAllFlows();
     Collection<TreeMap<String, String>> getAllFlows();
     ConcurrentMap<String, TreeMap<String, String>> getFlowsMap();
 
@@ -18,6 +19,7 @@ public interface DILStore {
     void putCollector(String collectorId, String configuration);
     String getCollector(String collectorId);
     void removeCollector(String collectorId);
+    void clearAllCollectors();
     ConcurrentMap<String, String> getCollectorsMap();
 
     // --- Lifecycle ---

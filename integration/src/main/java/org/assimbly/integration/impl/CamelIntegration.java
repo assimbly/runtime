@@ -5,6 +5,7 @@ import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
 import java.util.*;
 
+import org.assimbly.integration.impl.manager.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -29,10 +30,6 @@ import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.script.EvaluationRequest;
 import org.assimbly.dil.validation.beans.script.EvaluationResponse;
 import org.assimbly.docconverter.DocConverter;
-import org.assimbly.integration.impl.manager.ConfigManager;
-import org.assimbly.integration.impl.manager.FlowManager;
-import org.assimbly.integration.impl.manager.SSLManager;
-import org.assimbly.integration.impl.manager.StatsManager;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.JsonHelper;
@@ -64,6 +61,8 @@ public class CamelIntegration extends BaseIntegration {
     private final SSLManager sslManager;
     private final StatsManager statsManager;
     private final ConfigManager configManager;
+    private final StartupManager startupManager = new StartupManager();
+    private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
     private boolean started;
     private RouteController routeController;
     private ManagedCamelContext managed;
@@ -73,6 +72,7 @@ public class CamelIntegration extends BaseIntegration {
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
+        System.setProperty("camel.threads.virtual.enabled", "true");
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
         this.flowManager = new FlowManager(context);
@@ -108,15 +108,17 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setDefaultBlocks();
 
-        configManager.setDefaultThreadProfile(5, 50, 5000);
+        configManager.setDefaultThreadProfile(10, 50, 5000);
 
-        configManager.setThreadProfile("wiretapProfile", 0, 10, 2500);
+        configManager.setThreadProfile("wiretapProfile", 0, 20, 2500);
 
         configManager.setCertificateStore(true, sslManager);
 
         configManager.setDebugging(false);
 
         configManager.setSuppressLoggingOnTimeout(true);
+
+        configManager.setForceShutdownOnTimeout(true);
 
         configManager.setStreamCaching(true);
 
@@ -137,6 +139,8 @@ public class CamelIntegration extends BaseIntegration {
 
             context.start();
             started = true;
+
+            configManager.setTriggerMisfireLoggingListener();
 
             log.info("Integration Runtime started");
         }
@@ -169,33 +173,32 @@ public class CamelIntegration extends BaseIntegration {
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed").getReport();
         }
 
-        String result = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
+        FlowLoaderReport report = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
 
-        if (result == null) {
+        if (report == null || StringUtils.isEmpty(report.getReport())) {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
             super.removeFlowConfiguration(flowId);
             return null;
         }
 
-        try {
-            JsonNode root = new ObjectMapper().readTree(result);
-            int failed = root.path("flow").path("installed").path("failed").asInt(0);
-            if (failed > 0) {
-                log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
-                super.removeFlowConfiguration(flowId);
-            }
-        } catch (Exception _) {
-            // do nothing
+        if(report.isStatusFailed()) {
+            log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
+            super.removeFlowConfiguration(flowId);
+        } else {
+            String version = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
+            String tenant = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
+            installedFlowsManager.register(flowId, version, tenant);
         }
 
-        return result;
+        return report.getReport();
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        removeFlowConfiguration(flowId);
+        super.removeFlowConfiguration(flowId);
+        installedFlowsManager.unregister(flowId);
         return flowManager.stopFlow(flowId, timeout);
     }
 
@@ -204,7 +207,7 @@ public class CamelIntegration extends BaseIntegration {
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
 
-            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout);
+            String flowReport = flowManager.startFlow(flowId, super.getFlowConfiguration(flowId), timeout).getReport();
             String testReport = flowManager.testFlow(flowId);
             flowManager.stopFlow(flowId, timeout);
 
@@ -213,7 +216,7 @@ public class CamelIntegration extends BaseIntegration {
         } catch (Exception e) {
             log.error("Flow configuration failed for flowId: {} and mediaType: {}", flowId, mediaType, e);
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed");
+            return flowManager.finishReport(report, flowId, "error", e.getMessage(), "error", "failed").getReport();
         }
 
     }
@@ -224,6 +227,11 @@ public class CamelIntegration extends BaseIntegration {
         initDilStore();
 
         collectorsMap = dilStore.getCollectorsMap();
+        flowsMap = dilStore.getFlowsMap();
+
+        if (!collectorsMap.isEmpty() || !flowsMap.isEmpty()) {
+            startupManager.waitForDependencies();
+        }
 
         if(!collectorsMap.isEmpty()) {
             log.info("Found {} cached collectors. Restoring collectors...", collectorsMap.size());
@@ -233,14 +241,11 @@ public class CamelIntegration extends BaseIntegration {
             } catch (Exception e) {
                 log.error("Failed to restore collectors from cache.",e);
             }
-
         }
-
-        flowsMap = dilStore.getFlowsMap();
 
         if(!flowsMap.isEmpty()) {
             log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-            flowManager.startAllFlows(flowsMap);
+            flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
             log.info("Restored flows from cache.");
         }
 
@@ -605,6 +610,21 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
+    public String getFlowErrors(String flowId, int maxNumberOfEntries, String mediaType) {
+        return flowManager.getFlowErrors(flowId, maxNumberOfEntries, mediaType);
+    }
+
+    @Override
+    public String getStepErrors(String flowId, String stepId, int maxNumberOfEntries, String mediaType) {
+        return flowManager.getStepErrors(flowId, stepId, maxNumberOfEntries, mediaType);
+    }
+
+    @Override
+    public String getErrorByUid(String flowId, String stepId, long uid, String mediaType) {
+        return flowManager.getErrorByUid(flowId, stepId, uid, mediaType);
+    }
+
+    @Override
     public void setConnection(TreeMap<String, String> props, String stepType) throws Exception {
         flowManager.setConnection(props, stepType);
     }
@@ -751,7 +771,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(flowsMap);
+        flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
     }
 
     @Override
@@ -780,17 +800,17 @@ public class CamelIntegration extends BaseIntegration {
         if(flowProperties.isEmpty()){
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "XXX Flow is not installed";
-            return  flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed");
+            return flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed").getReport();
         }
 
 
-        return flowManager.startFlow(flowId, flowProperties, timeout);
+        return flowManager.startFlow(flowId, flowProperties, timeout).getReport();
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.restartFlow(flowId, flowProperties, timeout);
+        return flowManager.restartFlow(flowId, flowProperties, timeout).getReport();
     }
 
     @Override
@@ -801,12 +821,22 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String resumeFlow(String flowId) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.resumeFlow(flowId, flowProperties);
+        FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
+        if (flowLoaderReport.isStatusSuccess()) {
+            String version = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
+            String tenant = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
+            installedFlowsManager.register(flowId, version, tenant);
+        }
+        return flowLoaderReport.getReport();
     }
 
     @Override
     public String pauseFlow(String flowId) {
-        return flowManager.pauseFlow(flowId);
+        FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
+        if(flowLoaderReport.isStatusSuccess()) {
+            installedFlowsManager.unregister(flowId);
+        }
+        return flowLoaderReport.getReport();
     }
 
     @Override
@@ -870,8 +900,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public HttpsCertificateValidator.ValidationResult validateCertificate(String httpsUrl) {
-        HttpsCertificateValidator httpsCertificateValidator = new HttpsCertificateValidator();
-        return httpsCertificateValidator.validate(httpsUrl);
+        return HttpsCertificateValidator.validate(httpsUrl);
     }
 
     @Override
@@ -919,7 +948,7 @@ public class CamelIntegration extends BaseIntegration {
 
             // filter by tenant if provided
             if (tenant != null) {
-                String flowTenant = config.get("flow.tenant");
+                String flowTenant = config.get(FlowManager.PROPERTY_FLOW_TENANT);
                 if (!tenant.equalsIgnoreCase(flowTenant)) {
                     return;
                 }
@@ -963,17 +992,40 @@ public class CamelIntegration extends BaseIntegration {
         }
     }
 
+    @Override
+    public String getInstalledFlowsIndex() {
+        try {
+            List<Map<String, String>> result = new ArrayList<>();
+            installedFlowsManager.getAll().forEach((flowId, flowEntry) -> {
+                Map<String, String> entry = new LinkedHashMap<>();
+                entry.put("flowId", flowId);
+                entry.put("version", flowEntry.getVersion());
+                entry.put("tenant", flowEntry.getTenant());
+                result.add(entry);
+            });
+            return new ObjectMapper().writeValueAsString(result);
+        } catch (Exception e) {
+            log.error("Failed to serialize installed flows index", e);
+            return "[]";
+        }
+    }
+
     @NotNull
     private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
         Map<String, String> flow = new HashMap<>();
         flow.put("id", flowId);
-        flow.put("name", config.getOrDefault("flow.name", flowId));
+        flow.put("name", config.getOrDefault(FlowManager.PROPERTY_FLOW_NAME, flowId));
         return flow;
     }
 
     @Override
     public void deleteCacheEntry(String flowId) {
         super.removeFlowConfiguration(flowId);
+    }
+
+    @Override
+    public void clearAllCache() {
+        super.removeAllFlowConfiguration();
     }
 
     private String mergeJson(String flowJson, String testJson) {

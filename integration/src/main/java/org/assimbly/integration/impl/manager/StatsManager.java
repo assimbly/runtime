@@ -170,7 +170,7 @@ public class StatsManager {
         if (fullStats) {
             stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
             stats.uptime = managedRouteGroup.getUptime();
-            stats.lastFailed = managedRouteGroup.getLastExchangeFailureTimestamp() != null ? managedRouteGroup.getLastExchangeFailureTimestamp().getTime() : 0L;
+            stats.lastFailed = managedRouteGroup.getLastExchangeFailureHandledTimestamp() != null ? managedRouteGroup.getLastExchangeFailureHandledTimestamp().getTime() : 0L;
             stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0L;
         }
 
