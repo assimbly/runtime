@@ -33,7 +33,7 @@ public class AssimblyGatewayHeadlessContainer {
             mongoContainer = new MongoDBContainer("mongo:3.3.8")
                     .withExposedPorts(27017)
                     .withNetwork(network)
-                    .withNetworkAliases("flux-mongo")
+                    .withNetworkAliases("mongo")
                     .waitingFor(Wait.forListeningPort());
             mongoContainer.start();
         }

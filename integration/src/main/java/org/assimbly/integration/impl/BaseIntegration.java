@@ -7,7 +7,6 @@ import org.assimbly.dil.store.DILStoreFactory;
 import org.assimbly.dil.transpiler.JSONFileConfiguration;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.dil.transpiler.YAMLFileConfiguration;
-import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
@@ -22,10 +21,6 @@ public abstract class BaseIntegration implements Integration {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	DILStore dilStore;
-
-	private final TreeMap<String, String> configuredFlows = new TreeMap<>();
-
-	private String flowConfiguration;
 
 	private Properties encryptionProperties;
 	DB db;
@@ -57,7 +52,12 @@ public abstract class BaseIntegration implements Integration {
 	public void removeFlowConfiguration(String flowId) {
 		dilStore.removeFlow(flowId);
 	}
-	
+
+	public void removeAllFlowConfiguration() {
+		dilStore.clearAllFlows();
+		dilStore.clearAllCollectors();
+	}
+
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
 		TreeMap<String, String> flowProperties;
@@ -71,8 +71,6 @@ public abstract class BaseIntegration implements Integration {
 
 		setFlowConfiguration(flowId, flowProperties);
 
-		putFlowConfigurationToMap(flowId, mediaType, configuration);
-
 	}
 
 	public TreeMap<String,String> getFlowConfiguration(String flowId) {
@@ -85,50 +83,6 @@ public abstract class BaseIntegration implements Integration {
 		
 		return flowConf;
 	}	
-
-	public String getFlowConfiguration(String flowId, String mediaType) throws Exception {
-
-		flowConfiguration = getFlowConfigurationFromMap(flowId, mediaType);
-
-        return flowConfiguration;
-		
-	}
-
-
-	private void putFlowConfigurationToMap(String flowId, String mediaType, String flowConfiguration) {
-
-		if(mediaType.toLowerCase().contains("json")) {
-			flowConfiguration = DocConverter.convertJsonToXml(flowConfiguration);
-		}else if(mediaType.toLowerCase().contains("text")) {
-			flowConfiguration = DocConverter.convertYamlToXml(flowConfiguration);
-		}
-
-		if (configuredFlows.containsKey(flowId)){
-			configuredFlows.replace(flowId,flowConfiguration);
-		}else{
-			configuredFlows.put(flowId,flowConfiguration);
-		}
-
-	}
-
-
-	private String getFlowConfigurationFromMap(String flowId, String mediaType) throws Exception {
-
-		flowConfiguration = configuredFlows.get(flowId);
-
-		if(flowConfiguration==null){
-			flowConfiguration = "<dil></dil>";
-		}
-
-		if(mediaType.toLowerCase().contains("json")) {
-			flowConfiguration = DocConverter.convertXmlToJson(flowConfiguration);
-		}else if(mediaType.toLowerCase().contains("text")) {
-			flowConfiguration = DocConverter.convertXmlToYaml(flowConfiguration);
-		}
-
-		return flowConfiguration;
-
-	}
 
 	public String getLastError() {
 		

@@ -86,16 +86,6 @@ public interface Integration {
     TreeMap<String,String> getFlowConfiguration(String flowId) throws Exception;
 	
 	/**
-	* gets the integration configuration currently set (in use). 
-	*
-	* @param  flowId ID of the flow (String)
-	* @param  mediaType (XML,JSON,YAML)
-	* @return list of flow configurations (String of mediaType)
-	* @throws Exception if configuration can't be retrieved or is not available
-	*/
-    String getFlowConfiguration(String flowId, String mediaType) throws Exception;
-
-	/**
 	 * Add configuration for multiple collectors from a JSON Configuration File.
 	 *
 	 * @param  collectorsId (collectorsId)
@@ -728,6 +718,38 @@ public interface Integration {
 	String getErrors(int numberOfEntries, String mediaType);
 
 	/**
+	 * Gets a list of errors for a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  numberOfEntries the maximum number of errors to return
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getFlowErrors(String flowId, int numberOfEntries, String mediaType);
+
+	/**
+	 * Gets a list of errors for a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step	 *
+	 * @param  numberOfEntries the maximum number of errors to return
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getStepErrors(String flowId, String stepId, int numberOfEntries, String mediaType);
+
+	/**
+	 * Gets an error for a step by uid
+	 *
+	 * @param  flowId the id of the flow
+	 * @param  stepId the id of the step
+	 * @param  uid uid of the error
+	 * @param  mediaType (XML,JSON,TEXT)
+	 * @return returns info (id, name, version, environment, isError, status, uptime, lastError).
+	 */
+	String getErrorByUid(String flowId, String stepId, long uid, String mediaType);
+
+	/**
 	* Gets number of entries in (todays) failed log of all configured/running flows
 	*
 	* @throws Exception if log cannot be retrieved
@@ -985,10 +1007,22 @@ public interface Integration {
 	String getCachedInstalledFlows(String name, String scheme, String tenant);
 
 	/**
+	 * Returns list of installed flows
+	 *
+	 * @return list of installed flows
+	 */
+	String getInstalledFlowsIndex();
+
+	/**
 	 * Deletes cache entry
 	 *
 	 * @param  flowId to be deleted
 	 */
 	void deleteCacheEntry(String flowId);
+
+	/**
+	 * clear all cache
+	 */
+	void clearAllCache();
 
 }

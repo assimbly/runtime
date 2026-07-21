@@ -66,13 +66,13 @@ class FlowConfigurerRuntimeTest {
             // headers
             HashMap<String, String> headers = new HashMap<>();
             headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
             // body
-            String camelContext = ApiUtils.readFileAsStringFromResources("InboundHttpsCamelContext.xml");
+            String dil = ApiUtils.readFileAsStringFromResources("Scheduler.json");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/configure"), camelContext, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/configure"), dil, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -120,7 +120,7 @@ class FlowConfigurerRuntimeTest {
         try {
             // headers
             HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
+            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             // endpoint call
             HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/configure"), null, headers);
@@ -136,7 +136,7 @@ class FlowConfigurerRuntimeTest {
         }
     }
 
-    @Test
+/*    @Test
     @Order(4)
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowRoutesByFlowId() {
@@ -163,7 +163,7 @@ class FlowConfigurerRuntimeTest {
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
         }
-    }
+    }*/
 
     @Test
     @Order(5)

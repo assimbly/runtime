@@ -42,7 +42,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "{{transport}}:{{flowId}}?concurrentConsumers=8"
+        uri: "{{transport}}:{{flowId}}?virtualThreadPerTask=true"
         steps:
         - step:
             id: "step-{{stepId}}"

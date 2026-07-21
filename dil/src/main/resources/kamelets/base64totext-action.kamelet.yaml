@@ -17,7 +17,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -30,6 +34,7 @@ spec:
         default: "0"
   dependencies:
   - "camel:kamelet"
+  - "camel:base64"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
@@ -39,5 +44,11 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - unmarshal:
+                base64: {}
+            - convertBodyTo:
+                type: java.lang.String
+                charset: UTF-8
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

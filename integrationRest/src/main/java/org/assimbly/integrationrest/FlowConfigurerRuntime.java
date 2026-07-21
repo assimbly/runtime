@@ -57,35 +57,6 @@ public class FlowConfigurerRuntime {
    		}
     }
 
-    /**
-     * Get  /integration/flow/{flowId}/configure : get XML configuration for integration.
-     *
-     * @param flowId (flowId)
-     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     */
-    @GetMapping(
-			path = "/integration/flow/{flowId}/configure",
-			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-	)
-    public ResponseEntity<String> getFlowConfiguration(
-			@PathVariable(value = "flowId") String flowId,
-			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
-	) {
-
-    	plainResponse = true;
-
-    	try {
-			String flowConfiguration = integration.getFlowConfiguration(flowId, mediaType);
-			if(flowConfiguration.startsWith("Error")||flowConfiguration.startsWith("Warning")) {
-				return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/configure",flowConfiguration);
-			}
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/configure",flowConfiguration,plainResponse);
-   		} catch (Exception e) {
-			log.error("Get flow configuration failed",e);
-			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/configure",e.getMessage());
-   		}
-    }
-
 	@GetMapping(
 			path = "/integration/flow/{flowId}/isconfigured",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

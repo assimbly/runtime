@@ -3,11 +3,12 @@ package org.assimbly.util.mail;
 import jakarta.activation.DataHandler;
 import org.apache.axiom.attachments.ByteArrayDataSource;
 import org.apache.camel.Exchange;
-import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.commons.io.IOUtils;
 import org.assimbly.util.helper.MimeTypeHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -15,9 +16,12 @@ import java.util.Date;
 
 public class AttachmentAttacher implements Processor {
 
+    protected Logger log = LoggerFactory.getLogger(getClass());
+
     @Override
     public void process(Exchange exchange) throws Exception {
-        Message in = exchange.getIn();
+
+        AttachmentMessage in = exchange.getIn(AttachmentMessage.class);
 
         String fileName = in.getHeader(Exchange.FILE_NAME, String.class);
         String mimeType = in.getHeader(Exchange.CONTENT_TYPE, String.class);
@@ -48,7 +52,7 @@ public class AttachmentAttacher implements Processor {
 
         AttachmentMessage attMsg = exchange.getIn(AttachmentMessage.class);
 
-        // use SAME bytes (no re-reading)
+        log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
         attMsg.addAttachment(fileName, new DataHandler(new ByteArrayDataSource(fileBytes, mimeType)));
 
         in.setHeader(Exchange.CONTENT_TYPE, "text/plain");

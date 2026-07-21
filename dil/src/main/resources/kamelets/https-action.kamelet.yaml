@@ -92,6 +92,32 @@ spec:
         description: "AuthenticationPreemptive"
         type: "boolean"
         default: false
+      oauth2ClientId:
+        title: Oauth2 Client Id
+        description: Oauth2 Client Id
+        type: string
+        format: password
+        x-descriptors:
+          - urn:camel:group:credentials
+      oauth2ClientSecret:
+        title: Oauth2 Client Secret
+        description: Oauth2 Client Secret
+        type: string
+        format: password
+        x-descriptors:
+          - urn:camel:group:credentials
+      oauth2TokenEndpoint:
+        title: Oauth2 Token Endpoint
+        description: Oauth2 Token Endpoint
+        type: string
+        x-descriptors:
+          - urn:camel:group:credentials
+      oauth2Scope:
+        title: Oauth2 Scope
+        description: Oauth2 Scope
+        type: string
+        x-descriptors:
+          - urn:camel:group:credentials
       maxTotalConnections:
         title: "MaxTotalConnections"
         description: "MaxTotalConnections"
@@ -125,7 +151,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -179,7 +209,7 @@ spec:
                 - doTry:
                     steps:
                       - to:
-                          uri: "https://dummy.com?httpMethod={{httpMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&connectTimeout={{connectTimeout}}&soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy&sslContextParameters=#{{sslContextParameters}}&authMethod={{?authMethod}}&authUsername=RAW({{?authUsername}})&authPassword=RAW({{?authPassword}})"
+                          uri: "https://dummy.com?httpMethod={{httpMethod}}&transferException={{transferException}}&throwExceptionOnFailure={{throwExceptionOnFailure}}&lazyStartProducer={{lazyStartProducer}}&followRedirects={{followRedirects}}&authenticationPreemptive={{authenticationPreemptive}}&maxTotalConnections={{maxTotalConnections}}&connectionsPerRoute={{connectionsPerRoute}}&connectTimeout={{connectTimeout}}&soTimeout={{socketTimeout}}&cookieStore=#flowCookieStore&headerFilterStrategy=#CustomHttpHeaderFilterStrategy&sslContextParameters=#{{sslContextParameters}}&authMethod={{?authMethod}}&authUsername=RAW({{?authUsername}})&authPassword=RAW({{?authPassword}})&oauth2ClientId={{?oauth2ClientId}}&oauth2ClientSecret={{?oauth2ClientSecret}}&oauth2Scope={{?oauth2Scope}}&oauth2TokenEndpoint={{?oauth2TokenEndpoint}}"
                     doCatch:
                       - exception: "java.net.SocketTimeoutException"
                         disabled: "{{useErrorRoute}}"
@@ -246,4 +276,5 @@ spec:
                 - removeHeaders:
                     pattern: "user-agent|CamelHttpUri|ASSIMBLY_CUSTOM_DATE_HEADERS|ASSIMBLY_EXCLUDE_HEADERS"
                 - to:
+                    disabled: "{{sink}}"
                     uri: "{{out}}"
