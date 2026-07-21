@@ -88,6 +88,10 @@ spec:
         description: "Whether SASL auth is enabled"
         type: "boolean"
         default: false
+      contentType:
+        title: "contentType"
+        description: "contentType"
+        type: "string"
   dependencies:
   - "camel:kamelet"
   template:
@@ -125,6 +129,7 @@ spec:
                   mail.smtp.sasl.enable: "{{authEnabled}}"
                   mail.smtp.sasl.mechanisms: "{{?authMechanisms}}"
                   useHeaderSubject: true
+                  contentType: "{{?contentType}}"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
