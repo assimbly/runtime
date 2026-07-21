@@ -77,7 +77,7 @@ class BrokerConfigureRuntimeTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
             // asserts contents
-            assertThat(response.body()).isEqualTo("configuration set");
+            assertThat(response.body()).isEqualTo("success");
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

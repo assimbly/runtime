@@ -9,15 +9,18 @@ import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.KeyStore;
+import java.util.Base64;
 
 
 public class SSLConfiguration {
@@ -112,9 +115,31 @@ public class SSLConfiguration {
 														String truststorePath, String truststorePassword) throws Exception {
 
 		// Load the keystore from resource
-		KeyStore ks = KeyStore.getInstance("JKS");
-		try (InputStream is = URI.create(keystoreResource).toURL().openStream()) {
-			ks.load(is, keystorePassword.toCharArray());
+		KeyStore ks = KeyStore.getInstance("PKCS12");
+		if(keystoreResource.startsWith("http")) {
+			try (InputStream is = URI.create(keystoreResource).toURL().openStream()) {
+				ks.load(is, keystorePassword.toCharArray());
+			}
+		}else{
+			//ByteArrayInputStream is = new ByteArrayInputStream(keystoreResource.getBytes(StandardCharsets.UTF_8));
+			//ks.load(is, keystorePassword.toCharArray());
+			// 2. Handle Base64 String Workflow
+			String cleanBase64 = keystoreResource;
+
+			// Strip the Data URL prefix if it exists
+			if (cleanBase64.contains(",")) {
+				cleanBase64 = cleanBase64.substring(cleanBase64.indexOf(",") + 1);
+			}
+
+			// Normalize string by removing whitespace/newlines if any
+			cleanBase64 = cleanBase64.trim();
+
+			// Decode to raw bytes
+			byte[] keystoreBytes = Base64.getDecoder().decode(cleanBase64);
+
+			try (ByteArrayInputStream is = new ByteArrayInputStream(keystoreBytes)) {
+				ks.load(is, keystorePassword.toCharArray());
+			}
 		}
 
 		KeyStoreParameters keyStoreParameters = new KeyStoreParameters();

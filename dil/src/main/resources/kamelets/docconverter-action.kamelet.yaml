@@ -22,7 +22,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -47,4 +51,5 @@ spec:
             - to:
                 uri: "docconverter:{{convert}}"
             - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"

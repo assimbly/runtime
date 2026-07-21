@@ -11,7 +11,7 @@
     "stores": [
       {
         "type": "elastic",
-        "uri": "http://flux-es-test:9200/logs/_doc"
+        "uri": "http://elasticsearch-test:9200/logs/_doc"
       }
     ],
     "filters": [
@@ -33,7 +33,7 @@
     "stores": [
       {
         "type": "elastic",
-        "uri": "http://flux-es-test:9200/logs/_doc"
+        "uri": "http://elasticsearch-test:9200/logs/_doc"
       }
     ],
     "filters": [

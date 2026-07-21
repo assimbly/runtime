@@ -1,6 +1,5 @@
 package org.assimbly.integration.impl.manager;
 
-import net.sf.saxon.trans.Err;
 import org.apache.camel.*;
 import java.util.*;
 
@@ -8,9 +7,11 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
+import org.apache.camel.component.mail.MailAuthenticator;
 import org.apache.camel.spi.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.beans.OAuth2MailAuthenticator;
 import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.AS2KeyProcessor;
 import org.assimbly.dil.loader.FlowLoader;
@@ -28,6 +29,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -62,20 +68,26 @@ public class FlowManager {
 
     private static final long STOP_TIMEOUT = 300;
 
+    public static final String PROPERTY_FLOW_ENVIRONMENT = "flow.environment";
+    public static final String PROPERTY_FLOW_NAME = "flow.name";
+    public static final String PROPERTY_FLOW_TENANT = "flow.tenant";
+    public static final String PROPERTY_FLOW_VERSION = "flow.version";
+    public static final String PROPERTY_ID = "id";
+
     public FlowManager(CamelContext context) {
         this.context = context;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
     }
 
-    public String loadFlow(String flowId, TreeMap<String, String> properties) {
+    public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {
 
-        String version = setProperty(properties,"flow.version","0");
+        String version = setProperty(properties,PROPERTY_FLOW_VERSION,"0");
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, version);
 
         try {
 
-            //initialize security for AS2
+            //initialize security
             initializeSecurity(properties);
 
             //create connections & install dependencies if needed
@@ -104,6 +116,10 @@ public class FlowManager {
             log.info("Initialize AS2 Inbound security");
             initializeAs2InboundSecurity(properties);
         }
+        if (properties.containsKey("security.email")) {
+            log.info("Initialize oauth2 email authenticator");
+            initializeOAuth2EmailAuthenticator(properties);
+        }
         if (properties.containsKey("security.mutualtls")) {
             log.info("Initialize Mutual TLS");
             initializeMutualTLS(properties);
@@ -118,13 +134,16 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap, Map<String, InstalledFlowsManager.FlowEntry> installedFlowsIndexMap) {
 
         log.info("Starting all flows");
 
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                loadFlow(flowId, flowProps);
+                if(installedFlowsIndexMap.containsKey(flowId)) {
+                    // prevent paused flows to be installed on a restart
+                    loadFlow(flowId, flowProps);
+                }
                 log.info("Started flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -209,14 +228,14 @@ public class FlowManager {
 
             String result = routeLoader.getReport();
 
-            return finishReport(report, routeId, "start", result, "info", "success");
+            return finishReport(report, routeId, "start", result, "info", "success").getReport();
 
         } catch (Exception e) {
-            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed");
+            return finishReport(report, routeId, "start", "Route install failed | error=" + e.getMessage(), "error", "failed").getReport();
         }
     }
 
-    public String startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
+    public FlowLoaderReport startFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
 
         if (hasFlow(flowId)) {
             stopFlow(flowId, timeout, false);
@@ -226,7 +245,7 @@ public class FlowManager {
 
     }
 
-    public String restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
+    public FlowLoaderReport restartFlow(String flowId, TreeMap<String, String> flowProperties, long timeout) {
         return startFlow(flowId, flowProperties, timeout);
     }
 
@@ -239,7 +258,7 @@ public class FlowManager {
         if (!hasFlow(flowId)) {
             FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
             String errorMessage = "Flow is not installed";
-            return  finishReport(report, flowId, "stop", errorMessage, "error","failed");
+            return  finishReport(report, flowId, "stop", errorMessage, "error","failed").getReport();
         }
 
         try {
@@ -260,7 +279,7 @@ public class FlowManager {
 
             if (enableReport) {
                 FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
-                return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success");
+                return finishReport(report, flowId, "stop", "Stopped flow successfully", "info" ,"success").getReport();
             }
 
         } catch (Exception e) {
@@ -269,7 +288,7 @@ public class FlowManager {
 
             if (enableReport) {
                 FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
-                return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed");
+                return finishReport(report, flowId, "stop", "Stop flow failed | error=" + e.getMessage(), "error","failed").getReport();
             }
 
         }
@@ -281,7 +300,7 @@ public class FlowManager {
     private void removeRoute(String routeId) {
         try {
             if (context.getRoute(routeId) != null) {
-                context.getRouteController().stopRoute(routeId);
+                context.getRouteController().stopRoute(routeId, STOP_TIMEOUT, TimeUnit.MILLISECONDS);
                 context.removeRoute(routeId);
             }
         } catch (Exception e) {
@@ -289,7 +308,7 @@ public class FlowManager {
         }
     }
 
-    public String pauseFlow(String flowId) {
+    public FlowLoaderReport pauseFlow(String flowId) {
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
 
@@ -325,7 +344,7 @@ public class FlowManager {
 
     }
 
-    public String resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
+    public FlowLoaderReport resumeFlow(String flowId, TreeMap<String, String> flowProperties) {
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
 
@@ -397,7 +416,7 @@ public class FlowManager {
 
     }
 
-    public String finishReport(FlowLoaderReport report, String flowid, String event, String message, String messageType, String status) {
+    public FlowLoaderReport finishReport(FlowLoaderReport report, String flowid, String event, String message, String messageType, String status) {
 
         String eventCapitalized = StringUtils.capitalize(event);
 
@@ -411,7 +430,7 @@ public class FlowManager {
 
         report.finishReport(event, message, status);
 
-        return report.getReport();
+        return report;
 
     }
 
@@ -484,6 +503,7 @@ public class FlowManager {
         StringBuilder sb = new StringBuilder();
 
         for (Route r : routeList) {
+
             String routeId = r.getId();
             ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
 
@@ -620,13 +640,13 @@ public class FlowManager {
         JSONObject flow = new JSONObject();
 
         if (flowProperties != null) {
-            flow.put("id", flowProperties.get("id"));
-            flow.put("name", flowProperties.get("flow.name"));
+            flow.put("id", flowProperties.get(PROPERTY_ID));
+            flow.put("name", flowProperties.get(PROPERTY_FLOW_NAME));
             flow.put("isRunning", isFlowStarted(flowId));
             flow.put("status", getFlowStatus(flowId));
-            flow.put("version", setProperty(flowProperties,"flow.version","0"));
-            flow.put("environment", setProperty(flowProperties,"flow.environment",null));
-            flow.put("tenant", setProperty(flowProperties,"flow.tenant",null));
+            flow.put("version", setProperty(flowProperties,PROPERTY_FLOW_VERSION,"0"));
+            flow.put("environment", setProperty(flowProperties,PROPERTY_FLOW_ENVIRONMENT,null));
+            flow.put("tenant", setProperty(flowProperties,PROPERTY_FLOW_TENANT,null));
             flow.put("uptime", getFlowUptime(flowId));
         } else {
             flow.put("id", flowId);
@@ -672,31 +692,101 @@ public class FlowManager {
 
     public String getErrors(int maxNumberOfEntries, String mediaType) {
 
-        JSONArray errors = new JSONArray();
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistry.browse(maxNumberOfEntries);
+
+        String result = errorEventMessageToJson(errorEventMessages);
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    public String getFlowErrors(String flowId, int maxNumberOfEntries, String mediaType) {
 
         ErrorRegistry errorRegistry = context.getErrorRegistry();
-        Collection<ErrorRegistryEntry> errorRegistryEntries = errorRegistry.browse(maxNumberOfEntries);
 
-        for(ErrorRegistryEntry errorRegistryEntry: errorRegistryEntries){
-            JSONObject error = new JSONObject();
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistry.browse();
 
-            error.put("stepId",errorRegistryEntry.routeId());
-            error.put("exchangeId",errorRegistryEntry.exchangeId());
-            error.put("timestamp",errorRegistryEntry.timestamp());
-            error.put("endpointUri",errorRegistryEntry.endpointUri());
-            error.put("exceptionMessage",errorRegistryEntry.exceptionMessage());
-            error.put("exceptionType",errorRegistryEntry.exceptionType());
+        String result = errorEventMessageToJson(
+                errorEventMessages.stream()
+                        .filter(msg -> flowId.equals(msg.getRouteGroup()))
+                        .limit(maxNumberOfEntries)
+                        .toList()
+        );
 
-            errors.put(error);
-        }
-
-        String errorJson = errors.toString(4);
         if (mediaType.contains("xml")) {
-            errorJson = DocConverter.convertJsonToXml(errorJson);
+            result = DocConverter.convertJsonToXml(result);
         }
 
-        return errorJson;
+        return result;
 
+    }
+
+    public String getStepErrors(String flowId, String stepId, int maxNumberOfEntries, String mediaType) {
+
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+        ErrorRegistryView errorRegistryView = errorRegistry.forRoute(flowId + "-" + stepId);
+
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistryView.browse(maxNumberOfEntries);
+
+        String result = errorEventMessageToJson(errorEventMessages);
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    public String getErrorByUid(String flowId, String stepId, long uid, String mediaType) {
+
+        ErrorRegistry errorRegistry = context.getErrorRegistry();
+
+        ErrorRegistryView errorRegistryView = errorRegistry.forRoute(flowId + "-" + stepId);
+        
+        Collection<BacklogErrorEventMessage> errorEventMessages = errorRegistryView.browse();
+
+        Optional<BacklogErrorEventMessage> matchingMessage = errorEventMessages.stream()
+                .filter(msg -> uid == msg.getUid())
+                .findFirst();
+
+        String result = matchingMessage
+                .map(msg -> msg.toJSon(4))
+                .orElse("{}");
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        }
+
+        return result;
+
+    }
+
+    private String errorEventMessageToJson(Collection<BacklogErrorEventMessage> errorEventMessages) {
+
+        JsonMapper mapper = JsonMapper.builder().build();
+        ArrayNode arrayNode = mapper.createArrayNode();
+
+        for (BacklogErrorEventMessage errorEventMessage : errorEventMessages) {
+
+            ObjectNode node = mapper.createObjectNode();
+            node.put("uid", errorEventMessage.getUid());
+            node.put("flowId", errorEventMessage.getRouteGroup());
+            node.put("stepId", errorEventMessage.getRouteId());
+            node.put("timestamp", errorEventMessage.getTimestamp());
+            node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
+            node.put("exceptionType", errorEventMessage.getExceptionType());
+
+            arrayNode.add(node);
+        }
+
+        return mapper.writeValueAsString(arrayNode);
     }
 
 
@@ -858,6 +948,102 @@ public class FlowManager {
             return parts[1];
         }
         return null;
+    }
+
+    private void initializeOAuth2EmailAuthenticator(TreeMap<String, String> properties) {
+
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            if (!entry.getKey().endsWith(".routetemplate") ||
+                    (!entry.getValue().contains("routeTemplateRef=\"smtp-action\"") &&
+                    !entry.getValue().contains("routeTemplateRef=\"imaps-source\""))
+            ) {
+                continue;
+            }
+
+            boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
+            String protocol = isConsumer ? "imaps" : "smtp";
+
+            try {
+                // ---------- Parse XML ----------
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                dbf.setNamespaceAware(true);
+                DocumentBuilder db = dbf.newDocumentBuilder();
+
+                Document doc = db.parse(new InputSource(new StringReader(entry.getValue())));
+
+                Element root = doc.getDocumentElement();
+                Element templatedRoute = (Element)
+                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
+
+                if (templatedRoute == null) {
+                    continue;
+                }
+
+                // ---------- Collect parameter elements ----------
+                Map<String, Element> paramElements = new LinkedHashMap<>();
+                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
+
+                for (int i = 0; i < params.getLength(); i++) {
+                    Element p = (Element) params.item(i);
+                    paramElements.put(p.getAttribute("name"), p);
+                }
+
+                Map<String, String> allParams = new LinkedHashMap<>();
+                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
+                    String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
+                    allParams.put(e.getKey(), value);
+                }
+
+                String username = cleanRaw(allParams.get("username"));
+                String accessToken = cleanRaw(allParams.get("accessToken"));
+                String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
+
+                if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
+                    log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
+                    continue;
+                }
+
+                // ---------- Build & bind the Authenticator ----------
+                // Token is resolved lazily (per connection attempt) so refresh works without
+                // rebuilding the bean - see OAuth2MailAuthenticator below.
+                String beanId = "mailAuth-" + UUID.randomUUID();
+
+                MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
+                context.getRegistry().bind(beanId, authenticator);
+
+                // ---------- Wire it in as a real Kamelet property, not into "options" ----------
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
+                setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
+
+                // ---------- Serialize XML back ----------
+                Transformer tf = TransformerFactory.newInstance().newTransformer();
+                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+                StringWriter sw = new StringWriter();
+                tf.transform(new DOMSource(doc), new StreamResult(sw));
+
+                entry.setValue(sw.toString());
+
+            } catch (Exception e) {
+                log.error("initializeOAuth2EmailAuthenticator failed.", e);
+            }
+        }
+    }
+
+    private void setOrCreateParameter(Document doc, Element templatedRoute,
+                                      Map<String, Element> paramElements,
+                                      String name, String value) {
+        if (paramElements.containsKey(name)) {
+            paramElements.get(name).setAttribute("value", value);
+        } else {
+            Element param = doc.createElementNS(templatedRoute.getNamespaceURI(), "parameter");
+            param.setAttribute("name", name);
+            param.setAttribute("value", value);
+            templatedRoute.appendChild(param);
+            paramElements.put(name, param);
+        }
     }
 
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
