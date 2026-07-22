@@ -179,6 +179,7 @@ public class ConfigManager {
 
         JsonPathLanguage jsonpath = (JsonPathLanguage) context.resolveLanguage("jsonpath");
         jsonpath.setWriteAsString(true);
+        jsonpath.setUnpackArray(true);
 
         XPathLanguage xPathLanguage = (XPathLanguage) context.resolveLanguage("xpath");
         xPathLanguage.setSaxon(true);
