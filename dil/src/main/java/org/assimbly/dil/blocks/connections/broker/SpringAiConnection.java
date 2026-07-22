@@ -88,8 +88,11 @@ public class SpringAiConnection {
         context.getRegistry().bind(connectionId, chatModel);
         log.info("Successfully bound Spring AI ChatModel bean with id={} to the Camel registry", connectionId);
 
-        org.springframework.ai.chat.memory.ChatMemory chatMemory = org.springframework.ai.chat.memory.MessageWindowChatMemory.builder().build();
+        org.springframework.ai.chat.memory.ChatMemoryRepository memoryRepository = new org.springframework.ai.chat.memory.InMemoryChatMemoryRepository();
+        org.springframework.ai.chat.memory.ChatMemory chatMemory = org.springframework.ai.chat.memory.MessageWindowChatMemory.builder()
+                .chatMemoryRepository(memoryRepository)
+                .build();
         context.getRegistry().bind(connectionId + "-memory", chatMemory);
-        log.info("Successfully bound Spring AI MessageWindowChatMemory bean with id={}-memory to the Camel registry", connectionId);
+        log.info("Successfully bound Spring AI MessageWindowChatMemory (with InMemoryChatMemoryRepository) bean with id={}-memory to the Camel registry", connectionId);
     }
 }

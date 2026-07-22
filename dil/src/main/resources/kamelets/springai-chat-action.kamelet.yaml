@@ -34,18 +34,11 @@ spec:
         title: "Chat Memory Bean Name"
         description: "Name of the Spring AI ChatMemory bean in the Camel registry (e.g. #SpringAiChatMemory)"
         type: "string"
-      vectorStore:
-        title: "Vector Store Bean Name"
-        description: "Name of the Spring AI VectorStore bean in the Camel registry (e.g. #vectorStore)"
+      memoryId:
+        title: "Memory ID"
+        description: "Conversation session identifier to activate chat memory. Can be a fixed value or a Camel Simple expression (e.g. ${header.sessionId}). Required when chatMemory is set."
         type: "string"
-      topK:
-        title: "Top K"
-        description: "Number of similar documents to retrieve"
-        type: "integer"
-      similarityThreshold:
-        title: "Similarity Threshold"
-        description: "Similarity threshold to filter documents"
-        type: "string"
+        default: ""
 
   dependencies:
     - "camel:kamelet"
@@ -63,8 +56,16 @@ spec:
                 - convertBodyTo:
                     type: String
 
+                - choice:
+                    when:
+                      - simple: "'{{?memoryId}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelSpringAiChatConversationId"
+                              simple: "{{memoryId}}"
+
                 - to:
-                    uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&chatMemory={{?chatMemory}}&vectorStore={{?vectorStore}}&topK={{?topK}}&similarityThreshold={{?similarityThreshold}}"
+                    uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&chatMemory={{?chatMemory}}"
 
                 - to:
                     uri: "{{out}}"
