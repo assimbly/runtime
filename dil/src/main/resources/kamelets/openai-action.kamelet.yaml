@@ -1,0 +1,50 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "openai-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "OpenAI Action"
+    type: "object"
+    properties:
+      operation:
+        type: "string"
+        default: "chat-completion"
+      apiKey:
+        type: "string"
+        format: "password"
+      conversationMemory:
+        type: "boolean"
+        default: true
+      model:
+        type: "string"
+        default: "gpt-4o-mini"
+      in:
+        type: "string"
+        default: "kamelet:source"
+      out:
+        type: "string"
+        default: "kamelet:sink"
+      stepId:
+        type: "string"
+      routeId:
+        type: "string"
+      routeConfigurationId:
+        type: "string"
+        default: "0"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - to:
+              uri: "openai:{{operation}}"
+              parameters:
+                apiKey: "{{apiKey}}"
+                conversationMemory: "{{conversationMemory}}"
+                model: "{{model}}"
+          - to:
+              uri: "{{out}}"
