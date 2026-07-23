@@ -20,6 +20,7 @@ import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
+import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,8 +30,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -59,6 +58,9 @@ import java.util.stream.Collectors;
 public class FlowManager {
 
     protected static final Logger log = LoggerFactory.getLogger(FlowManager.class);
+
+    private static final String ASSIMBLY_ENCRYPTION_SECRET = System.getenv("ASSIMBLY_ENCRYPTION_SECRET");
+    private final EncryptionUtil encryptionUtil = new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET);
 
     private ServiceStatus status;
 
@@ -93,7 +95,7 @@ public class FlowManager {
             //create connections & install dependencies if needed
             createConnections(properties);
 
-            FlowLoader flow = new FlowLoader(properties, report);
+            FlowLoader flow = new FlowLoader(properties, report, encryptionUtil);
 
             flow.addRoutesToCamelContext(context);
 
