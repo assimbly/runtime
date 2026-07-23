@@ -23,11 +23,7 @@ public final class MimeTypeHelper {
         Detector detector = parser.getDetector();
 
         try {
-            // materialize stream to byte[]
-            byte[] bytes = content.readAllBytes();
-
-            // use a resettable stream
-            return detector.detect(new java.io.ByteArrayInputStream(bytes), new Metadata());
+            return detector.detect(content, new Metadata());
         } catch (IOException e) {
             log.error("MimeType not detected",e);
         }

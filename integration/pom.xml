@@ -41,7 +41,6 @@
             <version>${assimbly.version}</version>
         </dependency>
 
-
     </dependencies>
 
     <build>
