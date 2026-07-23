@@ -289,6 +289,13 @@
             </exclusions>
         </dependency>
 
+        <!-- AI dependencies -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-google-genai</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>
