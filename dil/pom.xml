@@ -51,6 +51,14 @@
           <scope>compile</scope>
       </dependency>
       <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-langchain4j-agent</artifactId>
+          <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-langchain4j-agent-api</artifactId>
+          <version>${camel.version}</version>
           <groupId>dev.langchain4j</groupId>
           <artifactId>langchain4j</artifactId>
           <version>1.10.0</version>
@@ -58,14 +66,13 @@
       <dependency>
           <groupId>dev.langchain4j</groupId>
           <artifactId>langchain4j-core</artifactId>
-          <version>1.10.0</version>
+          <version>1.13.0</version>
       </dependency>
       <dependency>
           <groupId>dev.langchain4j</groupId>
           <artifactId>langchain4j-google-ai-gemini</artifactId>
-          <version>1.10.0</version>
+          <version>1.13.0</version>
       </dependency>
-
   </dependencies>
 
 	<build>

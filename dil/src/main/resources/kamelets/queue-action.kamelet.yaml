@@ -62,7 +62,7 @@ spec:
             id: "step-{{stepId}}"
             steps:
             - toD:
-                uri: "{{transport}}:{{targetQueueId}}?connectionFactory=#{{connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous=true"
+                uri: "{{transport}}:{{targetQueueId}}?connectionFactory={{connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous=true"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"

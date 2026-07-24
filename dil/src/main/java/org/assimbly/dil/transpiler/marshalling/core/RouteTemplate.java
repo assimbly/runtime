@@ -319,6 +319,7 @@ public class RouteTemplate {
                 languageElement.setTextContent(value);
                 if(language.equals("jsonpath")){
                     languageElement.setAttribute("resultType","java.lang.String");
+                    languageElement.setAttribute("writeAsString","true");
                 } else if (language.equals("xpath")) {
                     languageElement.setAttribute("resultType","java.lang.String");
                     languageElement.setAttribute("saxon","true");

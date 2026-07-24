@@ -291,6 +291,9 @@
 
         <!-- AI dependencies -->
         <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-google-genai</artifactId>
+            <version>${spring-ai.version}</version>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
             <version>${langchain4j.version}</version>

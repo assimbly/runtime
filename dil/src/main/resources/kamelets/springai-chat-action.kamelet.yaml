@@ -1,0 +1,71 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "springai-chat-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+
+spec:
+  definition:
+    title: "Spring AI Chat Action"
+    description: "Send a prompt to a Spring AI chat model and receive the AI response"
+    type: "object"
+    properties:
+      in:
+        type: "string"
+        default: "kamelet:source"
+      out:
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+        default: "springai-chat"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+      chatModel:
+        title: "Chat Model Bean Name"
+        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #SpringAiChatModel)"
+        type: "string"
+        default: "#SpringAiChatModel"
+      chatMemory:
+        title: "Chat Memory Bean Name"
+        description: "Name of the Spring AI ChatMemory bean in the Camel registry (e.g. #SpringAiChatMemory)"
+        type: "string"
+      memoryId:
+        title: "Memory ID"
+        description: "Conversation session identifier to activate chat memory. Can be a fixed value or a Camel Simple expression (e.g. ${header.sessionId}). Required when chatMemory is set."
+        type: "string"
+        default: ""
+
+  dependencies:
+    - "camel:kamelet"
+    - "camel:spring-ai"
+
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - convertBodyTo:
+                    type: String
+
+                - choice:
+                    when:
+                      - simple: "'{{?memoryId}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelSpringAiChatConversationId"
+                              simple: "{{memoryId}}"
+
+                - to:
+                    uri: "spring-ai-chat://{{routeId}}?chatModel={{chatModel}}&chatMemory={{?chatMemory}}"
+
+                - to:
+                    uri: "{{out}}"
