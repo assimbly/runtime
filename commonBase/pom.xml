@@ -295,6 +295,16 @@
             <artifactId>spring-ai-google-genai</artifactId>
             <version>${spring-ai.version}</version>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-google-ai-gemini</artifactId>
+            <version>${langchain4j-google-ai-gemini.version}</version>
+        </dependency>
 
     </dependencies>
 

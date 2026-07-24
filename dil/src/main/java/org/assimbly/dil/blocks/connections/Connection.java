@@ -72,6 +72,8 @@ public class Connection {
 
             case "springai" ->
                     new SpringAiConnection(context, decryptedProperties, connectionId).start();
+            case "langchain4j" ->
+                    new LangChain4jConnection(context, decryptedProperties, connectionId).start();
 
             case "ibmq" ->
                     new IBMMQConnection(context, decryptedProperties, connectionId, connectionType).start();
