@@ -84,6 +84,7 @@
         <xpath2.version>1.2.0</xpath2.version>
         <xstream.version>1.4.21</xstream.version>
         <spring-ai.version>1.1.6</spring-ai.version>
+        <langchain4j.version>1.13.0</langchain4j.version>
 
         <!-- Manage the versions of test dependencies here -->
         <assertj.version>3.27.7</assertj.version>
