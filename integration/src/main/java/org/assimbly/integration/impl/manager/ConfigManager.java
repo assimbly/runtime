@@ -30,6 +30,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
@@ -194,6 +196,7 @@ public class ConfigManager {
         registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
         registry.bind("AS2MDNProcessor", new AS2MDNProcessor());
         registry.bind("AttachmentAttacher",new AttachmentAttacher());
+        registry.bind("counter", new AtomicInteger());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
         registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());

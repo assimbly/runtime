@@ -1,0 +1,70 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "https2-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "https2 source"
+    description: "Receives HTTP Requests"
+    type: "object"
+    properties:
+      path:
+        title: "Path"
+        description: "Path of the URL"
+        type: "string"
+      matchOnUriPrefix:
+        title: "MatchOnPrefix"
+        description: "Whether you would like to accept requests that start with the\
+          \ given URL."
+        type: "boolean"
+        default: false
+      preserveHttpHeaders:
+        title: "PreserveHttpHeaders"
+        description: "Whether to keep the CamelHttp* headers."
+        type: "boolean"
+        default: false
+      removeHeaders:
+        title: "RemoveHeaders"
+        description: "Whether to remove incoming http headers. (By default only remove CamelHttp headers)"
+        type: "string"
+        default: "CamelHttp*"
+      handlers:
+        title: "Handlers"
+        description: "Jetty handler that is binded"
+        type: "string"
+      sslContextParameters:
+        title: "SSLContextParameters"
+        description: "SSLContextParameters (reference to the keystore)"
+        type: "string"
+        default: "sslContext"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      from:
+        uri: "jetty:http:{{path}}"
+        steps:
+          - setExchangePattern: "InOut"
+          - setBody:
+              constant:
+                expression: X
+          - setExchangePattern: "InOnly"
+          - setBody:
+              constant:
+                expression: Y
