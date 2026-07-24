@@ -48,7 +48,7 @@ spec:
             id: "step-{{stepId}}"
             steps:
             - to:
-                uri: "jsonata:{{path}}?outputType=JsonString&prettyPrint=true"
+                uri: "jsonata:{{path}}?inputType=JsonString&outputType=JsonString&prettyPrint=true"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
