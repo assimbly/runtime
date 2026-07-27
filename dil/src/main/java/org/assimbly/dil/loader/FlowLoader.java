@@ -11,11 +11,14 @@ import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
+import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class FlowLoader extends RouteBuilder {
@@ -27,12 +30,14 @@ public class FlowLoader extends RouteBuilder {
 	private final String flowId;
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
+	private final EncryptionUtil encryptionUtil;
 
-	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport){
+	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport, EncryptionUtil encryptionUtil){
 		super();
 		this.props = props;
 		this.flowLoaderReport = flowLoaderReport;
 		this.flowId = props.get("id");
+		this.encryptionUtil = encryptionUtil;
 	}
 
 	public interface FailureProcessorListener {
@@ -204,7 +209,8 @@ public class FlowLoader extends RouteBuilder {
 
 			log.info("Load step:\n\n{}", step);
 
-			loader.loadRoutes(IntegrationUtil.setResource(step));
+			String resolvedStep = decryptStepIfNeeded(step);
+			loader.loadRoutes(IntegrationUtil.setResource(resolvedStep));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null, null);
 
@@ -269,6 +275,31 @@ public class FlowLoader extends RouteBuilder {
 
 	public boolean isFlowLoaded(){
 		return isFlowLoaded;
+	}
+
+	private String decryptStepIfNeeded(String step) {
+
+		if (step == null || !step.contains(EncryptionUtil.ENCODE_PREFIX)) {
+			return step;
+		}
+
+		Pattern pattern = Pattern.compile(EncryptionUtil.ENCODE_PREFIX_REGEX);
+		Matcher matcher = pattern.matcher(step);
+
+		StringBuilder result = new StringBuilder();
+
+		while (matcher.find()) {
+			String encrypted = matcher.group();
+
+			String decrypted = encryptionUtil.decrypt(encrypted);
+
+			matcher.appendReplacement(result,
+					Matcher.quoteReplacement(decrypted));
+		}
+
+		matcher.appendTail(result);
+
+		return result.toString();
 	}
 
 }
