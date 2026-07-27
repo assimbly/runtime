@@ -778,7 +778,7 @@ public class FlowManager {
             ObjectNode node = mapper.createObjectNode();
             node.put("uid", errorEventMessage.getUid());
             node.put("flowId", errorEventMessage.getRouteGroup());
-            node.put("stepId", errorEventMessage.getRouteId());
+            node.put("stepId", StringUtils.substringAfter(errorEventMessage.getRouteId(),errorEventMessage.getRouteGroup() + "-"));
             node.put("timestamp", errorEventMessage.getTimestamp());
             node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
             node.put("exceptionType", errorEventMessage.getExceptionType());

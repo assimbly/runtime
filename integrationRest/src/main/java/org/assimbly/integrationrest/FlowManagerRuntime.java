@@ -298,7 +298,7 @@ public class FlowManagerRuntime {
             path = "/integration/flow/{flowId}/step/{stepId}/errors",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowErrors(
+    public ResponseEntity<String> getStepErrors(
             @PathVariable(value = "flowId") String flowId,
             @PathVariable(value = "stepId") String stepId,
             @RequestHeader(defaultValue = "100", value = "maxNumberOfEntries") int maxNumberOfEntries,
