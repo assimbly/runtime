@@ -17,7 +17,19 @@ public final class EncryptionUtil {
     private final StandardPBEStringEncryptor textEncryptor = new StandardPBEStringEncryptor();
     private static final int SALT_LENGTH = 16; // Length of the salt in bytes
     private static final int IV_LENGTH = 16; // Length of the IV in bytes
-    private static String password;
+    private final String password;
+
+    public static final String CIPHER_ALGORITHM = "AES";
+    public static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+    public static final String KEY_DERIVATION_ALGORITHM = "PBKDF2WithHmacSHA1";
+    public static final int PBKDF2_ITERATIONS = 10000;
+    public static final int KEY_LENGTH_BITS = 256;
+
+    public static final String PBE_ALGORITHM = "PBEWithHMACSHA512AndAES_256";
+
+    public static final String ENCODE_PREFIX = "ENC(";
+    public static final String ENCODE_PREFIX_REGEX = "ENC\\([^)]*\\)";
+    public static final String ENCODE_SUFFIX = ")";
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
@@ -28,13 +40,20 @@ public final class EncryptionUtil {
         this.textEncryptor.setIvGenerator(new RandomIvGenerator());
     }
 
+    public EncryptionUtil(String password) {
+        this.password = password;
+        this.textEncryptor.setPassword(password);
+        this.textEncryptor.setAlgorithm(PBE_ALGORITHM);
+        this.textEncryptor.setIvGenerator(new RandomIvGenerator());
+    }
+
     public StandardPBEStringEncryptor getTextEncryptor() {
         return textEncryptor;
     }
 
     public String encrypt(String plainText) {
         // If the value is already encrypted, do not encrypt again and return
-        if (plainText.startsWith("ENC(") && plainText.endsWith(")")) {
+        if (plainText.startsWith(ENCODE_PREFIX) && plainText.endsWith(ENCODE_SUFFIX)) {
             return plainText;
         }
 
@@ -47,7 +66,7 @@ public final class EncryptionUtil {
         secureRandom.nextBytes(iv);
 
         // Generate key from password and salt
-        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), "AES");
+        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), CIPHER_ALGORITHM);
 
         // Encrypt the plain text
         byte[] encryptedBytes = encryptWithIv(secretKey, iv, plainText);
@@ -59,12 +78,12 @@ public final class EncryptionUtil {
         String encodedEncryptedText = encoder.encodeToString(encryptedBytes);
 
         // Concatenate and return
-        return String.format("ENC(%s|%s|%s)", encodedSalt, encodedIv, encodedEncryptedText);
+        return String.format("%s%s|%s|%s%s", ENCODE_PREFIX, encodedSalt, encodedIv, encodedEncryptedText, ENCODE_SUFFIX);
     }
 
     public String decrypt(String encryptedText) {
         // Validate and extract components
-        if (!encryptedText.startsWith("ENC(") || !encryptedText.endsWith(")")) {
+        if (!encryptedText.startsWith(ENCODE_PREFIX) || !encryptedText.endsWith(ENCODE_SUFFIX)) {
             throw new IllegalArgumentException("Invalid encrypted text format.");
         }
 
@@ -80,7 +99,7 @@ public final class EncryptionUtil {
         byte[] encryptedBytes = decoder.decode(parts[2]);
 
         // Generate key from password and salt
-        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), "AES");
+        SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), CIPHER_ALGORITHM);
 
         // Decrypt the encrypted text
         return decryptWithIv(secretKey, iv, encryptedBytes);
@@ -89,8 +108,8 @@ public final class EncryptionUtil {
 
     private byte[] generateKey(String password, byte[] salt) {
         try {
-            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 10000, 256); // 10000 iterations, 256 bits
-            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, PBKDF2_ITERATIONS, KEY_LENGTH_BITS);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM);
             return factory.generateSecret(spec).getEncoded();
         } catch (Exception e) {
             throw new RuntimeException("Key generation failed.", e);
@@ -99,7 +118,7 @@ public final class EncryptionUtil {
 
     private byte[] encryptWithIv(SecretKeySpec secretKey, byte[] iv, String plainText) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             IvParameterSpec ivParams = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParams);
             return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8)); // Use UTF-8 encoding
@@ -110,7 +129,7 @@ public final class EncryptionUtil {
 
     private String decryptWithIv(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             IvParameterSpec ivParams = new IvParameterSpec(iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParams);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
