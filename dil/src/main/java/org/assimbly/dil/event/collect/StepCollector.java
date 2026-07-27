@@ -1,8 +1,5 @@
 package org.assimbly.dil.event.collect;
 
-import java.nio.charset.*;
-import java.util.*;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.spi.CamelEvent;
@@ -19,10 +16,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-
+import java.nio.charset.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -106,7 +106,6 @@ public class StepCollector extends EventNotifierSupport {
 
                 Exchange originalExchange = stepEvent.getExchange();
 
-                long stepTimestamp = stepEvent.getTimestamp();
                 long processingTime = calculateAndUpdateComponentResponseTime(originalExchange, stepEvent);
 
                 // materialize body BEFORE async
@@ -118,14 +117,14 @@ public class StepCollector extends EventNotifierSupport {
                 exchange.getMessage().setBody(body);
 
                 // Hand off the HEAVY processing to a background thread
-                collectionPool.submit(() -> processEvent(exchange, stepId, stepTimestamp, processingTime));
+                collectionPool.submit(() -> processEvent(exchange, stepId, processingTime));
 
             }
 
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId, long stepTimestamp, long processingTime){
+    private void processEvent(Exchange exchange, String stepId, long processingTime){
 
         //set fields
         Message message = exchange.getMessage();
@@ -147,7 +146,7 @@ public class StepCollector extends EventNotifierSupport {
         exchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
 
         //calculate times
-        String timestamp = EventUtil.getCreatedTimestamp(stepTimestamp);
+        String timestamp = EventUtil.getCreatedTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
         MessageEvent messageEvent = getMessageEvent(exchange, stepId, processingTime, timestamp, transactionId, previousFlowId,
