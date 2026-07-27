@@ -16,7 +16,6 @@ spec:
         title: GraphQL Server URL
         description: The URL to which you want to send data.
         type: string
-        example: "http://example.com/graphql"
         pattern: "^(http|https)://.*"
       accessToken:
         title: GraphQL Access Token
@@ -25,6 +24,10 @@ spec:
         format: password
         x-descriptors:
           - urn:camel:group:credentials
+      query:
+        title: GraphQL Query
+        description: If defined the graphql query (otherwise it takes the body as query)
+        type: string
       in:
         title: "Source Endpoint"
         type: "string"
@@ -33,6 +36,10 @@ spec:
         title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -56,10 +63,13 @@ spec:
           - step:
               id: "step-{{stepId}}"
               steps:
+              - removeHeader:
+                  name: "Accept-Encoding"
               - to:
                   uri: "graphql://{{url}}"
                   parameters:
                     accessToken: "{{?accessToken}}"
+                    query: "{{?query}}"
               - to:
                   disabled: "{{sink}}"
                   uri: "{{out}}"
