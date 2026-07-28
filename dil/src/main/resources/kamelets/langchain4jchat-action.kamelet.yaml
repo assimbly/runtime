@@ -1,15 +1,19 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "langchain4j-chat-action"
+  name: "langchain4jchat-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "langchain4j-chat action"
+    title: "langchain4jchat action"
     description: "chat component for langchain4j"
     type: "object"
     properties:
+      chatModel:
+        title: "Chat Model Bean Name"
+        type: "string"
+        default: "geminiChatModel"
       path:
         title: "Path"
         description: "Path"
@@ -29,10 +33,6 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
-      chatModel:
-        title: "Chat Model Bean Name"
-        type: "string"
-        default: "#geminiChatModel"
   dependencies:
     - "camel:kamelet"
   template:
@@ -47,6 +47,6 @@ spec:
                 - convertBodyTo:
                     type: String
                 - to:
-                    uri: "langchain4j-chat://{{routeId}}?chatModel={{chatModel}}"
+                    uri: "langchain4j-chat://{{routeId}}?chatModel=#{{chatModel}}"
           - to:
               uri: "{{out}}"

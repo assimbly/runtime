@@ -8,7 +8,10 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.apache.camel.component.langchain4j.agent.api.Agent;
 import org.apache.camel.component.langchain4j.agent.api.AgentConfiguration;
-import org.apache.camel.component.langchain4j.agent.api.AgentWithoutMemory;
+import org.apache.camel.component.langchain4j.agent.api.AgentWithMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
@@ -70,8 +73,8 @@ public class LangChain4jAgentConnection {
 
     private void setConnection() {
         log.info("Setting up LangChain4j Agent connection. API Key length: {}, prefix: {}",
-                 apiKey != null ? apiKey.length() : 0,
-                 apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
+                apiKey != null ? apiKey.length() : 0,
+                apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
 
         String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-3.6-flash";
         long resolvedTimeout = 10;
@@ -91,8 +94,23 @@ public class LangChain4jAgentConnection {
                 .sendThinking(true)
                 .build();
 
+        InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
+        ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
+                .id(memoryId)
+                .maxMessages(100)
+                .chatMemoryStore(chatMemoryStore)
+                .build();
+
+        InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
+        ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
+                .id(memoryId)
+                .maxMessages(100)
+                .chatMemoryStore(chatMemoryStore)
+                .build();
+
         AgentConfiguration config = new AgentConfiguration()
-                .withChatModel(chatModel);
+                .withChatModel(chatModel)
+                .withChatMemoryProvider(chatMemoryProvider);
 
         if (webSearchApiKey != null && !webSearchApiKey.isEmpty()) {
             log.info("Attaching Tavily WebSearchTool to LangChain4j Agent with connection id={}", connectionId);

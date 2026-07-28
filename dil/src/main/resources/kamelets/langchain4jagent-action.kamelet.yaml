@@ -1,12 +1,13 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "langchain4j-agent-action"
+  name: "langchain4jagent-action"
   labels:
     camel.apache.org/kamelet.type: "action"
+
 spec:
   definition:
-    title: "langchain4j-agent action"
+    title: "langchain4jagent action"
     description: "agent component for langchain4j"
     type: "object"
     properties:
@@ -28,7 +29,7 @@ spec:
       agent:
         title: "Agent Bean Name"
         type: "string"
-        default: "#geminiAgent"
+        default: "geminiAgent"
       memoryId:
         title: "Memory ID"
         description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
@@ -63,6 +64,11 @@ spec:
                           - setHeader:
                               name: "CamelLangChain4jAgentMemoryId"
                               simple: "{{memoryId}}"
+                    otherwise:
+                      steps:
+                        - setHeader:
+                            name: "CamelLangChain4jAgentMemoryId"
+                            simple: "${exchangeId}"
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}&tags={{?tags}}"
           - to:
