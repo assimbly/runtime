@@ -1,0 +1,68 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4jagent-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+
+spec:
+  definition:
+    title: "langchain4jagent action"
+    description: "agent component for langchain4j"
+    type: "object"
+    properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+      agent:
+        title: "Agent Bean Name"
+        type: "string"
+        default: "geminiAgent"
+      memoryId:
+        title: "Memory ID"
+        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
+        type: "string"
+        default: ""
+
+  dependencies:
+    - "camel:kamelet"
+
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - convertBodyTo:
+                    type: String
+                - choice:
+                    when:
+                      - simple: "'{{?memoryId}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelLangChain4jAgentMemoryId"
+                              simple: "{{memoryId}}"
+                    otherwise:
+                      steps:
+                        - setHeader:
+                            name: "CamelLangChain4jAgentMemoryId"
+                            simple: "${exchangeId}"
+                - to:
+                    uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
+          - to:
+              uri: "{{out}}"
