@@ -26,6 +26,7 @@ spec:
         title: "Smart"
         description: "Apply namespace automatically"
         type: "String"
+        default: "true"
       params:
         title: "Params"
         description: "Query parameters on the SOAP URL"
