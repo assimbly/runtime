@@ -8,7 +8,10 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.apache.camel.component.langchain4j.agent.api.Agent;
 import org.apache.camel.component.langchain4j.agent.api.AgentConfiguration;
-import org.apache.camel.component.langchain4j.agent.api.AgentWithoutMemory;
+import org.apache.camel.component.langchain4j.agent.api.AgentWithMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import java.time.Duration;
 
 public class LangChain4jAgentConnection {
@@ -61,8 +64,8 @@ public class LangChain4jAgentConnection {
 
     private void setConnection() {
         log.info("Setting up LangChain4j Agent connection. API Key length: {}, prefix: {}",
-                 apiKey != null ? apiKey.length() : 0,
-                 apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
+                apiKey != null ? apiKey.length() : 0,
+                apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
 
         String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-2.5-flash";
         long resolvedTimeout = 10;
@@ -80,10 +83,18 @@ public class LangChain4jAgentConnection {
                 .timeout(Duration.ofSeconds(resolvedTimeout))
                 .build();
 
-        AgentConfiguration config = new AgentConfiguration()
-                .withChatModel(chatModel);
+        InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
+        ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
+                .id(memoryId)
+                .maxMessages(100)
+                .chatMemoryStore(chatMemoryStore)
+                .build();
 
-        Agent agent = new AgentWithoutMemory(config);
+        AgentConfiguration config = new AgentConfiguration()
+                .withChatModel(chatModel)
+                .withChatMemoryProvider(chatMemoryProvider);
+
+        Agent agent = new AgentWithMemory(config);
 
         context.getRegistry().bind(connectionId, agent);
         log.info("Successfully bound LangChain4j Agent bean with id={} to the Camel registry", connectionId);

@@ -1,15 +1,23 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "langchain4j-agent-action"
+  name: "langchain4jchat-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "langchain4j-agent action"
-    description: "agent component for langchain4j"
+    title: "langchain4jchat action"
+    description: "chat component for langchain4j"
     type: "object"
     properties:
+      chatModel:
+        title: "Chat Model Bean Name"
+        type: "string"
+        default: "geminiChatModel"
+      path:
+        title: "Path"
+        description: "Path"
+        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -25,15 +33,6 @@ spec:
         title: "Route Configuration ID"
         type: "string"
         default: "0"
-      agent:
-        title: "Agent Bean Name"
-        type: "string"
-        default: "#geminiAgent"
-      memoryId:
-        title: "Memory ID"
-        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
-        type: "string"
-        default: ""
   dependencies:
     - "camel:kamelet"
   template:
@@ -47,14 +46,7 @@ spec:
               steps:
                 - convertBodyTo:
                     type: String
-                - choice:
-                    when:
-                      - simple: "'{{?memoryId}}' != ''"
-                        steps:
-                          - setHeader:
-                              name: "CamelLangChain4jAgentMemoryId"
-                              simple: "{{memoryId}}"
                 - to:
-                    uri: "langchain4j-agent://{{routeId}}?agent={{agent}}"
+                    uri: "langchain4j-chat://{{routeId}}?chatModel=#{{chatModel}}"
           - to:
               uri: "{{out}}"
