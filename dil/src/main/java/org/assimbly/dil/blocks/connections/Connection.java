@@ -1,5 +1,8 @@
 package org.assimbly.dil.blocks.connections;
 
+import org.assimbly.dil.blocks.connections.ai.LangChain4jAgentConnection;
+import org.assimbly.dil.blocks.connections.ai.LangChain4jConnection;
+import org.assimbly.dil.blocks.connections.ai.SpringAiConnection;
 import org.assimbly.dil.blocks.connections.auth.BasicAuthentication;
 import org.assimbly.dil.blocks.connections.auth.MutualSSL;
 import org.assimbly.dil.blocks.connections.broker.*;

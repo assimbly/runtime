@@ -8,6 +8,8 @@ import java.util.*;
 
 import org.apache.camel.ManagementMBeansLevel;
 import org.apache.camel.ManagementStatisticsLevel;
+import org.apache.camel.catalog.CamelCatalog;
+import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.quartz.QuartzComponent;
@@ -485,4 +487,100 @@ public class ConfigManager {
         return routeMap;
     }
 
+    public String getCatalogSummary(String mediaType) {
+
+        CamelCatalog catalog = new DefaultCamelCatalog();
+        String result = catalog.summaryAsJson();
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        } else if (mediaType.contains("yaml")) {
+            result = DocConverter.convertJsonToYaml(result);
+        }
+
+        return result;
+    }
+
+    public String getCatalogList(String mediaType, String list) {
+
+        CamelCatalog catalog = new DefaultCamelCatalog();
+
+        String result;
+
+        switch (list) {
+            case "components":
+                result = catalog.listComponentsAsJson();
+                break;
+            case "dataformats":
+                result = catalog.listDataFormatsAsJson();
+                break;
+            case "languages":
+                result = catalog.listLanguagesAsJson();
+                break;
+            case "models":
+                result = catalog.listModelsAsJson();
+                break;
+            case "beans":
+                result = catalog.listBeansAsJson();
+                break;
+            case "transformers":
+                result = catalog.listTransformersAsJson();
+                break;
+            case "others":
+                result = catalog.listOthersAsJson();
+                break;
+            default:
+                result = "{}";
+        }
+
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        } else if (mediaType.contains("yaml")) {
+            result = DocConverter.convertJsonToYaml(result);
+        }
+
+        return result;
+    }
+
+    public String getCatalogSchema(String mediaType, String schema, String name) {
+
+        CamelCatalog catalog = new DefaultCamelCatalog();
+
+        String result;
+
+        switch (schema) {
+            case "component":
+                result = catalog.componentJSonSchema(name);
+                break;
+            case "language":
+                result = catalog.languageJSonSchema(name);
+                break;
+            case "dataformat":
+                result = catalog.dataFormatJSonSchema(name);
+                break;
+            case "main":
+                result = catalog.mainJsonSchema();
+                break;
+            case "model":
+                result = catalog.modelJSonSchema(name);
+                break;
+            case "transformer":
+                result = catalog.transformerJSonSchema(name);
+                break;
+            case "other":
+                result = catalog.otherJSonSchema(name);
+                break;
+            default:
+                result = "{}";
+        }
+
+        if (mediaType.contains("xml")) {
+            result = DocConverter.convertJsonToXml(result);
+        } else if (mediaType.contains("yaml")) {
+            result = DocConverter.convertJsonToYaml(result);
+        }
+
+        return result;
+    }
 }
