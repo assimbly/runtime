@@ -1,6 +1,9 @@
 package org.assimbly.dil.event.store.impl;
 
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.assimbly.dil.event.domain.Store;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
@@ -39,16 +42,40 @@ public final class ElasticStore {
             synchronized (ElasticStore.class) {
                 if (client == null) {
                     URL url = new URL(store.getUri());
+
+                    String usernameEnvVar = store.getUsernameEnv();
+                    String passwordEnvVar = store.getPasswordEnv();
+
+                    String username = usernameEnvVar != null ? System.getenv(usernameEnvVar) : null;
+                    String password = passwordEnvVar != null ? System.getenv(passwordEnvVar) : null;
+
+                    boolean useAuth = password != null && username != null;
+                    if(!useAuth) {
+                        log.warn("No credentials configured or env vars not set - connecting without authentication");
+                    }
+
                     client = RestClient.builder(new HttpHost(url.getHost(), url.getPort(), url.getProtocol()))
                             .setRequestConfigCallback(c -> c
                                     .setConnectTimeout(1000)
                                     .setSocketTimeout(3000))
-                            .setHttpClientConfigCallback(b -> b
-                                    .setMaxConnTotal(MAX_IN_FLIGHT)
-                                    .setMaxConnPerRoute(MAX_IN_FLIGHT)
-                            .setDefaultIOReactorConfig(org.apache.http.impl.nio.reactor.IOReactorConfig.custom()
-                                    .setIoThreadCount(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
-                                    .build()))
+                            .setHttpClientConfigCallback(b -> {
+                                b.setMaxConnTotal(MAX_IN_FLIGHT)
+                                        .setMaxConnPerRoute(MAX_IN_FLIGHT)
+                                        .setDefaultIOReactorConfig(org.apache.http.impl.nio.reactor.IOReactorConfig.custom()
+                                                .setIoThreadCount(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
+                                                .build());
+
+                                if (useAuth) {
+                                    BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                                    credentialsProvider.setCredentials(
+                                            new AuthScope(url.getHost(), url.getPort()),
+                                            new UsernamePasswordCredentials(username, password)
+                                    );
+                                    b.setDefaultCredentialsProvider(credentialsProvider);
+                                }
+
+                                return b;
+                            })
                             .build();
                 }
             }

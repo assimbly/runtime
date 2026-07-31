@@ -6,6 +6,8 @@ public class Store{
     private String id;
     private String type;
     private String uri;
+    private String usernameEnv;
+    private String passwordEnv;
 
     private String expiryInHours;
 
@@ -45,4 +47,21 @@ public class Store{
         this.expiryInHours = expiryInHours;
     }
 
+    @JsonProperty("usernameEnv")
+    public String getUsernameEnv() {
+        return usernameEnv;
+    }
+
+    public void setUsernameEnv(String usernameEnv) {
+        this.usernameEnv = usernameEnv;
+    }
+
+    @JsonProperty("passwordEnv")
+    public String getPasswordEnv() {
+        return passwordEnv;
+    }
+
+    public void setPasswordEnv(String passwordEnv) {
+        this.passwordEnv = passwordEnv;
+    }
 }
