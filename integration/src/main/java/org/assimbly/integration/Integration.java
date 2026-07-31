@@ -1025,4 +1025,45 @@ public interface Integration {
 	 */
 	void clearAllCache();
 
+	/**
+	 * Returns schema by type
+	 *
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  schema the schema. Valid values are
+	 *     COMPONENT,
+	 *     LANGUAGE,
+	 *     DATAFORMAT,
+	 *     MAIN,
+	 *     MODEL,
+	 *     TRANSFORMER,
+	 *     OTHER
+	 * @param  name the name of the schema
+	 * @return schema
+	 */
+    String getCatalogSchema(String mediaType, String schema, String name);
+
+	/**
+	 * Returns list by type. Valid values are
+	 *     	 COMPONENTS,
+	 *     	 DATAFORMATS,
+	 *     	 LANGUAGES,
+	 *     	 MODELS,
+	 *     	 BEANS,
+	 *     	 TRANSFORMERS,
+	 *     	 OTHERS
+	 *
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @param  list by type,
+	 * @return schema
+	 */
+	String getCatalogList(String mediaType, String list);
+
+	/**
+	 * Returns summary
+	 *
+	 * @param  mediaType (XML,JSON,YAML)
+	 * @return summary
+	 */
+	String getCatalogSummary(String mediaType);
+
 }

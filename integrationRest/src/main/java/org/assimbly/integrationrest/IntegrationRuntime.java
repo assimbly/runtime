@@ -1,5 +1,7 @@
 package org.assimbly.integrationrest;
 
+import org.assimbly.integrationrest.domain.CatalogListType;
+import org.assimbly.integrationrest.domain.CatalogSchemaType;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
@@ -483,4 +485,85 @@ public class IntegrationRuntime {
 
     }
 
+    /**
+     * GET /integration/catalog/summary : Get summary of the Camel Catalog.
+     *
+     * @return ResponseEntity containing JSON summary of catalog items
+     */
+    @GetMapping(
+            path = "/integration/catalog/summary",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getCatalogSummary(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+        try {
+
+            String result = integration.getCatalogSummary(mediaType);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/summary", result, true);
+        } catch (Exception e) {
+            log.error("Get catalog summary failed", e);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/summary", e.getMessage());
+        }
+    }
+
+    /**
+     * GET /integration/catalog/list/{listType} : List elements in the Camel Catalog by type.
+     *
+     * @param listType Type of catalog items to list (components, dataformats, languages, models, beans, transformers, others)
+     * @return ResponseEntity with the list formatted as JSON
+     */
+    @GetMapping(
+            path = "/integration/catalog/list/{listType}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getCatalogList(
+            @PathVariable(value = "listType") CatalogListType listType,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+        String list = listType.name().toLowerCase();
+
+        try {
+
+            String result = integration.getCatalogList(mediaType, list);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/{list}/", result, true);
+
+        } catch (Exception e) {
+            log.error("Get catalog list for {} failed", list, e);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/{list}/", e.getMessage());
+        }
+    }
+
+    /**
+     * GET /integration/catalog/schema/{schemaType}/{name} : Get JSON schema for a specific catalog item.
+     *
+     * @param schemaType Type of item (component, language, dataformat, main, model, transformer, other)
+     * @param name Name of the component/language/dataFormat/model to fetch the schema for
+     * @return ResponseEntity with the JSON schema
+     */
+    @GetMapping(
+            path = "/integration/catalog/schema/{schemaType}/{name}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getCatalogSchema(
+            @PathVariable(value = "schemaType") CatalogSchemaType schemaType,
+            @PathVariable(value = "name") String name,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        String schema = schemaType.name().toLowerCase();
+
+        try{
+
+            String result = integration.getCatalogSchema(mediaType, schema, name);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/schema/{schemaType}/{name}", result, true);
+
+        } catch (Exception e) {
+            log.error("Get catalog schema for schema {} with name {} failed", schema, name, e);
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/schema/{schemaType}/{name}", e.getMessage());
+        }
+    }
 }

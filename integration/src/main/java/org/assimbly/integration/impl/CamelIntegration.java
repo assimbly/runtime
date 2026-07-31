@@ -427,6 +427,25 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
+    public String getCatalogSummary(String mediaType) {
+        return configManager.getCatalogSummary(mediaType);
+    }
+
+    @Override
+    public String getCatalogList(String mediaType, String list) {
+        return configManager.getCatalogList(mediaType, list);
+    }
+
+    @Override
+    public String getCatalogSchema(String mediaType, String schema, String name) {
+        return configManager.getCatalogSchema(mediaType, schema, name);
+    }
+
+
+
+
+
+    @Override
     public String getListOfStepTemplates() {
         return configManager.getListOfStepTemplates();
     }

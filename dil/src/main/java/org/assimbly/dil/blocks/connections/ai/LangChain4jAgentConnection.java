@@ -1,4 +1,4 @@
-package org.assimbly.dil.blocks.connections.broker;
+package org.assimbly.dil.blocks.connections.ai;
 
 import org.apache.camel.CamelContext;
 import org.jasypt.properties.EncryptableProperties;
