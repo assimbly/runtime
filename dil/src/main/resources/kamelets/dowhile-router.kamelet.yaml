@@ -61,7 +61,7 @@ spec:
                 expression:
                   language:
                     language: "{{language}}"
-                    expression: "{{expression}}"
+                    expression: "{{expression}} && ${exchangeProperty.CamelLoopIndex} < 1000"
                 steps:
                 - to: "{{out_dowhile}}"
             - to:
