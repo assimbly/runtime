@@ -156,7 +156,7 @@ public class ConfigManager {
             ErrorRegistry errorRegistry = context.getErrorRegistry();
             errorRegistry.setEnabled(true);
             errorRegistry.setMaximumEntries(1000);
-            errorRegistry.setTimeToLive(Duration.ofMinutes(24));
+            errorRegistry.setTimeToLive(Duration.ofHours(24));
         }
     }
 
