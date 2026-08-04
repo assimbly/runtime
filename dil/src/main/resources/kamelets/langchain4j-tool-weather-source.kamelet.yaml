@@ -1,0 +1,26 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4j-tool-weather-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "LangChain4j Weather Tool"
+    description: "Returns a placeholder weather forecast for a given city."
+    type: "object"
+    properties:
+      city:
+        title: "City"
+        description: "Name of the city to get weather for"
+        type: "string"
+        default: ""
+  dependencies:
+    - "camel:langchain4j-tools"
+  template:
+    route:
+      from:
+        uri: "langchain4j-tools:weather?description=Returns+a+placeholder+weather+forecast+for+a+given+city&tags=weather"
+        steps:
+          - setBody:
+              simple: "Weather for ${header.city} is sunny with 25°C temperature."
