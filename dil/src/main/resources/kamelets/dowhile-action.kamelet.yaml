@@ -1,0 +1,80 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "dowhile-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "dowhile-action"
+    description: "Loops message based on a expression"
+    type: "object"
+    properties:
+      language:
+        title: "Expression"
+        description: "Expression"
+        type: "string"
+      expression:
+        title: "Expression"
+        description: "Expression"
+        type: "string"
+      maxLoops:
+        title: "Max Loops"
+        description: "Safety cap on iterations"
+        type: "integer"
+        default: 1000
+      out_dowhile:
+        title: "Out Dowhile Endpoint"
+        description: "Out Dowhile Endpoint"
+        type: "string"
+      out_default:
+        title: "Out Default Endpoint"
+        description: "Out Default Endpoint"
+        type: "string"
+        default: "mock:0"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - setProperty:
+                name: "loopGuard"
+                simple:
+                  expression: "0"
+                  resultType: "java.lang.Integer"
+            - loop:
+                doWhile: true
+                expression:
+                  language:
+                    language: "{{language}}"
+                    expression: "{{expression}} && ${exchangeProperty.loopGuard} < {{maxLoops}}"
+                steps:
+                  - to: "{{out}}"
+                  - setProperty:
+                      name: "loopGuard"
+                      expression:
+                        simple: "${exchangeProperty.loopGuard}++"
