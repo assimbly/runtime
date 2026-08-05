@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 public class StartupManager {
@@ -29,12 +32,22 @@ public class StartupManager {
         for (int attempt = 1; attempt <= DEPENDENCY_MAX_RETRIES; attempt++) {
             boolean allUp = healthUrls.stream().allMatch(url -> {
                 try {
+                    URI uri = URI.create(url);
+
                     HttpURLConnection conn = (HttpURLConnection) new java.net.URL(url).openConnection();
+
                     conn.setConnectTimeout(2_000);
                     conn.setReadTimeout(3_000);
                     conn.setRequestMethod("GET");
+
+                    if (uri.getUserInfo() != null) {
+                        String auth = Base64.getEncoder().encodeToString(uri.getUserInfo().getBytes(StandardCharsets.UTF_8));
+                        conn.setRequestProperty("Authorization", "Basic " + auth);
+                    }
+
                     int status = conn.getResponseCode();
                     conn.disconnect();
+
                     return status == 200;
                 } catch (Exception e) {
                     log.debug("Dependency not ready: {} — {}", url, e.getMessage());
