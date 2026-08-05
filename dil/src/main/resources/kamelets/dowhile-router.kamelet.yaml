@@ -18,6 +18,11 @@ spec:
         title: "Expression"
         description: "Expression"
         type: "string"
+      maxLoops:
+        title: "Max Loops"
+        description: "Safety cap on iterations"
+        type: "integer"
+        default: 1000
       out_dowhile:
         title: "Out Dowhile Endpoint"
         description: "Out Dowhile Endpoint"
@@ -56,13 +61,22 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - setProperty:
+                name: "loopGuard"
+                simple:
+                  expression: "0"
+                  resultType: "java.lang.Integer"
             - loop:
                 doWhile: true
                 expression:
                   language:
                     language: "{{language}}"
-                    expression: "{{expression}} && ${exchangeProperty.CamelLoopIndex} < 1000"
+                    expression: "{{expression}} && ${exchangeProperty.loopGuard} < {{maxLoops}}"
                 steps:
-                - to: "{{out_dowhile}}"
+                  - to: "{{out_dowhile}}"
+                  - setProperty:
+                      name: "loopGuard"
+                      expression:
+                        simple: "${exchangeProperty.loopGuard}++"
             - to:
                 uri: "{{out_default}}"
