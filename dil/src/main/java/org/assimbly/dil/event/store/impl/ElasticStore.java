@@ -2,6 +2,9 @@ package org.assimbly.dil.event.store.impl;
 
 import java.util.concurrent.*;
 
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.*;
 import org.assimbly.dil.event.domain.Store;
 import org.slf4j.Logger;
@@ -35,9 +38,15 @@ public final class ElasticStore {
     public ElasticStore(Store store) {
         URI uri = URI.create(store.getUri());
 
+        String usernameEnvVar = store.getUsernameEnv();
+        String passwordEnvVar = store.getPasswordEnv();
+
+        String username = usernameEnvVar != null ? System.getenv(usernameEnvVar) : null;
+        String password = passwordEnvVar != null ? System.getenv(passwordEnvVar) : null;
+
         // compareAndSet: only the first thread to win the race builds the client
         if (CLIENT_REF.get() == null) {
-            RestClient candidate = buildClient(uri);
+            RestClient candidate = buildClient(uri, username, password);
             if (!CLIENT_REF.compareAndSet(null, candidate)) {
                 // Another thread already set it — close the one we just built
                 closeQuietly(candidate);
@@ -47,17 +56,37 @@ public final class ElasticStore {
         this.path = uri.getPath();
     }
 
-    private static RestClient buildClient(URI uri) {
+    private static RestClient buildClient(URI uri, String username, String password) {
         org.apache.http.HttpHost host =
                 new org.apache.http.HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
+
+        boolean useAuth = password != null && username != null;
+        if(!useAuth) {
+            log.warn("No credentials configured or env vars not set - connecting without authentication");
+        }
 
         return RestClient.builder(host)
                 .setRequestConfigCallback(b -> b
                         .setConnectTimeout(1_000)
                         .setSocketTimeout(3_000))
-                .setHttpClientConfigCallback(b -> b
-                        .setMaxConnTotal(MAX_IN_FLIGHT)
-                        .setMaxConnPerRoute(MAX_IN_FLIGHT))
+                .setHttpClientConfigCallback(b -> {
+                    b.setMaxConnTotal(MAX_IN_FLIGHT)
+                            .setMaxConnPerRoute(MAX_IN_FLIGHT)
+                            .setDefaultIOReactorConfig(org.apache.http.impl.nio.reactor.IOReactorConfig.custom()
+                                    .setIoThreadCount(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
+                                    .build());
+
+                    if (useAuth) {
+                        BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                        credentialsProvider.setCredentials(
+                                new AuthScope(uri.getHost(), uri.getPort()),
+                                new UsernamePasswordCredentials(username, password)
+                        );
+                        b.setDefaultCredentialsProvider(credentialsProvider);
+                    }
+
+                    return b;
+                })
                 .build();
     }
 
