@@ -26,6 +26,7 @@ import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -1002,6 +1003,8 @@ public class FlowManager {
                 String accessToken = cleanRaw(allParams.get("accessToken"));
                 String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
 
+                accessToken = decryptAccessToken(accessToken);
+
                 if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
                     log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
                     continue;
@@ -1048,6 +1051,15 @@ public class FlowManager {
             templatedRoute.appendChild(param);
             paramElements.put(name, param);
         }
+    }
+
+    private @Nullable String decryptAccessToken(String accessToken) {
+        try {
+            accessToken = encryptionUtil.decrypt(accessToken);
+        } catch (Exception e) {
+            log.error("ERROR to decrypt accessToken - "+accessToken, e);
+        }
+        return accessToken;
     }
 
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
