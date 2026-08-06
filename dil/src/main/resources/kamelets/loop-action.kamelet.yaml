@@ -1,12 +1,12 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "loop-router"
+  name: "loop-action"
   labels:
-    camel.apache.org/kamelet.type: "router"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "loop-router"
+    title: "loop-action"
     description: "Loops based on a expression"
     type: "object"
     properties:
@@ -75,6 +75,4 @@ spec:
                     language: "{{language}}"
                     expression: "{{expression}}"
                 steps:
-                - to: "{{out_loop}}"
-            - to:
-                uri: "{{out_default}}"
+                - to: "{{out}}"
