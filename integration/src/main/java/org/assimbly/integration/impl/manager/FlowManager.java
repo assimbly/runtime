@@ -1000,9 +1000,12 @@ public class FlowManager {
                 }
 
                 String username = cleanRaw(allParams.get("username"));
-                String accessToken = cleanRaw(allParams.get("accessToken"));
                 String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
 
+                String accessToken = allParams.get("accessToken");
+                if (accessToken != null && accessToken.startsWith("RAW(") && accessToken.endsWith(")")) {
+                    accessToken = accessToken.substring(4, accessToken.length() - 1);
+                }
                 accessToken = decryptAccessToken(accessToken);
 
                 if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
