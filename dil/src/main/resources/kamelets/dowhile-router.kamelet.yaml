@@ -68,6 +68,7 @@ spec:
                   resultType: "java.lang.Integer"
             - loop:
                 doWhile: true
+                breakOnShutdown: true
                 expression:
                   language:
                     language: "{{language}}"

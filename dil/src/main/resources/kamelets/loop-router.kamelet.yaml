@@ -69,6 +69,7 @@ spec:
             steps:
             - loop:
                 copy: "{{copy}}"
+                breakOnShutdown: true
                 expression:
                   language:
                     language: "{{language}}"
