@@ -32,6 +32,14 @@ public class FlowLoader extends RouteBuilder {
 	private final FlowLoaderReport flowLoaderReport;
 	private final EncryptionUtil encryptionUtil;
 
+	// Define the fixed metadata key constants
+	public static final String METADATA_TENANT_NAME      = "MetaData.TenantName";
+	public static final String METADATA_ENVIRONMENT_NAME = "MetaData.EnvironmentName";
+	public static final String METADATA_FLOW_NAME        = "MetaData.FlowName";
+	public static final String METADATA_FLOW_ID          = "MetaData.FlowID";
+	public static final String METADATA_FLOW_VERSION     = "MetaData.FlowVersion";
+
+
 	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport, EncryptionUtil encryptionUtil){
 		super();
 		this.props = props;
@@ -50,6 +58,8 @@ public class FlowLoader extends RouteBuilder {
 		setExtendedcontext();
 
 		setResources();
+
+		setMetadata();
 
 		setErrorHandlers();
 
@@ -300,6 +310,22 @@ public class FlowLoader extends RouteBuilder {
 		matcher.appendTail(result);
 
 		return result.toString();
+	}
+
+	public void setMetadata() {
+
+		setVariable(METADATA_FLOW_ID, "id");
+		setVariable(METADATA_FLOW_NAME, "flow.name");
+		setVariable(METADATA_FLOW_VERSION, "flow.version");
+		setVariable(METADATA_ENVIRONMENT_NAME, "flow.environment");
+		setVariable(METADATA_TENANT_NAME, "flow.tenant");
+
+	}
+
+	private void setVariable(String type, String property){
+		if(props.containsKey(property)) {
+			context.setVariable("group:" + flowId + ":" + type, props.get(property));
+		}
 	}
 
 }
