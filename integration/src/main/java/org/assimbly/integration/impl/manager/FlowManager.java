@@ -784,6 +784,7 @@ public class FlowManager {
             node.put("uid", errorEventMessage.getUid());
             node.put("flowId", errorEventMessage.getRouteGroup());
             node.put("stepId", StringUtils.substringAfter(errorEventMessage.getRouteId(),errorEventMessage.getRouteGroup() + "-"));
+            node.put("tenant", context.getVariable("group:" + errorEventMessage.getRouteGroup() + ":MetaData.TenantName",String.class));
             node.put("timestamp", errorEventMessage.getTimestamp());
             node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
             node.put("exceptionType", errorEventMessage.getExceptionType());
