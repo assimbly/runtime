@@ -70,7 +70,7 @@ public class SpringAiConnection {
         if (temperature != null && !temperature.isEmpty()) {
             try {
                 resolvedTemp = Double.parseDouble(temperature);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 log.warn("Invalid temperature value '{}', using default 0.7", temperature);
             }
         }
@@ -82,7 +82,7 @@ public class SpringAiConnection {
 
         GoogleGenAiChatModel chatModel = GoogleGenAiChatModel.builder()
                 .genAiClient(genAiClient)
-                .defaultOptions(options)
+                .options(options)
                 .build();
 
         context.getRegistry().bind(connectionId, chatModel);
