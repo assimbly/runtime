@@ -154,13 +154,13 @@ spec:
                       - pollEnrich:
                           timeout: "{{timeout}}"
                           aggregationStrategy: "#CurrentEnrichStrategy"
-                          simple: "ftp:{{path}}?userName={{userName}}&password={{password}}&fileName={{?fileName}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&implicit={{implicit}}"
+                          simple: "ftps:{{path}}?userName={{userName}}&password={{password}}&fileName={{?fileName}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&implicit={{implicit}}"
                     otherwise:
                       steps:
                       - pollEnrich:
                           timeout: "{{timeout}}"
                           aggregationStrategy: "#CurrentEnrichStrategy"
-                          simple: "ftp:{{path}}?userName={{userName}}&password={{password}}&include={{?include}}&exclude={{?exclude}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&implicit={{implicit}}"
+                          simple: "ftps:{{path}}?userName={{userName}}&password={{password}}&include={{?include}}&exclude={{?exclude}}&move={{?move}}&moveFailed={{?moveFailed}}&charset={{charset}}&readLock={{readLock}}&disconnect={{disconnect}}&autoCreate={{autoCreate}}&passiveMode={{passiveMode}}&binary={{binary}}&delete={{delete}}&recursive={{recursive}}&throwExceptionOnConnectFailed=true&bridgeErrorHandler=true&implicit={{implicit}}"
                 - setProperty:
                     name: "Enrich-MaxMessagesPerPoll"
                     simple: "${exchangeProperty.Enrich-MaxMessagesPerPoll}--"
