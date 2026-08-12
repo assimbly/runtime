@@ -99,7 +99,7 @@ spec:
         type: "boolean"
         default: false
       implicit:
-        title: "Impliciti"
+        title: "Implicit"
         description: "Set the security mode (FTPS only)"
         type: "boolean"
         default: false
@@ -176,7 +176,7 @@ spec:
                       steps:
                       - toD:
                           disabled: "{{!abortMode}}"
-                          uri: "kamelet:sink"
+                          uri: "{{out}}"
                       - removeHeaders:
                           disabled: "{{!abortMode}}"
                           pattern: "CamelFile*"
@@ -186,7 +186,7 @@ spec:
                           simple: "${body}"
                 - toD:
                     disabled: "{{abortMode}}"
-                    uri: "kamelet:sink"
+                    uri: "{{out}}"
                 - removeHeaders:
                     disabled: "{{abortMode}}"
                     pattern: "CamelFile*"
