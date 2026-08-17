@@ -1,6 +1,7 @@
 package org.assimbly.dil.transpiler.ssl;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Component;
 import org.apache.camel.SSLContextParametersAware;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
@@ -14,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,13 +33,14 @@ public class SSLConfiguration {
 		}
 	}
 
+	public void setUseGlobalSslContextParameter(CamelContext context, String componentName) {
 
-	public void setUseGlobalSslContextParameter(CamelContext context,String componentName) {
-		if(context.getComponent(componentName)!=null){
-			((SSLContextParametersAware) context.getComponent(componentName)).setUseGlobalSslContextParameters(true);
-		}else{
-            log.warn("Can't set SSL for component {}. Component is not loaded on the classpath", componentName);
+		Component component = context.getComponent(componentName);
+
+		if (component instanceof SSLContextParametersAware sslAware) {
+			sslAware.setUseGlobalSslContextParameters(true);
 		}
+
 	}
 
 	public SSLContextParameters createSSLContextParameters(String keystorePath, String keystorePassword, String truststorePath, String truststorePassword)  {
@@ -121,8 +122,7 @@ public class SSLConfiguration {
 				ks.load(is, keystorePassword.toCharArray());
 			}
 		}else{
-			//ByteArrayInputStream is = new ByteArrayInputStream(keystoreResource.getBytes(StandardCharsets.UTF_8));
-			//ks.load(is, keystorePassword.toCharArray());
+
 			// 2. Handle Base64 String Workflow
 			String cleanBase64 = keystoreResource;
 
