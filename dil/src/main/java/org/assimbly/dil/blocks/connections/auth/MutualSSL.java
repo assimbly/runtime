@@ -56,8 +56,8 @@ public class MutualSSL {
 
     private void addToRegistry(String connectionId) throws Exception {
 
-        String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
-        String truststorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
+        String baseDirToUnix = FilenameUtils.separatorsToUnix(baseDir);
+        String truststorePath = baseDirToUnix + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
 
         SSLConfiguration sslConfiguration = new SSLConfiguration();
         SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
