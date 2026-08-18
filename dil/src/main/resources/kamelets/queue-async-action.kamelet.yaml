@@ -1,28 +1,38 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "flowlink-async-action"
+  name: "queue-async-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "Async flowlink action"
-    description: "Links messages to another flow (outbound) using an endpoint like async (seda)"
+    title: "queue async action"
+    description: "Links messages to another flow (outbound) using a queue like activemq asynchronously"
     type: "object"
     properties:
       transport:
         title: "Transport"
         description: "Transport"
         type: "string"
-      targetFlowId:
-        title: "TargetFlowID"
-        description: "Flow ID of the target flow"
+        default: "activemq"
+      targetQueueId:
+        title: "targetQueueId"
+        description: "Queue ID of the target flow"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory to ActiveMQ"
         type: "string"
       exchangePattern:
         title: "Exchange Pattern"
-        description: "Exchange Pattern"
+        description: "Exchange Pattern: InOnly or InOut"
         type: "string"
         default: "InOut"
+      timeToLive:
+        title: "TimeToLive"
+        description: "Time in milliseconds that a message stays on the queue when it's not consumed"
+        type: "integer"
+        default: "86400000"
       requestTimeout:
         title: "Request Timeout"
         description: "Timeout in milliseconds that is waited until a reply arrives"
@@ -51,18 +61,18 @@ spec:
         type: "string"
         default: "0"
   dependencies:
-    - "camel:kamelet"
+  - "camel:kamelet"
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
         uri: "{{in}}"
         steps:
-          - step:
-              id: "step-{{stepId}}"
-              steps:
-                - toD:
-                    uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&timeout={{requestTimeout}}&blockWhenFull=true&size=10000"
-                - to:
-                    disabled: "{{sink}}"
-                    uri: "{{out}}"
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - toD:
+                uri: "{{transport}}:{{targetQueueId}}?connectionFactory={{connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous=false&timeToLive={{timeToLive}}&requestTimeout={{requestTimeout}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

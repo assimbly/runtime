@@ -46,4 +46,4 @@ spec:
             - setExchangePattern: "InOnly"
             - to:
                 disabled: "{{sink}}"
-                uri: "a{{out}}?exchangePattern=InOnly"
+                uri: "{{out}}?exchangePattern=InOnly"

@@ -1,7 +1,9 @@
 package org.assimbly.dil.blocks.connections.auth;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.support.jsse.ClientAuthentication;
 import org.apache.camel.support.jsse.SSLContextParameters;
+import org.apache.camel.support.jsse.SSLContextServerParameters;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
@@ -59,6 +61,7 @@ public class MutualSSL {
         String baseDirToUnix = FilenameUtils.separatorsToUnix(baseDir);
         String truststorePath = baseDirToUnix + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
 
+        //This creates a copy of a keystore/truststore in memory and adds a server certificate (.p12/pfx) to it
         SSLConfiguration sslConfiguration = new SSLConfiguration();
         SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
                 certificate, password, truststorePath, getKeystorePassword()

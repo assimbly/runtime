@@ -57,7 +57,7 @@ spec:
               id: "step-{{stepId}}"
               steps:
                 - toD:
-                    uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}"
+                    uri: "{{transport}}:{{targetFlowId}}?exchangePattern={{exchangePattern}}&block=true&timeout=1800000&failIfNoConsumers=false"
                 - to:
                     disabled: "{{sink}}"
                     uri: "{{out}}"
