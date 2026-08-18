@@ -3,10 +3,7 @@ package org.assimbly.dil.transpiler.ssl;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
 import org.apache.camel.SSLContextParametersAware;
-import org.apache.camel.support.jsse.KeyManagersParameters;
-import org.apache.camel.support.jsse.KeyStoreParameters;
-import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.support.jsse.TrustManagersParameters;
+import org.apache.camel.support.jsse.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +143,7 @@ public class SSLConfiguration {
 		keyStoreParameters.setKeyStore(ks); // in-memory keystore
 		keyStoreParameters.setPassword(keystorePassword);
 
+
 		KeyManagersParameters keyManagers = new KeyManagersParameters();
 		keyManagers.setKeyStore(keyStoreParameters);
 		keyManagers.setKeyPassword(keystorePassword);
@@ -163,11 +161,18 @@ public class SSLConfiguration {
 		TrustManagersParameters trustManagers = new TrustManagersParameters();
 		trustManagers.setKeyStore(trustStoreParameters);
 
+		//Add server side client authentication requied
+		// SSLContextServerParameters serverParameters = new SSLContextServerParameters();
+		// serverParameters.setClientAuthentication("REQUIRE");
+
 		SSLContextParameters sslContextParameters = new SSLContextParameters();
+
+		//sslContextParameters.setServerParameters(serverParameters);
 		sslContextParameters.setKeyManagers(keyManagers);
 		sslContextParameters.setTrustManagers(trustManagers);
 
 		return sslContextParameters;
+
 	}
 
 }
