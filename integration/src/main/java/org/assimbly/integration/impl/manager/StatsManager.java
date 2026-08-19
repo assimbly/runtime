@@ -122,6 +122,20 @@ public class StatsManager {
         return json.toString();
     }
 
+    public void resetStats() {
+
+        Set<String> flowsIds = context.getRouteGroupIds();
+
+        for (String flowId : flowsIds) {
+            resetFlowStatistics(flowId);
+        }
+
+    }    
+
+    public void resetFlowStats(String flowId) {
+        resetFlowStatistics(flowId);
+    }
+
     private JSONObject createBasicFlowJson(String flowId) {
         JSONObject flow = new JSONObject();
         flow.put("id", flowId);
@@ -175,6 +189,23 @@ public class StatsManager {
         }
 
         return stats;
+    }
+
+    private void resetFlowStatistics(String flowId) {
+
+        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
+
+        if(managedRouteGroup!=null){
+
+            managedRouteGroup.reset();
+            List<Route> routes = context.getRoutesByGroup(flowId);
+
+            for (Route route : routes) {
+                ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
+                managedRoute.reset();
+            }
+
+        }
     }
 
     private void populateBasicStats(JSONObject flow, FlowStatistics stats) {

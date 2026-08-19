@@ -245,6 +245,21 @@ public interface Integration {
     String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
 	/**
+	 * Resets the stats for all flows
+	 *
+	 * @throws Exception if stats can't be retrieved
+	 */
+	void resetStats() throws Exception;
+
+	/**
+	 * Resets the stats for a specific flow
+	 *
+	 * @param  flowId the id of a flow
+	 * @throws Exception if stats can't be retrieved
+	 */
+	void resetFlowStats(String flowId) throws Exception;
+
+	/**
 	 * Gets the metrics of an integration
 	 *
 	 * @param  mediaType (xml or json)

@@ -132,6 +132,51 @@ public class StatisticsRuntime {
         }
     }
 
+    @PostMapping(
+            path = "/integration/stats/reset",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> resetStats(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+
+            log.info("Reset statistics for all flows");
+
+            integration.resetStats();
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/stats/reset", "success", false);
+        } catch (Exception e) {
+            log.error("Reset stats for all flows failed", e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/stats/reset",e.getMessage());
+        }
+
+    }
+
+    @PostMapping(
+            path = "/integration/flow/{flowId}/stats/reset",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> resetFlowStats(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+
+            log.info("Reset statistics for flow {}", flowId);
+
+            integration.resetFlowStats(flowId);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/stats/reset", "success", false);
+        } catch (Exception e) {
+            log.error("Reset stats for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/stats/reset",e.getMessage());
+        }
+
+    }
+
     @GetMapping(
             path = "/integration/flow/{flowId}/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -148,7 +193,6 @@ public class StatisticsRuntime {
         plainResponse = true;
 
         try {
-            
 
             String stats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
 

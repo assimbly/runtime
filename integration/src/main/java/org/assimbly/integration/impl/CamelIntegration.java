@@ -504,7 +504,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String doc = catalog.componentJSonSchema(componentType);
 
-        if (doc == null || doc.isEmpty()) {
+        if (doc.isEmpty()) {
             doc = "Unknown component";
         }
 
@@ -543,7 +543,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String schema = catalog.componentJSonSchema(componentType);
 
-        if (schema == null || schema.isEmpty()) {
+        if (schema.isEmpty()) {
             URL url = Resources.getResource("custom-steps-parameters.json");
             String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
             JSONArray jsonArray = new JSONArray(customSchemas);
@@ -574,7 +574,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String parameters = catalog.componentJSonSchema(componentType);
 
-        if (parameters == null || parameters.isEmpty()) {
+        if (parameters.isEmpty()) {
             parameters = "Unknown component";
         } else if (mediaType.contains("xml")) {
             parameters = DocConverter.convertJsonToXml(parameters);
@@ -711,6 +711,16 @@ public class CamelIntegration extends BaseIntegration {
     @Override
     public String getFlowStepStats(String flowId, String stepId, boolean fullStats) {
         return statsManager.getFlowStepStats(flowId, stepId, fullStats);
+    }
+
+    @Override
+    public void resetStats() {
+        statsManager.resetStats();
+    }
+
+    @Override
+    public void resetFlowStats(String flowId) {
+        statsManager.resetFlowStats(flowId);
     }
 
     @Override
