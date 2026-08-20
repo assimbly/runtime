@@ -93,6 +93,9 @@ public class Connection {
             case "langchain4j-agent" ->
                     new LangChain4jAgentConnection(context, decryptedProperties, connectionId).start();
 
+            case "langchain4j-web-search" ->
+                    new LangChain4jWebSearchConnection(context, decryptedProperties, connectionId).start();
+
             default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
 
         }

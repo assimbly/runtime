@@ -64,7 +64,7 @@ public class LangChain4jAgentConnection {
                  apiKey != null ? apiKey.length() : 0,
                  apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
 
-        String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-2.5-flash";
+        String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-3.6-flash";
         long resolvedTimeout = 10;
         if (timeout != null && !timeout.isEmpty()) {
             try {

@@ -16,11 +16,11 @@ spec:
         type: "string"
         default: ""
   dependencies:
-    - "camel:langchain4j-tools"
+    - "camel:ai-tool"
   template:
     route:
       from:
-        uri: "langchain4j-tools:weather?description=Returns+a+placeholder+weather+forecast+for+a+given+city&tags=weather"
+        uri: "ai-tool:weather?description=Returns+a+placeholder+weather+forecast+for+a+given+city&tags=weather"
         steps:
           - setBody:
               simple: "Weather for ${header.city} is sunny with 25°C temperature."

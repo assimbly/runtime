@@ -82,7 +82,7 @@ public class SpringAiConnection {
 
         GoogleGenAiChatModel chatModel = GoogleGenAiChatModel.builder()
                 .genAiClient(genAiClient)
-                .defaultOptions(options)
+                .options(options)
                 .build();
 
         context.getRegistry().bind(connectionId, chatModel);

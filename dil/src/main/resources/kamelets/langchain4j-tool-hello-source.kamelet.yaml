@@ -10,11 +10,11 @@ spec:
     description: "Returns a friendly greeting message."
     type: "object"
   dependencies:
-    - "camel:langchain4j-tools"
+    - "camel:ai-tool"
   template:
     route:
       from:
-        uri: "langchain4j-tools:hello?description=Returns+a+friendly+greeting+message&tags=test"
+        uri: "ai-tool:hello?description=Returns+a+friendly+greeting+message&tags=test"
         steps:
           - setBody:
               constant: "Hello World from LangChain4j Camel Tool!"

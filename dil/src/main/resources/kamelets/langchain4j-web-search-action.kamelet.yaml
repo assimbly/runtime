@@ -1,0 +1,67 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4j-web-search-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+
+spec:
+  definition:
+    title: "langchain4j-web-search action"
+    description: "Web Search component for LangChain4j"
+    type: "object"
+    properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "kamelet:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+      searchId:
+        title: "Search ID"
+        type: "string"
+        default: "search"
+      webSearchEngine:
+        title: "Web Search Engine Bean Name"
+        description: "Name of the WebSearchEngine bean in the Camel registry (e.g. #webSearchEngine)"
+        type: "string"
+        default: "#webSearchEngine"
+      maxResults:
+        title: "Max Results"
+        description: "Maximum number of search results to return"
+        type: "integer"
+        default: 1
+      resultType:
+        title: "Result Type"
+        description: "Result type (CONTENT, SNIPPET, or LANGCHAIN4J_WEB_SEARCH_ORGANIC_RESULT)"
+        type: "string"
+        default: "SNIPPET"
+
+  dependencies:
+    - "camel:kamelet"
+    - "camel:langchain4j-web-search"
+
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "{{routeId}}"
+              steps:
+                - convertBodyTo:
+                    type: String
+                - to:
+                    uri: "langchain4j-web-search:{{searchId}}?webSearchEngine={{webSearchEngine}}&maxResults={{maxResults}}&resultType={{resultType}}"
+          - to:
+              uri: "{{out}}"

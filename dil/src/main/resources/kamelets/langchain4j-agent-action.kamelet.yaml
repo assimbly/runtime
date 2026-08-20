@@ -43,7 +43,7 @@ spec:
   dependencies:
     - "camel:kamelet"
     - "camel:langchain4j-agent"
-    - "camel:langchain4j-tools"
+    - "camel:ai-tool"
 
   template:
     route:
@@ -64,6 +64,6 @@ spec:
                               name: "CamelLangChain4jAgentMemoryId"
                               simple: "{{memoryId}}"
                 - to:
-                    uri: "langchain4j-agent://{{routeId}}?agent={{agent}}&tags={{?tags}}"
+                    uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}&tags={{?tags}}"
           - to:
               uri: "{{out}}"
