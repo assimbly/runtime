@@ -35,11 +35,6 @@ spec:
         description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
         type: "string"
         default: ""
-      systemMessage:
-        title: "System Message"
-        description: "The system message / instructions for the AI Agent."
-        type: "string"
-        default: ""
       tags:
         title: "Tags"
         description: "Tags for discovering and calling Camel route tools (LangChain4j Tools / Function Calling)"
