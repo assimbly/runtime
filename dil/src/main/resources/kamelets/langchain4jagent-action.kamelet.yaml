@@ -35,9 +35,15 @@ spec:
         description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
         type: "string"
         default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI Agent."
+        type: "string"
+        default: ""
 
   dependencies:
     - "camel:kamelet"
+    - "camel:langchain4j-agent"
 
   template:
     route:
@@ -62,6 +68,13 @@ spec:
                         - setHeader:
                             name: "CamelLangChain4jAgentMemoryId"
                             simple: "${exchangeId}"
+                - choice:
+                    when:
+                      - simple: "'{{?systemMessage}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelLangChain4jAgentSystemMessage"
+                              simple: "{{systemMessage}}"
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
           - to:

@@ -21,6 +21,11 @@ spec:
         description: "Conversation session identifier to activate chat memory. Can be a fixed value or a Camel Simple expression (e.g. ${header.sessionId}). Required when chatMemory is set."
         type: "string"
         default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI model."
+        type: "string"
+        default: ""
       in:
         type: "string"
         default: "kamelet:source"
@@ -59,6 +64,14 @@ spec:
                           - setHeader:
                               name: "CamelSpringAiChatConversationId"
                               simple: "{{memoryId}}"
+
+                - choice:
+                    when:
+                      - simple: "'{{?systemMessage}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelSpringAiChatSystemMessage"
+                              simple: "{{systemMessage}}"
 
                 - to:
                     uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory"
