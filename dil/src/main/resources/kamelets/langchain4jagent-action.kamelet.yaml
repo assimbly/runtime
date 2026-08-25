@@ -35,9 +35,20 @@ spec:
         description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
         type: "string"
         default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI Agent."
+        type: "string"
+        default: ""
+      jsonSchema:
+        title: "JSON Schema"
+        description: "Inline JSON Schema string or header reference to constrain the Agent output"
+        type: "string"
+        default: ""
 
   dependencies:
     - "camel:kamelet"
+    - "camel:langchain4j-agent"
 
   template:
     route:
@@ -62,6 +73,46 @@ spec:
                         - setHeader:
                             name: "CamelLangChain4jAgentMemoryId"
                             simple: "${exchangeId}"
+                - choice:
+                    when:
+                      - simple: "'{{?systemMessage}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelLangChain4jAgentSystemMessage"
+                              constant: "{{systemMessage}}"
+                          - choice:
+                              when:
+                                - simple: "${header.CamelLangChain4jAgentSystemMessage} startsWith 'BASE64:'"
+                                  steps:
+                                    - setHeader:
+                                        name: "CamelLangChain4jAgentSystemMessage"
+                                        groovy: "new String(java.util.Base64.getDecoder().decode(request.headers['CamelLangChain4jAgentSystemMessage'].substring(7)))"
+                - setHeader:
+                    name: "CamelLangChain4jAgentJsonSchema"
+                    constant: "{{?jsonSchema}}"
+                - choice:
+                    when:
+                      - simple: "${header.CamelLangChain4jAgentJsonSchema} != ''"
+                        steps:
+                          - choice:
+                              when:
+                                - simple: "${header.CamelLangChain4jAgentJsonSchema} startsWith 'BASE64:'"
+                                  steps:
+                                    - setHeader:
+                                        name: "CamelLangChain4jAgentJsonSchema"
+                                        groovy: "new String(java.util.Base64.getDecoder().decode(request.headers['CamelLangChain4jAgentJsonSchema'].substring(7)))"
+                          - choice:
+                              when:
+                                - simple: "${header.CamelLangChain4jAgentSystemMessage} != null && ${header.CamelLangChain4jAgentSystemMessage} != ''"
+                                  steps:
+                                    - setHeader:
+                                        name: "CamelLangChain4jAgentSystemMessage"
+                                        simple: "${header.CamelLangChain4jAgentSystemMessage}\n\nIMPORTANT: You MUST respond ONLY with a valid JSON object matching the requested JSON Schema. Do NOT wrap the JSON in markdown code blocks or add extra explanations."
+                              otherwise:
+                                steps:
+                                  - setHeader:
+                                      name: "CamelLangChain4jAgentSystemMessage"
+                                      constant: "IMPORTANT: You MUST respond ONLY with a valid JSON object matching the requested JSON Schema. Do NOT wrap the JSON in markdown code blocks or add extra explanations."
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
           - to:
