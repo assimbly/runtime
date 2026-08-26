@@ -9,7 +9,11 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.apache.camel.component.langchain4j.agent.api.Agent;
 import org.apache.camel.component.langchain4j.agent.api.AgentConfiguration;
 import org.apache.camel.component.langchain4j.agent.api.AgentWithoutMemory;
+import dev.langchain4j.web.search.WebSearchEngine;
+import dev.langchain4j.web.search.WebSearchTool;
+import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
 import java.time.Duration;
+import java.util.List;
 
 public class LangChain4jAgentConnection {
 
@@ -22,6 +26,7 @@ public class LangChain4jAgentConnection {
     private String apiKey;
     private String modelName;
     private String timeout;
+    private String webSearchApiKey;
 
     public LangChain4jAgentConnection(CamelContext context, EncryptableProperties properties, String connectionId) {
         this.context = context;
@@ -44,6 +49,10 @@ public class LangChain4jAgentConnection {
         apiKey = properties.getProperty("connection." + connectionId + ".apikey");
         modelName = properties.getProperty("connection." + connectionId + ".modelname");
         timeout = properties.getProperty("connection." + connectionId + ".timeout");
+        webSearchApiKey = properties.getProperty("connection." + connectionId + ".websearchapikey");
+        if (webSearchApiKey == null || webSearchApiKey.isEmpty()) {
+            webSearchApiKey = properties.getProperty("connection." + connectionId + ".tavilyapikey");
+        }
     }
 
     private boolean checkConnection() {
@@ -78,10 +87,21 @@ public class LangChain4jAgentConnection {
                 .apiKey(apiKey)
                 .modelName(resolvedModel)
                 .timeout(Duration.ofSeconds(resolvedTimeout))
+                .returnThinking(true)
+                .sendThinking(true)
                 .build();
 
         AgentConfiguration config = new AgentConfiguration()
                 .withChatModel(chatModel);
+
+        if (webSearchApiKey != null && !webSearchApiKey.isEmpty()) {
+            log.info("Attaching Tavily WebSearchTool to LangChain4j Agent with connection id={}", connectionId);
+            WebSearchEngine webSearchEngine = TavilyWebSearchEngine.builder()
+                    .apiKey(webSearchApiKey)
+                    .build();
+            WebSearchTool webSearchTool = WebSearchTool.from(webSearchEngine);
+            config.withCustomTools(List.of(webSearchTool));
+        }
 
         Agent agent = new AgentWithoutMemory(config);
 
