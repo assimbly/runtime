@@ -74,7 +74,7 @@ spec:
                               simple: "{{systemMessage}}"
 
                 - to:
-                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory"
+                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory&systemMessage={{?systemMessage}}"
 
                 - to:
                     uri: "{{out}}"
