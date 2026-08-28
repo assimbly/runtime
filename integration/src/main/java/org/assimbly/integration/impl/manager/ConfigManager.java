@@ -13,6 +13,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.quartz.QuartzComponent;
+import org.apache.camel.impl.engine.DefaultRuntimeEndpointRegistry;
 import org.apache.camel.spi.*;
 import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -158,6 +159,7 @@ public class ConfigManager {
             errorRegistry.setMaximumEntries(1000);
             errorRegistry.setTimeToLive(Duration.ofHours(24));
         }
+
     }
 
     public void setDefaultBlocks() throws Exception {
