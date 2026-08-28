@@ -1,13 +1,13 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "setoauth2token-action"
+  name: "oauth2token-action"
   labels:
     camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "setoauth2token action"
-    description: "Set oAuth2token"
+    title: "oauth2token action"
+    description: "Set an oAuth Token"
     type: "object"
     properties:
       path:
