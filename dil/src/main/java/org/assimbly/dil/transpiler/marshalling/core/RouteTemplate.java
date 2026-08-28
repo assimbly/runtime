@@ -456,6 +456,8 @@ public class RouteTemplate {
 
             if(templateExists(templateName)){
                 templateId = templateName;
+            }else if(templateExists(scheme.replace("-", "") + "-" + type)){
+                templateId = scheme.replace("-", "") + "-" + type;
             }else if(uri.startsWith("block")){
                 String componentName = path;
                 componentName = componentName.toLowerCase();
