@@ -111,6 +111,16 @@ public class StepCollector extends EventNotifierSupport {
 
                     long processingTime = calculateAndUpdateComponentResponseTime(originalExchange, stepEvent);
 
+                    // Read previous flow properties from the LIVE exchange, and stamp the
+                    // current flowId/flowVersion onto it synchronously. This must happen
+                    // on the original exchange, not the async copy below, otherwise the
+                    // properties never propagate to the next step/flow and previousFlowId/
+                    // previousFlowVersion will always be null downstream.
+                    String previousFlowId = originalExchange.getProperty(FLOW_ID_PROPERTY, String.class);
+                    String previousFlowVersion = originalExchange.getProperty(FLOW_VERSION_PROPERTY, String.class);
+                    originalExchange.setProperty(FLOW_ID_PROPERTY, flowId);
+                    originalExchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
+
                     // materialize body BEFORE async
                     byte[] body = originalExchange.getMessage().getBody(byte[].class);
                     // create a copy of the exchange for async processing
@@ -120,7 +130,7 @@ public class StepCollector extends EventNotifierSupport {
 
                     // Hand off the HEAVY processing to a background thread
                     collectionPool.submit(() -> {
-                            processEvent(exchange, stepId, processingTime, isSuccessEvent);
+                        processEvent(exchange, stepId, processingTime, isSuccessEvent, previousFlowId, previousFlowVersion);
                     });
                 }
             }
@@ -132,7 +142,8 @@ public class StepCollector extends EventNotifierSupport {
         super.doStop();
     }
 
-    private void processEvent(Exchange exchange, String stepId, long processingTime, boolean isSuccessEvent){
+    private void processEvent(Exchange exchange, String stepId, long processingTime, boolean isSuccessEvent,
+                              String previousFlowId, String previousFlowVersion){
 
         //set fields
         Message message = exchange.getMessage();
@@ -146,13 +157,6 @@ public class StepCollector extends EventNotifierSupport {
             transactionId = message.getMessageId() + "_" + stepId;
             message.setHeader(BREADCRUMB_ID_HEADER, transactionId);
         }
-
-        // get previous flowId and flowVersion
-        String previousFlowId = exchange.getProperty(FLOW_ID_PROPERTY, String.class);
-        String previousFlowVersion = exchange.getProperty(FLOW_VERSION_PROPERTY, String.class);
-        // set flowId and flowVersion
-        exchange.setProperty(FLOW_ID_PROPERTY, flowId);
-        exchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
 
         //calculate times
         String timestamp = EventUtil.getCreatedTimestamp();
@@ -179,7 +183,7 @@ public class StepCollector extends EventNotifierSupport {
     private MessageEvent getSuccessMessageEvent(
             Exchange exchange, String stepId, long processingTime, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
-            Object> properties, String expiryDate
+                    Object> properties, String expiryDate
     ) {
         // read body only once
         InputStream inputStream = exchange.getMessage().getBody(InputStream.class);
@@ -209,7 +213,7 @@ public class StepCollector extends EventNotifierSupport {
     private MessageEvent getFailedMessageEvent(
             String stepId, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
-            Object> properties, String expiryDate
+                    Object> properties, String expiryDate
     ) {
         return new MessageEvent(
                 timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
