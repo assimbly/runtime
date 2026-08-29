@@ -6,6 +6,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.EventNotifier;
 import org.assimbly.dil.model.FlowConfigurationResult;
 import org.assimbly.dil.transpiler.model.EndpointDefinition;
+import org.assimbly.dil.validation.GroovyScriptSecurityValidator;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.Expression;
@@ -86,6 +87,8 @@ public abstract class BaseIntegration implements Integration {
 	public void setFlowConfiguration(String flowId, String mediaType, String configuration) throws Exception {
 
 		try {
+			// Validate Groovy scripts before doing anything else
+			GroovyScriptSecurityValidator.validate(mediaType, configuration);
 
 			if(mediaType.toLowerCase().contains("xml")) {
 				flowConfigurationResult = convertXMLToFlowConfiguration(flowId, configuration);
@@ -100,6 +103,9 @@ public abstract class BaseIntegration implements Integration {
 
 			putFlowConfigurationToMap(flowId, mediaType, configuration);
 
+		} catch (SecurityException e) {
+			log.error("Flow configuration rejected: Groovy script failed security validation", e);
+			throw e;
 		} catch (Exception e) {
 			log.error("Set flow configuration failed",e);
 		}

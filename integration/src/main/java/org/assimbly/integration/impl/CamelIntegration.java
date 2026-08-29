@@ -1581,8 +1581,13 @@ public class CamelIntegration extends BaseIntegration {
 	}
 
 	public String installFlow(String flowId, long timeout, String mediaType, String configuration) throws Exception {
-		super.setFlowConfiguration(flowId, mediaType, configuration);
-		return startFlow(flowId, timeout);
+		try {
+			super.setFlowConfiguration(flowId, mediaType, configuration);
+			return startFlow(flowId, timeout);
+		} catch (SecurityException e) {
+			finishFlowActionReport(flowId, "error", e.getMessage(),"error");
+			return loadReport;
+		}
 	}
 
 	public String uninstallFlow(String flowId, long timeout) throws Exception {
