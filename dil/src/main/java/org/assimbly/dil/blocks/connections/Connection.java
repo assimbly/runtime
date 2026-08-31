@@ -70,7 +70,7 @@ public class Connection {
             case "rabbitmq", "spring-rabbitmq" ->
                     new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
 
-            case "springai" ->
+            case "springai-chat" ->
                     new SpringAiConnection(context, decryptedProperties, connectionId).start();
             case "langchain4j" ->
                     new LangChain4jConnection(context, decryptedProperties, connectionId).start();
