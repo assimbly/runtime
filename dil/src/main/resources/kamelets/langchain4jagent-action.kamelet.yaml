@@ -32,7 +32,12 @@ spec:
         default: "geminiAgent"
       memoryId:
         title: "Memory ID"
-        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
+        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression or static ID."
+        type: "string"
+        default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI Agent."
         type: "string"
         default: ""
       tags:
@@ -63,19 +68,28 @@ spec:
                         steps:
                           - setHeader:
                               name: "CamelLangChain4jAgentMemoryId"
-                              simple: "{{memoryId}}"
+                              simple: "{{?memoryId}}"
                     otherwise:
                       steps:
-                        - setHeader:
-                            name: "CamelLangChain4jAgentMemoryId"
-                            simple: "${exchangeId}"
+                        - choice:
+                            when:
+                              - simple: "${header.memoryId} != null"
+                                steps:
+                                  - setHeader:
+                                      name: "CamelLangChain4jAgentMemoryId"
+                                      simple: "${header.memoryId}"
+                            otherwise:
+                              steps:
+                                - setHeader:
+                                    name: "CamelLangChain4jAgentMemoryId"
+                                    simple: "default"
                 - choice:
                     when:
                       - simple: "'{{?systemMessage}}' != ''"
                         steps:
                           - setHeader:
                               name: "CamelLangChain4jAgentSystemMessage"
-                              simple: "{{systemMessage}}"
+                              simple: "{{?systemMessage}}"
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}&tags={{?tags}}"
           - to:

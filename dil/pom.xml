@@ -68,6 +68,10 @@
       <dependency>
           <groupId>org.apache.camel</groupId>
           <artifactId>camel-langchain4j-web-search</artifactId>
+          <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.camel</groupId>
           <artifactId>camel-langchain4j-tools</artifactId>
           <version>${camel.version}</version>
       </dependency>

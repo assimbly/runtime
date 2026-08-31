@@ -73,9 +73,8 @@ public class Connection {
             case "rabbitmq", "spring-rabbitmq" ->
                     new RabbitMQConnection(context, decryptedProperties, connectionId, "spring-rabbitmq").start();
 
-            case "springai-chat" ->
+            case "springai-chat", "springaichat" ->
                     new SpringAiConnection(context, decryptedProperties, connectionId).start();
-
             case "langchain4j" ->
                     new LangChain4jConnection(context, decryptedProperties, connectionId).start();
 
@@ -94,10 +93,10 @@ public class Connection {
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");
 
-            case "langchain4j-agent" ->
+            case "langchain4j-agent", "langchain4jagent" ->
                     new LangChain4jAgentConnection(context, decryptedProperties, connectionId).start();
 
-            case "langchain4j-web-search" ->
+            case "langchain4j-web-search", "langchain4jwebsearch" ->
                     new LangChain4jWebSearchConnection(context, decryptedProperties, connectionId).start();
 
             default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");

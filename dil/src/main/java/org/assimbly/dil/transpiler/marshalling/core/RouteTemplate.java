@@ -455,7 +455,7 @@ public class RouteTemplate {
             }
 
             if(templateExists(templateName)){
-                templateId = templateName;
+                templateId = resolveTemplateName(templateName);
             }else if(uri.startsWith("block")){
                 String componentName = path;
                 componentName = componentName.toLowerCase();
@@ -470,7 +470,30 @@ public class RouteTemplate {
 
     private boolean templateExists(String templateName) {
         String fullTemplateName = templateName + ".kamelet.yaml";
-        return CustomKameletCatalog.getNames().contains(fullTemplateName);
+        if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
+            return true;
+        }
+        String targetStripped = fullTemplateName.replace("-", "");
+        for (String name : CustomKameletCatalog.getNames()) {
+            if (name.replace("-", "").equalsIgnoreCase(targetStripped)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String resolveTemplateName(String templateName) {
+        String fullTemplateName = templateName + ".kamelet.yaml";
+        if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
+            return templateName;
+        }
+        String targetStripped = fullTemplateName.replace("-", "");
+        for (String name : CustomKameletCatalog.getNames()) {
+            if (name.replace("-", "").equalsIgnoreCase(targetStripped)) {
+                return name.substring(0, name.indexOf(".kamelet.yaml"));
+            }
+        }
+        return templateName;
     }
 
 
