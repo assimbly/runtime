@@ -19,6 +19,10 @@ spec:
         title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -65,3 +69,4 @@ spec:
                     uri: "langchain4j-web-search:{{searchId}}?webSearchEngine={{webSearchEngine}}&maxResults={{maxResults}}&resultType={{resultType}}"
           - to:
               uri: "{{out}}"
+              disabled: "{{sink}}"
