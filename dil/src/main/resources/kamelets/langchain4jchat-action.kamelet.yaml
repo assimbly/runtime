@@ -53,5 +53,6 @@ spec:
                 - to:
                     uri: "langchain4j-chat://{{routeId}}?chatModel=#{{chatModel}}"
           - to:
-              uri: "{{out}}"
               disabled: "{{sink}}"
+              uri: "{{out}}"
+              

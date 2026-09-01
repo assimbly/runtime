@@ -97,5 +97,6 @@ spec:
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}&tags={{?tags}}"
           - to:
+              disabled: "{{sink}}"  
               uri: "{{out}}"
-              disabled: "{{sink}}"
+              

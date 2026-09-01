@@ -68,5 +68,6 @@ spec:
                 - to:
                     uri: "langchain4j-web-search:{{searchId}}?webSearchEngine={{webSearchEngine}}&maxResults={{maxResults}}&resultType={{resultType}}"
           - to:
-              uri: "{{out}}"
               disabled: "{{sink}}"
+              uri: "{{out}}"
+              
