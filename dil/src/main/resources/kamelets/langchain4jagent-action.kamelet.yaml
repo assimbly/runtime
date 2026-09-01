@@ -19,6 +19,10 @@ spec:
         title: "Sink Endpoint"
         type: "string"
         default: "kamelet:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -78,4 +82,5 @@ spec:
                 - to:
                     uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
           - to:
+              disabled: "{{sink}}"
               uri: "{{out}}"
