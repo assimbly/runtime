@@ -1,23 +1,14 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-<<<<<<<< HEAD:dil/src/main/resources/kamelets/langchain4j-web-search-action.kamelet.yaml
   name: "langchain4j-web-search-action"
-========
-  name: "langchain4jagent-action"
->>>>>>>> next:dil/src/main/resources/kamelets/langchain4jagent-action.kamelet.yaml
   labels:
     camel.apache.org/kamelet.type: "action"
 
 spec:
   definition:
-<<<<<<<< HEAD:dil/src/main/resources/kamelets/langchain4j-web-search-action.kamelet.yaml
     title: "langchain4j-web-search action"
     description: "Web Search component for LangChain4j"
-========
-    title: "langchain4jagent action"
-    description: "agent component for langchain4j"
->>>>>>>> next:dil/src/main/resources/kamelets/langchain4jagent-action.kamelet.yaml
     type: "object"
     properties:
       in:
@@ -38,7 +29,6 @@ spec:
       searchId:
         title: "Search ID"
         type: "string"
-<<<<<<<< HEAD:dil/src/main/resources/kamelets/langchain4j-web-search-action.kamelet.yaml
         default: "search"
       webSearchEngine:
         title: "Web Search Engine Bean Name"
@@ -59,17 +49,6 @@ spec:
   dependencies:
     - "camel:kamelet"
     - "camel:langchain4j-web-search"
-========
-        default: "geminiAgent"
-      memoryId:
-        title: "Memory ID"
-        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
-        type: "string"
-        default: ""
-
-  dependencies:
-    - "camel:kamelet"
->>>>>>>> next:dil/src/main/resources/kamelets/langchain4jagent-action.kamelet.yaml
 
   template:
     route:
@@ -82,24 +61,7 @@ spec:
               steps:
                 - convertBodyTo:
                     type: String
-<<<<<<<< HEAD:dil/src/main/resources/kamelets/langchain4j-web-search-action.kamelet.yaml
                 - to:
                     uri: "langchain4j-web-search:{{searchId}}?webSearchEngine={{webSearchEngine}}&maxResults={{maxResults}}&resultType={{resultType}}"
-========
-                - choice:
-                    when:
-                      - simple: "'{{?memoryId}}' != ''"
-                        steps:
-                          - setHeader:
-                              name: "CamelLangChain4jAgentMemoryId"
-                              simple: "{{memoryId}}"
-                    otherwise:
-                      steps:
-                        - setHeader:
-                            name: "CamelLangChain4jAgentMemoryId"
-                            simple: "${exchangeId}"
-                - to:
-                    uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
->>>>>>>> next:dil/src/main/resources/kamelets/langchain4jagent-action.kamelet.yaml
           - to:
               uri: "{{out}}"
