@@ -50,51 +50,7 @@
           <version>${activemq-classic.version}</version>
           <scope>compile</scope>
       </dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-langchain4j-agent</artifactId>
-          <version>${camel.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-langchain4j-agent-api</artifactId>
-          <version>${camel.version}</version>
-	  </dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-ai-tool</artifactId>
-          <version>${camel.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-langchain4j-web-search</artifactId>
-          <version>${camel.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.camel</groupId>
-          <artifactId>camel-langchain4j-tools</artifactId>
-          <version>${camel.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>dev.langchain4j</groupId>
-          <artifactId>langchain4j</artifactId>
-          <version>${langchain4j.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>dev.langchain4j</groupId>
-          <artifactId>langchain4j-core</artifactId>
-          <version>${langchain4j.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>dev.langchain4j</groupId>
-          <artifactId>langchain4j-google-ai-gemini</artifactId>
-          <version>${langchain4j.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>dev.langchain4j</groupId>
-          <artifactId>langchain4j-web-search-engine-tavily</artifactId>
-          <version>0.36.2</version>
-      </dependency>
+
   </dependencies>
 
 	<build>
