@@ -15,7 +15,7 @@ spec:
         description: "Delimiter"
         type: "string"
         default: ","
-      useHeader:
+      useHeaders:
         title: "Use header maps"
         description: "Wether to use header maps or not"
         type: "string"
@@ -61,9 +61,10 @@ spec:
             - unmarshal:
                 csv:
                   delimiter: "{{delimiter}}"
-                  useMaps: "{{useHeader}}"
+                  useMaps: "{{useHeaders}}"
+                  captureHeaderRecord: true
             - to:
-                uri: "csvtoxml://?encoding={{encoding}}"
+                uri: "csvtoxml://?encoding={{encoding}}&useHeaders={{useHeaders}}"
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"
