@@ -1,0 +1,20 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4j-tool-time-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "LangChain4j Time Tool"
+    description: "Returns the current date and time."
+    type: "object"
+  dependencies:
+    - "camel:ai-tool"
+  template:
+    route:
+      from:
+        uri: "ai-tool:time?description=Returns+the+current+system+date+and+time&tags=time"
+        steps:
+          - setBody:
+              simple: "Current system time is: ${date:now:yyyy-MM-dd HH:mm:ss}"

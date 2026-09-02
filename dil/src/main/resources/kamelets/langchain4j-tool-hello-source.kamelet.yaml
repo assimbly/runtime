@@ -1,0 +1,20 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "langchain4j-tool-hello-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "LangChain4j Hello Tool"
+    description: "Returns a friendly greeting message."
+    type: "object"
+  dependencies:
+    - "camel:ai-tool"
+  template:
+    route:
+      from:
+        uri: "ai-tool:hello?description=Returns+a+friendly+greeting+message&tags=test"
+        steps:
+          - setBody:
+              constant: "Hello World from LangChain4j Camel Tool!"
