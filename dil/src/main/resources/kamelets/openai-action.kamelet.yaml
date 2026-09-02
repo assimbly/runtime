@@ -23,6 +23,9 @@ spec:
       model:
         type: "string"
         default: "gpt-4o-mini"
+      systemMessage:
+        type: "string"
+        default: ""
       in:
         type: "string"
         default: "kamelet:source"
@@ -48,5 +51,6 @@ spec:
                 apiKey: "{{apiKey}}"
                 conversationMemory: "{{conversationMemory}}"
                 model: "{{model}}"
+                systemMessage: "{{?systemMessage}}"
           - to:
               uri: "{{out}}"
