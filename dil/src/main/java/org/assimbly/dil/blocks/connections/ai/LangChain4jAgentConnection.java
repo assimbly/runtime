@@ -107,14 +107,25 @@ public class LangChain4jAgentConnection {
 
         final int finalMaxMessages = resolvedMaxMessages;
         InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
-        java.util.Map<Object, dev.langchain4j.memory.ChatMemory> memories = new java.util.concurrent.ConcurrentHashMap<>();
-        ChatMemoryProvider chatMemoryProvider = memoryId -> memories.computeIfAbsent(memoryId, id ->
-                MessageWindowChatMemory.builder()
-                        .id(id)
-                        .maxMessages(finalMaxMessages)
-                        .chatMemoryStore(chatMemoryStore)
-                        .build()
+        java.util.Map<Object, dev.langchain4j.memory.ChatMemory> memories = java.util.Collections.synchronizedMap(
+                new java.util.LinkedHashMap<Object, dev.langchain4j.memory.ChatMemory>(100, 0.75f, true) {
+                    @Override
+                    protected boolean removeEldestEntry(java.util.Map.Entry<Object, dev.langchain4j.memory.ChatMemory> eldest) {
+                        return size() > 1000;
+                    }
+                }
         );
+        ChatMemoryProvider chatMemoryProvider = memoryId -> {
+            synchronized (memories) {
+                return memories.computeIfAbsent(memoryId, id ->
+                        MessageWindowChatMemory.builder()
+                                .id(id)
+                                .maxMessages(finalMaxMessages)
+                                .chatMemoryStore(chatMemoryStore)
+                                .build()
+                );
+            }
+        };
 
         AgentConfiguration config = new AgentConfiguration()
                 .withChatModel(chatModel)
