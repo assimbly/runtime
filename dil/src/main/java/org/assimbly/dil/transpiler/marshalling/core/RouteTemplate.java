@@ -2,6 +2,7 @@ package org.assimbly.dil.transpiler.marshalling.core;
 
 import javax.xml.xpath.*;
 
+import org.apache.camel.util.URISupport;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
@@ -15,10 +16,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 import static org.assimbly.util.IntegrationUtil.iterable;
 
@@ -38,6 +38,7 @@ public class RouteTemplate {
     private String path;
     private String scheme;
     private String options;
+    private String templatedRouteOptions;
     private String blockType;
     private String transport;
     private String blockUri;
@@ -58,6 +59,7 @@ public class RouteTemplate {
 
         this.baseUri = baseUri;
         this.options = options;
+        this.templatedRouteOptions = options;
         this.scheme = scheme;
         this.path = path;
 
@@ -299,6 +301,8 @@ public class RouteTemplate {
             return setHeaders;
         }
 
+        String writeAsString = getTemplatedRouteOptionValue("writeAsString", "false");
+
         String messageId = StringUtils.substringAfter(setHeadersUri,"message:");
         String headersXpath = "core/messages/message[name='" + messageId + "']/headers/header";
         String[] headers = conf.getStringArray(headersXpath + "/name");
@@ -319,7 +323,7 @@ public class RouteTemplate {
                 languageElement.setTextContent(value);
                 if(language.equals("jsonpath")){
                     languageElement.setAttribute("resultType","java.lang.String");
-                    languageElement.setAttribute("writeAsString","true");
+                    languageElement.setAttribute("writeAsString", writeAsString);
                 } else if (language.equals("xpath")) {
                     languageElement.setAttribute("resultType","java.lang.String");
                     languageElement.setAttribute("saxon","true");
@@ -541,6 +545,20 @@ public class RouteTemplate {
 
         createLinks(links, stepXPath, stepIndex, type, flowId);
 
+    }
+
+    private String getTemplatedRouteOptionValue(String key, String defaultValue) {
+        if (templatedRouteOptions == null || templatedRouteOptions.isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            Map<String, Object> parsedOptions = URISupport.parseQuery(templatedRouteOptions);
+            Object value = parsedOptions.get(key);
+            return value != null ? value.toString() : defaultValue;
+        } catch (URISyntaxException e) {
+            log.warn("Unable to parse options '{}' for key '{}', using default '{}'", templatedRouteOptions, key, defaultValue, e);
+            return defaultValue;
+        }
     }
 
     /**
