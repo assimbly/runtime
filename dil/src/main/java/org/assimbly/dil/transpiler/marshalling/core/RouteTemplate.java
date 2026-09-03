@@ -607,11 +607,6 @@ public class RouteTemplate {
 
         Element param = doc.createElementNS("http://camel.apache.org/schema/spring","parameter");
         param.setAttribute("name", name);
-
-        if (value != null && (value.contains("{") || value.contains("}")) && !value.startsWith("BASE64:")) {
-            value = "BASE64:" + java.util.Base64.getEncoder().encodeToString(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        }
-
         param.setAttribute("value", value);
 
         return param;
