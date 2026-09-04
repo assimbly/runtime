@@ -6,8 +6,7 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.*;
 
-import org.apache.camel.ManagementMBeansLevel;
-import org.apache.camel.ManagementStatisticsLevel;
+import org.apache.camel.*;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.http.HttpComponent;
@@ -35,8 +34,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.Component;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
@@ -248,6 +245,28 @@ public class ConfigManager {
         jettyHttpComponent12.setThreadPool(virtualThreadPool);
 
         return jettyHttpComponent12;
+    }
+
+    public void setSimpleFunctions() {
+
+        SimpleFunctionRegistry simpleFunctionRegistry = PluginHelper.getSimpleFunctionRegistry(context);
+        Language simpleLanguage = context.resolveLanguage("simple");
+
+        Expression flowVersion = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowVersion}");
+        simpleFunctionRegistry.addFunction("flowVersion", flowVersion);
+
+        Expression flowId = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowID}");
+        simpleFunctionRegistry.addFunction("flowId", flowId);
+
+        Expression flowName = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowName}");
+        simpleFunctionRegistry.addFunction("flowName", flowName);
+
+        Expression tenant = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.TenantName}");
+        simpleFunctionRegistry.addFunction("tenant", tenant);
+
+        Expression environment = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.EnvironmentName}");
+        simpleFunctionRegistry.addFunction("environment", environment);
+
     }
 
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
@@ -585,4 +604,5 @@ public class ConfigManager {
 
         return result;
     }
+
 }
