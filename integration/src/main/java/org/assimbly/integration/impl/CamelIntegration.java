@@ -395,7 +395,11 @@ public class CamelIntegration extends BaseIntegration {
 
         snapshot.forEach((collectorsId,configuration) -> {
             try {
-                addCollectorsConfiguration(collectorsId, "application/json", configuration);
+                if(configuration.startsWith("[")) {
+                    addCollectorsConfiguration("application/json", configuration);
+                }else{
+                    addCollectorConfiguration(collectorsId, "application/json", configuration);
+                }
                 log.info("Started collectors: {}", collectorsId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -404,8 +408,9 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String addCollectorsConfiguration(String collectorsId, String mediaType, String configuration) throws Exception {
-        dilStore.putCollector(collectorsId,configuration);
+    public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
+        String collectorsId = UUID.randomUUID().toString();
+        dilStore.putCollector(collectorsId, configuration);
         return configManager.addCollectorsConfiguration(mediaType, configuration);
     }
 

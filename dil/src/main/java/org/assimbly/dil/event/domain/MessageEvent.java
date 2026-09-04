@@ -65,6 +65,7 @@ public class MessageEvent {
     private final String previousFlowId;
     private final String previousFlowVersion;
     private final String stepId;
+    private final String eventType;
     private final String timestamp;
     private final String expiryDate;
     private final Map<String, Object> headers;
@@ -74,7 +75,7 @@ public class MessageEvent {
 
     public MessageEvent(
             String timestamp, String id, String flowId, String flowVersion, String previousFlowId, String previousFlowVersion,
-            String stepId, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
+            String stepId, String eventType, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
             boolean failedExchange
     ) {
         this.timestamp = timestamp;
@@ -84,6 +85,7 @@ public class MessageEvent {
         this.previousFlowId = previousFlowId;
         this.previousFlowVersion = previousFlowVersion;
         this.stepId = stepId;
+        this.eventType = eventType;
         this.headers = headers;
         this.properties = properties;
         this.body = body;

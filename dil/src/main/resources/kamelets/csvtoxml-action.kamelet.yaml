@@ -58,6 +58,8 @@ spec:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - setBody:
+               simple: "${body} ?: ''"
             - unmarshal:
                 csv:
                   delimiter: "{{delimiter}}"
