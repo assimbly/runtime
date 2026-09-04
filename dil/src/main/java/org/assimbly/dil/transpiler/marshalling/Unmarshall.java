@@ -167,6 +167,10 @@ public class Unmarshall {
 			String name = optionProperty.substring(optionsIndex);
 			String value = conf.getProperty(optionProperty).toString();
 
+	        if (value != null && (name.equalsIgnoreCase("jsonSchema") || name.equalsIgnoreCase("schema")) && (value.contains("{") || value.contains("}")) && !value.startsWith("BASE64:")) {
+	            value = "BASE64:" + java.util.Base64.getEncoder().encodeToString(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+	        }
+
 			if (i > 0) {
 				uriOptions.append('&');
 			}
