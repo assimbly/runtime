@@ -78,7 +78,7 @@ spec:
                               simple: "{{systemMessage}}"
 
                 - to:
-                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory&systemMessage={{?systemMessage}}"
+                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory"
 
                 - to:
                     disabled: "{{sink}}"
