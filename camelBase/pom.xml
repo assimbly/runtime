@@ -139,6 +139,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-stax</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-univocity-parsers</artifactId>
         </dependency>
         <dependency>
@@ -292,6 +296,10 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-scheduler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-schematron</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>

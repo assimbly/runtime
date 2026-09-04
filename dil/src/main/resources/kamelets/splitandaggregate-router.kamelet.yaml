@@ -74,8 +74,7 @@ spec:
               steps:
                 - setProperty:
                     name: "Aggregate-Type"
-                    constant:
-                      expression: "{{aggregateType}}"
+                    constant: "{{aggregateType}}"
                 - split:
                     aggregationStrategy: "AggregateStrategy"
                     parallelProcessing: "{{parallelProcessing}}"

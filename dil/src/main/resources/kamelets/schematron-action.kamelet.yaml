@@ -1,23 +1,18 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "file-source"
+  name: "schematron-action"
   labels:
-    camel.apache.org/kamelet.type: "source"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "file source"
-    description: "File endpoint that listens to a directory"
+    title: "Schematron action"
+    description: "Apply Schematron validation on a message"
     type: "object"
     properties:
       path:
-        title: "path"
-        description: "path of component"
-        type: "string"
-        default: "dummy"
-      options:
-        title: "options (query parameters)"
-        description: "Endpoint URI"
+        title: "Path"
+        description: "Path"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -26,7 +21,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -43,11 +42,13 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "file:{{path}}?bridgeErrorHandler=true&{{?options}}"
+        uri: "{{in}}"
         steps:
         - step:
             id: "step-{{stepId}}"
             steps:
             - to:
+                uri: "schematron:{{path}}"
+            - to:
+                disabled: "{{sink}}"
                 uri: "{{out}}"
-
