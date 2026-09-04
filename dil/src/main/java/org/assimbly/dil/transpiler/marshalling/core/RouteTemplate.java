@@ -477,13 +477,9 @@ public class RouteTemplate {
         if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
             return true;
         }
-        String targetStripped = fullTemplateName.replace("-", "");
-        for (String name : CustomKameletCatalog.getNames()) {
-            if (name.replace("-", "").equalsIgnoreCase(targetStripped)) {
-                return true;
-            }
-        }
-        return false;
+        String altName = templateName.replace("langchain4j-", "langchain4j")
+                                     .replace("spring-ai-", "springai") + ".kamelet.yaml";
+        return CustomKameletCatalog.getNames().contains(altName);
     }
 
     private String resolveTemplateName(String templateName) {
@@ -491,11 +487,10 @@ public class RouteTemplate {
         if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
             return templateName;
         }
-        String targetStripped = fullTemplateName.replace("-", "");
-        for (String name : CustomKameletCatalog.getNames()) {
-            if (name.replace("-", "").equalsIgnoreCase(targetStripped)) {
-                return name.substring(0, name.indexOf(".kamelet.yaml"));
-            }
+        String altName = templateName.replace("langchain4j-", "langchain4j")
+                                     .replace("spring-ai-", "springai");
+        if (CustomKameletCatalog.getNames().contains(altName + ".kamelet.yaml")) {
+            return altName;
         }
         return templateName;
     }

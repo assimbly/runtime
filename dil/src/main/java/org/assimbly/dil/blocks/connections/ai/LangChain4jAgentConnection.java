@@ -54,9 +54,6 @@ public class LangChain4jAgentConnection {
         modelName = properties.getProperty("connection." + connectionId + ".modelname");
         timeout = properties.getProperty("connection." + connectionId + ".timeout");
         webSearchApiKey = properties.getProperty("connection." + connectionId + ".websearchapikey");
-        if (webSearchApiKey == null || webSearchApiKey.isEmpty()) {
-            webSearchApiKey = properties.getProperty("connection." + connectionId + ".tavilyapikey");
-        }
         maxMessages = properties.getProperty("connection." + connectionId + ".maxmessages");
     }
 
@@ -111,7 +108,11 @@ public class LangChain4jAgentConnection {
                 new java.util.LinkedHashMap<Object, dev.langchain4j.memory.ChatMemory>(100, 0.75f, true) {
                     @Override
                     protected boolean removeEldestEntry(java.util.Map.Entry<Object, dev.langchain4j.memory.ChatMemory> eldest) {
-                        return size() > 1000;
+                        boolean shouldEvict = size() > 1000;
+                        if (shouldEvict && eldest.getValue() != null) {
+                            eldest.getValue().clear();
+                        }
+                        return shouldEvict;
                     }
                 }
         );
@@ -131,11 +132,16 @@ public class LangChain4jAgentConnection {
                 .withChatModel(chatModel)
                 .withChatMemoryProvider(chatMemoryProvider);
 
-        if (webSearchApiKey != null && !webSearchApiKey.isEmpty()) {
+        java.util.Set<WebSearchEngine> searchEngines = context.getRegistry().findByType(WebSearchEngine.class);
+        if (searchEngines != null && !searchEngines.isEmpty()) {
+            log.info("Attaching registered WebSearchEngine to LangChain4j Agent with connection id={}", connectionId);
+            WebSearchTool webSearchTool = WebSearchTool.from(searchEngines.iterator().next());
+            config.withCustomTools(List.of(webSearchTool));
+        } else if (webSearchApiKey != null && !webSearchApiKey.isEmpty()) {
             log.info("Attaching Tavily WebSearchTool to LangChain4j Agent with connection id={}", connectionId);
             WebSearchEngine webSearchEngine = TavilyWebSearchEngine.builder()
                     .apiKey(webSearchApiKey)
-            		.build();
+                    .build();
             WebSearchTool webSearchTool = WebSearchTool.from(webSearchEngine);
             config.withCustomTools(List.of(webSearchTool));
         }

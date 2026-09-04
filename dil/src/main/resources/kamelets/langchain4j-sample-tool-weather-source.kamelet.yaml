@@ -6,8 +6,8 @@ metadata:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
-    title: "LangChain4j Weather Tool"
-    description: "Returns a placeholder weather forecast for a given city."
+    title: "Sample/Mock Weather Tool"
+    description: "Sample/Mock tool that returns a placeholder weather forecast for demonstration purposes."
     type: "object"
     properties:
       city:
