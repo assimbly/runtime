@@ -90,10 +90,18 @@ public interface Integration {
 	 *
 	 * @param  mediaType (JSON)
 	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
-	 * @throws Exception if configuration can't be set
+	 * @throws Exception if configuration can't be added
 	 */
     String addCollectorsConfiguration(String mediaType, String configuration) throws Exception;
 
+	/**
+	 * Remove configuration for multiple collectors from a JSON Configuration File.
+	 *
+	 * @param  mediaType (JSON)
+	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
+	 * @throws Exception if configuration can't be removed
+	 */
+	String removeCollectorsConfiguration(String mediaType, String configuration) throws Exception;
 
 	/**
 	 * Add collector configuration from a JSON Configuration File.
@@ -101,7 +109,7 @@ public interface Integration {
 	 * @param  collectorId Id of the collector (String)
 	 * @param  mediaType (JSON)
 	 * @param  configuration (the JSON file with the configuration. See the Assimbly wiki for examples)
-	 * @throws Exception if configuration can't be set
+	 * @throws Exception if configuration can't be added
 	 */
     String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception;
 
@@ -109,7 +117,7 @@ public interface Integration {
 	 * Sets the collector configuration from a string for a specific format (XML,JSON,YAML).
 	 *
 	 * @param  collectorId Id of the collector (String)
-	 * @throws Exception if configuration can't be set
+	 * @throws Exception if configuration can't be removed
 	 */
     String removeCollectorConfiguration(String collectorId) throws Exception;
 
