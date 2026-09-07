@@ -13,12 +13,17 @@ spec:
     properties:
       chatModel:
         title: "Chat Model Bean Name"
-        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. #SpringAiChatModel)"
+        description: "Name of the Spring AI ChatModel bean in the Camel registry (e.g. SpringAiChatModel)"
         type: "string"
         default: "SpringAiChatModel"
       memoryId:
         title: "Memory ID"
-        description: "Conversation session identifier to activate chat memory. Can be a fixed value or a Camel Simple expression (e.g. ${header.sessionId}). Required when chatMemory is set."
+        description: "Conversation session identifier to activate chat memory. Can be a fixed value or a Camel Simple expression."
+        type: "string"
+        default: ""
+      tags:
+        title: "Tags"
+        description: "Tags for discovering and calling Camel route tools (Spring AI Function Calling)"
         type: "string"
         default: ""
       systemMessage:
@@ -60,7 +65,6 @@ spec:
               steps:
                 - convertBodyTo:
                     type: String
-
                 - choice:
                     when:
                       - simple: "'{{?memoryId}}' != ''"

@@ -307,7 +307,11 @@
             <artifactId>langchain4j-google-ai-gemini</artifactId>
             <version>${langchain4j.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-web-search-engine-tavily</artifactId>
+            <version>${langchain4j-tavily.version}</version>
+        </dependency>
         <!-- spring AI -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
