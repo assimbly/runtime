@@ -108,6 +108,8 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setDefaultBlocks();
 
+        configManager.setSimpleFunctions();
+
         configManager.setDefaultThreadProfile(10, 50, 5000);
 
         configManager.setThreadProfile("wiretapProfile", 0, 20, 2500);
@@ -395,7 +397,11 @@ public class CamelIntegration extends BaseIntegration {
 
         snapshot.forEach((collectorsId,configuration) -> {
             try {
-                addCollectorsConfiguration(collectorsId, "application/json", configuration);
+                if(configuration.startsWith("[")) {
+                    addCollectorsConfiguration("application/json", configuration);
+                }else{
+                    addCollectorConfiguration(collectorsId, "application/json", configuration);
+                }
                 log.info("Started collectors: {}", collectorsId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -404,9 +410,31 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String addCollectorsConfiguration(String collectorsId, String mediaType, String configuration) throws Exception {
-        dilStore.putCollector(collectorsId,configuration);
-        return configManager.addCollectorsConfiguration(mediaType, configuration);
+    public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
+
+        JSONArray collectorIds = configManager.addCollectorsConfiguration(mediaType, configuration);
+
+        for (int i = 0; i < collectorIds.length(); i++) {
+            String collectorId = collectorIds.getString(i);
+            dilStore.putCollector(collectorId, configuration);
+        }
+
+        return collectorIds.toString();
+
+    }
+
+    @Override
+    public String removeCollectorsConfiguration(String mediaType, String configuration) throws Exception {
+
+        JSONArray collectorIds = configManager.removeCollectorsConfiguration(mediaType, configuration);
+
+        for (int i = 0; i < collectorIds.length(); i++) {
+            String collectorId = collectorIds.getString(i);
+            dilStore.removeCollector(collectorId);
+        }
+
+        return collectorIds.toString();
+
     }
 
     @Override
@@ -414,6 +442,8 @@ public class CamelIntegration extends BaseIntegration {
         dilStore.putCollector(collectorId,configuration);
         return configManager.addCollectorConfiguration(collectorId, mediaType, configuration);
     }
+
+
 
     @Override
     public String removeCollectorConfiguration(String collectorId) {

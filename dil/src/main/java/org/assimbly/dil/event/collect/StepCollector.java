@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,6 +107,8 @@ public class StepCollector extends EventNotifierSupport {
 
                 Exchange originalExchange = stepEvent.getExchange();
 
+                String eventType = stepEvent.getType().name();
+
                 long processingTime = calculateAndUpdateComponentResponseTime(originalExchange, stepEvent);
 
                 // Read previous flow properties from the LIVE exchange, and stamp the
@@ -127,14 +130,14 @@ public class StepCollector extends EventNotifierSupport {
                 exchange.getMessage().setBody(body);
 
                 // Hand off the HEAVY processing to a background thread
-                collectionPool.submit(() -> processEvent(exchange, stepId, processingTime, previousFlowId, previousFlowVersion));
+                collectionPool.submit(() -> processEvent(exchange, stepId, eventType, processingTime, previousFlowId, previousFlowVersion));
 
             }
 
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId, long processingTime,
+    private void processEvent(Exchange exchange, String stepId, String eventType, long processingTime,
                               String previousFlowId, String previousFlowVersion){
 
         //set fields
@@ -153,7 +156,7 @@ public class StepCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getCreatedTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
-        MessageEvent messageEvent = getMessageEvent(exchange, stepId, processingTime, timestamp, transactionId, previousFlowId,
+        MessageEvent messageEvent = getMessageEvent(exchange, stepId, eventType, processingTime, timestamp, transactionId, previousFlowId,
                 previousFlowVersion, headers, properties, expiryDate, isExceptionCaught(exchange));
 
         String json = messageEvent.toJson();
@@ -163,7 +166,7 @@ public class StepCollector extends EventNotifierSupport {
     }
 
     private MessageEvent getMessageEvent(
-            Exchange exchange, String stepId, long processingTime, String timestamp, String transactionId,
+            Exchange exchange, String stepId, String eventType, long processingTime, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
                     Object> properties, String expiryDate, boolean isFailedExchange
     ) {
@@ -190,7 +193,7 @@ public class StepCollector extends EventNotifierSupport {
         String bodyToStoreOnEvent = getBodyToStoreOnEvent(body, bodyType);
 
         return new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, headers,
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, eventType, headers,
                 properties, bodyToStoreOnEvent, expiryDate, isFailedExchange
         );
     }
@@ -254,7 +257,7 @@ public class StepCollector extends EventNotifierSupport {
         }
 
         // set timestamp property
-        exchange.setProperty(TIMESTAMP_PROPERTY, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss.SSS")));
+        exchange.setProperty(TIMESTAMP_PROPERTY, LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss.SSS")));
 
         // set BodyType property
         exchange.setProperty(MESSAGE_BODY_TYPE_PROPERTY, bodyType);

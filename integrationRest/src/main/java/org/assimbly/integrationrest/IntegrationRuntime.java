@@ -342,21 +342,19 @@ public class IntegrationRuntime {
 
     }
 
-    /*
+    /**
      * POST  /integration/collectors/add : Set configuration for multiple collectors
      *
-     * @param collectorId (CollectorId)
      * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(
-            path = "/integration/collectors/{collectorsId}/add",
+            path = "/integration/collectors/add",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> addCollectorConfigurations(
-            @PathVariable(value = "collectorsId") String collectorsId,
+    public ResponseEntity<String> addCollectors(
             @RequestBody String configuration,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
@@ -364,16 +362,38 @@ public class IntegrationRuntime {
         log.info("Add collectors. Configuration: \n\n{}\n", configuration);
 
         try {
-            String result = integration.addCollectorsConfiguration(collectorsId, mediaType, configuration);
-            if(!result.equalsIgnoreCase("configured")){
-                log.error("Add collector failed. Message: {}", result);
-                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",result);
-            }
-
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",result);
+            String result = integration.addCollectorsConfiguration(mediaType, configuration);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/add",result);
         } catch (Exception e) {
             log.error("Add collector failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/{collectorsId}/add",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/add",e.getMessage());
+        }
+
+    }
+
+
+    /**
+     * DELETE  /integration/collectors/remove : Remove collectors configuration
+     *
+     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the remove of configuration failed
+     */
+    @DeleteMapping(
+            path = "/integration/collectors/remove",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> removeCollectors(
+            @RequestBody String configuration,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        log.info("Remove collectors. Configuration: \n\n{}\n", configuration);
+
+        try {
+            String result = integration.removeCollectorsConfiguration(mediaType, configuration);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collector/remove", result);
+        } catch (Exception e) {
+            log.error("Remove collectors failed", e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/remove", e.getMessage());
         }
 
     }
@@ -400,11 +420,6 @@ public class IntegrationRuntime {
 
         try {
             String result = integration.addCollectorConfiguration(collectorId,mediaType, configuration);
-            if(!result.equalsIgnoreCase("configured")){
-                log.error("Add collector {} failed. Message: {}", collectorId, result);
-                return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/{collectorId}/add",result);
-            }
-
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collector/{collectorId}/add",result);
         } catch (Exception e) {
             log.error("Add collector {} failed", collectorId, e);
@@ -412,6 +427,7 @@ public class IntegrationRuntime {
         }
 
     }
+
 
     /**
      * DELETE  /integration/collector/{collectorId}/remove : Remove collector configuration

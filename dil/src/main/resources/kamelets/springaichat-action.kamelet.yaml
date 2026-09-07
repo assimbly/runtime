@@ -26,6 +26,11 @@ spec:
         description: "Tags for discovering and calling Camel route tools (Spring AI Function Calling)"
         type: "string"
         default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI model."
+        type: "string"
+        default: ""
       in:
         type: "string"
         default: "kamelet:source"
@@ -66,23 +71,19 @@ spec:
                         steps:
                           - setHeader:
                               name: "CamelSpringAiChatConversationId"
-                              simple: "{{?memoryId}}"
-                    otherwise:
-                      steps:
-                        - choice:
-                            when:
-                              - simple: "${header.memoryId} != null"
-                                steps:
-                                  - setHeader:
-                                      name: "CamelSpringAiChatConversationId"
-                                      simple: "${header.memoryId}"
-                            otherwise:
-                              steps:
-                                - setHeader:
-                                    name: "CamelSpringAiChatConversationId"
-                                    simple: "default"
+                              simple: "{{memoryId}}"
+
+                - choice:
+                    when:
+                      - simple: "'{{?systemMessage}}' != ''"
+                        steps:
+                          - setHeader:
+                              name: "CamelSpringAiChatSystemMessage"
+                              simple: "{{systemMessage}}"
+
                 - to:
-                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory&tags={{?tags}}"
-          - to:
-              disabled: "{{sink}}"
-              uri: "{{out}}"
+                    uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory"
+
+                - to:
+                    disabled: "{{sink}}"
+                    uri: "{{out}}"

@@ -6,13 +6,14 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.*;
 
-import org.apache.camel.ManagementMBeansLevel;
-import org.apache.camel.ManagementStatisticsLevel;
+import net.sf.saxon.xpath.XPathFactoryImpl;
+import org.apache.camel.*;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.quartz.QuartzComponent;
+import org.apache.camel.impl.engine.DefaultRuntimeEndpointRegistry;
 import org.apache.camel.spi.*;
 import org.apache.camel.util.concurrent.ThreadType;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -34,8 +35,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.Component;
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.jetty12.JettyHttpComponent12;
@@ -67,6 +66,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import javax.xml.xpath.XPathFactory;
+
 public class ConfigManager {
 
     protected static final Logger log = LoggerFactory.getLogger(ConfigManager.class);
@@ -84,17 +85,18 @@ public class ConfigManager {
 
     public void setTriggerMisfireLoggingListener() {
         try {
+
             QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
-            if (quartzComponent != null) {
-                Scheduler scheduler = quartzComponent.getScheduler();
-                if (scheduler != null) {
-                    scheduler.getListenerManager().addTriggerListener(
-                            new TriggerMisfireLoggingListener()
-                    );
-                }
+            Scheduler scheduler = quartzComponent.getScheduler();
+
+            if (scheduler != null) {
+                scheduler.getListenerManager().addTriggerListener(
+                        new TriggerMisfireLoggingListener()
+                );
             }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("setTriggerMisfireLoggingListener failed",e);
         }
     }
 
@@ -202,7 +204,7 @@ public class ConfigManager {
         registry.bind("counter", new AtomicInteger());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-        registry.bind("saxonXPathFactory", javax.xml.xpath.XPathFactory.class, new net.sf.saxon.xpath.XPathFactoryImpl());
+        registry.bind("saxonXPathFactory", XPathFactory.class, new XPathFactoryImpl());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
         registry.bind("CustomHttpBinding", new CustomHttpBinding());
         registry.bind("flowCookieStore", new CookieStore());
@@ -247,6 +249,28 @@ public class ConfigManager {
         jettyHttpComponent12.setThreadPool(virtualThreadPool);
 
         return jettyHttpComponent12;
+    }
+
+    public void setSimpleFunctions() {
+
+        SimpleFunctionRegistry simpleFunctionRegistry = PluginHelper.getSimpleFunctionRegistry(context);
+        Language simpleLanguage = context.resolveLanguage("simple");
+
+        Expression flowVersion = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowVersion}");
+        simpleFunctionRegistry.addFunction("flowVersion", flowVersion);
+
+        Expression flowId = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowID}");
+        simpleFunctionRegistry.addFunction("flowId", flowId);
+
+        Expression flowName = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.FlowName}");
+        simpleFunctionRegistry.addFunction("flowName", flowName);
+
+        Expression tenant = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.TenantName}");
+        simpleFunctionRegistry.addFunction("tenant", tenant);
+
+        Expression environment = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.EnvironmentName}");
+        simpleFunctionRegistry.addFunction("environment", environment);
+
     }
 
     public void setDefaultThreadProfile(int poolSize, int maxPoolSize, int maxQueueSize) {
@@ -373,10 +397,9 @@ public class ConfigManager {
 
     }
 
+    public JSONArray addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
 
-    public String addCollectorsConfiguration(String mediaType, String configuration) throws Exception {
-
-        String result = "unconfigured";
+        JSONArray collectorIds = new JSONArray();
 
         if (mediaType.contains("xml")) {
             configuration = DocConverter.convertXmlToJson(configuration);
@@ -391,16 +414,50 @@ public class ConfigManager {
 
             EventConfigurer eventConfigurer = new EventConfigurer(collection.getId(), context);
 
-            result = eventConfigurer.add(collection);
+            String configured = eventConfigurer.add(collection);
 
-            if (!result.equalsIgnoreCase("configured")) {
+            if (!configured.equalsIgnoreCase("configured")) {
                 break;
+            }else{
+                collectorIds.put(collection.getId());
             }
+            
         }
 
-        return result;
+        return collectorIds;
 
     }
+
+    public JSONArray removeCollectorsConfiguration(String mediaType, String configuration) throws Exception {
+
+        JSONArray collectorIds = new JSONArray();
+
+        if (mediaType.contains("xml")) {
+            configuration = DocConverter.convertXmlToJson(configuration);
+        } else if (mediaType.contains("yaml")) {
+            configuration = DocConverter.convertYamlToJson(configuration);
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        Collection[] collections = mapper.readValue(configuration, Collection[].class);
+
+        for (Collection collection : collections) {
+
+            String removed = removeCollectorConfiguration(collection.getId());
+
+            if (!removed.equalsIgnoreCase("removed")) {
+                break;
+            }else{
+                collectorIds.put(collection.getId());
+            }
+
+        }
+
+        return collectorIds;
+
+    }
+
+
 
     public String serialize(String json) {
         Gson gson = new Gson();
@@ -506,33 +563,16 @@ public class ConfigManager {
 
         CamelCatalog catalog = new DefaultCamelCatalog();
 
-        String result;
-
-        switch (list) {
-            case "components":
-                result = catalog.listComponentsAsJson();
-                break;
-            case "dataformats":
-                result = catalog.listDataFormatsAsJson();
-                break;
-            case "languages":
-                result = catalog.listLanguagesAsJson();
-                break;
-            case "models":
-                result = catalog.listModelsAsJson();
-                break;
-            case "beans":
-                result = catalog.listBeansAsJson();
-                break;
-            case "transformers":
-                result = catalog.listTransformersAsJson();
-                break;
-            case "others":
-                result = catalog.listOthersAsJson();
-                break;
-            default:
-                result = "{}";
-        }
+        String result = switch (list) {
+            case "components" -> catalog.listComponentsAsJson();
+            case "dataformats" -> catalog.listDataFormatsAsJson();
+            case "languages" -> catalog.listLanguagesAsJson();
+            case "models" -> catalog.listModelsAsJson();
+            case "beans" -> catalog.listBeansAsJson();
+            case "transformers" -> catalog.listTransformersAsJson();
+            case "others" -> catalog.listOthersAsJson();
+            default -> "{}";
+        };
 
 
         if (mediaType.contains("xml")) {
@@ -584,4 +624,5 @@ public class ConfigManager {
 
         return result;
     }
+
 }
