@@ -397,7 +397,7 @@ public class IntegrationRuntime {
         }
 
     }
-    
+
     /**
      * POST  /integration/collector/{collectorId}/add : Set the configuraton of a collector
      *
