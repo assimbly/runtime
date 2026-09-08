@@ -93,6 +93,12 @@ public class MessageEvent {
         this.failedExchange = failedExchange;
     }
 
+
+    @JsonProperty("eventType")
+    public String getEventType() {
+        return eventType;
+    }
+
     @JsonProperty("timestamp")
     public String getTimestamp() {
         return timestamp;
@@ -225,4 +231,5 @@ public class MessageEvent {
         // No matching unit found
         return "";
     }
+
 }
