@@ -1,7 +1,7 @@
 apiVersion: "camel.apache.org/v1"
 kind: "Kamelet"
 metadata:
-  name: "langchain4j-tool-weather-source"
+  name: "langchain4j-sample-tool-weather-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
