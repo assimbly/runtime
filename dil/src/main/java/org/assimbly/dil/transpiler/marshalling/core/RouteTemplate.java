@@ -479,7 +479,25 @@ public class RouteTemplate {
 
     private boolean templateExists(String templateName) {
         String fullTemplateName = templateName + ".kamelet.yaml";
-        return CustomKameletCatalog.getNames().contains(fullTemplateName);
+        if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
+            return true;
+        }
+        String altName = templateName.replace("langchain4j-", "langchain4j")
+                                     .replace("spring-ai-", "springai") + ".kamelet.yaml";
+        return CustomKameletCatalog.getNames().contains(altName);
+    }
+
+    private String resolveTemplateName(String templateName) {
+        String fullTemplateName = templateName + ".kamelet.yaml";
+        if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
+            return templateName;
+        }
+        String altName = templateName.replace("langchain4j-", "langchain4j")
+                                     .replace("spring-ai-", "springai");
+        if (CustomKameletCatalog.getNames().contains(altName + ".kamelet.yaml")) {
+            return altName;
+        }
+        return templateName;
     }
 
 

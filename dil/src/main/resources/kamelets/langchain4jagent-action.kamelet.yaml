@@ -36,7 +36,17 @@ spec:
         default: "geminiAgent"
       memoryId:
         title: "Memory ID"
-        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression."
+        description: "The memory ID to identify the conversation session. Can be a Camel Simple expression or static ID."
+        type: "string"
+        default: ""
+      systemMessage:
+        title: "System Message"
+        description: "The system message / instructions for the AI Agent."
+        type: "string"
+        default: ""
+      tags:
+        title: "Tags"
+        description: "Tags for discovering and calling Camel route tools (LangChain4j Tools / Function Calling)"
         type: "string"
         default: ""
       systemMessage:
@@ -49,11 +59,9 @@ spec:
         description: "Inline JSON Schema string or header reference to constrain the Agent output"
         type: "string"
         default: ""
-
   dependencies:
     - "camel:kamelet"
     - "camel:langchain4j-agent"
-
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
@@ -71,9 +79,21 @@ spec:
                         steps:
                           - setHeader:
                               name: "CamelLangChain4jAgentMemoryId"
-                              simple: "{{memoryId}}"
+                              simple: "{{?memoryId}}"
                     otherwise:
                       steps:
+                        - choice:
+                            when:
+                              - simple: "${header.memoryId} != null"
+                                steps:
+                                  - setHeader:
+                                      name: "CamelLangChain4jAgentMemoryId"
+                                      simple: "${header.memoryId}"
+                            otherwise:
+                              steps:
+                                - setHeader:
+                                    name: "CamelLangChain4jAgentMemoryId"
+                                    simple: "default"
                         - setHeader:
                             name: "CamelLangChain4jAgentMemoryId"
                             simple: "${exchangeId}"
@@ -118,7 +138,8 @@ spec:
                                       name: "CamelLangChain4jAgentSystemMessage"
                                       constant: "IMPORTANT: You MUST respond ONLY with a valid JSON object matching the requested JSON Schema. Do NOT wrap the JSON in markdown code blocks or add extra explanations."
                 - to:
-                    uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}"
+                    uri: "langchain4j-agent://{{routeId}}?agent=#{{agent}}&tags={{?tags}}"
           - to:
               disabled: "{{sink}}"
               uri: "{{out}}"
+              

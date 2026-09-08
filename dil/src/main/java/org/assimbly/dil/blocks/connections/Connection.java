@@ -2,6 +2,7 @@ package org.assimbly.dil.blocks.connections;
 
 import org.assimbly.dil.blocks.connections.ai.LangChain4jAgentConnection;
 import org.assimbly.dil.blocks.connections.ai.LangChain4jConnection;
+import org.assimbly.dil.blocks.connections.ai.LangChain4jWebSearchConnection;
 import org.assimbly.dil.blocks.connections.ai.SpringAiConnection;
 import org.assimbly.dil.blocks.connections.auth.BasicAuthentication;
 import org.assimbly.dil.blocks.connections.auth.MutualSSL;
@@ -76,7 +77,7 @@ public class Connection {
             case "springai", "springaichat", "springai-chat" ->
                     new SpringAiConnection(context, decryptedProperties, connectionId).start();
 
-            case "langchain4j" ->
+            case "langchain4jchat" ->
                     new LangChain4jConnection(context, decryptedProperties, connectionId).start();
 
             case "ibmq" ->
@@ -94,8 +95,11 @@ public class Connection {
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");
 
-            case "langchain4j-agent" ->
+            case "langchain4jagent" ->
                     new LangChain4jAgentConnection(context, decryptedProperties, connectionId).start();
+
+            case "langchain4j-web-search" ->
+                    new LangChain4jWebSearchConnection(context, decryptedProperties, connectionId).start();
 
             default -> throw new IllegalArgumentException("Connection parameters for connection " + connectionType + " are not implemented");
 

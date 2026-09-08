@@ -12,7 +12,11 @@ import org.apache.camel.component.langchain4j.agent.api.AgentWithMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import dev.langchain4j.web.search.WebSearchEngine;
+import dev.langchain4j.web.search.WebSearchTool;
+import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
 import java.time.Duration;
+import java.util.List;
 
 public class LangChain4jAgentConnection {
 
@@ -25,6 +29,8 @@ public class LangChain4jAgentConnection {
     private String apiKey;
     private String modelName;
     private String timeout;
+    private String webSearchApiKey;
+    private String maxMessages;
 
     public LangChain4jAgentConnection(CamelContext context, EncryptableProperties properties, String connectionId) {
         this.context = context;
@@ -47,6 +53,8 @@ public class LangChain4jAgentConnection {
         apiKey = properties.getProperty("connection." + connectionId + ".apikey");
         modelName = properties.getProperty("connection." + connectionId + ".modelname");
         timeout = properties.getProperty("connection." + connectionId + ".timeout");
+        webSearchApiKey = properties.getProperty("connection." + connectionId + ".websearchapikey");
+        maxMessages = properties.getProperty("connection." + connectionId + ".maxmessages");
     }
 
     private boolean checkConnection() {
@@ -67,7 +75,7 @@ public class LangChain4jAgentConnection {
                 apiKey != null ? apiKey.length() : 0,
                 apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
 
-        String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-2.5-flash";
+        String resolvedModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-3.6-flash";
         long resolvedTimeout = 10;
         if (timeout != null && !timeout.isEmpty()) {
             try {
@@ -77,22 +85,66 @@ public class LangChain4jAgentConnection {
             }
         }
 
+        int resolvedMaxMessages = 100;
+        if (maxMessages != null && !maxMessages.isEmpty()) {
+            try {
+                resolvedMaxMessages = Integer.parseInt(maxMessages);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid maxMessages value '{}', using default 100", maxMessages);
+            }
+        }
+
         ChatModel chatModel = GoogleAiGeminiChatModel.builder()
                 .apiKey(apiKey)
                 .modelName(resolvedModel)
                 .timeout(Duration.ofSeconds(resolvedTimeout))
+                .returnThinking(true)
+                .sendThinking(true)
                 .build();
 
+        final int finalMaxMessages = resolvedMaxMessages;
         InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
-        ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
-                .id(memoryId)
-                .maxMessages(100)
-                .chatMemoryStore(chatMemoryStore)
-                .build();
+        java.util.Map<Object, dev.langchain4j.memory.ChatMemory> memories = java.util.Collections.synchronizedMap(
+                new java.util.LinkedHashMap<Object, dev.langchain4j.memory.ChatMemory>(100, 0.75f, true) {
+                    @Override
+                    protected boolean removeEldestEntry(java.util.Map.Entry<Object, dev.langchain4j.memory.ChatMemory> eldest) {
+                        boolean shouldEvict = size() > 1000;
+                        if (shouldEvict && eldest.getValue() != null) {
+                            eldest.getValue().clear();
+                        }
+                        return shouldEvict;
+                    }
+                }
+        );
+        ChatMemoryProvider chatMemoryProvider = memoryId -> {
+            synchronized (memories) {
+                return memories.computeIfAbsent(memoryId, id ->
+                        MessageWindowChatMemory.builder()
+                                .id(id)
+                                .maxMessages(finalMaxMessages)
+                                .chatMemoryStore(chatMemoryStore)
+                                .build()
+                );
+            }
+        };
 
         AgentConfiguration config = new AgentConfiguration()
                 .withChatModel(chatModel)
                 .withChatMemoryProvider(chatMemoryProvider);
+
+        java.util.Set<WebSearchEngine> searchEngines = context.getRegistry().findByType(WebSearchEngine.class);
+        if (searchEngines != null && !searchEngines.isEmpty()) {
+            log.info("Attaching registered WebSearchEngine to LangChain4j Agent with connection id={}", connectionId);
+            WebSearchTool webSearchTool = WebSearchTool.from(searchEngines.iterator().next());
+            config.withCustomTools(List.of(webSearchTool));
+        } else if (webSearchApiKey != null && !webSearchApiKey.isEmpty()) {
+            log.info("Attaching Tavily WebSearchTool to LangChain4j Agent with connection id={}", connectionId);
+            WebSearchEngine webSearchEngine = TavilyWebSearchEngine.builder()
+                    .apiKey(webSearchApiKey)
+                    .build();
+            WebSearchTool webSearchTool = WebSearchTool.from(webSearchEngine);
+            config.withCustomTools(List.of(webSearchTool));
+        }
 
         Agent agent = new AgentWithMemory(config);
 
