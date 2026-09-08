@@ -34,6 +34,7 @@ public class RouteTemplate {
     private Element templatedRoute;
     private String routeId;
     private String stepId;
+    private String flowId;
     private String templateId;
     private String path;
     private String scheme;
@@ -65,6 +66,7 @@ public class RouteTemplate {
 
         routeId = flowId + "-" + stepId;
         this.stepId = stepId;
+        this.flowId = flowId;
 
         createTemplatedRoutes();
 
@@ -115,6 +117,7 @@ public class RouteTemplate {
 
         Element route = customRouteDoc.createElement("route");
         route.setAttribute("id", routeId);
+        route.setAttribute("group", flowId);
 
         Element fromEndpoint = createFrom(links, stepXPath);
         route.appendChild(fromEndpoint);
