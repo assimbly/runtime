@@ -93,10 +93,7 @@ spec:
                               steps:
                                 - setHeader:
                                     name: "CamelLangChain4jAgentMemoryId"
-                                    simple: "default"
-                        - setHeader:
-                            name: "CamelLangChain4jAgentMemoryId"
-                            simple: "${exchangeId}"
+                                    simple: "${exchangeId}"
                 - choice:
                     when:
                       - simple: "'{{?systemMessage}}' != ''"

@@ -51,10 +51,13 @@ public class LangChain4jAgentConnection {
         setFields();
 
         if (checkConnection()) {
-            log.info("Creating new LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
+            if (context.getRegistry().lookupByName(connectionId) != null) {
+                log.info("Updating existing LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
+                context.getRegistry().unbind(connectionId);
+            } else {
+                log.info("Creating new LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
+            }
             setConnection();
-        } else {
-            log.info("Reuse LangChain4j Agent connection with id={}", connectionId);
         }
     }
 
@@ -80,11 +83,6 @@ public class LangChain4jAgentConnection {
     }
 
     private boolean checkConnection() {
-        Object isRegistered = context.getRegistry().lookupByName(connectionId);
-        if (isRegistered != null) {
-            return false;
-        }
-
         if (!"ollama".equalsIgnoreCase(provider) && (apiKey == null || apiKey.isEmpty())) {
             throw new IllegalArgumentException("LangChain4j agent connection parameters are invalid. apikey is required for provider " + provider);
         }
@@ -134,7 +132,10 @@ public class LangChain4jAgentConnection {
             }
         }
 
-        boolean resolvedThinking = Boolean.parseBoolean(thinking);
+        Boolean resolvedThinking = null;
+        if (thinking != null && !thinking.isEmpty()) {
+            resolvedThinking = Boolean.parseBoolean(thinking);
+        }
 
         ChatModel chatModel = buildChatModel(provider, resolvedTimeout, resolvedTemp, resolvedMaxTokens, resolvedThinking);
 
@@ -173,7 +174,7 @@ public class LangChain4jAgentConnection {
         log.info("Successfully bound LangChain4j Agent bean with id={} to the Camel registry", connectionId);
     }
 
-    private ChatModel buildChatModel(String provider, long timeoutSec, double temp, int maxTokens, boolean thinking) {
+    private ChatModel buildChatModel(String provider, long timeoutSec, double temp, int maxTokens, Boolean thinking) {
         String p = provider.toLowerCase();
         return switch (p) {
             case "openai" -> {
@@ -227,12 +228,15 @@ public class LangChain4jAgentConnection {
             }
             default -> { // google-gemini
                 String model = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-1.5-flash";
+                boolean enableThinking = (thinking == null || thinking);
                 yield GoogleAiGeminiChatModel.builder()
                         .apiKey(apiKey)
                         .modelName(model)
                         .temperature(temp)
                         .maxOutputTokens(maxTokens)
                         .timeout(Duration.ofSeconds(timeoutSec))
+                        .returnThinking(enableThinking)
+                        .sendThinking(enableThinking)
                         .build();
             }
         };

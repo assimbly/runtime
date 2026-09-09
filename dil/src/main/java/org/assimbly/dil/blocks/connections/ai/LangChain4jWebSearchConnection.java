@@ -27,10 +27,13 @@ public class LangChain4jWebSearchConnection {
         setFields();
 
         if (checkConnection()) {
-            log.info("Creating new LangChain4j Web Search connection with id={}", connectionId);
+            if (context.getRegistry().lookupByName(connectionId) != null) {
+                log.info("Updating existing LangChain4j Web Search connection with id={}", connectionId);
+                context.getRegistry().unbind(connectionId);
+            } else {
+                log.info("Creating new LangChain4j Web Search connection with id={}", connectionId);
+            }
             setConnection();
-        } else {
-            log.info("Reuse LangChain4j Web Search connection with id={}", connectionId);
         }
     }
 
@@ -39,11 +42,6 @@ public class LangChain4jWebSearchConnection {
     }
 
     private boolean checkConnection() {
-        Object isRegistered = context.getRegistry().lookupByName(connectionId);
-        if (isRegistered != null) {
-            return false;
-        }
-
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalArgumentException("LangChain4j Web Search connection parameters are invalid. apikey is required");
         }
