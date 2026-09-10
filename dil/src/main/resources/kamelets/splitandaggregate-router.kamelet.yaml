@@ -92,6 +92,12 @@ spec:
                       - setHeader:
                           name: "CamelSplitComplete"
                           simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
+                      - choice:
+                          when:
+                            - simple: "'{{language}}' == 'xpath'"
+                              steps:
+                                - process:
+                                    ref: detachSplitBodyProcessor
                       - convertBodyTo:
                           type: "java.lang.String"
                       - to: "{{out_split}}"

@@ -204,27 +204,27 @@ public class ConfigManager {
         registry.bind("counter", new AtomicInteger());
         registry.bind("CurrentAggregateStrategy", new AggregateStrategy());
         registry.bind("CurrentEnrichStrategy", new EnrichStrategy());
-        registry.bind("saxonXPathFactory", XPathFactory.class, new XPathFactoryImpl());
         registry.bind("CustomHttpHeaderFilterStrategy", new CustomHttpHeaderFilterStrategy());
         registry.bind("CustomHttpBinding", new CustomHttpBinding());
+        registry.bind("detachSplitBodyProcessor", new DetachSplitBodyProcessor());
+        registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
         registry.bind("flowCookieStore", new CookieStore());
+        registry.bind("FlowLogger", new FlowLogger());
         registry.bind("InputStreamToStringProcessor", new InputStreamToStringProcessor());
         registry.bind("JsonAggregateStrategy", new JsonAggregateStrategy());
         registry.bind("ManageFlowProcessor", new ManageFlowProcessor());
         registry.bind("multipartProcessor", new MultipartProcessor());
         registry.bind("permissiveHostnameVerifier", new NoopHostnameVerifier());
         registry.bind("RoutingRulesProcessor", new RoutingRulesProcessor());
+        registry.bind("saxonXPathFactory", XPathFactory.class, new XPathFactoryImpl());
         registry.bind("SetOriginalMessageProcessor", new SetOriginalMessageProcessor());
         registry.bind("SetBodyProcessor", new SetBodyProcessor());
         registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
         registry.bind("SetPatternProcessor", new SetPatternProcessor());
+        registry.bind("SqlProcessor", new SqlProcessor());
         registry.bind("Unzip", new UnzipProcessor());
         registry.bind("uuid-function", new UuidExtensionFunction());
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
-        registry.bind("FlowLogger", new FlowLogger());
-        registry.bind("exceptionAsJson", new ExceptionAsJsonProcessor());
-        registry.bind("SqlProcessor", new SqlProcessor());
-
     }
 
     private JettyHttpComponent12 getJettyConfiguration() {
