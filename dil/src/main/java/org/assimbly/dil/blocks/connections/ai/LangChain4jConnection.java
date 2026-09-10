@@ -30,10 +30,13 @@ public class LangChain4jConnection {
         setFields();
 
         if (checkConnection()) {
-            log.info("Creating new LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
+            if (context.getRegistry().lookupByName(connectionId) != null) {
+                log.info("Updating existing LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
+                context.getRegistry().unbind(connectionId);
+            } else {
+                log.info("Creating new LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
+            }
             setConnection();
-        } else {
-            log.info("Reuse LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
         }
     }
 
@@ -44,11 +47,6 @@ public class LangChain4jConnection {
     }
 
     private boolean checkConnection() {
-        Object isRegistered = context.getRegistry().lookupByName(connectionId);
-        if (isRegistered != null) {
-            return false;
-        }
-
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalArgumentException("LangChain4j connection parameters are invalid. apikey is required");
         }
@@ -75,6 +73,8 @@ public class LangChain4jConnection {
                 .apiKey(apiKey)
                 .modelName(resolvedModel)
                 .timeout(Duration.ofSeconds(resolvedTimeout))
+                .returnThinking(true)
+                .sendThinking(true)
                 .build();
 
         context.getRegistry().bind(connectionId, chatModel);

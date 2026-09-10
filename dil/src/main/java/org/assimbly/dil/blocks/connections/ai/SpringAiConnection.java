@@ -30,10 +30,13 @@ public class SpringAiConnection {
         setFields();
 
         if (checkConnection()) {
-            log.info("Creating new Spring AI GoogleGenAiChatModel connection with id={}", connectionId);
+            if (context.getRegistry().lookupByName(connectionId) != null) {
+                log.info("Updating existing Spring AI GoogleGenAiChatModel connection with id={}", connectionId);
+                context.getRegistry().unbind(connectionId);
+            } else {
+                log.info("Creating new Spring AI GoogleGenAiChatModel connection with id={}", connectionId);
+            }
             setConnection();
-        } else {
-            log.info("Reuse Spring AI GoogleGenAiChatModel connection with id={}", connectionId);
         }
     }
 
@@ -44,11 +47,6 @@ public class SpringAiConnection {
     }
 
     private boolean checkConnection() {
-        Object isRegistered = context.getRegistry().lookupByName(connectionId);
-        if (isRegistered != null) {
-            return false;
-        }
-
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalArgumentException("Spring AI connection parameters are invalid. apikey is required");
         }
