@@ -20,7 +20,7 @@ Note:
 1. Sometimes different names are used in the JSONProperties to be in sync with indices in Elastic
 2. This must be changed later after Camel2 isn't used anymore. Change the JSONProperties to
 their Java name to make them the same to DIL/Camel3.
- */
+*/
 
 public class MessageEvent {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -93,12 +93,6 @@ public class MessageEvent {
         this.failedExchange = failedExchange;
     }
 
-
-    @JsonProperty("eventType")
-    public String getEventType() {
-        return eventType;
-    }
-
     @JsonProperty("timestamp")
     public String getTimestamp() {
         return timestamp;
@@ -134,6 +128,11 @@ public class MessageEvent {
         return stepId;
     }
 
+    @JsonProperty("eventType")
+    public String getEventType() {
+        return eventType;
+    }
+    
     @JsonProperty("failedExchange")
     public boolean isFailedExchange() {
         return failedExchange;
