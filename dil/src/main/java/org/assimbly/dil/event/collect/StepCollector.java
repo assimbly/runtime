@@ -53,6 +53,7 @@ public class StepCollector extends EventNotifierSupport {
     public static final String MESSAGE_BODY_SIZE_PROPERTY = "CamelMessageBodySize";
     public static final String MESSAGE_BODY_TYPE_PROPERTY = "BodyType";
     public static final String EXCHANGE_PATTERN_PROPERTY = "ExchangePattern";
+    public static final String PREVIOUS_STEP_ID_PROPERTY = "PreviousStepId";
 
     private static final String BLACKLISTED_ROUTES_PARTS = "BLACKLISTED_ROUTES_PARTS";
     private static final String[] blacklistedRoutesParts = getBlacklistedRoutesParts();
@@ -120,8 +121,10 @@ public class StepCollector extends EventNotifierSupport {
                 // previousFlowVersion will always be null downstream.
                 String previousFlowId = originalExchange.getProperty(FLOW_ID_PROPERTY, String.class);
                 String previousFlowVersion = originalExchange.getProperty(FLOW_VERSION_PROPERTY, String.class);
+                String previousStepId = originalExchange.getProperty(PREVIOUS_STEP_ID_PROPERTY, String.class);
                 originalExchange.setProperty(FLOW_ID_PROPERTY, flowId);
                 originalExchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
+                originalExchange.setProperty(PREVIOUS_STEP_ID_PROPERTY, stepId);
 
                 // materialize body BEFORE async
                 byte[] body = originalExchange.getMessage().getBody(byte[].class);
@@ -132,14 +135,14 @@ public class StepCollector extends EventNotifierSupport {
                 exchange.getMessage().setBody(body);
 
                 // Hand off the HEAVY processing to a background thread
-                collectionPool.submit(() -> processEvent(exchange, stepId, eventType, processingTime, previousFlowId, previousFlowVersion));
+                collectionPool.submit(() -> processEvent(exchange, stepId, previousStepId, eventType, processingTime, previousFlowId, previousFlowVersion));
 
             }
 
         }
     }
 
-    private void processEvent(Exchange exchange, String stepId, String eventType, long processingTime,
+    private void processEvent(Exchange exchange, String stepId, String previousStepId, String eventType, long processingTime,
                               String previousFlowId, String previousFlowVersion){
 
         //set fields
@@ -158,7 +161,7 @@ public class StepCollector extends EventNotifierSupport {
         String timestamp = EventUtil.getCreatedTimestamp();
         String expiryDate = EventUtil.getExpiryTimestamp(expiryInHours);
 
-        MessageEvent messageEvent = getMessageEvent(exchange, stepId, eventType, processingTime, timestamp, transactionId, previousFlowId,
+        MessageEvent messageEvent = getMessageEvent(exchange, stepId, previousStepId, eventType, processingTime, timestamp, transactionId, previousFlowId,
                 previousFlowVersion, headers, properties, expiryDate, isExceptionCaught(exchange));
 
         String json = messageEvent.toJson();
@@ -168,7 +171,7 @@ public class StepCollector extends EventNotifierSupport {
     }
 
     private MessageEvent getMessageEvent(
-            Exchange exchange, String stepId, String eventType, long processingTime, String timestamp, String transactionId,
+            Exchange exchange, String stepId, String previousStepId, String eventType, long processingTime, String timestamp, String transactionId,
             String previousFlowId, String previousFlowVersion, Map<String, Object> headers, Map<String,
                     Object> properties, String expiryDate, boolean isFailedExchange
     ) {
@@ -195,7 +198,7 @@ public class StepCollector extends EventNotifierSupport {
         String bodyToStoreOnEvent = getBodyToStoreOnEvent(body, bodyType);
 
         return new MessageEvent(
-                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, stepId, eventType, headers,
+                timestamp, transactionId, flowId, flowVersion, previousFlowId, previousFlowVersion, previousStepId, stepId, eventType, headers,
                 properties, bodyToStoreOnEvent, expiryDate, isFailedExchange
         );
     }
