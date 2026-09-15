@@ -65,6 +65,7 @@ public class MessageEvent {
     private final String previousFlowId;
     private final String previousFlowVersion;
     private final String stepId;
+    private final String previousStepId;
     private final String eventType;
     private final String timestamp;
     private final String expiryDate;
@@ -75,8 +76,8 @@ public class MessageEvent {
 
     public MessageEvent(
             String timestamp, String id, String flowId, String flowVersion, String previousFlowId, String previousFlowVersion,
-            String stepId, String eventType, Map<String, Object> headers, Map<String, Object> properties, String body, String expiryDate,
-            boolean failedExchange
+            String previousStepId, String stepId, String eventType, Map<String, Object> headers, Map<String, Object> properties,
+            String body, String expiryDate, boolean failedExchange
     ) {
         this.timestamp = timestamp;
         this.id = id;
@@ -84,6 +85,7 @@ public class MessageEvent {
         this.flowVersion = flowVersion;
         this.previousFlowId = previousFlowId;
         this.previousFlowVersion = previousFlowVersion;
+        this.previousStepId = previousStepId;
         this.stepId = stepId;
         this.eventType = eventType;
         this.headers = headers;
@@ -121,6 +123,11 @@ public class MessageEvent {
     @JsonProperty("previousFlowVersion")
     public String getPreviousFlowVersion() {
         return previousFlowVersion;
+    }
+
+    @JsonProperty("previousStep")
+    public String getPreviousStep() {
+        return previousStepId;
     }
 
     @JsonProperty("step")
