@@ -7,8 +7,6 @@ import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
-import org.apache.camel.catalog.CamelCatalog;
-import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.mail.MailAuthenticator;
 import org.apache.camel.spi.*;
 import org.apache.commons.io.FileUtils;
@@ -21,6 +19,7 @@ import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
 import org.assimbly.dil.transpiler.XMLFileConfiguration;
 import org.assimbly.docconverter.DocConverter;
+import org.assimbly.docconverter.StringConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
@@ -135,7 +134,7 @@ public class FlowManager {
 
         List<Route> routes = context.getRoutesByGroup(flowId);
 
-        return routes != null && !routes.isEmpty();
+        return !routes.isEmpty();
 
     }
 
@@ -630,7 +629,7 @@ public class FlowManager {
             JSONObject flowObject = new JSONObject();
             flowObject.put("flow", flowsArray);
             flowsObject.put("flows", flowObject);
-            result = DocConverter.convertJsonToXml(flowsObject.toString());
+            result = DocConverter.jsonToXml(flowsObject.toString());
         }
 
         return result;
@@ -663,7 +662,7 @@ public class FlowManager {
 
         String integrationInfo = json.toString(4);
         if (mediaType.contains("xml")) {
-            integrationInfo = DocConverter.convertJsonToXml(integrationInfo);
+            integrationInfo = DocConverter.jsonToXml(integrationInfo);
         }
 
         return integrationInfo;
@@ -688,7 +687,7 @@ public class FlowManager {
             JSONObject flowObject = new JSONObject();
             flowObject.put("flow", flowsArray);
             flowsObject.put("flows", flowObject);
-            result = DocConverter.convertJsonToXml(flowsObject.toString());
+            result = DocConverter.jsonToXml(flowsObject.toString());
         }
 
         return result;
@@ -704,7 +703,7 @@ public class FlowManager {
         String result = errorEventMessageToJson(errorEventMessages);
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -725,7 +724,7 @@ public class FlowManager {
         );
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -742,7 +741,7 @@ public class FlowManager {
         String result = errorEventMessageToJson(errorEventMessages);
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -766,7 +765,7 @@ public class FlowManager {
                 .orElse("{}");
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -814,7 +813,7 @@ public class FlowManager {
     public String getFlowId(String filename, String configurationUTF8) throws Exception {
 
         String flowId = "";
-        Document doc = DocConverter.convertStringToDoc(configurationUTF8);
+        Document doc = StringConverter.stringToDoc(configurationUTF8);
         XPath xPath = XPathFactory.newInstance().newXPath();
 
         String root = doc.getDocumentElement().getTagName();
@@ -855,7 +854,7 @@ public class FlowManager {
 
         List<Route> routes = context.getRoutesByGroup(id);
 
-        if(routes != null && !routes.isEmpty()){
+        if(!routes.isEmpty()){
             return routes;
         }
 
@@ -967,7 +966,6 @@ public class FlowManager {
             }
 
             boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
-            String protocol = isConsumer ? "imaps" : "smtp";
 
             try {
                 // ---------- Parse XML ----------

@@ -26,27 +26,18 @@ public class LangChain4jWebSearchConnection {
     public void start() {
         setFields();
 
-        if (checkConnection()) {
-            if (context.getRegistry().lookupByName(connectionId) != null) {
-                log.info("Updating existing LangChain4j Web Search connection with id={}", connectionId);
-                context.getRegistry().unbind(connectionId);
-            } else {
-                log.info("Creating new LangChain4j Web Search connection with id={}", connectionId);
-            }
-            setConnection();
+        if (context.getRegistry().lookupByName(connectionId) != null) {
+            log.info("Updating existing LangChain4j Web Search connection with id={}", connectionId);
+            context.getRegistry().unbind(connectionId);
+        } else {
+            log.info("Creating new LangChain4j Web Search connection with id={}", connectionId);
         }
+        setConnection();
+
     }
 
     private void setFields() {
         apiKey = properties.getProperty("connection." + connectionId + ".apikey");
-    }
-
-    private boolean checkConnection() {
-        if (apiKey == null || apiKey.isEmpty()) {
-            throw new IllegalArgumentException("LangChain4j Web Search connection parameters are invalid. apikey is required");
-        }
-
-        return true;
     }
 
     private void setConnection() {

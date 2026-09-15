@@ -10,7 +10,7 @@ import org.apache.commons.configuration2.tree.xpath.XPathExpressionEngine;
 import org.assimbly.dil.transpiler.marshalling.Marshall;
 import org.assimbly.dil.transpiler.marshalling.Unmarshall;
 import org.assimbly.dil.transpiler.transform.Transform;
-import org.assimbly.docconverter.DocConverter;
+import org.assimbly.docconverter.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -28,7 +28,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
@@ -72,7 +71,7 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, String xml) throws Exception {
 
 		propertiesList = new ArrayList<>();
-		Document document = DocConverter.convertStringToDoc(xml);
+		Document document = StringConverter.stringToDoc(xml);
 
 		List<String> flowIds = getFlowIds(integrationId,document);
 
@@ -92,7 +91,7 @@ public class XMLFileConfiguration {
 	public List<TreeMap<String, String>> getFlowConfigurations(String integrationId, URI uri) throws Exception {
 
 		propertiesList = new ArrayList<>();
-		Document document = DocConverter.convertUriToDoc(uri);
+		Document document = StringConverter.uriToDoc(uri);
 
 		List<String> flowIds = getFlowIds(integrationId,document);
 
@@ -192,7 +191,7 @@ public class XMLFileConfiguration {
 
 			doc = new Marshall().setProperties(doc,integrationId,configurations);
 
-            return DocConverter.convertDocToString(doc);
+            return StringConverter.docToString(doc);
 
 		}
 
@@ -212,7 +211,7 @@ public class XMLFileConfiguration {
 
 		String xmlFlowConfiguration;
 		if(doc!=null) {
-			xmlFlowConfiguration = DocConverter.convertDocToString(doc);
+			xmlFlowConfiguration = StringConverter.docToString(doc);
 		}else {
 			xmlFlowConfiguration = "Error: Can't create configuration";
 		}

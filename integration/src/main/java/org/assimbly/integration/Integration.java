@@ -637,7 +637,7 @@ public interface Integration {
 	*/
     String getFlowStatus(String flowId) throws Exception;
 
-	/*
+	/**
 	* Gets the status of a flow 
 	*
 	* @param  flowId the id of the flow

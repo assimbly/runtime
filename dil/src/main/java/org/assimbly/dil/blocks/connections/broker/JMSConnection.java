@@ -7,7 +7,6 @@ import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.ClassicJmsHeaderFilterStrategy;
 import org.apache.camel.component.jms.JmsComponent;
-import org.apache.camel.component.jms.ReplyToType;
 import org.apache.camel.component.sjms.SjmsComponent;
 import org.apache.camel.component.sjms2.Sjms2Component;
 import org.jasypt.properties.EncryptableProperties;
@@ -167,15 +166,14 @@ public class JMSConnection {
 
         JmsComponent jmsComponent = context.getComponent(componentName, JmsComponent.class);
 
-        if(jmsComponent != null){
-            jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
-            jmsComponent.setIncludeCorrelationIDAsBytes(false);
-            jmsComponent.setCacheLevelName("CACHE_CONSUMER");
-            jmsComponent.setConcurrentConsumers(1);
-            jmsComponent.setMaxConcurrentConsumers(4);
-            jmsComponent.setReplyToConcurrentConsumers(1);
-            jmsComponent.setTestConnectionOnStartup(false); // so that can be used on cache flow
-        }
+        jmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
+        jmsComponent.setIncludeCorrelationIDAsBytes(false);
+        jmsComponent.setCacheLevelName("CACHE_CONSUMER");
+        jmsComponent.setConcurrentConsumers(1);
+        jmsComponent.setMaxConcurrentConsumers(4);
+        jmsComponent.setReplyToConcurrentConsumers(1);
+        jmsComponent.setTestConnectionOnStartup(false); // so that can be used on cache flow
+
 
         context.getRegistry().bind(connectionId, connectionFactory);
 

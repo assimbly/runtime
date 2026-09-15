@@ -132,7 +132,7 @@ public class MessageEvent {
     public String getEventType() {
         return eventType;
     }
-    
+
     @JsonProperty("failedExchange")
     public boolean isFailedExchange() {
         return failedExchange;

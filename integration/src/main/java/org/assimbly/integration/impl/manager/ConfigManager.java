@@ -388,9 +388,9 @@ public class ConfigManager {
         String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
 
         if (mediaType.contains("xml")) {
-            resourceAsString = DocConverter.convertYamlToXml(resourceAsString);
+            resourceAsString = DocConverter.yamlToXml(resourceAsString);
         } else if (mediaType.contains("json")) {
-            resourceAsString = DocConverter.convertYamlToJson(resourceAsString);
+            resourceAsString = DocConverter.yamlToJson(resourceAsString);
         }
 
         return resourceAsString;
@@ -402,9 +402,9 @@ public class ConfigManager {
         JSONArray collectorIds = new JSONArray();
 
         if (mediaType.contains("xml")) {
-            configuration = DocConverter.convertXmlToJson(configuration);
+            configuration = DocConverter.xmlToJson(configuration);
         } else if (mediaType.contains("yaml")) {
-            configuration = DocConverter.convertYamlToJson(configuration);
+            configuration = DocConverter.yamlToJson(configuration);
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -433,9 +433,9 @@ public class ConfigManager {
         JSONArray collectorIds = new JSONArray();
 
         if (mediaType.contains("xml")) {
-            configuration = DocConverter.convertXmlToJson(configuration);
+            configuration = DocConverter.xmlToJson(configuration);
         } else if (mediaType.contains("yaml")) {
-            configuration = DocConverter.convertYamlToJson(configuration);
+            configuration = DocConverter.yamlToJson(configuration);
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -465,12 +465,12 @@ public class ConfigManager {
         return StringEscapeUtils.escapeEcmaScript(g);
     }
 
-    public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) throws Exception {
+    public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) {
 
         if (mediaType.contains("xml")) {
-            configuration = DocConverter.convertXmlToJson(configuration);
+            configuration = DocConverter.xmlToJson(configuration);
         } else if (mediaType.contains("yaml")) {
-            configuration = DocConverter.convertYamlToJson(configuration);
+            configuration = DocConverter.yamlToJson(configuration);
         }
 
         EventConfigurer eventConfigurer = new EventConfigurer(collectorId, context);
@@ -551,9 +551,9 @@ public class ConfigManager {
         String result = catalog.summaryAsJson();
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         } else if (mediaType.contains("yaml")) {
-            result = DocConverter.convertJsonToYaml(result);
+            result = DocConverter.jsonToYaml(result);
         }
 
         return result;
@@ -576,9 +576,9 @@ public class ConfigManager {
 
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         } else if (mediaType.contains("yaml")) {
-            result = DocConverter.convertJsonToYaml(result);
+            result = DocConverter.jsonToYaml(result);
         }
 
         return result;
@@ -617,9 +617,9 @@ public class ConfigManager {
         }
 
         if (mediaType.contains("xml")) {
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         } else if (mediaType.contains("yaml")) {
-            result = DocConverter.convertJsonToYaml(result);
+            result = DocConverter.jsonToYaml(result);
         }
 
         return result;

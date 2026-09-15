@@ -4,6 +4,7 @@ import org.apache.camel.*;
 import org.apache.camel.spi.*;
 import org.assimbly.dil.validation.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.assimbly.integration.impl.manager.*;
 import tools.jackson.databind.JsonNode;
@@ -482,13 +483,14 @@ public class CamelIntegration extends BaseIntegration {
 
     public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
 
+        Pattern xmlDeclarationPattern = Pattern.compile("<\\?xml(.+?)\\?>");
         StringBuilder buf = new StringBuilder();
 
         for (Route route : context.getRoutes()) {
             if (route.getId().equals(id) || route.getId().startsWith(id + "-")) {
                 ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
                 String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
-                xmlConfiguration = xmlConfiguration.replaceAll("<\\?xml(.+?)\\?>", "").trim();
+                xmlConfiguration = xmlDeclarationPattern.matcher(xmlConfiguration).replaceAll("").trim();
                 buf.append(xmlConfiguration);
             }
         }
@@ -502,7 +504,7 @@ public class CamelIntegration extends BaseIntegration {
                     camelRouteConfiguration +
                     "</routes>";
             if (mediaType.contains("json")) {
-                camelRouteConfiguration = DocConverter.convertXmlToJson(camelRouteConfiguration);
+                camelRouteConfiguration = DocConverter.xmlToJson(camelRouteConfiguration);
             }
         }
 
@@ -561,7 +563,7 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         if (mediaType.contains("xml")) {
-            components = DocConverter.convertJsonToXml(components);
+            components = DocConverter.jsonToXml(components);
         }
 
         return components;
@@ -591,7 +593,7 @@ public class CamelIntegration extends BaseIntegration {
         if (schema == null || schema.isEmpty()) {
             schema = "Unknown component";
         } else if (mediaType.contains("xml")) {
-            schema = DocConverter.convertJsonToXml(schema);
+            schema = DocConverter.jsonToXml(schema);
         }
 
         return schema;
@@ -607,7 +609,7 @@ public class CamelIntegration extends BaseIntegration {
         if (parameters.isEmpty()) {
             parameters = "Unknown component";
         } else if (mediaType.contains("xml")) {
-            parameters = DocConverter.convertJsonToXml(parameters);
+            parameters = DocConverter.jsonToXml(parameters);
         }
 
         return parameters;
@@ -1000,57 +1002,69 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getCachedInstalledFlows(String name, String scheme, String tenant) {
-
         List<Map<String, String>> result = new ArrayList<>();
 
-        flowsMap.forEach((flowId, config) -> config.forEach((key, value) -> {
+        for (Map.Entry<String, TreeMap<String, String>> entry : flowsMap.entrySet()) {
+            String flowId = entry.getKey();
+            TreeMap<String, String> config = entry.getValue();
 
-            // filter by tenant if provided
-            if (tenant != null) {
-                String flowTenant = config.get(FlowManager.PROPERTY_FLOW_TENANT);
-                if (!tenant.equalsIgnoreCase(flowTenant)) {
-                    return;
-                }
+            if (!matchesTenant(config, tenant)) {
+                continue;
             }
 
-            // return all flows if no filters are provided
-            if (name == null && scheme == null) {
-                Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                result.add(flow);
-                return;
+            if ((name == null && scheme == null) || matchesNameAndScheme(config, name, scheme)) {
+                result.add(buildFlowInfoMap(flowId, config));
             }
+        }
 
-            if (key.startsWith("source.") && key.endsWith(".uri")) {
-                try {
-                    URI uri = new URI(value);
+        return toJson(result);
+    }
 
-                    // filter by scheme
-                    if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
-                        return;
-                    }
+    private boolean matchesTenant(Map<String, String> config, String tenant) {
+        if (tenant == null) {
+            return true;
+        }
+        String flowTenant = config.get(FlowManager.PROPERTY_FLOW_TENANT);
+        return tenant.equalsIgnoreCase(flowTenant);
+    }
 
-                    String path = uri.getPath();
-                    String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
-
-                    if (name!=null && endpoint.equals(name.toLowerCase())) {
-                        Map<String, String> flow = buildFlowInfoMap(flowId, config);
-                        result.add(flow);
-                    }
-
-                } catch (Exception _) {
-                    // ignore malformed URI
-                }
+    private boolean matchesNameAndScheme(Map<String, String> config, String name, String scheme) {
+        for (Map.Entry<String, String> entry : config.entrySet()) {
+            if (matchesSourceUri(entry.getKey(), entry.getValue(), name, scheme)) {
+                return true;
             }
-        }));
+        }
+        return false;
+    }
+
+    private boolean matchesSourceUri(String key, String value, String name, String scheme) {
+        if (!key.startsWith("source.") || !key.endsWith(".uri")) {
+            return false;
+        }
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(result);
+            URI uri = new URI(value);
+
+            if (scheme != null && !scheme.equalsIgnoreCase(uri.getScheme())) {
+                return false;
+            }
+
+            String path = uri.getPath();
+            String endpoint = path.substring(path.lastIndexOf("/") + 1).toLowerCase();
+
+            return name == null || endpoint.equals(name.toLowerCase());
+        } catch (Exception _) {
+            return false;
+        }
+    }
+
+    private String toJson(List<Map<String, String>> result) {
+        try {
+            return new ObjectMapper().writeValueAsString(result);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
     @Override
     public String getInstalledFlowsIndex() {
         try {

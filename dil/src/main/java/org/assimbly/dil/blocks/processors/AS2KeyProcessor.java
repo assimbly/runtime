@@ -6,7 +6,6 @@ import org.apache.camel.component.as2.api.AS2CompressionAlgorithm;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -15,159 +14,270 @@ import java.security.cert.X509Certificate;
 
 public class AS2KeyProcessor implements Processor {
 
-    boolean isToEncrypt;
-    boolean isToDecrypt;
-    boolean isSigned;
-
     @Override
     public void process(Exchange exchange) throws Exception {
 
-        // message structure
+        // Message structure
         String messageStructure = exchange.getProperty("messageStructure", String.class);
 
-        // password and alias
+        // Password and alias
         String password = exchange.getProperty("keyPassword", String.class);
         String alias = exchange.getProperty("keyAlias", String.class);
 
-        URI encryptCertificateUri = null;
-        URI decryptCertificateUri = null;
-        URI signingCertificateUri = null;
+        // Certificate for encryption
+        URI encryptCertificateUri = getOptionalUri(
+                exchange.getProperty("certificateForEncrypt", String.class)
+        );
+        boolean isToEncrypt = encryptCertificateUri != null;
 
-        // certificateForEncrypt
-        String encryptCertificate = exchange.getProperty("certificateForEncrypt", String.class);
-        if (encryptCertificate != null) {
-            encryptCertificateUri = buildUriFromString(encryptCertificate);
-        }
-        isToEncrypt = encryptCertificateUri != null;
+        // Certificate for decryption
+        URI decryptCertificateUri = getOptionalUri(
+                exchange.getProperty("certificateForDecrypt", String.class)
+        );
+        boolean isToDecrypt = decryptCertificateUri != null
+                && hasText(password)
+                && hasText(alias);
 
-        // certificateForDecrypt
-        String decryptCertificate = exchange.getProperty("certificateForDecrypt", String.class);
-        if (decryptCertificate != null) {
-            decryptCertificateUri = buildUriFromString(decryptCertificate);
-        }
-        isToDecrypt = decryptCertificateUri != null && password != null && !password.isEmpty() && alias != null && !alias.isEmpty();
+        // Certificate for signing
+        URI signingCertificateUri = getOptionalUri(
+                exchange.getProperty("certificateForSigning", String.class)
+        );
+        boolean isSigned = signingCertificateUri != null
+                && hasText(password)
+                && hasText(alias);
 
-        // certificateForSigning
-        String signingCertificate = exchange.getProperty("certificateForSigning", String.class);
-        if (signingCertificate != null) {
-            signingCertificateUri = buildUriFromString(signingCertificate);
-        }
-        isSigned = signingCertificateUri != null && password != null && !password.isEmpty() && alias != null && !alias.isEmpty();
+        if (isSigned) {
+            // Signing certificate chain
+            Certificate[] signingCertificateChain =
+                    getCertificateFromP12(signingCertificateUri, password, alias);
+            exchange.getMessage().setHeader(
+                    "CamelAs2.signingCertificateChain",
+                    signingCertificateChain
+            );
 
-
-        if(isSigned) {
-            // signingCertificateChain
-            Certificate[] signingCertificateChain = getCertificateFromP12(signingCertificateUri, password, alias);
-            exchange.getMessage().setHeader("CamelAs2.signingCertificateChain", signingCertificateChain);
-
-            // signingPrivateKey
-            PrivateKey privateKey = getPrivateKey(signingCertificateUri, password, alias);
-            exchange.getMessage().setHeader("CamelAs2.signingPrivateKey", privateKey);
-        }
-
-        if(isToEncrypt) {
-            // encryptingCertificateChain
-            Certificate[] encryptingCertificateChain = getCertificateChainFromX509(encryptCertificateUri);
-            exchange.getMessage().setHeader("CamelAs2.encryptingCertificateChain", encryptingCertificateChain);
+            // Signing private key
+            PrivateKey privateKey =
+                    getPrivateKey(signingCertificateUri, password, alias);
+            exchange.getMessage().setHeader(
+                    "CamelAs2.signingPrivateKey",
+                    privateKey
+            );
         }
 
-        if(isToDecrypt) {
-            // decryptingPrivateKey
-            PrivateKey decryptingPrivateKey = getPrivateKey(decryptCertificateUri, password, alias);
-            exchange.getMessage().setHeader("CamelAs2.decryptingPrivateKey", decryptingPrivateKey);
+        if (isToEncrypt) {
+            // Encrypting certificate chain
+            Certificate[] encryptingCertificateChain =
+                    getCertificateChainFromX509(encryptCertificateUri);
+            exchange.getMessage().setHeader(
+                    "CamelAs2.encryptingCertificateChain",
+                    encryptingCertificateChain
+            );
         }
 
-        if(messageStructure != null && messageStructure.contains("COMPRESSED")) {
-            // compressionAlgorithm
-            exchange.getMessage().setHeader("CamelAs2.compressionAlgorithm", AS2CompressionAlgorithm.ZLIB);
+        if (isToDecrypt) {
+            // Decrypting private key
+            PrivateKey decryptingPrivateKey =
+                    getPrivateKey(decryptCertificateUri, password, alias);
+            exchange.getMessage().setHeader(
+                    "CamelAs2.decryptingPrivateKey",
+                    decryptingPrivateKey
+            );
         }
 
+        if (messageStructure != null && messageStructure.contains("COMPRESSED")) {
+            // Compression algorithm
+            exchange.getMessage().setHeader(
+                    "CamelAs2.compressionAlgorithm",
+                    AS2CompressionAlgorithm.ZLIB
+            );
+        }
     }
 
-    // public static methods used by as2 inbound step
+    // Public static methods used by AS2 inbound step
+
     public static String getSigningAlgorithm(Certificate[] certArr) {
-        X509Certificate x509Cert = (X509Certificate) certArr[0];
+        if (certArr == null || certArr.length == 0 || certArr[0] == null) {
+            throw new IllegalArgumentException("Certificate chain must contain at least one certificate.");
+        }
+
+        if (!(certArr[0] instanceof X509Certificate x509Cert)) {
+            throw new IllegalArgumentException("Certificate must be an X.509 certificate.");
+        }
+
         return x509Cert.getSigAlgName().toUpperCase();
     }
-    public static Certificate[] getSigningCertificateChain(URI certificateUri, String password, String alias) throws Exception {
+
+    public static Certificate[] getSigningCertificateChain(
+            URI certificateUri,
+            String password,
+            String alias) throws Exception {
+
+        requireUri(certificateUri, "Signing certificate URI");
+        requireText(password, "Keystore password");
+        requireText(alias, "Keystore alias");
+
         return getCertificateFromP12(certificateUri, password, alias);
     }
-    public static Certificate[] getValidateSigningCertificateChain(URI certificateUri) throws Exception {
+
+    public static Certificate[] getValidateSigningCertificateChain(
+            URI certificateUri) throws Exception {
+
+        requireUri(certificateUri, "Signing certificate URI");
+
         return getCertificateChainFromX509(certificateUri);
     }
-    public static PrivateKey getSigningPrivateKey(URI certificateUri, String password, String alias) throws Exception {
-        return getPrivateKey(certificateUri, password, alias);
-    }
-    public static PrivateKey getDecryptingPrivateKey(URI certificateUri, String password, String alias) throws Exception {
+
+    public static PrivateKey getSigningPrivateKey(
+            URI certificateUri,
+            String password,
+            String alias) throws Exception {
+
+        requireUri(certificateUri, "Signing certificate URI");
+        requireText(password, "Keystore password");
+        requireText(alias, "Keystore alias");
+
         return getPrivateKey(certificateUri, password, alias);
     }
 
+    public static PrivateKey getDecryptingPrivateKey(
+            URI certificateUri,
+            String password,
+            String alias) throws Exception {
 
-    // get PrivateKey from a P12 certificate - by a URI
-    private static PrivateKey getPrivateKey(URI certificateUri, String password, String alias) throws Exception {
+        requireUri(certificateUri, "Decrypting certificate URI");
+        requireText(password, "Keystore password");
+        requireText(alias, "Keystore alias");
+
+        return getPrivateKey(certificateUri, password, alias);
+    }
+
+    // Get PrivateKey from a PKCS12 certificate by URI
+
+    private static PrivateKey getPrivateKey(
+            URI certificateUri,
+            String password,
+            String alias) throws Exception {
+
+        requireUri(certificateUri, "Certificate URI");
+        requireText(password, "Keystore password");
+        requireText(alias, "Keystore alias");
+
         KeyStore keystore = KeyStore.getInstance("PKCS12");
-        PrivateKey key;
 
         try (InputStream inputStream = certificateUri.toURL().openStream()) {
             keystore.load(inputStream, password.toCharArray());
         }
-        key = (PrivateKey) keystore.getKey(alias, password.toCharArray());
+
+        PrivateKey key = (PrivateKey) keystore.getKey(
+                alias,
+                password.toCharArray()
+        );
 
         if (key == null) {
-            throw new IllegalStateException("Private key not found in keystore.");
+            throw new IllegalStateException(
+                    "Private key not found in keystore for alias: " + alias
+            );
         }
 
         return key;
     }
 
-    // get Certificate from a P12 certificate - by a URI
-    private static Certificate[] getCertificateFromP12(URI certificateUri, String password, String alias) throws Exception {
+    // Get Certificate from a PKCS12 certificate by URI
+
+    private static Certificate[] getCertificateFromP12(
+            URI certificateUri,
+            String password,
+            String alias) throws Exception {
+
+        requireUri(certificateUri, "Certificate URI");
+        requireText(password, "Keystore password");
+        requireText(alias, "Keystore alias");
+
         KeyStore keystore = KeyStore.getInstance("PKCS12");
-        Certificate cert;
 
         try (InputStream inputStream = certificateUri.toURL().openStream()) {
             keystore.load(inputStream, password.toCharArray());
         }
-        cert = keystore.getCertificate(alias);
+
+        Certificate cert = keystore.getCertificate(alias);
 
         if (cert == null) {
-            throw new IllegalStateException("Certificate not found in keystore.");
+            throw new IllegalStateException(
+                    "Certificate not found in keystore for alias: " + alias
+            );
         }
 
         return new Certificate[]{cert};
     }
 
-    // get Certificate from a X509 certificate - by a URI
-    private static Certificate[] getCertificateChainFromX509(URI certUri) throws Exception {
-        CertificateFactory factory = CertificateFactory.getInstance("X.509");
-        URL url = certUri.toURL();
+    // Get Certificate from an X.509 certificate by URI
 
-        try (InputStream is = url.openStream()) {
-            Certificate cert = factory.generateCertificate(is);
+    private static Certificate[] getCertificateChainFromX509(
+            URI certificateUri) throws Exception {
+
+        requireUri(certificateUri, "Certificate URI");
+
+        CertificateFactory factory = CertificateFactory.getInstance("X.509");
+
+        try (InputStream inputStream = certificateUri.toURL().openStream()) {
+            Certificate cert = factory.generateCertificate(inputStream);
 
             if (!(cert instanceof X509Certificate)) {
-                throw new IllegalStateException("Could not load a valid X.509 certificate from URI: " + certUri);
+                throw new IllegalStateException(
+                        "Could not load a valid X.509 certificate from URI: "
+                                + certificateUri
+                );
             }
 
             return new Certificate[]{cert};
         }
     }
 
-    // builds a URI from a String value
-    private URI buildUriFromString(String value){
+    // Build a URI from a String value.
+    // Returns null when no certificate value was supplied.
+
+    private static URI getOptionalUri(String value) {
+        if (!hasText(value)) {
+            return null;
+        }
+
         String trimmedValue = value.trim();
 
         if (trimmedValue.startsWith("RAW(") && trimmedValue.endsWith(")")) {
-            value = trimmedValue.substring(4, trimmedValue.length() - 1);
-        } else {
-            value = trimmedValue;
+            trimmedValue = trimmedValue.substring(
+                    4,
+                    trimmedValue.length() - 1
+            ).trim();
+        }
+
+        if (trimmedValue.isEmpty()) {
+            return null;
         }
 
         try {
-            return new URI(value);
-        } catch (Exception _) {
-            return null;
+            return URI.create(trimmedValue);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Invalid certificate URI: " + trimmedValue,
+                    e
+            );
         }
+    }
+
+    private static void requireUri(URI uri, String name) {
+        if (uri == null) {
+            throw new IllegalArgumentException(name + " must not be null.");
+        }
+    }
+
+    private static void requireText(String value, String name) {
+        if (!hasText(value)) {
+            throw new IllegalArgumentException(name + " must not be null or empty.");
+        }
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
 }

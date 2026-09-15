@@ -66,7 +66,6 @@ public class DILPersistentStore implements DILStore {
         } catch (Exception e) {
             db.rollback(); // Rollback if something goes wrong to maintain DB integrity
             log.error("Failed to clear flows map", e);
-            throw e;
         }
     }
 
@@ -106,7 +105,6 @@ public class DILPersistentStore implements DILStore {
         } catch (Exception e) {
             db.rollback(); // Rollback if something goes wrong to maintain DB integrity
             log.error("Failed to clear collectors map", e);
-            throw e;
         }
     }
 

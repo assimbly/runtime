@@ -111,7 +111,7 @@ public class ManagedBrokerRuntime {
         result = broker.getConnections();
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -122,7 +122,7 @@ public class ManagedBrokerRuntime {
         result = broker.getConsumers();
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -144,7 +144,7 @@ public class ManagedBrokerRuntime {
         result = broker.getQueue(queueName);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -156,7 +156,7 @@ public class ManagedBrokerRuntime {
         result = broker.getQueues();
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -198,7 +198,7 @@ public class ManagedBrokerRuntime {
         result = broker.getTopic(topicName);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -209,7 +209,7 @@ public class ManagedBrokerRuntime {
         result = broker.getTopics();
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -222,7 +222,7 @@ public class ManagedBrokerRuntime {
         result = broker.listMessages(endpointName, filter);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -271,7 +271,7 @@ public class ManagedBrokerRuntime {
         result = broker.browseMessage(endpointName, messageId, excludeBody);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;
@@ -282,7 +282,7 @@ public class ManagedBrokerRuntime {
         result = broker.browseMessages(endpointName, page, numberOfMessages, excludeBody);
 
         if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.convertJsonToXml(result);
+            result = DocConverter.jsonToXml(result);
         }
 
         return result;

@@ -33,83 +33,125 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
-
 public final class IntegrationUtil {
 
-	private static final Logger log = LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
+	private static final Logger log =
+			LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
+
+	private IntegrationUtil() {
+		throw new UnsupportedOperationException("Utility class");
+	}
 
 	public static boolean isValidUri(String name) {
 		try {
 			URI uri = new URI(name);
-
-            return uri.getScheme() != null;
-
+			return uri.getScheme() != null;
 		} catch (URISyntaxException _) {
 			return false;
 		}
-
 	}
 
-	public static boolean isYaml(String yaml){
+	public static boolean isYaml(String yaml) {
 		try {
 			final ObjectMapper mapper = new YAMLMapper();
 			mapper.readTree(yaml);
 			return true;
-		 } catch (JacksonException _) {
+		} catch (JacksonException _) {
 			return false;
-		 }
+		}
 	}
 
-	public static boolean isJson(String json){
+	public static boolean isJson(String json) {
 		try {
 			final ObjectMapper mapper = new ObjectMapper();
 			mapper.readTree(json);
 			return true;
-		 } catch (JacksonException _) {
+		} catch (JacksonException _) {
 			return false;
-		 }
+		}
 	}
 
 	public static boolean isXML(String xml) {
 		return xml.startsWith("<");
 	}
-	
+
 	public static String isValidXML(URL schemaFile, String xml) {
 
 		String result;
 
 		Source xmlFile = new StreamSource(new StringReader(xml));
-		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
 		try {
+			SchemaFactory schemaFactory =
+					SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
+			// Prevent the schema from loading external DTDs.
+			schemaFactory.setProperty(
+					XMLConstants.ACCESS_EXTERNAL_DTD,
+					""
+			);
+
+			// Prevent the schema from loading external schemas.
+			schemaFactory.setProperty(
+					XMLConstants.ACCESS_EXTERNAL_SCHEMA,
+					""
+			);
+
 			Schema schema = schemaFactory.newSchema(schemaFile);
+
 			Validator validator = schema.newValidator();
+
+			// Prevent the validator from accessing external DTDs.
+			validator.setProperty(
+					XMLConstants.ACCESS_EXTERNAL_DTD,
+					""
+			);
+
+			// Prevent the validator from accessing external schemas.
+			validator.setProperty(
+					XMLConstants.ACCESS_EXTERNAL_SCHEMA,
+					""
+			);
+
 			validator.validate(xmlFile);
+
 			result = "xml is valid";
+
 		} catch (SAXException | IOException e) {
 			result = "xml is NOT valid. Reason:" + e;
 		}
 
 		return result;
-
 	}
 
-	public static Resource setResource(String route){
+	public static Resource setResource(String route) {
 
 		String uuid = UUID.randomUUID().toString();
 
-		if(IntegrationUtil.isXML(route)){
-			return ResourceHelper.fromString("route_" + uuid + ".xml", route);
-		}else if(IntegrationUtil.isYaml(route)){
-			return ResourceHelper.fromString("route_" + uuid + ".yaml", route);
-		}else{
+		if (IntegrationUtil.isXML(route)) {
+			return ResourceHelper.fromString(
+					"route_" + uuid + ".xml",
+					route
+			);
+		} else if (IntegrationUtil.isYaml(route)) {
+			return ResourceHelper.fromString(
+					"route_" + uuid + ".yaml",
+					route
+			);
+		} else {
 			log.warn("unknown route format");
-			return ResourceHelper.fromString("route_" + uuid + ".xml", route);
-		}		
+
+			return ResourceHelper.fromString(
+					"route_" + uuid + ".xml",
+					route
+			);
+		}
 	}
 
 	public static String testConnection(String host, int port, int timeOut) {
 
-		SocketAddress socketAddress = new InetSocketAddress(host, port);
+		SocketAddress socketAddress =
+				new InetSocketAddress(host, port);
 
 		timeOut = timeOut * 1000;
 
@@ -124,91 +166,183 @@ public final class IntegrationUtil {
 		return "Connection successful";
 	}
 
-
-	public static List<String> getXMLParameters(XMLConfiguration conf, String prefix) {
+	public static List<String> getXMLParameters(
+			XMLConfiguration conf,
+			String prefix) {
 
 		Iterator<String> keys;
 
-		if(prefix == null || prefix.isEmpty()){
+		if (prefix == null || prefix.isEmpty()) {
 			keys = conf.getKeys();
-		}else{
+		} else {
 			keys = conf.getKeys(prefix);
 		}
 
 		List<String> keyList = new ArrayList<>();
 
-		while(keys.hasNext()){
+		while (keys.hasNext()) {
 			keyList.add(keys.next());
 		}
 
 		return keyList;
 	}
 
-	public static Node getNode(XMLConfiguration xmlConfiguration, String xpath) throws XPathExpressionException {
+	public static Node getNode(
+			XMLConfiguration xmlConfiguration,
+			String xpath) throws XPathExpressionException {
 
 		Document doc = xmlConfiguration.getDocument();
 
-		XPath xpathFactory = XPathFactory.newInstance().newXPath();
-		XPathExpression expr = xpathFactory.compile(xpath);
-		return (Node) expr.evaluate(doc, XPathConstants.NODE);
+		XPath xpathFactory =
+				XPathFactory.newInstance().newXPath();
 
+		XPathExpression expr =
+				xpathFactory.compile(xpath);
+
+		return (Node) expr.evaluate(
+				doc,
+				XPathConstants.NODE
+		);
 	}
 
+	public static NodeList getNodeList(
+			String xml,
+			String nodeName)
+			throws IOException, SAXException, ParserConfigurationException {
 
-	public static NodeList getNodeList(String xml, String nodeName) throws IOException, SAXException, ParserConfigurationException {
+		InputStream isr = new ByteArrayInputStream(
+				xml.getBytes(StandardCharsets.UTF_8)
+		);
 
-		InputStream isr = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
+		DocumentBuilderFactory dbf =
+				createSecureDocumentBuilderFactory();
+
+		DocumentBuilder db =
+				dbf.newDocumentBuilder();
+
 		Document doc = db.parse(isr);
 
 		return doc.getElementsByTagName(nodeName);
+	}
 
+	/**
+	 * Creates a securely configured XML parser factory.
+	 *
+	 * Prevents XML External Entity (XXE) attacks and external
+	 * DTD/schema access.
+	 */
+	private static DocumentBuilderFactory createSecureDocumentBuilderFactory()
+			throws ParserConfigurationException {
+
+		DocumentBuilderFactory factory =
+				DocumentBuilderFactory.newInstance();
+
+		factory.setNamespaceAware(true);
+
+		// Disallow DOCTYPE declarations completely.
+		factory.setFeature(
+				"http://apache.org/xml/features/disallow-doctype-decl",
+				true
+		);
+
+		// Disable external general entities.
+		factory.setFeature(
+				"http://xml.org/sax/features/external-general-entities",
+				false
+		);
+
+		// Disable external parameter entities.
+		factory.setFeature(
+				"http://xml.org/sax/features/external-parameter-entities",
+				false
+		);
+
+		// Do not expand entity references.
+		factory.setExpandEntityReferences(false);
+
+		// Disable external DTD access.
+		factory.setAttribute(
+				XMLConstants.ACCESS_EXTERNAL_DTD,
+				""
+		);
+
+		// Disable external schema access.
+		factory.setAttribute(
+				XMLConstants.ACCESS_EXTERNAL_SCHEMA,
+				""
+		);
+
+		return factory;
 	}
 
 	public static Iterable<Node> iterable(final NodeList nodeList) {
 		return () -> new Iterator<>() {
 
-            private int index;
+			private int index;
 
-            @Override
-            public boolean hasNext() {
-                return index < nodeList.getLength();
-            }
+			@Override
+			public boolean hasNext() {
+				return index < nodeList.getLength();
+			}
 
-            @Override
-            public Node next() {
-                if (!hasNext())
-                    throw new NoSuchElementException();
-                return nodeList.item(index++);
-            }
-        };
+			@Override
+			public Node next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+
+				return nodeList.item(index++);
+			}
+		};
 	}
 
 	public static void printTreemap(TreeMap<String, String> treeMap) {
 
-        IO.println("print treemap: \n");
-		for (Map.Entry<String,String> entry : treeMap.entrySet()) {
-            IO.println("key: " + entry.getKey() + "; value: " + entry.getValue());
+		IO.println("print treemap: \n");
+
+		for (Map.Entry<String, String> entry : treeMap.entrySet()) {
+			IO.println(
+					"key: " + entry.getKey()
+							+ "; value: " + entry.getValue()
+			);
 		}
-
 	}
 
-	public static void printConfiguration(TreeMap<String, String> treeMap) {
+	public static void printConfiguration(
+			TreeMap<String, String> treeMap) {
 
-		List<String> items = Arrays.asList( "id", "flow", "source", "action", "sink", "response", "error", "header", "connection", "route", "routeConfiguration", "routeTemplate");
+		List<String> items = Arrays.asList(
+				"id",
+				"flow",
+				"source",
+				"action",
+				"sink",
+				"response",
+				"error",
+				"header",
+				"connection",
+				"route",
+				"routeConfiguration",
+				"routeTemplate"
+		);
 
-		String configuration = convertTreemapToString(treeMap, items);
+		String configuration =
+				convertTreemapToString(treeMap, items);
 
-        IO.println(configuration);
-
+		IO.println(configuration);
 	}
 
-	public static String convertTreemapToString(TreeMap<String, String> treeMap, List<String> items) {
+	public static String convertTreemapToString(
+			TreeMap<String, String> treeMap,
+			List<String> items) {
 
 		StringBuilder string = new StringBuilder();
 
-		string.append("\nFlow Configuration\n-----------------------------------------------------------------\n");
+		string.append("""
+
+       Flow Configuration
+       -----------------------------------------------------------------
+       """);
 
 		Map<String, String> subMap;
 
@@ -216,31 +350,40 @@ public final class IntegrationUtil {
 
 			subMap = treeMap.entrySet()
 					.stream()
-					.filter(map -> map.getKey().startsWith(item))
-					.collect(Collectors.toMap(Map.Entry::getKey, map -> Optional.ofNullable(map.getValue()).orElse("")));
+					.filter(map ->
+							map.getKey().startsWith(item))
+					.collect(Collectors.toMap(
+							Map.Entry::getKey,
+							map -> Optional.ofNullable(map.getValue())
+									.orElse("")
+					));
 
-			if(!subMap.isEmpty()) {
+			if (!subMap.isEmpty()) {
 
-				string.append('\n').append(item.toUpperCase()).append('\n');
+				string.append('\n')
+						.append(item.toUpperCase())
+						.append('\n');
 
-				for(Map.Entry<String,String> entry : subMap.entrySet()) {
+				for (Map.Entry<String, String> entry :
+						subMap.entrySet()) {
 
 					String key = entry.getKey();
 					String value = entry.getValue();
 
-					if (key.contains("password")){
+					if (key.contains("password")) {
 						value = "***********";
 					}
 
-					string.append(key).append(':').append(value).append('\n');
+					string.append(key)
+							.append(':')
+							.append(value)
+							.append('\n');
 				}
 			}
-
 		}
 
 		string.append('\n');
 
 		return string.toString();
 	}
-
 }

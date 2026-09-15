@@ -5,6 +5,8 @@ import org.apache.camel.Exchange;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 public class JsonAggregateStrategy implements AggregationStrategy {
 
     @Override
@@ -26,8 +28,8 @@ public class JsonAggregateStrategy implements AggregationStrategy {
             return newExchange;
         }
         
-        if(oldExchange.getProperty("hasBeenAggregated") != null && oldExchange.getProperty("hasBeenAggregated", Boolean.class)) {
-            array = new JSONArray(oldExchange.getIn().getBody(String.class));
+        if(Boolean.TRUE.equals(oldExchange.getProperty("hasBeenAggregated", Boolean.class))) {
+            array = new JSONArray(Objects.requireNonNull(oldExchange.getIn().getBody(String.class)));
         }else{
             array = wrapInArray(new JSONArray(), oldExchange.getIn().getBody(String.class));
         }
@@ -41,11 +43,16 @@ public class JsonAggregateStrategy implements AggregationStrategy {
         return oldExchange;
     }
 
-    private JSONArray wrapInArray(JSONArray array, String json){
-        if(json.charAt(0) == '[') {
-            return array.put(new JSONArray(json));
-        } else {
-            return array.put(new JSONObject(json));
+    private JSONArray wrapInArray(JSONArray array, String json) {
+        if (json == null || json.isBlank()) {
+            return array;
         }
+
+        if (json.trim().charAt(0) == '[') {
+            return array.put(new JSONArray(json));
+        }
+
+        return array.put(new JSONObject(json));
     }
+
 }

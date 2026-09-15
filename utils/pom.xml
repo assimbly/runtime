@@ -73,14 +73,19 @@
             <version>${commons-codec.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.assimbly</groupId>
-            <artifactId>docconverter</artifactId>
-            <version>${docconverter.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
             <version>${httpClient5.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

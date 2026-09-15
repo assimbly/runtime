@@ -15,16 +15,12 @@ public class FlowLogger implements Processor {
         String messageToLog = exchange.getProperty("AssimblyLogMessage", String.class);
         String logLevel = exchange.getProperty("AssimblyLogLevel", String.class);
 
-        switch (logLevel) {
-            case "WARNING":
-                log.warn(messageToLog);
-                break;
-            case "ERROR":
-                log.error(messageToLog);
-                break;
-            default:
-                log.info(messageToLog);
-                break;
+        if ("WARNING".equals(logLevel)) {
+            log.warn(messageToLog);
+        } else if ("ERROR".equals(logLevel)) {
+            log.error(messageToLog);
+        } else {
+            log.info(messageToLog);
         }
 
         exchange.removeProperty("AssimblyLogMessage");

@@ -43,7 +43,7 @@ public class CacheManagerRuntime {
             String result = integration.getInstalledFlowsIndex();
 
             if (mediaType.contains("xml")) {
-                result = DocConverter.convertJsonToXml(result);
+                result = DocConverter.jsonToXml(result);
             }
 
             boolean plainResponse = !result.startsWith("Error") && !result.startsWith("Warning");

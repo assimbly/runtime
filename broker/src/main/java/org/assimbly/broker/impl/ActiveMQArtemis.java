@@ -547,7 +547,7 @@ public class ActiveMQArtemis implements Broker {
 	public String countMessagesFromList(String endpointList) {
 
 		long numberOfMessages = 0L;
-		String[] endpointNames= endpointList.split("\\s*,\\s*");
+		String[] endpointNames = endpointList.split(",\\s*");
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		for(String endpointName: endpointNames){

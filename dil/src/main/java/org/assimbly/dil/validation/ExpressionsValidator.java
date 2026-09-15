@@ -2,8 +2,6 @@ package org.assimbly.dil.validation;
 
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.LanguageValidationResult;
-import org.apache.camel.spi.SimpleFunctionRegistry;
-import org.apache.camel.support.PluginHelper;
 import org.assimbly.dil.validation.beans.ValidationExpression;
 
 import net.sf.saxon.s9api.Processor;

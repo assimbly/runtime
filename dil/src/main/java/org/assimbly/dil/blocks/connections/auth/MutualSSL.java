@@ -1,9 +1,7 @@
 package org.assimbly.dil.blocks.connections.auth;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.support.jsse.ClientAuthentication;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.support.jsse.SSLContextServerParameters;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;

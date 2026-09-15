@@ -38,9 +38,10 @@ public class AttachmentEnrichStrategy implements AggregationStrategy {
         log.info("[Enrich] Adding attachment. key={} mime-type={} size={}", attachmentName, mimeType, data.length);
 
         AttachmentMessage am = original.getMessage(AttachmentMessage.class);
-        am.addAttachment(attachmentName, new DataHandler(data, mimeType));
-        original.getMessage().setHeader(Exchange.FILE_NAME, attachmentName);
-
+        if (am != null){
+            am.addAttachment(attachmentName, new DataHandler(data, mimeType));
+            original.getMessage().setHeader(Exchange.FILE_NAME, attachmentName);
+        }
         return original;
 
     }

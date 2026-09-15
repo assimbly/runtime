@@ -20,10 +20,7 @@ import java.nio.charset.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -182,7 +179,8 @@ public class StepCollector extends EventNotifierSupport {
         if (inputStream != null && message.getBody() != null) {
             try {
                 body = IOUtils.toByteArray(inputStream);
-                bodyType = message.getBody().getClass().getSimpleName();
+                Object bodyObject = message.getBody();
+                bodyType = Objects.toString(bodyObject == null ? null : bodyObject.getClass().getSimpleName(), "null");
             } catch (Exception _) {
                 // Ignoring exception intentionally
             }

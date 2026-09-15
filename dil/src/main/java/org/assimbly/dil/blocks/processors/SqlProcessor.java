@@ -29,15 +29,15 @@ public class SqlProcessor implements Processor {
 
         Message message = exchange.getMessage();
         String contentType = message.getHeader("Content-Type", String.class);
-        String output = "";
+        String output;
 
-        if(contentType.equalsIgnoreCase("text/plain")){
+        if(contentType == null || contentType.equalsIgnoreCase("text/plain")){
             output = message.getBody(String.class);
         } else {
             Document result = processResult(message);
             output = prettyPrint(result);
             if (contentType.equalsIgnoreCase("application/json")){
-                output = DocConverter.convertXmlToJson(output);
+                output = DocConverter.xmlToJson(output);
             }
         }
 
@@ -56,7 +56,7 @@ public class SqlProcessor implements Processor {
         Element rootElement = doc.createElement("ResultSet");
         doc.appendChild(rootElement);
 
-        boolean hasErrors= message.getHeader("HasErrors",Boolean.class);
+        boolean hasErrors= Boolean.TRUE.equals(message.getHeader("HasErrors", Boolean.class));
 
         if(hasErrors){
             String errorMessage= message.getHeader("errorMessage",String.class);
@@ -66,7 +66,7 @@ public class SqlProcessor implements Processor {
 
             List<Map<String, Object>> rows = message.getBody(List.class);
 
-            int rowCount = 0;
+            int rowCount;
             if(rows == null || rows.isEmpty()){
                 rows = message.getHeader("CamelSqlGeneratedKeyRows",List.class);
                 rowCount= message.getHeader("CamelSqlGeneratedKeysRowCount",int.class);

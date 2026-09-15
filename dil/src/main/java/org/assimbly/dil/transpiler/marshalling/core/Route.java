@@ -2,7 +2,7 @@ package org.assimbly.dil.transpiler.marshalling.core;
 
 import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.apache.commons.lang3.StringUtils;
-import org.assimbly.docconverter.DocConverter;
+import org.assimbly.docconverter.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -45,7 +45,7 @@ public class Route {
         Node node = getRoute(routeId);
 
         assert node != null;
-        String routeAsString = DocConverter.convertNodeToString(node);
+        String routeAsString = StringConverter.nodeToString(node);
 
         return routeAsString.replace("<route id=\"" + routeId + "\"", "<route id=\"" + flowId + "-" + routeId + "\" group=\"" + flowId + "\"");
 
@@ -60,7 +60,7 @@ public class Route {
 
             Node node = evaluateNodeXpath("/dil/core/routeConfigurations/routeConfiguration/dataFormats/csv[@id='" + ref +"']");
 
-            dataFormatAsString = DocConverter.convertNodeToString(node);
+            dataFormatAsString = StringConverter.nodeToString(node);
             if(dataFormatAsString!=null) {
                 route = route.replaceAll("<customDataFormat ref=(.*)", dataFormatAsString);
             }else{

@@ -313,7 +313,10 @@ public final class CertificatesUtil {
 		try {
 			if (pemCertificate != null && !pemCertificate.trim().isEmpty()) {
 
-				Pattern parse = Pattern.compile("(?m)(?s)^--+BEGIN.*--+$(.*)^--+END.*--+$.*");
+				Pattern parse = Pattern.compile(
+						"^--+BEGIN[^\\r\\n]*\\R.*?^--+END[^\\r\\n]*$",
+						Pattern.MULTILINE | Pattern.DOTALL
+				);
 				pemCertificate = parse.matcher(pemCertificate).replaceFirst("$1");
 
 				byte[] derCertificate = decoder.decode(pemCertificate);

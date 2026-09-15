@@ -121,7 +121,7 @@ public class StatisticsRuntime {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
 
             if(mediaType.contains("xml")) {
-                stats = DocConverter.convertJsonToXml(stats);
+                stats = DocConverter.jsonToXml(stats);
             }
 
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
@@ -197,7 +197,7 @@ public class StatisticsRuntime {
             String stats = integration.getFlowStats(flowId, fullStats, includeMetaData, includeSteps, filter);
 
             if(mediaType.contains("xml")) {
-                stats = DocConverter.convertJsonToXml(stats);
+                stats = DocConverter.jsonToXml(stats);
             }
 
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
@@ -227,7 +227,7 @@ public class StatisticsRuntime {
             if(flowStepStats.startsWith("Error")||flowStepStats.startsWith("Warning")) {plainResponse = false;}
 
             if (mediaType.contains("xml")) {
-                flowStepStats = DocConverter.convertJsonToXml(flowStepStats);
+                flowStepStats = DocConverter.jsonToXml(flowStepStats);
             }
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/stats",flowStepStats,plainResponse);
         } catch (Exception e) {

@@ -21,10 +21,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class LangChain4jAgentConnection {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
+    protected static Logger log = LoggerFactory.getLogger(LangChain4jAgentConnection.class);
 
     private final CamelContext context;
     private final EncryptableProperties properties;
@@ -50,15 +51,14 @@ public class LangChain4jAgentConnection {
     public void start() {
         setFields();
 
-        if (checkConnection()) {
-            if (context.getRegistry().lookupByName(connectionId) != null) {
-                log.info("Updating existing LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
-                context.getRegistry().unbind(connectionId);
-            } else {
-                log.info("Creating new LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
-            }
-            setConnection();
+        if (context.getRegistry().lookupByName(connectionId) != null) {
+            log.info("Updating existing LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
+            context.getRegistry().unbind(connectionId);
+        } else {
+            log.info("Creating new LangChain4j Agent connection with id={}, provider={}", connectionId, provider);
         }
+        setConnection();
+
     }
 
     private void setFields() {
@@ -82,70 +82,30 @@ public class LangChain4jAgentConnection {
         }
     }
 
-    private boolean checkConnection() {
-        if (!"ollama".equalsIgnoreCase(provider) && (apiKey == null || apiKey.isEmpty())) {
-            throw new IllegalArgumentException("LangChain4j agent connection parameters are invalid. apikey is required for provider " + provider);
-        }
-
-        return true;
-    }
-
     private void setConnection() {
+
         log.info("Setting up LangChain4j Agent connection for provider={}. API Key length: {}, prefix: {}",
                 provider,
                 apiKey != null ? apiKey.length() : 0,
                 apiKey != null && apiKey.length() >= 5 ? apiKey.substring(0, 5) : "N/A");
 
-        long resolvedTimeout = 10;
-        if (timeout != null && !timeout.isEmpty()) {
-            try {
-                resolvedTimeout = Long.parseLong(timeout);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid timeout value '{}', using default 10s", timeout);
-            }
-        }
+        long resolvedTimeout = parseOrDefault(timeout, 10L, Long::parseLong, "timeout");
+        double resolvedTemp = parseOrDefault(temperature, 0.7, Double::parseDouble, "temperature");
+        int resolvedMaxMessages = parseOrDefault(maxMessages, 100, Integer::parseInt, "maxMessages");
+        int resolvedMaxTokens = parseOrDefault(maxTokens, 1000, Integer::parseInt, "maxTokens");
 
-        double resolvedTemp = 0.7;
-        if (temperature != null && !temperature.isEmpty()) {
-            try {
-                resolvedTemp = Double.parseDouble(temperature);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid temperature value '{}', using default 0.7", temperature);
-            }
-        }
-
-        int resolvedMaxMessages = 100;
-        if (maxMessages != null && !maxMessages.isEmpty()) {
-            try {
-                resolvedMaxMessages = Integer.parseInt(maxMessages);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid maxMessages value '{}', using default 100", maxMessages);
-            }
-        }
-
-        int resolvedMaxTokens = 1000;
-        if (maxTokens != null && !maxTokens.isEmpty()) {
-            try {
-                resolvedMaxTokens = Integer.parseInt(maxTokens);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid maxTokens value '{}', using default 1000", maxTokens);
-            }
-        }
-
-        Boolean resolvedThinking = null;
-        if (thinking != null && !thinking.isEmpty()) {
-            resolvedThinking = Boolean.parseBoolean(thinking);
-        }
+        Boolean resolvedThinking = (thinking != null && !thinking.isEmpty())
+                ? Boolean.parseBoolean(thinking)
+                : null;
 
         ChatModel chatModel = buildChatModel(provider, resolvedTimeout, resolvedTemp, resolvedMaxTokens, resolvedThinking);
 
-        final int finalMaxMessages = resolvedMaxMessages;
         InMemoryChatMemoryStore chatMemoryStore = new InMemoryChatMemoryStore();
         Map<Object, ChatMemory> memories = new ConcurrentHashMap<>();
         ChatMemoryProvider chatMemoryProvider = memoryId -> memories.computeIfAbsent(memoryId, id ->
                 MessageWindowChatMemory.builder()
                         .id(id)
-                        .maxMessages(finalMaxMessages)
+                        .maxMessages(resolvedMaxMessages)
                         .chatMemoryStore(chatMemoryStore)
                         .build()
         );
@@ -155,7 +115,7 @@ public class LangChain4jAgentConnection {
                 .withChatMemoryProvider(chatMemoryProvider);
 
         java.util.Set<WebSearchEngine> searchEngines = context.getRegistry().findByType(WebSearchEngine.class);
-        if (searchEngines != null && !searchEngines.isEmpty()) {
+        if (!searchEngines.isEmpty()) {
             log.info("Attaching registered WebSearchEngine to LangChain4j Agent with connection id={}", connectionId);
             WebSearchTool webSearchTool = WebSearchTool.from(searchEngines.iterator().next());
             config.withCustomTools(List.of(webSearchTool));
@@ -176,69 +136,120 @@ public class LangChain4jAgentConnection {
 
     private ChatModel buildChatModel(String provider, long timeoutSec, double temp, int maxTokens, Boolean thinking) {
         String p = provider.toLowerCase();
+
         return switch (p) {
-            case "openai" -> {
-                String model = (modelName != null && !modelName.isEmpty()) ? modelName : "gpt-4o-mini";
-                var builder = OpenAiChatModel.builder()
-                        .apiKey(apiKey)
-                        .modelName(model)
-                        .temperature(temp)
-                        .maxTokens(maxTokens)
-                        .timeout(Duration.ofSeconds(timeoutSec));
-                if (baseUrl != null && !baseUrl.isEmpty()) {
-                    builder.baseUrl(baseUrl);
-                }
-                yield builder.build();
-            }
-            case "groq" -> {
-                String model = (modelName != null && !modelName.isEmpty()) ? modelName : "llama-3.3-70b-versatile";
-                String targetUrl = (baseUrl != null && !baseUrl.isEmpty()) ? baseUrl : "https://api.groq.com/openai/v1";
-                yield OpenAiChatModel.builder()
-                        .baseUrl(targetUrl)
-                        .apiKey(apiKey)
-                        .modelName(model)
-                        .temperature(temp)
-                        .maxTokens(maxTokens)
-                        .timeout(Duration.ofSeconds(timeoutSec))
-                        .build();
-            }
-            case "mistral" -> {
-                String model = (modelName != null && !modelName.isEmpty()) ? modelName : "mistral-small-latest";
-                String targetUrl = (baseUrl != null && !baseUrl.isEmpty()) ? baseUrl : "https://api.mistral.ai/v1";
-                yield OpenAiChatModel.builder()
-                        .baseUrl(targetUrl)
-                        .apiKey(apiKey)
-                        .modelName(model)
-                        .temperature(temp)
-                        .maxTokens(maxTokens)
-                        .timeout(Duration.ofSeconds(timeoutSec))
-                        .build();
-            }
-            case "ollama" -> {
-                String model = (modelName != null && !modelName.isEmpty()) ? modelName : "llama3";
-                String targetUrl = (baseUrl != null && !baseUrl.isEmpty()) ? baseUrl : "http://localhost:11434/v1";
-                yield OpenAiChatModel.builder()
-                        .baseUrl(targetUrl)
-                        .apiKey(apiKey != null ? apiKey : "ollama")
-                        .modelName(model)
-                        .temperature(temp)
-                        .maxTokens(maxTokens)
-                        .timeout(Duration.ofSeconds(timeoutSec))
-                        .build();
-            }
-            default -> { // google-gemini
-                String model = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-1.5-flash";
-                boolean enableThinking = (thinking == null || thinking);
-                yield GoogleAiGeminiChatModel.builder()
-                        .apiKey(apiKey)
-                        .modelName(model)
-                        .temperature(temp)
-                        .maxOutputTokens(maxTokens)
-                        .timeout(Duration.ofSeconds(timeoutSec))
-                        .returnThinking(enableThinking)
-                        .sendThinking(enableThinking)
-                        .build();
-            }
+            case "openai" -> buildOpenAiChatModel(timeoutSec, temp, maxTokens);
+            case "groq" -> buildGroqChatModel(timeoutSec, temp, maxTokens);
+            case "mistral" -> buildMistralChatModel(timeoutSec, temp, maxTokens);
+            case "ollama" -> buildOllamaChatModel(timeoutSec, temp, maxTokens);
+            default -> buildGeminiChatModel(timeoutSec, temp, maxTokens, thinking);
         };
     }
+
+    private ChatModel buildOpenAiChatModel(long timeoutSec, double temp, int maxTokens) {
+        String model = modelName != null && !modelName.isEmpty()
+                ? modelName
+                : "gpt-4o-mini";
+
+        var builder = OpenAiChatModel.builder()
+                .apiKey(apiKey)
+                .modelName(model)
+                .temperature(temp)
+                .maxTokens(maxTokens)
+                .timeout(Duration.ofSeconds(timeoutSec));
+
+        if (baseUrl != null && !baseUrl.isEmpty()) {
+            builder.baseUrl(baseUrl);
+        }
+
+        return builder.build();
+    }
+
+    private ChatModel buildGroqChatModel(long timeoutSec, double temp, int maxTokens) {
+        String model = modelName != null && !modelName.isEmpty()
+                ? modelName
+                : "llama-3.3-70b-versatile";
+
+        String targetUrl = baseUrl != null && !baseUrl.isEmpty()
+                ? baseUrl
+                : "https://api.groq.com/openai/v1";
+
+        return OpenAiChatModel.builder()
+                .baseUrl(targetUrl)
+                .apiKey(apiKey)
+                .modelName(model)
+                .temperature(temp)
+                .maxTokens(maxTokens)
+                .timeout(Duration.ofSeconds(timeoutSec))
+                .build();
+    }
+
+    private ChatModel buildMistralChatModel(long timeoutSec, double temp, int maxTokens) {
+        String model = modelName != null && !modelName.isEmpty()
+                ? modelName
+                : "mistral-small-latest";
+
+        String targetUrl = baseUrl != null && !baseUrl.isEmpty()
+                ? baseUrl
+                : "https://api.mistral.ai/v1";
+
+        return OpenAiChatModel.builder()
+                .baseUrl(targetUrl)
+                .apiKey(apiKey)
+                .modelName(model)
+                .temperature(temp)
+                .maxTokens(maxTokens)
+                .timeout(Duration.ofSeconds(timeoutSec))
+                .build();
+    }
+
+    private ChatModel buildOllamaChatModel(long timeoutSec, double temp, int maxTokens) {
+        String model = modelName != null && !modelName.isEmpty()
+                ? modelName
+                : "llama3";
+
+        String targetUrl = baseUrl != null && !baseUrl.isEmpty()
+                ? baseUrl
+                : "http://localhost:11434/v1";
+
+        return OpenAiChatModel.builder()
+                .baseUrl(targetUrl)
+                .apiKey(apiKey != null ? apiKey : "ollama")
+                .modelName(model)
+                .temperature(temp)
+                .maxTokens(maxTokens)
+                .timeout(Duration.ofSeconds(timeoutSec))
+                .build();
+    }
+
+    private ChatModel buildGeminiChatModel(long timeoutSec, double temp, int maxTokens, Boolean thinking) {
+        String model = modelName != null && !modelName.isEmpty()
+                ? modelName
+                : "gemini-1.5-flash";
+
+        boolean enableThinking = thinking == null || thinking;
+
+        return GoogleAiGeminiChatModel.builder()
+                .apiKey(apiKey)
+                .modelName(model)
+                .temperature(temp)
+                .maxOutputTokens(maxTokens)
+                .timeout(Duration.ofSeconds(timeoutSec))
+                .returnThinking(enableThinking)
+                .sendThinking(enableThinking)
+                .build();
+    }
+
+    private static <T> T parseOrDefault(String value, T defaultValue, Function<String, T> parser, String label) {
+        if (value == null || value.isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return parser.apply(value);
+        } catch (NumberFormatException _) {
+            log.warn("Invalid {} value '{}', using default {}", label, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
 }

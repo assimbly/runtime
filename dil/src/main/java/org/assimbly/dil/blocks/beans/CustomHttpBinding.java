@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.concurrent.TimeoutException;
 
 public class CustomHttpBinding extends DefaultHttpBinding {
@@ -41,10 +40,9 @@ public class CustomHttpBinding extends DefaultHttpBinding {
             }
 
         } else {
-            if (exchange.getMessage() != null) {
-                // just copy the protocol relates header if we do not have them
-                customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
-            }
+            // just copy the protocol relates header if we do not have them
+            customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
+
             addResponseTimeHeader(exchange, message);
             doWriteResponse(message, response, exchange);
         }
@@ -208,7 +206,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
     }
     private void addResponseTimeHeader(Exchange exchange, Message message) {
         Instant initInstant = Instant.ofEpochMilli(exchange.getClock().getCreated());
-        Instant nowInstant = Calendar.getInstance().toInstant();
+        Instant nowInstant = Instant.now();
         Duration duration = Duration.between(initInstant, nowInstant);
         message.setHeader(HTTP_RESPONSE_TIME, String.valueOf(duration.toMillis()));
     }

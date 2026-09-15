@@ -129,13 +129,13 @@ public class FlowManagerRuntime {
         try {
 
             if(contentType.equals("application/json")){
-                route = DocConverter.convertJsonToXml(route);
+                route = DocConverter.jsonToXml(route);
             }
 
             String report = integration.installRoute(routeId, route);
 
             if(mediaType.equals("application/xml")){
-                report = DocConverter.convertJsonToXml(report);
+                report = DocConverter.jsonToXml(report);
             }
 
             if (report.contains("successfully")) {
@@ -451,7 +451,7 @@ public class FlowManagerRuntime {
             boolean isuccessfully = isSuccessResponse(response);
 
             if (mediaType.equals("application/xml")) {
-                response = DocConverter.convertJsonToXml(response);
+                response = DocConverter.jsonToXml(response);
             }
 
             if (isuccessfully) {

@@ -15,61 +15,65 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class AS2MDNProcessor implements Processor {
 
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+
     @Override
     public void process(Exchange exchange) throws Exception {
-
-        // Get the body of the exchange, which is the MDN entity
         Object body = exchange.getIn().getBody();
 
-        if (exchange.getIn().getBody() instanceof DispositionNotificationMultipartReportEntity) {
-            processMdnReportBody(exchange, body);
+        if (body instanceof DispositionNotificationMultipartReportEntity reportEntity) {
+            processMdnReportBody(exchange, reportEntity);
         } else {
             exchange.getIn().setHeader("AS2Disposition", "NOT-PROCESSED");
-            throw new AS2BusinessException("Body is not an instance of DispositionNotificationMultipartReportEntity");
+            throw new AS2BusinessException(
+                    "Body is not an instance of DispositionNotificationMultipartReportEntity");
         }
     }
 
-    private void processMdnReportBody(Exchange exchange, Object body) throws IOException, MessagingException {
+    private void processMdnReportBody(
+            Exchange exchange,
+            DispositionNotificationMultipartReportEntity reportEntity)
+            throws IOException, MessagingException {
 
-        DispositionNotificationMultipartReportEntity reportEntity = (DispositionNotificationMultipartReportEntity) body;
-        // Get the InputStream from the report entity
         InputStream inputStream = reportEntity.getContent();
 
-        // Create a Mail session (this is required to create MimeMessage)
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
 
-        // Create MimeMessage from InputStream
         MimeMessage mimeMessage = new MimeMessage(session, inputStream);
-
-        // Extract MimeMultipart from MimeMessage
         MimeMultipart mimeMultipart = (MimeMultipart) mimeMessage.getContent();
 
         if (mimeMultipart != null && mimeMultipart.getCount() > 1) {
-            // Get the second part (MDN message)
             BodyPart bodyPart = mimeMultipart.getBodyPart(1);
 
-            // Read MDN body content as String
             String mdnText;
-            try (Scanner scanner = new Scanner(bodyPart.getInputStream(), StandardCharsets.UTF_8).useDelimiter("\\A")) {
+            try (Scanner scanner = new Scanner(
+                    bodyPart.getInputStream(),
+                    StandardCharsets.UTF_8).useDelimiter("\\A")) {
+
                 mdnText = scanner.hasNext() ? scanner.next() : "";
             }
 
-            // Parse MDN body lines and set headers dynamically
             setMdnHeader(exchange, mdnText);
         }
     }
 
-    private void setMdnHeader(Exchange exchange, String mdnText){
+    private void setMdnHeader(Exchange exchange, String mdnText) {
         for (String line : mdnText.split("\\r?\\n")) {
             line = line.trim();
-            String[] parts = line.split(":", 2);
-            if (line.isEmpty() || parts.length != 2) continue;
 
-            String key = "AS2" + parts[0].trim().replaceAll("\\s+", "-");
+            String[] parts = line.split(":", 2);
+            if (line.isEmpty() || parts.length != 2) {
+                continue;
+            }
+
+            String key = "AS2"
+                    + WHITESPACE_PATTERN.matcher(parts[0].trim()).replaceAll("-");
+
             String value = parts[1].trim();
 
             exchange.getIn().setHeader(key, value);

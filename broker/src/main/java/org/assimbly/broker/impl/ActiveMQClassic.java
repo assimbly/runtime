@@ -2,7 +2,6 @@ package org.assimbly.broker.impl;
 
 import org.apache.activemq.broker.jmx.*;
 
-import java.net.URLEncoder;
 import java.util.*;
 
 import tools.jackson.databind.ObjectMapper;
@@ -15,7 +14,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
-import org.assimbly.docconverter.DocConverter;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONObject;
@@ -65,7 +63,7 @@ public class ActiveMQClassic implements Broker {
 
                 // File.toURI() produces: file:///C:/Users/Raymond/.assimbly/broker/activemq.xml
                 URI fileUri = brokerFile.getCanonicalFile().toURI();
-                URI configurationUri = new URI("xbean:" + fileUri.toString());
+                URI configurationUri = new URI("xbean:" + fileUri);
 
                 broker = BrokerFactory.createBroker(configurationUri);
             } else {
@@ -74,7 +72,7 @@ public class ActiveMQClassic implements Broker {
                 log.warn("No config file 'activemq.xml' found.");
 
                 URI fileUri = brokerFile.getCanonicalFile().toURI();
-                URI configurationUri = new URI("xbean:" + fileUri.toString());
+                URI configurationUri = new URI("xbean:" + fileUri);
 
                 broker = BrokerFactory.createBroker(configurationUri);
             }
@@ -195,7 +193,7 @@ public class ActiveMQClassic implements Broker {
             FileUtils.touch(brokerFile);
             try(InputStream inputStream = classloader.getResourceAsStream("activemq.xml")) {
                 assert inputStream != null;
-                resolvedConfiguration = DocConverter.convertStreamToString(inputStream);
+                resolvedConfiguration = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             }
         }
 
@@ -547,7 +545,7 @@ public class ActiveMQClassic implements Broker {
     public String countMessagesFromList(String endpointList) throws Exception {
 
         long numberOfMessages = 0L;
-        String[] endpointNames= endpointList.split("\\s*,\\s*");
+        String[] endpointNames = endpointList.split(",\\s*");
 
         for(String endpointName: endpointNames){
 

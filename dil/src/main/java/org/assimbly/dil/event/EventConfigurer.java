@@ -35,11 +35,12 @@ public class EventConfigurer {
 
     public String add(String jsonConfiguration) {
 
-        log.info("Check event collector configuration:\n\n{}", jsonConfiguration);
+        log.info("Add collector with id={}. Configuration:\n\n{}", collectorId, jsonConfiguration);
 
         try {
             configuration = new Collection().fromJson(jsonConfiguration);
         } catch (JacksonException e) {
+            log.error("Adding collector with id={} failed",collectorId,e);
             return e.getMessage();
         }
 
@@ -65,16 +66,16 @@ public class EventConfigurer {
             case StepCollector stepCollector -> {
                 stepCollector.shutdown();
                 context.getManagementStrategy().removeEventNotifier((EventNotifier) collector);
-                log.info("Removed step collector with id={}", collectorId);
+                log.debug("Removed step collector with id={}", collectorId);
             }
             case RouteCollector routeCollector -> {
                 routeCollector.shutdown();
                 context.getManagementStrategy().removeEventNotifier((EventNotifier) collector);
-                log.info("Removed route collector with id={}", collectorId);
+                log.debug("Removed route collector with id={}", collectorId);
             }
             case LogCollector logCollector -> {
                 removeLogger(logCollector);
-                log.info("Removed log collector with id={}", collectorId);
+                log.debug("Removed log collector with id={}", collectorId);
             }
             case null, default -> log.warn("Collector with id={} does not exist", collectorId);
         }
@@ -107,7 +108,7 @@ public class EventConfigurer {
             remove(collectorId);
         }
 
-        log.info("Event collector configuration is valid");
+        log.debug("Event collector configuration is valid");
 
         return "ok";
 

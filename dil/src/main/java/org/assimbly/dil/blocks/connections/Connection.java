@@ -109,13 +109,21 @@ public class Connection {
 
     private EncryptableProperties decryptProperties(TreeMap<String, String> properties) {
 
-        EncryptableProperties encryptableProperties = (EncryptableProperties) context.getRegistry().lookupByName("encryptableProperties");
-        EncryptionUtil encryptionUtil = (EncryptionUtil) context.getRegistry().lookupByName("encryptionUtil");
+        EncryptableProperties encryptableProperties =
+                (EncryptableProperties) context.getRegistry().lookupByName("encryptableProperties");
 
-        for (Map.Entry<String,String> entry : properties.entrySet()) {
+        EncryptionUtil encryptionUtil =
+                (EncryptionUtil) context.getRegistry().lookupByName("encryptionUtil");
+
+        if (encryptionUtil == null) {
+            throw new IllegalStateException("encryptionUtil is not registered");
+        }
+
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
             String propertyKey = entry.getKey();
             String propertyValue = entry.getValue();
-            if(isEncodedString(propertyValue)){
+
+            if (isEncodedString(propertyValue)) {
                 propertyValue = encryptionUtil.decrypt(propertyValue);
             }
 
@@ -123,7 +131,6 @@ public class Connection {
         }
 
         return encryptableProperties;
-
     }
 
     private boolean isEncodedString(String input) {

@@ -43,19 +43,19 @@ public final class ExchangeMarshaller {
         }
 
         Map<String, String> headers = new ConcurrentHashMap<>();
-        if (exchange.getIn().getHeaders() != null) {
-            for (String key : exchange.getIn().getHeaders().keySet()) {
-                headers.put(key, exchange.getIn().getHeader(key, String.class));
-            }
+
+        for (String key : exchange.getIn().getHeaders().keySet()) {
+            headers.put(key, exchange.getIn().getHeader(key, String.class));
         }
 
         Map<String, String> properties = new ConcurrentHashMap<>();
-        if (exchange.getProperties() != null) {
-            for (String key : exchange.getProperties().keySet()) {
-                properties.put(key, exchange.getProperty(key, String.class));
-            }
+
+        for (String key : exchange.getProperties().keySet()) {
+            properties.put(key, exchange.getProperty(key, String.class));
         }
 
         return new ExchangeDto(properties, headers, body);
+
     }
+
 }

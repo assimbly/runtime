@@ -1,18 +1,18 @@
 package org.assimbly.dil.event.domain;
 
-import java.util.Date;
+import java.time.Instant;
 
 public class FlowEvent {
 
 	private String flowId;
-	private Date timestamp;
+	private Instant timestamp;
 	private String error;
-	
-	public FlowEvent(String string, Date timestamp, String error) {
-		    this.flowId = string;
-		    this.timestamp = timestamp;
-		    this.error = error;
-		  }
+
+	public FlowEvent(String flowId, Instant timestamp, String error) {
+		this.flowId = flowId;
+		this.timestamp = timestamp;
+		this.error = error;
+	}
 
 	public String getFlowId() {
 		return flowId;
@@ -22,11 +22,11 @@ public class FlowEvent {
 		this.flowId = flowId;
 	}
 
-	public Object getTimestamp() {
+	public Instant getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(Date timestamp) {
+	public void setTimestamp(Instant timestamp) {
 		this.timestamp = timestamp;
 	}
 
@@ -37,5 +37,5 @@ public class FlowEvent {
 	public void setError(String error) {
 		this.error = error;
 	}
-	
+
 }

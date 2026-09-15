@@ -45,6 +45,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons-collections4.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
             <version>${commons-configuration2.version}</version>
         </dependency>
@@ -241,6 +246,14 @@
             <groupId>org.jolokia</groupId>
             <artifactId>jolokia-client-java</artifactId>
             <version>${jolokia.version}</version>
+        </dependency>
+
+        <!-- docconverter -->
+        <!-- Source: https://mvnrepository.com/artifact/io.github.assimbly/docconverter -->
+        <dependency>
+            <groupId>io.github.assimbly</groupId>
+            <artifactId>docconverter</artifactId>
+            <version>${docconverter.version}</version>
         </dependency>
 
         <!-- Jetty dependencies for OAuth -->

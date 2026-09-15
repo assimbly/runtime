@@ -7,6 +7,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -55,20 +56,27 @@ public final class ApiUtils {
         if (format.contains("SSS")) {
             // 1-digit milliseconds -> add two trailing zeros
             dateStr = dateStr.replaceAll("(\\.\\d)(?!\\d)", "$100");
+
             // 2-digit milliseconds -> add a trailing zero
             dateStr = dateStr.replaceAll("(\\.\\d{2})(?!\\d)", "$10");
         }
+
         return dateStr;
     }
 
     public static String getNowDate(String format) {
-        return Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(format));
+        return Instant.now()
+                .atOffset(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ofPattern(format));
     }
 
     public static String readFileAsStringFromResources(String fileName) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
+            Path path = Path.of(
+                    Objects.requireNonNull(classLoader.getResource(fileName)).toURI()
+            );
+
             return Files.readString(path, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("Error to load {} file from resources", fileName, e);
@@ -79,7 +87,10 @@ public final class ApiUtils {
     public static byte[] readFileAsBytesFromResources(String fileName) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Path path = Path.of(Objects.requireNonNull(classLoader.getResource(fileName)).toURI());
+            Path path = Path.of(
+                    Objects.requireNonNull(classLoader.getResource(fileName)).toURI()
+            );
+
             return Files.readAllBytes(path);
         } catch (Exception e) {
             log.error("Error to load {} file from resources", fileName, e);
@@ -89,60 +100,96 @@ public final class ApiUtils {
 
     public static String extractRouteFromXmlByRouteId(String xml, String routeId) throws Exception {
 
-        // create a DocumentBuilderFactory and set up a DocumentBuilder
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+
+        // Prevent XXE and other external entity attacks.
+        factory.setFeature(
+                "http://apache.org/xml/features/disallow-doctype-decl",
+                true
+        );
+        factory.setFeature(
+                "http://xml.org/sax/features/external-general-entities",
+                false
+        );
+        factory.setFeature(
+                "http://xml.org/sax/features/external-parameter-entities",
+                false
+        );
         factory.setExpandEntityReferences(false);
+
         DocumentBuilder builder = factory.newDocumentBuilder();
 
-        // parse the string content into a Document
+        // Parse the string content into a Document.
         InputSource inputSource = new InputSource(new StringReader(xml));
         Document document = builder.parse(inputSource);
 
-        // create XPath object
+        // Create XPath object.
         XPathFactory xPathFactory = XPathFactory.newInstance();
         XPath xpath = xPathFactory.newXPath();
 
-        // xpath expression to find the route with the specific id
+        // XPath expression to find the route with the specific id.
         String expression = "//route[@id='" + routeId + "']";
 
-        // execute XPath to find the route element
-        NodeList routeNodes = (NodeList) xpath.evaluate(expression, document, XPathConstants.NODESET);
+        // Execute XPath to find the route element.
+        NodeList routeNodes = (NodeList) xpath.evaluate(
+                expression,
+                document,
+                XPathConstants.NODESET
+        );
 
-        // check if the route is found
         if (routeNodes.getLength() > 0) {
-            // get the first matching route node (you can change this to handle multiple matches if needed)
             Node routeNode = routeNodes.item(0);
-
-            // convert the node to a string (XML)
             return getStringFromNode(routeNode);
         }
+
         return null;
     }
 
     private static String getStringFromNode(Node node) throws Exception {
-        // create a transformer to convert the node to a string
         StringWriter writer = new StringWriter();
+
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+
+        // Prevent external DTDs and stylesheets from being accessed.
+        transformerFactory.setAttribute(
+                XMLConstants.ACCESS_EXTERNAL_DTD,
+                ""
+        );
+        transformerFactory.setAttribute(
+                XMLConstants.ACCESS_EXTERNAL_STYLESHEET,
+                ""
+        );
+
+        // Enable secure processing.
+        transformerFactory.setFeature(
+                XMLConstants.FEATURE_SECURE_PROCESSING,
+                true
+        );
+
         Transformer transformer = transformerFactory.newTransformer();
 
-        // format the output for better readability
+        // Format the output for better readability.
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-        // prevent the XML declaration from being included in the output
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        // Prevent the XML declaration from being included in the output.
+        transformer.setOutputProperty(
+                OutputKeys.OMIT_XML_DECLARATION,
+                "yes"
+        );
 
-        // convert the node to a string
-        transformer.transform(new DOMSource(node), new StreamResult(writer));
+        // Convert the node to a string.
+        transformer.transform(
+                new DOMSource(node),
+                new StreamResult(writer)
+        );
+
         return writer.toString();
     }
 
     public static String buildAuth(String email, String pwd) {
         String data = email + ":" + pwd;
-        return Base64.getEncoder().encodeToString(data.getBytes());
+        return Base64.getEncoder()
+                .encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
-
 }

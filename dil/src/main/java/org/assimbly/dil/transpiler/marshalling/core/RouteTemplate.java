@@ -7,7 +7,7 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xerces.dom.DocumentImpl;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
-import org.assimbly.docconverter.DocConverter;
+import org.assimbly.docconverter.StringConverter;
 import org.assimbly.util.IntegrationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,11 +92,11 @@ public class RouteTemplate {
 
     }
 
-    private void createCustomRoute(String[] links, String stepXPath, String type, String stepId, String customType)  throws Exception {
+    private void createCustomRoute(String[] links, String stepXPath, String type, String stepId, String customType) {
 
         createRoutes(links, stepXPath, customType, type);
 
-        String route = DocConverter.convertDocToString(customRouteDoc);
+        String route = StringConverter.docToString(customRouteDoc);
 
         properties.put(type + "." + stepId + ".route", route);
         properties.put(type + "." + stepId + ".route.id",  routeId);
@@ -304,7 +304,7 @@ public class RouteTemplate {
             return setHeaders;
         }
 
-        String writeAsString = getTemplatedRouteOptionValue("writeAsString", "false");
+        String writeAsString = getTemplatedRouteOptionValue();
 
         String messageId = StringUtils.substringAfter(setHeadersUri,"message:");
         String headersXpath = "core/messages/message[name='" + messageId + "']/headers/header";
@@ -341,11 +341,11 @@ public class RouteTemplate {
 
     }
 
-    private void createStep(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId, String stepId) throws Exception {
+    private void createStep(List<String> optionProperties, String[] links, String stepXPath, int stepIndex, String type, String flowId, String stepId) {
 
         createTemplatedRoute(optionProperties, links, stepXPath, stepIndex, type, flowId);
 
-        String routeTemplate = DocConverter.convertDocToString(templateDoc);
+        String routeTemplate = StringConverter.docToString(templateDoc);
 
         properties.put(type + "." + stepId + ".routetemplate", routeTemplate);
         properties.put(type + "." + stepId + ".routetemplate.id",  routeId);
@@ -422,7 +422,7 @@ public class RouteTemplate {
 
             routeId = baseUri;
             Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routes/route[@id='" + routeId + "']");
-            String route = DocConverter.convertNodeToString(routeNode);
+            String route = StringConverter.nodeToString(routeNode);
 
             properties.put(type + "." + stepId + ".route.id", routeId);
             properties.put(type + "." + stepId + ".route", route);
@@ -432,7 +432,7 @@ public class RouteTemplate {
             String stepRouteConfigurationId = baseUri;
 
             Node routeNode = IntegrationUtil.getNode(conf,"/dil/core/routeConfigurations/routeConfiguration[@id='" + stepRouteConfigurationId + "']");
-            String routeConfiguration = DocConverter.convertNodeToString(routeNode);
+            String routeConfiguration = StringConverter.nodeToString(routeNode);
 
             String timestamp = getTimestamp();
             String updatedRouteConfigurationId = baseUri + "_" + timestamp;
@@ -487,20 +487,6 @@ public class RouteTemplate {
         return CustomKameletCatalog.getNames().contains(altName);
     }
 
-    private String resolveTemplateName(String templateName) {
-        String fullTemplateName = templateName + ".kamelet.yaml";
-        if (CustomKameletCatalog.getNames().contains(fullTemplateName)) {
-            return templateName;
-        }
-        String altName = templateName.replace("langchain4j-", "langchain4j")
-                                     .replace("spring-ai-", "springai");
-        if (CustomKameletCatalog.getNames().contains(altName + ".kamelet.yaml")) {
-            return altName;
-        }
-        return templateName;
-    }
-
-
     private void createTemplatedRoutes(){
         templatedRoutes = templateDoc.createElementNS("http://camel.apache.org/schema/spring", "templatedRoutes");
         templateDoc.appendChild(templatedRoutes);
@@ -547,17 +533,17 @@ public class RouteTemplate {
 
     }
 
-    private String getTemplatedRouteOptionValue(String key, String defaultValue) {
+    private String getTemplatedRouteOptionValue() {
         if (templatedRouteOptions == null || templatedRouteOptions.isEmpty()) {
-            return defaultValue;
+            return "false";
         }
         try {
             Map<String, Object> parsedOptions = URISupport.parseQuery(templatedRouteOptions);
-            Object value = parsedOptions.get(key);
-            return value != null ? value.toString() : defaultValue;
+            Object value = parsedOptions.get("writeAsString");
+            return value != null ? value.toString() : "false";
         } catch (URISyntaxException e) {
-            log.warn("Unable to parse options '{}' for key '{}', using default '{}'", templatedRouteOptions, key, defaultValue, e);
-            return defaultValue;
+            log.warn("Unable to parse options '{}' for key '{}', using default '{}'", templatedRouteOptions, "writeAsString", "false", e);
+            return "false";
         }
     }
 
@@ -872,7 +858,7 @@ public class RouteTemplate {
 
         Node node = IntegrationUtil.getNode(conf,"/dil/core/routeTemplates/routeTemplate[@id='" + templateId + "']");
 
-        String routeTemplateAsString = DocConverter.convertNodeToString(node);
+        String routeTemplateAsString = StringConverter.nodeToString(node);
 
         properties.put(type + "." + stepId + ".routetemplatedefinition.id", templateId);
         properties.put(type + "." + stepId + ".routetemplatedefinition", routeTemplateAsString);
@@ -943,7 +929,7 @@ public class RouteTemplate {
             if (node == null) {
                 node = IntegrationUtil.getNode(conf, "/dil/core/messages/message[id='" + messageName + "']/body/*");
             }
-            resourceAsString = DocConverter.convertNodeToString(node);
+            resourceAsString = StringConverter.nodeToString(node);
         }
 
         return resourceAsString;
@@ -960,7 +946,7 @@ public class RouteTemplate {
         }
 
         if (node != null) {
-            String headerKeysAsString = DocConverter.convertNodeToString(node);
+            String headerKeysAsString = StringConverter.nodeToString(node);
             // Assuming 'parameter', 'templateDoc', and 'templatedRoute' are instance variables
             Element parameter = createParameter(templateDoc, "headers", headerKeysAsString);
             templatedRoute.appendChild(parameter);

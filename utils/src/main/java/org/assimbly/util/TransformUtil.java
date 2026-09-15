@@ -1,14 +1,15 @@
 package org.assimbly.util;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -18,38 +19,58 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public final class TransformUtil {
 
-    private static final Logger log = LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+    private static final Logger log =
+            LoggerFactory.getLogger("org.assimbly.util.TransformUtil");
+
+    private TransformUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     public static String transformXML(String xml, InputStream xslFile) {
 
         String outputXML = null;
+
         try {
-            System.setProperty("javax.xml.transform.TransformerFactory", "net.sf.saxon.TransformerFactoryImpl");
-            TransformerFactory factory = TransformerFactory.newInstance();
+            System.setProperty(
+                    "javax.xml.transform.TransformerFactory",
+                    "net.sf.saxon.TransformerFactoryImpl"
+            );
 
-            StreamSource sourcXsl = new StreamSource(xslFile);
-            Transformer transformer = factory.newTransformer(sourcXsl);
-            Source xmlStream = new StreamSource(new StringReader(xml));
+            TransformerFactory factory =
+                    createSecureTransformerFactory();
+
+            StreamSource sourceXsl = new StreamSource(xslFile);
+            Transformer transformer =
+                    factory.newTransformer(sourceXsl);
+
+            Source xmlStream =
+                    new StreamSource(new StringReader(xml));
+
             StringWriter writer = new StringWriter();
-
             Result result = new StreamResult(writer);
 
             transformer.transform(xmlStream, result);
 
-            outputXML = writer.getBuffer().toString();
+            outputXML = writer.toString();
 
             writer.close();
 
         } catch (TransformerConfigurationException tce) {
-            log.error("XSLT Transformation of XML failed due to a TransformerConfigurationException",tce);
+            log.error(
+                    "XSLT Transformation of XML failed due to a TransformerConfigurationException",
+                    tce
+            );
         } catch (TransformerException te) {
-            log.error("XSLT Transformation of XML failed due to a TransformerException",te);
+            log.error(
+                    "XSLT Transformation of XML failed due to a TransformerException",
+                    te
+            );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         return outputXML;
     }
 
@@ -57,70 +78,150 @@ public final class TransformUtil {
      * Performs simultaneous search/replace of multiple strings.
      *
      * @param target        string to perform replacements on.
-     * @param replacements  map where key represents value to search for, and value represents replacem
+     * @param replacements  map where key represents value to search for,
+     *                      and value represents replacement.
      * @param caseSensitive whether or not the search is case-sensitive.
      * @return replaced string
      */
-    public static String replaceMultipleStrings(String target, Map<String, String> replacements, boolean caseSensitive) {
-        if(target == null || target.isEmpty() || replacements == null || replacements.isEmpty())
-            return target;
+    public static String replaceMultipleStrings(
+            String target,
+            Map<String, String> replacements,
+            boolean caseSensitive) {
 
-        //if we are doing case-insensitive replacements, we need to make the map case-insensitive--make a new map with all-lower-case keys
-        if(!caseSensitive) {
-            Map<String, String> altReplacements = HashMap.newHashMap(replacements.size());
-            for(Map.Entry<String, String> entry : replacements.entrySet())
-                altReplacements.put(entry.getKey().toLowerCase(), replacements.get(entry.getKey()));
+        if (target == null
+                || target.isEmpty()
+                || replacements == null
+                || replacements.isEmpty()) {
+            return target;
+        }
+
+        if (!caseSensitive) {
+            Map<String, String> altReplacements =
+                    HashMap.newHashMap(replacements.size());
+
+            for (Map.Entry<String, String> entry :
+                    replacements.entrySet()) {
+
+                altReplacements.put(
+                        entry.getKey().toLowerCase(),
+                        entry.getValue()
+                );
+            }
 
             replacements = altReplacements;
         }
 
         StringBuilder patternString = new StringBuilder();
-        if(!caseSensitive)
+
+        if (!caseSensitive) {
             patternString.append("(?i)");
+        }
 
         patternString.append('(');
+
         boolean first = true;
-        for(String key : replacements.keySet()) {
-            if(first)
+
+        for (String key : replacements.keySet()) {
+            if (first) {
                 first = false;
-            else
+            } else {
                 patternString.append('|');
+            }
 
             patternString.append(Pattern.quote(key));
         }
+
         patternString.append(')');
 
-        Pattern pattern = Pattern.compile(patternString.toString());
+        Pattern pattern =
+                Pattern.compile(patternString.toString());
+
         Matcher matcher = pattern.matcher(target);
 
         StringBuilder res = new StringBuilder();
-        while(matcher.find()) {
+
+        while (matcher.find()) {
             String match = matcher.group(1);
-            if(!caseSensitive)
+
+            if (!caseSensitive) {
                 match = match.toLowerCase();
-            matcher.appendReplacement(res, replacements.get(match));
+            }
+
+            matcher.appendReplacement(
+                    res,
+                    Matcher.quoteReplacement(replacements.get(match))
+            );
         }
+
         matcher.appendTail(res);
 
         return res.toString();
-
     }
-	
-	public static String nodeToString(Node node) {
 
-		StringWriter sw = new StringWriter();
+    public static String nodeToString(Node node) {
 
-		try {
-		  Transformer t = TransformerFactory.newInstance().newTransformer();
-		  t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		  t.setOutputProperty(OutputKeys.INDENT, "yes");
-		  t.transform(new DOMSource(node), new StreamResult(sw));
-		} catch (TransformerException te) {
-            log.error("nodeToString Transformer Exception: {}", String.valueOf(te));
-		}
+        StringWriter sw = new StringWriter();
 
-		return sw.toString();
+        try {
+            TransformerFactory factory =
+                    createSecureTransformerFactory();
 
-	}
+            Transformer transformer =
+                    factory.newTransformer();
 
+            transformer.setOutputProperty(
+                    OutputKeys.OMIT_XML_DECLARATION,
+                    "yes"
+            );
+
+            transformer.setOutputProperty(
+                    OutputKeys.INDENT,
+                    "yes"
+            );
+
+            transformer.transform(
+                    new DOMSource(node),
+                    new StreamResult(sw)
+            );
+
+        } catch (TransformerException te) {
+            log.error(
+                    "nodeToString Transformer Exception: {}",
+                    String.valueOf(te)
+            );
+        }
+
+        return sw.toString();
+    }
+
+    /**
+     * Creates a securely configured TransformerFactory.
+     * Prevents external DTDs and external stylesheets from being accessed.
+     */
+    private static TransformerFactory createSecureTransformerFactory()
+            throws TransformerConfigurationException {
+
+        TransformerFactory factory =
+                TransformerFactory.newInstance();
+
+        // Enable secure XML processing.
+        factory.setFeature(
+                XMLConstants.FEATURE_SECURE_PROCESSING,
+                true
+        );
+
+        // Prevent access to external DTDs.
+        factory.setAttribute(
+                XMLConstants.ACCESS_EXTERNAL_DTD,
+                ""
+        );
+
+        // Prevent access to external stylesheets.
+        factory.setAttribute(
+                XMLConstants.ACCESS_EXTERNAL_STYLESHEET,
+                ""
+        );
+
+        return factory;
+    }
 }

@@ -24,7 +24,7 @@ public class JsonEnrichStrategy implements AggregationStrategy {
 
             String resourceBody = convertBodyToString(resource);
 
-            array = wrapArray(array,resourceBody);
+            array = wrapInArray(array,resourceBody);
             resource.getIn().setBody(array.toString(2));
 
             return resource;
@@ -34,8 +34,8 @@ public class JsonEnrichStrategy implements AggregationStrategy {
             String originalBody = convertBodyToString(original);
             String resourceBody = convertBodyToString(resource);
 
-            array = wrapArray(array, originalBody);
-            array = wrapArray(array, resourceBody);
+            array = wrapInArray(array, originalBody);
+            array = wrapInArray(array, resourceBody);
 
             original.getIn().setBody(array.toString(2));
 
@@ -43,14 +43,6 @@ public class JsonEnrichStrategy implements AggregationStrategy {
 
         }
 
-    }
-
-    private JSONArray wrapArray(JSONArray array, String json){
-        if(json.charAt(0) == '[') {
-            return array.put(new JSONArray(json));
-        } else {
-            return array.put(new JSONObject(json));
-        }
     }
 
     private String convertBodyToString(Exchange exchange){
@@ -64,11 +56,25 @@ public class JsonEnrichStrategy implements AggregationStrategy {
                 // Convert Object to String using Camel's typeconverter
                return exchange.getContext().getTypeConverter().convertTo(String.class, body);
             } catch (TypeConversionException e) {
-               log.error("Failed to enrich message body of type: " + body.getClass().getName() + " | Error:" + e.getMessage());
+               if(body!=null) {
+                   log.error("Failed to enrich message body of type: " + body.getClass().getName() + " | Error:" + e.getMessage());
+               }
                throw e;
             }
         }
 
+    }
+
+    private JSONArray wrapInArray(JSONArray array, String json) {
+        if (json == null || json.isBlank()) {
+            return array;
+        }
+
+        if (json.trim().charAt(0) == '[') {
+            return array.put(new JSONArray(json));
+        }
+
+        return array.put(new JSONObject(json));
     }
 
 }

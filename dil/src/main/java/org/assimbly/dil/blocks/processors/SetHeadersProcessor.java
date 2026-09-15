@@ -23,7 +23,7 @@ public class SetHeadersProcessor implements Processor {
 
 	  String headers  = exchange.getProperty("assimbly.headers",String.class);
 
-	  if(headers.startsWith("<headers")){
+	  if(headers != null && headers.startsWith("<headers")){
 
 		  NodeList nodeList = IntegrationUtil.getNodeList(headers, "headers").item(0).getChildNodes();
 

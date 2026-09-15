@@ -65,7 +65,7 @@ public class StartupManager {
 
             try {
                 Thread.sleep(DEPENDENCY_RETRY_DELAY_MS);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException _) {
                 Thread.currentThread().interrupt();
                 log.warn("waitForDependencies interrupted");
                 return;

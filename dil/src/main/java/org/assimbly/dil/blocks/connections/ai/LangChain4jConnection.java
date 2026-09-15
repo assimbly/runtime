@@ -29,29 +29,20 @@ public class LangChain4jConnection {
     public void start() {
         setFields();
 
-        if (checkConnection()) {
-            if (context.getRegistry().lookupByName(connectionId) != null) {
-                log.info("Updating existing LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
-                context.getRegistry().unbind(connectionId);
-            } else {
-                log.info("Creating new LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
-            }
-            setConnection();
+        if (context.getRegistry().lookupByName(connectionId) != null) {
+            log.info("Updating existing LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
+            context.getRegistry().unbind(connectionId);
+        } else {
+            log.info("Creating new LangChain4j GoogleAiGeminiChatModel connection with id={}", connectionId);
         }
+        setConnection();
+
     }
 
     private void setFields() {
         apiKey = properties.getProperty("connection." + connectionId + ".apikey");
         modelName = properties.getProperty("connection." + connectionId + ".modelname");
         timeout = properties.getProperty("connection." + connectionId + ".timeout");
-    }
-
-    private boolean checkConnection() {
-        if (apiKey == null || apiKey.isEmpty()) {
-            throw new IllegalArgumentException("LangChain4j connection parameters are invalid. apikey is required");
-        }
-
-        return true;
     }
 
     private void setConnection() {
@@ -64,7 +55,7 @@ public class LangChain4jConnection {
         if (timeout != null && !timeout.isEmpty()) {
             try {
                 resolvedTimeout = Long.parseLong(timeout);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 log.warn("Invalid timeout value '{}', using default 10s", timeout);
             }
         }

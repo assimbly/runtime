@@ -1,22 +1,17 @@
 package org.assimbly.dil.blocks.processors;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
-import org.apache.camel.Message;
-import org.apache.camel.Route;
+import org.apache.camel.*;
 import org.apache.camel.spi.Configurer;
 import org.apache.camel.spi.ExchangeFormatter;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.support.ExceptionHelper;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.support.MessageHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.concurrent.Future;
 
 /**
  * Default {@link ExchangeFormatter} that have fine grained options to configure what to include in the output.
@@ -435,24 +430,7 @@ public class JsonExchangeFormatter implements ExchangeFormatter {
     // Implementation methods
     //-------------------------------------------------------------------------
     protected String getBodyAsString(Message message) {
-        if (message.getBody() instanceof Future && !isShowFuture()) {
-                // just use to string of the future object
-                return message.getBody().toString();
-            }
-
-
-        return MessageHelper.extractBodyForLogging(message, null, isShowCachedStreams(), isShowStreams(), isShowFiles(), getMaxChars(message));
-    }
-
-    private int getMaxChars(Message message) {
-        int maximumChars = getMaxChars();
-        if (message.getExchange() != null) {
-            String globalOption = message.getExchange().getContext().getGlobalOption(Exchange.LOG_DEBUG_BODY_MAX_CHARS);
-            if (globalOption != null) {
-                maximumChars = message.getExchange().getContext().getTypeConverter().convertTo(Integer.class, globalOption);
-            }
-        }
-        return maximumChars;
+        return message.getBody(String.class);
     }
 
     protected String getBodyTypeAsString(Message message) {

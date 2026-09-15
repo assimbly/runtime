@@ -90,10 +90,10 @@ public class JDBCConnection {
     }
 
     private void setUrl() {
+        String configuredUrl = properties.getProperty("connection." + connectionId + ".url");
 
-        url = properties.getProperty("connection." + connectionId + ".url");
-
-        if(url!=null){
+        if (configuredUrl != null) {
+            url = configuredUrl;
             return;
         }
 
@@ -101,47 +101,49 @@ public class JDBCConnection {
         String port = properties.getProperty("connection." + connectionId + ".port");
         String dbName = properties.getProperty("connection." + connectionId + ".dbname");
 
-        switch (dbtype.toLowerCase()) {
-            case "mysql":
-                url = (host != null && port != null)
-                        ? "jdbc:mysql://" + host + ":" + port + "/"
-                        : "jdbc:mysql://localhost:3306/";
-                break;
-            case "oracle":
-                url = (host != null && port != null)
-                        ? "jdbc:oracle:thin:@" + host + ":" + port
-                        : "jdbc:oracle:thin:@localhost:1521:orcl";
-                break;
-            case "postgres", "postgresql":
-                url = (host != null && port != null)
-                        ? "jdbc:postgresql://" + host + ":" + port + "/"
-                        : "jdbc:postgresql://localhost:5432/";
-                break;
-            case "sqlserver":
-                url = (host != null && port != null)
-                        ? "jdbc:sqlserver://" + host + ":" + port + ";databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true;"
-                        : "jdbc:sqlserver://localhost:1433;databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true;";
-                break;
-            case "db2":
-                url = (host != null && port != null)
-                        ? "jdbc:db2://" + host + ":" + port + "/"
-                        : "jdbc:db2://localhost:50000/";
-                break;
-            case "informix", "informix-sqli":
-                url = (host != null && port != null)
-                        ? "jdbc:informix-sqli://" + host + ":" + port + "/"
-                        : "jdbc:informix-sqli://localhost:9088/";
-                break;
-            case "sqlite":
-                url = (host != null && port != null)
-                        ? "jdbc:sqlite://" + host + ":" + port + "/"
-                        : "jdbc:sqlite://localhost/";
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported database: " + dbtype);
-        }
+        url = createUrl(host, port, dbName);
     }
 
+    private String createUrl(String host, String port, String dbName) {
+        String databaseType = dbtype.toLowerCase();
+
+        return switch (databaseType) {
+            case "mysql" -> (host != null && port != null)
+                    ? "jdbc:mysql://" + host + ":" + port + "/"
+                    : "jdbc:mysql://localhost:3306/";
+
+            case "oracle" -> (host != null && port != null)
+                    ? "jdbc:oracle:thin:@" + host + ":" + port
+                    : "jdbc:oracle:thin:@localhost:1521:orcl";
+
+            case "postgres", "postgresql" -> (host != null && port != null)
+                    ? "jdbc:postgresql://" + host + ":" + port + "/"
+                    : "jdbc:postgresql://localhost:5432/";
+
+            case "sqlserver" -> (host != null && port != null)
+                    ? "jdbc:sqlserver://" + host + ":" + port
+                    + ";databaseName=" + dbName
+                    + ";encrypt=true;trustServerCertificate=true;"
+                    : "jdbc:sqlserver://localhost:1433"
+                    + ";databaseName=" + dbName
+                    + ";encrypt=true;trustServerCertificate=true;";
+
+            case "db2" -> (host != null && port != null)
+                    ? "jdbc:db2://" + host + ":" + port + "/"
+                    : "jdbc:db2://localhost:50000/";
+
+            case "informix", "informix-sqli" -> (host != null && port != null)
+                    ? "jdbc:informix-sqli://" + host + ":" + port + "/"
+                    : "jdbc:informix-sqli://localhost:9088/";
+
+            case "sqlite" -> (host != null && port != null)
+                    ? "jdbc:sqlite://" + host + ":" + port + "/"
+                    : "jdbc:sqlite://localhost/";
+
+            default -> throw new IllegalArgumentException("Unsupported database: " + dbtype);
+        };
+
+    }
 
     private void setConnection(String direction, Object stepId) {
 

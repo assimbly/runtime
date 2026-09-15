@@ -31,19 +31,39 @@ public class SetOriginalMessageProcessor implements Processor {
 				// load the original http message into the current exchange from the camel global variable
 
 				// load retry attempts
-				Integer retryAttempts = exchange.getMessage().getHeader(ASSIMBLY_RETRY_ATTEMPTS_HEADER, Integer.class);
+				// Load retry attempts
+				Integer retryAttempts = exchange.getMessage()
+						.getHeader(ASSIMBLY_RETRY_ATTEMPTS_HEADER, Integer.class);
+
+				if (retryAttempts == null) {
+					retryAttempts = 0;
+				}
+
 				retryAttempts++;
 
-				// load original http message variable id
-				variableId = exchange.getMessage().getHeader(ASSIMBLY_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER, String.class);
+                // Load original HTTP message variable id
+				variableId = exchange.getMessage()
+						.getHeader(ASSIMBLY_ORIGINAL_HTTP_MESSAGE_VARIABLE_ID_HEADER, String.class);
 
-				// load original http message from global variable
-				Message originalHttpMessage = exchange.getVariable(CAMEL_GLOBAL_VARIABLE_PREFIX + variableId, Message.class);
+				// Load original HTTP message from global variable
+				Message originalHttpMessage = exchange.getVariable(
+						CAMEL_GLOBAL_VARIABLE_PREFIX + variableId,
+						Message.class
+				);
 
-				// set retry attempts
-				originalHttpMessage.setHeader(ASSIMBLY_RETRY_ATTEMPTS_HEADER, retryAttempts);
+				if (originalHttpMessage == null) {
+					throw new IllegalStateException(
+							"Original HTTP message not found for variable: " + variableId
+					);
+				}
 
-				// load original http message into exchange
+                // Set retry attempts
+				originalHttpMessage.setHeader(
+						ASSIMBLY_RETRY_ATTEMPTS_HEADER,
+						retryAttempts
+				);
+
+                // Load original HTTP message into exchange
 				exchange.setMessage(originalHttpMessage);
 				break;
 

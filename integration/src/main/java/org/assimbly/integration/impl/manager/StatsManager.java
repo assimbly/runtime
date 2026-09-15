@@ -753,7 +753,7 @@ public class StatsManager {
         for (Route route : routes) {
             String routeId = route.getId();
             String flowId = StringUtils.substringBefore(routeId, "-");
-            if (flowId != null && !flowId.isEmpty()) {
+            if (!flowId.isEmpty()) {
                 flowIds.add(flowId);
             }
         }
@@ -772,7 +772,7 @@ public class StatsManager {
         if (metricsService != null) {
             integrationStats = metricsService.dumpStatisticsAsJson();
             if (mediaType.contains("xml")) {
-                integrationStats = DocConverter.convertJsonToXml(integrationStats);
+                integrationStats = DocConverter.jsonToXml(integrationStats);
             }
         }
 
@@ -790,7 +790,7 @@ public class StatsManager {
         if (historyService != null) {
             integrationStats = historyService.dumpStatisticsAsJson();
             if (mediaType.contains("xml")) {
-                integrationStats = DocConverter.convertJsonToXml(integrationStats);
+                integrationStats = DocConverter.jsonToXml(integrationStats);
             }
         }
 
@@ -894,10 +894,10 @@ public class StatsManager {
         return mediaType;
     }
 
-    private String convertMediaType(String content, String from, String to) throws Exception{
+    private String convertMediaType(String content, String from, String to) {
         return switch (from + "->" + to) {
-            case "json->xml" -> DocConverter.convertJsonToXml(content);
-            case "xml->json" -> DocConverter.convertXmlToJson(content);
+            case "json->xml" -> DocConverter.jsonToXml(content);
+            case "xml->json" -> DocConverter.xmlToJson(content);
             default -> content;
         };
     }

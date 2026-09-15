@@ -5,22 +5,22 @@ import org.assimbly.util.BaseDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 public class FileStore {
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
     private File file;
-    private final Date date = new Date();
 
     public FileStore(String collectorId, org.assimbly.dil.event.domain.Store store) {
-
         createFile(collectorId, store);
-
     }
 
     public void store(String json) {
@@ -32,15 +32,13 @@ public class FileStore {
         }
     }
 
-    private void createFile(String collectorid, org.assimbly.dil.event.domain.Store store){
-
+    private void createFile(String collectorid, org.assimbly.dil.event.domain.Store store) {
         String uri = store.getUri();
-        String today = new SimpleDateFormat("yyyyMMdd").format(date);
+
+        // Use LocalDate with explicit ZoneId to resolve both java.time and S8688 warnings
+        String today = LocalDate.now(ZoneId.systemDefault()).format(DATE_FORMATTER);
 
         file = new File(Objects.requireNonNullElseGet(uri, () -> baseDir + "/events/" + collectorid + "/" + today + "_events.log"));
-
     }
 
 }
-
-
