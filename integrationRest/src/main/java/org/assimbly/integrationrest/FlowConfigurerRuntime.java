@@ -147,6 +147,7 @@ public class FlowConfigurerRuntime {
 	)
     public ResponseEntity<String> getComponentSchema(
 			@PathVariable(value = "componenttype") String componenttype,
+			@RequestParam(value = "type", required = false) String type,
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) {
 
@@ -154,7 +155,7 @@ public class FlowConfigurerRuntime {
 
 		try {
 
-            String documentation = integration.getComponentSchema(componenttype, mediaType);
+            String documentation = integration.getComponentSchema(componenttype, type, mediaType);
     		if(documentation.startsWith("Unknown")) {
 				//return empty default if unknown
 				documentation = "{\"component\": {\"kind\": \"block\"},\"properties\": {    \"\": { \"kind\": \"\", \"displayName\": \"\", \"group\": \"\", \"label\": \"\", \"required\": false, \"type\": \"string\", \"javaType\": \"\", \"deprecated\": false, \"deprecationNote\": \"\", \"autowired\": false, \"secret\": false, \"description\": \"\" }}}";

@@ -40,6 +40,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
@@ -569,24 +570,21 @@ public class CamelIntegration extends BaseIntegration {
         return components;
     }
 
-    public String getComponentSchema(String componentType, String mediaType) throws Exception {
+    @Override
+    public String getComponentSchema(String componentType, String type, String mediaType) throws Exception {
 
         DefaultCamelCatalog catalog = new DefaultCamelCatalog();
+        String schema = null;
 
-        String schema = catalog.componentJSonSchema(componentType);
-
-        if (schema.isEmpty()) {
-            URL url = Resources.getResource("custom-steps-parameters.json");
-            String customSchemas = Resources.toString(url, StandardCharsets.UTF_8);
-            JSONArray jsonArray = new JSONArray(customSchemas);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject components = jsonArray.getJSONObject(i);
-                JSONObject component = components.getJSONObject("component");
-                String name = component.getString("name");
-                if (name.equalsIgnoreCase(componentType)) {
-                    schema = components.toString();
-                    break;
-                }
+        if (catalog.findComponentNames().contains(componentType)) {
+            schema = catalog.componentJSonSchema(componentType);
+        } else if (StringUtils.isNotBlank(type)) {
+            try {
+                URL url = Resources.getResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
+                String kamelet = Resources.toString(url, StandardCharsets.UTF_8);
+                schema = retrieveKameletOptions(kamelet, componentType);
+            } catch (Exception e) {
+                log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
             }
         }
 
@@ -597,6 +595,73 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         return schema;
+    }
+
+    @SuppressWarnings("unchecked")
+    private String retrieveKameletOptions(String kameletYaml, String componentType) {
+        Set<String> skipProperties = Set.of(
+                "path", "in", "out", "sink", "routeId", "stepId", "routeConfigurationId"
+        );
+
+        Yaml yaml = new Yaml();
+        Map<String, Object> root = yaml.load(kameletYaml);
+        Map<String, Object> spec = (Map<String, Object>) root.get("spec");
+        Map<String, Object> definition = (Map<String, Object>) spec.get("definition");
+        Map<String, Object> properties = (Map<String, Object>) definition.getOrDefault("properties", Map.of());
+        if (properties == null) {
+            properties = Map.of();
+        }
+        List<String> requiredList = (List<String>) definition.get("required");
+        Set<String> required = requiredList != null ? new HashSet<>(requiredList) : Set.of();
+
+        JSONObject schemaProperties = new JSONObject();
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            String name = entry.getKey();
+            if (skipProperties.contains(name)) {
+                continue;
+            }
+
+            Map<String, Object> prop = (Map<String, Object>) entry.getValue();
+            String propType = String.valueOf(prop.getOrDefault("type", "string"));
+
+            JSONObject propertySchema = new JSONObject();
+            propertySchema.put("kind", "parameter");
+            propertySchema.put("displayName", prop.getOrDefault("title", name));
+            propertySchema.put("group", "common");
+            propertySchema.put("label", "");
+            propertySchema.put("required", required.contains(name));
+            propertySchema.put("type", propType);
+            propertySchema.put("javaType", toJavaType(propType));
+            propertySchema.put("deprecated", false);
+            propertySchema.put("deprecationNote", "");
+            propertySchema.put("autowired", false);
+            propertySchema.put("secret", false);
+            propertySchema.put("description", prop.getOrDefault("description", ""));
+            if (prop.containsKey("default")) {
+                propertySchema.put("defaultValue", prop.get("default"));
+            }
+
+            schemaProperties.put(name, propertySchema);
+        }
+
+        JSONObject component = new JSONObject();
+        component.put("kind", "kamelet");
+        component.put("name", componentType);
+
+        JSONObject schema = new JSONObject();
+        schema.put("component", component);
+        schema.put("properties", schemaProperties);
+
+        return schema.toString();
+    }
+
+    private String toJavaType(String type) {
+        return switch (type) {
+            case "boolean" -> "java.lang.Boolean";
+            case "integer", "int" -> "java.lang.Integer";
+            case "number" -> "java.lang.Double";
+            default -> "java.lang.String";
+        };
     }
 
     @Override

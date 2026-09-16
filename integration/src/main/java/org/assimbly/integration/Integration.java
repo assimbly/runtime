@@ -383,11 +383,12 @@ public interface Integration {
 	* Gets the documentation/schema of a component
 	*
 	* @param  componentType type of component (for example 'file')
+	* @param  type optional kamelet type (for example 'action'); when null/blank, kamelet lookup is skipped
  	* @param  mediaType type of dataform (xml or json)
 	* @throws Exception if documentation couldn't get found
 	* @return returns documenation
 	*/
-    String getComponentSchema(String componentType, String mediaType) throws Exception;
+    String getComponentSchema(String componentType, String type, String mediaType) throws Exception;
 
 	/**
 	* Gets the parameters of a component
