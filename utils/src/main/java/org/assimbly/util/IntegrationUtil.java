@@ -85,33 +85,22 @@ public final class IntegrationUtil {
 			SchemaFactory schemaFactory =
 					SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-			// Prevent the schema from loading external DTDs.
-			schemaFactory.setProperty(
-					XMLConstants.ACCESS_EXTERNAL_DTD,
-					""
-			);
-
-			// Prevent the schema from loading external schemas.
-			schemaFactory.setProperty(
-					XMLConstants.ACCESS_EXTERNAL_SCHEMA,
-					""
-			);
+			// Apache Xerces XMLSchemaFactory (often pulled in transitively) does not
+			// recognize JAXP ACCESS_EXTERNAL_* properties; skip when unsupported.
+			schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			setSchemaFactoryPropertyQuietly(
+					schemaFactory, XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			setSchemaFactoryPropertyQuietly(
+					schemaFactory, XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
 			Schema schema = schemaFactory.newSchema(schemaFile);
 
 			Validator validator = schema.newValidator();
-
-			// Prevent the validator from accessing external DTDs.
-			validator.setProperty(
-					XMLConstants.ACCESS_EXTERNAL_DTD,
-					""
-			);
-
-			// Prevent the validator from accessing external schemas.
-			validator.setProperty(
-					XMLConstants.ACCESS_EXTERNAL_SCHEMA,
-					""
-			);
+			validator.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+			setValidatorPropertyQuietly(
+					validator, XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			setValidatorPropertyQuietly(
+					validator, XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
 			validator.validate(xmlFile);
 
@@ -122,6 +111,34 @@ public final class IntegrationUtil {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Sets a SchemaFactory property when supported.
+	 * Apache Xerces {@code XMLSchemaFactory} does not recognize JAXP
+	 * {@code ACCESS_EXTERNAL_DTD}/{@code ACCESS_EXTERNAL_SCHEMA}.
+	 */
+	private static void setSchemaFactoryPropertyQuietly(
+			SchemaFactory schemaFactory, String name, Object value) {
+		try {
+			schemaFactory.setProperty(name, value);
+		} catch (SAXException e) {
+			log.debug("SchemaFactory property '{}' not supported by {}: {}",
+					name, schemaFactory.getClass().getName(), e.toString());
+		}
+	}
+
+	/**
+	 * Sets a Validator property when supported by the implementation.
+	 */
+	private static void setValidatorPropertyQuietly(
+			Validator validator, String name, Object value) {
+		try {
+			validator.setProperty(name, value);
+		} catch (SAXException e) {
+			log.debug("Validator property '{}' not supported by {}: {}",
+					name, validator.getClass().getName(), e.toString());
+		}
 	}
 
 	public static Resource setResource(String route) {
