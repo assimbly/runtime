@@ -60,6 +60,9 @@ spec:
                 name: "Enrich-Type"
                 simple:
                   expression: "application/override"
+            - setProperty:
+                name: "AssimblyAggregateNoExceptionOnNull"
+                constant: "true"
             - pollEnrich:
                 timeout: "{{timeout}}"
                 aggregationStrategy: "#CurrentEnrichStrategy"

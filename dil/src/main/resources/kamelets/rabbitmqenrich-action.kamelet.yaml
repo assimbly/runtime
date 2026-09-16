@@ -100,10 +100,8 @@ spec:
                 simple:
                   expression: "application/override"
             - setProperty:
-                name: "AggregateNoExceptionOnNull"
-                simple:
-                  expression: true
-                  resultType: "java.lang.Boolean"
+                name: "AssimblyAggregateNoExceptionOnNull"
+                constant: "true"
             - pollEnrich:
                 timeout: "{{timeout}}"
                 aggregationStrategy: "CurrentEnrichStrategy"

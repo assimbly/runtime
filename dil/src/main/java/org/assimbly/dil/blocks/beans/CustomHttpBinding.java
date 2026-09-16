@@ -29,16 +29,24 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
         Message message = exchange.getMessage();
 
-        Exception exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        // Prefer the live exception on a failed exchange (e.g. enrich aggregation).
+        // Fall back to EXCEPTION_CAUGHT for cases already handled by an error handler.
+        Exception exception = exchange.getException();
+        if (exception == null) {
+            exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        }
 
         if (exception != null) {
             addResponseTimeHeader(exchange, message);
             try {
-                doWriteExceptionResponse(message, exception, response);
+                writeAssimblyExceptionResponse(message, exception, response);
             } catch (Exception e) {
                 log.error("Cannot write response: {}", e.getMessage(), e);
             }
-
+        } else if (exchange.isFailed()) {
+            addResponseTimeHeader(exchange, message);
+            // Fault without an Exception instance
+            doWriteFaultResponse(message, response, exchange);
         } else {
             // just copy the protocol relates header if we do not have them
             customCopyProtocolHeaders(exchange.getIn(), exchange.getMessage());
@@ -49,25 +57,38 @@ public class CustomHttpBinding extends DefaultHttpBinding {
 
     }
 
-    private void doWriteExceptionResponse(Message message, Throwable exception, HttpServletResponse response) throws Exception {
+    /**
+     * Ensure Camel's default plain-text stacktrace path also returns Assimbly's JSON error body.
+     */
+    @Override
+    public void doWriteExceptionResponse(Throwable exception, HttpServletResponse response) throws IOException {
+        try {
+            writeAssimblyExceptionResponse(null, exception, response);
+        } catch (Exception e) {
+            log.error("Cannot write exception response: {}", e.getMessage(), e);
+            super.doWriteExceptionResponse(exception, response);
+        }
+    }
+
+    private void writeAssimblyExceptionResponse(Message message, Throwable exception, HttpServletResponse response) throws Exception {
 
         if (exception instanceof TimeoutException) {
             response.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
             response.setContentType("text/plain");
             response.getWriter().write("Timeout error");
-        }else {
+        } else {
             generateExceptionResponse(message, exception, response);
         }
     }
 
     private void generateExceptionResponse(Message message, Throwable exception, HttpServletResponse response) throws Exception {
 
-        String accept = message.getHeader("Accept", String.class);
-        String userAgent = message.getHeader("User-Agent", String.class);
+        String accept = message != null ? message.getHeader("Accept", String.class) : null;
+        String userAgent = message != null ? message.getHeader("User-Agent", String.class) : null;
         String infoMessage;
         String responseBody = null;
 
-        if(message.getBody() == null) {
+        if (message == null || message.getBody() == null) {
             infoMessage = EMPTY_BODY_MESSAGE;
         } else {
             infoMessage = DEFAULT_ERROR_MESSAGE;
@@ -94,6 +115,7 @@ public class CustomHttpBinding extends DefaultHttpBinding {
             }
         }
         if(responseBody == null) {
+            response.setContentType("application/json");
             responseBody = generateJsonResponse(response.getStatus(), infoMessage, exception.toString());
         }
 

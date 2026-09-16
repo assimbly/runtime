@@ -135,6 +135,9 @@ spec:
                 name: "Enrich-Type"
                 constant: "application/override"
             - setProperty:
+                name: "AssimblyAggregateNoExceptionOnNull"
+                constant: "true"
+            - setProperty:
                 name: "Enrich-MaxMessagesPerPoll"
                 constant: "{{maxMessagesPerPoll}}"
             - loop:
