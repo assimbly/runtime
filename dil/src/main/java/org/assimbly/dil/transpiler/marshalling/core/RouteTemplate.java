@@ -467,7 +467,7 @@ public class RouteTemplate {
         } else {
             templateId = "generic-" + (type.equals("sink") ? "action" : type);
         }
-    
+
     }
 
     private boolean templateExists(String templateName) {
