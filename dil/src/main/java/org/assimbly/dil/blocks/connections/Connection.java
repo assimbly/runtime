@@ -77,9 +77,6 @@ public class Connection {
             case "springai", "springaichat", "springai-chat" ->
                     new SpringAiConnection(context, decryptedProperties, connectionId).start();
 
-            case "langchain4jchat" ->
-                    new LangChain4jConnection(context, decryptedProperties, connectionId).start();
-
             case "ibmq" ->
                     new IBMMQConnection(context, decryptedProperties, connectionId, connectionType).start();
 
@@ -94,6 +91,9 @@ public class Connection {
 
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");
+
+            case "langchain4jchat" ->
+                    new LangChain4jConnection(context, decryptedProperties, connectionId).start();
 
             case "langchain4jagent" ->
                     new LangChain4jAgentConnection(context, decryptedProperties, connectionId).start();
