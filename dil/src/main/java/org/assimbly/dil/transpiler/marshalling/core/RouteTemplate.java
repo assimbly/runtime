@@ -449,32 +449,25 @@ public class RouteTemplate {
     }
 
 
-    private void createTemplateId(String uri,String type){
-
-        if(uri==null || uri.isEmpty()){
+    private void createTemplateId(String uri, String type) {
+        if (uri == null || uri.isEmpty()) {
             templateId = "link-" + type;
-        }else{
-
-
-            String templateName = scheme + "-" + type;
-            if(type.equals("sink")) {
-                templateName  = scheme + "-action";
-            }
-
-            if(templateExists(templateName)){
-                templateId = templateName;
-            }else if(templateExists(scheme.replace("-", "") + "-" + type)){
-                templateId = scheme.replace("-", "") + "-" + type;
-            }else if(uri.startsWith("block")){
-                String componentName = path;
-                componentName = componentName.toLowerCase();
-                templateId = componentName + "-" + type;
-            }else{
-                templateId = "generic-" + type;
-            }
-
+            return;
         }
 
+        String templateName = scheme + "-" + (type.equals("sink") ? "action" : type);
+        String compactTemplateName = scheme.replace("-", "") + "-" + type;
+
+        if (templateExists(templateName)) {
+            templateId = templateName;
+        } else if (templateExists(compactTemplateName)) {
+            templateId = compactTemplateName;
+        } else if (uri.startsWith("block")) {
+            templateId = path.toLowerCase() + "-" + type;
+        } else {
+            templateId = "generic-" + (type.equals("sink") ? "action" : type);
+        }
+    
     }
 
     private boolean templateExists(String templateName) {
