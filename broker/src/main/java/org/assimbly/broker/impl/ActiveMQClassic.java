@@ -577,7 +577,7 @@ public class ActiveMQClassic implements Broker {
 
     public String getFlowMessageCountsList(boolean excludeEmptyQueues) {
 
-        Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(endpointType, excludeEmptyQueues);
+        Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(flowIdsMessageCountMap);
@@ -708,40 +708,47 @@ public class ActiveMQClassic implements Broker {
 
     }
 
-    private Map<String, Long> getFlowIdsMessageCountMap(String destinationType, boolean excludeEmptyQueues) {
-        Map<String, Long> destinationMessageCounts = new ConcurrentHashMap<>();
+    private static final List<String> INTERNAL_PREFIXES = List.of(
+            "ActiveMQ.Advisory.",
+            "ActiveMQ.Scheduler",
+            "ActiveMQ.Plugin",
+            "ActiveMQ.DLQ",
+            "ID:"                 // temporary destinations, just in case
+    );
+
+    private boolean isInternalDestination(String destinationName) {
+        return destinationName == null
+                || INTERNAL_PREFIXES.stream().anyMatch(destinationName::startsWith);
+    }
+
+    private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) {
+
+        Map<String, Long> destinationMessageCounts = new HashMap<>();
 
         try {
-            // Get all destinations
-            Set<ObjectName> destinations = broker.getManagementContext().queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",*"), null);
+            // No trailing ",*": matches only the destination MBeans, not consumer/producer subscriptions
+            ObjectName pattern = new ObjectName("org.apache.activemq:type=Broker,brokerName="
+                    + broker.getBrokerName()
+                    + ",destinationType=Queue"
+                    + ",destinationName=*");
 
-            // Iterate over each destination
+            Set<ObjectName> destinations = broker.getManagementContext().queryNames(pattern, null);
+
             for (ObjectName destination : destinations) {
                 String destinationName = destination.getKeyProperty("destinationName");
 
-                if(!destinationName.startsWith("ID_")) {
-                    // discard destination without prefix ID_
+                if (isInternalDestination(destinationName)) {
                     continue;
                 }
 
-                // extract flowId
-                String flowId = destinationName.substring(0, Math.min(destinationName.length(), 27));
+                DestinationViewMBean view = getDestinationViewMBean("Queue", destinationName);
+                long messageCount = view.getQueueSize();
 
-                // Get the DestinationViewMBean for the current destination
-                DestinationViewMBean destinationViewMBean = getQueueViewMBean(destinationType, destinationName);
-
-                // Get the message count for the current destination
-                long messageCount = destinationViewMBean.getQueueSize();
-
-                if(destinationMessageCounts.containsKey(flowId)) {
-                    messageCount += destinationMessageCounts.get(flowId);
-                }
-
-                if(messageCount > 0 || !excludeEmptyQueues) {
-                    // Add the destination name and message count to the map
-                    destinationMessageCounts.put(flowId, messageCount);
+                if (messageCount > 0 || !excludeEmptyQueues) {
+                    destinationMessageCounts.put(destinationName, messageCount);
                 }
             }
+
         } catch (Exception e) {
             log.error("event=getFlowIdsMessageCountMap status=failed message=Failed to get all destinations and messages counts reason={}", e.getMessage(), e);
         }

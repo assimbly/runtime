@@ -107,6 +107,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.apache.artemis</groupId>
+                <artifactId>artemis-bom</artifactId>
+                <version>${activemq-artemis.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-bom</artifactId>
                 <version>${camel.version}</version>

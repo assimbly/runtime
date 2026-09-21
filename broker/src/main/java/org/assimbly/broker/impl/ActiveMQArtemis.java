@@ -3,7 +3,6 @@ package org.assimbly.broker.impl;
 import tools.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
-import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
@@ -657,26 +656,25 @@ public class ActiveMQArtemis implements Broker {
 			String[] queueNames = activeBroker.getActiveMQServerControl().getQueueNames();
 
 			for (String queueName : queueNames) {
-				if(!queueName.startsWith("ID_")) {
-					// discard queues without prefix ID_
-					continue;
+
+				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(queueName);
+
+				if(!queueControl.isInternalQueue() && !queueControl.isTemporary()){
+
+					// Get the message count for the current queue
+					long messageCount = queueControl.getMessageCount();
+
+					if(destinationMessageCounts.containsKey(queueName)) {
+						messageCount += destinationMessageCounts.get(queueName);
+					}
+
+					if(messageCount > 0 || !excludeEmptyQueues) {
+						// Add queue name and message count to the map
+						destinationMessageCounts.put(queueName, messageCount);
+					}
+
 				}
 
-				// extract flowId
-				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
-				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(ResourceNames.QUEUE + queueName);
-
-				// Get the message count for the current queue
-				long messageCount = queueControl.getMessageCount();
-
-				if(destinationMessageCounts.containsKey(flowId)) {
-					messageCount += destinationMessageCounts.get(flowId);
-				}
-
-				if(messageCount > 0 || !excludeEmptyQueues) {
-					// Add queue name and message count to the map
-					destinationMessageCounts.put(flowId, messageCount);
-				}
 			}
 
 		} catch (Exception e) {

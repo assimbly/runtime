@@ -111,7 +111,7 @@ public class MessageBrokerRuntime {
 
         try {
             final String result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues.orElse(false));
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result);
+            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result, true);
         } catch (Exception e) {
             log.error("event=getFlowsMessageCountList type=POST type={} reason={}", brokerType, e.getMessage(), e);
             return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", e.getMessage());

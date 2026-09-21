@@ -63,6 +63,7 @@
             <version>${activemq-classic.version}</version>
         </dependency>
 
+        <!-- activemq artemis native dependencies -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-artemis-native</artifactId>
@@ -72,43 +73,31 @@
         <!-- activemq artemis dependencies -->
         <dependency>
             <groupId>org.apache.artemis</groupId>
-            <artifactId>artemis-server</artifactId>
-            <version>${activemq-artemis.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-server</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-commons</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-ra</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-dto</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-amqp-protocol</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-openwire-protocol</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client-all</artifactId>
-            <version>${activemq-artemis.version}</version>
         </dependency>
 
         <dependency>
