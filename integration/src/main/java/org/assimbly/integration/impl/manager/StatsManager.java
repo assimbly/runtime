@@ -329,27 +329,23 @@ public class StatsManager {
 
     }
 
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
+    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
-        JSONObject json = new JSONObject();
-        JSONObject flow = new JSONObject();
-        JSONArray steps = new JSONArray();
+        JSONObject flow = createBasicFlowJson(flowId);
 
-        long totalMessages = 0;
-        long completedMessages = 0;
-        long failedMessages = 0;
-        long pendingMessages = 0;
+        // Calculate basic statistics
+        FlowStatistics stats = calculateFlowStatistics(flowId, false);
 
-        List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
+        // Populate basic stats
+        populateBasicStats(flow, stats);
 
-        for (ManagedRouteMBean route : routes) {
+        if (includeSteps) {
+            JSONArray steps = new JSONArray();
 
-            totalMessages += route.getExchangesTotal();
-            completedMessages += route.getExchangesCompleted() - route.getFailuresHandled();
-            failedMessages += route.getExchangesFailed() + route.getFailuresHandled();
-            pendingMessages += route.getExchangesInflight();
+            List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
 
-            if (includeSteps) {
+            for (ManagedRouteMBean route : routes) {
+
                 JSONObject step = new JSONObject();
                 String routeId = route.getRouteId();
                 String stepId = StringUtils.substringAfter(routeId, flowId + "-");
@@ -359,24 +355,16 @@ public class StatsManager {
                 step.put("failed", route.getExchangesFailed() + route.getFailuresHandled());
                 step.put("pending", route.getExchangesInflight());
                 steps.put(step);
+
             }
 
-        }
-
-        flow.put("id", flowId);
-        flow.put("total", totalMessages);
-        flow.put("completed", completedMessages);
-        flow.put("failed", failedMessages);
-        flow.put("pending", pendingMessages);
-
-        if (includeSteps) {
             flow.put("steps", steps);
+
         }
-        json.put("flow", flow);
 
-        String flowStats = json.toString(4);
+        String flowMessages = flow.toString(4);
 
-        return applyMediaType(flowStats, "json", mediaType);
+        return applyMediaType(flowMessages, "json", mediaType);
 
     }
 

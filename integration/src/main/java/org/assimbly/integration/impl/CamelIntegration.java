@@ -752,7 +752,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
-        return statsManager.getFlowMessages(flowId, includeSteps, mediaType);
+        return statsManager.getFlowMessages(flowId, includeSteps, mediaType, flowsMap);
     }
 
     @Override
