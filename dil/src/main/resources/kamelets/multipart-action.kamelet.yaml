@@ -78,7 +78,7 @@ spec:
                   steps:
                   - setHeader:
                       name: "MultipartFormFields"
-                      constant: "{{formFields}}"
+                      simple: "{{formFields}}"
             - process:
                 ref: "multipartProcessor"
             - to:
