@@ -76,45 +76,53 @@ public class TriggerMisfireWatchdog {
         Set<TriggerKey> keys = scheduler.getTriggerKeys(GroupMatcher.anyTriggerGroup());
 
         for (TriggerKey key : keys) {
-            Trigger.TriggerState state = scheduler.getTriggerState(key);
-            if (state != Trigger.TriggerState.NORMAL && state != Trigger.TriggerState.BLOCKED) {
-                continue;
-            }
-
-            Trigger trigger = scheduler.getTrigger(key);
-            if (trigger == null) {
-                continue;
-            }
-
-            Date nextFireTime = trigger.getNextFireTime();
-            if (nextFireTime == null) {
-                TriggerMisfireLog.clearTrigger(key);
-                continue;
-            }
-            if (nextFireTime.after(lateCutoff)) {
-                // On schedule again — reset only if the job actually ran after the last miss.
-                TriggerMisfireLog.clearIfRecovered(trigger);
-                continue;
-            }
-
-            Date missed = nextFireTime;
-            int count = 0;
-            while (missed != null && !missed.after(lateCutoff) && count < MAX_MISSES_PER_TRIGGER) {
-                TriggerMisfireLog.logIfNew(trigger, missed);
-                Date after = trigger.getFireTimeAfter(missed);
-                if (after == null || !after.after(missed)) {
-                    break;
-                }
-                missed = after;
-                count++;
-            }
-
-            if (count >= MAX_MISSES_PER_TRIGGER && missed != null && !missed.after(lateCutoff)) {
-                log.warn("Trigger {}/{} has additional missed fires beyond the log limit of {}",
-                        key.getGroup(), key.getName(), MAX_MISSES_PER_TRIGGER);
-            }
+            inspectTrigger(key, lateCutoff);
         }
 
         TriggerMisfireLog.pruneOlderThan(new Date(now.getTime() - (misfireThresholdMs * 10)));
+    }
+
+    private void inspectTrigger(TriggerKey key, Date lateCutoff) throws Exception {
+        Trigger.TriggerState state = scheduler.getTriggerState(key);
+        if (state != Trigger.TriggerState.NORMAL && state != Trigger.TriggerState.BLOCKED) {
+            return;
+        }
+
+        Trigger trigger = scheduler.getTrigger(key);
+        if (trigger == null) {
+            return;
+        }
+
+        Date nextFireTime = trigger.getNextFireTime();
+        if (nextFireTime == null) {
+            TriggerMisfireLog.clearTrigger(key);
+            return;
+        }
+        if (nextFireTime.after(lateCutoff)) {
+            // On schedule again — reset only if the job actually ran after the last miss.
+            TriggerMisfireLog.clearIfRecovered(trigger);
+            return;
+        }
+
+        logMissedFires(trigger, key, nextFireTime, lateCutoff);
+    }
+
+    private void logMissedFires(Trigger trigger, TriggerKey key, Date nextFireTime, Date lateCutoff) {
+        Date missed = nextFireTime;
+        int count = 0;
+        while (missed != null && !missed.after(lateCutoff) && count < MAX_MISSES_PER_TRIGGER) {
+            TriggerMisfireLog.logIfNew(trigger, missed);
+            Date after = trigger.getFireTimeAfter(missed);
+            if (after == null || !after.after(missed)) {
+                break;
+            }
+            missed = after;
+            count++;
+        }
+
+        if (count >= MAX_MISSES_PER_TRIGGER && missed != null && !missed.after(lateCutoff)) {
+            log.warn("Trigger {}/{} has additional missed fires beyond the log limit of {}",
+                    key.getGroup(), key.getName(), MAX_MISSES_PER_TRIGGER);
+        }
     }
 }
