@@ -77,7 +77,7 @@ public class CamelIntegration extends BaseIntegration {
         System.setProperty("camel.threads.virtual.enabled", "true");
         context = new DefaultCamelContext(registry);
         this.sslManager = new SSLManager();
-        this.flowManager = new FlowManager(context);
+        this.flowManager = new FlowManager(context, installedFlowsManager);
         this.statsManager = new StatsManager(context, flowManager);
         this.configManager = new ConfigManager(context, registry);
         init(useDefaultSettings);
@@ -192,9 +192,7 @@ public class CamelIntegration extends BaseIntegration {
             log.warn("Flow failed to start. Removing configuration for flowId: {}", flowId);
             super.removeFlowConfiguration(flowId);
         } else {
-            String version = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
-            String tenant = super.getFlowConfiguration(flowId).getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
-            installedFlowsManager.register(flowId, version, tenant);
+            registerInstalledFlow(flowId, super.getFlowConfiguration(flowId), InstalledFlowsManager.FlowEntry.STATUS_STARTED);
         }
 
         return report.getReport();
@@ -249,7 +247,7 @@ public class CamelIntegration extends BaseIntegration {
 
         if(!flowsMap.isEmpty()) {
             log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-            flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
+            flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll(), installedFlowsManager);
             log.info("Restored flows from cache.");
         }
 
@@ -897,7 +895,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll());
+        flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll(), installedFlowsManager);
     }
 
     @Override
@@ -907,12 +905,14 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String pauseAllFlows() {
-        return flowManager.pauseAllFlows(flowsMap);
+        flowsMap.forEach((flowId, _) -> pauseFlow(flowId));
+        return FlowManager.FlowStatus.STARTED.toString();
     }
 
     @Override
     public String resumeAllFlows() {
-        return flowManager.resumeAllFlows(flowsMap);
+        flowsMap.forEach((flowId, _) -> resumeFlow(flowId));
+        return FlowManager.FlowStatus.RESUMED.toString();
     }
 
     @Override
@@ -930,13 +930,21 @@ public class CamelIntegration extends BaseIntegration {
         }
 
 
-        return flowManager.startFlow(flowId, flowProperties, timeout).getReport();
+        FlowLoaderReport report = flowManager.startFlow(flowId, flowProperties, timeout);
+        if (report.isStatusSuccess()) {
+            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        }
+        return report.getReport();
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
         TreeMap<String, String> flowProperties = getProperties(flowId);
-        return flowManager.restartFlow(flowId, flowProperties, timeout).getReport();
+        FlowLoaderReport report = flowManager.restartFlow(flowId, flowProperties, timeout);
+        if (report.isStatusSuccess()) {
+            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        }
+        return report.getReport();
     }
 
     @Override
@@ -949,9 +957,7 @@ public class CamelIntegration extends BaseIntegration {
         TreeMap<String, String> flowProperties = getProperties(flowId);
         FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
         if (flowLoaderReport.isStatusSuccess()) {
-            String version = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
-            String tenant = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
-            installedFlowsManager.register(flowId, version, tenant);
+            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
         }
         return flowLoaderReport.getReport();
     }
@@ -960,7 +966,8 @@ public class CamelIntegration extends BaseIntegration {
     public String pauseFlow(String flowId) {
         FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
         if(flowLoaderReport.isStatusSuccess()) {
-            installedFlowsManager.unregister(flowId);
+            TreeMap<String, String> flowProperties = getProperties(flowId);
+            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
         }
         return flowLoaderReport.getReport();
     }
@@ -1139,6 +1146,7 @@ public class CamelIntegration extends BaseIntegration {
                 entry.put("flowId", flowId);
                 entry.put("version", flowEntry.getVersion());
                 entry.put("tenant", flowEntry.getTenant());
+                entry.put("status", flowEntry.getStatus());
                 result.add(entry);
             });
             return new ObjectMapper().writeValueAsString(result);
@@ -1146,6 +1154,16 @@ public class CamelIntegration extends BaseIntegration {
             log.error("Failed to serialize installed flows index", e);
             return "[]";
         }
+    }
+
+    private void registerInstalledFlow(String flowId, TreeMap<String, String> flowProperties, String status) {
+        String version = "0";
+        String tenant = "0";
+        if (flowProperties != null) {
+            version = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_VERSION, "0");
+            tenant = flowProperties.getOrDefault(FlowManager.PROPERTY_FLOW_TENANT, "0");
+        }
+        installedFlowsManager.register(flowId, version, tenant, status);
     }
 
     @NotNull

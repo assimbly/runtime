@@ -15,7 +15,10 @@ import java.util.*;
  * store incompatibilities.
  *
  * File format: JSON Lines, one object per line:
- *   {"flowId":"68c7b0cc1e33920007000082","version":"12","tenant":"integrations"}
+ *   {"flowId":"...","version":"12","tenant":"integrations","status":"started"}
+ *
+ * {@code status} is {@link FlowEntry#STATUS_STARTED} or {@link FlowEntry#STATUS_PAUSED}.
+ * Lines without status are treated as started (backward compatible).
  */
 public class InstalledFlowsManager {
 
@@ -30,9 +33,13 @@ public class InstalledFlowsManager {
         this.indexFile = Paths.get(cacheDir.toString(), FILE_NAME);
     }
 
-   public synchronized void register(String flowId, String version, String tenant) {
+    public synchronized void register(String flowId, String version, String tenant) {
+        register(flowId, version, tenant, FlowEntry.STATUS_STARTED);
+    }
+
+    public synchronized void register(String flowId, String version, String tenant, String status) {
         Map<String, FlowEntry> entries = readAll();
-        entries.put(flowId, new FlowEntry(flowId, version, tenant));
+        entries.put(flowId, new FlowEntry(flowId, version, tenant, normalizeStatus(status)));
         writeAll(entries);
     }
 
@@ -89,9 +96,10 @@ public class InstalledFlowsManager {
             String flowId  = entry.get("flowId");
             String version = entry.get("version");
             String tenant  = entry.get("tenant");
+            String status  = normalizeStatus(entry.get("status"));
 
             if (flowId != null && version != null && tenant != null) {
-                result.put(flowId, new FlowEntry(flowId, version, tenant));
+                result.put(flowId, new FlowEntry(flowId, version, tenant, status));
             }
         } catch (Exception _) {
             log.warn("Skipping malformed line in installed-flows index: {}", line);
@@ -108,6 +116,7 @@ public class InstalledFlowsManager {
                     recordMap.put("flowId", entry.getFlowId());
                     recordMap.put("version", entry.getVersion());
                     recordMap.put("tenant", entry.getTenant());
+                    recordMap.put("status", entry.getStatus());
                     writer.write(mapper.writeValueAsString(recordMap));
                     writer.newLine();
                 }
@@ -119,22 +128,43 @@ public class InstalledFlowsManager {
         }
     }
 
+    private static String normalizeStatus(String status) {
+        if (FlowEntry.STATUS_PAUSED.equalsIgnoreCase(status)) {
+            return FlowEntry.STATUS_PAUSED;
+        }
+        return FlowEntry.STATUS_STARTED;
+    }
+
     /**
      * Simple data class for a flow entry.
      */
     public static class FlowEntry {
+        public static final String STATUS_STARTED = "started";
+        public static final String STATUS_PAUSED = "paused";
+
         private final String flowId;
         private final String version;
         private final String tenant;
+        private final String status;
 
         public FlowEntry(String flowId, String version, String tenant) {
+            this(flowId, version, tenant, STATUS_STARTED);
+        }
+
+        public FlowEntry(String flowId, String version, String tenant, String status) {
             this.flowId = flowId;
             this.version = version;
             this.tenant = tenant;
+            this.status = status != null ? status : STATUS_STARTED;
         }
 
         public String getFlowId() { return flowId; }
         public String getVersion() { return version; }
         public String getTenant() { return tenant; }
+        public String getStatus() { return status; }
+
+        public boolean isPaused() {
+            return STATUS_PAUSED.equals(status);
+        }
     }
 }
