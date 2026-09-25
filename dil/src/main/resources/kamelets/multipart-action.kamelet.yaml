@@ -19,6 +19,11 @@ spec:
         description: "Content-Type on the message"
         type: "string"
         default: "multipart/form-data"
+      formFields:
+        title: "Form Fields"
+        description: "JSON object of additional text form fields sent with the file"
+        type: "string"
+        default: ""
       in:
         title: "Source Endpoint"
         type: "string"
@@ -67,6 +72,13 @@ spec:
                   - setHeader:
                       name: "MultipartFieldName"
                       simple: "{{fname}}"
+            - choice:
+                when:
+                - simple: "'{{?formFields}}' != ''"
+                  steps:
+                  - setHeader:
+                      name: "MultipartFormFields"
+                      simple: "{{formFields}}"
             - process:
                 ref: "multipartProcessor"
             - to:
