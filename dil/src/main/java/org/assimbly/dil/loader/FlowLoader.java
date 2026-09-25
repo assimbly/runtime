@@ -31,6 +31,8 @@ public class FlowLoader extends RouteBuilder {
 	private boolean isFlowLoaded = true;
 	private final FlowLoaderReport flowLoaderReport;
 	private final EncryptionUtil encryptionUtil;
+	/** When false, routes are loaded with autoStartup=false so consumers never activate. */
+	private final boolean autoStartup;
 
 	// Define the fixed metadata key constants
 	public static final String METADATA_TENANT_NAME      = "MetaData.TenantName";
@@ -41,11 +43,16 @@ public class FlowLoader extends RouteBuilder {
 
 
 	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport, EncryptionUtil encryptionUtil){
+		this(props, flowLoaderReport, encryptionUtil, true);
+	}
+
+	public FlowLoader(final TreeMap<String, String> props, FlowLoaderReport flowLoaderReport, EncryptionUtil encryptionUtil, boolean autoStartup){
 		super();
 		this.props = props;
 		this.flowLoaderReport = flowLoaderReport;
 		this.flowId = props.get("id");
 		this.encryptionUtil = encryptionUtil;
+		this.autoStartup = autoStartup;
 	}
 
 	public interface FailureProcessorListener {
@@ -192,9 +199,11 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			log.info("Load route:\n\n{}", route);
+			String routeToLoad = ensureAutoStartup(route);
 
-			loader.loadRoutes(IntegrationUtil.setResource(route));
+			log.info("Load route:\n\n{}", routeToLoad);
+
+			loader.loadRoutes(IntegrationUtil.setResource(routeToLoad));
 
 			flowLoaderReport.setStep(id, null, "route", "success", null, null);
 
@@ -213,13 +222,28 @@ public class FlowLoader extends RouteBuilder {
 
 	}
 
+	/**
+	 * Forces {@code autoStartup="false"} on plain {@code <route>} XML when this loader must not
+	 * activate consumers. Templated routes have no such attribute — {@code FlowManager} marks
+	 * their {@code RouteDefinition}s instead.
+	 */
+	private String ensureAutoStartup(String routeXml) {
+		if (autoStartup || routeXml == null) {
+			return routeXml;
+		}
+		String withoutAttr = routeXml.replaceAll("(?i)\\s+autoStartup\\s*=\\s*\"[^\"]*\"", "");
+		return withoutAttr.replaceAll("(?i)<route\\b", "<route autoStartup=\"false\"");
+	}
+
 	private void loadStep(String step, String type, String id, String uri) {
 
 		try {
 
-			log.info("Load step:\n\n{}", step);
-
 			String resolvedStep = decryptStepIfNeeded(step);
+			resolvedStep = ensureAutoStartup(resolvedStep);
+
+			log.info("Load step:\n\n{}", resolvedStep);
+
 			loader.loadRoutes(IntegrationUtil.setResource(resolvedStep));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null, null);
