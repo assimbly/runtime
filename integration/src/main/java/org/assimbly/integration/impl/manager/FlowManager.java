@@ -264,10 +264,6 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap, Map<String, InstalledFlowsManager.FlowEntry> installedFlowsIndexMap) {
-        startAllFlows(flowsMap, installedFlowsIndexMap, null);
-    }
-
     /**
      * Restores flows from cache. Started entries are loaded and activated; paused entries are loaded
      * with {@code autoStartup=false} (never start-then-pause). Cache entries missing from the index
@@ -317,36 +313,6 @@ public class FlowManager {
         });
 
         return "restarted";
-    }
-
-    public String pauseAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-        log.info("Pause all flows");
-
-        flowsMap.forEach((flowId, _) -> {
-            try {
-                pauseFlow(flowId);
-                log.info("Paused flow: {}", flowId);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        return FlowStatus.STARTED.toString();
-    }
-
-    public String resumeAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-        log.info("Resume all flows");
-
-        flowsMap.forEach((flowId, flowProps) -> {
-            try {
-                resumeFlow(flowId, flowProps);
-                log.info("Resumed flow: {}", flowId);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        return FlowStatus.RESUMED.toString();
     }
 
     public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {

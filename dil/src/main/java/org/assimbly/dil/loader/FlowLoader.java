@@ -224,10 +224,8 @@ public class FlowLoader extends RouteBuilder {
 
 	/**
 	 * Forces {@code autoStartup="false"} on plain {@code <route>} XML when this loader must not
-	 * activate consumers (e.g. restoring a paused flow after backend restart).
-	 * <p>
-	 * Note: {@code <templatedRoute>} has no {@code autoStartup} attribute in Camel; callers must
-	 * also disable {@code CamelContext.setAutoStartup(false)} around the load for those steps.
+	 * activate consumers. Templated routes have no such attribute — {@code FlowManager} marks
+	 * their {@code RouteDefinition}s instead.
 	 */
 	private String ensureAutoStartup(String routeXml) {
 		if (autoStartup || routeXml == null) {
@@ -242,7 +240,6 @@ public class FlowLoader extends RouteBuilder {
 		try {
 
 			String resolvedStep = decryptStepIfNeeded(step);
-			// Apply to any embedded <route> elements; templatedRoute itself is handled at CamelContext level
 			resolvedStep = ensureAutoStartup(resolvedStep);
 
 			log.info("Load step:\n\n{}", resolvedStep);
