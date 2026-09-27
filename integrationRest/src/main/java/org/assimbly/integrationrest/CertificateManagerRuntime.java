@@ -254,10 +254,12 @@ public class CertificateManagerRuntime {
         log.debug("REST request to delete certificate : {}", certificateName);
 
         try {
-            deleteCertificateInKeystore(keystoreName, keystorePassword);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, "text/plain", "/certificates/{certificateName}", "success");
+            // a certificate that is not (or no longer) in the keystore is not an error, so the caller can still remove its record
+            boolean deleted = deleteCertificateInKeystore(keystoreName, keystorePassword, certificateName);
+            String message = deleted ? "success" : "certificate not found in keystore";
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, "text/plain", "/certificates/{certificateName}", message);
         }catch (Exception e) {
-            log.debug("Remove url to Whitelist failed: {}", e.getMessage());
+            log.error("Delete certificate {} from keystore {} failed", certificateName, keystoreName, e);
             return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, "text/plain", "/certificates/{certificateName}", e.getMessage());
         }
     }
@@ -399,12 +401,12 @@ public class CertificateManagerRuntime {
 
     }
 
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword) {
+    public boolean deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
 
         String keystorePath = baseDir + "/security/" + keystoreName;
 
         CertificatesUtil util = new CertificatesUtil();
-        util.deleteCertificate(keystorePath, keystorePassword);
+        return util.deleteCertificate(keystorePath, keystorePassword, certificateName);
     }
 
 }

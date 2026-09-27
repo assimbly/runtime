@@ -228,10 +228,10 @@ public class SSLManager {
         return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
     }
 
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword) {
+    public boolean deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
         String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
         CertificatesUtil util = new CertificatesUtil();
-        util.deleteCertificate(keystorePath, keystorePassword);
+        return util.deleteCertificate(keystorePath, keystorePassword, certificateName);
     }
 
     public void setMutualSsl(String keystoreResource, String keystorePassword, String contextId, Registry registry) throws Exception {

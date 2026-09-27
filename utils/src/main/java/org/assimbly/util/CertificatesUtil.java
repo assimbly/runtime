@@ -260,18 +260,25 @@ public final class CertificatesUtil {
 
 	}
 
-	public void deleteCertificate(String keyStorePath, String keystorePassword) {
+	/**
+	 * Deletes the certificate with the given alias from the keystore.
+	 *
+	 * @return true if the certificate was found and deleted, false if the alias doesn't exist
+	 */
+	public boolean deleteCertificate(String keyStorePath, String keystorePassword, String certificateName) throws Exception {
 
-		try {
-			//load keystore
-			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword,null);
+		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-			// Save the new keystore contents
-			storeKeystore(keyStorePath,keystorePassword,keystore);
-
-		}catch (Exception e) {
-			log.error("Delete certificate for keystore {} failed", keyStorePath, e);
+		if (!keystore.containsAlias(certificateName)) {
+			log.warn("Certificate {} not found in keystore {}", certificateName, keyStorePath);
+			return false;
 		}
+
+		keystore.deleteEntry(certificateName);
+
+		storeKeystore(keyStorePath, keystorePassword, keystore);
+
+		return true;
 
 	}
 

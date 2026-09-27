@@ -886,8 +886,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
-        sslManager.deleteCertificateInKeystore(keystoreName, keystorePassword);
+    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
+        sslManager.deleteCertificateInKeystore(keystoreName, keystorePassword, certificateName);
     }
 
     @Override
