@@ -60,6 +60,8 @@ public final class CertificatesUtil {
 
 	public static final String PEER_CERTIFICATES = "PEER_CERTIFICATES";
 
+	private static final Pattern PEM_BOUNDARY = Pattern.compile("-+(BEGIN|END)[^-]*-+");
+
 	public Certificate[] downloadCertificates(String url) throws Exception {
 
 		IO.println("Start downloading certificates (url=" + url + ")");
@@ -300,26 +302,23 @@ public final class CertificatesUtil {
 
 		String pemCertificate = new String(encoder.encode(derCertificate), StandardCharsets.UTF_8);
 
-		return "-----BEGIN CERTIFICATE-----\n" + pemCertificate + "-----END CERTIFICATE-----";
+		return "-----BEGIN CERTIFICATE-----\r\n" + pemCertificate + "\r\n-----END CERTIFICATE-----";
 
 	}
 
 	public static X509Certificate convertPemToX509Certificate(String pemCertificate) throws CertificateException {
 
-		java.util.Base64.Decoder decoder = java.util.Base64.getMimeDecoder();
+		java.util.Base64.Decoder decoder = java.util.Base64.getDecoder();
 		CertificateFactory cf = CertificateFactory.getInstance("X509");
 		X509Certificate certificate = null;
 
 		try {
 			if (pemCertificate != null && !pemCertificate.trim().isEmpty()) {
 
-				Pattern parse = Pattern.compile(
-						"^--+BEGIN[^\\r\\n]*\\R.*?^--+END[^\\r\\n]*$",
-						Pattern.MULTILINE | Pattern.DOTALL
-				);
-				pemCertificate = parse.matcher(pemCertificate).replaceFirst("$1");
+				// Strip header/footer wherever they are (the footer is not always on its own line) and all whitespace
+				String base64Certificate = PEM_BOUNDARY.matcher(pemCertificate).replaceAll("").replaceAll("\\s", "");
 
-				byte[] derCertificate = decoder.decode(pemCertificate);
+				byte[] derCertificate = decoder.decode(base64Certificate);
 
 				certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(derCertificate));
 
