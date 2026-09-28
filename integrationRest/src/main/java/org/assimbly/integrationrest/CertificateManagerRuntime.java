@@ -365,7 +365,7 @@ public class CertificateManagerRuntime {
             CertificatesUtil util = new CertificatesUtil();
             Certificate[] certificates = util.downloadCertificates(url);
             String keystorePath = baseDir + "/security/" + keystoreName;
-            util.downloadCertificates(keystorePath, keystorePassword, certificates);
+            util.storeCertificates(keystorePath, keystorePassword, certificates);
         } catch (Exception e) {
             log.error("Set Certificate in keystore {} for url {} failed", keystoreName, url, e);
         }
@@ -388,7 +388,7 @@ public class CertificateManagerRuntime {
 
         String keystorePath = baseDir + "/security/" + keystoreName;
 
-        return util.downloadCertificates(keystorePath, keystorePassword, certificates);
+        return util.storeCertificates(keystorePath, keystorePassword, certificates);
 
     }
 

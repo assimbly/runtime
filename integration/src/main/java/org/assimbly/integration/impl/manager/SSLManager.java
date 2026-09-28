@@ -192,7 +192,7 @@ public class SSLManager {
             CertificatesUtil util = new CertificatesUtil();
             Certificate[] certificates = util.downloadCertificates(url);
             String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-            util.downloadCertificates(keystorePath, keystorePassword, certificates);
+            util.storeCertificates(keystorePath, keystorePassword, certificates);
         } catch (Exception e) {
             log.error("Set certificates for url {} failed.", url, e);
         }
@@ -216,7 +216,7 @@ public class SSLManager {
         File file = new File(keystorePath);
 
         if (file.exists()) {
-            return util.downloadCertificates(keystorePath, keystorePassword, certificates);
+            return util.storeCertificates(keystorePath, keystorePassword, certificates);
         } else {
             throw new KeyStoreException("Keystore " + keystoreName + " doesn't exist");
         }
