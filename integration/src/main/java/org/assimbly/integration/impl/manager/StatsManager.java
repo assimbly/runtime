@@ -147,7 +147,6 @@ public class StatsManager {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
         FlowStatistics stats = new FlowStatistics();
-        // Same overlay as /info and /status: restored paused flows are Camel Stopped
         stats.status = flowManager.getFlowStatus(flowId);
 
         if(managedRouteGroup==null){

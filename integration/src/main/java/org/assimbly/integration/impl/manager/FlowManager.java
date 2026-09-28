@@ -93,13 +93,7 @@ public class FlowManager {
         return loadFlow(flowId, properties, true);
     }
 
-    /**
-     * Loads a flow into the Camel context.
-     *
-     * @param autoStart when false (paused restore), route definitions are marked
-     *                  {@code autoStartup=false}. Needed because templated routes ignore XML autoStartup
-     *                  and cache restore runs before {@code CamelContext.start()}.
-     */
+    /** @param autoStart false = paused restore (routes stay stopped) */
     public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties, boolean autoStart) {
 
         String version = setProperty(properties,PROPERTY_FLOW_VERSION,"0");
@@ -111,7 +105,7 @@ public class FlowManager {
             initializeSecurity(properties);
             createConnections(properties);
 
-            // When loading into an already-started context, block consumer activation during add.
+            // Block consumers when adding into an already-started context
             Boolean previousContextAutoStartup = null;
             if (!autoStart && context.getStatus().isStarted()) {
                 previousContextAutoStartup = context.isAutoStartup();
@@ -147,12 +141,7 @@ public class FlowManager {
 
     }
 
-    /**
-     * Marks this flow's {@link RouteDefinition}s as {@code autoStartup=false} so
-     * {@link CamelContext#start()} (or a later start) leaves them stopped.
-     * Uses {@link ModelCamelContext#getRouteDefinitions()} because live routes are often
-     * still empty before the context has started.
-     */
+    /** Mark route definitions autoStartup=false (live routes may not exist yet). */
     private void disableFlowAutoStartup(String flowId) {
         ModelCamelContext modelContext = (ModelCamelContext) context;
         int marked = 0;
@@ -180,10 +169,7 @@ public class FlowManager {
         return routeId != null && (routeId.equals(flowId) || routeId.startsWith(flowId + "-"));
     }
 
-    /**
-     * After {@link CamelContext#start()}, stop any flow still marked paused in the index
-     * (safety net if a definition was not marked in time).
-     */
+    /** Stop any index-paused flow that still became active after context start. */
     public void enforceDesiredPausedFlows() {
         if (installedFlowsManager == null) {
             return;
@@ -235,10 +221,7 @@ public class FlowManager {
 
     }
 
-    /**
-     * Restores flows from cache using the installed-flows index status.
-     * Missing index entries (legacy pause = unregister) are restored as paused and re-registered.
-     */
+    /** Restore cached flows; honor index status (missing entry = legacy paused). */
     public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap,
                               InstalledFlowsManager installedFlowsManager) {
 
@@ -255,7 +238,7 @@ public class FlowManager {
                     loadFlow(flowId, flowProps, autoStart);
                     log.info(autoStart ? "Started flow: {}" : "Restored paused flow: {}", flowId);
                 } else if (installedFlowsManager != null) {
-                    // Legacy: paused flows were removed from the index but left in DIL cache
+                    // Legacy pause: in cache but not in index
                     loadFlow(flowId, flowProps, false);
                     installedFlowsManager.register(
                             flowId,
@@ -446,7 +429,7 @@ public class FlowManager {
             RouteController routeController = context.getRouteController();
             List<Route> routeList = getRoutesByFlowId(flowId);
 
-            // Restored paused flows are Camel Stopped (autoStartup=false), not Suspended
+            // Restored paused routes are Stopped, not Suspended
             boolean needsStart = routeList.stream().anyMatch(route ->
                     routeController.getRouteStatus(route.getId()).isStopped());
 
@@ -563,7 +546,7 @@ public class FlowManager {
                     String flowId = routesList.getFirst().getId();
                     ServiceStatus serviceStatus = routeController.getRouteStatus(flowId);
                     flowStatus = serviceStatus.toString().toLowerCase();
-                    // Restored paused flows are Camel Stopped (autoStartup=false); report as suspended for UI
+                    // Index paused + Camel stopped → suspended
                     if ("stopped".equals(flowStatus) && isDesiredPaused(id)) {
                         flowStatus = "suspended";
                     }

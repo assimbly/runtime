@@ -144,7 +144,7 @@ public class CamelIntegration extends BaseIntegration {
             context.start();
             started = true;
 
-            // Cache restore runs before this start(); paused flows must not stay active after startup
+            // Keep index-paused flows stopped after context start
             flowManager.enforceDesiredPausedFlows();
 
             configManager.setTriggerMisfireLoggingListener();

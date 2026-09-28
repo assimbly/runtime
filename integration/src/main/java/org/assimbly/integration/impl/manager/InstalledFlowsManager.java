@@ -10,15 +10,8 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * Maintains a lightweight, crash-safe index of installed flows on disk.
- * Stored independently of DILStore so it survives cache wipes and
- * store incompatibilities.
- *
- * File format: JSON Lines, one object per line:
- *   {"flowId":"...","version":"12","tenant":"integrations","status":"started"}
- *
- * {@code status} is {@link FlowEntry#STATUS_STARTED} or {@link FlowEntry#STATUS_PAUSED}.
- * Lines without status are treated as started (backward compatible).
+ * On-disk index of installed flows (survives DIL cache wipes).
+ * JSON Lines: flowId, version, tenant, status (started|paused; missing = started).
  */
 public class InstalledFlowsManager {
 
