@@ -1,5 +1,6 @@
 package org.assimbly.integrationrest;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.URI;
@@ -47,6 +47,13 @@ public class LlmProviderRuntime {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Result of a credentials validation. A record (instead of a Jackson ObjectNode) so springdoc can
+     * generate an OpenAPI schema for it; modelsCount is left out of the JSON when it is null.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record CredentialValidationResult(boolean valid, String message, Integer modelsCount) {}
+
     @GetMapping(value = "/providers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> getSupportedProviders() {
         return ResponseEntity.ok(SUPPORTED_PROVIDERS);
@@ -57,7 +64,7 @@ public class LlmProviderRuntime {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ObjectNode> validateCredentials(
+    public ResponseEntity<CredentialValidationResult> validateCredentials(
             @RequestBody Map<String, String> payload)
             throws InterruptedException {
 
@@ -66,18 +73,15 @@ public class LlmProviderRuntime {
         String baseUrl = payload.get("baseUrl");
 
         if (provider == null || provider.isBlank()) {
-            return badRequest("valid", false, "Provider is required");
+            return badRequest("Provider is required");
         }
 
         try {
             List<String> models = fetchModelsFromProvider(provider, apiKey, baseUrl);
 
-            ObjectNode response = objectMapper.createObjectNode();
-            response.put("valid", true);
-            response.put("message", "Successfully connected to " + provider);
-            response.put("modelsCount", models.size());
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    new CredentialValidationResult(true, "Successfully connected to " + provider, models.size())
+            );
 
         } catch (IOException | RuntimeException e) {
             log.warn(
@@ -86,11 +90,8 @@ public class LlmProviderRuntime {
                     e.getMessage()
             );
 
-            ObjectNode response = objectMapper.createObjectNode();
-            response.put("valid", false);
-            response.put("message", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new CredentialValidationResult(false, e.getMessage(), null));
         }
     }
 
@@ -341,16 +342,8 @@ public class LlmProviderRuntime {
         return modelIds;
     }
 
-    private ResponseEntity<ObjectNode> badRequest(
-            String field,
-            boolean value,
-            String message) {
-
-        ObjectNode response = objectMapper.createObjectNode();
-        response.put(field, value);
-        response.put("message", message);
-
-        return ResponseEntity.badRequest().body(response);
+    private ResponseEntity<CredentialValidationResult> badRequest(String message) {
+        return ResponseEntity.badRequest().body(new CredentialValidationResult(false, message, null));
     }
 
     private static String stripTrailingSlashes(String value) {
