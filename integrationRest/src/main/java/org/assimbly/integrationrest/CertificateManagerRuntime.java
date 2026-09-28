@@ -77,23 +77,23 @@ public class CertificateManagerRuntime {
     }
 
     /**
-     * POST  /certificates : import a new certificates.
+     * POST  /certificates/download : download the certificates of a url and store them in the keystore.
      *
      * @param url the url to get the certificates
-     * @return the ResponseEntity<String> with status 200 (Imported) and with body (certificates), or with status 400 (Bad Request) if the certificates failed to import
+     * @return the ResponseEntity<String> with status 200 (Downloaded) and with body (certificates), or with status 400 (Bad Request) if the certificates failed to download
      */
     @PostMapping(
-            path = "/certificates/import",
+            path = "/certificates/download",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> importCertificates(
+    public ResponseEntity<String> downloadCertificates(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestBody String url,
             @RequestHeader(value = "keystoreName") String keystoreName,
             @RequestHeader(value = "keystorePassword") String keystorePassword
     ) {
 
-        log.debug("REST request to import certificates for url: {}", url);
+        log.debug("REST request to download certificates for url: {}", url);
 
         try {
 
@@ -103,15 +103,15 @@ public class CertificateManagerRuntime {
                 throw new Exception("Certificates couldn't be downloaded.");
             }
 
-            Map<String,Certificate> certificateMap = importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
+            Map<String,Certificate> certificateMap = downloadCertificatesInKeystore(keystoreName, keystorePassword, certificates);
 
             String result = certificatesAsJSon(certificateMap, url, keystoreName);
 
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/import", result);
+            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/download", result);
 
         } catch (Exception e) {
-            log.error("Can't import certificates into keystore.", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/import", e.getMessage());
+            log.error("Can't download certificates into keystore.", e);
+            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/download", e.getMessage());
         }
 
     }
@@ -148,7 +148,7 @@ public class CertificateManagerRuntime {
             Certificate[] certificates = new X509Certificate[1];
             certificates[0] = cert;
 
-            Map<String,Certificate> certificateMap = importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
+            Map<String,Certificate> certificateMap = downloadCertificatesInKeystore(keystoreName, keystorePassword, certificates);
 
             String result = certificatesAsJSon(certificateMap, null, keystoreName);
 
@@ -365,7 +365,7 @@ public class CertificateManagerRuntime {
             CertificatesUtil util = new CertificatesUtil();
             Certificate[] certificates = util.downloadCertificates(url);
             String keystorePath = baseDir + "/security/" + keystoreName;
-            util.importCertificates(keystorePath, keystorePassword, certificates);
+            util.downloadCertificates(keystorePath, keystorePassword, certificates);
         } catch (Exception e) {
             log.error("Set Certificate in keystore {} for url {} failed", keystoreName, url, e);
         }
@@ -382,13 +382,13 @@ public class CertificateManagerRuntime {
     }
 
 
-    public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) {
+    public Map<String,Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) {
 
         CertificatesUtil util = new CertificatesUtil();
 
         String keystorePath = baseDir + "/security/" + keystoreName;
 
-        return util.importCertificates(keystorePath, keystorePassword, certificates);
+        return util.downloadCertificates(keystorePath, keystorePassword, certificates);
 
     }
 

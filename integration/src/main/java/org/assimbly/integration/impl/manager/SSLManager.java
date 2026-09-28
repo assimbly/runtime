@@ -192,7 +192,7 @@ public class SSLManager {
             CertificatesUtil util = new CertificatesUtil();
             Certificate[] certificates = util.downloadCertificates(url);
             String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-            util.importCertificates(keystorePath, keystorePassword, certificates);
+            util.downloadCertificates(keystorePath, keystorePassword, certificates);
         } catch (Exception e) {
             log.error("Set certificates for url {} failed.", url, e);
         }
@@ -210,13 +210,13 @@ public class SSLManager {
         }
     }
 
-    public Map<String, Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+    public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
         String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
         File file = new File(keystorePath);
 
         if (file.exists()) {
-            return util.importCertificates(keystorePath, keystorePassword, certificates);
+            return util.downloadCertificates(keystorePath, keystorePassword, certificates);
         } else {
             throw new KeyStoreException("Keystore " + keystoreName + " doesn't exist");
         }

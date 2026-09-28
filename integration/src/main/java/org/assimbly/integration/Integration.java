@@ -462,7 +462,7 @@ public interface Integration {
 	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
-    Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
+    Map<String,Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception;
 
 
 	/**

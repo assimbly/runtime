@@ -188,7 +188,7 @@ public final class CertificatesUtil {
 
 	}
 
-	public Map<String,Certificate> importCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
+	public Map<String,Certificate> downloadCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
         IO.println("Importing certificates");
 		Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();

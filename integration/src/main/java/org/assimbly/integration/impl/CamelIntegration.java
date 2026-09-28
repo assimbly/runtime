@@ -876,8 +876,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public Map<String, Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
-        return sslManager.importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
+    public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+        return sslManager.downloadCertificatesInKeystore(keystoreName, keystorePassword, certificates);
     }
 
     @Override

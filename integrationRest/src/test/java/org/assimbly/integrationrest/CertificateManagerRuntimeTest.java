@@ -142,7 +142,7 @@ class CertificateManagerRuntimeTest {
             headers.put("keystorePassword", "supersecret");
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/import"), "https://www.google.com", null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/certificates/download"), "https://www.google.com", null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
