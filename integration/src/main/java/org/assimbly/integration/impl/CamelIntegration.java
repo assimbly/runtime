@@ -250,7 +250,7 @@ public class CamelIntegration extends BaseIntegration {
 
         if(!flowsMap.isEmpty()) {
             log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-            flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll(), installedFlowsManager);
+            flowManager.startAllFlows(flowsMap, installedFlowsManager);
             log.info("Restored flows from cache.");
         }
 
@@ -898,7 +898,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(flowsMap, installedFlowsManager.getAll(), installedFlowsManager);
+        flowManager.startAllFlows(flowsMap, installedFlowsManager);
     }
 
     @Override
