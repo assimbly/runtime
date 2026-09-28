@@ -66,8 +66,6 @@ public class FlowManager {
     private static final String ASSIMBLY_ENCRYPTION_SECRET = System.getenv("ASSIMBLY_ENCRYPTION_SECRET");
     private final EncryptionUtil encryptionUtil = new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET);
 
-    private ServiceStatus status;
-
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
@@ -412,7 +410,6 @@ public class FlowManager {
 
         RouteController routeController = context.getRouteController();
         List<Route> routeList = getRoutesByFlowId(flowId);
-        status = routeController.getRouteStatus(routeList.getFirst().getId());
 
         for (Route route : routeList) {
             if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
