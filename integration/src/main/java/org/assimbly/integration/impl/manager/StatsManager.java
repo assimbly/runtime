@@ -147,11 +147,11 @@ public class StatsManager {
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
         FlowStatistics stats = new FlowStatistics();
+        stats.status = flowManager.getFlowStatus(flowId);
+
         if(managedRouteGroup==null){
             return stats;
         }
-
-        stats.status = managedRouteGroup.getState().toLowerCase();
 
         stats.totalTransactions = managedRouteGroup.getExchangesTotal();
         stats.completedTransactions = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();

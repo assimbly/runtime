@@ -217,9 +217,10 @@ public class FlowLoader extends RouteBuilder {
 
 		try {
 
-			log.info("Load step:\n\n{}", step);
-
 			String resolvedStep = decryptStepIfNeeded(step);
+
+			log.info("Load step:\n\n{}", resolvedStep);
+
 			loader.loadRoutes(IntegrationUtil.setResource(resolvedStep));
 
 			flowLoaderReport.setStep(id, uri, type, "success", null, null);

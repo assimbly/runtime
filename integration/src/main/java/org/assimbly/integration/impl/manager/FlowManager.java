@@ -8,6 +8,8 @@ import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
 import org.apache.camel.component.mail.MailAuthenticator;
+import org.apache.camel.model.ModelCamelContext;
+import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.spi.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,10 +66,9 @@ public class FlowManager {
     private static final String ASSIMBLY_ENCRYPTION_SECRET = System.getenv("ASSIMBLY_ENCRYPTION_SECRET");
     private final EncryptionUtil encryptionUtil = new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET);
 
-    private ServiceStatus status;
-
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
+    private final InstalledFlowsManager installedFlowsManager;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -79,11 +80,21 @@ public class FlowManager {
     public static final String PROPERTY_ID = "id";
 
     public FlowManager(CamelContext context) {
+        this(context, null);
+    }
+
+    public FlowManager(CamelContext context, InstalledFlowsManager installedFlowsManager) {
         this.context = context;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        this.installedFlowsManager = installedFlowsManager;
     }
 
     public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {
+        return loadFlow(flowId, properties, true);
+    }
+
+    /** @param autoStart false = paused restore (routes stay stopped) */
+    public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties, boolean autoStart) {
 
         String version = setProperty(properties,PROPERTY_FLOW_VERSION,"0");
 
@@ -91,21 +102,36 @@ public class FlowManager {
 
         try {
 
-            //initialize security
             initializeSecurity(properties);
-
-            //create connections & install dependencies if needed
             createConnections(properties);
 
-            FlowLoader flow = new FlowLoader(properties, report, encryptionUtil);
+            // Block consumers when adding into an already-started context
+            Boolean previousContextAutoStartup = null;
+            if (!autoStart && context.getStatus().isStarted()) {
+                previousContextAutoStartup = context.isAutoStartup();
+                context.setAutoStartup(false);
+            }
 
-            flow.addRoutesToCamelContext(context);
+            try {
+                FlowLoader flow = new FlowLoader(properties, report, encryptionUtil);
+                flow.addRoutesToCamelContext(context);
 
-            if(flow.isFlowLoaded()){
-                return finishReport(report, flowId, "start", "Started flow successfully", "info","success");
-            }else{
-                stopFlow(flowId, STOP_TIMEOUT);
-                return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
+                if (!flow.isFlowLoaded()) {
+                    stopFlow(flowId, STOP_TIMEOUT);
+                    return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
+                }
+
+                if (!autoStart) {
+                    disableFlowAutoStartup(flowId);
+                }
+
+                String event = autoStart ? "start" : "pause";
+                String message = autoStart ? "Started flow successfully" : "Loaded paused flow successfully";
+                return finishReport(report, flowId, event, message, "info","success");
+            } finally {
+                if (previousContextAutoStartup != null) {
+                    context.setAutoStartup(previousContextAutoStartup);
+                }
             }
 
         } catch (Exception e) {
@@ -113,6 +139,63 @@ public class FlowManager {
             return finishReport(report, flowId, "start", e.getMessage(), "error","failed");
         }
 
+    }
+
+    /** Mark route definitions autoStartup=false (live routes may not exist yet). */
+    private void disableFlowAutoStartup(String flowId) {
+        ModelCamelContext modelContext = (ModelCamelContext) context;
+        int marked = 0;
+        for (RouteDefinition definition : modelContext.getRouteDefinitions()) {
+            if (belongsToFlow(definition, flowId)) {
+                definition.setAutoStartup("false");
+                marked++;
+            }
+        }
+        if (marked == 0) {
+            log.warn("No route definitions found to disable autoStartup | flowid={}", flowId);
+        } else {
+            log.info("Disabled autoStartup for {} route definition(s) | flowid={}", marked, flowId);
+        }
+    }
+
+    private static boolean belongsToFlow(RouteDefinition definition, String flowId) {
+        if (definition == null || flowId == null) {
+            return false;
+        }
+        if (flowId.equals(definition.getGroup())) {
+            return true;
+        }
+        String routeId = definition.getId();
+        return routeId != null && (routeId.equals(flowId) || routeId.startsWith(flowId + "-"));
+    }
+
+    /** Stop any index-paused flow that still became active after context start. */
+    public void enforceDesiredPausedFlows() {
+        if (installedFlowsManager == null) {
+            return;
+        }
+        installedFlowsManager.getAll().forEach((flowId, entry) -> {
+            if (entry != null && entry.isPaused()) {
+                stopLiveRoutes(flowId);
+            }
+        });
+    }
+
+    private void stopLiveRoutes(String flowId) {
+        RouteController routeController = context.getRouteController();
+        for (Route route : getRoutesByFlowId(flowId)) {
+            String routeId = route.getId();
+            try {
+                ServiceStatus routeStatus = routeController.getRouteStatus(routeId);
+                if (routeStatus != null && !routeStatus.isStopped()) {
+                    routeController.stopRoute(routeId, STOP_TIMEOUT, TimeUnit.MILLISECONDS);
+                    log.info("Stopped paused flow route after context start | flowid={} | routeid={}",
+                            flowId, routeId);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to stop paused flow route | flowid={} | routeid={}", flowId, routeId, e);
+            }
+        }
     }
 
     private void initializeSecurity(TreeMap<String, String> properties) throws Exception {
@@ -138,17 +221,34 @@ public class FlowManager {
 
     }
 
-    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap, Map<String, InstalledFlowsManager.FlowEntry> installedFlowsIndexMap) {
+    /** Restore cached flows; honor index status (missing entry = legacy paused). */
+    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap,
+                              InstalledFlowsManager installedFlowsManager) {
 
         log.info("Starting all flows");
 
+        Map<String, InstalledFlowsManager.FlowEntry> index =
+                installedFlowsManager != null ? installedFlowsManager.getAll() : Map.of();
+
         flowsMap.forEach((flowId, flowProps) -> {
             try {
-                if(installedFlowsIndexMap.containsKey(flowId)) {
-                    // prevent paused flows to be installed on a restart
-                    loadFlow(flowId, flowProps);
+                InstalledFlowsManager.FlowEntry entry = index.get(flowId);
+                if (entry != null) {
+                    boolean autoStart = !entry.isPaused();
+                    loadFlow(flowId, flowProps, autoStart);
+                    log.info(autoStart ? "Started flow: {}" : "Restored paused flow: {}", flowId);
+                } else if (installedFlowsManager != null) {
+                    // Legacy pause: in cache but not in index
+                    loadFlow(flowId, flowProps, false);
+                    installedFlowsManager.register(
+                            flowId,
+                            flowProps.getOrDefault(PROPERTY_FLOW_VERSION, "0"),
+                            flowProps.getOrDefault(PROPERTY_FLOW_TENANT, "0"),
+                            InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+                    log.info("Restored legacy paused flow: {}", flowId);
+                } else {
+                    log.info("Skipping flow not in installed index: {}", flowId);
                 }
-                log.info("Started flow: {}", flowId);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -170,36 +270,6 @@ public class FlowManager {
         });
 
         return "restarted";
-    }
-
-    public String pauseAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-        log.info("Pause all flows");
-
-        flowsMap.forEach((flowId, _) -> {
-            try {
-                pauseFlow(flowId);
-                log.info("Paused flow: {}", flowId);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        return FlowStatus.STARTED.toString();
-    }
-
-    public String resumeAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-        log.info("Resume all flows");
-
-        flowsMap.forEach((flowId, flowProps) -> {
-            try {
-                resumeFlow(flowId, flowProps);
-                log.info("Resumed flow: {}", flowId);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        return FlowStatus.RESUMED.toString();
     }
 
     public String stopAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -323,7 +393,6 @@ public class FlowManager {
 
         RouteController routeController = context.getRouteController();
         List<Route> routeList = getRoutesByFlowId(flowId);
-        status = routeController.getRouteStatus(routeList.getFirst().getId());
 
         for (Route route : routeList) {
             if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
@@ -352,28 +421,32 @@ public class FlowManager {
 
         FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
 
-        RouteController routeController = context.getRouteController();
-
         if (!hasFlow(flowId)) {
-            String errorMessage = "Flow is not installed";
-            return  finishReport(report, flowId, "resume", errorMessage, "error","failed");
+            return finishReport(report, flowId, "resume", "Flow is not installed", "error","failed");
         }
 
         try {
-
+            RouteController routeController = context.getRouteController();
             List<Route> routeList = getRoutesByFlowId(flowId);
+
+            // Restored paused routes are Stopped, not Suspended
+            boolean needsStart = routeList.stream().anyMatch(route ->
+                    routeController.getRouteStatus(route.getId()).isStopped());
+
+            if (needsStart) {
+                FlowLoaderReport startReport = startFlow(flowId, flowProperties, STOP_TIMEOUT);
+                if (startReport.isStatusSuccess()) {
+                    return finishReport(report, flowId, "resume", "Resumed flow successfully", "info","success");
+                }
+                return startReport;
+            }
+
             for (Route route : routeList) {
                 String routeId = route.getId();
-                status = routeController.getRouteStatus(routeId);
-
-                if (status.isSuspended()) {
+                if (routeController.getRouteStatus(routeId).isSuspended()) {
                     routeController.resumeRoute(routeId);
                     log.info("Resumed flow  | flowid={} | stepid={}", flowId, routeId);
-                } else if (status.isStopped()) {
-                    log.info("Starting route as route {} is currently stopped (not suspended)", flowId);
-                    startFlow(routeId, flowProperties, STOP_TIMEOUT);
                 }
-
             }
 
             return finishReport(report, flowId, "resume", "Resumed flow successfully", "info","success");
@@ -473,6 +546,10 @@ public class FlowManager {
                     String flowId = routesList.getFirst().getId();
                     ServiceStatus serviceStatus = routeController.getRouteStatus(flowId);
                     flowStatus = serviceStatus.toString().toLowerCase();
+                    // Index paused + Camel stopped → suspended
+                    if ("stopped".equals(flowStatus) && isDesiredPaused(id)) {
+                        flowStatus = "suspended";
+                    }
                 }
             } catch (Exception e) {
                 log.error("Get status flow {} failed.", id, e);
@@ -486,6 +563,14 @@ public class FlowManager {
 
         return flowStatus;
 
+    }
+
+    private boolean isDesiredPaused(String flowId) {
+        if (installedFlowsManager == null) {
+            return false;
+        }
+        InstalledFlowsManager.FlowEntry entry = installedFlowsManager.get(flowId);
+        return entry != null && entry.isPaused();
     }
 
     public String getFlowUptime(String flowId) {
