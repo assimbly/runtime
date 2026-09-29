@@ -219,17 +219,11 @@ public final class XmlHelper {
         // Do not expand entity references.
         factory.setExpandEntityReferences(false);
 
-        // Disable external DTD access.
-        factory.setAttribute(
-                XMLConstants.ACCESS_EXTERNAL_DTD,
-                ""
-        );
-
-        // Disable external schema access.
-        factory.setAttribute(
-                XMLConstants.ACCESS_EXTERNAL_SCHEMA,
-                ""
-        );
+        // Disable external DTD/schema access when supported by the JAXP provider.
+        // Apache Xerces (e.g. exist-db xercesImpl on the runtime classpath) does not
+        // recognize these attributes and throws IllegalArgumentException.
+        setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
         return factory;
     }
@@ -249,18 +243,35 @@ public final class XmlHelper {
                 true
         );
 
-        // Disable external DTD access.
-        factory.setAttribute(
-                XMLConstants.ACCESS_EXTERNAL_DTD,
-                ""
-        );
-
-        // Disable external stylesheet access.
-        factory.setAttribute(
-                XMLConstants.ACCESS_EXTERNAL_STYLESHEET,
-                ""
-        );
+        // Same as DocumentBuilderFactory: not all TransformerFactory providers
+        // support these JAXP attributes (ignore when unsupported).
+        setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 
         return factory;
+    }
+
+    private static void setAttributeIfSupported(
+            DocumentBuilderFactory factory,
+            String name,
+            Object value
+    ) {
+        try {
+            factory.setAttribute(name, value);
+        } catch (IllegalArgumentException e) {
+            log.debug("DocumentBuilderFactory does not support attribute {}: {}", name, e.getMessage());
+        }
+    }
+
+    private static void setAttributeIfSupported(
+            TransformerFactory factory,
+            String name,
+            Object value
+    ) {
+        try {
+            factory.setAttribute(name, value);
+        } catch (IllegalArgumentException e) {
+            log.debug("TransformerFactory does not support attribute {}: {}", name, e.getMessage());
+        }
     }
 }
