@@ -64,7 +64,7 @@ spec:
                 csv:
                   delimiter: "{{delimiter}}"
                   useMaps: "{{useHeaders}}"
-                  captureHeaderRecord: true
+                  captureHeaderRecord: "{{useHeaders}}"
             - to:
                 uri: "csvtoxml://?encoding={{encoding}}&useHeaders={{useHeaders}}"
             - to:
