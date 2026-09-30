@@ -3,6 +3,8 @@ package org.assimbly.integrationrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -15,6 +17,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@Tag(name = "Flow configuration", description = "Configure flows and look up components")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -37,6 +40,7 @@ public class FlowConfigurerRuntime {
      * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
      */
+    @Operation(summary = "Set the configuration of a flow")
     @PostMapping(
 			path = "/integration/flow/{flowId}/configure",
 			consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
@@ -57,6 +61,7 @@ public class FlowConfigurerRuntime {
    		}
     }
 
+	@Operation(summary = "Check if a flow is configured")
 	@GetMapping(
 			path = "/integration/flow/{flowId}/isconfigured",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -76,6 +81,7 @@ public class FlowConfigurerRuntime {
 
 	}
 
+    @Operation(summary = "Get the documentation version")
     @GetMapping(
 			path = "/integration/flow/documentation/version",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -91,6 +97,7 @@ public class FlowConfigurerRuntime {
 		}
     }
 
+    @Operation(summary = "Get the documentation of a component")
     @GetMapping(
 			path = "/integration/flow/documentation/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -115,6 +122,7 @@ public class FlowConfigurerRuntime {
   }
 
 
+	@Operation(summary = "List components")
 	@GetMapping(
 			path = "/integration/flow/components",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -141,6 +149,7 @@ public class FlowConfigurerRuntime {
 		}
 	}
 
+    @Operation(summary = "Get the schema of a component")
     @GetMapping(
 			path = "/integration/flow/schema/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -168,6 +177,7 @@ public class FlowConfigurerRuntime {
 		}
     }
 
+    @Operation(summary = "Get the options of a component")
     @GetMapping(
 			path = "/integration/flow/options/{componenttype}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -191,6 +201,7 @@ public class FlowConfigurerRuntime {
 		}
     }
 
+    @Operation(summary = "Get the Camel route of a flow")
     @GetMapping(
 			path = "/integration/flow/{flowId}/route",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
@@ -209,6 +220,7 @@ public class FlowConfigurerRuntime {
 		}
     }
 
+	@Operation(summary = "Get a step template")
 	@GetMapping(
 			path = "/integration/flow/step/{templatename}",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -228,6 +240,7 @@ public class FlowConfigurerRuntime {
 
 	}
 
+	@Operation(summary = "List step templates")
 	@GetMapping(
 			path = "/integration/flow/list/steps",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
@@ -244,6 +257,7 @@ public class FlowConfigurerRuntime {
 
 	}
 
+	@Operation(summary = "Remove a flow")
 	@DeleteMapping(
 			path = "/integration/flow/{flowId}/remove",
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

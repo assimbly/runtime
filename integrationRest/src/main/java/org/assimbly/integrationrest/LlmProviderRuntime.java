@@ -1,5 +1,7 @@
 package org.assimbly.integrationrest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+@Tag(name = "LLM providers", description = "Check LLM provider credentials and models")
 @RestController
 @RequestMapping("/api/integration/llm")
 public class LlmProviderRuntime {
@@ -54,11 +57,13 @@ public class LlmProviderRuntime {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CredentialValidationResult(boolean valid, String message, Integer modelsCount) {}
 
+    @Operation(summary = "List supported providers")
     @GetMapping(value = "/providers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> getSupportedProviders() {
         return ResponseEntity.ok(SUPPORTED_PROVIDERS);
     }
 
+    @Operation(summary = "Validate provider credentials")
     @PostMapping(
             value = "/validate",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -95,6 +100,7 @@ public class LlmProviderRuntime {
         }
     }
 
+    @Operation(summary = "List the models of a provider")
     @PostMapping(
             value = "/models",
             consumes = MediaType.APPLICATION_JSON_VALUE,

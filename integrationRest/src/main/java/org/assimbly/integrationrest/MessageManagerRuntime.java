@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -22,6 +24,7 @@ import java.util.TreeMap;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@Tag(name = "Messages", description = "Send messages to a step")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -40,6 +43,7 @@ public class MessageManagerRuntime {
      *
      * @return if message has been send
      */
+    @Operation(summary = "Send a message (fire and forget)")
     @PostMapping(
             path = "/integration/send/{numberOfTimes}",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
@@ -92,6 +96,7 @@ public class MessageManagerRuntime {
      *
      * @return the reply message
      */
+    @Operation(summary = "Send a request message and return the reply")
     @PostMapping(
             path = "/integration/sendrequest",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},

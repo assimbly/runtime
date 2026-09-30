@@ -5,6 +5,8 @@ import org.assimbly.integrationrest.domain.CatalogSchemaType;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.integration.Integration;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -22,6 +24,7 @@ import java.util.TreeMap;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@Tag(name = "Integration", description = "Control the integration and list flows, errors and the catalog")
 @Component
 @RestController
 @RequestMapping("/api")
@@ -44,6 +47,7 @@ public class IntegrationRuntime {
      *
      * @return The ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the starting integration failed
      */
+    @Operation(summary = "Start the integration")
     @GetMapping(
             path = "/integration/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -72,6 +76,7 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
+    @Operation(summary = "Stop the integration")
     @GetMapping(
             path = "/integration/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -93,6 +98,7 @@ public class IntegrationRuntime {
      *
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      */
+    @Operation(summary = "Get integration information")
     @GetMapping(
             path = "/integration/info",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -114,6 +120,7 @@ public class IntegrationRuntime {
      *
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the stopping integration failed
      */
+    @Operation(summary = "Check if the integration is started")
     @GetMapping(
             path = "/integration/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -130,6 +137,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "Get the last error")
     @GetMapping(
             path = "/integration/lasterror",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -146,6 +154,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "Get the base directory")
     @GetMapping(
             path = "/integration/basedirectory",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -164,6 +173,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "Set the base directory")
     @PostMapping(
             path = "/integration/basedirectory",
             consumes = {MediaType.TEXT_PLAIN_VALUE},
@@ -186,6 +196,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List flows")
     @GetMapping(
             path = "/integration/list/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -205,6 +216,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List flows with details")
     @GetMapping(
             path = "/integration/list/flows/details",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -224,6 +236,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List errors")
     @GetMapping(
             path = "/integration/list/errors",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -243,6 +256,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List the SOAP actions of a WSDL")
     @PostMapping(
             path = "/integration/list/soap/action",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -263,6 +277,7 @@ public class IntegrationRuntime {
     }
 
 
+    @Operation(summary = "Count flows")
     @GetMapping(
             path = "/integration/count/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -282,6 +297,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "Count steps")
     @GetMapping(
             path = "/integration/count/steps",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -301,6 +317,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "Count alerts")
     @GetMapping(
             path = "/integration/numberofalerts",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -317,13 +334,14 @@ public class IntegrationRuntime {
         }
     }
 
+    @Operation(summary = "List threads")
     @GetMapping(
             path = "/integration/threads",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> getThreads(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(required = false, defaultValue = "", value = "filter") String filter,
+            @Parameter(description = "Only threads whose name contains this text", example = "camel") @RequestHeader(required = false, defaultValue = "", value = "filter") String filter,
             @RequestHeader(required = false, value = "topEntries") Integer topEntries
     ) {
 
@@ -349,6 +367,7 @@ public class IntegrationRuntime {
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
+    @Operation(summary = "Add collectors")
     @PostMapping(
             path = "/integration/collectors/add",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
@@ -377,6 +396,7 @@ public class IntegrationRuntime {
      *
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the remove of configuration failed
      */
+    @Operation(summary = "Remove collectors")
     @DeleteMapping(
             path = "/integration/collectors/remove",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -405,6 +425,7 @@ public class IntegrationRuntime {
      * @param configuration as JSON or XML
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if setting of the configuration failed
      */
+    @Operation(summary = "Add a collector")
     @PostMapping(
             path = "/integration/collector/{collectorId}/add",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
@@ -435,6 +456,7 @@ public class IntegrationRuntime {
      * @param collectorId (CollectorId)
      * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the remove of configuration failed
      */
+    @Operation(summary = "Remove a collector")
     @DeleteMapping(
             path = "/integration/collector/{collectorId}/remove",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -456,6 +478,7 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List flows by endpoint")
     @GetMapping(
             path = "/integration/list/flows/endpoint",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -506,6 +529,7 @@ public class IntegrationRuntime {
      *
      * @return ResponseEntity containing JSON summary of catalog items
      */
+    @Operation(summary = "Get the catalog summary")
     @GetMapping(
             path = "/integration/catalog/summary",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -530,6 +554,7 @@ public class IntegrationRuntime {
      * @param listType Type of catalog items to list (components, dataformats, languages, models, beans, transformers, others)
      * @return ResponseEntity with the list formatted as JSON
      */
+    @Operation(summary = "List catalog items")
     @GetMapping(
             path = "/integration/catalog/list/{listType}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -559,6 +584,7 @@ public class IntegrationRuntime {
      * @param name Name of the component/language/dataFormat/model to fetch the schema for
      * @return ResponseEntity with the JSON schema
      */
+    @Operation(summary = "Get a catalog schema")
     @GetMapping(
             path = "/integration/catalog/schema/{schemaType}/{name}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

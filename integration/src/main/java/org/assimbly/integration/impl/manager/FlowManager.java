@@ -9,6 +9,7 @@ import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.RouteError;
 import org.apache.camel.component.mail.MailAuthenticator;
 import org.apache.camel.spi.*;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.blocks.beans.OAuth2MailAuthenticator;
@@ -925,7 +926,7 @@ public class FlowManager {
                         String contextId = "mutualSslContext_" + routeId;
 
                         SSLManager sslManager = new SSLManager();
-                        sslManager.setMutualSsl(keystoreResource, keystorePassword, contextId, this.context.getRegistry());
+                        sslManager.setMutualSslContext(contextId, this.context.getRegistry(SimpleRegistry.class), keystoreResource, keystorePassword);
                     }
                 }
 

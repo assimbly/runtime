@@ -26,6 +26,10 @@ public final class HttpUtil {
         return makeHttpCall(path, "POST", body, params, headers);
     }
 
+    public static HttpResponse<String> putRequest(String path, String body, Map<String,String> params, Map<String,String> headers) {
+        return makeHttpCall(path, "PUT", body, params, headers);
+    }
+
     public static HttpResponse<String> deleteRequest(String path, String body, Map<String,String> params, Map<String,String> headers) {
         return makeHttpCall(path, "DELETE", body, params, headers);
     }

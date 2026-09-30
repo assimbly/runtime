@@ -423,7 +423,7 @@ public interface Integration {
 	* Download the chain of certificates for the specified url
 	*
 	* @param certificateName name of the certificate
-	* @param keystoreName the name of the keystore (jks file)
+	* @param keystoreName the name of thethe keystore (p12 file)
 	* @return returns the Certificate object
 	* @throws Exception if certificates cannot be downloaded
 	*/
@@ -431,22 +431,12 @@ public interface Integration {
 
 	
 	/**
-	* Sets TLS certificates.
-	* Download and import certificates to truststore (jks) used by the integration
-	*
-	* @param url an https url
-	* @throws Exception if certificates cannot be imported
-	*/
-    void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) throws Exception;
-
-	
-	/**
 	* Import TLS certificate.
-	* Import certificate into truststore (jks) used by the integration
+	* Import certificate into truststore (p12) used by the integration
 	*
 	* @param certificateName name of the certificate
 	* @param certificate Java certificate object
-	* @param keystoreName the name of the keystore (jks file)
+	* @param keystoreName the name of the keystore (p12 file)
  	* @return returns a confirmation message
 	* @throws Exception if certificates cannot be imported
 	*/
@@ -455,10 +445,10 @@ public interface Integration {
 	
 	/**
 	* Import TLS certificates.
-	* Import certificates to truststore (jks) used by the integration
+	* Import certificates to truststore (p12) used by the integration
 	*
 	* @param certificates map with one or more Java certificate object
-	* @param keystoreName the name of the keystore (jks file)
+	* @param keystoreName the name of the keystore (p12 file)
 	* @return returns a map with certificate name and Java certificate object
 	* @throws Exception if certificates cannot be imported
 	*/
@@ -467,7 +457,7 @@ public interface Integration {
 
 	/**
 	 * Import TLS certificate.
-	 * Import certificate into truststore (jks) used by the integration
+	 * Import certificate into truststore (p12) used by the integration
 	 *
 	 * @return returns a confirmation message
 	 * @throws Exception if certificates cannot be imported

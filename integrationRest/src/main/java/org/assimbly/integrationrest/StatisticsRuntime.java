@@ -3,6 +3,8 @@ package org.assimbly.integrationrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Resource to return information about the stats of flows.
  */
+@Tag(name = "Statistics", description = "Statistics, messages and metrics")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -32,6 +35,7 @@ public class StatisticsRuntime {
 
     //statistics of integrations, flows and steps
 
+    @Operation(summary = "Get statistics")
     @GetMapping(
             path = "/integration/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -50,6 +54,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get statistics per step")
     @GetMapping(
             path = "/integration/stats/steps",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -68,6 +73,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get statistics per flow")
     @GetMapping(
             path = "/integration/stats/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -87,6 +93,7 @@ public class StatisticsRuntime {
     }
 
 
+    @Operation(summary = "Get message counts")
     @GetMapping(
             path = "/integration/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -105,6 +112,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get statistics of the given flows")
     @PostMapping(
             path = "/integration/statsbyflowids",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -132,6 +140,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Reset all statistics")
     @PostMapping(
             path = "/integration/stats/reset",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -154,6 +163,7 @@ public class StatisticsRuntime {
 
     }
 
+    @Operation(summary = "Reset the statistics of a flow")
     @PostMapping(
             path = "/integration/flow/{flowId}/stats/reset",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -177,6 +187,7 @@ public class StatisticsRuntime {
 
     }
 
+    @Operation(summary = "Get statistics of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -208,6 +219,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get statistics of a step")
     @GetMapping(
             path = "/integration/flow/{flowId}/step/{stepId}/stats",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -236,6 +248,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get message counts of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -257,6 +270,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Count all messages of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/messages/total",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -275,6 +289,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Count completed messages of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/messages/completed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -293,6 +308,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Count failed messages of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/messages/failed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -311,6 +327,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Count pending messages of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/messages/pending",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -329,6 +346,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get message counts of a step")
     @GetMapping(
             path = "/integration/flow/{flowId}/step/{stepId}/messages",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -349,6 +367,7 @@ public class StatisticsRuntime {
 
     }
 
+    @Operation(summary = "Get metrics")
     @GetMapping(
             path = "/integration/metrics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -368,6 +387,7 @@ public class StatisticsRuntime {
         }
     }
 
+    @Operation(summary = "Get metrics history")
     @GetMapping(
             path = "/integration/historymetrics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

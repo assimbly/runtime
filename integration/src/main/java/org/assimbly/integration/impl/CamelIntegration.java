@@ -866,11 +866,6 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
-        sslManager.setCertificatesInKeystore(keystoreName, keystorePassword, url);
-    }
-
-    @Override
     public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
         return sslManager.importCertificateInKeystore(keystoreName, keystorePassword, certificateName, certificate);
     }

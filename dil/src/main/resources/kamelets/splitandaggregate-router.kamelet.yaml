@@ -1,105 +1,196 @@
-apiVersion: "camel.apache.org/v1"
-kind: "Kamelet"
+apiVersion: camel.apache.org/v1
+kind: Kamelet
 metadata:
-  name: "splitandaggregate-router"
+  name: splitandaggregate-router
   labels:
-    camel.apache.org/kamelet.type: "router"
+    camel.apache.org/kamelet.type: router
 spec:
   definition:
-    title: "splitandaggregate-router"
-    description: "Splits message by an expression and aggregate result by XML or JSON"
-    type: "object"
+    title: splitandaggregate-router
+    description: Splits message by an expression and aggregate result by XML or JSON
+    type: object
     properties:
       language:
-        title: "Language"
-        description: "Language"
-        type: "string"
+        title: Language
+        description: Language
+        type: string
       expression:
-        title: "Expression"
-        description: "Expression"
-        type: "string"
+        title: Expression
+        description: Expression
+        type: string
       parallelProcessing:
-        title: "Parallel Processing"
-        description: "Parallel Processing of split"
-        type: "boolean"
+        title: Parallel Processing
+        description: Parallel Processing of split
+        type: boolean
         default: false
       streaming:
-        title: "Streaming"
-        description: "Use Streaming"
-        type: "boolean"
+        title: Streaming
+        description: Use Streaming
+        type: boolean
         default: false
       aggregateType:
-        title: "Aggregate Type"
-        description: "Content-Type to use for aggregation (XML or JSON)"
-        type: "string"
-        default: "xml"
+        title: Aggregate Type
+        description: Content-Type to use for aggregation (XML or JSON)
+        type: string
+        default: xml
       in:
-        title: "Source Endpoint"
-        type: "string"
-        default: "kamelet:source"
+        title: Source Endpoint
+        type: string
+        default: 'kamelet:source'
       out_split:
-        title: "OutSplit"
-        description: "Out Split Rule"
-        type: "string"
+        title: OutSplit
+        description: Out Split Rule
+        type: string
       out_default:
-        title: "Out Default Rule"
-        description: "Out Default Rule"
-        type: "string"
-        default: "mock:0"
+        title: Out Default Rule
+        description: Out Default Rule
+        type: string
+        default: 'mock:0'
       routeId:
-        title: "Route ID"
-        type: "string"
+        title: Route ID
+        type: string
       stepId:
-        title: "Step ID"
-        type: "string"
+        title: Step ID
+        type: string
       routeConfigurationId:
-        title: "Route Configuration ID"
-        type: "string"
-        default: "0"
+        title: Route Configuration ID
+        type: string
+        default: '0'
   dependencies:
-  - "camel:kamelet"
+    - 'camel:kamelet'
   template:
     beans:
-      - name: "Namespace"
-        type: "#class:org.apache.camel.support.builder.Namespaces"
+      - name: Namespace
+        type: '#class:org.apache.camel.support.builder.Namespaces'
         properties:
-          h: "http://www.w3.org/TR/html4/"
+          h: 'http://www.w3.org/TR/html4/'
     route:
-      routeConfigurationId: "{{routeConfigurationId}}"
+      routeConfigurationId: '{{routeConfigurationId}}'
       from:
-        uri: "{{in}}"
+        uri: '{{in}}'
         steps:
           - step:
-              id: "step-{{stepId}}"
+              id: 'step-{{stepId}}'
               steps:
                 - setProperty:
-                    name: "Aggregate-Type"
-                    constant: "{{aggregateType}}"
-                - split:
-                    aggregationStrategy: "AggregateStrategy"
-                    parallelProcessing: "{{parallelProcessing}}"
-                    streaming: "{{streaming}}"
-                    language:
-                      language: "{{language}}"
-                      expression: "{{expression}}"
-                    steps:
-                      - setHeader:
-                          name: "CamelSplitIndex"
-                          simple: "${exchangeProperty.CamelSplitIndex}"
-                      - setHeader:
-                          name: "CamelSplitSize"
-                          simple: "${exchangeProperty.CamelSplitSize}"
-                      - setHeader:
-                          name: "CamelSplitComplete"
-                          simple: "${exchangeProperty.CamelSplitComplete.toString().trim()}"
-                      - choice:
-                          when:
-                            - simple: "'{{language}}' == 'xpath'"
-                              steps:
-                                - process:
-                                    ref: detachSplitBodyProcessor
-                      - convertBodyTo:
-                          type: "java.lang.String"
-                      - to: "{{out_split}}"
+                    name: Aggregate-Type
+                    constant: '{{aggregateType}}'
+                - choice:
+                    when:
+                        - simple: "'{{language}}' == 'xpath'"
+                          steps:
+                            - split:
+                                aggregationStrategy: AggregateStrategy
+                                parallelProcessing: '{{parallelProcessing}}'
+                                streaming: '{{streaming}}'
+                                expression:
+                                  xpath: '{{expression}}'
+                                steps:
+                                  - setHeader:
+                                      name: CamelSplitIndex
+                                      simple: '${exchangeProperty.CamelSplitIndex}'
+                                  - setHeader:
+                                      name: CamelSplitSize
+                                      simple: '${exchangeProperty.CamelSplitSize}'
+                                  - setHeader:
+                                      name: CamelSplitComplete
+                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                                  - process:
+                                      ref: detachSplitBodyProcessor
+                                  - convertBodyTo:
+                                      type: java.lang.String
+                                  - to:
+                                      uri: '{{out_split}}'
+                        - simple: "'{{language}}' == 'jsonpath'"
+                          steps:
+                            - split:
+                                aggregationStrategy: AggregateStrategy
+                                parallelProcessing: '{{parallelProcessing}}'
+                                streaming: '{{streaming}}'
+                                expression:
+                                  jsonpath:
+                                    expression: '{{expression}}'
+                                steps:
+                                  - setHeader:
+                                      name: CamelSplitIndex
+                                      simple: '${exchangeProperty.CamelSplitIndex}'
+                                  - setHeader:
+                                      name: CamelSplitSize
+                                      simple: '${exchangeProperty.CamelSplitSize}'
+                                  - setHeader:
+                                      name: CamelSplitComplete
+                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                                  - convertBodyTo:
+                                      type: java.lang.String
+                                  - to:
+                                      uri: '{{out_split}}'
+                        - simple: "'{{language}}' == 'simple'"
+                          steps:
+                            - split:
+                                aggregationStrategy: AggregateStrategy
+                                parallelProcessing: '{{parallelProcessing}}'
+                                streaming: '{{streaming}}'
+                                expression:
+                                  simple: '{{expression}}'
+                                steps:
+                                  - setHeader:
+                                      name: CamelSplitIndex
+                                      simple: '${exchangeProperty.CamelSplitIndex}'
+                                  - setHeader:
+                                      name: CamelSplitSize
+                                      simple: '${exchangeProperty.CamelSplitSize}'
+                                  - setHeader:
+                                      name: CamelSplitComplete
+                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                                  - convertBodyTo:
+                                      type: java.lang.String
+                                  - to:
+                                      uri: '{{out_split}}'
+                        - simple: "'{{language}}' == 'tokenize'"
+                          steps:
+                            - split:
+                                aggregationStrategy: AggregateStrategy
+                                parallelProcessing: '{{parallelProcessing}}'
+                                streaming: '{{streaming}}'
+                                expression:
+                                  tokenize:
+                                    token: '{{expression}}'
+                                steps:
+                                  - setHeader:
+                                      name: CamelSplitIndex
+                                      simple: '${exchangeProperty.CamelSplitIndex}'
+                                  - setHeader:
+                                      name: CamelSplitSize
+                                      simple: '${exchangeProperty.CamelSplitSize}'
+                                  - setHeader:
+                                      name: CamelSplitComplete
+                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                                  - convertBodyTo:
+                                      type: java.lang.String
+                                  - to:
+                                      uri: '{{out_split}}'
+                        - simple: "'{{language}}' == 'xtokenize'"
+                          steps:
+                            - split:
+                                aggregationStrategy: AggregateStrategy
+                                parallelProcessing: '{{parallelProcessing}}'
+                                streaming: '{{streaming}}'
+                                expression:
+                                  xtokenize:
+                                    expression: '{{expression}}'
+                                steps:
+                                  - setHeader:
+                                      name: CamelSplitIndex
+                                      simple: '${exchangeProperty.CamelSplitIndex}'
+                                  - setHeader:
+                                      name: CamelSplitSize
+                                      simple: '${exchangeProperty.CamelSplitSize}'
+                                  - setHeader:
+                                      name: CamelSplitComplete
+                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                                  - convertBodyTo:
+                                      type: java.lang.String
+                                  - to:
+                                      uri: '{{out_split}}'
                 - to:
-                    uri: "{{out_default}}"
+                    uri: '{{out_default}}'

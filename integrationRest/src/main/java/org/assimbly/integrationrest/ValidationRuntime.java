@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.dil.validation.HttpsCertificateValidator;
 import org.assimbly.dil.validation.beans.ValidationExpression;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -31,6 +33,7 @@ import java.util.List;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@Tag(name = "Validation", description = "Validate expressions, connections, scripts and more")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -48,6 +51,7 @@ public class ValidationRuntime {
 
     //validations
 
+    @Operation(summary = "Validate a cron expression")
     @GetMapping(
             path = "/validation/cron",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -78,6 +82,7 @@ public class ValidationRuntime {
         }
     }
 
+    @Operation(summary = "Validate the certificate of a URL")
     @GetMapping(
             path = "/validation/certificate",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -107,6 +112,7 @@ public class ValidationRuntime {
         }
     }
 
+    @Operation(summary = "Validate a URL")
     @GetMapping(
             path = "/validation/url",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -138,6 +144,7 @@ public class ValidationRuntime {
     }
 
 
+    @Operation(summary = "Validate expressions")
     @PostMapping(
             path = "/validation/expression",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
@@ -179,6 +186,7 @@ public class ValidationRuntime {
 
     }
 
+    @Operation(summary = "Validate an FTP connection")
     @PostMapping(
             path = "/validation/ftp",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
@@ -217,6 +225,7 @@ public class ValidationRuntime {
 
     }
 
+    @Operation(summary = "Validate a regular expression")
     @PostMapping(
             path = "/validation/regex",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
@@ -257,6 +266,7 @@ public class ValidationRuntime {
 
     }
 
+    @Operation(summary = "Validate a script")
     @PostMapping(
             path = "/validation/script",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
@@ -300,6 +310,7 @@ public class ValidationRuntime {
 
     }
 
+    @Operation(summary = "Validate a Camel URI")
     @GetMapping(
             path = "/validation/uri",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -316,6 +327,7 @@ public class ValidationRuntime {
         }
     }
 
+    @Operation(summary = "Validate an XSLT")
     @PostMapping(path = "/validation/xslt",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -359,6 +371,7 @@ public class ValidationRuntime {
 
     }
 
+    @Operation(summary = "Test a connection to a host and port")
     @GetMapping(
             path = "/validation/connection/{host}/{port}/{timeout}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
