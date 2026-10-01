@@ -180,9 +180,17 @@ spec:
                       - toD:
                           disabled: "{{!abortMode}}"
                           uri: "{{out}}"
+                      - setProperty:
+                          disabled: "{{!abortMode}}"
+                          name: "Enrich-FileName"
+                          simple: "${header.CamelFileNameConsumed} ?: ${header.CamelFileName}"
                       - removeHeaders:
                           disabled: "{{!abortMode}}"
                           pattern: "CamelFile*"
+                      - setHeader:
+                          disabled: "{{!abortMode}}"
+                          name: "CamelFileName"
+                          simple: "${exchangeProperty.Enrich-FileName}"
                       - setProperty:
                           disabled: "{{!abortMode}}"
                           name: "Enrich-Response"
@@ -190,9 +198,17 @@ spec:
                 - toD:
                     disabled: "{{abortMode}}"
                     uri: "{{out}}"
+                - setProperty:
+                    disabled: "{{abortMode}}"
+                    name: "Enrich-FileName"
+                    simple: "${header.CamelFileNameConsumed} ?: ${header.CamelFileName}"
                 - removeHeaders:
                     disabled: "{{abortMode}}"
                     pattern: "CamelFile*"
+                - setHeader:
+                    disabled: "{{abortMode}}"
+                    name: "CamelFileName"
+                    simple: "${exchangeProperty.Enrich-FileName}"
                 - setProperty:
                     disabled: "{{abortMode}}"
                     name: "Enrich-Response"
