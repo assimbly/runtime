@@ -75,122 +75,32 @@ spec:
                 - setProperty:
                     name: Aggregate-Type
                     constant: '{{aggregateType}}'
-                - choice:
-                    when:
-                        - simple: "'{{language}}' == 'xpath'"
-                          steps:
-                            - split:
-                                aggregationStrategy: AggregateStrategy
-                                parallelProcessing: '{{parallelProcessing}}'
-                                streaming: '{{streaming}}'
-                                expression:
-                                  xpath: '{{expression}}'
-                                steps:
-                                  - setHeader:
-                                      name: CamelSplitIndex
-                                      simple: '${exchangeProperty.CamelSplitIndex}'
-                                  - setHeader:
-                                      name: CamelSplitSize
-                                      simple: '${exchangeProperty.CamelSplitSize}'
-                                  - setHeader:
-                                      name: CamelSplitComplete
-                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
-                                  - process:
-                                      ref: detachSplitBodyProcessor
-                                  - convertBodyTo:
-                                      type: java.lang.String
-                                  - to:
-                                      uri: '{{out_split}}'
-                        - simple: "'{{language}}' == 'jsonpath'"
-                          steps:
-                            - split:
-                                aggregationStrategy: AggregateStrategy
-                                parallelProcessing: '{{parallelProcessing}}'
-                                streaming: '{{streaming}}'
-                                expression:
-                                  jsonpath:
-                                    expression: '{{expression}}'
-                                steps:
-                                  - setHeader:
-                                      name: CamelSplitIndex
-                                      simple: '${exchangeProperty.CamelSplitIndex}'
-                                  - setHeader:
-                                      name: CamelSplitSize
-                                      simple: '${exchangeProperty.CamelSplitSize}'
-                                  - setHeader:
-                                      name: CamelSplitComplete
-                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
-                                  - convertBodyTo:
-                                      type: java.lang.String
-                                  - to:
-                                      uri: '{{out_split}}'
-                        - simple: "'{{language}}' == 'simple'"
-                          steps:
-                            - split:
-                                aggregationStrategy: AggregateStrategy
-                                parallelProcessing: '{{parallelProcessing}}'
-                                streaming: '{{streaming}}'
-                                expression:
-                                  simple: '{{expression}}'
-                                steps:
-                                  - setHeader:
-                                      name: CamelSplitIndex
-                                      simple: '${exchangeProperty.CamelSplitIndex}'
-                                  - setHeader:
-                                      name: CamelSplitSize
-                                      simple: '${exchangeProperty.CamelSplitSize}'
-                                  - setHeader:
-                                      name: CamelSplitComplete
-                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
-                                  - convertBodyTo:
-                                      type: java.lang.String
-                                  - to:
-                                      uri: '{{out_split}}'
-                        - simple: "'{{language}}' == 'tokenize'"
-                          steps:
-                            - split:
-                                aggregationStrategy: AggregateStrategy
-                                parallelProcessing: '{{parallelProcessing}}'
-                                streaming: '{{streaming}}'
-                                expression:
-                                  tokenize:
-                                    token: '{{expression}}'
-                                steps:
-                                  - setHeader:
-                                      name: CamelSplitIndex
-                                      simple: '${exchangeProperty.CamelSplitIndex}'
-                                  - setHeader:
-                                      name: CamelSplitSize
-                                      simple: '${exchangeProperty.CamelSplitSize}'
-                                  - setHeader:
-                                      name: CamelSplitComplete
-                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
-                                  - convertBodyTo:
-                                      type: java.lang.String
-                                  - to:
-                                      uri: '{{out_split}}'
-                        - simple: "'{{language}}' == 'xtokenize'"
-                          steps:
-                            - split:
-                                aggregationStrategy: AggregateStrategy
-                                parallelProcessing: '{{parallelProcessing}}'
-                                streaming: '{{streaming}}'
-                                expression:
-                                  xtokenize:
-                                    expression: '{{expression}}'
-                                steps:
-                                  - setHeader:
-                                      name: CamelSplitIndex
-                                      simple: '${exchangeProperty.CamelSplitIndex}'
-                                  - setHeader:
-                                      name: CamelSplitSize
-                                      simple: '${exchangeProperty.CamelSplitSize}'
-                                  - setHeader:
-                                      name: CamelSplitComplete
-                                      simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
-                                  - convertBodyTo:
-                                      type: java.lang.String
-                                  - to:
-                                      uri: '{{out_split}}'
+                - split:
+                    aggregationStrategy: AggregateStrategy
+                    parallelProcessing: '{{parallelProcessing}}'
+                    streaming: '{{streaming}}'
+                    language:
+                      language: '{{language}}'
+                      expression: '{{expression}}'
+                    steps:
+                      - setHeader:
+                          name: CamelSplitIndex
+                          simple: '${exchangeProperty.CamelSplitIndex}'
+                      - setHeader:
+                          name: CamelSplitSize
+                          simple: '${exchangeProperty.CamelSplitSize}'
+                      - setHeader:
+                          name: CamelSplitComplete
+                          simple: '${exchangeProperty.CamelSplitComplete.toString().trim()}'
+                      - choice:
+                          when:
+                            - simple: "'{{language}}' == 'xpath'"
+                              steps:
+                                - process:
+                                    ref: detachSplitBodyProcessor
+                      - convertBodyTo:
+                          type: java.lang.String
+                      - to:
+                          uri: '{{out_split}}'
                 - to:
                     uri: '{{out_default}}'
