@@ -14,6 +14,7 @@ public class AMQPConnection {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
+	private static final String OUTBOUND_TRUSTSTORE_FILE = "outbound-truststore.p12";
     private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
 
     private final CamelContext context;
@@ -139,7 +140,7 @@ public class AMQPConnection {
 
         String sslUrl = url;
         if (url.indexOf('?') == -1) {
-            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks" + "&transport.trustStorePassword=" + getKeystorePassword();
+            sslUrl = url + "?transport.verifyHost=false&transport.trustAll=true&transport.trustStoreLocation=" + baseDirURI + "/security/" + OUTBOUND_TRUSTSTORE_FILE + "&transposrt.trustStorePassword=" + getKeystorePassword();
         } else {
             String[] urlSplitted = url.split("/?");
             String[] optionsSplitted = urlSplitted[1].split("&");
@@ -149,7 +150,7 @@ public class AMQPConnection {
             }
 
             if (Arrays.stream(optionsSplitted).anyMatch("transport.trustStoreLocation"::startsWith)) {
-                sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/truststore.jks";
+                sslUrl = url + "&transport.trustStoreLocation=" + baseDirURI + "/security/" + OUTBOUND_TRUSTSTORE_FILE;
             }
 
             if (Arrays.stream(optionsSplitted).anyMatch("transport.trustStorePassword"::startsWith)) {

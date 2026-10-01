@@ -1,5 +1,7 @@
 package org.assimbly.brokerrest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * REST controller for configuring the broker.
  */
+@Tag(name = "Broker configuration", description = "Get and set the broker configuration")
 @RestController
 @RequestMapping("/api")
 public class BrokerConfigurerRuntime {
@@ -29,6 +32,7 @@ public class BrokerConfigurerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Get the broker configuration")
     @GetMapping("/brokers/{id}/configure")
     public String getConfigurationBroker(
             @PathVariable(value = "id") Long id,
@@ -55,6 +59,7 @@ public class BrokerConfigurerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Set the broker configuration")
     @PostMapping(path = "/brokers/{id}/configure")
     public ResponseEntity<String> setConfigurationBroker(
             @PathVariable(value = "id") Long id,

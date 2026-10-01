@@ -3,6 +3,8 @@ package org.assimbly.brokerrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * REST controller for managing queues on the broker.
  */
+@Tag(name = "Broker queues", description = "Manage queues on the broker")
 @RestController
 @RequestMapping("/api")
 public class QueueManagerRuntime {
@@ -32,6 +35,7 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (success or failed) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Create a queue")
     @PostMapping(
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -61,6 +65,7 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Delete a queue")
     @DeleteMapping(
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -90,6 +95,7 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return Queue destination details
      */
+    @Operation(summary = "Get queue details")
     @GetMapping(
             path = "/brokers/{brokerType}/queue/{queueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -118,6 +124,7 @@ public class QueueManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "List queues with details")
     @GetMapping(
             path= "/brokers/{brokerType}/queues",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -146,6 +153,7 @@ public class QueueManagerRuntime {
      * @param queueName, the name of the queue
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove all messages of a queue")
     @PostMapping(
             path = "/brokers/{brokerType}/queue/{queueName}/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -174,6 +182,7 @@ public class QueueManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove all messages of all queues")
     @PostMapping(
             path = "/brokers/{brokerType}/queues/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

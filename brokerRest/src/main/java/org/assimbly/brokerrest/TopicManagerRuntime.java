@@ -3,6 +3,8 @@ package org.assimbly.brokerrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * REST controller for managing topics on the broker.
  */
+@Tag(name = "Broker topics", description = "Manage topics on the broker")
 @RestController
 @RequestMapping("/api")
 public class TopicManagerRuntime {
@@ -32,6 +35,7 @@ public class TopicManagerRuntime {
      * @param topicName, the name of the topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Create a topic")
     @PostMapping(
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -61,6 +65,7 @@ public class TopicManagerRuntime {
      * @param topicName, the name of the topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Delete a topic")
     @DeleteMapping(
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -90,6 +95,7 @@ public class TopicManagerRuntime {
      * @param topicName, the name of the topic
      * @return topics with details with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Get topic details")
     @GetMapping(
             path = "/brokers/{brokerType}/topic/{topicName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -119,6 +125,7 @@ public class TopicManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of topics with details 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "List topics with details")
     @GetMapping(
             path = "/brokers/{brokerType}/topics",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -147,6 +154,7 @@ public class TopicManagerRuntime {
      * @param topicName, the name of the topic
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove all messages of a topic")
     @PostMapping(
             path = "/brokers/{brokerType}/topic/{topicName}/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -175,6 +183,7 @@ public class TopicManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove all messages of all topics")
     @PostMapping(
             path = "/brokers/{brokerType}/topics/clear",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

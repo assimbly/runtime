@@ -867,18 +867,13 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
-        sslManager.setCertificatesInKeystore(keystoreName, keystorePassword, url);
-    }
-
-    @Override
     public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
         return sslManager.importCertificateInKeystore(keystoreName, keystorePassword, certificateName, certificate);
     }
 
     @Override
-    public Map<String, Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
-        return sslManager.importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
+    public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+        return sslManager.downloadCertificatesInKeystore(keystoreName, keystorePassword, certificates);
     }
 
     @Override
@@ -887,8 +882,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) {
-        sslManager.deleteCertificateInKeystore(keystoreName, keystorePassword);
+    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
+        sslManager.deleteCertificateInKeystore(keystoreName, keystorePassword, certificateName);
     }
 
     @Override

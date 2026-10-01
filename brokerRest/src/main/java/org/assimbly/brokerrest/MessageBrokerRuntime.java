@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ import java.util.Optional;
 /**
  * REST controller for managing messages on the broker.
  */
+@Tag(name = "Broker messages", description = "Browse, send, move and remove messages")
 @RestController
 @RequestMapping("/api")
 public class MessageBrokerRuntime {
@@ -39,6 +42,7 @@ public class MessageBrokerRuntime {
      * @param filter, the filter
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "List messages of a queue or topic")
     @GetMapping(
             path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -69,6 +73,7 @@ public class MessageBrokerRuntime {
      * @param endpointNames, the name of the queue
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Count messages of several queues or topics")
     @PostMapping(
             path = "/brokers/{brokerType}/messages/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -97,6 +102,7 @@ public class MessageBrokerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of flows with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Count messages per flow")
     @GetMapping(
             path = "/brokers/{brokerType}/flows/message/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -126,6 +132,7 @@ public class MessageBrokerRuntime {
      * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Count messages")
     @GetMapping(
             path = "/brokers/{brokerType}/messages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -155,6 +162,7 @@ public class MessageBrokerRuntime {
      * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Count delayed messages")
     @GetMapping(
             path = "/brokers/{brokerType}/delayedmessages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -185,6 +193,7 @@ public class MessageBrokerRuntime {
      * @param messageId, the messageId (retrieved to listMessages)
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Browse a message")
     @GetMapping(
             path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -216,6 +225,7 @@ public class MessageBrokerRuntime {
      * @param endpointName, the name of the queue
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Browse messages (paged)")
     @GetMapping(
             path = "/brokers/{brokerType}/messages/{endpointName}/browse",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -249,6 +259,7 @@ public class MessageBrokerRuntime {
      * @param messageHeaders, the message headers (json map)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Send a message")
     @PostMapping(
             path = "/brokers/{brokerType}/message/{endpointName}/send",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
@@ -286,6 +297,7 @@ public class MessageBrokerRuntime {
      * @param endpointName, the name of the queue or topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove a message")
     @DeleteMapping(
             path = "/brokers/{brokerType}/message/{endpointName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -316,6 +328,7 @@ public class MessageBrokerRuntime {
      * @param endpointName, the name of the endpoint (topic or queue)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Remove all messages")
     @DeleteMapping(
             path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -346,6 +359,7 @@ public class MessageBrokerRuntime {
      * @param targetQueueName, the name of the target queue
      * @return the status (source) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Move a message to another queue")
     @PostMapping(
             path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -378,6 +392,7 @@ public class MessageBrokerRuntime {
      * @param targetQueueName, the name of the target queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Move all messages to another queue")
     @PostMapping(
             path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

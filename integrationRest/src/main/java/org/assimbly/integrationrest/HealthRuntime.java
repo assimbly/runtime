@@ -3,6 +3,8 @@ package org.assimbly.integrationrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Resource to return information about the health of flows.
  */
+@Tag(name = "Health", description = "Health checks of flows and steps")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -31,6 +34,7 @@ public class HealthRuntime {
 
     //healtchecks of flows and steps
 
+    @Operation(summary = "Get the health of all flows")
     @GetMapping(
             path = "/integration/health",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -51,6 +55,7 @@ public class HealthRuntime {
         }
     }
 
+    @Operation(summary = "Get the health of the given flows")
     @PostMapping(
             path = "/integration/healthbyflowids",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -75,6 +80,7 @@ public class HealthRuntime {
         }
     }
 
+    @Operation(summary = "Get the health of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/health",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -100,6 +106,7 @@ public class HealthRuntime {
         }
     }
 
+    @Operation(summary = "Get the health of a step")
     @GetMapping(
             path = "/integration/flow/{flowId}/step/{stepId}/health",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

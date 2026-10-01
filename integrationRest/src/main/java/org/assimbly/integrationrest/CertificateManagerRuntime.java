@@ -3,40 +3,53 @@ package org.assimbly.integrationrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.BaseDirectory;
+import org.assimbly.util.CertificateExpiry;
 import org.assimbly.util.CertificatesUtil;
 import org.assimbly.util.rest.ResponseUtil;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
+import java.io.File;
+import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
+import java.util.TreeMap;
 
 
 /**
- * REST controller for managing Security.
+ * REST controller for managing the certificates in the runtime's keystores.
+ * <p>
+ * /certificates manages the trusted certificates (default keystore outbound-truststore.p12) and
+ * /certificates/identity the server identities (default keystore server-identity.p12). The keystoreName and
+ * keystorePassword headers are optional; the password defaults to the runtime's keystore password.
  */
+@Tag(name = "Certificates", description = "Manage certificates in keystores")
 @RestController
 @RequestMapping("/api")
 public class CertificateManagerRuntime {
 
     private final Logger log = LoggerFactory.getLogger(CertificateManagerRuntime.class);
+
+    private static final String TRUSTSTORE = CertificatesUtil.TRUSTSTORE_FILE;
+    private static final String IDENTITY_STORE = CertificatesUtil.IDENTITY_STORE_FILE;
+
+    // names that are also literal paths next to /certificates/{certificateName} and /certificates/identity/{certificateName}
+    private static final Set<String> RESERVED_CERTIFICATE_NAMES = Set.of("identity", "expired", "expiring");
+    private static final Set<String> RESERVED_IDENTITY_NAMES = Set.of("generate");
 
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
@@ -46,296 +59,539 @@ public class CertificateManagerRuntime {
         this.integration = integrationRuntime.getIntegration();
     }
 
-    /**
-     * POST  /certificates/ : Sets TLS certificates.
-     *
-     * @return the ResponseEntity with status 200 (Successful) and status 400 (Bad Request) if the configuration failed
-     */
-    @PostMapping(
-            path = "/certificates/set",
-            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> setCertificates(
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestBody String url,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword
+    // --- trusted certificates -------------------------------------------------------------------------------------
+
+    @Operation(summary = "Get all certificates in the keystore with their expiry")
+    @GetMapping(path = "/certificates", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> listCertificates(
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
-
-        log.debug("REST request to set certificates for url: {}", url);
-
-        try {
-            integration.setCertificatesInKeystore(keystoreName, keystorePassword, url);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/setcertificates/{id}","Certificates set");
-        } catch (Exception e) {
-            log.error("Set certificates for keystore={} for url={} failed", keystoreName, url, e);
-
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/setcertificates/{id}",e.getMessage());
-        }
-
+        return list(keystoreName, keystorePassword, "/certificates");
     }
 
-    /**
-     * POST  /certificates : import a new certificates.
-     *
-     * @param url the url to get the certificates
-     * @return the ResponseEntity<String> with status 200 (Imported) and with body (certificates), or with status 400 (Bad Request) if the certificates failed to import
-     */
-    @PostMapping(
-            path = "/certificates/import",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> importCertificates(
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestBody String url,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword
+    @Operation(summary = "Get a certificate in the keystore with its expiry")
+    @GetMapping(path = "/certificates/{certificateName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getCertificate(
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
-
-        log.debug("REST request to import certificates for url: {}", url);
-
-        try {
-
-            Certificate[] certificates = getCertificates(url);
-
-            if(certificates == null || certificates.length == 0){
-                throw new Exception("Certificates couldn't be downloaded.");
-            }
-
-            Map<String,Certificate> certificateMap = importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
-
-            String result = certificatesAsJSon(certificateMap, url, keystoreName);
-
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/import", result);
-
-        } catch (Exception e) {
-            log.error("Can't import certificates into keystore.", e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/import", e.getMessage());
-        }
-
+        return get(certificateName, keystoreName, keystorePassword, "/certificates/{certificateName}");
     }
 
-
+    @Operation(
+            summary = "Import trusted (CA) certificates into the truststore",
+            description = "The body is PEM, or base64 encoded PEM or DER, optionally as a data URL. The certificate is stored under certificateName; "
+                    + "the other certificates of a PEM bundle under certificateName-2, -3, ... "
+                    + "Returns 409 when a name already holds a different certificate (use PUT to replace it)."
+    )
     @PostMapping(
-            path = "/certificates/upload",
+            path = "/certificates/{certificateName}",
             consumes = {MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uploadCertificate(
+    public ResponseEntity<String> importTrustedCertificates(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
-            @RequestBody String certificate,
-            @RequestHeader(value = "FileType") String fileType,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestBody String certificates,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
 
+        log.debug("REST request to import trusted certificate {} into keystore {}", certificateName, keystoreName);
+
         try {
+            CertificatesUtil.validateAlias(certificateName, RESERVED_CERTIFICATE_NAMES);
+            List<X509Certificate> parsed = CertificatesUtil.parseCertificates(certificates);
+            warnIfExpired(parsed);
 
-            Certificate cert;
-            if(fileType.equalsIgnoreCase("pem")) {
-                cert = CertificatesUtil.convertPemToX509Certificate(certificate);
-            }else if(fileType.equalsIgnoreCase("p12")){
-                return ResponseUtil.createFailureResponse(1L, mediaType,"/certificates/upload","use the p12 uploader");
-            }else{
-                //create certificate from String
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                InputStream certificateStream = new ByteArrayInputStream(certificate.getBytes(StandardCharsets.UTF_8));
-                cert = cf.generateCertificate(certificateStream);
-            }
+            Map<String,Certificate> certificateMap = CertificatesUtil.importTrustedCertificates(keystorePath(keystoreName, true), password(keystorePassword), parsed, certificateName);
 
-            Certificate[] certificates = new X509Certificate[1];
-            certificates[0] = cert;
+            log.info("Imported trusted certificates {} into keystore {}", certificateMap.keySet(), keystoreName);
 
-            Map<String,Certificate> certificateMap = importCertificatesInKeystore(keystoreName, keystorePassword, certificates);
-
-            String result = certificatesAsJSon(certificateMap, null, keystoreName);
-
-            log.debug("Uploaded certificate: {}", cert);
-
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/upload", result);
-
-
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/certificates/{certificateName}", certificatesAsJSon(certificateMap, null, keystoreName));
         } catch (Exception e) {
-            log.debug("Uploaded certificate failed: {}", e.getMessage());
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/upload", e.getMessage());
+            log.error("Import trusted certificate {} into keystore {} failed", certificateName, keystoreName, e);
+            return failure(mediaType, "/certificates/{certificateName}", e);
         }
 
     }
 
-    @PostMapping(
-            path = "/certificates/uploadp12",
+    @Operation(
+            summary = "Create or replace a trusted (CA) certificate in the truststore",
+            description = "The body is one certificate: PEM, or base64 encoded PEM or DER, optionally as a data URL. "
+                    + "Returns 409 when certificateName is an identity (private key entry)."
+    )
+    @PutMapping(
+            path = "/certificates/{certificateName}",
             consumes = {MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> uploadP12Certificate(
+    public ResponseEntity<String> replaceTrustedCertificate(
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @Parameter(hidden = true) @RequestHeader(value = "Content-Type") String contentType,
+            @PathVariable(value = "certificateName") String certificateName,
             @RequestBody String certificate,
-            @RequestHeader(value = "FileType") String fileType,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword,
-            @RequestHeader(value = "password") String password
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
 
+        log.debug("REST request to replace trusted certificate {} in keystore {}", certificateName, keystoreName);
+
         try {
+            CertificatesUtil.validateAlias(certificateName, RESERVED_CERTIFICATE_NAMES);
+            List<X509Certificate> parsed = CertificatesUtil.parseCertificates(certificate);
+            if (parsed.size() != 1) {
+                throw new IllegalArgumentException("Replacing certificate '" + certificateName + "' needs exactly one certificate, the body has " + parsed.size());
+            }
+            warnIfExpired(parsed);
 
-            Map<String,Certificate> certificateMap = importP12CertificateInKeystore(keystoreName, keystorePassword, certificate, password);
+            Map<String,Certificate> certificateMap = CertificatesUtil.putTrustedCertificate(keystorePath(keystoreName, true), password(keystorePassword), certificateName, parsed.getFirst());
 
-            String result = certificatesAsJSon(certificateMap, "P12", keystoreName);
+            log.info("Stored trusted certificate {} in keystore {}", certificateName, keystoreName);
 
-            log.debug("Uploaded P12 certificate");
-
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/securities/uploadcertificate",result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/certificates/{certificateName}", certificatesAsJSon(certificateMap, null, keystoreName));
         } catch (Exception e) {
-            log.debug("Uploaded certificate failed: {}", e.getMessage());
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/securities/uploadcertificate",e.getMessage());
+            log.error("Replace trusted certificate {} in keystore {} failed", certificateName, keystoreName, e);
+            return failure(mediaType, "/certificates/{certificateName}", e);
         }
 
     }
 
-    @GetMapping(
-            path = "/certificates/generate",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> generateCertificate(
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestHeader(value = "cn") String cn,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword
-    ) {
-
-        try {
-
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(4096, new SecureRandom());
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-            Certificate cert = CertificatesUtil.selfsignCertificate2(keyPair, cn);
-
-            importCertificateInKeystore(keystoreName, keystorePassword, cn, cert);
-
-            Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
-            certificateMap.put("Self-Signed (" + cn + ")",cert);
-
-            String result = certificatesAsJSon(certificateMap, null, keystoreName);
-
-            log.debug("Generated certificate: {}", cert);
-
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, mediaType, "/certificates/generate", result);
-
-
-        } catch (Exception e) {
-            log.debug("Generate self-signed certificate failed: {}", e.getMessage());
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, mediaType, "/certificates/generate", e.getMessage());
-        }
-
-    }
-
-
-
-    /**
-     * Get  /securities/:id : delete the "id" security.
-     *
-     * @param certificateName the name (alias) of the certificate to delete
-     * @return the ResponseEntity with status 200 (OK)
-     */
-    @GetMapping(
-            path = "/certificates/delete/{certificateName}",
+    @Operation(summary = "Delete a certificate from the keystore")
+    @DeleteMapping(
+            path = "/certificates/{certificateName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
     public ResponseEntity<String> deleteCertificate(
-            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @PathVariable(value = "certificateName") String certificateName,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
-        log.debug("REST request to delete certificate : {}", certificateName);
+        return delete(certificateName, keystoreName, keystorePassword, "/certificates/{certificateName}");
+    }
+
+    @Operation(summary = "Get the certificates in the keystore that expire within a number of days")
+    @GetMapping(path = "/certificates/expiring/{numberOfDays}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getExpiringCertificates(
+            @PathVariable(value = "numberOfDays") int numberOfDays,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        log.debug("REST request to get the certificates in keystore {} that expire within {} days", keystoreName, numberOfDays);
+
+        if (numberOfDays < 0) {
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expiring/{numberOfDays}", "numberOfDays can't be negative");
+        }
 
         try {
-            deleteCertificateInKeystore(keystoreName, keystorePassword);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(1, "text/plain", "/certificates/{certificateName}", "success");
-        }catch (Exception e) {
-            log.debug("Remove url to Whitelist failed: {}", e.getMessage());
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(1, "text/plain", "/certificates/{certificateName}", e.getMessage());
+            // daysUntilExpiry is rounded down, so "< numberOfDays" means it expires within numberOfDays days from now
+            List<CertificateExpiry> expiring = certificatesExpiry(keystoreName, password(keystorePassword)).stream()
+                    .filter(expiry -> expiry.valid() && expiry.daysUntilExpiry() < numberOfDays)
+                    .toList();
+            return ResponseEntity.ok(expiring);
+        } catch (Exception e) {
+            log.error("Get the expiring certificates in keystore {} failed", keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expiring/{numberOfDays}", e.getMessage());
         }
     }
 
+    @Operation(summary = "Get the expired certificates in the keystore")
+    @GetMapping(path = "/certificates/expired", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getExpiredCertificates(
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        log.debug("REST request to get the expired certificates in keystore {}", keystoreName);
 
-    /**
-     * Remote  /securities/:id : delete the "url" security.
-     *
-     * @return the ResponseEntity with status 200 (OK)
-     */
-    @PostMapping("/certificates/update")
-    public ResponseEntity<String> updateCertificates(
-            @RequestBody String certificates,
-            @RequestHeader(value = "keystoreName") String keystoreName,
-            @RequestHeader(value = "keystorePassword") String keystorePassword,
-            @RequestParam(value = "url") String url
-    ) throws Exception {
-        log.debug("REST request to updates certificates in truststore for url {}", url);
-
-        if(certificates.isEmpty()) {
-            return ResponseEntity.ok().body("no certificates found");
+        try {
+            Instant now = Instant.now();
+            Map<String, X509Certificate> expired = new TreeMap<>(CertificatesUtil.getCertificates(keystorePath(keystoreName), password(keystorePassword)));
+            expired.values().removeIf(certificate -> !certificate.getNotAfter().toInstant().isBefore(now));
+            return ResponseEntity.ok(expiredCertificates(expired, now));
+        } catch (Exception e) {
+            log.error("Get the expired certificates in keystore {} failed", keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expired", e.getMessage());
         }
+    }
 
-        JSONObject jsonObject = new JSONObject(certificates);
+    @Operation(summary = "Delete the expired certificates from the keystore", description = "Returns the deleted certificates. Expired key entries (identities with a private key) are kept.")
+    @DeleteMapping(path = "/certificates/expired", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteExpiredCertificates(
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        log.debug("REST request to delete the expired certificates in keystore {}", keystoreName);
 
-        JSONArray jsonArray = jsonObject.getJSONArray("certificate");
+        try {
+            Instant now = Instant.now();
+            Map<String, X509Certificate> deleted = CertificatesUtil.deleteExpiredCertificates(keystorePath(keystoreName), password(keystorePassword), now);
+            log.info("Deleted {} expired certificates from keystore {}: {}", deleted.size(), keystoreName, deleted.keySet());
+            return ResponseEntity.ok(expiredCertificates(deleted, now));
+        } catch (Exception e) {
+            log.error("Delete the expired certificates in keystore {} failed", keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expired", e.getMessage());
+        }
+    }
 
-        Instant dateNow = Instant.now();
+    // --- downloaded certificates of a domain ----------------------------------------------------------------------
 
-        for (int i = 0 ; i < jsonArray.length(); i++) {
-            JSONObject certificate = jsonArray.getJSONObject(i);
-            String certificateName = certificate.getString("certificateName");
-            String certificateFile = certificate.getString("certificateFile");
-            Instant certificateExpiry = Instant.parse(certificate.getString("certificateExpiry"));
+    @Operation(
+            summary = "Get the downloaded certificates of a domain with their expiry",
+            description = "The certificates stored for the domain as <domain>-root-ca, <domain>-intermediate-ca(-n) and <domain>-leaf."
+    )
+    @GetMapping(path = "/certificates/domain/{domain}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getDomainCertificates(
+            @PathVariable(value = "domain") String domain,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        log.debug("REST request to get the certificates of domain {} in keystore {}", domain, keystoreName);
 
-            if(dateNow.isAfter(certificateExpiry)) {
-                log.warn("Certificate '{}' for url {} is expired (Expiry Date: {})", certificateName, url, certificateExpiry);
-            }else {
-                log.info("Certificate '{}' for url {} is valid (Expiry Date: {})", certificateName, url, certificateExpiry);
+        try {
+            String prefix = CertificatesUtil.certificateAliasPrefix(CertificatesUtil.domainUrl(domain));
+            Map<String, X509Certificate> certificates = CertificatesUtil.getDomainCertificates(keystorePath(keystoreName), password(keystorePassword), prefix);
+            return ResponseEntity.ok(certificatesExpiry(certificates));
+        } catch (Exception e) {
+            log.error("Get the certificates of domain {} in keystore {} failed", domain, keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/domain/{domain}", e.getMessage());
+        }
+    }
+
+    @Operation(
+            summary = "Download the certificates of a domain into the keystore",
+            description = "Downloads the TLS certificate chain of https://<domain>/ and stores the selected certificates as <domain>-root-ca, "
+                    + "<domain>-intermediate-ca(-n) and <domain>-leaf. Returns 409 when the domain already has certificates (use PUT to renew them)."
+    )
+    @PostMapping(
+            path = "/certificates/domain/{domain}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> addDomainCertificates(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "domain") String domain,
+            @Parameter(description = "Which certificates of the chain to store: root, intermediate, leaf or all")
+            @RequestHeader(value = "certificateType", required = false, defaultValue = CertificatesUtil.CERTIFICATE_TYPE_ROOT) String certificateType,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return downloadForDomain(mediaType, domain, certificateType, keystoreName, keystorePassword, false);
+    }
+
+    @Operation(
+            summary = "Renew the certificates of a domain in the keystore",
+            description = "Downloads the TLS certificate chain of https://<domain>/ and, only when that succeeds, replaces all certificates of the domain "
+                    + "with the selected ones in one keystore write."
+    )
+    @PutMapping(
+            path = "/certificates/domain/{domain}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> renewDomainCertificates(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "domain") String domain,
+            @Parameter(description = "Which certificates of the chain to store: root, intermediate, leaf or all")
+            @RequestHeader(value = "certificateType", required = false, defaultValue = CertificatesUtil.CERTIFICATE_TYPE_ROOT) String certificateType,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return downloadForDomain(mediaType, domain, certificateType, keystoreName, keystorePassword, true);
+    }
+
+    @Operation(summary = "Delete the downloaded certificates of a domain from the keystore", description = "Returns the deleted certificates.")
+    @DeleteMapping(path = "/certificates/domain/{domain}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteDomainCertificates(
+            @PathVariable(value = "domain") String domain,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        log.debug("REST request to delete the certificates of domain {} from keystore {}", domain, keystoreName);
+
+        try {
+            String prefix = CertificatesUtil.certificateAliasPrefix(CertificatesUtil.domainUrl(domain));
+            String keystorePath = keystorePath(keystoreName, true);
+            Map<String, X509Certificate> deleted = new File(keystorePath).isFile()
+                    ? CertificatesUtil.deleteDomainCertificates(keystorePath, password(keystorePassword), prefix)
+                    : Map.of();
+            log.info("Deleted the certificates {} of domain {} from keystore {}", deleted.keySet(), domain, keystoreName);
+            return ResponseEntity.ok(certificatesExpiry(deleted));
+        } catch (Exception e) {
+            log.error("Delete the certificates of domain {} from keystore {} failed", domain, keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/domain/{domain}", e.getMessage());
+        }
+    }
+
+    private ResponseEntity<String> downloadForDomain(String mediaType, String domain, String certificateType, String keystoreName, String keystorePassword, boolean replace) {
+        log.debug("REST request to {} the {} certificates of domain {}", replace ? "renew" : "download", certificateType, domain);
+
+        try {
+            String url = CertificatesUtil.domainUrl(domain);
+            String prefix = CertificatesUtil.certificateAliasPrefix(url);
+
+            // download and select before touching the keystore, so a failed download changes nothing
+            Certificate[] certificates = getCertificates(url);
+            if (certificates == null || certificates.length == 0) {
+                throw new CertificateException("The certificates of " + url + " couldn't be downloaded");
+            }
+            Map<String,Certificate> selected = CertificatesUtil.selectCertificates(url, certificates, certificateType);
+
+            Map<String,Certificate> certificateMap = CertificatesUtil.storeDomainCertificates(keystorePath(keystoreName, true), password(keystorePassword), prefix, selected, replace);
+
+            log.info("Stored the certificates {} of domain {} in keystore {}", certificateMap.keySet(), domain, keystoreName);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/certificates/domain/{domain}", certificatesAsJSon(certificateMap, url, keystoreName));
+        } catch (Exception e) {
+            log.error("{} the certificates of domain {} in keystore {} failed", replace ? "Renewing" : "Downloading", domain, keystoreName, e);
+            return failure(mediaType, "/certificates/domain/{domain}", e);
+        }
+    }
+
+    // --- identities -----------------------------------------------------------------------------------------------
+
+    @Operation(summary = "Get all identities in the keystore with their expiry")
+    @GetMapping(path = "/certificates/identity", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> listIdentities(
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return list(keystoreName, keystorePassword, "/certificates/identity");
+    }
+
+    @Operation(summary = "Get an identity in the keystore with its expiry")
+    @GetMapping(path = "/certificates/identity/{certificateName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getIdentity(
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return get(certificateName, keystoreName, keystorePassword, "/certificates/identity/{certificateName}");
+    }
+
+    @Operation(
+            summary = "Import a server identity (private key + certificate chain) into the keystore",
+            description = "The body is a PKCS12 (.p12/.pfx) file, base64 encoded, optionally as a data URL. The identity is stored under certificateName; "
+                    + "further private keys in the file under certificateName-2, -3, ... Returns 409 when a name exists (use PUT to replace it)."
+    )
+    @PostMapping(
+            path = "/certificates/identity/{certificateName}",
+            consumes = {MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> importIdentity(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestBody String p12,
+            @RequestHeader(value = "password") String password,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return storeIdentity(mediaType, certificateName, p12, password, keystoreName, keystorePassword, false);
+    }
+
+    @Operation(
+            summary = "Create or replace (renew) a server identity in the keystore",
+            description = "The body is a PKCS12 (.p12/.pfx) file with one private key, base64 encoded, optionally as a data URL."
+    )
+    @PutMapping(
+            path = "/certificates/identity/{certificateName}",
+            consumes = {MediaType.TEXT_PLAIN_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> replaceIdentity(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestBody String p12,
+            @RequestHeader(value = "password") String password,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return storeIdentity(mediaType, certificateName, p12, password, keystoreName, keystorePassword, true);
+    }
+
+    @Operation(summary = "Delete an identity from the keystore")
+    @DeleteMapping(
+            path = "/certificates/identity/{certificateName}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> deleteIdentity(
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return delete(certificateName, keystoreName, keystorePassword, "/certificates/identity/{certificateName}");
+    }
+
+    @Operation(
+            summary = "Generate a server identity with a self-signed certificate",
+            description = "Generates an RSA key pair and a self-signed certificate for the common name, and stores both as an identity. "
+                    + "The identity is named after the common name, unless certificateName is given. Returns 409 when the name exists."
+    )
+    @PostMapping(
+            path = "/certificates/identity/generate",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> generateIdentity(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(value = "cn") String cn,
+            @Parameter(description = "Name (alias) for the identity. Defaults to the common name")
+            @RequestHeader(value = "certificateName", required = false) String certificateName,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+
+        log.debug("REST request to generate a self-signed identity for {} in keystore {}", cn, keystoreName);
+
+        try {
+            if (certificateName != null && !certificateName.isBlank()) {
+                CertificatesUtil.validateAlias(certificateName, RESERVED_IDENTITY_NAMES);
             }
 
-            X509Certificate real = CertificatesUtil.convertPemToX509Certificate(certificateFile);
-            importCertificateInKeystore(keystoreName, keystorePassword, certificateName,real);
+            Map<String,Certificate> certificateMap = CertificatesUtil.generateIdentity(keystorePath(keystoreName, true), password(keystorePassword), cn, certificateName);
+
+            log.info("Generated self-signed identity {} in keystore {}", certificateMap.keySet(), keystoreName);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/certificates/identity/generate", certificatesAsJSon(certificateMap, null, keystoreName));
+        } catch (Exception e) {
+            log.error("Generate self-signed identity for {} in keystore {} failed", cn, keystoreName, e);
+            return failure(mediaType, "/certificates/identity/generate", e);
         }
 
-        return ResponseEntity.ok().body("truststore updated");
     }
 
+    // --- shared ---------------------------------------------------------------------------------------------------
 
+    private ResponseEntity<?> list(String keystoreName, String keystorePassword, String path) {
+        log.debug("REST request to get the certificates in keystore {}", keystoreName);
+
+        try {
+            return ResponseEntity.ok(certificatesExpiry(keystoreName, password(keystorePassword)));
+        } catch (Exception e) {
+            log.error("Get the certificates in keystore {} failed", keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, path, e.getMessage());
+        }
+    }
+
+    private ResponseEntity<?> get(String certificateName, String keystoreName, String keystorePassword, String path) {
+        log.debug("REST request to get certificate {} in keystore {}", certificateName, keystoreName);
+
+        try {
+            X509Certificate certificate = CertificatesUtil.getCertificates(keystorePath(keystoreName), password(keystorePassword)).get(certificateName);
+            if (certificate == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(CertificateExpiry.of(certificateName, certificate, Instant.now()));
+        } catch (Exception e) {
+            log.error("Get certificate {} in keystore {} failed", certificateName, keystoreName, e);
+            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, path, e.getMessage());
+        }
+    }
+
+    private ResponseEntity<String> delete(String certificateName, String keystoreName, String keystorePassword, String path) {
+        log.debug("REST request to delete certificate {} from keystore {}", certificateName, keystoreName);
+
+        try {
+            // a certificate that is not (or no longer) in the keystore is not an error, so the caller can still remove its record
+            String keystorePath = keystorePath(keystoreName, true);
+            boolean deleted = new File(keystorePath).isFile() && new CertificatesUtil().deleteCertificate(keystorePath, password(keystorePassword), certificateName);
+            String message = deleted ? "success" : "certificate not found in keystore";
+            return ResponseUtil.createSuccessResponse(1, "text/plain", path, message);
+        } catch (Exception e) {
+            log.error("Delete certificate {} from keystore {} failed", certificateName, keystoreName, e);
+            return ResponseUtil.createFailureResponse(1, "text/plain", path, e.getMessage());
+        }
+    }
+
+    private ResponseEntity<String> storeIdentity(String mediaType, String certificateName, String p12, String p12Password, String keystoreName, String keystorePassword, boolean replace) {
+        log.debug("REST request to {} identity {} in keystore {}", replace ? "replace" : "import", certificateName, keystoreName);
+
+        try {
+            CertificatesUtil.validateAlias(certificateName, RESERVED_IDENTITY_NAMES);
+
+            Map<String,Certificate> certificateMap = new CertificatesUtil().importIdentity(keystorePath(keystoreName, true), password(keystorePassword), p12, p12Password, certificateName, replace);
+
+            log.info("Stored identities {} in keystore {}", certificateMap.keySet(), keystoreName);
+
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/certificates/identity/{certificateName}", certificatesAsJSon(certificateMap, null, keystoreName));
+        } catch (Exception e) {
+            log.error("Store identity {} in keystore {} failed", certificateName, keystoreName, e);
+            return failure(mediaType, "/certificates/identity/{certificateName}", e);
+        }
+    }
+
+    /** 409 when an existing entry is in the way, otherwise 400. */
+    private ResponseEntity<String> failure(String mediaType, String path, Exception e) {
+        ResponseEntity<String> response = ResponseUtil.createFailureResponse(1L, mediaType, path, e.getMessage());
+        if (e instanceof CertificatesUtil.AliasExistsException) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).headers(response.getHeaders()).body(response.getBody());
+        }
+        return response;
+    }
+
+    private void warnIfExpired(List<X509Certificate> certificates) {
+        Instant now = Instant.now();
+        for (X509Certificate certificate : certificates) {
+            if (certificate.getNotAfter().toInstant().isBefore(now)) {
+                log.warn("Certificate {} is expired (Expiry Date: {})", certificate.getSubjectX500Principal(), certificate.getNotAfter().toInstant());
+            }
+        }
+    }
+
+    private static String password(String keystorePassword) {
+        return keystorePassword == null || keystorePassword.isEmpty() ? CertificatesUtil.runtimeKeystorePassword() : keystorePassword;
+    }
+
+    private List<CertificateExpiry> certificatesExpiry(String keystoreName, String keystorePassword) throws Exception {
+        return certificatesExpiry(CertificatesUtil.getCertificates(keystorePath(keystoreName), keystorePassword));
+    }
+
+    private List<CertificateExpiry> certificatesExpiry(Map<String, X509Certificate> certificates) {
+        Instant now = Instant.now();
+        return certificates.entrySet().stream()
+                .sorted(Comparator.comparing(entry -> entry.getValue().getNotAfter()))
+                .map(entry -> CertificateExpiry.of(entry.getKey(), entry.getValue(), now))
+                .toList();
+    }
+
+    private List<CertificateExpiry.Expired> expiredCertificates(Map<String, X509Certificate> certificates, Instant now) {
+        return certificates.entrySet().stream()
+                .sorted(Comparator.comparing(entry -> entry.getValue().getNotAfter()))
+                .map(entry -> CertificateExpiry.Expired.of(entry.getKey(), entry.getValue(), now))
+                .toList();
+    }
+
+    private String keystorePath(String keystoreName) throws KeyStoreException {
+        return keystorePath(keystoreName, false);
+    }
+
+    // loading a keystore that doesn't exist creates it, so reading endpoints check first
+    private String keystorePath(String keystoreName, boolean createIfMissing) throws KeyStoreException {
+        String keystorePath = baseDir + "/security/" + keystoreName;
+        if (!createIfMissing && !new File(keystorePath).isFile()) {
+            throw new KeyStoreException("Keystore " + keystoreName + " doesn't exist");
+        }
+        return keystorePath;
+    }
 
     private String certificatesAsJSon(Map<String,Certificate> certificateMap, String certificateUrl, String certificateStore) throws CertificateException {
 
         JSONObject certificatesObject  = new JSONObject();
         JSONObject certificateObject = new JSONObject();
 
-
         for (Map.Entry<String, Certificate> entry : certificateMap.entrySet()) {
-            String key = entry.getKey();
-            Certificate certificate = entry.getValue();
-            X509Certificate real = (X509Certificate) certificate;
-
-            Instant certificateExpiry = real.getNotAfter().toInstant();
-
-            String certificateFile = CertificatesUtil.convertX509CertificateToPem(real);
+            X509Certificate real = (X509Certificate) entry.getValue();
 
             JSONObject certificateDetails = new JSONObject();
 
-            certificateDetails.put("certificateFile",certificateFile);
-            certificateDetails.put("certificateName", key);
-            certificateDetails.put("certificateStore",certificateStore);
-
-            certificateDetails.put("certificateExpiry",certificateExpiry);
-            certificateDetails.put("certificateUrl",certificateUrl);
+            certificateDetails.put("certificateFile", CertificatesUtil.convertX509CertificateToPem(real));
+            certificateDetails.put("certificateName", entry.getKey());
+            certificateDetails.put("certificateStore", certificateStore);
+            certificateDetails.put("certificateExpiry", real.getNotAfter().toInstant());
+            certificateDetails.put("certificateUrl", certificateUrl);
 
             certificateObject.append("certificate", certificateDetails);
         }
 
-        certificatesObject.put("certificates",certificateObject);
+        certificatesObject.put("certificates", certificateObject);
 
         return certificatesObject.toString();
 
@@ -355,56 +611,6 @@ public class CertificateManagerRuntime {
         String keystorePath = baseDir + "/security/" + keystoreName;
         CertificatesUtil util = new CertificatesUtil();
         return util.getCertificate(keystorePath, keystorePassword, certificateName);
-    }
-
-    public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
-
-        try {
-            CertificatesUtil util = new CertificatesUtil();
-            Certificate[] certificates = util.downloadCertificates(url);
-            String keystorePath = baseDir + "/security/" + keystoreName;
-            util.importCertificates(keystorePath, keystorePassword, certificates);
-        } catch (Exception e) {
-            log.error("Set Certificate in keystore {} for url {} failed", keystoreName, url, e);
-        }
-    }
-
-    public void importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
-
-        CertificatesUtil util = new CertificatesUtil();
-
-        String keystorePath = baseDir + "/security/" + keystoreName;
-
-        util.importCertificate(keystorePath, keystorePassword, certificateName, certificate);
-
-    }
-
-
-    public Map<String,Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) {
-
-        CertificatesUtil util = new CertificatesUtil();
-
-        String keystorePath = baseDir + "/security/" + keystoreName;
-
-        return util.importCertificates(keystorePath, keystorePassword, certificates);
-
-    }
-
-    public Map<String,Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
-
-        CertificatesUtil util = new CertificatesUtil();
-
-        String keystorePath = baseDir + "/security/" + keystoreName;
-        return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
-
-    }
-
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword) {
-
-        String keystorePath = baseDir + "/security/" + keystoreName;
-
-        CertificatesUtil util = new CertificatesUtil();
-        util.deleteCertificate(keystorePath, keystorePassword);
     }
 
 }

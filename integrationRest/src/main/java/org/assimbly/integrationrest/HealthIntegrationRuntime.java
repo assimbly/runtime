@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.*;
 
 import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@Tag(name = "Backend health", description = "Health of the backend itself")
 @ControllerAdvice
 @RestController
 @RequestMapping("/health/backend")
@@ -40,6 +43,7 @@ public class HealthIntegrationRuntime {
 
     private boolean plainResponse;
 
+    @Operation(summary = "Get flows overview")
     @GetMapping(
             path = "/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -59,6 +63,7 @@ public class HealthIntegrationRuntime {
         }
     }
 
+    @Operation(summary = "Get JVM statistics")
     @GetMapping(
             path = "/jvm",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

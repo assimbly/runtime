@@ -1,9 +1,13 @@
 package org.assimbly.integration.impl.manager;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStoreException;
 import java.security.cert.Certificate;
 import java.util.*;
@@ -15,10 +19,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.spi.Registry;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
@@ -38,74 +40,86 @@ public class SSLManager {
     private static final String HTTP_MUTUAL_SSL_PROP = "httpMutualSSL";
     private static final String SEP = "/";
     private static final String SECURITY_PATH = "security";
-    private static final String TRUSTSTORE_FILE = "truststore.jks";
-    private static final String KEYSTORE_FILE = "keystore.jks";
+
+    private static final String SERVER_IDENTITY_FILE = "server-identity.p12";
+    private static final String OUTBOUND_TRUSTSTORE_FILE = "outbound-truststore.p12";
+
     private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
     private static final String RESOURCE_PROP = "resource";
     private static final String AUTH_PASSWORD_PROP = "authPassword";
 
-    private final DocumentBuilderFactory xmlFactory;
-    private final XPathFactory xpathFactory;
+    private static final String[] SSL_COMPONENTS = { "ftps", "https", "imaps", "jetty", "netty", "smtps" };
 
-    public SSLManager() {
-        this.xmlFactory = DocumentBuilderFactory.newInstance();
-        this.xmlFactory.setNamespaceAware(true);
-        try {
-            // Disallow DTDs and External Entities for XXE prevention
-            this.xmlFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            this.xmlFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            this.xmlFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        } catch (Exception e) {
-            log.warn("Failed to set XXE protection features on DocumentBuilderFactory", e);
-        }
-        this.xpathFactory = XPathFactory.newInstance();
-    }
 
     public void setSSLContext(CamelContext context, SimpleRegistry registry) throws Exception {
 
-        String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
+        SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-        File securityPath = new File(baseDir + SEP + SECURITY_PATH + SEP);
+        Path securityPath = prepareSecurityDirectory();
 
-        if (!securityPath.exists()) {
-            boolean securityPathCreated = securityPath.mkdirs();
-            if (!securityPathCreated) {
-                throw new Exception("Directory: " + securityPath.getAbsolutePath() + " cannot be created to store keystore files");
-            }
-        }
+        //generic SSL Context
+        registerSSLContext(context, registry, sslConfiguration, securityPath);
 
-        String keyStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
-        String trustStorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
+        //Register the sslConfiguration globally
+        sslConfiguration.setUseGlobalSslContextParameters(context, SSL_COMPONENTS);
+
+    }
+
+    public void setMutualSslContext(String contextId, SimpleRegistry registry, String keystoreResource, String keystorePassword) throws Exception {
 
         SSLConfiguration sslConfiguration = new SSLConfiguration();
 
-        SSLContextParameters sslContextParameters = sslConfiguration.createSSLContextParameters(
-                keyStorePath, getKeystorePassword(), trustStorePath, getKeystorePassword()
-        );
+        Path securityPath = prepareSecurityDirectory();
 
-        SSLContextParameters sslContextParametersKeystoreOnly = sslConfiguration.createSSLContextParameters(
-                keyStorePath, getKeystorePassword(), null, null
-        );
+        //specific Mutal SSL Context
+        registerMutualSSLContext(contextId, registry, sslConfiguration, securityPath, keystoreResource, keystorePassword);
 
-        SSLContextParameters sslContextParametersTruststoreOnly = sslConfiguration.createSSLContextParameters(
-                null, null, trustStorePath, getKeystorePassword()
-        );
+    }
 
-        registry.bind("default", sslContextParameters);
+    private void registerSSLContext(CamelContext context, SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath) throws Exception {
+
+        String serverIdentityPath = securityPath.resolve(SERVER_IDENTITY_FILE).toString();
+
+        String outboundTrustPath = securityPath.resolve(OUTBOUND_TRUSTSTORE_FILE).toString();
+
+        SSLContextParameters sslContextParameters =
+                sslConfiguration.createSSLContextParameters(
+                        serverIdentityPath,
+                        getKeystorePassword(),
+                        outboundTrustPath,
+                        getKeystorePassword()
+                );
+
+        SSLContext sslContext = sslContextParameters.createSSLContext(context);
+
         registry.bind("sslContext", sslContextParameters);
-        registry.bind("sslContextObj", sslContextParameters.createSSLContext(context));
-        registry.bind("keystore", sslContextParametersKeystoreOnly);
-        registry.bind("truststore", sslContextParametersTruststoreOnly);
+        registry.bind("sslContextObj", sslContext);
 
         try {
-            SSLContext sslContext = sslContextParameters.createSSLContext(context);
             sslContext.createSSLEngine();
         } catch (Exception e) {
-            log.error("Can't set SSL context for certificate keystore. TLS/SSL certificates are not available. Reason: {}", e.getMessage());
+            log.error(
+                    "Can't set SSL context for certificate keystore. " +
+                            "TLS/SSL certificates are not available. Reason: {}",
+                    e.getMessage()
+            );
         }
+    }
 
-        String[] sslComponents = {"ftps", "https", "imaps", "jetty", "netty", "smtps"};
-        sslConfiguration.setUseGlobalSslContextParameters(context, sslComponents);
+    private void registerMutualSSLContext(String contextId, SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath, String keystoreResource, String keystorePassword) throws Exception {
+
+        String outboundTrustPath = securityPath.resolve(OUTBOUND_TRUSTSTORE_FILE).toString();
+
+        SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
+                keystoreResource,
+                keystorePassword,
+                outboundTrustPath,
+                getKeystorePassword()
+        );
+
+        registry.bind(contextId, sslContextParameters);
+
+
     }
 
     // add certificate from url on the keystore
@@ -116,7 +130,7 @@ public class SSLManager {
             String encodedResourceContent = Base64.getEncoder().encodeToString(fileContent);
 
             CertificatesUtil util = new CertificatesUtil();
-            String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + KEYSTORE_FILE;
+            String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + SERVER_IDENTITY_FILE;
             util.importP12Certificate(keystorePath, getKeystorePassword(), encodedResourceContent, authPassword);
 
         } catch (Exception e) {
@@ -152,9 +166,18 @@ public class SSLManager {
     // get property value by property name
     private String getPropertyValue(String xml, String propName) {
         try {
+            DocumentBuilderFactory xmlFactory = DocumentBuilderFactory.newInstance();
+            xmlFactory.setNamespaceAware(true);
+
+            // Disallow DTDs and External Entities for XXE prevention
+            xmlFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            xmlFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            xmlFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+
             DocumentBuilder builder = xmlFactory.newDocumentBuilder();
             Document doc = builder.parse(new InputSource(new StringReader(xml)));
-            XPath xpath = xpathFactory.newXPath();
+
+            XPath xpath = XPathFactory.newInstance().newXPath();
             String expression = "//setProperty[@name='%s']/constant/text()".formatted(propName);
             return xpath.evaluate(expression, doc);
         } catch (Exception e) {
@@ -187,17 +210,6 @@ public class SSLManager {
         return util.getCertificate(keystorePath, keystorePassword, certificateName);
     }
 
-    public void setCertificatesInKeystore(String keystoreName, String keystorePassword, String url) {
-        try {
-            CertificatesUtil util = new CertificatesUtil();
-            Certificate[] certificates = util.downloadCertificates(url);
-            String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
-            util.importCertificates(keystorePath, keystorePassword, certificates);
-        } catch (Exception e) {
-            log.error("Set certificates for url {} failed.", url, e);
-        }
-    }
-
     public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
         CertificatesUtil util = new CertificatesUtil();
         String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
@@ -210,13 +222,13 @@ public class SSLManager {
         }
     }
 
-    public Map<String, Certificate> importCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
+    public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
         String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
         File file = new File(keystorePath);
 
         if (file.exists()) {
-            return util.importCertificates(keystorePath, keystorePassword, certificates);
+            return util.storeCertificates(keystorePath, keystorePassword, certificates);
         } else {
             throw new KeyStoreException("Keystore " + keystoreName + " doesn't exist");
         }
@@ -228,22 +240,16 @@ public class SSLManager {
         return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
     }
 
-    public void deleteCertificateInKeystore(String keystoreName, String keystorePassword) {
+    public boolean deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
         String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
         CertificatesUtil util = new CertificatesUtil();
-        util.deleteCertificate(keystorePath, keystorePassword);
+        return util.deleteCertificate(keystorePath, keystorePassword, certificateName);
     }
 
-    public void setMutualSsl(String keystoreResource, String keystorePassword, String contextId, Registry registry) throws Exception {
-        String baseDir2 = FilenameUtils.separatorsToUnix(baseDir);
-        String truststorePath = baseDir2 + SEP + SECURITY_PATH + SEP + TRUSTSTORE_FILE;
-
-        SSLConfiguration sslConfiguration = new SSLConfiguration();
-        SSLContextParameters sslContextParameters = sslConfiguration.createRuntimeSSLContext(
-                keystoreResource, keystorePassword, truststorePath, getKeystorePassword()
-        );
-
-        registry.bind(contextId, sslContextParameters);
+    private Path prepareSecurityDirectory() throws IOException {
+        Path securityPath = Paths.get(baseDir, SECURITY_PATH);
+        Files.createDirectories(securityPath);
+        return securityPath;
     }
 
 }

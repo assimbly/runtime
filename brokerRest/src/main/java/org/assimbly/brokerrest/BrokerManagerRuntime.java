@@ -3,6 +3,8 @@ package org.assimbly.brokerrest;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * REST controller for managing the broker.
  */
+@Tag(name = "Broker manager", description = "Start, stop and monitor the broker")
 @RestController
 @RequestMapping("/api")
 public class BrokerManagerRuntime {
@@ -32,6 +35,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Get the broker status")
     @GetMapping("/brokers/{id}/status")
     public String statusBroker(
             @PathVariable(value = "id") Long id,
@@ -59,6 +63,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "Get broker information")
     @GetMapping("/brokers/{id}/info")
     public String getBrokerInfo(
             @PathVariable(value = "id") Long id,
@@ -84,6 +89,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
+    @Operation(summary = "Start the broker")
     @GetMapping("/brokers/{id}/start")
     public ResponseEntity<String> startBroker(
             @PathVariable(value = "id") Long id,
@@ -110,6 +116,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
+    @Operation(summary = "Restart the broker")
     @GetMapping("/brokers/{id}/restart")
     public ResponseEntity<String> restartBroker(
             @PathVariable(value = "id") Long id,
@@ -136,6 +143,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
+    @Operation(summary = "Stop the broker")
     @GetMapping("/brokers/{id}/stop")
     public ResponseEntity<String> stopBroker(
             @PathVariable(value = "id") Long id,
@@ -160,6 +168,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of connections with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "List broker connections")
     @GetMapping(
             path = "/brokers/{brokerType}/connections",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -187,6 +196,7 @@ public class BrokerManagerRuntime {
      * @param brokerType, the type of broker: classic or artemis
      * @return list of consumers with status 200 (OK) or with status 404 (Not Found)
      */
+    @Operation(summary = "List broker consumers")
     @GetMapping(
             path = "/brokers/{brokerType}/consumers",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

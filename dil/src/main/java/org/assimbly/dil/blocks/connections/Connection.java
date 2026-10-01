@@ -87,7 +87,7 @@ public class Connection {
                     new BasicAuthentication(context, decryptedProperties, connectionId).start();
 
             case "mutualssl" ->
-                    new MutualSSL(context, decryptedProperties, connectionId).start();
+                    new MutualSSL(context, decryptedProperties, connectionId, stepType, String.valueOf(stepId)).start();
 
             case "imaps" ->
                     log.debug("Imaps connection will be configured on the component");

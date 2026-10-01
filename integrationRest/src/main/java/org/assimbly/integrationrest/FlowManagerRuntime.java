@@ -5,7 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import tools.jackson.core.JacksonException;
 
 
+@Tag(name = "Flow manager", description = "Install, run and monitor flows")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -34,6 +36,7 @@ public class FlowManagerRuntime {
     }
     
     //manage flows
+    @Operation(summary = "Start a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/start",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -50,6 +53,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Stop a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/stop",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -66,6 +70,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Restart a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/restart",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -82,6 +87,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Pause a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/pause",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -97,6 +103,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Resume a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/resume" ,
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -112,6 +119,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Install a Camel route")
     @PostMapping(
             path = "/integration/route/{routeId}/install",
             consumes =  {MediaType.APPLICATION_XML_VALUE},
@@ -152,7 +160,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows")
+    @Operation(summary = "Install a flow")
     @PostMapping(
             path = "/integration/flow/{flowId}/install",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -174,6 +182,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Uninstall a flow")
     @DeleteMapping(
             path = "/integration/flow/{flowId}/uninstall",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -190,7 +199,7 @@ public class FlowManagerRuntime {
 
     }
 
-    @Schema(description = "Flows")
+    @Operation(summary = "Test a flow")
     @PostMapping(
             path = "/integration/flow/{flowId}/test",
             consumes =  {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
@@ -213,6 +222,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Check if a flow is started")
     @GetMapping(
             path = "/integration/flow/{flowId}/isstarted",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -233,6 +243,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Get flow information")
     @GetMapping(
             path = "/integration/flow/{flowId}/info",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -255,6 +266,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Get the uptime of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/uptime",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -274,6 +286,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "List errors of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/errors",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -294,6 +307,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "List errors of a step")
     @GetMapping(
             path = "/integration/flow/{flowId}/step/{stepId}/errors",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -315,6 +329,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Get the last error of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/lasterror",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -333,6 +348,7 @@ public class FlowManagerRuntime {
         }
     }
 
+    @Operation(summary = "Get an error by uid")
     @GetMapping(
             path = "/integration/flow/{flowId}/step/{stepId}/error",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -354,6 +370,7 @@ public class FlowManagerRuntime {
 
     }
 
+    @Operation(summary = "Get the alerts of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/alerts",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -372,6 +389,7 @@ public class FlowManagerRuntime {
         }
     }
 
+    @Operation(summary = "Count the alerts of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/alerts/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -392,6 +410,7 @@ public class FlowManagerRuntime {
         }
     }
 
+    @Operation(summary = "Get the events of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/events",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -410,6 +429,7 @@ public class FlowManagerRuntime {
         }
     }
 
+    @Operation(summary = "Get the status of a flow")
     @GetMapping(
             path = "/integration/flow/{flowId}/status",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}

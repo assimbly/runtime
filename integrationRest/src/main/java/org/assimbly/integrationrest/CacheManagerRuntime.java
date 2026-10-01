@@ -1,6 +1,8 @@
 package org.assimbly.integrationrest;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * REST controller for managing Security.
  */
+@Tag(name = "Cache", description = "Inspect and invalidate the flow cache")
 @RestController
 @RequestMapping("/api")
 public class CacheManagerRuntime {
@@ -29,6 +32,7 @@ public class CacheManagerRuntime {
     /**
      * GET  /cache/installed-flows : list of installed flows
      */
+    @Operation(summary = "List installed flows in the cache")
     @GetMapping(
             path = "/cache/installed-flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -58,6 +62,7 @@ public class CacheManagerRuntime {
     /**
      * DELETE  /cache/{flowId}/invalidate : Invalidate a specific cache entry
      */
+    @Operation(summary = "Invalidate the cache of a flow")
     @DeleteMapping(
             path = "/cache/{flowId}/invalidate",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
@@ -78,6 +83,7 @@ public class CacheManagerRuntime {
     /**
      * DELETE  /cache/invalidate : Invalidate all cache entries
      */
+    @Operation(summary = "Invalidate the whole cache")
     @DeleteMapping(
             path = "/cache/invalidate",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
