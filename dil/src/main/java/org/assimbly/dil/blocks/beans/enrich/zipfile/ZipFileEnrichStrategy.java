@@ -37,7 +37,7 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
         byte[] sourceZip = in.getBody(byte[].class);
         byte[] resourceData = newExchange.getContext().getTypeConverter().convertTo(byte[].class, resource.getBody());
 
-        String fileName = resolveFileName(newExchange, resource);
+        String fileName = resolveFileName(resource);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -53,23 +53,15 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
         return oldExchange;
     }
 
-    /**
-     * Resolves the zip entry name from the enriched resource.
-     * Prefers CamelFileNameConsumed, then CamelFileName, then Enrich-FileName
-     * (set by ftp/sftp enrich kamelets before they strip CamelFile* headers).
-     */
-    private String resolveFileName(Exchange resourceExchange, Message resource) {
+    private String resolveFileName(Message resource) {
         String fileName = resource.getHeader(Exchange.FILE_NAME_CONSUMED, String.class);
         if (fileName == null) {
             fileName = resource.getHeader(Exchange.FILE_NAME, String.class);
         }
-        if (fileName == null) {
-            fileName = resourceExchange.getProperty("Enrich-FileName", String.class);
-        }
         if (fileName == null || fileName.isBlank()) {
             throw new IllegalArgumentException(
                     "Cannot enrich zip: resource exchange has no filename "
-                            + "(CamelFileNameConsumed, CamelFileName or Enrich-FileName)"
+                            + "(CamelFileNameConsumed or CamelFileName)"
             );
         }
         return fileName;
