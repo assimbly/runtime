@@ -178,6 +178,7 @@ spec:
                       - removeHeaders:
                           disabled: "{{!abortMode}}"
                           pattern: "CamelFile*"
+                          excludePattern: "CamelFileName|CamelFileNameConsumed"
                       - setProperty:
                           disabled: "{{!abortMode}}"
                           name: "Enrich-Response"
@@ -188,6 +189,7 @@ spec:
                 - removeHeaders:
                     disabled: "{{abortMode}}"
                     pattern: "CamelFile*"
+                    excludePattern: "CamelFileName|CamelFileNameConsumed"
                 - setProperty:
                     disabled: "{{abortMode}}"
                     name: "Enrich-Response"
