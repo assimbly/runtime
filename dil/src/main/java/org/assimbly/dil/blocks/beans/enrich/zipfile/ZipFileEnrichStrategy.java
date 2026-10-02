@@ -37,7 +37,10 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
         byte[] sourceZip = in.getBody(byte[].class);
         byte[] resourceData = newExchange.getContext().getTypeConverter().convertTo(byte[].class, resource.getBody());
 
-        String fileName = resolveFileName(resource);
+        String fileName = resource.getHeader(Exchange.FILE_NAME_CONSUMED, String.class);
+        if(fileName == null) {
+            fileName = resource.getHeader(Exchange.FILE_NAME, String.class);
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -51,20 +54,6 @@ public class ZipFileEnrichStrategy implements AggregationStrategy {
         in.setBody(baos.toByteArray());
 
         return oldExchange;
-    }
-
-    private String resolveFileName(Message resource) {
-        String fileName = resource.getHeader(Exchange.FILE_NAME_CONSUMED, String.class);
-        if (fileName == null) {
-            fileName = resource.getHeader(Exchange.FILE_NAME, String.class);
-        }
-        if (fileName == null || fileName.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Cannot enrich zip: resource exchange has no filename "
-                            + "(CamelFileNameConsumed or CamelFileName)"
-            );
-        }
-        return fileName;
     }
 
     private void writeZipEntry(ZipOutputStream zos, byte[] data, String filepath) throws IOException {
