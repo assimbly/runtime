@@ -111,16 +111,15 @@ public class StepCollector extends EventNotifierSupport {
 
                 long processingTime = calculateAndUpdateComponentResponseTime(originalExchange, stepEvent);
 
-                // Read previous flow properties from the LIVE exchange, and stamp the
-                // current flowId/flowVersion onto it synchronously. This must happen
-                // on the original exchange, not the async copy below, otherwise the
-                // properties never propagate to the next step/flow and previousFlowId/
-                // previousFlowVersion will always be null downstream.
-                String previousFlowId = originalExchange.getProperty(FLOW_ID_PROPERTY, String.class);
-                String previousFlowVersion = originalExchange.getProperty(FLOW_VERSION_PROPERTY, String.class);
+                // Read previous flow id/version from the LIVE exchange, and stamp the
+                // current values onto it synchronously. This must happen on the original
+                // exchange, not the async copy below, otherwise they never propagate.
+                // Also stamp as headers so values survive JMS/queue hops (properties do not).
+                String previousFlowId = getFlowInfo(originalExchange, FLOW_ID_PROPERTY);
+                String previousFlowVersion = getFlowInfo(originalExchange, FLOW_VERSION_PROPERTY);
                 String previousStepId = originalExchange.getProperty(PREVIOUS_STEP_ID_PROPERTY, String.class);
-                originalExchange.setProperty(FLOW_ID_PROPERTY, flowId);
-                originalExchange.setProperty(FLOW_VERSION_PROPERTY, flowVersion);
+                setFlowInfo(originalExchange, FLOW_ID_PROPERTY, flowId);
+                setFlowInfo(originalExchange, FLOW_VERSION_PROPERTY, flowVersion);
                 originalExchange.setProperty(PREVIOUS_STEP_ID_PROPERTY, stepId);
 
                 // materialize body BEFORE async
@@ -287,6 +286,19 @@ public class StepCollector extends EventNotifierSupport {
         } catch (Exception _) {
             return blacklistedRoutesParts;
         }
+    }
+
+    private static String getFlowInfo(Exchange exchange, String name) {
+        String value = exchange.getProperty(name, String.class);
+        if (value == null) {
+            value = exchange.getMessage().getHeader(name, String.class);
+        }
+        return value;
+    }
+
+    private static void setFlowInfo(Exchange exchange, String name, String value) {
+        exchange.setProperty(name, value);
+        exchange.getMessage().setHeader(name, value);
     }
 
     private static long calculateAndUpdateComponentResponseTime(Exchange originalExchange, CamelEvent.StepEvent stepEvent) {
