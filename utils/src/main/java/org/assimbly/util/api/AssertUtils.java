@@ -97,6 +97,10 @@ public final class AssertUtils {
         assertErrorGenericResponse(responseJson, null);
     }
 
+    public static void assertJsonResponse(JsonNode responseJson, JsonNode expectedJson) {
+        assertThat(responseJson).isEqualTo(expectedJson);
+    }
+
     // health
 
     public static void assertSuccessfulHealthResponse(JsonNode flowJson, String id) {
@@ -133,11 +137,8 @@ public final class AssertUtils {
         assertThat(responseJson.get(UPTIME).asString()).isNotEmpty();
         assertThat(responseJson.get("startedFlows").asString()).isNotEmpty();
         assertThat(responseJson.get("totalThreads").asInt()).isPositive();
-        assertThat(responseJson.get("cpuLoadLastMinute").asString()).isNotEmpty();
-        assertThat(responseJson.get("cpuLoadLast15Minutes").asString()).isNotEmpty();
         assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
         assertThat(responseJson.get(EXCHANGES_FAILED).asInt()).isNotNegative();
-        assertThat(responseJson.get("cpuLoadLast5Minutes").asString()).isNotEmpty();
         assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
     }
 

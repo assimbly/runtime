@@ -74,10 +74,9 @@ class StatisticsRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get("flow");
 
             // asserts contents
-            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+            AssertUtils.assertEmptyFlowStatsResponse(responseJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
