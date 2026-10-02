@@ -364,7 +364,7 @@ public class ConfigManager {
 
     public String getListOfStepTemplates() {
 
-        List<String> kamelets = getKamelets();
+        List<String> kamelets = new ArrayList<>(getKamelets());
 
         for (int i = 0; i < kamelets.size(); i++) {
             String kamelet = kamelets.get(i);
