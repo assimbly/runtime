@@ -79,7 +79,7 @@ class IntegrationRuntimeTest {
             flowIdLog = (String)collectorProp.get(TestApplicationContext.CollectorField.FLOW_ID_LOG.name());
 
             // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/collectors/"+schedulerCamelContextProp.get(TestApplicationContext.CollectorField.ID.name())+"/add"), body, null, headers);
+            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/collectors/add"), body, null, headers);
 
             // assert http status
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
@@ -88,7 +88,7 @@ class IntegrationRuntimeTest {
             JsonNode responseJson = objectMapper.readTree(response.body());
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "configured");
+            AssertUtils.assertSuccessfulGenericResponse(responseJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);
