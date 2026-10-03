@@ -168,6 +168,16 @@ public class ConfigManager {
         //Add services
         context.addService(new CustomXmlJsonDataFormat());
 
+        //rest configuratonion
+        RestConfiguration rc = new RestConfiguration();
+        rc.setComponent("jetty");
+        rc.setEndpointProperties(Map.of("sslContextParameters", "#sslContext"));
+        rc.setScheme("https");
+        rc.setHost("0.0.0.0");
+        rc.setPort(9001);
+        context.setRestConfiguration(rc);
+
+        //components
         DirectComponent directComponent = new DirectComponent();
         directComponent.setTimeout(300000);
 
