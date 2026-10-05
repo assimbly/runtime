@@ -277,19 +277,20 @@ public final class IntegrationUtil {
 		// Do not expand entity references.
 		factory.setExpandEntityReferences(false);
 
-		// Disable external DTD access.
-		factory.setAttribute(
-				XMLConstants.ACCESS_EXTERNAL_DTD,
-				""
-		);
-
-		// Disable external schema access.
-		factory.setAttribute(
-				XMLConstants.ACCESS_EXTERNAL_SCHEMA,
-				""
-		);
+		// Disable external DTD and schema access. Not every parser knows these JAXP properties (Xerces, which an
+		// application can have on its classpath, doesn't); the features above already stop external access there.
+		setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_DTD);
+		setAttributeIfSupported(factory, XMLConstants.ACCESS_EXTERNAL_SCHEMA);
 
 		return factory;
+	}
+
+	private static void setAttributeIfSupported(DocumentBuilderFactory factory, String attribute) {
+		try {
+			factory.setAttribute(attribute, "");
+		} catch (IllegalArgumentException e) {
+			// The parser doesn't support this property.
+		}
 	}
 
 	public static Iterable<Node> iterable(final NodeList nodeList) {
