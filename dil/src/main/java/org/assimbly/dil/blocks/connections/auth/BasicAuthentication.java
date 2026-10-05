@@ -3,13 +3,19 @@ package org.assimbly.dil.blocks.connections.auth;
 import org.apache.camel.CamelContext;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.security.Password;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Base64;
 
 public class BasicAuthentication {
 
@@ -61,7 +67,27 @@ public class BasicAuthentication {
         loginService.setUserStore(userStore);
 
         ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
-        securityHandler.setAuthenticator(new BasicAuthenticator());
+        securityHandler.setAuthenticator(new BasicAuthenticator() {
+            @Override
+            public AuthenticationState validateRequest(Request request, Response response, Callback callback)
+                    throws ServerAuthException {
+                String authorization = request.getHeaders().get(getAuthorizationHeader());
+                if (authorization != null && authorization.regionMatches(true, 0, "Basic ", 0, 6)) {
+                    try {
+                        Base64.getDecoder().decode(authorization.substring(6));
+                    } catch (IllegalArgumentException e) {
+                        // Let Jetty issue its normal challenge without decoding the malformed credentials.
+                        request = new Request.Wrapper(request) {
+                            @Override
+                            public HttpFields getHeaders() {
+                                return HttpFields.build(super.getHeaders()).remove(getAuthorizationHeader());
+                            }
+                        };
+                    }
+                }
+                return super.validateRequest(request, response, callback);
+            }
+        });
         securityHandler.setLoginService(loginService);
         securityHandler.setRealmName(connectionId);
 
