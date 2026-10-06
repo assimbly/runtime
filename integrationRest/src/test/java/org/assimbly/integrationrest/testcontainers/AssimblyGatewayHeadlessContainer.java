@@ -30,7 +30,7 @@ public class AssimblyGatewayHeadlessContainer {
         // to prevent the "Prematurely reached end of stream" error on the mongo container, it will be started only once
         if(mongoContainer == null) {
             // initialize mongodb container
-            mongoContainer = new MongoDBContainer("mongo:3.3.8")
+            mongoContainer = new MongoDBContainer("mongo:3.4")
                     .withExposedPorts(27017)
                     .withNetwork(network)
                     .withNetworkAliases("mongo")

@@ -189,9 +189,12 @@ class MessageBrokerRuntimeTest {
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode responseJson = objectMapper.readTree(response.body());
+            JsonNode expectedJson = objectMapper.createObjectNode()
+                    .put(QUEUE_TEST_1, 1)
+                    .put(QUEUE_TEST_2, 0);
 
             // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "{}");
+            AssertUtils.assertJsonResponse(responseJson, expectedJson);
 
         } catch (Exception e) {
             fail("Test failed due to unexpected exception: " + e.getMessage(), e);

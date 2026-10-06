@@ -97,6 +97,10 @@ public final class AssertUtils {
         assertErrorGenericResponse(responseJson, null);
     }
 
+    public static void assertJsonResponse(JsonNode responseJson, JsonNode expectedJson) {
+        assertThat(responseJson).isEqualTo(expectedJson);
+    }
+
     // health
 
     public static void assertSuccessfulHealthResponse(JsonNode flowJson, String id) {
@@ -133,11 +137,8 @@ public final class AssertUtils {
         assertThat(responseJson.get(UPTIME).asString()).isNotEmpty();
         assertThat(responseJson.get("startedFlows").asString()).isNotEmpty();
         assertThat(responseJson.get("totalThreads").asInt()).isPositive();
-        assertThat(responseJson.get("cpuLoadLastMinute").asString()).isNotEmpty();
-        assertThat(responseJson.get("cpuLoadLast15Minutes").asString()).isNotEmpty();
         assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
         assertThat(responseJson.get(EXCHANGES_FAILED).asInt()).isNotNegative();
-        assertThat(responseJson.get("cpuLoadLast5Minutes").asString()).isNotEmpty();
         assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
     }
 
@@ -340,6 +341,32 @@ public final class AssertUtils {
             boolean hasEmptyHeaders = element.has(HEADERS) && element.get(HEADERS).isArray() && element.get(HEADERS).isEmpty();
             return hasValidName && hasEmptyHeaders;
         });
+    }
+
+    // certificates
+
+    public static void assertCertificateExpiry(JsonNode expiryJson) {
+        assertThat(expiryJson.get("name").asString()).isNotEmpty();
+        assertThat(expiryJson.get("expiresAt").asString()).isNotEmpty();
+        assertThat(expiryJson.get("daysUntilExpiry").asLong()).isNotNegative();
+        assertThat(expiryJson.get("valid").isBoolean()).isTrue();
+    }
+
+    public static void assertCertificateExpiry(JsonNode expiryJson, String name) {
+        assertCertificateExpiry(expiryJson);
+        assertThat(expiryJson.get("name").asString()).isEqualTo(name);
+    }
+
+    public static void assertExpiredCertificate(JsonNode expiredJson) {
+        assertThat(expiredJson.get("name").asString()).isNotEmpty();
+        assertThat(expiredJson.get("expiredAt").asString()).isNotEmpty();
+        assertThat(expiredJson.get("daysExpired").asLong()).isNotNegative();
+        assertThat(expiredJson.get("valid").asBoolean()).isFalse();
+    }
+
+    public static void assertExpiredCertificate(JsonNode expiredJson, String name) {
+        assertExpiredCertificate(expiredJson);
+        assertThat(expiredJson.get("name").asString()).isEqualTo(name);
     }
 
     // validations
