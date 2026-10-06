@@ -84,7 +84,7 @@ public class Connection {
                     new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
 
             case "basic" ->
-                    new BasicAuthentication(context, decryptedProperties, connectionId).start();
+                    new BasicAuthentication(context, decryptedProperties, connectionId, stepType, String.valueOf(stepId)).start();
 
             case "mutualssl" ->
                     new MutualSSL(context, decryptedProperties, connectionId, stepType, String.valueOf(stepId)).start();
