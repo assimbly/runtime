@@ -343,6 +343,32 @@ public final class AssertUtils {
         });
     }
 
+    // certificates
+
+    public static void assertCertificateExpiry(JsonNode expiryJson) {
+        assertThat(expiryJson.get("name").asString()).isNotEmpty();
+        assertThat(expiryJson.get("expiresAt").asString()).isNotEmpty();
+        assertThat(expiryJson.get("daysUntilExpiry").asLong()).isNotNegative();
+        assertThat(expiryJson.get("valid").isBoolean()).isTrue();
+    }
+
+    public static void assertCertificateExpiry(JsonNode expiryJson, String name) {
+        assertCertificateExpiry(expiryJson);
+        assertThat(expiryJson.get("name").asString()).isEqualTo(name);
+    }
+
+    public static void assertExpiredCertificate(JsonNode expiredJson) {
+        assertThat(expiredJson.get("name").asString()).isNotEmpty();
+        assertThat(expiredJson.get("expiredAt").asString()).isNotEmpty();
+        assertThat(expiredJson.get("daysExpired").asLong()).isNotNegative();
+        assertThat(expiredJson.get("valid").asBoolean()).isFalse();
+    }
+
+    public static void assertExpiredCertificate(JsonNode expiredJson, String name) {
+        assertExpiredCertificate(expiredJson);
+        assertThat(expiredJson.get("name").asString()).isEqualTo(name);
+    }
+
     // validations
 
     public static void assertCertificateResponse(JsonNode responseJson, String status, String containsMsg) {
