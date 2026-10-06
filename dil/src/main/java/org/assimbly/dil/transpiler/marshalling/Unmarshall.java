@@ -274,6 +274,11 @@ public class Unmarshall {
             options = addConnectionFactoryOption(options, stepId, type, stepXPath);
         }
 
+        if (isJettyHandlerConnection(type, stepId) && !options.contains("handlers=")) {
+            optionProperties.add(stepXPath + "options/handlers");
+            options = addHandlersOption(options, stepId, type, stepXPath);
+        }
+
 		RouteTemplate routeTemplate = new RouteTemplate(properties, conf);
 
 		properties = routeTemplate.setRouteTemplate(flowId, stepId, type, baseUri, scheme, path, options, optionProperties, links, stepXPath, stepIndex);
@@ -296,6 +301,33 @@ public class Unmarshall {
 
 		return options;
 
+	}
+
+	private boolean isJettyHandlerConnection(String type, String stepId) {
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
+		if (connectionId == null) {
+			return false;
+		}
+		String connectionType = properties.get("connection." + connectionId + ".type");
+		return connectionType != null
+				&& (connectionType.equalsIgnoreCase("basic") || connectionType.equalsIgnoreCase("mutualssl"));
+	}
+
+	private String addHandlersOption(String options, String stepId, String type, String stepXPath) {
+
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
+
+		String option = "handlers=#" + connectionId;
+
+		conf.addProperty(stepXPath + "options/handlers", "#" + connectionId);
+
+		if (options.isEmpty()) {
+			options = option;
+		} else {
+			options = options + "&" + option;
+		}
+
+		return options;
 	}
 
 	private void createResources() {
