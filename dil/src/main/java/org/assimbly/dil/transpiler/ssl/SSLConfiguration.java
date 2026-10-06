@@ -62,13 +62,8 @@ public class SSLConfiguration {
 
 			createKeystore(keystorePath);
 
-			KeyStoreParameters keystoreParameters = createKeystoreParameters(keystorePath, keystorePassword);
-
-			KeyManagersParameters kmp = new KeyManagersParameters();
-			kmp.setKeyPassword(keystorePassword);
-			kmp.setKeyStore(keystoreParameters);
-
-			sslContextParameters.setKeyManagers(kmp);
+			//The keystore is reloaded when the file changes (no restart needed after adding a certificate)
+			sslContextParameters.setKeyManagers(new ReloadingKeyManagersParameters(keystorePath, keystorePassword));
 
 		}
 
