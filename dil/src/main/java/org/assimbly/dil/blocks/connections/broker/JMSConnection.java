@@ -134,6 +134,8 @@ public class JMSConnection {
 
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
 
+        connectionFactory.setSendTimeout(30000); // fail a send to an unresponsive broker instead of blocking forever
+
         if (username != null && !username.isEmpty()){
             connectionFactory.setUserName(username);
         }
@@ -154,6 +156,7 @@ public class JMSConnection {
         pooledConnectionFactory.setConnectionFactory(connectionFactory);
         pooledConnectionFactory.setCreateConnectionOnStartup(true);
         pooledConnectionFactory.setBlockIfSessionPoolIsFull(true);
+        pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(30000); // fail instead of blocking forever when the pool is exhausted
         pooledConnectionFactory.setMaxConnections(20);
         pooledConnectionFactory.setMaximumActiveSessionPerConnection(200);
         pooledConnectionFactory.setIdleTimeout(10000);
