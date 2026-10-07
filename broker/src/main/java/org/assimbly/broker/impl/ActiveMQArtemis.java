@@ -691,7 +691,8 @@ public class ActiveMQArtemis implements Broker {
 		String userName = broker.getActiveMQServer().getConfiguration().getClusterUser();
 		String password = broker.getActiveMQServer().getConfiguration().getClusterPassword();
 
-		Map<String,String> messageHeadersAsString = messageHeaders.entrySet().stream()
+		Map<String, Object> headers = messageHeaders == null ? Map.of() : messageHeaders;
+		Map<String,String> messageHeadersAsString = headers.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
 
 

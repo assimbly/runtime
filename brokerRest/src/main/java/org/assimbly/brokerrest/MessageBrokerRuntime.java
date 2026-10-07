@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -275,12 +275,12 @@ public class MessageBrokerRuntime {
 
         log.debug("event=sendMessageToEndpoint type=POST message=Send message specified endpoint name={} type={}", endpointName, brokerType);
 
-        HashMap<String, Object> messageHeadersMap = null;
-        if(messageHeaders!=null){
-            messageHeadersMap = new ObjectMapper().readValue(messageHeaders, new TypeReference<>() {});
-        }
-
         try {
+            Map<String, Object> messageHeadersMap = messageHeaders == null ? Map.of()
+                    : new ObjectMapper().readValue(messageHeaders, new TypeReference<>() {});
+            if (messageHeadersMap == null) {
+                messageHeadersMap = Map.of();
+            }
             final String result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
         } catch (Exception e) {
