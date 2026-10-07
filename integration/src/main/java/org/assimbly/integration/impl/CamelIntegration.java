@@ -1417,12 +1417,14 @@ public class CamelIntegration extends BaseIntegration {
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
-
+        activeMQConnectionFactory.setSendTimeout(30000); 
+		
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
 		pooledConnectionFactory.setMaxConnections(20);
 		pooledConnectionFactory.setMaximumActiveSessionPerConnection(200);
 		pooledConnectionFactory.setIdleTimeout(10000);
+		pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(30000);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);
