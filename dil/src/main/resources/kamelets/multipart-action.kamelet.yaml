@@ -21,7 +21,7 @@ spec:
         default: "multipart/form-data"
       formFields:
         title: "Form Fields"
-        description: "JSON object of additional text form fields sent with the file"
+        description: "JSON object of additional text form fields sent with the file. Supports Camel Simple on the whole value (${header.formFields}) or on string values inside the JSON (${header.x}, ${body})."
         type: "string"
         default: ""
       in:
@@ -72,13 +72,9 @@ spec:
                   - setHeader:
                       name: "MultipartFieldName"
                       simple: "{{fname}}"
-            - choice:
-                when:
-                - simple: "'{{?formFields}}' != ''"
-                  steps:
-                  - setHeader:
-                      name: "MultipartFormFields"
-                      simple: "{{formFields}}"
+            - setHeader:
+                name: "MultipartFormFields"
+                constant: "{{?formFields}}"
             - process:
                 ref: "multipartProcessor"
             - to:
