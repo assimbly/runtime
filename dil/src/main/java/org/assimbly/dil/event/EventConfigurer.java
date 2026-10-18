@@ -186,6 +186,7 @@ public class EventConfigurer {
         ArrayList<Store> stores = configuration.getStores();
 
         StepCollector stepCollector = new StepCollector(id, flowId, flowVersion, events, filters, stores);
+
         stepCollector.setIgnoreCamelContextEvents(true);
         stepCollector.setIgnoreCamelContextInitEvents(true);
         stepCollector.setIgnoreExchangeEvents(true);

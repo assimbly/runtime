@@ -94,7 +94,7 @@ public class StatsManager {
         JSONObject flow = createBasicFlowJson(flowId);
 
         // Calculate basic statistics
-        FlowStatistics stats = calculateFlowStatistics(flowId, fullStats);
+        FlowStatistics stats = calculateFlowStatistics(flowId, fullStats, flowsMap);
 
         // Populate basic stats
         populateBasicStats(flow, stats);
@@ -142,7 +142,7 @@ public class StatsManager {
         return flow;
     }
 
-    private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats) {
+    private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
@@ -153,10 +153,13 @@ public class StatsManager {
             return stats;
         }
 
-        stats.totalTransactions = managedRouteGroup.getExchangesTotal();
-        stats.completedTransactions = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();
-        stats.failedTransactions = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
-        stats.pendingTransactions = managedRouteGroup.getExchangesInflight();
+        // Transactions count each message once, the messages count it once per step
+        for (ManagedRouteMBean entryRoute : getEntryRoutes(flowId, flowsMap)) {
+            stats.totalTransactions += entryRoute.getExchangesTotal();
+            stats.completedTransactions += entryRoute.getExchangesCompleted() - entryRoute.getFailuresHandled();
+            stats.failedTransactions += entryRoute.getExchangesFailed() + entryRoute.getFailuresHandled();
+            stats.pendingTransactions += entryRoute.getExchangesInflight();
+        }
 
         long total = 0;
         long completed = 0;
@@ -189,6 +192,33 @@ public class StatsManager {
         }
 
         return stats;
+    }
+
+    // The routes where messages enter the flow: the routes of its source steps. A step passes a message on as the
+    // same exchange over sync links, so the outcome there is the outcome of the whole flow. A route flow has no
+    // source step, so its own routes are used.
+    private List<ManagedRouteMBean> getEntryRoutes(String flowId, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+
+        List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
+        TreeMap<String, String> flowProps = flowsMap != null ? flowsMap.get(flowId) : null;
+
+        if (flowProps == null) {
+            return routes;
+        }
+
+        Set<String> sourceRouteIds = new HashSet<>();
+        for (String key : flowProps.keySet()) {
+            if (key.startsWith("source.") && key.endsWith(".uri")) {
+                sourceRouteIds.add(flowId + "-" + StringUtils.substringBetween(key, "source.", ".uri"));
+            }
+        }
+
+        List<ManagedRouteMBean> sourceRoutes = routes.stream()
+                .filter(route -> sourceRouteIds.contains(route.getRouteId()))
+                .toList();
+
+        return sourceRoutes.isEmpty() ? routes : sourceRoutes;
+
     }
 
     private void resetFlowStatistics(String flowId) {
@@ -334,7 +364,7 @@ public class StatsManager {
         JSONObject flow = createBasicFlowJson(flowId);
 
         // Calculate basic statistics
-        FlowStatistics stats = calculateFlowStatistics(flowId, false);
+        FlowStatistics stats = calculateFlowStatistics(flowId, false, flowsMap);
 
         // Populate basic stats
         populateBasicStats(flow, stats);
@@ -690,7 +720,7 @@ public class StatsManager {
 
     }
 
-    public String getStatsByFlowIds(String flowIds) {
+    public String getStatsByFlowIds(String flowIds, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         String[] values = flowIds.split(",");
 
@@ -702,7 +732,7 @@ public class StatsManager {
             JSONObject json = new JSONObject();
             JSONObject flow = createBasicFlowJson(flowId);
 
-            FlowStatistics stats = calculateFlowStatistics(flowId, true);
+            FlowStatistics stats = calculateFlowStatistics(flowId, true, flowsMap);
 
             // Populate basic stats
             populateBasicStats(flow, stats);

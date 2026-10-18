@@ -231,6 +231,7 @@ public class ConfigManager {
         registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
         registry.bind("SetPatternProcessor", new SetPatternProcessor());
         registry.bind("SqlProcessor", new SqlProcessor());
+        registry.bind("UblSchemaValidationProcessor", new UblSchemaValidationProcessor());
         registry.bind("Unzip", new UnzipProcessor());
         registry.bind("uuid-function", new UuidExtensionFunction());
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());

@@ -1,0 +1,64 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "ubl-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "ubl action"
+    description: "Validates and normalizes a UBL 2.1 document (Invoice, CreditNote, Order, ...)"
+    type: "object"
+    properties:
+      prettyPrint:
+        title: "Pretty Print"
+        description: "Whether to format the output XML"
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  - "camel:ubl"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            # camel-ubl reads without schema validation, so validate against the UBL 2.1 schema of the document type first
+            - process:
+                ref: "UblSchemaValidationProcessor"
+            - unmarshal:
+                ubl: {}
+            - marshal:
+                ubl:
+                  prettyPrint: "{{prettyPrint}}"
+            - convertBodyTo:
+                type: "java.lang.String"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

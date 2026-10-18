@@ -1,5 +1,6 @@
 package org.assimbly.dil.validation.scripts;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.DefaultExchange;
@@ -15,7 +16,11 @@ public final class ExchangeMarshaller {
     }
 
     public static Exchange unmarshall(ExchangeDto exchangeDto) {
-        Exchange exchange = new DefaultExchange(new DefaultCamelContext());
+        return unmarshall(exchangeDto, new DefaultCamelContext());
+    }
+
+    public static Exchange unmarshall(ExchangeDto exchangeDto, CamelContext context) {
+        Exchange exchange = new DefaultExchange(context);
 
         if (exchangeDto.getBody() != null) {
             exchange.getIn().setBody(exchangeDto.getBody());

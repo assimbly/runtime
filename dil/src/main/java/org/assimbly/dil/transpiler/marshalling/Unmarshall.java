@@ -32,6 +32,7 @@ public class Unmarshall {
 			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
 			"amqp", "amqps", "queue", "queue-async", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
 	};
+	private final List<String> jmsConnectionTypes = Arrays.asList("activemq", "amazonmq", "jms", "sjms", "sjms2");
 
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
@@ -130,7 +131,27 @@ public class Unmarshall {
 			setRouteTemplate(index, stepId, type);
 		} else {
 			setBlocks(stepElement, stepId, type);
+			setRouteConnectionFactory(stepId, type);
 		}
+	}
+
+	// A Route Step with a JMS connection uses that connection for the JMS endpoints in its route
+	private void setRouteConnectionFactory(String stepId, String type) {
+
+		String routeKey = type + "." + stepId + ".route";
+		String route = properties.get(routeKey);
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
+
+		if (route == null || connectionId == null) {
+			return;
+		}
+
+		String connectionType = properties.get("connection." + connectionId + ".type");
+
+		if (connectionType != null && jmsConnectionTypes.contains(connectionType.toLowerCase())) {
+			properties.put(routeKey, Route.addConnectionFactory(route, connectionId));
+		}
+
 	}
 
 	private void setUri(String uri, String stepId, String type, int index) {

@@ -77,6 +77,11 @@ public class RouteTemplate {
                 customRouteDoc = new DocumentImpl();
             }
             createCustomRoute(links, stepXPath, type, stepId,"contentrouter");
+        }else if(baseUri.equalsIgnoreCase("switch") && type.equalsIgnoreCase("router") ) {
+            if (customRouteDoc == null) {
+                customRouteDoc = new DocumentImpl();
+            }
+            createCustomRoute(links, stepXPath, type, stepId,"switchrouter");
         }else if(baseUri.startsWith("setheaders")) {
             if (customRouteDoc == null) {
                 customRouteDoc = new DocumentImpl();
@@ -132,6 +137,11 @@ public class RouteTemplate {
             choice = createWhens(links, stepXPath, choice);
             choice = createOtherwise(links, stepXPath, choice);
             step.appendChild(choice);
+        }else if (customType.equalsIgnoreCase("switchrouter")){
+            Element switchElement = customRouteDoc.createElement("switch");
+            switchElement = createNamespace(stepXPath, switchElement);
+            switchElement = createSwitch(links, stepXPath, switchElement);
+            step.appendChild(switchElement);
         }else if (customType.equalsIgnoreCase("setheaders")){
             Element setHeaders = customRouteDoc.createElement("setHeaders");
             setHeaders = createHeaders(stepXPath, setHeaders);
@@ -294,6 +304,64 @@ public class RouteTemplate {
         }
 
         return choice;
+    }
+
+    // Switch dispatches on literal values: the selector comes from the step options,
+    // each out link with a rule is a case (rule = value), an out link without a rule is the otherwise
+    public Element createSwitch(String[] links, String stepXPath, Element switchElement) {
+
+        String language = Objects.toString(conf.getProperty(stepXPath + "options/language"), "simple");
+        String expression = Objects.toString(conf.getProperty(stepXPath + "options/expression"), null);
+
+        Element selector = customRouteDoc.createElement("selector");
+        Element languageElement = customRouteDoc.createElement(language);
+        languageElement.setTextContent(expression);
+        if(language.equals("jsonpath")){
+            languageElement.setAttribute("resultType","java.lang.String");
+        } else if (language.equals("xpath")) {
+            languageElement.setAttribute("resultType","java.lang.String");
+            languageElement.setAttribute("saxon","true");
+        }
+        selector.appendChild(languageElement);
+        switchElement.appendChild(selector);
+
+        Element otherwise = null;
+
+        for(int index = 1; index <= links.length; index++) {
+
+            String linkXPath = stepXPath + "links/link[" + index + "]/";
+
+            //get values from configuration
+            String bound = Objects.toString(conf.getProperty(linkXPath + "bound"), null);
+            String linkTransport = createLinkTransport(linkXPath);
+            String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
+            String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
+            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
+            String endpoint = createLinkEndpoint(linkTransport, id);
+
+            if(bound==null || !bound.equalsIgnoreCase("out")) {
+                continue;
+            }
+
+            if(rule != null) {
+                Element switchCase = customRouteDoc.createElement("case");
+                switchCase.setAttribute("value", rule);
+                switchCase.setAttribute("uri", endpoint);
+                switchElement.appendChild(switchCase);
+            } else {
+                otherwise = customRouteDoc.createElement("otherwise");
+                otherwise.setAttribute("uri", endpoint);
+            }
+
+        }
+
+        // the schema expects otherwise after all cases
+        if(otherwise != null) {
+            switchElement.appendChild(otherwise);
+        }
+
+        return switchElement;
     }
 
     public Element createHeaders( String stepXPath, Element setHeaders) {

@@ -873,6 +873,16 @@ public class FlowManager {
             node.put("timestamp", errorEventMessage.getTimestamp());
             node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
             node.put("exceptionType", errorEventMessage.getExceptionType());
+            // the Camel node that failed (not the onException handling it) and its source location
+            node.put("nodeId", errorEventMessage.getToNode());
+            node.put("location", errorEventMessage.getLocation());
+            node.put("endpointUri", errorEventMessage.getEndpointUri());
+            node.put("exchangeId", errorEventMessage.getExchangeId());
+            node.put("handled", errorEventMessage.isHandled());
+            // identical errors are collapsed into one entry
+            node.put("repeatCount", errorEventMessage.getRepeatCount());
+            node.put("repeatFirstTimestamp", errorEventMessage.getRepeatFirstTimestamp());
+            node.put("repeatLastTimestamp", errorEventMessage.getRepeatLastTimestamp());
 
             arrayNode.add(node);
         }

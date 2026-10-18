@@ -12,7 +12,7 @@ spec:
     properties:
       path:
         title: "Path"
-        description: "Path"
+        description: "The Simple expression"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -21,7 +21,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -38,7 +42,7 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
         - step:
             id: "step-{{stepId}}"
@@ -46,4 +50,5 @@ spec:
             - setBody:
                 simple: "{{path}}"
             - to:
-                uri: "kamelet:sink"
+                disabled: "{{sink}}"
+                uri: "{{out}}"

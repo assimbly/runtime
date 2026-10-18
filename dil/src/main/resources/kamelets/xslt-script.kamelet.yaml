@@ -12,7 +12,7 @@ spec:
     properties:
       path:
         title: "Path"
-        description: "Path"
+        description: "The XSLT stylesheet, inline"
         type: "string"
       in:
         title: "Source Endpoint"
@@ -21,7 +21,11 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
         title: "Route ID"
         type: "string"
@@ -38,12 +42,18 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: "kamelet:source"
+        uri: "{{in}}"
         steps:
         - step:
             id: "step-{{stepId}}"
             steps:
+            - setHeader:
+                name: "CamelXsltStylesheet"
+                constant: "{{path}}"
             - to:
-                uri: "xslt-saxon:{{path}}?saxonExtensionFunctions=#uuid-function"
+                uri: "xslt-saxon:xslt/script-placeholder.xsl?allowTemplateFromHeader=true&saxonExtensionFunctions=#uuid-function"
+            - removeHeader:
+                name: "CamelXsltStylesheet"
             - to:
-                uri: "kamelet:sink"
+                disabled: "{{sink}}"
+                uri: "{{out}}"

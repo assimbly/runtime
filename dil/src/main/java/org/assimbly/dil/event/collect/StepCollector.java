@@ -87,6 +87,10 @@ public class StepCollector extends EventNotifierSupport {
     @Override
     public void notify(CamelEvent event) {
 
+        System.out.println("------- 1 tracing json start ------");
+        System.out.println(event.toJSon(4));
+        System.out.println("------- 2. tracing json end ------");
+
         //filter only the configured events
         if (events != null && events.contains(event.getType().name())) {
 
@@ -98,7 +102,19 @@ public class StepCollector extends EventNotifierSupport {
             // Cast to Camel event to retrieve the StepEvent
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
 
+            System.out.println("------- tracing json start ------");
+            System.out.println(stepEvent.toJSon(4));
+            System.out.println("------- tracing json end ------");
 
+            System.out.println("------- tracing json map stat ------");
+            Map<String, Object> map = stepEvent.asJSon();
+
+            map.forEach((key, value) -> {
+                String type = value != null ? value.getClass().getSimpleName() : "null";
+                System.out.println("Key: " + key + ", Type: " + type + ", Value: " + value);
+            });
+
+            System.out.println("------- tracing json map end ------");
 
             // Get the stepId
             String stepId = StringUtils.substringAfter(stepEvent.getStepId(), "step-");

@@ -14,10 +14,13 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Route {
 
     static final Logger log = LoggerFactory.getLogger(Route.class);
+    private static final Pattern JMS_URI = Pattern.compile("(\\buri=\")((?:jms|sjms|sjms2|activemq):[^\"]*)\"");
     private final Document doc;
     private final TreeMap<String, String> properties;
     XPathFactory xf = new XPathFactoryImpl();
@@ -40,11 +43,33 @@ public class Route {
 
     }
 
+    // Adds the connection's ConnectionFactory to the JMS endpoints of a route that don't name one
+    public static String addConnectionFactory(String route, String connectionId) {
+
+        Matcher matcher = JMS_URI.matcher(route);
+        StringBuilder result = new StringBuilder();
+
+        while (matcher.find()) {
+            String uri = matcher.group(2);
+            if (!uri.contains("connectionFactory=")) {
+                uri = uri + (uri.contains("?") ? "&amp;" : "?") + "connectionFactory=#" + connectionId;
+            }
+            matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(1) + uri + "\""));
+        }
+
+        matcher.appendTail(result);
+
+        return result.toString();
+
+    }
+
     private String createRoute(String flowId, String routeId) {
 
         Node node = getRoute(routeId);
 
         assert node != null;
+        node = node.cloneNode(true);
+        setLogNames((Element) node, flowId);
         String routeAsString = StringConverter.nodeToString(node);
 
         return routeAsString.replace("<route id=\"" + routeId + "\"", "<route id=\"" + flowId + "-" + routeId + "\" group=\"" + flowId + "\"");
@@ -74,6 +99,23 @@ public class Route {
         }
 
         return route;
+
+    }
+
+    // Without a logName, Camel names the logger after the generated route resource and line (e_1a2b…:3), so use the flow's name
+    private void setLogNames(Element route, String flowId) {
+
+        String flowName = properties.get("flow.name");
+        String logName = flowName == null || flowName.isBlank() ? flowId : flowName;
+
+        NodeList logs = route.getElementsByTagName("log");
+
+        for (int i = 0; i < logs.getLength(); i++) {
+            Element log = (Element) logs.item(i);
+            if (!log.hasAttribute("logName") && !log.hasAttribute("logger")) {
+                log.setAttribute("logName", logName);
+            }
+        }
 
     }
 

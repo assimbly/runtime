@@ -63,6 +63,16 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <!-- FlowManager can't be created without an encryption secret -->
+                        <ASSIMBLY_ENCRYPTION_SECRET>integration-test-secret</ASSIMBLY_ENCRYPTION_SECRET>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

@@ -997,7 +997,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String getStatsByFlowIds(String flowIds, String filter, String mediaType) {
-        return statsManager.getStatsByFlowIds(flowIds);
+        return statsManager.getStatsByFlowIds(flowIds, flowsMap);
     }
 
     @Override
