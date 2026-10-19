@@ -19,7 +19,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
-import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
+import org.assimbly.dil.listener.TriggerMisfireWatchdog;
 import org.assimbly.util.mail.AttachmentAttacher;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.util.thread.VirtualThreadPool;
@@ -76,26 +76,37 @@ public class ConfigManager {
 
     ConcurrentMap<String, String> collectorsMap;
 
+    private TriggerMisfireWatchdog triggerMisfireWatchdog;
+
     public ConfigManager(CamelContext context, SimpleRegistry registry) {
         this.context = context;
         this.registry = registry;
 
     }
 
-    public void setTriggerMisfireLoggingListener() {
+    public void setTriggerMisfireWatchdog() {
         try {
 
             QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
             Scheduler scheduler = quartzComponent.getScheduler();
 
             if (scheduler != null) {
-                scheduler.getListenerManager().addTriggerListener(
-                        new TriggerMisfireLoggingListener()
-                );
+                long misfireThresholdMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000"));
+                long watchdogIntervalMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_WATCHDOG_INTERVAL", "5000"));
+                stopTriggerMisfireWatchdog();
+                triggerMisfireWatchdog = new TriggerMisfireWatchdog(scheduler, misfireThresholdMs, watchdogIntervalMs);
+                triggerMisfireWatchdog.start();
             }
 
         } catch (Exception e) {
-            log.warn("setTriggerMisfireLoggingListener failed",e);
+            log.warn("setTriggerMisfireWatchdog failed",e);
+        }
+    }
+
+    public void stopTriggerMisfireWatchdog() {
+        if (triggerMisfireWatchdog != null) {
+            triggerMisfireWatchdog.stop();
+            triggerMisfireWatchdog = null;
         }
     }
 
