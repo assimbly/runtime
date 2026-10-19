@@ -294,6 +294,10 @@ public class FlowLoader extends RouteBuilder {
 			return step;
 		}
 
+		if (encryptionUtil == null) {
+			throw new IllegalStateException("The Flow has encrypted values, but no encryption key is set (ASSIMBLY_ENCRYPTION_SECRET)");
+		}
+
 		Pattern pattern = Pattern.compile(EncryptionUtil.ENCODE_PREFIX_REGEX);
 		Matcher matcher = pattern.matcher(step);
 

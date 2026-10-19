@@ -65,7 +65,10 @@ public class FlowManager {
     protected static final Logger log = LoggerFactory.getLogger(FlowManager.class);
 
     private static final String ASSIMBLY_ENCRYPTION_SECRET = System.getenv("ASSIMBLY_ENCRYPTION_SECRET");
-    private final EncryptionUtil encryptionUtil = new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET);
+
+    // Decrypts the ENC(...) values in a Flow: with ASSIMBLY_ENCRYPTION_SECRET when it is set, otherwise with the key
+    // the embedding application passes through setFallbackEncryptionUtil (null until then).
+    private volatile EncryptionUtil encryptionUtil = hasEncryptionSecret() ? new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET) : null;
 
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
@@ -88,6 +91,17 @@ public class FlowManager {
         this.context = context;
         this.managedContext = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
         this.installedFlowsManager = installedFlowsManager;
+    }
+
+    /** Uses this key for ENC(...) values when ASSIMBLY_ENCRYPTION_SECRET isn't set; with it set, this does nothing. */
+    public void setFallbackEncryptionUtil(EncryptionUtil fallback) {
+        if (!hasEncryptionSecret()) {
+            encryptionUtil = fallback;
+        }
+    }
+
+    private static boolean hasEncryptionSecret() {
+        return ASSIMBLY_ENCRYPTION_SECRET != null && !ASSIMBLY_ENCRYPTION_SECRET.isEmpty();
     }
 
     public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {

@@ -381,6 +381,7 @@ public class CamelIntegration extends BaseIntegration {
 
         registry.bind("encryptableProperties", encryptableProperties);
         registry.bind("encryptionUtil", EncryptionUtil.class, encryptionUtil);
+        flowManager.setFallbackEncryptionUtil(encryptionUtil);
 
         try {
             setCaching();
