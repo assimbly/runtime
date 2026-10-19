@@ -16,21 +16,21 @@ class UrlValidatorTest {
             "https://www.ingwb.com/en/service/financial-markets/foreign-exchange-rates-for-hungary";
 
     @Test
-    void validateURL_acceptsHttpAndHttps() {
+    void validateUrlAcceptsHttpAndHttps() {
         assertTrue(UrlValidator.validateURL("https://example.com/path"));
         assertTrue(UrlValidator.validateURL("http://example.com"));
         assertTrue(UrlValidator.validateURL(ING_FX_RATES_URL));
     }
 
     @Test
-    void validate_returnsInvalidForMalformedUrl() {
+    void validateReturnsInvalidForMalformedUrl() {
         ValidationErrorMessage result = new UrlValidator().validate("not-a-url");
         assertNotNull(result);
         assertEquals("Url is not valid!", result.getError());
     }
 
     @Test
-    void validate_reachesIngFxRatesUrlWithUserAgentFallback() {
+    void validateReachesIngFxRatesUrlWithUserAgentFallback() {
         // Java/ is blocked by this site; fallback UAs should still succeed
         UrlValidator validator = new UrlValidator(
                 5000,
