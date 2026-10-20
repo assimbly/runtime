@@ -4,7 +4,9 @@ import tools.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.management.QueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.config.impl.FileConfiguration;
 import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImpl;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
@@ -28,7 +30,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,15 +65,14 @@ public class ActiveMQArtemis implements Broker {
 			broker = new EmbeddedActiveMQ();
 
 			if (brokerFile.exists()) {
-				log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-				broker.setConfigResourcePath(fileConfig);
+				log.info("event=StartBroker status=configuring config=broker.xml path={}", brokerFile.getAbsolutePath());
 			} else {
 				log.warn("No config file 'broker.xml' found.");
 				log.info("event=StartBroker status=configuring config=broker.xml url=tcp://127.0.0.1:61616 path= {}", baseDir);
-				this.setFileConfiguration("");
-				String fileConfig = "file:///" + brokerFile.getAbsolutePath();
-				broker.setConfigResourcePath(fileConfig);
+				writeDefaultConfiguration();
 			}
+
+			broker.setConfiguration(readFileConfiguration());
 
 			broker.start();
 
@@ -190,15 +193,8 @@ public class ActiveMQArtemis implements Broker {
 	public String getFileConfiguration() throws IOException {
 
 		if(!brokerFile.exists()) {
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-			
-    		try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
-
-				FileUtils.touch(brokerFile);
-
-                assert is != null;
-                Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
+			try {
+				writeDefaultConfiguration();
 			} catch (IOException e) {
 				log.error("event=GetFileConfiguration status=failed config=broker.xml reason={}", e.getMessage(), e);
 			}
@@ -221,14 +217,77 @@ public class ActiveMQArtemis implements Broker {
 			} 
 			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
 		}else {
-			FileUtils.touch(brokerFile);
-			try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
-                assert is != null;
-                Files.copy(is, brokerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			}
+			writeDefaultConfiguration();
 		}
 
 		return "success";
+
+	}
+
+	// Writes the example broker.xml with a cluster password only this broker knows
+	private void writeDefaultConfiguration() throws IOException {
+
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+
+		String configuration;
+		try(InputStream is = classloader.getResourceAsStream("broker.xml")) {
+			if (is == null) {
+				throw new IOException("Example broker.xml not found on the classpath");
+			}
+			configuration = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+		}
+
+		configuration = configuration.replace(
+				"<cluster-password>admin</cluster-password>",
+				"<cluster-password>" + randomPassword() + "</cluster-password>");
+
+		FileUtils.writeStringToFile(brokerFile, configuration, StandardCharsets.UTF_8);
+
+	}
+
+	private static String randomPassword() {
+		byte[] bytes = new byte[18];
+		new SecureRandom().nextBytes(bytes);
+		return HexFormat.of().formatHex(bytes);
+	}
+
+	// Reads broker.xml like EmbeddedActiveMQ does, but resolves relative directories (data/journal and so on)
+	// against the broker folder instead of the folder the Gateway was started from
+	private Configuration readFileConfiguration() throws Exception {
+
+		FileConfiguration configuration = new FileConfiguration();
+		FileDeploymentManager deploymentManager = new FileDeploymentManager("file:///" + brokerFile.getAbsolutePath());
+		deploymentManager.addDeployable(configuration);
+		deploymentManager.readConfiguration();
+
+		// An explicit artemis.instance wins, like in a standalone Artemis broker
+		if (System.getProperty("artemis.instance") == null) {
+			configuration.setBrokerInstance(brokerInstance(configuration));
+		}
+
+		return configuration;
+
+	}
+
+	private File brokerInstance(FileConfiguration configuration) {
+
+		File brokerFolder = brokerFile.getAbsoluteFile().getParentFile();
+		File workingFolder = new File(System.getProperty("user.dir")).getAbsoluteFile();
+
+		configuration.setBrokerInstance(brokerFolder);
+		File bindings = configuration.getBindingsLocation();
+		configuration.setBrokerInstance(workingFolder);
+		File previousBindings = configuration.getBindingsLocation();
+
+		// Earlier versions kept the messages relative to the working folder. Keep using them until they are moved.
+		if (!bindings.equals(previousBindings) && !bindings.exists() && previousBindings.exists()) {
+			log.warn("event=StartBroker status=configuring reason=The broker keeps its messages in {}, relative to the folder the Gateway was started from. "
+					+ "Stop the Gateway and move them to {} to keep them in the broker folder.",
+					previousBindings.getParentFile(), bindings.getParentFile());
+			return workingFolder;
+		}
+
+		return brokerFolder;
 
 	}
 

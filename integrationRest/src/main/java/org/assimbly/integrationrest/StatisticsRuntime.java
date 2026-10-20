@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Resource to return information about the stats of flows.
  */
-@Tag(name = "Statistics", description = "Statistics, messages and metrics")
+@Tag(name = "Statistics", description = "Statistics, exchanges, transactions and metrics")
 @ControllerAdvice
 @RestController
 @RequestMapping("/api")
@@ -78,37 +78,20 @@ public class StatisticsRuntime {
             path = "/integration/stats/flows",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowsStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
+    public ResponseEntity<String> getFlowsStats(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @RequestHeader(required = false, defaultValue = "true", value = "FullStats") boolean fullStats
+    ) {
 
         plainResponse = true;
 
         try {
-            String stats = integration.getFlowsStats(mediaType);
+            String stats = integration.getFlowsStats(fullStats, mediaType);
             if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/stats/flows",stats,plainResponse);
         } catch (Exception e) {
             log.error("Get stats failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/stats/flows",e.getMessage());
-        }
-    }
-
-
-    @Operation(summary = "Get message counts")
-    @GetMapping(
-            path = "/integration/messages",
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
-    )
-    public ResponseEntity<String> getMessages(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
-
-        plainResponse = true;
-
-        try {
-            String stats = integration.getMessages(mediaType);
-            if(stats.startsWith("Error")||stats.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/messages",stats,plainResponse);
-        } catch (Exception e) {
-            log.error("Get messages failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/messages",e.getMessage());
         }
     }
 
@@ -248,121 +231,214 @@ public class StatisticsRuntime {
         }
     }
 
-    @Operation(summary = "Get message counts of a flow")
+    @Operation(summary = "Get the exchanges of a flow (each message counted once per step)")
     @GetMapping(
-            path = "/integration/flow/{flowId}/messages",
+            path = "/integration/flow/{flowId}/exchanges",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowMessages(
+    public ResponseEntity<String> getFlowExchanges(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeSteps") boolean includeSteps
     ) {
 
         try {
-            
-
-            String numberOfMessages = integration.getFlowMessages(flowId, includeSteps, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/messages",numberOfMessages,true);
+            String exchanges = integration.getFlowExchanges(flowId, includeSteps, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/exchanges",exchanges,true);
         } catch (Exception e) {
-            log.error("Get messages for flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
+            log.error("Get exchanges for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges",e.getMessage(),"unable to get exchanges of flow " + flowId,flowId);
         }
     }
 
-    @Operation(summary = "Count all messages of a flow")
+    @Operation(summary = "Get the transactions of a flow (each message counted once)")
     @GetMapping(
-            path = "/integration/flow/{flowId}/messages/total",
+            path = "/integration/flow/{flowId}/transactions",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowTotalMessages(
+    public ResponseEntity<String> getFlowTransactions(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-            String numberOfMessages = integration.getFlowTotalMessages(flowId);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/total",numberOfMessages,numberOfMessages,flowId);
+            String transactions = integration.getFlowTransactions(flowId, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/transactions",transactions,true);
         } catch (Exception e) {
-            log.error("Get total messages for flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/total",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
+            log.error("Get transactions for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions",e.getMessage(),"unable to get transactions of flow " + flowId,flowId);
         }
     }
 
-    @Operation(summary = "Count completed messages of a flow")
+    @Operation(summary = "Count all exchanges of a flow")
     @GetMapping(
-            path = "/integration/flow/{flowId}/messages/completed",
+            path = "/integration/flow/{flowId}/exchanges/total",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowCompletedMessages(
+    public ResponseEntity<String> getFlowTotalExchanges(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-            String completedMessages = integration.getFlowCompletedMessages(flowId);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/completed",completedMessages,completedMessages,flowId);
+            String totalExchanges = integration.getFlowTotalExchanges(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/total",totalExchanges,totalExchanges,flowId);
         } catch (Exception e) {
-            log.error("Get completed messages for flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/completed",e.getMessage(),"unable to get completed messages of flow " + flowId,flowId);
+            log.error("Get total exchanges for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/total",e.getMessage(),"unable to get total exchanges of flow " + flowId,flowId);
         }
     }
 
-    @Operation(summary = "Count failed messages of a flow")
+    @Operation(summary = "Count completed exchanges of a flow")
     @GetMapping(
-            path = "/integration/flow/{flowId}/messages/failed",
+            path = "/integration/flow/{flowId}/exchanges/completed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowFailedMessages(
+    public ResponseEntity<String> getFlowCompletedExchanges(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-            String failedMessages = integration.getFlowFailedMessages(flowId);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/failed",failedMessages,failedMessages,flowId);
+            String completedExchanges = integration.getFlowCompletedExchanges(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/completed",completedExchanges,completedExchanges,flowId);
         } catch (Exception e) {
-            log.error("Get failed messages for flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/failed",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
+            log.error("Get completed exchanges for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/completed",e.getMessage(),"unable to get completed exchanges of flow " + flowId,flowId);
         }
     }
 
-    @Operation(summary = "Count pending messages of a flow")
+    @Operation(summary = "Count failed exchanges of a flow")
     @GetMapping(
-            path = "/integration/flow/{flowId}/messages/pending",
+            path = "/integration/flow/{flowId}/exchanges/failed",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getFlowPendingMessages(
+    public ResponseEntity<String> getFlowFailedExchanges(
             @PathVariable(value = "flowId") String flowId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-            String failedMessages = integration.getFlowPendingMessages(flowId);
-            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/pending",failedMessages,failedMessages,flowId);
+            String failedExchanges = integration.getFlowFailedExchanges(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/failed",failedExchanges,failedExchanges,flowId);
         } catch (Exception e) {
-            log.error("Get pending messages for flow {} failed", flowId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/messages/pending",e.getMessage(),"unable to get failed messages of flow " + flowId,flowId);
+            log.error("Get failed exchanges for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/failed",e.getMessage(),"unable to get failed exchanges of flow " + flowId,flowId);
         }
     }
 
-    @Operation(summary = "Get message counts of a step")
+    @Operation(summary = "Count pending exchanges of a flow")
     @GetMapping(
-            path = "/integration/flow/{flowId}/step/{stepId}/messages",
+            path = "/integration/flow/{flowId}/exchanges/pending",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public ResponseEntity<String> getStepMessages(
+    public ResponseEntity<String> getFlowPendingExchanges(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String pendingExchanges = integration.getFlowPendingExchanges(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/pending",pendingExchanges,pendingExchanges,flowId);
+        } catch (Exception e) {
+            log.error("Get pending exchanges for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/exchanges/pending",e.getMessage(),"unable to get pending exchanges of flow " + flowId,flowId);
+        }
+    }
+
+    @Operation(summary = "Count all transactions of a flow")
+    @GetMapping(
+            path = "/integration/flow/{flowId}/transactions/total",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowTotalTransactions(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String totalTransactions = integration.getFlowTotalTransactions(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/total",totalTransactions,totalTransactions,flowId);
+        } catch (Exception e) {
+            log.error("Get total transactions for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/total",e.getMessage(),"unable to get total transactions of flow " + flowId,flowId);
+        }
+    }
+
+    @Operation(summary = "Count completed transactions of a flow")
+    @GetMapping(
+            path = "/integration/flow/{flowId}/transactions/completed",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowCompletedTransactions(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String completedTransactions = integration.getFlowCompletedTransactions(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/completed",completedTransactions,completedTransactions,flowId);
+        } catch (Exception e) {
+            log.error("Get completed transactions for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/completed",e.getMessage(),"unable to get completed transactions of flow " + flowId,flowId);
+        }
+    }
+
+    @Operation(summary = "Count failed transactions of a flow")
+    @GetMapping(
+            path = "/integration/flow/{flowId}/transactions/failed",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowFailedTransactions(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String failedTransactions = integration.getFlowFailedTransactions(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/failed",failedTransactions,failedTransactions,flowId);
+        } catch (Exception e) {
+            log.error("Get failed transactions for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/failed",e.getMessage(),"unable to get failed transactions of flow " + flowId,flowId);
+        }
+    }
+
+    @Operation(summary = "Count pending transactions of a flow")
+    @GetMapping(
+            path = "/integration/flow/{flowId}/transactions/pending",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFlowPendingTransactions(
+            @PathVariable(value = "flowId") String flowId,
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
+    ) {
+
+        try {
+            String pendingTransactions = integration.getFlowPendingTransactions(flowId);
+            return ResponseUtil.createSuccessResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/pending",pendingTransactions,pendingTransactions,flowId);
+        } catch (Exception e) {
+            log.error("Get pending transactions for flow {} failed", flowId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/transactions/pending",e.getMessage(),"unable to get pending transactions of flow " + flowId,flowId);
+        }
+    }
+
+    @Operation(summary = "Get the exchanges of a step")
+    @GetMapping(
+            path = "/integration/flow/{flowId}/step/{stepId}/exchanges",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getStepExchanges(
             @PathVariable(value = "flowId") String flowId,
             @PathVariable(value = "stepId") String stepId,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
         try {
-            String numberOfMessages = integration.getStepMessages(flowId, stepId, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/messages",numberOfMessages,true);
+            String exchanges = integration.getStepExchanges(flowId, stepId, mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/exchanges",exchanges,true);
         } catch (Exception e) {
-            log.error("Get messages for flow {} for step {} failed", flowId, stepId, e);
-            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/messages",e.getMessage(),"unable to get total messages of flow " + flowId,flowId);
+            log.error("Get exchanges for flow {} for step {} failed", flowId, stepId, e);
+            return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/exchanges",e.getMessage(),"unable to get exchanges of step " + stepId + " of flow " + flowId,flowId);
         }
 
     }

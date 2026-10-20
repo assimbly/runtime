@@ -47,7 +47,7 @@ class RouteStepTest {
     }
 
     @Test
-    void logsAreNamedAfterTheFlow() throws Exception {
+    void logsAreNamedAfterTheFlowAndItsId() throws Exception {
         String route = transpile("SJMS", """
                 <route id="5998">
                   <from uri="file:in"/>
@@ -55,7 +55,7 @@ class RouteStepTest {
                   <log message="named" logName="mine"/>
                 </route>""");
 
-        assertEquals(1, route.split("logName=\"MoveFiles\"", -1).length - 1, route);
+        assertEquals(1, route.split("logName=\"MoveFiles/5914\"", -1).length - 1, route);
         assertTrue(route.contains("logName=\"mine\""), route);
     }
 

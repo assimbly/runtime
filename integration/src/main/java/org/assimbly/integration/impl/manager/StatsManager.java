@@ -10,6 +10,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Route;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
+import org.apache.camel.api.management.mbean.ManagedPerformanceCounterMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteGroupMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.component.metrics.messagehistory.MetricsMessageHistoryFactory;
@@ -27,17 +28,22 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
-import java.text.DecimalFormat;
 import java.util.concurrent.ConcurrentMap;
 
 public class StatsManager {
 
     protected static final Logger log = LoggerFactory.getLogger(StatsManager.class);
+
+    // Jackson nodes keep insertion order (org.json does not), so stats fields are returned in the order they are put
+    private static final JsonMapper mapper = JsonMapper.builder().build();
 
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
@@ -89,12 +95,16 @@ public class StatsManager {
     }
 
     public String getFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+        return buildFlowStats(flowId, fullStats, includeMetaData, includeSteps, flowsMap).toString();
+    }
 
-        JSONObject json = new JSONObject();
-        JSONObject flow = createBasicFlowJson(flowId);
+    private ObjectNode buildFlowStats(String flowId, boolean fullStats, boolean includeMetaData, boolean includeSteps, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+
+        ObjectNode json = mapper.createObjectNode();
+        ObjectNode flow = createBasicFlowJson(flowId);
 
         // Calculate basic statistics
-        FlowStatistics stats = calculateFlowStatistics(flowId, fullStats, flowsMap);
+        FlowStatistics stats = calculateFlowStatistics(flowId, fullStats);
 
         // Populate basic stats
         populateBasicStats(flow, stats);
@@ -102,13 +112,6 @@ public class StatsManager {
         // Add additional stats if requested
         if (fullStats) {
             populateDetailedStats(flow, stats);
-
-            // Add steps if requested
-            if (includeSteps) {
-                JSONArray steps = collectStepStatistics(flowId);
-                json.put("steps", steps);
-            }
-
         }
 
         // Add metadata if requested
@@ -117,9 +120,14 @@ public class StatsManager {
         }
 
         // Build final response
-        json.put("flow", flow);
+        json.set("flow", flow);
 
-        return json.toString();
+        // Add steps if requested
+        if (fullStats && includeSteps) {
+            json.set("steps", collectStepStatistics(flowId));
+        }
+
+        return json;
     }
 
     public void resetStats() {
@@ -136,13 +144,13 @@ public class StatsManager {
         resetFlowStatistics(flowId);
     }
 
-    private JSONObject createBasicFlowJson(String flowId) {
-        JSONObject flow = new JSONObject();
+    private ObjectNode createBasicFlowJson(String flowId) {
+        ObjectNode flow = mapper.createObjectNode();
         flow.put("id", flowId);
         return flow;
     }
 
-    private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    private FlowStatistics calculateFlowStatistics(String flowId, boolean fullStats) {
 
         ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
 
@@ -153,72 +161,67 @@ public class StatsManager {
             return stats;
         }
 
-        // Transactions count each message once, the messages count it once per step
-        for (ManagedRouteMBean entryRoute : getEntryRoutes(flowId, flowsMap)) {
-            stats.totalTransactions += entryRoute.getExchangesTotal();
-            stats.completedTransactions += entryRoute.getExchangesCompleted() - entryRoute.getFailuresHandled();
-            stats.failedTransactions += entryRoute.getExchangesFailed() + entryRoute.getFailuresHandled();
-            stats.pendingTransactions += entryRoute.getExchangesInflight();
-        }
-
-        long total = 0;
-        long completed = 0;
-        long failed = 0;
-        long pending = 0;
-
-        List<Route> routes = context.getRoutesByGroup(flowId);
-
-        for (Route route : routes) {
-
-            ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
-
-            total += managedRoute.getExchangesTotal();
-            completed += managedRoute.getExchangesCompleted() - managedRoute.getFailuresHandled();
-            failed += managedRoute.getExchangesFailed() + managedRoute.getFailuresHandled();
-            pending += managedRoute.getExchangesInflight();
-
-        }
-
-        stats.totalMessages = total;
-        stats.completedMessages = completed;
-        stats.failedMessages = failed;
-        stats.pendingMessages = pending;
+        // Transactions count each message once (route group), exchanges count it once per step (routes)
+        stats.transactions = Counts.of(managedRouteGroup);
+        stats.exchanges = sumOfRoutes(context.getRoutesByGroup(flowId));
 
         if (fullStats) {
             stats.uptimeMillis = managedRouteGroup.getUptimeMillis();
             stats.uptime = managedRouteGroup.getUptime();
-            stats.lastFailed = managedRouteGroup.getLastExchangeFailureHandledTimestamp() != null ? managedRouteGroup.getLastExchangeFailureHandledTimestamp().getTime() : 0L;
-            stats.lastCompleted = managedRouteGroup.getLastExchangeCompletedTimestamp() != null ? managedRouteGroup.getLastExchangeCompletedTimestamp().getTime() : 0L;
+            // failed counts both unhandled and handled failures, so take the latest of both
+            stats.lastFailed = Math.max(toMillis(managedRouteGroup.getLastExchangeFailureTimestamp()), toMillis(managedRouteGroup.getLastExchangeFailureHandledTimestamp()));
+            stats.lastCompleted = toMillis(managedRouteGroup.getLastExchangeCompletedTimestamp());
+            stats.meanProcessingTime = managedRouteGroup.getMeanProcessingTime();
+            stats.maxProcessingTime = managedRouteGroup.getMaxProcessingTime();
+            stats.lastProcessingTime = managedRouteGroup.getLastProcessingTime();
         }
 
         return stats;
     }
 
-    // The routes where messages enter the flow: the routes of its source steps. A step passes a message on as the
-    // same exchange over sync links, so the outcome there is the outcome of the whole flow. A route flow has no
-    // source step, so its own routes are used.
-    private List<ManagedRouteMBean> getEntryRoutes(String flowId, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-
-        List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
-        TreeMap<String, String> flowProps = flowsMap != null ? flowsMap.get(flowId) : null;
-
-        if (flowProps == null) {
-            return routes;
-        }
-
-        Set<String> sourceRouteIds = new HashSet<>();
-        for (String key : flowProps.keySet()) {
-            if (key.startsWith("source.") && key.endsWith(".uri")) {
-                sourceRouteIds.add(flowId + "-" + StringUtils.substringBetween(key, "source.", ".uri"));
+    private Counts sumOfRoutes(List<Route> routes) {
+        Counts sum = Counts.NONE;
+        for (Route route : routes) {
+            ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
+            if (managedRoute != null) {
+                sum = sum.plus(Counts.of(managedRoute));
             }
         }
+        return sum;
+    }
 
-        List<ManagedRouteMBean> sourceRoutes = routes.stream()
-                .filter(route -> sourceRouteIds.contains(route.getRouteId()))
-                .toList();
+    private static long toMillis(Date date) {
+        return date != null ? date.getTime() : 0L;
+    }
 
-        return sourceRoutes.isEmpty() ? routes : sourceRoutes;
+    // Exchange counters of Camel, with handled failures counted as failed instead of completed
+    private record Counts(long total, long completed, long failed, long pending) {
 
+        static final Counts NONE = new Counts(0, 0, 0, 0);
+
+        static Counts of(ManagedPerformanceCounterMBean counter) {
+            return new Counts(
+                    counter.getExchangesTotal(),
+                    counter.getExchangesCompleted() - counter.getFailuresHandled(),
+                    counter.getExchangesFailed() + counter.getFailuresHandled(),
+                    counter.getExchangesInflight());
+        }
+
+        Counts plus(Counts other) {
+            return new Counts(total + other.total, completed + other.completed, failed + other.failed, pending + other.pending);
+        }
+
+        // without prefix the keys are total, completed, ... and with prefix "exchanges" they are exchangesTotal, ...
+        void putInto(ObjectNode json, String prefix) {
+            json.put(key(prefix, "total"), total);
+            json.put(key(prefix, "completed"), completed);
+            json.put(key(prefix, "failed"), failed);
+            json.put(key(prefix, "pending"), pending);
+        }
+
+        private static String key(String prefix, String name) {
+            return prefix.isEmpty() ? name : prefix + StringUtils.capitalize(name);
+        }
     }
 
     private void resetFlowStatistics(String flowId) {
@@ -238,27 +241,24 @@ public class StatsManager {
         }
     }
 
-    private void populateBasicStats(JSONObject flow, FlowStatistics stats) {
-        flow.put("total", stats.totalMessages);
-        flow.put("completed", stats.completedMessages);
-        flow.put("failed", stats.failedMessages);
-        flow.put("pending", stats.pendingMessages);
-        flow.put("totalTransactions", stats.totalTransactions);
-        flow.put("completedTransactions", stats.completedTransactions);
-        flow.put("failedTransactions", stats.failedTransactions);
-        flow.put("pendingTransactions", stats.pendingTransactions);
+    private void populateBasicStats(ObjectNode flow, FlowStatistics stats) {
+        stats.exchanges.putInto(flow, "exchanges");
+        stats.transactions.putInto(flow, "transactions");
     }
 
-    private void populateDetailedStats(JSONObject flow, FlowStatistics stats) {
+    private void populateDetailedStats(ObjectNode flow, FlowStatistics stats) {
         flow.put("status", stats.status);
         flow.put("timeout", getTimeout(context));
         flow.put("uptime", stats.uptime);
         flow.put("uptimeMillis", stats.uptimeMillis);
         flow.put("lastFailed", stats.lastFailed);
         flow.put("lastCompleted", stats.lastCompleted);
+        flow.put("meanProcessingTime", stats.meanProcessingTime);
+        flow.put("maxProcessingTime", stats.maxProcessingTime);
+        flow.put("lastProcessingTime", stats.lastProcessingTime);
     }
 
-    private void populateMetadata(JSONObject flow, String flowId, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    private void populateMetadata(ObjectNode flow, String flowId, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
         TreeMap<String, String> flowProps = flowsMap.get(flowId);
         if (flowProps != null) {
             for (var flowProp : flowProps.entrySet()) {
@@ -270,30 +270,27 @@ public class StatsManager {
         }
     }
 
-    private JSONArray collectStepStatistics(String flowId) {
-        JSONArray steps = new JSONArray();
+    private ArrayNode collectStepStatistics(String flowId) {
+        ArrayNode steps = mapper.createArrayNode();
         List<Route> routes = context.getRoutesByGroup(flowId);
         for (Route route : routes) {
             String routeId = route.getId();
-            JSONObject step = getStepStats(routeId, true);
-            steps.put(step);
+            ObjectNode step = getStepStats(routeId, true);
+            steps.add(step);
         }
         return steps;
     }
 
     // Helper class to store statistics
     private static final class FlowStatistics {
-        long totalTransactions;
-        long completedTransactions;
-        long failedTransactions;
-        long pendingTransactions;
-        long totalMessages;
-        long completedMessages;
-        long failedMessages;
-        long pendingMessages;
+        Counts exchanges = Counts.NONE;
+        Counts transactions = Counts.NONE;
         long uptimeMillis;
         long lastFailed;
         long lastCompleted;
+        long meanProcessingTime;
+        long maxProcessingTime;
+        long lastProcessingTime;
         String uptime;
         String status;
     }
@@ -314,15 +311,15 @@ public class StatsManager {
 
         String routeid = flowId + "-" + stepid;
 
-        JSONObject json = getStepStats(routeid, fullStats);
-        return json.toString(4);
+        ObjectNode json = getStepStats(routeid, fullStats);
+        return toPrettyString(json);
 
     }
 
-    private JSONObject getStepStats(String routeid, boolean fullStats) {
+    private ObjectNode getStepStats(String routeid, boolean fullStats) {
 
-        JSONObject json = new JSONObject();
-        JSONObject step = new JSONObject();
+        ObjectNode json = mapper.createObjectNode();
+        ObjectNode step = mapper.createObjectNode();
 
         ManagedRouteMBean route = managedContext.getManagedRoute(routeid);
 
@@ -347,126 +344,95 @@ public class StatsManager {
 
                 String statsAsJson = route.dumpStatsAsJSon(true);
 
-                JSONObject stepStatsObject = new JSONObject(statsAsJson);
-
-                step.put("stats", stepStatsObject);
+                step.set("stats", mapper.readTree(statsAsJson));
             }
         }
 
-        json.put("step", step);
+        json.set("step", step);
 
         return json;
 
     }
 
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public String getFlowExchanges(String flowId, boolean includeSteps, String mediaType) {
 
-        JSONObject flow = createBasicFlowJson(flowId);
+        ObjectNode json = mapper.createObjectNode();
+        ObjectNode flow = createBasicFlowJson(flowId);
 
-        // Calculate basic statistics
-        FlowStatistics stats = calculateFlowStatistics(flowId, false, flowsMap);
-
-        // Populate basic stats
-        populateBasicStats(flow, stats);
+        calculateFlowStatistics(flowId, false).exchanges.putInto(flow, "");
 
         if (includeSteps) {
-            JSONArray steps = new JSONArray();
+            ArrayNode steps = flow.putArray("steps");
 
-            List<ManagedRouteMBean> routes = managedContext.getManagedRoutesByGroup(flowId);
-
-            for (ManagedRouteMBean route : routes) {
-
-                JSONObject step = new JSONObject();
-                String routeId = route.getRouteId();
-                String stepId = StringUtils.substringAfter(routeId, flowId + "-");
-                step.put("id", stepId);
-                step.put("total", route.getExchangesTotal());
-                step.put("completed", route.getExchangesCompleted() - route.getFailuresHandled());
-                step.put("failed", route.getExchangesFailed() + route.getFailuresHandled());
-                step.put("pending", route.getExchangesInflight());
-                steps.put(step);
-
+            for (ManagedRouteMBean route : managedContext.getManagedRoutesByGroup(flowId)) {
+                ObjectNode step = steps.addObject();
+                step.put("id", StringUtils.substringAfter(route.getRouteId(), flowId + "-"));
+                Counts.of(route).putInto(step, "");
             }
-
-            flow.put("steps", steps);
-
         }
 
-        String flowMessages = flow.toString(4);
+        json.set("flow", flow);
 
-        return applyMediaType(flowMessages, "json", mediaType);
+        return applyMediaType(toPrettyString(json), "json", mediaType);
 
     }
 
-    public String getFlowTotalMessages(String flowId) {
-        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        if(managedRouteGroup==null){
-            return "0";
-        }
-        return Long.toString(managedRouteGroup.getExchangesTotal());
-    }
+    public String getFlowTransactions(String flowId, String mediaType) {
 
-    public String getFlowCompletedMessages(String flowId) {
-        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        if(managedRouteGroup==null){
-            return "0";
-        }
-        long completedMessages = managedRouteGroup.getExchangesCompleted() - managedRouteGroup.getFailuresHandled();
+        ObjectNode json = mapper.createObjectNode();
+        ObjectNode flow = createBasicFlowJson(flowId);
 
-        return Long.toString(completedMessages);
+        calculateFlowStatistics(flowId, false).transactions.putInto(flow, "");
+
+        json.set("flow", flow);
+
+        return applyMediaType(toPrettyString(json), "json", mediaType);
 
     }
 
-    public String getFlowFailedMessages(String flowId) {
-        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        if(managedRouteGroup==null){
-            return "0";
-        }
-        long failedMessages = managedRouteGroup.getExchangesFailed() + managedRouteGroup.getFailuresHandled();
-
-        return Long.toString(failedMessages);
-
+    public String getFlowTotalExchanges(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).exchanges.total());
     }
 
-    public String getFlowPendingMessages(String flowId) {
-        ManagedRouteGroupMBean managedRouteGroup = managedContext.getManagedRouteGroup(flowId);
-        if(managedRouteGroup==null){
-            return "0";
-        }
-        return Long.toString(managedRouteGroup.getExchangesInflight());
+    public String getFlowCompletedExchanges(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).exchanges.completed());
     }
 
-    public String getStepMessages(String flowId, String stepId, String mediaType) {
+    public String getFlowFailedExchanges(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).exchanges.failed());
+    }
 
-        long totalMessages = 0;
-        long completedMessages = 0;
-        long failedMessages = 0;
-        long pendingMessages = 0;
+    public String getFlowPendingExchanges(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).exchanges.pending());
+    }
 
-        String routeId = flowId + "-" + stepId;
+    public String getFlowTotalTransactions(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).transactions.total());
+    }
 
-        ManagedRouteMBean route = managedContext.getManagedRoute(routeId);
+    public String getFlowCompletedTransactions(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).transactions.completed());
+    }
 
-        if (route != null) {
-            totalMessages += route.getExchangesTotal();
-            completedMessages += route.getExchangesCompleted() - route.getFailuresHandled();
-            failedMessages += route.getExchangesFailed() + route.getFailuresHandled();
-            pendingMessages += route.getExchangesInflight();
-        }
+    public String getFlowFailedTransactions(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).transactions.failed());
+    }
 
-        JSONObject json = new JSONObject();
-        JSONObject step = new JSONObject();
+    public String getFlowPendingTransactions(String flowId) {
+        return Long.toString(calculateFlowStatistics(flowId, false).transactions.pending());
+    }
+
+    public String getStepExchanges(String flowId, String stepId, String mediaType) {
+
+        ManagedRouteMBean route = managedContext.getManagedRoute(flowId + "-" + stepId);
+
+        ObjectNode json = mapper.createObjectNode();
+        ObjectNode step = json.putObject("step");
 
         step.put("id", stepId);
-        step.put("total", totalMessages);
-        step.put("completed", completedMessages);
-        step.put("failed", failedMessages);
-        step.put("pending", pendingMessages);
-        json.put("step", step);
+        (route != null ? Counts.of(route) : Counts.NONE).putInto(step, "");
 
-        String flowStats = json.toString(4);
-
-        return applyMediaType(flowStats, "json", mediaType);
+        return applyMediaType(toPrettyString(json), "json", mediaType);
 
     }
 
@@ -611,7 +577,7 @@ public class StatsManager {
 
     public String getStats(String mediaType) {
 
-        JSONObject json = new JSONObject();
+        ObjectNode json = mapper.createObjectNode();
 
         ManagedCamelContextMBean managedCamelContext = managedContext.getManagedCamelContext();
 
@@ -622,17 +588,16 @@ public class StatsManager {
         json.put("uptimeMillis", managedCamelContext.getUptimeMillis());
         json.put("startedFlows", countFlows("started"));
         json.put("startedSteps", managedCamelContext.getStartedRoutes());
-        json.put("exchangesTotal", managedCamelContext.getExchangesTotal());
-        json.put("exchangesCompleted", managedCamelContext.getExchangesCompleted() - managedCamelContext.getFailuresHandled());
-        json.put("exchangesInflight", managedCamelContext.getExchangesInflight());
-        json.put("exchangesFailed", managedCamelContext.getExchangesFailed() + managedCamelContext.getFailuresHandled());
+        // Transactions count each message once (context), exchanges count it once per step (routes)
+        sumOfRoutes(context.getRoutes()).putInto(json, "exchanges");
+        Counts.of(managedCamelContext).putInto(json, "transactions");
         json.put("cpuLoadLastMinute", managedCamelContext.getLoad01());
         json.put("cpuLoadLast5Minutes", managedCamelContext.getLoad05());
         json.put("cpuLoadLast15Minutes", managedCamelContext.getLoad15());
         json.put("memoryUsage", getMemoryUsage());
         json.put("totalThreads", ManagementFactory.getThreadMXBean().getThreadCount());
 
-        String stats = json.toString(4);
+        String stats = toPrettyString(json);
 
         return applyMediaType(stats, "json", mediaType);
 
@@ -693,10 +658,8 @@ public class StatsManager {
 
         double memoryUsagePercentage = ((double) usedMemory / maxMemory) * 100;
 
-        DecimalFormat df = new DecimalFormat("#.##");
-        memoryUsagePercentage = Double.parseDouble(df.format(memoryUsagePercentage));
-
-        return memoryUsagePercentage;
+        // round to two decimals without DecimalFormat, which uses a locale-dependent decimal separator
+        return Math.round(memoryUsagePercentage * 100.0) / 100.0;
 
     }
 
@@ -710,38 +673,35 @@ public class StatsManager {
 
     }
 
-    public String getFlowsStats(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public String getFlowsStats(boolean fullStats, String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
         Set<String> flowIds = context.getRouteGroupIds();
 
-        String result = getStatsFromList(flowIds, true, flowsMap);
+        String result = getStatsFromList(flowIds, fullStats, flowsMap);
 
         return applyMediaType(result, "json", mediaType);
 
     }
 
-    public String getStatsByFlowIds(String flowIds, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
+    public String getStatsByFlowIds(String flowIds) {
 
         String[] values = flowIds.split(",");
 
         Set<String> flowSet = new HashSet<>(Arrays.asList(values));
 
-        JSONArray flows = new JSONArray();
+        ArrayNode flows = mapper.createArrayNode();
 
         for (String flowId : flowSet) {
-            JSONObject json = new JSONObject();
-            JSONObject flow = createBasicFlowJson(flowId);
+            ObjectNode flow = createBasicFlowJson(flowId);
 
-            FlowStatistics stats = calculateFlowStatistics(flowId, true, flowsMap);
+            FlowStatistics stats = calculateFlowStatistics(flowId, true);
 
             // Populate basic stats
             populateBasicStats(flow, stats);
             populateDetailedStats(flow, stats);
 
             // Build final response
-            json.put("flow", flow);
-
-            flows.put(json);
+            flows.addObject().set("flow", flow);
         }
 
         return flows.toString();
@@ -750,35 +710,13 @@ public class StatsManager {
 
     private String getStatsFromList(Set<String> flowIds, boolean fullStats, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
 
-        JSONArray flows = new JSONArray();
+        ArrayNode flows = mapper.createArrayNode();
 
         for (String flowId : flowIds) {
-            String flowStats = getFlowStats(flowId, fullStats, false, false, flowsMap);
-            JSONObject flow = new JSONObject(flowStats);
-            flows.put(flow);
+            flows.add(buildFlowStats(flowId, fullStats, false, false, flowsMap));
         }
 
         return flows.toString();
-
-    }
-
-    public String getMessages(String mediaType, ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
-
-        Set<String> flowIds = new HashSet<>();
-
-        List<Route> routes = context.getRoutes();
-
-        for (Route route : routes) {
-            String routeId = route.getId();
-            String flowId = StringUtils.substringBefore(routeId, "-");
-            if (!flowId.isEmpty()) {
-                flowIds.add(flowId);
-            }
-        }
-
-        String result = getStatsFromList(flowIds, false, flowsMap);
-
-        return applyMediaType(result, "json", mediaType);
 
     }
 
@@ -867,6 +805,10 @@ public class StatsManager {
 
         return Integer.toString(stepIds.size());
 
+    }
+
+    private static String toPrettyString(ObjectNode json) {
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
     }
 
     private String applyMediaType(String content, String origMediaType, String destMediaType) {

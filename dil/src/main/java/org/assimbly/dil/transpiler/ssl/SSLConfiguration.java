@@ -4,6 +4,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
 import org.apache.camel.SSLContextParametersAware;
 import org.apache.camel.support.jsse.*;
+import org.assimbly.util.CertificatesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class SSLConfiguration {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
 	private static final String SERVER_IDENTITY_FILE = "server-identity.p12";
+	private static final String DEFAULT_IDENTITY_CN = "localhost";
 
 	public void setUseGlobalSslContextParameters(CamelContext context,String[] sslComponentNames) {
 		for (String sslComponent : sslComponentNames) {
@@ -60,7 +62,12 @@ public class SSLConfiguration {
 		//create keystore
 		if(keystorePath!= null && keystorePassword != null){
 
-			createKeystore(keystorePath);
+			if (createKeystore(keystorePath)) {
+				//A new Gateway gets a self-signed identity, so HTTPS sources work without adding a certificate first
+				generateDefaultIdentity(keystorePath, keystorePassword);
+			} else {
+				warnWhenNoIdentity(keystorePath, keystorePassword);
+			}
 
 			//The keystore is reloaded when the file changes (no restart needed after adding a certificate)
 			sslContextParameters.setKeyManagers(new ReloadingKeyManagersParameters(keystorePath, keystorePassword));
@@ -89,7 +96,8 @@ public class SSLConfiguration {
 	}
 
 	//This method assumes an empty server-identity.p12 is available as resource on the classpath
-	public void createKeystore(String keystorePath){
+	//Returns true when the keystore was created
+	public boolean createKeystore(String keystorePath){
 
 		File file = new File(keystorePath);
 		Path path = file.toPath();
@@ -104,6 +112,7 @@ public class SSLConfiguration {
                     assert is != null;
                     Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 					is.close();
+					return true;
 				}
 
 			} catch (IOException e) {
@@ -111,6 +120,33 @@ public class SSLConfiguration {
 			}
 		}
 
+		return false;
+
+	}
+
+	private void generateDefaultIdentity(String keystorePath, String keystorePassword) {
+		try {
+			CertificatesUtil.generateIdentity(keystorePath, keystorePassword, DEFAULT_IDENTITY_CN, null);
+			log.info("Generated a self-signed identity for '{}' in {}. Replace it under Administration > Certificates to use your own certificate.",
+					DEFAULT_IDENTITY_CN, keystorePath);
+		} catch (Exception e) {
+			log.error("Generate a self-signed identity in {} failed. HTTPS sources have no certificate until you add one.", keystorePath, e);
+		}
+	}
+
+	private void warnWhenNoIdentity(String keystorePath, String keystorePassword) {
+		try (InputStream is = Files.newInputStream(Paths.get(keystorePath))) {
+			KeyStore keystore = KeyStore.getInstance("PKCS12");
+			keystore.load(is, keystorePassword.toCharArray());
+			for (String alias : Collections.list(keystore.aliases())) {
+				if (keystore.isKeyEntry(alias)) {
+					return;
+				}
+			}
+			log.warn("Keystore {} has no identity: HTTPS sources fail the TLS handshake until you add one under Administration > Certificates.", keystorePath);
+		} catch (Exception e) {
+			log.warn("Can't read keystore {}: {}", keystorePath, e.getMessage());
+		}
 	}
 
 	public KeyStoreParameters createKeystoreParameters(String keystorePath, String keystorePassword){

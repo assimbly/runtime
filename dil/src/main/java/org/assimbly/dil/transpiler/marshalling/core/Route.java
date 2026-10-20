@@ -102,11 +102,12 @@ public class Route {
 
     }
 
-    // Without a logName, Camel names the logger after the generated route resource and line (e_1a2b…:3), so use the flow's name
+    // Without a logName, Camel names the logger after the generated route resource and line (e_1a2b…:3), so use
+    // <flow name>/<flow id>, like the flow's error handler, so the lines can be found by flow
     private void setLogNames(Element route, String flowId) {
 
         String flowName = properties.get("flow.name");
-        String logName = flowName == null || flowName.isBlank() ? flowId : flowName;
+        String logName = flowName == null || flowName.isBlank() ? flowId : flowName + "/" + flowId;
 
         NodeList logs = route.getElementsByTagName("log");
 

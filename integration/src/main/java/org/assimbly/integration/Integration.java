@@ -226,28 +226,20 @@ public interface Integration {
 	/**
 	 * Gets the stats of all flows
 	 *
+	 * @param  fullStats include status, uptime and timings, or only the exchange and transaction counts
 	 * @param  mediaType (xml or json)
 	 * @throws Exception if stats can't be retrieved
-	 * @return returns stats of integration (system)
+	 * @return returns stats per flow
 	 */
-    String getFlowsStats(String mediaType) throws Exception;
+    String getFlowsStats(boolean fullStats, String mediaType) throws Exception;
 
 	/**
-	 * Gets the stats of an integration
-	 *
-	 * @param  mediaType (xml or json)
-	 * @throws Exception if flow doesn't start
-	 * @return returns number of messages
-	 */
-    String getMessages(String mediaType) throws Exception;
-
-	/**
-	 * Gets the stats of an integration
+	 * Gets the stats of the given flows
 	 *
 	 * @param  flowIds comma separated list of flow ids
 	 * @param  mediaType (xml or json)
-	 * @throws Exception if flow doesn't start
-	 * @return returns number of messages
+	 * @throws Exception if stats can't be retrieved
+	 * @return returns stats per flow
 	 */
     String getStatsByFlowIds(String flowIds, String filter, String mediaType) throws Exception;
 
@@ -638,70 +630,116 @@ public interface Integration {
     String getFlowUptime(String flowId) throws Exception;
 
 	/**
-	* Gets the number of messages a flow has prcessed
+	* Gets the last error of a flow
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
-	* @return returns number of messages
+	* @return returns the last error
 	*/
     String getFlowLastError(String flowId) throws Exception;
 
 	/**
-	 * Gets the processed messages of a flow
+	 * Gets the exchanges of a flow (each message counted once per step)
 	 *
 	 * @param  flowId the id of the flow
-	 * @param  includeSteps Whether or not to include steps
+	 * @param  includeSteps Whether or not to include the exchanges per step
 	 * @param mediaType (XML,JSON or TEXT)
 	 * @throws Exception if flow doesn't start
-	 * @return returns number of messages (total, completed, failed, pending)
+	 * @return returns number of exchanges (total, completed, failed, pending)
 	 */
-    String getFlowMessages(String flowId, boolean includeSteps, String mediaType) throws Exception;
+    String getFlowExchanges(String flowId, boolean includeSteps, String mediaType) throws Exception;
 
 	/**
-	* Gets the total number of messages a flow has processed
+	 * Gets the transactions of a flow (each message counted once, not once per step)
+	 *
+	 * @param  flowId the id of the flow
+	 * @param mediaType (XML,JSON or TEXT)
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of transactions (total, completed, failed, pending)
+	 */
+    String getFlowTransactions(String flowId, String mediaType) throws Exception;
+
+	/**
+	* Gets the total number of exchanges of a flow
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
-	* @return returns number of messages
+	* @return returns number of exchanges
 	*/
-    String getFlowTotalMessages(String flowId) throws Exception;
+    String getFlowTotalExchanges(String flowId) throws Exception;
 
 	/**
-	* Gets the total number of completed messages a flow has processed
+	* Gets the number of completed exchanges of a flow
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
-	* @return returns number of messages
+	* @return returns number of exchanges
 	*/
-    String getFlowCompletedMessages(String flowId) throws Exception;
+    String getFlowCompletedExchanges(String flowId) throws Exception;
 
 	/**
-	* Gets the total number of failed messages a flow has processed
+	* Gets the number of failed exchanges of a flow
 	*
 	* @param  flowId the id of the flow
 	* @throws Exception if flow doesn't start
-	* @return returns number of messages
+	* @return returns number of exchanges
 	*/
-    String getFlowFailedMessages(String flowId) throws Exception;
+    String getFlowFailedExchanges(String flowId) throws Exception;
 
 	/**
-	 * Gets the total number of pending messages a flow has processed
+	 * Gets the number of pending exchanges of a flow
 	 *
 	 * @param  flowId the id of the flow
 	 * @throws Exception if flow doesn't start
-	 * @return returns number of messages
+	 * @return returns number of exchanges
 	 */
-    String getFlowPendingMessages(String flowId) throws Exception;
+    String getFlowPendingExchanges(String flowId) throws Exception;
 
 	/**
-	 * Gets the processed messaged of a step in a flow
+	 * Gets the total number of transactions of a flow (each message counted once, not once per step)
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of transactions
+	 */
+    String getFlowTotalTransactions(String flowId) throws Exception;
+
+	/**
+	 * Gets the number of completed transactions of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of transactions
+	 */
+    String getFlowCompletedTransactions(String flowId) throws Exception;
+
+	/**
+	 * Gets the number of failed transactions of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of transactions
+	 */
+    String getFlowFailedTransactions(String flowId) throws Exception;
+
+	/**
+	 * Gets the number of pending transactions of a flow
+	 *
+	 * @param  flowId the id of the flow
+	 * @throws Exception if flow doesn't start
+	 * @return returns number of transactions
+	 */
+    String getFlowPendingTransactions(String flowId) throws Exception;
+
+	/**
+	 * Gets the exchanges of a step in a flow
 	 *
 	 * @param  flowId the id of the flow
 	 * @param  stepId the id of the step
 	 * @throws Exception if flow doesn't start
-	 * @return returns number of messages (total, completed, failed, pending)
+	 * @return returns number of exchanges (total, completed, failed, pending)
 	 */
-    String getStepMessages(String flowId, String stepId, String mediaType) throws Exception;
+    String getStepExchanges(String flowId, String stepId, String mediaType) throws Exception;
 
 	/**
 	* Gets the failure log for the specified flow

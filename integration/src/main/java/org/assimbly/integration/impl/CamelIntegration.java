@@ -753,33 +753,58 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
-        return statsManager.getFlowMessages(flowId, includeSteps, mediaType, flowsMap);
+    public String getFlowExchanges(String flowId, boolean includeSteps, String mediaType) {
+        return statsManager.getFlowExchanges(flowId, includeSteps, mediaType);
     }
 
     @Override
-    public String getFlowTotalMessages(String flowId) {
-        return statsManager.getFlowTotalMessages(flowId);
+    public String getFlowTransactions(String flowId, String mediaType) {
+        return statsManager.getFlowTransactions(flowId, mediaType);
     }
 
     @Override
-    public String getFlowCompletedMessages(String flowId) {
-        return statsManager.getFlowCompletedMessages(flowId);
+    public String getFlowTotalExchanges(String flowId) {
+        return statsManager.getFlowTotalExchanges(flowId);
     }
 
     @Override
-    public String getFlowFailedMessages(String flowId) {
-        return statsManager.getFlowFailedMessages(flowId);
+    public String getFlowCompletedExchanges(String flowId) {
+        return statsManager.getFlowCompletedExchanges(flowId);
     }
 
     @Override
-    public String getFlowPendingMessages(String flowId) {
-        return statsManager.getFlowPendingMessages(flowId);
+    public String getFlowFailedExchanges(String flowId) {
+        return statsManager.getFlowFailedExchanges(flowId);
     }
 
     @Override
-    public String getStepMessages(String flowId, String stepId, String mediaType) {
-        return statsManager.getStepMessages(flowId, stepId, mediaType);
+    public String getFlowPendingExchanges(String flowId) {
+        return statsManager.getFlowPendingExchanges(flowId);
+    }
+
+    @Override
+    public String getFlowTotalTransactions(String flowId) {
+        return statsManager.getFlowTotalTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowCompletedTransactions(String flowId) {
+        return statsManager.getFlowCompletedTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowFailedTransactions(String flowId) {
+        return statsManager.getFlowFailedTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowPendingTransactions(String flowId) {
+        return statsManager.getFlowPendingTransactions(flowId);
+    }
+
+    @Override
+    public String getStepExchanges(String flowId, String stepId, String mediaType) {
+        return statsManager.getStepExchanges(flowId, stepId, mediaType);
     }
 
     @Override
@@ -987,18 +1012,13 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) {
-        return statsManager.getFlowsStats(mediaType, flowsMap);
-    }
-
-    @Override
-    public String getMessages(String mediaType) {
-        return statsManager.getMessages(mediaType, flowsMap);
+    public String getFlowsStats(boolean fullStats, String mediaType) {
+        return statsManager.getFlowsStats(fullStats, mediaType, flowsMap);
     }
 
     @Override
     public String getStatsByFlowIds(String flowIds, String filter, String mediaType) {
-        return statsManager.getStatsByFlowIds(flowIds, flowsMap);
+        return statsManager.getStatsByFlowIds(flowIds);
     }
 
     @Override

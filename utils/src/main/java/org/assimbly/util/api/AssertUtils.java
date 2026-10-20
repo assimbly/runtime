@@ -16,6 +16,13 @@ public final class AssertUtils {
     private static final String EXCHANGES_FAILED = "exchangesFailed";
     private static final String EXCHANGES_IN_FLIGHT = "exchangesInflight";
 
+    private static final String EXCHANGES_TOTAL = "exchangesTotal";
+    private static final String EXCHANGES_PENDING = "exchangesPending";
+    private static final String TRANSACTIONS_TOTAL = "transactionsTotal";
+    private static final String TRANSACTIONS_COMPLETED = "transactionsCompleted";
+    private static final String TRANSACTIONS_FAILED = "transactionsFailed";
+    private static final String TRANSACTIONS_PENDING = "transactionsPending";
+
     private static final String COMPLETED = "completed";
     private static final String FAILED = "failed";
     private static final String PENDING = "pending";
@@ -130,15 +137,15 @@ public final class AssertUtils {
         assertThat(responseJson.get(UPTIME_MILLIS).asInt()).isPositive();
         assertThat(responseJson.get("startedSteps").asInt()).isNotNegative();
         assertThat(responseJson.get("memoryUsage").asDouble()).isPositive();
-        assertThat(responseJson.get(EXCHANGES_IN_FLIGHT).asInt()).isNotNegative();
         assertThat(responseJson.get("camelVersion").asString()).isNotEmpty();
-        assertThat(responseJson.get(EXCHANGES_COMPLETED).asInt()).isNotNegative();
         assertThat(responseJson.get("camelId").asString()).isNotEmpty();
         assertThat(responseJson.get(UPTIME).asString()).isNotEmpty();
         assertThat(responseJson.get("startedFlows").asString()).isNotEmpty();
         assertThat(responseJson.get("totalThreads").asInt()).isPositive();
-        assertThat(responseJson.get("exchangesTotal").asInt()).isNotNegative();
-        assertThat(responseJson.get(EXCHANGES_FAILED).asInt()).isNotNegative();
+        for (String counter : List.of(EXCHANGES_TOTAL, EXCHANGES_COMPLETED, EXCHANGES_FAILED, EXCHANGES_PENDING,
+                TRANSACTIONS_TOTAL, TRANSACTIONS_COMPLETED, TRANSACTIONS_FAILED, TRANSACTIONS_PENDING)) {
+            assertThat(responseJson.get(counter).asInt()).as(counter).isNotNegative();
+        }
         assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
     }
 
@@ -215,46 +222,58 @@ public final class AssertUtils {
         assertThat(responseJson.get(UPTIME_MILLIS).asInt()).isPositive();
         assertThat(responseJson.get("startedSteps").isInt()).isTrue();
         assertThat(responseJson.get("memoryUsage").isDouble()).isTrue();
-        assertThat(responseJson.get(EXCHANGES_IN_FLIGHT).isInt()).isTrue();
         assertThat(responseJson.get("camelVersion")).isNotNull();
-        assertThat(responseJson.get(EXCHANGES_COMPLETED).isInt()).isTrue();
         assertThat(responseJson.get("camelId")).isNotNull();
         assertThat(responseJson.get(UPTIME)).isNotNull();
         assertThat(responseJson.get("startedFlows")).isNotNull();
         assertThat(responseJson.get("totalThreads").isInt()).isTrue();
-        assertThat(responseJson.get("exchangesTotal").isInt()).isTrue();
-        assertThat(responseJson.get(EXCHANGES_FAILED).isInt()).isTrue();
+        for (String counter : List.of(EXCHANGES_TOTAL, EXCHANGES_COMPLETED, EXCHANGES_FAILED, EXCHANGES_PENDING,
+                TRANSACTIONS_TOTAL, TRANSACTIONS_COMPLETED, TRANSACTIONS_FAILED, TRANSACTIONS_PENDING)) {
+            assertThat(responseJson.get(counter).isNumber()).as(counter).isTrue();
+        }
         assertThat(responseJson.get(STATUS).asString()).isEqualTo(status);
     }
 
     public static void assertFlowsStatsResponse(JsonNode flowJson, String status) {
         assertThat(flowJson.get(UPTIME_MILLIS).asInt()).isPositive();
-        assertThat(flowJson.get(PENDING).isInt()).isTrue();
-        assertThat(flowJson.get(COMPLETED).isInt()).isTrue();
-        assertThat(flowJson.get(FAILED).isInt()).isTrue();
+        for (String counter : List.of(EXCHANGES_TOTAL, EXCHANGES_COMPLETED, EXCHANGES_FAILED, EXCHANGES_PENDING,
+                TRANSACTIONS_TOTAL, TRANSACTIONS_COMPLETED, TRANSACTIONS_FAILED, TRANSACTIONS_PENDING)) {
+            assertThat(flowJson.get(counter).isNumber()).as(counter).isTrue();
+        }
         assertThat(flowJson.get("lastFailed")).isNotNull();
         assertThat(flowJson.get("timeout").isInt()).isTrue();
         assertThat(flowJson.get(UPTIME)).isNotNull();
-        assertThat(flowJson.get(TOTAL).isInt()).isTrue();
         assertThat(flowJson.get("lastCompleted")).isNotNull();
         assertThat(flowJson.get("id")).isNotNull();
         assertThat(flowJson.get(STATUS).asString()).isEqualTo(status);
     }
 
+    // the stats of a flow, with prefixed counters (exchangesTotal, transactionsTotal, ...)
     public static void assertEmptyFlowStatsResponse(JsonNode flowJson, String id) {
-        assertThat(flowJson.get(TOTAL).asInt()).isZero();
-        assertThat(flowJson.get(PENDING).asInt()).isZero();
         assertThat(flowJson.get("id").asString()).isEqualTo(id);
-        assertThat(flowJson.get(COMPLETED).asInt()).isZero();
-        assertThat(flowJson.get(FAILED).asInt()).isZero();
+        for (String counter : List.of(EXCHANGES_TOTAL, EXCHANGES_COMPLETED, EXCHANGES_FAILED, EXCHANGES_PENDING,
+                TRANSACTIONS_TOTAL, TRANSACTIONS_COMPLETED, TRANSACTIONS_FAILED, TRANSACTIONS_PENDING)) {
+            assertThat(flowJson.get(counter).asInt()).as(counter).isZero();
+        }
     }
 
-    public static void assertMessageStatFieldsResponse(JsonNode flowJson, String id) {
-        assertThat(flowJson.get(TOTAL).asInt()).isNotNegative();
-        assertThat(flowJson.get(PENDING).asInt()).isNotNegative();
+    // the exchanges or transactions of a flow or step, with short counters (total, completed, ...)
+    public static void assertEmptyCountsResponse(JsonNode json, String id) {
+        assertThat(json.get("id").asString()).isEqualTo(id);
+        assertThat(json.get(TOTAL).asInt()).isZero();
+        assertThat(json.get(COMPLETED).asInt()).isZero();
+        assertThat(json.get(FAILED).asInt()).isZero();
+        assertThat(json.get(PENDING).asInt()).isZero();
+    }
+
+    public static void assertFlowCountsResponse(JsonNode flowJson, String id) {
         assertThat(flowJson.get("id").asString()).isEqualTo(id);
-        assertThat(flowJson.get(COMPLETED).asInt()).isNotNegative();
-        assertThat(flowJson.get(FAILED).asInt()).isZero();
+        for (String counter : List.of(EXCHANGES_TOTAL, EXCHANGES_COMPLETED, EXCHANGES_PENDING,
+                TRANSACTIONS_TOTAL, TRANSACTIONS_COMPLETED, TRANSACTIONS_PENDING)) {
+            assertThat(flowJson.get(counter).asInt()).as(counter).isNotNegative();
+        }
+        assertThat(flowJson.get(EXCHANGES_FAILED).asInt()).isZero();
+        assertThat(flowJson.get(TRANSACTIONS_FAILED).asInt()).isZero();
     }
 
     public static void assertMetricStatFieldsResponse(List<String> fieldNames) {
