@@ -147,7 +147,7 @@ public class CamelIntegration extends BaseIntegration {
             // Keep index-paused flows stopped after context start
             flowManager.enforceDesiredPausedFlows();
 
-            configManager.setTriggerMisfireLoggingListener();
+            configManager.setTriggerMisfireWatchdog();
 
             log.info("Integration Runtime started");
         }
@@ -156,6 +156,7 @@ public class CamelIntegration extends BaseIntegration {
 
     public void stop() throws Exception {
         super.getFlowConfigurations().clear();
+        configManager.stopTriggerMisfireWatchdog();
         if (context != null) {
             for (Route route : context.getRoutes()) {
                 routeController.stopRoute(route.getId());
