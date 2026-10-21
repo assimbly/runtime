@@ -116,7 +116,9 @@ public final class ElasticStore {
                     // Schedule retry - it will call storeInternal and try to get a new permit
                     RETRY_SCHEDULER.schedule(() -> storeInternal(json, attempt + 1), delay, TimeUnit.MILLISECONDS);
                 } else {
-                    log.error("[ES-GIVEUP] Failed after " + (MAX_RETRIES + 1) + " attempts.");
+                    // The shared client's host, which may differ from this store's URI
+                    String target = client.getNodes().get(0).getHost().toURI() + path;
+                    log.error("[ES-GIVEUP] POST {} failed after {} attempts: {}", target, MAX_RETRIES + 1, ex.toString());
                 }
             }
         });
