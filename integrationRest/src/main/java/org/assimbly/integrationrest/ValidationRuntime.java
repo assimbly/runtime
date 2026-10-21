@@ -181,7 +181,8 @@ public class ValidationRuntime {
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/expression", e.getMessage(), plainResponse);
+            String errorBody = new ObjectMapper().writeValueAsString(new BadRequestResponse(e.getMessage()));
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/expression", errorBody, plainResponse);
         }
 
     }
