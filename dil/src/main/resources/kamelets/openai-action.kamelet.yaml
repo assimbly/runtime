@@ -45,12 +45,15 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-          - to:
-              uri: "openai:{{operation}}"
-              parameters:
-                apiKey: "{{apiKey}}"
-                conversationMemory: "{{conversationMemory}}"
-                model: "{{model}}"
-                systemMessage: "{{?systemMessage}}"
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - to:
+                    uri: "openai:{{operation}}"
+                    parameters:
+                      apiKey: "{{apiKey}}"
+                      conversationMemory: "{{conversationMemory}}"
+                      model: "{{model}}"
+                      systemMessage: "{{?systemMessage}}"
           - to:
               uri: "{{out}}"

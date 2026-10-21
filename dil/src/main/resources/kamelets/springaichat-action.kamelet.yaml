@@ -61,7 +61,7 @@ spec:
         uri: "{{in}}"
         steps:
           - step:
-              id: "{{routeId}}"
+              id: "step-{{stepId}}"
               steps:
                 - convertBodyTo:
                     type: String
@@ -84,6 +84,6 @@ spec:
                 - to:
                     uri: "spring-ai-chat://{{routeId}}?chatModel=#{{chatModel}}&chatMemory=#{{chatModel}}-memory"
 
-                - to:
-                    disabled: "{{sink}}"
-                    uri: "{{out}}"
+          - to:
+              disabled: "{{sink}}"
+              uri: "{{out}}"

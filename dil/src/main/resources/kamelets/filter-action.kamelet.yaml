@@ -48,14 +48,16 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-          - choice:
+          - step:
               id: "step-{{stepId}}"
-              when:
-                - expression:
-                    language:
-                      language: "{{language}}"
-                      expression: "{{expression}}"
-                  steps:
-                    - to:
-                        disabled: "{{sink}}"
-                        uri: "{{out}}"
+              steps:
+                - choice:
+                    when:
+                      - expression:
+                          language:
+                            language: "{{language}}"
+                            expression: "{{expression}}"
+                        steps:
+                          - to:
+                              disabled: "{{sink}}"
+                              uri: "{{out}}"

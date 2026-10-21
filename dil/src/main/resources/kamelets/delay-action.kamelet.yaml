@@ -40,8 +40,11 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-          - delay:
-              constant: "{{milliseconds}}"
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - delay:
+                    constant: "{{milliseconds}}"
           - to:
               disabled: "{{sink}}"
               uri: "{{out}}"

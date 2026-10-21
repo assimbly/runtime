@@ -54,25 +54,28 @@ spec:
         period: "{{period}}"
         repeatCount: "{{?numbers}}"
       steps:
-        - choice:
-            when:
-              - simple: "${variable.route:counter} == null"
-                steps:
-                  - setVariable:
-                      name: route:counter
-                      simple:
-                        expression: "{{start}}"
-                        resultType: java.lang.Integer
-            otherwise:
-              steps:
-                - setVariable:
-                    name: route:counter
-                    simple:
-                      expression: "${variable.route:counter}++"
-                      resultType: java.lang.Integer
-        - setBody:
-            simple: "${variable.route:counter}"
-        - setHeader:
-            name: "Content-Type"
-            constant: "text/plain"
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+              - choice:
+                  when:
+                    - simple: "${variable.route:counter} == null"
+                      steps:
+                        - setVariable:
+                            name: route:counter
+                            simple:
+                              expression: "{{start}}"
+                              resultType: java.lang.Integer
+                  otherwise:
+                    steps:
+                      - setVariable:
+                          name: route:counter
+                          simple:
+                            expression: "${variable.route:counter}++"
+                            resultType: java.lang.Integer
+              - setBody:
+                  simple: "${variable.route:counter}"
+              - setHeader:
+                  name: "Content-Type"
+                  constant: "text/plain"
         - to: "{{out}}"

@@ -61,7 +61,7 @@ spec:
         uri: "{{in}}"
         steps:
           - step:
-              id: "{{routeId}}"
+              id: "step-{{stepId}}"
               steps:
                 - convertBodyTo:
                     type: String

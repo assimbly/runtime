@@ -60,11 +60,14 @@ spec:
       from:
         uri: "jetty:http:{{path}}"
         steps:
-          - setExchangePattern: "InOut"
-          - setBody:
-              constant:
-                expression: X
-          - setExchangePattern: "InOnly"
-          - setBody:
-              constant:
-                expression: Y
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - setExchangePattern: "InOut"
+                - setBody:
+                    constant:
+                      expression: X
+                - setExchangePattern: "InOnly"
+                - setBody:
+                    constant:
+                      expression: Y
