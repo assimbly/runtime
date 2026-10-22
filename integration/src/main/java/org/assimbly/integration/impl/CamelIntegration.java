@@ -13,14 +13,15 @@ import tools.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import net.sf.saxon.xpath.XPathFactoryImpl;
 
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
 import org.apache.camel.language.xpath.XPathBuilder;
+import org.apache.camel.model.Model;
+import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.lang3.StringUtils;
 
@@ -67,7 +68,6 @@ public class CamelIntegration extends BaseIntegration {
     private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
     private boolean started;
     private RouteController routeController;
-    private ManagedCamelContext managed;
     private Properties encryptionProperties;
     private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
     private ConcurrentMap<String, String> collectorsMap;
@@ -489,11 +489,17 @@ public class CamelIntegration extends BaseIntegration {
 
         Pattern xmlDeclarationPattern = Pattern.compile("<\\?xml(.+?)\\?>");
         StringBuilder buf = new StringBuilder();
+        // dumped from the route model, so it also works without JMX management
+        Model model = context.getCamelContextExtension().getContextPlugin(Model.class);
+        ModelToXMLDumper dumper = PluginHelper.getModelToXMLDumper(context);
 
         for (Route route : context.getRoutes()) {
             if (route.getId().equals(id) || route.getId().startsWith(id + "-")) {
-                ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
-                String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
+                RouteDefinition definition = model.getRouteDefinition(route.getId());
+                if (definition == null) {
+                    continue;
+                }
+                String xmlConfiguration = dumper.dumpModelAsXml(context, definition, true, false, false);
                 xmlConfiguration = xmlDeclarationPattern.matcher(xmlConfiguration).replaceAll("").trim();
                 buf.append(xmlConfiguration);
             }
