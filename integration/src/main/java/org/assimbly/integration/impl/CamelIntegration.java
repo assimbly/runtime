@@ -23,6 +23,7 @@ import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.SimpleRegistry;
+import org.apache.camel.xml.LwModelToXMLDumper;
 import org.apache.commons.lang3.StringUtils;
 
 import org.assimbly.dil.loader.FlowLoaderReport;
@@ -487,11 +488,12 @@ public class CamelIntegration extends BaseIntegration {
 
     public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
 
-        Pattern xmlDeclarationPattern = Pattern.compile("<\\?xml(.+?)\\?>");
         StringBuilder buf = new StringBuilder();
         // dumped from the route model, so it also works without JMX management
         Model model = context.getCamelContextExtension().getContextPlugin(Model.class);
-        ModelToXMLDumper dumper = PluginHelper.getModelToXMLDumper(context);
+        // the light-weight dumper, as the JAXB dumper loses every step of a route from a route template (a Kamelet)
+        // when it resolves placeholders. Each route is dumped on its own, so that it gets its own template parameters.
+        ModelToXMLDumper dumper = new LwModelToXMLDumper();
 
         for (Route route : context.getRoutes()) {
             if (route.getId().equals(id) || route.getId().startsWith(id + "-")) {
@@ -499,9 +501,10 @@ public class CamelIntegration extends BaseIntegration {
                 if (definition == null) {
                     continue;
                 }
-                String xmlConfiguration = dumper.dumpModelAsXml(context, definition, true, false, false);
-                xmlConfiguration = xmlDeclarationPattern.matcher(xmlConfiguration).replaceAll("").trim();
-                buf.append(xmlConfiguration);
+                String xmlConfiguration = dumper.dumpModelAsXml(context, definition, true, false, false)
+                        .replaceFirst(" xmlns=\"http://camel.apache.org/schema/xml-io\"", "")
+                        .trim();
+                buf.append(xmlConfiguration.indent(4));
             }
         }
 
@@ -510,7 +513,7 @@ public class CamelIntegration extends BaseIntegration {
         if (camelRouteConfiguration.isEmpty()) {
             camelRouteConfiguration = "0";
         } else {
-            camelRouteConfiguration = "<routes xmlns=\"http://camel.apache.org/schema/spring\">" +
+            camelRouteConfiguration = "<routes xmlns=\"http://camel.apache.org/schema/spring\">\n" +
                     camelRouteConfiguration +
                     "</routes>";
             if (mediaType.contains("json")) {
