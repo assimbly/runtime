@@ -587,7 +587,7 @@ public class ActiveMQClassic implements Broker {
 
     public String getFlowMessageCountsList(boolean excludeEmptyQueues) throws Exception {
 
-        Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(endpointType, excludeEmptyQueues);
+        Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap("Queue", excludeEmptyQueues);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(flowIdsMessageCountMap);
@@ -745,19 +745,19 @@ public class ActiveMQClassic implements Broker {
 
         try {
             // Get all destinations
-            Set<ObjectName> destinations = broker.getManagementContext().queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",*"), null);
+            Set<ObjectName> destinations = broker.getManagementContext().queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=" + broker.getBrokerName() + ",destinationType=" + destinationType + ",destinationName=*"), null);
 
             // Iterate over each destination
             for (ObjectName destination : destinations) {
                 String destinationName = destination.getKeyProperty("destinationName");
 
-                if(!destinationName.startsWith("ID_")) {
-                    // discard destination without prefix ID_
+                if(destinationName.startsWith("DLQ_") || destinationName.startsWith("ActiveMQ.")) {
+                    // discard dead letter and broker internal destinations
                     continue;
                 }
 
                 // extract flowId
-                String flowId = destinationName.substring(0, Math.min(destinationName.length(), 27));
+                String flowId = destinationName.substring(0, Math.min(destinationName.length(), 24));
 
                 // Get the DestinationViewMBean for the current destination
                 DestinationViewMBean destinationViewMBean = getQueueViewMBean(destinationType, destinationName);
