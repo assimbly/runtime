@@ -677,13 +677,13 @@ public class ActiveMQArtemis implements Broker {
 			String[] queueNames = activeBroker.getActiveMQServerControl().getQueueNames();
 
 			for (String queueName : queueNames) {
-				if(!queueName.startsWith("ID_")) {
-					// discard queues without prefix ID_
+				if(queueName.startsWith("DLQ_")) {
+					// discard destination with prefix DLQ_
 					continue;
 				}
 
 				// extract flowId
-				String flowId = queueName.substring(0, Math.min(queueName.length(), 27));
+				String flowId = queueName.substring(0, Math.min(queueName.length(), 24));
 				QueueControl queueControl = (QueueControl) activeBroker.getManagementService().getResource(ResourceNames.QUEUE + queueName);
 
 				// Get the message count for the current queue
