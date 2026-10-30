@@ -60,6 +60,9 @@ public class SSLManager {
         //generic SSL Context
         registerSSLContext(context, registry, sslConfiguration, securityPath);
 
+        //SSL Context for flows that only trust the outbound truststore (step option sslContextParameters=strictOutbound)
+        registerStrictOutboundSSLContext(registry, sslConfiguration, securityPath);
+
         //Register the sslConfiguration globally
         sslConfiguration.setUseGlobalSslContextParameters(context, SSL_COMPONENTS);
 
@@ -104,6 +107,20 @@ public class SSLManager {
                     e.getMessage()
             );
         }
+    }
+
+    private void registerStrictOutboundSSLContext(SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath) {
+
+        String serverIdentityPath = securityPath.resolve(SERVER_IDENTITY_FILE).toString();
+
+        String outboundTrustPath = securityPath.resolve(OUTBOUND_TRUSTSTORE_FILE).toString();
+
+        registry.bind("strictOutbound", sslConfiguration.createStrictOutboundSSLContextParameters(
+                serverIdentityPath,
+                getKeystorePassword(),
+                outboundTrustPath,
+                getKeystorePassword()
+        ));
     }
 
     private void registerMutualSSLContext(String contextId, SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath, String keystoreResource, String keystorePassword) throws Exception {

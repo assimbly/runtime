@@ -95,6 +95,21 @@ public class SSLConfiguration {
 		return sslContextParameters;
 	}
 
+	//For outbound calls that should only trust the outbound truststore, not the JDK's default CAs (cacerts)
+	public SSLContextParameters createStrictOutboundSSLContextParameters(String keystorePath, String keystorePassword, String truststorePath, String truststorePassword)  {
+
+		createKeystore(truststorePath);
+
+		TrustManagersParameters tmp = new TrustManagersParameters();
+		tmp.setTrustManager(new InboundClientAcceptingTrustManager(truststorePath, truststorePassword, false));
+
+		SSLContextParameters sslContextParameters = new SSLContextParameters();
+		sslContextParameters.setKeyManagers(new ReloadingKeyManagersParameters(keystorePath, keystorePassword));
+		sslContextParameters.setTrustManagers(tmp);
+
+		return sslContextParameters;
+	}
+
 	//This method assumes an empty server-identity.p12 is available as resource on the classpath
 	//Returns true when the keystore was created
 	public boolean createKeystore(String keystorePath){

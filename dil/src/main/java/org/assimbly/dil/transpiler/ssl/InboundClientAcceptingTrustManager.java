@@ -21,6 +21,7 @@ import java.security.cert.X509Certificate;
  * Trust manager for the global SSL context.
  *
  * Server certificates (outbound calls) are trusted when the JDK's default CAs (cacerts) or the outbound truststore trust them.
+ * With trustDefaultCas set to false (the strictOutbound context) only the outbound truststore trusts them.
  * The outbound truststore is reloaded when the file changes.
  * Client certificates (inbound calls) are accepted during the TLS handshake. The TLS handshake still proves that the client
  * owns the private key of the certificate, the certificate itself is validated per flow by the MutualTlsHandler.
@@ -33,14 +34,20 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
 
     private final Path truststorePath;
     private final String truststorePassword;
+    private final boolean trustDefaultCas;
 
     private X509ExtendedTrustManager defaultTrustManager;
     private X509ExtendedTrustManager delegate;
     private FileTime delegateLastModified;
 
     public InboundClientAcceptingTrustManager(String truststorePath, String truststorePassword) {
+        this(truststorePath, truststorePassword, true);
+    }
+
+    public InboundClientAcceptingTrustManager(String truststorePath, String truststorePassword, boolean trustDefaultCas) {
         this.truststorePath = Paths.get(truststorePath);
         this.truststorePassword = truststorePassword;
+        this.trustDefaultCas = trustDefaultCas;
     }
 
     @Override
@@ -74,6 +81,14 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
     }
 
     private void checkServerTrusted(ServerCheck check) throws CertificateException {
+        if (!trustDefaultCas) {
+            X509ExtendedTrustManager outbound = getDelegate();
+            if (outbound == null) {
+                throw new CertificateException("Server certificate is not trusted: outbound truststore " + truststorePath + " has no certificates");
+            }
+            check.run(outbound);
+            return;
+        }
         try {
             check.run(getDefaultTrustManager());
         } catch (CertificateException defaultException) {
