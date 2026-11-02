@@ -56,7 +56,7 @@ import org.assimbly.dil.blocks.connections.Connection;
 import org.assimbly.dil.blocks.processors.*;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
-import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
+import org.assimbly.dil.listener.TriggerMisfireWatchdog;
 import org.assimbly.dil.loader.FlowLoader;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.dil.loader.RouteLoader;
@@ -125,6 +125,7 @@ public class CamelIntegration extends BaseIntegration {
 
 	private CamelContext context;
 	private boolean started;
+	private TriggerMisfireWatchdog triggerMisfireWatchdog;
 	private static String BROKER_HOST = "ASSIMBLY_BROKER_HOST";
 	private static String BROKER_PORT = "ASSIMBLY_BROKER_PORT";
 	private final static long stopTimeout = 300;
@@ -241,15 +242,19 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-	public void setTriggerMisfireLoggingListener() {
+	public void setTriggerMisfireWatchdog() {
 		try {
 			QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
 			if (quartzComponent != null) {
 				Scheduler scheduler = quartzComponent.getScheduler();
 				if (scheduler != null) {
-					scheduler.getListenerManager().addTriggerListener(
-							new TriggerMisfireLoggingListener()
-					);
+					long misfireThresholdMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000"));
+					long watchdogIntervalMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_WATCHDOG_INTERVAL", "5000"));
+					if (triggerMisfireWatchdog != null) {
+						triggerMisfireWatchdog.stop();
+					}
+					triggerMisfireWatchdog = new TriggerMisfireWatchdog(scheduler, misfireThresholdMs, watchdogIntervalMs);
+					triggerMisfireWatchdog.start();
 				}
 			}
 		} catch (Exception e) {
@@ -335,6 +340,12 @@ public class CamelIntegration extends BaseIntegration {
 		context.addComponent("jetty-nossl", jettyHttpComponent12);
 		context.addComponent("jetty", jettyHttpComponent12);
 		context.addComponent("rabbitmq", new SpringRabbitMQComponent());
+
+		QuartzComponent quartz = context.getComponent("quartz", QuartzComponent.class);
+		quartz.setProperties(Map.of(
+				"org.quartz.threadPool.threadCount", System.getenv().getOrDefault("QUARTZ_THREAD_COUNT", "10"),
+				"org.quartz.jobStore.misfireThreshold", System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000")
+		));
 
 		// Add bean/processors and other custom classes to the registry
 		registry.bind("AggregateStrategy", new AggregateStrategy());
@@ -996,7 +1007,7 @@ public class CamelIntegration extends BaseIntegration {
 			context.start();
 			started = true;
 
-			setTriggerMisfireLoggingListener();
+			setTriggerMisfireWatchdog();
 
 			log.info("Runtime started");
 
@@ -1006,6 +1017,10 @@ public class CamelIntegration extends BaseIntegration {
 
 	public void stop() throws Exception {
 		super.getFlowConfigurations().clear();
+		if (triggerMisfireWatchdog != null) {
+			triggerMisfireWatchdog.stop();
+			triggerMisfireWatchdog = null;
+		}
 		if (context != null){
 			for (Route route : context.getRoutes()) {
 				//routeController.stopRoute(route.getId(), stopTimeout, java.util.concurrent.TimeUnit.Seconds);
@@ -1402,12 +1417,14 @@ public class CamelIntegration extends BaseIntegration {
 	private static JmsComponent getJmsComponent(String activemqUrl) {
 
 		ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(activemqUrl);
-
+        activeMQConnectionFactory.setSendTimeout(30000); 
+		
 		PooledConnectionFactory pooledConnectionFactory = new PooledConnectionFactory();
 		pooledConnectionFactory.setConnectionFactory(activeMQConnectionFactory);
 		pooledConnectionFactory.setMaxConnections(20);
 		pooledConnectionFactory.setMaximumActiveSessionPerConnection(200);
 		pooledConnectionFactory.setIdleTimeout(10000);
+		pooledConnectionFactory.setBlockIfSessionPoolIsFullTimeout(30000);
 
 		JmsComponent jmsComponent = new JmsComponent();
 		jmsComponent.setConnectionFactory(pooledConnectionFactory);

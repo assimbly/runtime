@@ -189,6 +189,8 @@ public class MessageEvent {
                 .filter(header -> !header.getKey().startsWith(JMS_PREFIX))
                 .filter(header -> header.getValue() != null)
                 .filter(header -> !header.getKey().equals(StepCollector.COMPONENT_INIT_TIME_HEADER))
+                .filter(header -> !header.getKey().equals(StepCollector.FLOW_ID_PROPERTY))
+                .filter(header -> !header.getKey().equals(StepCollector.FLOW_VERSION_PROPERTY))
                 .filter(header -> !(header.getValue() instanceof StdScheduler))
                 .filter(header -> !(header.getValue() instanceof ScheduledThreadPoolExecutor))
                 .filter(header -> !(header.getValue() instanceof org.eclipse.jetty.ee10.servlet.ServletApiRequest))
