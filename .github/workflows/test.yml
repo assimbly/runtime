@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: "assimbly/runtime"
           ref: ${{ inputs.branch }}
@@ -29,45 +29,53 @@ jobs:
 
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Setup Maven settings.xml
-        uses: whelk-io/maven-settings-xml-action@v22
-
-        with:
-
-          repositories: >
-            [
-                {
-                  "id": "maven",
-                  "name": "Maven Central",
-                  "url": "https://repo1.maven.org/maven2"
-                },
-                {
-                  "id": "github",
-                  "name": "Assimbly Base Repository",
-                  "url": "https://maven.pkg.github.com/assimbly/base",
-                  "snapshots": {
-                    "enabled": "true"
-                  }
-                },
-                {
-                    "id": "aurea",
-                    "name": "Aurea Sonic Repository",
-                    "url": "https://int-factory.aurea.com/nexus/content/repositories/sonic-releases/"
-                }
-            ]
-          servers: >
-            [
-                {
-                    "id": "github",
-                    "username": "assimbly",
-                    "password": "${{ secrets.MAVEN_TOKEN }}"
-                }
-            ]
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+            <activeProfiles>
+              <activeProfile>github</activeProfile>
+            </activeProfiles>
+            <profiles>
+              <profile>
+                <id>github</id>
+                <repositories>
+                  <repository>
+                    <id>maven</id>
+                    <name>Maven Central</name>
+                    <url>https://repo1.maven.org/maven2</url>
+                  </repository>
+                  <repository>
+                    <id>github</id>
+                    <name>Assimbly Base Repository</name>
+                    <url>https://maven.pkg.github.com/assimbly/base</url>
+                    <snapshots>
+                      <enabled>true</enabled>
+                    </snapshots>
+                  </repository>
+                  <repository>
+                    <id>aurea</id>
+                    <name>Aurea Sonic Repository</name>
+                    <url>https://int-factory.aurea.com/nexus/content/repositories/sonic-releases/</url>
+                  </repository>
+                </repositories>
+              </profile>
+            </profiles>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>assimbly</username>
+                <password>${env.GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
 
       - name: Test project
         run: mvn test
@@ -76,7 +84,7 @@ jobs:
 
       - name: Post a Slack message in the backend dev channel
         if: failure()
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL_BACKEND_DEV }}
           webhook-type: incoming-webhook

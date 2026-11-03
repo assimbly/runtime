@@ -35,7 +35,7 @@ jobs:
     steps:
 
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: assimbly/runtime
           ref: ${{ inputs.branch }}
@@ -58,7 +58,7 @@ jobs:
           git diff-index --quiet HEAD || git commit -a -m "Update version to ${{inputs.milestone}}"
 
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@v1.3.0
         with:
           github_token: ${{ secrets.RELEASE_TOKEN }}
           repository: assimbly/runtime
