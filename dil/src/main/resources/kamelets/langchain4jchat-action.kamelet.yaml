@@ -25,13 +25,16 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
         default: false
       routeId:
         title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
         type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"

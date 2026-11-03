@@ -87,7 +87,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       routeId:
         title: "Route ID"
         type: "string"
@@ -129,4 +129,4 @@ spec:
             steps:
               - process:
                   ref: "{{kafkaHeaderDeserializer}}"
-              - to: "kamelet:sink"
+              - to: "{{out}}"

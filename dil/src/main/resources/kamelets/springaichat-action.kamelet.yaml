@@ -36,7 +36,7 @@ spec:
         default: "kamelet:source"
       out:
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       sink:
         title: "Sink"
         type: "boolean"
