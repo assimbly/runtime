@@ -327,7 +327,7 @@ public class CamelIntegration extends BaseIntegration {
 		//kameletComponent.setLocation("ref:");
 		context.addComponent("function", kameletComponent);
 
-		JettyHttpComponent12 jettyHttpComponent12 = new org.apache.camel.component.jetty12.JettyHttpComponent12();
+		JettyHttpComponent12 jettyHttpComponent12 = new InterruptSafeJettyHttpComponent();
 		jettyHttpComponent12.setRequestHeaderSize(80000);
 		jettyHttpComponent12.setResponseHeaderSize(80000);
 		jettyHttpComponent12.setBridgeErrorHandler(true);
