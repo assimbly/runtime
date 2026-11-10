@@ -400,7 +400,7 @@ public class ConfigManager {
             }
         }
 
-        Collections.sort(kamelets);
+        kamelets.sort(Comparator.naturalOrder());
 
         JSONArray jsonArray = new JSONArray(kamelets);
 

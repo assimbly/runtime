@@ -112,9 +112,9 @@ public class Route {
         NodeList logs = route.getElementsByTagName("log");
 
         for (int i = 0; i < logs.getLength(); i++) {
-            Element log = (Element) logs.item(i);
-            if (!log.hasAttribute("logName") && !log.hasAttribute("logger")) {
-                log.setAttribute("logName", logName);
+            Element logElement = (Element) logs.item(i);
+            if (!logElement.hasAttribute("logName") && !logElement.hasAttribute("logger")) {
+                logElement.setAttribute("logName", logName);
             }
         }
 

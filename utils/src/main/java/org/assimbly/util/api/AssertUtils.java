@@ -418,7 +418,7 @@ public final class AssertUtils {
     }
 
     public static void assertScriptErrorResponse(String msg) {
-        assertThat(msg).contains("failed to compile groovy script");
+        assertThat(msg).contains("syntax error");
     }
 
     public static void assertExpressionErrorResponse(JsonNode json) {

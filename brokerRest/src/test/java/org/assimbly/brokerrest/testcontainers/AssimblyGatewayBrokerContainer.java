@@ -10,6 +10,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Duration;
 
 public class AssimblyGatewayBrokerContainer {
 
@@ -24,14 +25,17 @@ public class AssimblyGatewayBrokerContainer {
 
     public void init() {
         // initialize assimbly gateway broker container
+        Duration startupTimeout = Duration.ofMinutes(3);
         gatewayBrokerContainer = new GenericContainer<>("assimbly/gateway-broker:next")
                 .withExposedPorts(8088)
                 .withNetwork(network)
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.ASSIMBLY_ENV)
                 .withEnv("MONGO_SECRET_KEY", TestApplicationContext.MONGO_SECRET_KEY)
                 .withEnv("ASSIMBLY_BROKER_JMX_PORT", TestApplicationContext.ASSIMBLY_BROKER_JMX_PORT)
-                .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
-                .waitingFor(Wait.forListeningPort())
+                // prod image locks /api/**; adding dev opens it without headless's datasource exclusions
+                .withEnv("SPRING_PROFILES_ACTIVE", "prod,dev,no-liquibase,api-docs")
+                .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1).withStartupTimeout(startupTimeout))
+                .waitingFor(Wait.forListeningPort().withStartupTimeout(startupTimeout))
                 .withFileSystemBind(getResourcePath(), "/data/.assimbly/", BindMode.READ_WRITE);
         gatewayBrokerContainer.start();
     }

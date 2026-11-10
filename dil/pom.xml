@@ -97,6 +97,15 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<!-- ConfigurableWhitelist reads ${user.home}/.assimbly/groovy/whitelist.conf -->
+						<user.home>${project.build.testOutputDirectory}/home</user.home>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

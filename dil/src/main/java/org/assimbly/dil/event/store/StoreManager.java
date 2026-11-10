@@ -56,7 +56,7 @@ public class StoreManager {
                     }
                     break;
                 default:
-                    consoleStore = new ConsoleStore(collectorId, store);
+                    consoleStore = new ConsoleStore(collectorId);
                     break;
             }
 

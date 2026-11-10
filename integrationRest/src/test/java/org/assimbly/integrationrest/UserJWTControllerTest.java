@@ -15,7 +15,6 @@ import java.util.HashMap;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 
 class UserJWTControllerTest {
@@ -35,30 +34,27 @@ class UserJWTControllerTest {
 
     @Test
     void shouldAuthenticateAndGetToken() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", TestApplicationContext.db);
 
-            // body
-            JSONObject bodyJson = new JSONObject();
-            bodyJson.put("username", "admin");
-            bodyJson.put("password", "admin");
-            bodyJson.put("rememberMe", "false");
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("db", TestApplicationContext.db);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authenticate"), bodyJson.toString(), null, headers);
+        // body
+        JSONObject bodyJson = new JSONObject();
+        bodyJson.put("username", "admin");
+        bodyJson.put("password", "admin");
+        bodyJson.put("rememberMe", "false");
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authenticate"), bodyJson.toString(), null, headers);
 
-            // asserts contents
-            assertThatJson(response.body()).inPath("id_token");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThatJson(response.body()).inPath("id_token");
+
     }
 
 }

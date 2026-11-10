@@ -288,7 +288,7 @@ public final class IntegrationUtil {
 	private static void setAttributeIfSupported(DocumentBuilderFactory factory, String attribute) {
 		try {
 			factory.setAttribute(attribute, "");
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException _) {
 			// The parser doesn't support this property.
 		}
 	}

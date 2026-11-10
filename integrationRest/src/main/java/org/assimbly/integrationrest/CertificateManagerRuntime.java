@@ -47,7 +47,6 @@ public class CertificateManagerRuntime {
     private static final String TRUSTSTORE = CertificatesUtil.TRUSTSTORE_FILE;
     private static final String IDENTITY_STORE = CertificatesUtil.IDENTITY_STORE_FILE;
 
-    // names that are also literal paths next to /certificates/{certificateName} and /certificates/identity/{certificateName}
     private static final Set<String> RESERVED_CERTIFICATE_NAMES = Set.of("identity", "expired", "expiring");
     private static final Set<String> RESERVED_IDENTITY_NAMES = Set.of("generate");
 
@@ -63,7 +62,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Get all certificates in the keystore with their expiry")
     @GetMapping(path = "/certificates", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> listCertificates(
+    public ResponseEntity<Object> listCertificates(
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
@@ -72,7 +71,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Get a certificate in the keystore with its expiry")
     @GetMapping(path = "/certificates/{certificateName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCertificate(
+    public ResponseEntity<Object> getCertificate(
             @PathVariable(value = "certificateName") String certificateName,
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
@@ -173,7 +172,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Get the certificates in the keystore that expire within a number of days")
     @GetMapping(path = "/certificates/expiring/{numberOfDays}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getExpiringCertificates(
+    public ResponseEntity<Object> getExpiringCertificates(
             @PathVariable(value = "numberOfDays") int numberOfDays,
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
@@ -181,7 +180,7 @@ public class CertificateManagerRuntime {
         log.debug("REST request to get the certificates in keystore {} that expire within {} days", keystoreName, numberOfDays);
 
         if (numberOfDays < 0) {
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expiring/{numberOfDays}", "numberOfDays can't be negative");
+            return jsonFailure("/certificates/expiring/{numberOfDays}", "numberOfDays can't be negative");
         }
 
         try {
@@ -192,13 +191,13 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(expiring);
         } catch (Exception e) {
             log.error("Get the expiring certificates in keystore {} failed", keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expiring/{numberOfDays}", e.getMessage());
+            return jsonFailure("/certificates/expiring/{numberOfDays}", e.getMessage());
         }
     }
 
     @Operation(summary = "Get the expired certificates in the keystore")
     @GetMapping(path = "/certificates/expired", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getExpiredCertificates(
+    public ResponseEntity<Object> getExpiredCertificates(
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
@@ -211,13 +210,13 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(expiredCertificates(expired, now));
         } catch (Exception e) {
             log.error("Get the expired certificates in keystore {} failed", keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expired", e.getMessage());
+            return jsonFailure("/certificates/expired", e.getMessage());
         }
     }
 
     @Operation(summary = "Delete the expired certificates from the keystore", description = "Returns the deleted certificates. Expired key entries (identities with a private key) are kept.")
     @DeleteMapping(path = "/certificates/expired", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> deleteExpiredCertificates(
+    public ResponseEntity<Object> deleteExpiredCertificates(
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
@@ -230,7 +229,7 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(expiredCertificates(deleted, now));
         } catch (Exception e) {
             log.error("Delete the expired certificates in keystore {} failed", keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/expired", e.getMessage());
+            return jsonFailure("/certificates/expired", e.getMessage());
         }
     }
 
@@ -241,7 +240,7 @@ public class CertificateManagerRuntime {
             description = "The certificates stored for the domain as <domain>-root-ca, <domain>-intermediate-ca(-n) and <domain>-leaf."
     )
     @GetMapping(path = "/certificates/domain/{domain}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getDomainCertificates(
+    public ResponseEntity<Object> getDomainCertificates(
             @PathVariable(value = "domain") String domain,
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
@@ -254,7 +253,7 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(certificatesExpiry(certificates));
         } catch (Exception e) {
             log.error("Get the certificates of domain {} in keystore {} failed", domain, keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/domain/{domain}", e.getMessage());
+            return jsonFailure("/certificates/domain/{domain}", e.getMessage());
         }
     }
 
@@ -300,7 +299,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Delete the downloaded certificates of a domain from the keystore", description = "Returns the deleted certificates.")
     @DeleteMapping(path = "/certificates/domain/{domain}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> deleteDomainCertificates(
+    public ResponseEntity<Object> deleteDomainCertificates(
             @PathVariable(value = "domain") String domain,
             @RequestHeader(value = "keystoreName", required = false, defaultValue = TRUSTSTORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
@@ -317,7 +316,7 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(certificatesExpiry(deleted));
         } catch (Exception e) {
             log.error("Delete the certificates of domain {} from keystore {} failed", domain, keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, "/certificates/domain/{domain}", e.getMessage());
+            return jsonFailure("/certificates/domain/{domain}", e.getMessage());
         }
     }
 
@@ -350,7 +349,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Get all identities in the keystore with their expiry")
     @GetMapping(path = "/certificates/identity", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> listIdentities(
+    public ResponseEntity<Object> listIdentities(
             @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
     ) {
@@ -359,7 +358,7 @@ public class CertificateManagerRuntime {
 
     @Operation(summary = "Get an identity in the keystore with its expiry")
     @GetMapping(path = "/certificates/identity/{certificateName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getIdentity(
+    public ResponseEntity<Object> getIdentity(
             @PathVariable(value = "certificateName") String certificateName,
             @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
             @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
@@ -460,18 +459,18 @@ public class CertificateManagerRuntime {
 
     // --- shared ---------------------------------------------------------------------------------------------------
 
-    private ResponseEntity<?> list(String keystoreName, String keystorePassword, String path) {
+    private ResponseEntity<Object> list(String keystoreName, String keystorePassword, String path) {
         log.debug("REST request to get the certificates in keystore {}", keystoreName);
 
         try {
             return ResponseEntity.ok(certificatesExpiry(keystoreName, password(keystorePassword)));
         } catch (Exception e) {
             log.error("Get the certificates in keystore {} failed", keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, path, e.getMessage());
+            return jsonFailure(path, e.getMessage());
         }
     }
 
-    private ResponseEntity<?> get(String certificateName, String keystoreName, String keystorePassword, String path) {
+    private ResponseEntity<Object> get(String certificateName, String keystoreName, String keystorePassword, String path) {
         log.debug("REST request to get certificate {} in keystore {}", certificateName, keystoreName);
 
         try {
@@ -482,7 +481,7 @@ public class CertificateManagerRuntime {
             return ResponseEntity.ok(CertificateExpiry.of(certificateName, certificate, Instant.now()));
         } catch (Exception e) {
             log.error("Get certificate {} in keystore {} failed", certificateName, keystoreName, e);
-            return ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, path, e.getMessage());
+            return jsonFailure(path, e.getMessage());
         }
     }
 
@@ -525,6 +524,11 @@ public class CertificateManagerRuntime {
             return ResponseEntity.status(HttpStatus.CONFLICT).headers(response.getHeaders()).body(response.getBody());
         }
         return response;
+    }
+
+    private static ResponseEntity<Object> jsonFailure(String path, String message) {
+        ResponseEntity<String> response = ResponseUtil.createFailureResponse(1L, MediaType.APPLICATION_JSON_VALUE, path, message);
+        return ResponseEntity.status(response.getStatusCode()).headers(response.getHeaders()).body(response.getBody());
     }
 
     private void warnIfExpired(List<X509Certificate> certificates) {

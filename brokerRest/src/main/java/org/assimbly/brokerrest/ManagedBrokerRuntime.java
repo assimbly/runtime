@@ -225,35 +225,25 @@ public class ManagedBrokerRuntime {
     }
 
     public String countMessagesFromList(String brokerType, String endpointNames) throws Exception {
-
         Broker broker = getBroker(brokerType);
-        String result = broker.countMessagesFromList(endpointNames);
-
-        return result;
+        return broker.countMessagesFromList(endpointNames);
     }
 
     public String getFlowMessageCountsList(String brokerType, boolean excludeEmptyQueues) throws Exception {
-
         Broker broker = getBroker(brokerType);
-        String result = broker.getFlowMessageCountsList(excludeEmptyQueues);
-
-        return result;
+        return broker.getFlowMessageCountsList(excludeEmptyQueues);
     }
 
     public String countMessages(String brokerType, String endpointName) throws Exception {
-
         Broker broker = getBroker(brokerType);
-        String result = broker.countMessages(endpointName);
-
-        return result;
+        return broker.countMessages(endpointName);
     }
 
     public String countDelayedMessages(String brokerType, String endpointName) throws Exception {
 
         Broker broker = getBroker(brokerType);
-        String result = broker.countDelayedMessages(endpointName);
+        return broker.countDelayedMessages(endpointName);
 
-        return result;
     }
 
 

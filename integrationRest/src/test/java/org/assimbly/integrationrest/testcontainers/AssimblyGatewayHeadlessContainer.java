@@ -11,6 +11,7 @@ import org.testcontainers.mongodb.MongoDBContainer;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Duration;
 
 
 public class AssimblyGatewayHeadlessContainer {
@@ -39,13 +40,14 @@ public class AssimblyGatewayHeadlessContainer {
         }
 
         // initialize assimbly gateway container
+        Duration startupTimeout = Duration.ofMinutes(3);
         gatewayHeadlessContainer = new GenericContainer<>("assimbly/gateway-headless:next")
                 .withExposedPorts(8088)
                 .withNetwork(network)
                 .withEnv("ASSIMBLY_ENV", TestApplicationContext.assimblyEnv)
                 .withEnv("MONGO_SECRET_KEY",TestApplicationContext.mongoSecretKey)
-                .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1))
-                .waitingFor(Wait.forListeningPort())
+                .waitingFor(Wait.forLogMessage(".*Assimbly is running!.*", 1).withStartupTimeout(startupTimeout))
+                .waitingFor(Wait.forListeningPort().withStartupTimeout(startupTimeout))
                 .withFileSystemBind(getResourceSecurityPath(), "/data/.assimbly/security/", BindMode.READ_WRITE)
                 .withFileSystemBind("/tmp/jeka", "/data/.jeka", BindMode.READ_WRITE); // bind a writable directory to prevent AccessDeniedException on /data/.jeka
         gatewayHeadlessContainer.start();

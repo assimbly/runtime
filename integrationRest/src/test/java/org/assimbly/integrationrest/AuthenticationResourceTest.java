@@ -16,7 +16,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -44,113 +43,101 @@ public class AuthenticationResourceTest {
     }
 
     public static void generateAuthToken() {
-        try {
-            // create user on mongodb
-            MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
-            headers.put("db", TestApplicationContext.db);
+        // create user on mongodb
+        MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/db/authenticate"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
+        headers.put("db", TestApplicationContext.db);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/db/authenticate"), null, headers);
 
-            // authToken to be used on other unit tests
-            authToken = response.body();
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // authToken to be used on other unit tests
+        authToken = response.body();
+
     }
 
     @Test
     @Order(2)
-    void shouldRegisterAuthentication() {
-        try {
-            // check for necessary data before continue
-            assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
+    void shouldRegisterAuthentication() throws Exception {
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("db", TestApplicationContext.db);
-            headers.put("domainName", TestApplicationContext.domainName);
-            headers.put("Authorization", authToken);
+        // check for necessary data before continue
+        assumeTrue(authToken != null, "Skipping shouldRegisterAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath( "/api/authentication/register"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("db", TestApplicationContext.db);
+        headers.put("domainName", TestApplicationContext.domainName);
+        headers.put("Authorization", authToken);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath( "/api/authentication/register"), null, headers);
 
-            // asserts contents
-            assertThat(response.headers().map()).containsKey("location");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // totpSecret to be used on other unit tests
-            String location = response.headers().map().get("location").getFirst();
-            location = URLDecoder.decode(location, "UTF-8");
-            totpSecret = HttpUtil.extractSecret(location);
+        // asserts contents
+        assertThat(response.headers().map()).containsKey("location");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // totpSecret to be used on other unit tests
+        String location = response.headers().map().get("location").getFirst();
+        location = URLDecoder.decode(location, "UTF-8");
+        totpSecret = HttpUtil.extractSecret(location);
+
     }
 
     @Test
     @Order(3)
     void shouldValidateAuthentication() {
-        try {
-            // check for necessary data before continue
-            assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        // check for necessary data before continue
+        assumeTrue(totpSecret != null, "Skipping shouldValidateAuthentication test because shouldRegisterAuthentication test did not run.");
 
-            // body
-            Document bodyDoc = new Document();
-            bodyDoc.append("email", TestApplicationContext.emailUser);
-            bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authentication/validate"), bodyDoc.toJson(), null, headers);
+        // body
+        Document bodyDoc = new Document();
+        bodyDoc.append("email", TestApplicationContext.emailUser);
+        bodyDoc.append("token", GoogleTOTPUtil.generateToken(totpSecret));
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/authentication/validate"), bodyDoc.toJson(), null, headers);
 
-            // asserts contents
-            assertThat(response.body()).isEqualTo("true");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(response.body()).isEqualTo("true");
+
     }
 
     @Test
     @Order(4)
     void shouldRemoveAuthentication() {
-        try {
-            // check for necessary data before continue
-            assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Authorization", authToken);
+        // check for necessary data before continue
+        assumeTrue(authToken != null, "Skipping shouldRemoveAuthentication test because shouldAuthenticateAndGenerateDBToken test did not run.");
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/authentication/remove"), null, null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Authorization", authToken);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.deleteRequest(container.buildGatewayHeadlessApiPath("/api/authentication/remove"), null, null, headers);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+
     }
 
 }

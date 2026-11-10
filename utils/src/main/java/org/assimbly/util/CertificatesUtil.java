@@ -308,7 +308,10 @@ public final class CertificatesUtil {
 
 	/** Lowercase, with every run of characters other than a-z and 0-9 replaced by a hyphen. */
 	private static String toAlias(String name) {
-		return NON_ALIAS_CHARACTERS.matcher(name.toLowerCase(Locale.ROOT)).replaceAll("-").replaceAll("^-+|-+$", "");
+		String alias = NON_ALIAS_CHARACTERS.matcher(name.toLowerCase(Locale.ROOT)).replaceAll("-");
+		int start = alias.startsWith("-") ? 1 : 0;
+		int end = alias.length() > start && alias.endsWith("-") ? alias.length() - 1 : alias.length();
+		return alias.substring(start, end);
 	}
 
 	/**
@@ -326,70 +329,95 @@ public final class CertificatesUtil {
 
 	static Map<String, Certificate> selectCertificates(String url, Certificate[] chain, String certificateType, X509Certificate[] trustAnchors) throws CertificateException {
 
-		String type = certificateType == null || certificateType.isBlank() ? CERTIFICATE_TYPE_ROOT : certificateType.trim().toLowerCase(Locale.ROOT);
-		if (!CERTIFICATE_TYPES.contains(type)) {
-			throw new IllegalArgumentException("Unknown certificateType '" + certificateType + "' (expected root, intermediate, leaf or all)");
-		}
+		String type = certificateType(certificateType);
 
 		if (chain == null || chain.length == 0) {
 			throw new CertificateException("No certificates downloaded from " + url);
 		}
 
 		String prefix = certificateAliasPrefix(url);
-
-		X509Certificate leaf = (X509Certificate) chain[0];
-		X509Certificate root = null;
-		List<X509Certificate> intermediates = new ArrayList<>();
-
-		for (int i = 1; i < chain.length; i++) {
-			X509Certificate certificate = (X509Certificate) chain[i];
-			if (root == null && isSelfSigned(certificate)) {
-				root = certificate;
-			} else {
-				intermediates.add(certificate);
-			}
-		}
+		DownloadedChain downloaded = DownloadedChain.of(chain);
 
 		boolean includeRoot = type.equals(CERTIFICATE_TYPE_ROOT) || type.equals(CERTIFICATE_TYPE_ALL);
 		boolean includeIntermediates = type.equals(CERTIFICATE_TYPE_INTERMEDIATE) || type.equals(CERTIFICATE_TYPE_ALL);
 		boolean includeLeaf = type.equals(CERTIFICATE_TYPE_LEAF) || type.equals(CERTIFICATE_TYPE_ALL);
 
-		if (root == null && includeRoot) {
-			if (intermediates.isEmpty() && isSelfSigned(leaf)) {
-				root = leaf;
-			} else {
-				// servers usually don't send the root: find the trusted issuer of the chain, walking up from the leaf
-				X509Certificate[] anchors = trustAnchors != null ? trustAnchors : defaultTrustAnchors();
-				for (int i = 0; i < chain.length && root == null; i++) {
-					root = findTrustAnchor((X509Certificate) chain[i], anchors);
-				}
-			}
-		}
-
 		Map<String, Certificate> selected = new LinkedHashMap<>();
 
+		X509Certificate root = null;
 		if (includeRoot) {
-			if (root == null) {
-				throw new CertificateException("Root certificate for " + prefix + " was not sent by the server and was not found in the JVM default truststore");
-			}
+			root = rootOf(downloaded, trustAnchors, prefix);
 			selected.put(prefix + "-root-ca", root);
 		}
 
 		if (includeIntermediates) {
-			if (intermediates.isEmpty() && !type.equals(CERTIFICATE_TYPE_ALL)) {
+			if (downloaded.intermediates().isEmpty() && !type.equals(CERTIFICATE_TYPE_ALL)) {
 				throw new CertificateException("The server of " + url + " didn't send any intermediate certificates");
 			}
-			for (int i = 0; i < intermediates.size(); i++) {
-				selected.put(prefix + "-intermediate-ca" + (i == 0 ? "" : "-" + (i + 1)), intermediates.get(i));
-			}
+			putIntermediates(selected, prefix, downloaded.intermediates());
 		}
 
 		// a self-signed leaf is its own root, store it only once
-		if (includeLeaf && !(includeRoot && leaf.equals(root))) {
-			selected.put(prefix + "-leaf", leaf);
+		if (includeLeaf && !downloaded.leaf().equals(root)) {
+			selected.put(prefix + "-leaf", downloaded.leaf());
 		}
 
 		return selected;
+	}
+
+	/** The peer certificates split into the leaf, the root when the server sent it (the first self-signed one) and the others. */
+	private record DownloadedChain(X509Certificate leaf, X509Certificate root, List<X509Certificate> intermediates) {
+
+		static DownloadedChain of(Certificate[] chain) {
+			X509Certificate root = null;
+			List<X509Certificate> intermediates = new ArrayList<>();
+			for (int i = 1; i < chain.length; i++) {
+				X509Certificate certificate = (X509Certificate) chain[i];
+				if (root == null && isSelfSigned(certificate)) {
+					root = certificate;
+				} else {
+					intermediates.add(certificate);
+				}
+			}
+			return new DownloadedChain((X509Certificate) chain[0], root, intermediates);
+		}
+	}
+
+	private static String certificateType(String certificateType) {
+		String type = certificateType == null || certificateType.isBlank() ? CERTIFICATE_TYPE_ROOT : certificateType.trim().toLowerCase(Locale.ROOT);
+		if (!CERTIFICATE_TYPES.contains(type)) {
+			throw new IllegalArgumentException("Unknown certificateType '" + certificateType + "' (expected root, intermediate, leaf or all)");
+		}
+		return type;
+	}
+
+	private static X509Certificate rootOf(DownloadedChain chain, X509Certificate[] trustAnchors, String prefix) throws CertificateException {
+		if (chain.root() != null) {
+			return chain.root();
+		}
+		if (chain.intermediates().isEmpty() && isSelfSigned(chain.leaf())) {
+			return chain.leaf();
+		}
+
+		// servers usually don't send the root: find the trusted issuer of the chain, walking up from the leaf
+		X509Certificate[] anchors = trustAnchors != null ? trustAnchors : defaultTrustAnchors();
+		List<X509Certificate> certificates = new ArrayList<>();
+		certificates.add(chain.leaf());
+		certificates.addAll(chain.intermediates());
+		for (X509Certificate certificate : certificates) {
+			X509Certificate root = findTrustAnchor(certificate, anchors);
+			if (root != null) {
+				return root;
+			}
+		}
+
+		throw new CertificateException("Root certificate for " + prefix + " was not sent by the server and was not found in the JVM default truststore");
+	}
+
+	private static void putIntermediates(Map<String, Certificate> selected, String prefix, List<X509Certificate> intermediates) {
+		for (int i = 0; i < intermediates.size(); i++) {
+			selected.put(prefix + "-intermediate-ca" + (i == 0 ? "" : "-" + (i + 1)), intermediates.get(i));
+		}
 	}
 
 	/**
@@ -628,8 +656,9 @@ public final class CertificatesUtil {
 	/** Decodes base64 content, ignoring line breaks and a data URL prefix (data:...;base64,). */
 	static byte[] decodeBase64(String content) {
 		String base64 = content.trim();
-		if (base64.startsWith("data:") && base64.indexOf(',') > 0) {
-			base64 = base64.substring(base64.indexOf(',') + 1);
+		int comma = base64.indexOf(',');
+		if (base64.startsWith("data:") && comma >= 0) {
+			base64 = base64.substring(comma + 1);
 		}
 		return Base64.getMimeDecoder().decode(base64);
 	}
@@ -1022,18 +1051,14 @@ public final class CertificatesUtil {
 		Provider bcProvider = new BouncyCastleProvider();
 		Security.addProvider(bcProvider);
 
-		long now = System.currentTimeMillis();
-		Date startDate = new Date(now);
+		Instant now = Instant.now();
+		ZoneId zone = ZoneId.systemDefault();
+		Date startDate = Date.from(now);
 
 		X500Name dnName = new X500Name("CN=" + subjectDN);
-		BigInteger certSerialNumber = new BigInteger(Long.toString(now)); // <-- Using the current timestamp as the certificate serial number
+		BigInteger certSerialNumber = BigInteger.valueOf(now.toEpochMilli()); // <-- Using the current timestamp as the certificate serial number
 
-		Date endDate = Date.from(startDate.toInstant()
-				.atZone(ZoneId.systemDefault())
-				.toLocalDate()
-				.plusYears(2)
-				.atStartOfDay(ZoneId.systemDefault())
-				.toInstant());
+		Date endDate = Date.from(now.atZone(zone).toLocalDate().plusYears(2).atStartOfDay(zone).toInstant());
 
 		String signatureAlgorithm = "SHA256WithRSA"; // <-- Use appropriate signature algorithm based on your keyPair algorithm.
 

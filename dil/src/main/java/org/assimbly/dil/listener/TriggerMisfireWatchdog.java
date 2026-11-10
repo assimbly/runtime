@@ -7,7 +7,7 @@ import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -71,18 +71,18 @@ public class TriggerMisfireWatchdog {
             return;
         }
 
-        Date now = new Date();
-        Date lateCutoff = new Date(now.getTime() - misfireThresholdMs);
+        Instant now = Instant.now();
+        Instant lateCutoff = now.minusMillis(misfireThresholdMs);
         Set<TriggerKey> keys = scheduler.getTriggerKeys(GroupMatcher.anyTriggerGroup());
 
         for (TriggerKey key : keys) {
             inspectTrigger(key, lateCutoff);
         }
 
-        TriggerMisfireLog.pruneOlderThan(new Date(now.getTime() - (misfireThresholdMs * 10)));
+        TriggerMisfireLog.pruneOlderThan(now.minusMillis(misfireThresholdMs * 10));
     }
 
-    private void inspectTrigger(TriggerKey key, Date lateCutoff) throws Exception {
+    private void inspectTrigger(TriggerKey key, Instant lateCutoff) throws Exception {
         Trigger.TriggerState state = scheduler.getTriggerState(key);
         if (state != Trigger.TriggerState.NORMAL && state != Trigger.TriggerState.BLOCKED) {
             return;
@@ -93,34 +93,37 @@ public class TriggerMisfireWatchdog {
             return;
         }
 
-        Date nextFireTime = trigger.getNextFireTime();
+        var nextFireTime = trigger.getNextFireTime();
         if (nextFireTime == null) {
             TriggerMisfireLog.clearTrigger(key);
             return;
         }
-        if (nextFireTime.after(lateCutoff)) {
+        if (nextFireTime.toInstant().isAfter(lateCutoff)) {
             // On schedule again — reset only if the job actually ran after the last miss.
             TriggerMisfireLog.clearIfRecovered(trigger);
             return;
         }
 
-        logMissedFires(trigger, key, nextFireTime, lateCutoff);
+        logMissedFires(trigger, key, lateCutoff);
     }
 
-    private void logMissedFires(Trigger trigger, TriggerKey key, Date nextFireTime, Date lateCutoff) {
-        Date missed = nextFireTime;
+    private void logMissedFires(Trigger trigger, TriggerKey key, Instant lateCutoff) {
+        // Quartz's getFireTimeAfter only accepts java.util.Date, so keep the Quartz value alongside the Instant.
+        var missedDate = trigger.getNextFireTime();
+        Instant missed = missedDate.toInstant();
         int count = 0;
-        while (missed != null && !missed.after(lateCutoff) && count < MAX_MISSES_PER_TRIGGER) {
+        while (!missed.isAfter(lateCutoff) && count < MAX_MISSES_PER_TRIGGER) {
             TriggerMisfireLog.logIfNew(trigger, missed);
-            Date after = trigger.getFireTimeAfter(missed);
-            if (after == null || !after.after(missed)) {
+            var afterDate = trigger.getFireTimeAfter(missedDate);
+            if (afterDate == null || !afterDate.toInstant().isAfter(missed)) {
                 break;
             }
-            missed = after;
+            missedDate = afterDate;
+            missed = afterDate.toInstant();
             count++;
         }
 
-        if (count >= MAX_MISSES_PER_TRIGGER && missed != null && !missed.after(lateCutoff)) {
+        if (count >= MAX_MISSES_PER_TRIGGER && !missed.isAfter(lateCutoff)) {
             log.warn("Trigger {}/{} has additional missed fires beyond the log limit of {}",
                     key.getGroup(), key.getName(), MAX_MISSES_PER_TRIGGER);
         }

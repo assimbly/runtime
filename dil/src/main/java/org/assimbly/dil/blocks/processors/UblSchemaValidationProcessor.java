@@ -63,7 +63,7 @@ public class UblSchemaValidationProcessor implements Processor {
 		try {
 			Method method = UBL21Marshaller.class.getMethod("getAll" + documentType + "XSDs");
 			return (List<ClassPathResource>) method.invoke(null);
-		} catch (NoSuchMethodException e) {
+		} catch (NoSuchMethodException _) {
 			throw new IllegalArgumentException("Not a UBL 2.1 document: unknown document type '" + documentType + "'");
 		} catch (ReflectiveOperationException e) {
 			throw new IllegalStateException("Could not get UBL 2.1 schemas for " + documentType, e);

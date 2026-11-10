@@ -14,6 +14,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Jetty handler that enforces mutual TLS for the path of an HTTPS source.
@@ -33,7 +34,7 @@ public class MutualTlsHandler extends Handler.Wrapper {
 
     private volatile String path;
     private volatile boolean matchOnUriPrefix;
-    private volatile X509TrustManager trustManager;
+    private final AtomicReference<X509TrustManager> trustManager = new AtomicReference<>();
 
     private MutualTlsHandler(String connectionId) {
         this.connectionId = connectionId;
@@ -46,13 +47,15 @@ public class MutualTlsHandler extends Handler.Wrapper {
     public void configure(String path, boolean matchOnUriPrefix, X509TrustManager trustManager) {
         this.path = normalizePath(path);
         this.matchOnUriPrefix = matchOnUriPrefix;
-        this.trustManager = trustManager;
+        this.trustManager.set(trustManager);
     }
 
     @Override
     public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
-        if (!isProtectedPath(request.getHttpURI().getCanonicalPath())) {
+        X509TrustManager currentTrustManager = trustManager.get();
+
+        if (currentTrustManager == null || !isProtectedPath(request.getHttpURI().getCanonicalPath())) {
             return super.handle(request, response, callback);
         }
 
@@ -68,7 +71,7 @@ public class MutualTlsHandler extends Handler.Wrapper {
         }
 
         try {
-            trustManager.checkClientTrusted(chain, chain[0].getPublicKey().getAlgorithm());
+            currentTrustManager.checkClientTrusted(chain, chain[0].getPublicKey().getAlgorithm());
         } catch (CertificateException e) {
             log.warn("Mutual TLS for connection {}: request to {} rejected, client certificate subject={} issuer={} is not trusted. Reason: {}",
                     connectionId, request.getHttpURI().getPath(), chain[0].getSubjectX500Principal(), chain[0].getIssuerX500Principal(), e.getMessage());
@@ -82,7 +85,7 @@ public class MutualTlsHandler extends Handler.Wrapper {
 
     private boolean isProtectedPath(String requestPath) {
 
-        if (requestPath == null || trustManager == null) {
+        if (requestPath == null) {
             return false;
         }
 

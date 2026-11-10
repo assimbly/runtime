@@ -8,7 +8,7 @@ public class ConsoleStore {
 
     private final Logger log;
 
-    public ConsoleStore(String collectorId, org.assimbly.dil.event.domain.Store store) {
+    public ConsoleStore(String collectorId) {
         log = LoggerFactory.getLogger("org.assimbly.collector." + collectorId);
     }
 

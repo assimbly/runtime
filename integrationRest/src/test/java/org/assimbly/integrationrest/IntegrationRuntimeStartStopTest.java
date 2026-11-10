@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class IntegrationRuntimeStartStopTest {
@@ -57,79 +56,70 @@ class IntegrationRuntimeStartStopTest {
     @Test
     @Order(1)
     void shouldReturnErrorOnStart() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/start"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/start"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST_400);
 
-            // asserts contents
-            AssertUtils.assertErrorGenericResponse(responseJson, "Integration already running");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertErrorGenericResponse(responseJson, "Integration already running");
+
     }
 
     @Test
     @Order(2)
     void shouldStop() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stop"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stop"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Integration stopped");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulGenericResponse(responseJson, "Integration stopped");
+
     }
 
     @Test
     @Order(3)
     void shouldStart() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/start"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Content-type", MediaType.TEXT_PLAIN_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/start"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "Integration started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulGenericResponse(responseJson, "Integration started");
+
     }
 
 }

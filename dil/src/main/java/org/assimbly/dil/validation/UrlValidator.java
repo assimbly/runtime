@@ -48,24 +48,27 @@ public class UrlValidator {
                 return INVALID_URL_ERROR;
             }
 
-            Exception lastFailure = null;
+            ValidationErrorMessage lastFailure = UNREACHABLE_ERROR;
             for (String userAgent : userAgents) {
-                try {
-                    attemptConnection(decodedUrl, userAgent);
+                lastFailure = checkConnection(decodedUrl, userAgent);
+                if (lastFailure == null) {
                     return null;
-                } catch (UnknownHostException _) {
-                    return UNREACHABLE_ERROR;
-                } catch (IOException e) {
-                    // includes SocketTimeoutException: try the next User-Agent
-                    lastFailure = e;
                 }
             }
+            return lastFailure;
 
-            if (lastFailure != null) {
-                return new ValidationErrorMessage(lastFailure.getMessage());
-            }
-            return UNREACHABLE_ERROR;
         } catch (Exception e) {
+            return new ValidationErrorMessage(e.getMessage());
+        }
+    }
+
+    private ValidationErrorMessage checkConnection(String decodedUrl, String userAgent) {
+        try {
+            attemptConnection(decodedUrl, userAgent);
+            return null;
+        } catch (UnknownHostException _) {
+            return UNREACHABLE_ERROR;
+        } catch (IOException e) {
             return new ValidationErrorMessage(e.getMessage());
         }
     }

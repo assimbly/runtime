@@ -258,37 +258,57 @@ public class SSLConfiguration {
 	public List<X509Certificate> loadCertificates(String resource, String password) throws Exception {
 
 		byte[] bytes = readResource(resource);
-		List<X509Certificate> certificates = new ArrayList<>();
 		IOException keystoreException = null;
 
 		if (password != null) {
-			try (ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
-				KeyStore ks = KeyStore.getInstance("PKCS12");
-				ks.load(is, password.toCharArray());
-				for (String alias : Collections.list(ks.aliases())) {
-					Certificate[] chain = ks.getCertificateChain(alias);
-					if (chain != null) {
-						for (Certificate certificate : chain) {
-							certificates.add((X509Certificate) certificate);
-						}
-					} else if (ks.getCertificate(alias) instanceof X509Certificate certificate) {
-						certificates.add(certificate);
-					}
-				}
-				return certificates;
+			try {
+				return loadKeystoreCertificates(bytes, password);
 			} catch (IOException e) {
 				log.debug("Resource is not a PKCS12 keystore, trying to read it as certificate(s): {}", e.getMessage());
 				keystoreException = e;
 			}
 		}
 
+		try {
+			return loadX509Certificates(bytes);
+		} catch (CertificateException e) {
+			// Neither a keystore nor certificates: report the keystore error (for example a wrong password)
+			throw keystoreException != null ? keystoreException : e;
+		}
+
+	}
+
+	private List<X509Certificate> loadKeystoreCertificates(byte[] bytes, String password) throws Exception {
+
+		List<X509Certificate> certificates = new ArrayList<>();
+
+		try (ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
+			KeyStore ks = KeyStore.getInstance("PKCS12");
+			ks.load(is, password.toCharArray());
+			for (String alias : Collections.list(ks.aliases())) {
+				Certificate[] chain = ks.getCertificateChain(alias);
+				if (chain != null) {
+					for (Certificate certificate : chain) {
+						certificates.add((X509Certificate) certificate);
+					}
+				} else if (ks.getCertificate(alias) instanceof X509Certificate certificate) {
+					certificates.add(certificate);
+				}
+			}
+		}
+
+		return certificates;
+
+	}
+
+	private List<X509Certificate> loadX509Certificates(byte[] bytes) throws IOException, CertificateException {
+
+		List<X509Certificate> certificates = new ArrayList<>();
+
 		try (ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
 			for (Certificate certificate : CertificateFactory.getInstance("X.509").generateCertificates(is)) {
 				certificates.add((X509Certificate) certificate);
 			}
-		} catch (CertificateException e) {
-			// Neither a keystore nor certificates: report the keystore error (for example a wrong password)
-			throw keystoreException != null ? keystoreException : e;
 		}
 
 		return certificates;

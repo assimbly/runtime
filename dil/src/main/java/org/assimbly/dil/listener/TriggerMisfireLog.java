@@ -5,8 +5,7 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.Iterator;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,18 +24,18 @@ final class TriggerMisfireLog {
     private TriggerMisfireLog() {
     }
 
-    static void logIfNew(Trigger trigger, Date missedFireTime) {
+    static void logIfNew(Trigger trigger, Instant missedFireTime) {
         if (trigger == null || missedFireTime == null) {
             return;
         }
         TriggerKey key = trigger.getKey();
         String triggerId = triggerId(key);
-        String dedupeKey = triggerId + "@" + missedFireTime.getTime();
+        String dedupeKey = triggerId + "@" + missedFireTime.toEpochMilli();
         if (!LOGGED.add(dedupeKey)) {
             return;
         }
         int occurrence = COUNTERS.computeIfAbsent(triggerId, id -> new AtomicInteger()).incrementAndGet();
-        LAST_MISSED_MILLIS.merge(triggerId, missedFireTime.getTime(), Math::max);
+        LAST_MISSED_MILLIS.merge(triggerId, missedFireTime.toEpochMilli(), Math::max);
         log.warn("""
                 > Trigger misfire detected
                   - Group: {}
@@ -66,7 +65,7 @@ final class TriggerMisfireLog {
         if (lastMissed == null) {
             return;
         }
-        Date previousFireTime = trigger.getPreviousFireTime();
+        var previousFireTime = trigger.getPreviousFireTime();
         if (previousFireTime != null && previousFireTime.getTime() >= lastMissed) {
             clearTrigger(key);
         }
@@ -87,31 +86,26 @@ final class TriggerMisfireLog {
      * Drop dedupe entries older than {@code olderThan} so the set does not grow forever
      * for triggers that disappear without a recovery clear. Active streaks are kept.
      */
-    static void pruneOlderThan(Date olderThan) {
+    static void pruneOlderThan(Instant olderThan) {
         if (olderThan == null) {
             return;
         }
-        long cutoff = olderThan.getTime();
-        Iterator<String> it = LOGGED.iterator();
-        while (it.hasNext()) {
-            String entry = it.next();
-            int at = entry.lastIndexOf('@');
-            if (at < 0) {
-                it.remove();
-                continue;
-            }
-            String triggerId = entry.substring(0, at);
-            if (COUNTERS.containsKey(triggerId)) {
-                continue;
-            }
-            try {
-                long fireTime = Long.parseLong(entry.substring(at + 1));
-                if (fireTime < cutoff) {
-                    it.remove();
-                }
-            } catch (NumberFormatException e) {
-                it.remove();
-            }
+        long cutoff = olderThan.toEpochMilli();
+        LOGGED.removeIf(entry -> isStale(entry, cutoff));
+    }
+
+    private static boolean isStale(String entry, long cutoff) {
+        int at = entry.lastIndexOf('@');
+        if (at < 0) {
+            return true;
+        }
+        if (COUNTERS.containsKey(entry.substring(0, at))) {
+            return false;
+        }
+        try {
+            return Long.parseLong(entry.substring(at + 1)) < cutoff;
+        } catch (NumberFormatException _) {
+            return true;
         }
     }
 

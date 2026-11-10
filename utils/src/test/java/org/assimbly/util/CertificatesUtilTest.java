@@ -430,7 +430,9 @@ class CertificatesUtilTest {
         String p12 = Base64.getEncoder().encodeToString(out.toByteArray());
         String keystorePath = tempDir.resolve("server-identity.p12").toString();
 
-        assertThatThrownBy(() -> new CertificatesUtil().importIdentity(keystorePath, PASSWORD, p12, "p12-password", "server", true))
+        CertificatesUtil certificatesUtil = new CertificatesUtil();
+
+        assertThatThrownBy(() -> certificatesUtil.importIdentity(keystorePath, PASSWORD, p12, "p12-password", "server", true))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(new CertificatesUtil().importIdentity(keystorePath, PASSWORD, p12, "p12-password", "server", false))
                 .containsOnlyKeys("server", "server-2");

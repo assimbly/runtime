@@ -8,6 +8,8 @@ import org.assimbly.integrationrest.testcontainers.AssimblyGatewayHeadlessContai
 import org.assimbly.integrationrest.utils.TestApplicationContext;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
 
 import java.net.http.HttpResponse;
@@ -19,7 +21,6 @@ import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StatisticsRuntimeTest {
@@ -61,525 +62,360 @@ class StatisticsRuntimeTest {
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertEmptyCountsResponse(responseJson.get("flow"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertEmptyCountsResponse(responseJson.get("flow"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowTransactions() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertEmptyCountsResponse(responseJson.get("flow"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertEmptyCountsResponse(responseJson.get("flow"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetCompletedFlowExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges/completed"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges/completed"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
+
     }
 
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetCompletedFlowTransactions() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions/completed"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions/completed"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulGenericResponseWithoutMsg(responseJson);
+
     }
 
-    @Test
+    @ParameterizedTest
     @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetFailedFlowExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+    @ValueSource(strings = {
+            "exchanges/failed",
+            "transactions/failed",
+            "exchanges/pending",
+            "transactions/pending",
+            "exchanges/total",
+            "transactions/total"
+    })
+    void shouldGetZeroFlowCount(String path) {
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges/failed"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/"+path), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
+        // asserts contents
+        AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
 
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetFailedFlowTransactions() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions/failed"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetPendingFlowExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges/pending"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetPendingFlowTransactions() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions/pending"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetTotalFlowExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/exchanges/total"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
-    }
-
-
-    @Test
-    @Tag("NeedsSchedulerFlowInstalled")
-    void shouldGetTotalFlowTransactions() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/transactions/total"), null, headers);
-
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-
-            // asserts contents
-            AssertUtils.assertSuccessfulGenericResponse(responseJson, "0");
-
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStepExchanges() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/exchanges"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/exchanges"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode stepJson = responseJson.get("step");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertEmptyCountsResponse(stepJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode stepJson = responseJson.get("step");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertEmptyCountsResponse(stepJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowStatsByStepId() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()) + "/step/" + schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()) + "/stats"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()) + "/step/" + schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name()) + "/stats"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode stepJson = responseJson.get("step");
-            JsonNode statsJson = stepJson.get("stats");
-            String id = "%s-%s".formatted(
-                    schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()),
-                    schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())
-            );
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertStepStatsResponse(stepJson, statsJson, id, "started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode stepJson = responseJson.get("step");
+        JsonNode statsJson = stepJson.get("stats");
+        String id = "%s-%s".formatted(
+                schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()),
+                schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())
+        );
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertStepStatsResponse(stepJson, statsJson, id, "started");
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetHistoryMetrics() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/historymetrics"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/historymetrics"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertHistoryMetricStatFieldsResponse(fieldNames);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertHistoryMetricStatFieldsResponse(fieldNames);
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowsCounts() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("FullStats", "false");
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/flows"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("FullStats", "false");
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/flows"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get(0).get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertFlowCountsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get(0).get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertFlowCountsResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetMetrics() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/metrics"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // asserts
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/metrics"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
+        // asserts
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertMetricStatFieldsResponse(fieldNames);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        List<String> fieldNames = StreamSupport.stream(Spliterators.spliteratorUnknownSize(responseJson.propertyNames().iterator(), 0), false).toList();
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertMetricStatFieldsResponse(fieldNames);
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStepsStats() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/steps"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/steps"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode camelContextStatJson = responseJson.get("camelContextStat");
-            List<String> fieldNames = List.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(camelContextStatJson.propertyNames().iterator(), 0), false).toList());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertStepStatFieldsResponse(fieldNames);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode camelContextStatJson = responseJson.get("camelContextStat");
+        List<String> fieldNames = List.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(camelContextStatJson.propertyNames().iterator(), 0), false).toList());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertStepStatFieldsResponse(fieldNames);
+
     }
 
     @Test
     void shouldGetEmptyFlowStats() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
-            headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call - get flow stats
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/stats"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("charset", StandardCharsets.ISO_8859_1.displayName());
+        headers.put("Content-type", MediaType.APPLICATION_XML_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call - get flow stats
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/stats"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertEmptyFlowStatsResponse(flowJson, (String)inboundHttpsCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
     @Test
     void shouldGetStats() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertStatsResponse(responseJson, "Started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertStatsResponse(responseJson, "Started");
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStatsFlows() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/flows"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/stats/flows"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get(0).get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertFlowsStatsResponse(flowJson, "started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get(0).get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertFlowsStatsResponse(flowJson, "started");
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetStatsByFlowIds() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // body
-            String body = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name());
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/statsbyflowids"), body, null, headers);
+        // body
+        String body = (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name());
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/statsbyflowids"), body, null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get(0).get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertFlowsStatsResponse(flowJson, "started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get(0).get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertFlowsStatsResponse(flowJson, "started");
+
     }
 
 }

@@ -1,6 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
 import org.apache.camel.*;
+
+import java.time.ZoneId;
 import java.util.*;
 
 import org.apache.camel.api.management.ManagedCamelContext;
@@ -35,29 +37,35 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.security.cert.Certificate;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class FlowManager {
@@ -68,7 +76,8 @@ public class FlowManager {
 
     // Decrypts the ENC(...) values in a Flow: with ASSIMBLY_ENCRYPTION_SECRET when it is set, otherwise with the key
     // the embedding application passes through setFallbackEncryptionUtil (null until then).
-    private volatile EncryptionUtil encryptionUtil = hasEncryptionSecret() ? new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET) : null;
+    private final AtomicReference<EncryptionUtil> encryptionUtil =
+            new AtomicReference<>(hasEncryptionSecret() ? new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET) : null);
 
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
@@ -76,6 +85,17 @@ public class FlowManager {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
+
+    private static final DateTimeFormatter LOG_FILE_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private static final Set<String> AS2_SECURITY_PARAMS = Set.of(
+            "signingPrivateKey",
+            "decryptingPrivateKey",
+            "signingCertificateChain",
+            "validateSigningCertificateChain"
+    );
+
+    private static final Set<String> AS2_SENSITIVE_PARAMS = Set.of("password", "alias");
 
     public static final String PROPERTY_FLOW_ENVIRONMENT = "flow.environment";
     public static final String PROPERTY_FLOW_NAME = "flow.name";
@@ -96,7 +116,7 @@ public class FlowManager {
     /** Uses this key for ENC(...) values when ASSIMBLY_ENCRYPTION_SECRET isn't set; with it set, this does nothing. */
     public void setFallbackEncryptionUtil(EncryptionUtil fallback) {
         if (!hasEncryptionSecret()) {
-            encryptionUtil = fallback;
+            encryptionUtil.set(fallback);
         }
     }
 
@@ -128,7 +148,7 @@ public class FlowManager {
             }
 
             try {
-                FlowLoader flow = new FlowLoader(properties, report, encryptionUtil);
+                FlowLoader flow = new FlowLoader(properties, report, encryptionUtil.get());
                 flow.addRoutesToCamelContext(context);
 
                 if (!flow.isFlowLoaded()) {
@@ -634,8 +654,7 @@ public class FlowManager {
 
     public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception {
 
-        Date date = new Date();
-        String today = new SimpleDateFormat("yyyyMMdd").format(date);
+        String today = LocalDate.now(ZoneId.systemDefault()).format(LOG_FILE_DATE);
         File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
 
         if (file.exists()) {
@@ -680,8 +699,7 @@ public class FlowManager {
 
     public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception {
 
-        Date date = new Date();
-        String today = new SimpleDateFormat("yyyyMMdd").format(date);
+        String today = LocalDate.now(ZoneId.systemDefault()).format(LOG_FILE_DATE);
         File file = new File(baseDir + "/events/" + id + "/" + today + "_events.log");
 
         if (file.exists()) {
@@ -1068,87 +1086,102 @@ public class FlowManager {
     private void initializeOAuth2EmailAuthenticator(TreeMap<String, String> properties) {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (!entry.getKey().endsWith(".routetemplate") ||
-                    (!entry.getValue().contains("routeTemplateRef=\"smtp-action\"") &&
-                    !entry.getValue().contains("routeTemplateRef=\"imaps-source\""))
-            ) {
-                continue;
-            }
-
-            boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
-
-            try {
-                // ---------- Parse XML ----------
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                dbf.setNamespaceAware(true);
-                DocumentBuilder db = dbf.newDocumentBuilder();
-
-                Document doc = db.parse(new InputSource(new StringReader(entry.getValue())));
-
-                Element root = doc.getDocumentElement();
-                Element templatedRoute = (Element)
-                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
-
-                if (templatedRoute == null) {
-                    continue;
+            if (isRouteTemplate(entry, "smtp-action") || isRouteTemplate(entry, "imaps-source")) {
+                try {
+                    configureOAuth2EmailAuthenticator(entry);
+                } catch (Exception e) {
+                    log.error("initializeOAuth2EmailAuthenticator failed.", e);
                 }
-
-                // ---------- Collect parameter elements ----------
-                Map<String, Element> paramElements = new LinkedHashMap<>();
-                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
-
-                for (int i = 0; i < params.getLength(); i++) {
-                    Element p = (Element) params.item(i);
-                    paramElements.put(p.getAttribute("name"), p);
-                }
-
-                Map<String, String> allParams = new LinkedHashMap<>();
-                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
-                    String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
-                    allParams.put(e.getKey(), value);
-                }
-
-                String username = cleanRaw(allParams.get("username"));
-                String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
-
-                String accessToken = allParams.get("accessToken");
-                if (accessToken != null && accessToken.startsWith("RAW(") && accessToken.endsWith(")")) {
-                    accessToken = accessToken.substring(4, accessToken.length() - 1);
-                }
-                accessToken = decryptAccessToken(accessToken);
-
-                if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
-                    log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
-                    continue;
-                }
-
-                // ---------- Build & bind the Authenticator ----------
-                // Token is resolved lazily (per connection attempt) so refresh works without
-                // rebuilding the bean - see OAuth2MailAuthenticator below.
-                String beanId = "mailAuth-" + UUID.randomUUID();
-
-                MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
-                context.getRegistry().bind(beanId, authenticator);
-
-                // ---------- Wire it in as a real Kamelet property, not into "options" ----------
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
-
-                // ---------- Serialize XML back ----------
-                Transformer tf = TransformerFactory.newInstance().newTransformer();
-                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-
-                StringWriter sw = new StringWriter();
-                tf.transform(new DOMSource(doc), new StreamResult(sw));
-
-                entry.setValue(sw.toString());
-
-            } catch (Exception e) {
-                log.error("initializeOAuth2EmailAuthenticator failed.", e);
             }
         }
+    }
+
+    private void configureOAuth2EmailAuthenticator(Map.Entry<String, String> entry) throws Exception {
+
+        boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
+
+        Document doc = parseXml(entry.getValue());
+        Element templatedRoute = findTemplatedRoute(doc);
+        if (templatedRoute == null) {
+            return;
+        }
+
+        Map<String, Element> paramElements = collectParameterElements(templatedRoute);
+        Map<String, String> allParams = readParameterValues(paramElements);
+
+        String username = cleanRaw(allParams.get("username"));
+        String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
+
+        String accessToken = allParams.get("accessToken");
+        if (accessToken != null && accessToken.startsWith("RAW(") && accessToken.endsWith(")")) {
+            accessToken = accessToken.substring(4, accessToken.length() - 1);
+        }
+        accessToken = decryptAccessToken(accessToken);
+
+        if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
+            log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
+            return;
+        }
+
+        // ---------- Build & bind the Authenticator ----------
+        // Token is resolved lazily (per connection attempt) so refresh works without
+        // rebuilding the bean - see OAuth2MailAuthenticator below.
+        String beanId = "mailAuth-" + UUID.randomUUID();
+
+        MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
+        context.getRegistry().bind(beanId, authenticator);
+
+        // ---------- Wire it in as a real Kamelet property, not into "options" ----------
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
+
+        entry.setValue(serializeXml(doc));
+    }
+
+    private static boolean isRouteTemplate(Map.Entry<String, String> entry, String templateRef) {
+        return entry.getKey().endsWith(".routetemplate")
+                && entry.getValue().contains("routeTemplateRef=\"" + templateRef + "\"");
+    }
+
+    private static Document parseXml(String xml) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        return dbf.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+    }
+
+    private static Element findTemplatedRoute(Document doc) {
+        return (Element) doc.getDocumentElement().getElementsByTagNameNS("*", "templatedRoute").item(0);
+    }
+
+    private static Map<String, Element> collectParameterElements(Element templatedRoute) {
+        Map<String, Element> paramElements = new LinkedHashMap<>();
+        NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
+
+        for (int i = 0; i < params.getLength(); i++) {
+            Element p = (Element) params.item(i);
+            paramElements.put(p.getAttribute("name"), p);
+        }
+        return paramElements;
+    }
+
+    private static Map<String, String> readParameterValues(Map<String, Element> paramElements) {
+        Map<String, String> allParams = new LinkedHashMap<>();
+        for (Map.Entry<String, Element> e : paramElements.entrySet()) {
+            String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
+            allParams.put(e.getKey(), value);
+        }
+        return allParams;
+    }
+
+    private static String serializeXml(Document doc) throws TransformerException {
+        Transformer tf = TransformerFactory.newInstance().newTransformer();
+        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+        StringWriter sw = new StringWriter();
+        tf.transform(new DOMSource(doc), new StreamResult(sw));
+        return sw.toString();
     }
 
     private void setOrCreateParameter(Document doc, Element templatedRoute,
@@ -1167,7 +1200,7 @@ public class FlowManager {
 
     private @Nullable String decryptAccessToken(String accessToken) {
         try {
-            accessToken = encryptionUtil.decrypt(accessToken);
+            accessToken = encryptionUtil.get().decrypt(accessToken);
         } catch (Exception e) {
             log.error("ERROR to decrypt accessToken - "+accessToken, e);
         }
@@ -1177,164 +1210,94 @@ public class FlowManager {
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (!entry.getKey().endsWith(".routetemplate") || !entry.getValue().contains("routeTemplateRef=\"as2-source\"")) {
-                continue;
-            }
-
-            try {
-                // ---------- Parse XML ----------
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                dbf.setNamespaceAware(true);
-                DocumentBuilder db = dbf.newDocumentBuilder();
-
-                Document doc = db.parse(
-                        new InputSource(new StringReader(entry.getValue()))
-                );
-
-                Element root = doc.getDocumentElement();
-                Element templatedRoute = (Element)
-                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
-
-                if (templatedRoute == null) {
-                    continue;
+            if (isRouteTemplate(entry, "as2-source")) {
+                try {
+                    configureAs2InboundSecurity(entry);
+                } catch (Exception e) {
+                    log.error("initializeAs2InboundSecurity failed.", e);
                 }
-
-                // ---------- Collect parameter elements ----------
-                Map<String, Element> paramElements = new LinkedHashMap<>();
-                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
-
-                for (int i = 0; i < params.getLength(); i++) {
-                    Element p = (Element) params.item(i);
-                    paramElements.put(p.getAttribute("name"), p);
-                }
-
-                // ---------- Extract parameter values ----------
-                Map<String, String> allParams = new LinkedHashMap<>();
-                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
-                    String value = e.getValue()
-                            .getAttribute("value")
-                            .replace("&amp;", "&")
-                            .trim();
-                    allParams.put(e.getKey(), value);
-                }
-
-                // ---------- Extract password & alias ----------
-                String password = cleanRaw(allParams.get("password"));
-                String alias = cleanRaw(allParams.get("alias"));
-
-                // ---------- Bind keys and rebuild params ----------
-                Set<String> securityParams = Set.of(
-                        "signingPrivateKey",
-                        "decryptingPrivateKey",
-                        "signingCertificateChain",
-                        "validateSigningCertificateChain"
-                );
-
-                String uniqueId = UUID.randomUUID().toString();
-                Map<String, String> boundParams = new LinkedHashMap<>();
-
-                for (Map.Entry<String, String> e : allParams.entrySet()) {
-                    String key = e.getKey();
-                    String value = e.getValue();
-
-                    if (securityParams.contains(key)) {
-
-                        String beanId = key + "-" + uniqueId;
-                        String cleanedValue = cleanRaw(value);
-                        Object keyObject;
-
-                        switch (key) {
-                            case "signingCertificateChain":
-                                keyObject = AS2KeyProcessor.getSigningCertificateChain(
-                                        new URI(cleanedValue), password, alias);
-                                boundParams.put(
-                                        "signingAlgorithm",
-                                        AS2KeyProcessor.getSigningAlgorithm(
-                                                (java.security.cert.Certificate[]) keyObject));
-                                break;
-
-                            case "signingPrivateKey":
-                                keyObject = AS2KeyProcessor.getSigningPrivateKey(
-                                        new URI(cleanedValue), password, alias);
-                                break;
-
-                            case "decryptingPrivateKey":
-                                keyObject = AS2KeyProcessor.getDecryptingPrivateKey(
-                                        new URI(cleanedValue), password, alias);
-                                break;
-
-                            default:
-                                keyObject = AS2KeyProcessor.getValidateSigningCertificateChain(
-                                        new URI(cleanedValue));
-                        }
-
-                        context.getRegistry().bind(beanId, keyObject);
-                        boundParams.put(key, "#" + beanId);
-
-                    } else {
-                        boundParams.put(key, value);
-                    }
-                }
-
-                // ---------- Rebuild query ----------
-                StringBuilder newQuery = new StringBuilder();
-                boolean first = true;
-
-                for (Map.Entry<String, String> e : boundParams.entrySet()) {
-                    String key = e.getKey();
-
-                    if (key.equals("password") || key.equals("alias")) {
-                        continue;
-                    }
-
-                    if (!first) newQuery.append('&');
-                    newQuery.append(key).append('=').append(e.getValue());
-                    first = false;
-                }
-
-                String escapedQuery = newQuery.toString().replace("&", "&amp;");
-
-                // ---------- Write back to XML ----------
-                if (paramElements.containsKey("uri")) {
-                    paramElements.get("uri")
-                            .setAttribute("value", "as2?" + escapedQuery);
-                }
-
-                if (paramElements.containsKey("options")) {
-                    paramElements.get("options")
-                            .setAttribute("value", escapedQuery);
-                }
-
-                for (String sec : securityParams) {
-                    if (paramElements.containsKey(sec)) {
-                        paramElements.get(sec)
-                                .setAttribute("value",
-                                        boundParams.get(sec).replace("&", "&amp;"));
-                    }
-                }
-
-                // Remove sensitive parameters
-                if (paramElements.containsKey("password")) {
-                    templatedRoute.removeChild(paramElements.get("password"));
-                }
-                if (paramElements.containsKey("alias")) {
-                    templatedRoute.removeChild(paramElements.get("alias"));
-                }
-
-                // ---------- Serialize XML ----------
-                Transformer tf = TransformerFactory.newInstance().newTransformer();
-                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-
-                StringWriter sw = new StringWriter();
-                tf.transform(new DOMSource(doc), new StreamResult(sw));
-
-                entry.setValue(sw.toString());
-
-            } catch (Exception e) {
-                log.error("initializeAs2InboundSecurity failed.", e);
             }
         }
+    }
+
+    private void configureAs2InboundSecurity(Map.Entry<String, String> entry) throws Exception {
+
+        Document doc = parseXml(entry.getValue());
+        Element templatedRoute = findTemplatedRoute(doc);
+        if (templatedRoute == null) {
+            return;
+        }
+
+        Map<String, Element> paramElements = collectParameterElements(templatedRoute);
+        Map<String, String> boundParams = bindAs2SecurityParams(readParameterValues(paramElements));
+
+        String escapedQuery = buildAs2Query(boundParams).replace("&", "&amp;");
+
+        // ---------- Write back to XML ----------
+        if (paramElements.containsKey("uri")) {
+            paramElements.get("uri").setAttribute("value", "as2?" + escapedQuery);
+        }
+
+        if (paramElements.containsKey("options")) {
+            paramElements.get("options").setAttribute("value", escapedQuery);
+        }
+
+        for (String sec : AS2_SECURITY_PARAMS) {
+            if (paramElements.containsKey(sec)) {
+                paramElements.get(sec).setAttribute("value", boundParams.get(sec).replace("&", "&amp;"));
+            }
+        }
+
+        for (String sensitive : AS2_SENSITIVE_PARAMS) {
+            if (paramElements.containsKey(sensitive)) {
+                templatedRoute.removeChild(paramElements.get(sensitive));
+            }
+        }
+
+        entry.setValue(serializeXml(doc));
+    }
+
+    private Map<String, String> bindAs2SecurityParams(Map<String, String> allParams) throws Exception {
+
+        String password = cleanRaw(allParams.get("password"));
+        String alias = cleanRaw(allParams.get("alias"));
+
+        String uniqueId = UUID.randomUUID().toString();
+        Map<String, String> boundParams = new LinkedHashMap<>();
+
+        for (Map.Entry<String, String> e : allParams.entrySet()) {
+            String key = e.getKey();
+            if (AS2_SECURITY_PARAMS.contains(key)) {
+                String beanId = key + "-" + uniqueId;
+                URI uri = new URI(cleanRaw(e.getValue()));
+                context.getRegistry().bind(beanId, loadAs2Key(key, uri, password, alias, boundParams));
+                boundParams.put(key, "#" + beanId);
+            } else {
+                boundParams.put(key, e.getValue());
+            }
+        }
+        return boundParams;
+    }
+
+    private static Object loadAs2Key(String key, URI uri, String password, String alias,
+                                     Map<String, String> boundParams) throws Exception {
+        return switch (key) {
+            case "signingCertificateChain" -> {
+                Certificate[] chain = AS2KeyProcessor.getSigningCertificateChain(uri, password, alias);
+                boundParams.put("signingAlgorithm", AS2KeyProcessor.getSigningAlgorithm(chain));
+                yield chain;
+            }
+            case "signingPrivateKey" -> AS2KeyProcessor.getSigningPrivateKey(uri, password, alias);
+            case "decryptingPrivateKey" -> AS2KeyProcessor.getDecryptingPrivateKey(uri, password, alias);
+            default -> AS2KeyProcessor.getValidateSigningCertificateChain(uri);
+        };
+    }
+
+    private static String buildAs2Query(Map<String, String> boundParams) {
+        return boundParams.entrySet().stream()
+                .filter(e -> !AS2_SENSITIVE_PARAMS.contains(e.getKey()))
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining("&"));
     }
 
     private String cleanRaw(String value) {

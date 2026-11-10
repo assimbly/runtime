@@ -5,10 +5,12 @@ import org.jasypt.iv.RandomIvGenerator;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -16,11 +18,14 @@ public final class EncryptionUtil {
 
     private final StandardPBEStringEncryptor textEncryptor = new StandardPBEStringEncryptor();
     private static final int SALT_LENGTH = 16; // Length of the salt in bytes
-    private static final int IV_LENGTH = 16; // Length of the IV in bytes
+    private static final int IV_LENGTH = 12; // GCM recommended nonce length in bytes
+    private static final int GCM_TAG_LENGTH_BITS = 128;
     private final String password;
 
     public static final String CIPHER_ALGORITHM = "AES";
-    public static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+    public static final String CIPHER_TRANSFORMATION = "AES/GCM/NoPadding";
+    /** Legacy transform kept only so existing ENC(salt|iv|ciphertext) values still decrypt. */
+    private static final String LEGACY_CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
     public static final String KEY_DERIVATION_ALGORITHM = "PBKDF2WithHmacSHA1";
     public static final int PBKDF2_ITERATIONS = 10000;
     public static final int KEY_LENGTH_BITS = 256;
@@ -61,7 +66,7 @@ public final class EncryptionUtil {
         byte[] salt = new byte[SALT_LENGTH];
         secureRandom.nextBytes(salt);
 
-        // Generate random IV
+        // Generate random IV / nonce
         byte[] iv = new byte[IV_LENGTH];
         secureRandom.nextBytes(iv);
 
@@ -119,9 +124,8 @@ public final class EncryptionUtil {
     private byte[] encryptWithIv(SecretKeySpec secretKey, byte[] iv, String plainText) {
         try {
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            IvParameterSpec ivParams = new IvParameterSpec(iv);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParams);
-            return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8)); // Use UTF-8 encoding
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
+            return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new RuntimeException("Encryption failed.", e);
         }
@@ -129,14 +133,29 @@ public final class EncryptionUtil {
 
     private String decryptWithIv(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) {
         try {
-            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            IvParameterSpec ivParams = new IvParameterSpec(iv);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParams);
-            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-            return new String(decryptedBytes, StandardCharsets.UTF_8); // Use UTF-8 encoding
-        } catch (Exception e) {
-            throw new RuntimeException("Decryption failed.", e);
+            return decryptGcm(secretKey, iv, encryptedBytes);
+        } catch (GeneralSecurityException gcmFailure) {
+            try {
+                return decryptLegacyCbc(secretKey, iv, encryptedBytes);
+            } catch (GeneralSecurityException cbcFailure) {
+                RuntimeException failure = new RuntimeException("Decryption failed.", cbcFailure);
+                failure.addSuppressed(gcmFailure);
+                throw failure;
+            }
         }
+    }
+
+    private static String decryptGcm(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
+        return new String(cipher.doFinal(encryptedBytes), StandardCharsets.UTF_8);
+    }
+
+    /** Decrypts values written before the switch to AES/GCM/NoPadding. */
+    private static String decryptLegacyCbc(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(LEGACY_CIPHER_TRANSFORMATION); // NOSONAR java:S5542 - legacy decrypt only
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+        return new String(cipher.doFinal(encryptedBytes), StandardCharsets.UTF_8);
     }
 
 }

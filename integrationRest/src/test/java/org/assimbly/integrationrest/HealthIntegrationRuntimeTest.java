@@ -13,7 +13,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HealthIntegrationRuntimeTest {
@@ -33,55 +32,49 @@ class HealthIntegrationRuntimeTest {
 
     @Test
     void shouldGetBackendHealthInfo() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/health/backend/jvm"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/health/backend/jvm"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode jvmJson = responseJson.get("jvm");
-            JsonNode memoryJson = responseJson.get("memory");
-            JsonNode threadsJson = responseJson.get("threads");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertJvmHealthResponse(jvmJson);
-            AssertUtils.assertMemoryHealthResponse(memoryJson);
-            AssertUtils.assertThreadsHealthResponse(threadsJson);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode jvmJson = responseJson.get("jvm");
+        JsonNode memoryJson = responseJson.get("memory");
+        JsonNode threadsJson = responseJson.get("threads");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertJvmHealthResponse(jvmJson);
+        AssertUtils.assertMemoryHealthResponse(memoryJson);
+        AssertUtils.assertThreadsHealthResponse(threadsJson);
+
     }
 
     @Test
     void shouldGetBackendFlowsInfo() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/health/backend/flows"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/health/backend/flows"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertHealthResponse(responseJson, "Started");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertHealthResponse(responseJson, "Started");
+
     }
 
 }
