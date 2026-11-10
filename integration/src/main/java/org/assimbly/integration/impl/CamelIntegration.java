@@ -572,7 +572,7 @@ public class CamelIntegration extends BaseIntegration {
         if (includeCustomComponents) {
             URL url = Resources.getResource("custom-steps.json");
             String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
-            components = JsonHelper.mergeJsonArray(components, customComponent);
+            components = JsonHelper.mergeJsonArray(components, customComponent, "name");
         }
 
         if (mediaType.contains("xml")) {
@@ -588,16 +588,17 @@ public class CamelIntegration extends BaseIntegration {
         DefaultCamelCatalog catalog = new DefaultCamelCatalog();
         String schema = null;
 
-        if (catalog.findComponentNames().contains(componentType)) {
+        boolean catalogComponent = catalog.findComponentNames().contains(componentType);
+
+        // A producer-only catalog component (such as http) has no consumer options, so its Source kamelet describes them
+        boolean kameletSource = catalogComponent && "source".equalsIgnoreCase(type) && catalog.componentModel(componentType).isProducerOnly();
+
+        if (!catalogComponent || kameletSource) {
+            schema = getKameletSchema(componentType, type);
+        }
+
+        if (schema == null && catalogComponent) {
             schema = catalog.componentJSonSchema(componentType);
-        } else if (StringUtils.isNotBlank(type)) {
-            try {
-                URL url = Resources.getResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
-                String kamelet = Resources.toString(url, StandardCharsets.UTF_8);
-                schema = retrieveKameletOptions(kamelet, componentType);
-            } catch (Exception e) {
-                log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
-            }
         }
 
         if (schema == null || schema.isEmpty()) {
@@ -607,6 +608,21 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         return schema;
+    }
+
+    private String getKameletSchema(String componentType, String type) {
+        if (StringUtils.isBlank(type)) {
+            return null;
+        }
+
+        try {
+            URL url = Resources.getResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
+            String kamelet = Resources.toString(url, StandardCharsets.UTF_8);
+            return retrieveKameletOptions(kamelet, componentType);
+        } catch (Exception e) {
+            log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")

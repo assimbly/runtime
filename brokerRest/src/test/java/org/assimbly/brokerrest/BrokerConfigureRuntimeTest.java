@@ -13,7 +13,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 class BrokerConfigureRuntimeTest {
 
@@ -32,56 +31,50 @@ class BrokerConfigureRuntimeTest {
 
     @Test
     void shouldGetBrokerConfiguration() {
-        try {
-            // params
-            HashMap<String, String> params = new HashMap<>();
-            params.put("brokerType", "classic");
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
+        // params
+        HashMap<String, String> params = new HashMap<>();
+        params.put("brokerType", "classic");
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), params, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), params, headers);
 
-            // asserts contents
-            assertThat(response.body()).isEqualTo(ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml"));
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(response.body()).isEqualTo(ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml"));
+
     }
 
     @Test
     void shouldSetBrokerConfiguration() {
-        try {
-            // params
-            HashMap<String, String> params = new HashMap<>();
-            params.put("brokerType", "classic");
-            params.put("brokerConfigurationType", ""); // the following param is not used internally
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
+        // params
+        HashMap<String, String> params = new HashMap<>();
+        params.put("brokerType", "classic");
+        params.put("brokerConfigurationType", ""); // the following param is not used internally
 
-            // body
-            String brokerConfig = ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml");
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_XML_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), brokerConfig, params, headers);
+        // body
+        String brokerConfig = ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml");
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), brokerConfig, params, headers);
 
-            // asserts contents
-            assertThat(response.body()).isEqualTo("success");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(response.body()).isEqualTo("success");
+
     }
 
 }

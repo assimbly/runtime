@@ -1,5 +1,6 @@
 package org.assimbly.brokerrest;
 
+import io.swagger.v3.oas.models.parameters.Parameter;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springdoc.core.customizers.ParameterCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -72,11 +73,15 @@ public class BrokerOpenApiConfig {
         return (parameter, methodParameter) -> {
             Doc doc = parameter == null || !ownController(methodParameter.getContainingClass()) ? null : PARAMETERS.get(parameter.getName());
             if (doc != null) {
-                if (parameter.getDescription() == null) parameter.setDescription(doc.description());
-                if (parameter.getExample() == null && parameter.getExamples() == null) parameter.setExample(doc.example());
-                if (doc.allowed() != null && parameter.getSchema() != null) parameter.getSchema().setEnum(doc.allowed());
+                applyDoc(parameter, doc);
             }
             return parameter;
         };
+    }
+
+    private static void applyDoc(Parameter parameter, Doc doc) {
+        if (parameter.getDescription() == null) parameter.setDescription(doc.description());
+        if (parameter.getExample() == null && parameter.getExamples() == null) parameter.setExample(doc.example());
+        if (doc.allowed() != null && parameter.getSchema() != null) parameter.getSchema().setEnum(doc.allowed());
     }
 }

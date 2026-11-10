@@ -804,6 +804,12 @@ public class RouteTemplate {
             templatedRoute.appendChild(param);
         }
 
+        // The Branch's language belongs with its expression; without it router templates fall back to their default or fail
+        if (language != null) {
+            Element param = createParameter(templateDoc, "language", language);
+            templatedRoute.appendChild(param);
+        }
+
         if (type.equals("router")) {
             handleRouterLinkType(bound, language, rule, expression, endpoint);
         } else {
