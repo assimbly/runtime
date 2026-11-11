@@ -7,7 +7,7 @@ import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+
 import org.assimbly.docconverter.DocConverter;
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
@@ -15,19 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.NativeWebRequest;
+
 import tools.jackson.core.JacksonException;
 
 
 @Tag(name = "Flow manager", description = "Install, run and monitor flows")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class FlowManagerRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private String flowId;
 
     private final Integration integration;
 
@@ -132,7 +130,7 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Install routeId: {}. Configuration:\n\n{}", routeId, route);
+        log.info("Install routeId: {}", routeId);
 
         try {
 
@@ -154,7 +152,7 @@ public class FlowManagerRuntime {
             }
 
         } catch (Exception e) {
-            log.error("Test flow {} failed", flowId, e);
+            log.error("Install route {} failed", routeId, e);
             return ResponseUtil.createFailureResponseWithHeaders(1L, mediaType, "/integration/route/{routeId}/install", e.getMessage(), "unable to run route " + routeId, routeId);
         }
 
@@ -174,7 +172,7 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        log.info("Install flowId: {}. Configuration:\n\n{}", flowId, configuration);
+        log.info("Install flowId: {}", flowId);
 
         String report = integration.installFlow(flowId, timeout, contentType, configuration);
 
@@ -213,7 +211,7 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        log.info("Test flowId: {}. Configuration:\n\n{}", flowId, configuration);
+        log.info("Test flowId: {}", flowId);
 
         String report = integration.testFlow(flowId, timeout, contentType, configuration);
 
@@ -449,19 +447,6 @@ public class FlowManagerRuntime {
 
     }
 
-    // Generates a generic error response (exceptions outside try catch):
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
-
-        log.error("IntegrationErrorHandler", error);
-
-        HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
-        String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
-        String path = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
-        String message = error.getMessage();
-
-        return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
-    }
     private ResponseEntity<String> response(String mediaType, String endpoint, String response) {
 
         String path = "/integration/flow/{flowId}/" + endpoint;

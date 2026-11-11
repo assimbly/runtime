@@ -18,14 +18,11 @@ import org.springframework.http.ResponseEntity;
  * Resource to return information about the stats of flows.
  */
 @Tag(name = "Statistics", description = "Statistics, exchanges, transactions and metrics")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class StatisticsRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-
-    private boolean plainResponse;
 
     private final Integration integration;
 
@@ -42,7 +39,7 @@ public class StatisticsRuntime {
     )
     public ResponseEntity<String> getStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
         
         try {
             String stats = integration.getStats(mediaType);
@@ -61,7 +58,7 @@ public class StatisticsRuntime {
     )
     public ResponseEntity<String> getRoutesStats(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String stats = integration.getStepsStats(mediaType);
@@ -83,7 +80,7 @@ public class StatisticsRuntime {
             @RequestHeader(required = false, defaultValue = "true", value = "FullStats") boolean fullStats
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String stats = integration.getFlowsStats(fullStats, mediaType);
@@ -106,7 +103,7 @@ public class StatisticsRuntime {
             @RequestHeader(required = false, defaultValue = "", value = "filter") String filter
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String stats = integration.getStatsByFlowIds(flowIds, filter, mediaType);
@@ -184,7 +181,7 @@ public class StatisticsRuntime {
             @RequestHeader(required = false, defaultValue = "",value = "filter") String filter
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -214,7 +211,7 @@ public class StatisticsRuntime {
             @RequestHeader(defaultValue = "false", value = "FullStats") boolean fullStats
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -450,7 +447,7 @@ public class StatisticsRuntime {
     )
     public ResponseEntity<String> getMetrics(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
         
 
         try {
@@ -470,7 +467,7 @@ public class StatisticsRuntime {
     )
     public ResponseEntity<String> getHistoryMetrics(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String metrics = integration.getHistoryMetrics(mediaType);

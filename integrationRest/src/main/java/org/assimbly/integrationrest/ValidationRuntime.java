@@ -34,14 +34,11 @@ import java.util.List;
  * Resource to return information about the currently running Spring profiles.
  */
 @Tag(name = "Validation", description = "Validate expressions, connections, scripts and more")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class ValidationRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
-    private boolean plainResponse;
 
     private final Integration integration;
 
@@ -61,7 +58,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -92,7 +89,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -122,7 +119,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -156,7 +153,7 @@ public class ValidationRuntime {
             @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -199,7 +196,7 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -238,7 +235,7 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -279,7 +276,7 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -339,9 +336,9 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        try {
+        boolean plainResponse = true;
 
-            plainResponse = true;
+        try {
 
             HashMap<String,String> paramList;
 

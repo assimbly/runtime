@@ -34,8 +34,6 @@ public class IntegrationRuntime {
 
     private final Integration integration = new CamelIntegration(true);
 
-    private boolean plainResponse;
-
     private boolean integrationIsStarting;
 
     public IntegrationRuntime() throws Exception {
@@ -146,7 +144,7 @@ public class IntegrationRuntime {
 
         try {
             String error = integration.getLastError();
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/lasterror",error,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/lasterror",error,true);
         } catch (Exception e) {
             log.error("Get last error for integration failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/lasterror",e.getMessage());
@@ -161,7 +159,7 @@ public class IntegrationRuntime {
     )
     public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String directory = integration.getBaseDirectory();
@@ -184,7 +182,7 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             integration.setBaseDirectory(directory);
@@ -378,7 +376,7 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Add collectors. Configuration: \n\n{}\n", configuration);
+        log.info("Add collectors");
 
         try {
             String result = integration.addCollectorsConfiguration(mediaType, configuration);
@@ -406,7 +404,7 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Remove collectors. Configuration: \n\n{}\n", configuration);
+        log.info("Remove collectors");
 
         try {
             String result = integration.removeCollectorsConfiguration(mediaType, configuration);

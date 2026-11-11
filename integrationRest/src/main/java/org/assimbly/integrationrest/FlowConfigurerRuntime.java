@@ -5,28 +5,25 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.NativeWebRequest;
+
 
 /**
  * Resource to return information about the currently running Spring profiles.
  */
 @Tag(name = "Flow configuration", description = "Configure flows and look up components")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class FlowConfigurerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
-    private boolean plainResponse;
-
 	private final Integration integration;
 
 	public FlowConfigurerRuntime(IntegrationRuntime integrationRuntime) {
@@ -90,7 +87,7 @@ public class FlowConfigurerRuntime {
 
 		try {
             String documentation = integration.getDocumentationVersion();
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/documentation/version",documentation,plainResponse);
+			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/documentation/version",documentation,true);
 		} catch (Exception e) {
 			log.error("Get documentation version failed",e);
 			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/documentation/version",e.getMessage());
@@ -107,7 +104,7 @@ public class FlowConfigurerRuntime {
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) {
 
-    	plainResponse = true;
+    	boolean plainResponse = true;
 
 		try {
             String documentation = integration.getDocumentation(componenttype, mediaType);
@@ -134,7 +131,7 @@ public class FlowConfigurerRuntime {
 
 		log.info("Get components");
 
-		plainResponse = true;
+		boolean plainResponse = true;
 
 		try {
 			String components = integration.getComponents(includeCustomComponents, mediaType);
@@ -160,7 +157,7 @@ public class FlowConfigurerRuntime {
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) {
 
-    	plainResponse = true;
+    	boolean plainResponse = true;
 
 		try {
 
@@ -187,7 +184,7 @@ public class FlowConfigurerRuntime {
 			@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
 	) {
 
-    	plainResponse = true;
+    	boolean plainResponse = true;
 
 		try {
             String documentation = integration.getComponentParameters(componenttype, mediaType);
@@ -277,17 +274,5 @@ public class FlowConfigurerRuntime {
 
     }
 
-    // Generates a generic error response (exceptions outside try catch):
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
-
-		HttpServletRequest httpRequest = request.getNativeRequest(HttpServletRequest.class);
-
-		String mediaType = httpRequest != null ? httpRequest.getHeader("ACCEPT") : MediaType.APPLICATION_JSON_VALUE;
-		String path = httpRequest != null ? httpRequest.getRequestURI() : "/";
-		String message = error.getMessage();
-
-    	return ResponseUtil.createFailureResponse(1L, mediaType,path,message);
-    }
 
 }

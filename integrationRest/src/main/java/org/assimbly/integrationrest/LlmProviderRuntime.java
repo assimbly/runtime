@@ -35,6 +35,10 @@ public class LlmProviderRuntime {
 
     private static final String DEFAULT_OLLAMA_URL = "http://localhost:11434";
 
+    // A list of models is small; this keeps a wrong or hostile URL from filling the memory
+    private static final long MAX_RESPONSE_BYTES = 5L * 1024 * 1024;
+    private static final int MAX_ERROR_LENGTH = 500;
+
     private static final List<String> SUPPORTED_PROVIDERS = List.of(
             "openai",
             "google-gemini",
@@ -140,7 +144,7 @@ public class LlmProviderRuntime {
             throws IOException, InterruptedException {
 
         String normalizedProvider = normalizeProvider(provider);
-        URI targetUri = buildModelsUri(normalizedProvider, apiKey, baseUrl);
+        URI targetUri = buildModelsUri(normalizedProvider, baseUrl);
         HttpRequest request = buildModelsRequest(
                 normalizedProvider,
                 targetUri,
@@ -149,7 +153,7 @@ public class LlmProviderRuntime {
 
         HttpResponse<String> response = httpClient.send(
                 request,
-                HttpResponse.BodyHandlers.ofString()
+                HttpResponse.BodyHandlers.limiting(HttpResponse.BodyHandlers.ofString(), MAX_RESPONSE_BYTES)
         );
 
         validateResponse(response);
@@ -163,7 +167,6 @@ public class LlmProviderRuntime {
 
     private URI buildModelsUri(
             String provider,
-            String apiKey,
             String baseUrl) {
 
         return switch (provider) {
@@ -177,10 +180,7 @@ public class LlmProviderRuntime {
                     URI.create("https://api.mistral.ai/v1/models");
 
             case "google-gemini", "gemini" ->
-                    URI.create(
-                            "https://generativelanguage.googleapis.com/v1beta/models?key="
-                                    + requireApiKey(provider, apiKey)
-                    );
+                    URI.create("https://generativelanguage.googleapis.com/v1beta/models");
 
             case "anthropic" ->
                     URI.create("https://api.anthropic.com/v1/models");
@@ -190,7 +190,12 @@ public class LlmProviderRuntime {
                         ? DEFAULT_OLLAMA_URL
                         : baseUrl;
 
-                yield URI.create(stripTrailingSlashes(base) + "/api/tags");
+                URI uri = URI.create(stripTrailingSlashes(base) + "/api/tags");
+                if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
+                    throw new IllegalArgumentException("baseUrl must be an http or https URL");
+                }
+
+                yield uri;
             }
 
             default ->
@@ -200,7 +205,7 @@ public class LlmProviderRuntime {
         };
     }
 
-    private HttpRequest buildModelsRequest(
+    HttpRequest buildModelsRequest(
             String provider,
             URI targetUri,
             String apiKey) {
@@ -228,8 +233,14 @@ public class LlmProviderRuntime {
                 );
             }
 
-            case "google-gemini", "gemini", "ollama" -> {
-                // Gemini authentication is part of the URL.
+            // as a header and not as ?key= in the URL, where it ends up in logs and error messages
+            case "google-gemini", "gemini" ->
+                    builder.header(
+                            "x-goog-api-key",
+                            requireApiKey(provider, apiKey)
+                    );
+
+            case "ollama" -> {
                 // Ollama does not require authentication by default.
             }
 
@@ -258,7 +269,7 @@ public class LlmProviderRuntime {
                     "Provider API returned HTTP "
                             + response.statusCode()
                             + ": "
-                            + response.body()
+                            + abbreviate(response.body())
             );
         }
     }
@@ -350,6 +361,13 @@ public class LlmProviderRuntime {
 
     private ResponseEntity<CredentialValidationResult> badRequest(String message) {
         return ResponseEntity.badRequest().body(new CredentialValidationResult(false, message, null));
+    }
+
+    private static String abbreviate(String body) {
+        if (body == null || body.length() <= MAX_ERROR_LENGTH) {
+            return body;
+        }
+        return body.substring(0, MAX_ERROR_LENGTH) + "...";
     }
 
     private static String stripTrailingSlashes(String value) {

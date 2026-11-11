@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Resource to return information about the currently running Spring profiles.
  */
 @Tag(name = "Backend health", description = "Health of the backend itself")
-@ControllerAdvice
 @RestController
 @RequestMapping("/health/backend")
 public class HealthIntegrationRuntime {

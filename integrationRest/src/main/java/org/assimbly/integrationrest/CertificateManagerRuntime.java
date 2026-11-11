@@ -569,11 +569,19 @@ public class CertificateManagerRuntime {
 
     // loading a keystore that doesn't exist creates it, so reading endpoints check first
     private String keystorePath(String keystoreName, boolean createIfMissing) throws KeyStoreException {
+        requireKeystoreName(keystoreName);
         String keystorePath = baseDir + "/security/" + keystoreName;
         if (!createIfMissing && !new File(keystorePath).isFile()) {
             throw new KeyStoreException("Keystore " + keystoreName + " doesn't exist");
         }
         return keystorePath;
+    }
+
+    // The keystore name comes from a request header and is a file in the security directory, never a path
+    static void requireKeystoreName(String keystoreName) {
+        if (keystoreName == null || keystoreName.isBlank() || keystoreName.contains("/") || keystoreName.contains("\\") || keystoreName.contains("..")) {
+            throw new IllegalArgumentException("Invalid keystore name: " + keystoreName);
+        }
     }
 
     private String certificatesAsJSon(Map<String,Certificate> certificateMap, String certificateUrl, String certificateStore) throws CertificateException {
@@ -612,6 +620,7 @@ public class CertificateManagerRuntime {
     }
 
     public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
+        requireKeystoreName(keystoreName);
         String keystorePath = baseDir + "/security/" + keystoreName;
         CertificatesUtil util = new CertificatesUtil();
         return util.getCertificate(keystorePath, keystorePassword, certificateName);
