@@ -15,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -31,6 +32,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -476,6 +483,60 @@ class CertificatesUtilTest {
 
         assertThatThrownBy(() -> CertificatesUtil.generateIdentity(keystorePath, PASSWORD, "myserver.example.com", "server"))
                 .isInstanceOf(CertificatesUtil.AliasExistsException.class);
+    }
+
+    @Test
+    void importP12CertificateSkipsKeysWithoutCertificate(@TempDir Path tempDir) throws Exception {
+        KeyStore p12 = KeyStore.getInstance("PKCS12");
+        p12.load(null, null);
+        p12.setKeyEntry("identity", leafKeys.getPrivate(), "p12-password".toCharArray(), new Certificate[]{leaf});
+        p12.setKeyEntry("secret", new SecretKeySpec(new byte[32], "AES"), "p12-password".toCharArray(), null);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        p12.store(out, "p12-password".toCharArray());
+
+        Map<String, Certificate> imported = new CertificatesUtil().importP12Certificate(tempDir.resolve("server-identity.p12").toString(), PASSWORD, Base64.getEncoder().encodeToString(out.toByteArray()), "p12-password");
+
+        assertThat(imported).containsExactly(entry("identity", leaf));
+    }
+
+    @Test
+    void failedStoreKeepsTheExistingKeystore(@TempDir Path tempDir) throws Exception {
+        String keystorePath = createTruststore(tempDir, "keep");
+        byte[] before = Files.readAllBytes(Path.of(keystorePath));
+
+        // a keystore that was never loaded can't be stored
+        assertThatThrownBy(() -> CertificatesUtil.storeKeystore(keystorePath, PASSWORD, KeyStore.getInstance("PKCS12")))
+                .isInstanceOf(KeyStoreException.class);
+
+        assertThat(Files.readAllBytes(Path.of(keystorePath))).isEqualTo(before);
+        try (Stream<Path> files = Files.list(tempDir)) {
+            assertThat(files).containsExactly(Path.of(keystorePath));
+        }
+    }
+
+    @Test
+    void getCertificateDoesNotRewriteTheKeystore(@TempDir Path tempDir) throws Exception {
+        String keystorePath = createTruststore(tempDir, "keep");
+        byte[] before = Files.readAllBytes(Path.of(keystorePath));
+
+        assertThat(new CertificatesUtil().getCertificate(keystorePath, PASSWORD, "keep")).isEqualTo(certificate);
+
+        // storing a PKCS12 keystore again gives other bytes (new salts)
+        assertThat(Files.readAllBytes(Path.of(keystorePath))).isEqualTo(before);
+    }
+
+    @Test
+    void concurrentImportsKeepEachOthersCertificates(@TempDir Path tempDir) throws Exception {
+        String keystorePath = createTruststore(tempDir);
+        List<String> names = IntStream.range(0, 12).mapToObj(i -> "certificate-" + i).toList();
+
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (String name : names) {
+                executor.submit(() -> CertificatesUtil.importTrustedCertificates(keystorePath, PASSWORD, List.of(certificate), name));
+            }
+        }
+
+        assertThat(CertificatesUtil.getCertificates(keystorePath, PASSWORD)).containsOnlyKeys(names);
     }
 
     /** A base64 encoded PKCS12 file with one private key entry (alias "1"). */
