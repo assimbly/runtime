@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller for the health of the backend itself: an overview of the flows and the JVM.
  */
 @Tag(name = "Backend health", description = "Health of the backend itself")
 @RestController

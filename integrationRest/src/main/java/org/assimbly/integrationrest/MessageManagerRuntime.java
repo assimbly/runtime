@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to send messages to a step.
  */
 @Tag(name = "Messages", description = "Send messages to a step")
 @RestController
@@ -31,6 +31,8 @@ import java.util.TreeMap;
 public class MessageManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Integration integration;
 
@@ -146,7 +148,7 @@ public class MessageManagerRuntime {
 
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/sendrequest",result);
         } catch (Exception e) {
-            log.error("Send reuqest message to {} failed", uri, e);
+            log.error("Send request message to {} failed", uri, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/sendrequest",e.getMessage());
         }
     }
@@ -165,7 +167,7 @@ public class MessageManagerRuntime {
             return new TreeMap<>();
         }
 
-        return new ObjectMapper().readValue(message, new TypeReference<>() {
+        return MAPPER.readValue(message, new TypeReference<>() {
         });
 
     }

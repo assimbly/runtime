@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 /**
- * REST controller for managing Security.
+ * REST controller to inspect and invalidate the flow cache.
  */
 @Tag(name = "Cache", description = "Inspect and invalidate the flow cache")
 @RestController

@@ -26,6 +26,8 @@ public class FlowManagerRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
 
     private final Integration integration;
 
@@ -475,8 +477,7 @@ public class FlowManagerRuntime {
 
     private boolean isSuccessResponse(String response) throws JacksonException {
 
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(response);
+        JsonNode root = MAPPER.readTree(response);
 
         String status = root.path("flow").path("status").asString();
 

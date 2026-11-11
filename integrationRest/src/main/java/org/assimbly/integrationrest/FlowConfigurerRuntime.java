@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to configure flows and to look up components.
  */
 @Tag(name = "Flow configuration", description = "Configure flows and look up components")
 @RestController

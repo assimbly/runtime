@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 import java.net.URISyntaxException;
 import java.util.Properties;
@@ -22,10 +21,9 @@ import java.util.TreeMap;
 
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to control the integration and to list its flows, errors and catalog.
  */
 @Tag(name = "Integration", description = "Control the integration and list flows, errors and the catalog")
-@Component
 @RestController
 @RequestMapping("/api")
 public class IntegrationRuntime {
@@ -33,8 +31,6 @@ public class IntegrationRuntime {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final Integration integration = new CamelIntegration(true);
-
-    private boolean integrationIsStarting;
 
     public IntegrationRuntime() throws Exception {
         // Empty constructor needed because of Exception.
@@ -509,7 +505,7 @@ public class IntegrationRuntime {
 
     public void initIntegration(){
 
-        if(!integration.isStarted() && !integrationIsStarting){
+        if(!integration.isStarted()){
             try {
 
                 //add notifier before starting integration
