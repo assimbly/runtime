@@ -7,12 +7,15 @@ import org.assimbly.util.domain.FlowState;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.PropertiesHelper;
 import org.assimbly.util.rest.LogUtil;
+import org.assimbly.util.rest.ResponseUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.http.ResponseEntity;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UtilsReviewRegressionTest {
@@ -67,6 +70,33 @@ class UtilsReviewRegressionTest {
     void routeIsExtractedById() throws Exception {
         assertThat(ApiUtils.extractRouteFromXmlByRouteId(ROUTES, "second")).contains("direct:b").doesNotContain("direct:a");
         assertThat(ApiUtils.extractRouteFromXmlByRouteId(ROUTES, "unknown")).isNull();
+    }
+
+    @Test
+    void responseBodyFollowsTheMediaType() {
+        ResponseEntity<String> json = ResponseUtil.createSuccessResponse(1L, "application/json", "/path", "done");
+        ResponseEntity<String> xml = ResponseUtil.createFailureResponse(1L, "application/XML", "/path", "wrong");
+        ResponseEntity<String> text = ResponseUtil.createFailureResponse(1L, "text/plain", "/path", "wrong");
+
+        assertThat(json.getStatusCode().value()).isEqualTo(200);
+        assertThatJson(json.getBody()).isObject()
+                .containsEntry("id", "1").containsEntry("details", "successful").containsEntry("path", "/path").containsEntry("message", "done")
+                .containsKeys("status", "timestamp");
+        assertThat(xml.getStatusCode().value()).isEqualTo(400);
+        assertThat(xml.getBody()).startsWith("<response>").endsWith("</response>")
+                .contains("<status>400</status>", "<message>wrong</message>", "<details>failed. See the log for a complete stack trace</details>");
+        assertThat(text.getBody()).isEqualTo("wrong");
+    }
+
+    @Test
+    void plainResponseAndHeaders() {
+        assertThat(ResponseUtil.createSuccessResponse(1L, "application/json", "/path", "done", true).getBody()).isEqualTo("done");
+        assertThat(ResponseUtil.createFailureResponse(1L, "application/json", "/path", "wrong", true).getBody()).isEqualTo("wrong");
+
+        ResponseEntity<String> failure = ResponseUtil.createFailureResponseWithHeaders(1L, "text/plain", "/path", "wrong", "alert", "flow");
+        assertThat(failure.getStatusCode().value()).isEqualTo(400);
+        assertThat(failure.getHeaders().getFirst("X-gatewayApp-alert")).isEqualTo("alert");
+        assertThat(failure.getHeaders().getFirst("X-gatewayApp-params")).isEqualTo("flow");
     }
 
     @Test

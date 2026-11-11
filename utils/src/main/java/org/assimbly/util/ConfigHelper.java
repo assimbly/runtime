@@ -1,5 +1,6 @@
 package org.assimbly.util;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -7,12 +8,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class ConfigHelper {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger("org.assimbly.util.ConfigHelper");
+    private static final Logger log = LoggerFactory.getLogger("org.assimbly.util.ConfigHelper");
 
     private final String fileName;
 
@@ -27,24 +26,16 @@ public final class ConfigHelper {
      * @return the found property.
      */
     public String get(String key) {
-        try {
-            Properties props = loadFile(fileName);
-            return props.getProperty(key);
-        } catch (IOException e) {
-            Logger.getLogger(ConfigHelper.class.getName()).log(Level.SEVERE, null, e);
-        }
-
-        return "";
+        return loadFile(fileName).getProperty(key);
     }
 
     /**
      * Load the contents of the module's config file into a properties object.
      *
      * @param fileName to get the config file by.
-     * @return a Properties object representing all the properties.
-     * @throws IOException when something went wrong while loading the file.
+     * @return a Properties object representing all the properties; empty when the file can't be read.
      */
-    private Properties loadFile(String fileName) throws IOException {
+    private Properties loadFile(String fileName) {
 
         Properties props = new Properties();
 

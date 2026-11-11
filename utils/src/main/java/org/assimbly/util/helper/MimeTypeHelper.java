@@ -14,16 +14,16 @@ import java.io.InputStream;
 
 public final class MimeTypeHelper {
 
-    private static final Logger log = LoggerFactory.getLogger("org.assimbly.mail.helper.MimeTypeHelper");
+    private static final Logger log = LoggerFactory.getLogger(MimeTypeHelper.class);
+
+    // loading the parsers is expensive, the detector can be shared between threads
+    private static final Detector DETECTOR = new AutoDetectParser().getDetector();
 
     private MimeTypeHelper() {}
 
     public static MediaType detectMimeType(InputStream content) {
-        AutoDetectParser parser = new AutoDetectParser();
-        Detector detector = parser.getDetector();
-
         try {
-            return detector.detect(content, new Metadata());
+            return DETECTOR.detect(content, new Metadata());
         } catch (IOException e) {
             log.error("MimeType not detected",e);
         }

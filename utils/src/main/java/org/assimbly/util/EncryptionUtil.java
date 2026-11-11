@@ -46,10 +46,7 @@ public final class EncryptionUtil {
     }
 
     public EncryptionUtil(String password) {
-        this.password = password;
-        this.textEncryptor.setPassword(password);
-        this.textEncryptor.setAlgorithm(PBE_ALGORITHM);
-        this.textEncryptor.setIvGenerator(new RandomIvGenerator());
+        this(password, PBE_ALGORITHM);
     }
 
     public StandardPBEStringEncryptor getTextEncryptor() {
@@ -116,8 +113,8 @@ public final class EncryptionUtil {
             PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, PBKDF2_ITERATIONS, KEY_LENGTH_BITS);
             SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM);
             return factory.generateSecret(spec).getEncoded();
-        } catch (Exception e) {
-            throw new RuntimeException("Key generation failed.", e);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Key generation failed.", e);
         }
     }
 
@@ -126,8 +123,8 @@ public final class EncryptionUtil {
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
             return cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Encryption failed.", e);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Encryption failed.", e);
         }
     }
 
@@ -138,7 +135,7 @@ public final class EncryptionUtil {
             try {
                 return decryptLegacyCbc(secretKey, iv, encryptedBytes);
             } catch (GeneralSecurityException cbcFailure) {
-                RuntimeException failure = new RuntimeException("Decryption failed.", cbcFailure);
+                IllegalStateException failure = new IllegalStateException("Decryption failed.", cbcFailure);
                 failure.addSuppressed(gcmFailure);
                 throw failure;
             }

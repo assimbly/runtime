@@ -71,7 +71,6 @@ public final class CertificatesUtil {
 	public static final String TRUSTSTORE_FILE = "outbound-truststore.p12";
 	/** The keystore with the server identities (private key + certificate chain). */
 	public static final String IDENTITY_STORE_FILE = "server-identity.p12";
-	private static final String SERVER_IDENTITY_FILE = IDENTITY_STORE_FILE;
 	private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
 	private static final String DEFAULT_KEYSTORE_PWD = "supersecret";
 	private static final Pattern NON_ALIAS_CHARACTERS = Pattern.compile("[^a-z0-9]+");
@@ -986,7 +985,7 @@ public final class CertificatesUtil {
 		}
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		try (InputStream is = classloader.getResourceAsStream(SERVER_IDENTITY_FILE)) {
+		try (InputStream is = classloader.getResourceAsStream(IDENTITY_STORE_FILE)) {
 			if (is != null) {
 				Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
 			}

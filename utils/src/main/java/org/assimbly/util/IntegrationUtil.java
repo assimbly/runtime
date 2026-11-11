@@ -38,6 +38,9 @@ public final class IntegrationUtil {
 	private static final Logger log =
 			LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
 
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+	private static final ObjectMapper YAML_MAPPER = new YAMLMapper();
+
 	private IntegrationUtil() {
 		throw new UnsupportedOperationException("Utility class");
 	}
@@ -53,8 +56,7 @@ public final class IntegrationUtil {
 
 	public static boolean isYaml(String yaml) {
 		try {
-			final ObjectMapper mapper = new YAMLMapper();
-			mapper.readTree(yaml);
+			YAML_MAPPER.readTree(yaml);
 			return true;
 		} catch (JacksonException _) {
 			return false;
@@ -63,8 +65,7 @@ public final class IntegrationUtil {
 
 	public static boolean isJson(String json) {
 		try {
-			final ObjectMapper mapper = new ObjectMapper();
-			mapper.readTree(json);
+			JSON_MAPPER.readTree(json);
 			return true;
 		} catch (JacksonException _) {
 			return false;

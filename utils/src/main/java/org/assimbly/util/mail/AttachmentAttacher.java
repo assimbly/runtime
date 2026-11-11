@@ -5,7 +5,6 @@ import org.apache.axiom.attachments.ByteArrayDataSource;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.attachment.AttachmentMessage;
-import org.apache.commons.io.IOUtils;
 import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,7 @@ public class AttachmentAttacher implements Processor {
             InputStream is = in.getBody(InputStream.class);
 
             // read ONCE; a message without body gives an empty attachment
-            byte[] fileBytes = is == null ? new byte[0] : IOUtils.toByteArray(is);
+            byte[] fileBytes = is == null ? new byte[0] : is.readAllBytes();
 
             // detect using fresh stream
             if (mimeType == null) {
@@ -54,14 +53,8 @@ public class AttachmentAttacher implements Processor {
                 emailBody = "";
             }
 
-            AttachmentMessage attMsg = exchange.getIn(AttachmentMessage.class);
-
-            if(attMsg!=null) {
-                log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
-                attMsg.addAttachment(fileName, new DataHandler(new ByteArrayDataSource(fileBytes, mimeType)));
-            }else {
-                log.warn("Adding attachment '{}' with mime type: '{}' failed as attachement is null", fileName, mimeType);
-            }
+            log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
+            in.addAttachment(fileName, new DataHandler(new ByteArrayDataSource(fileBytes, mimeType)));
 
             in.setHeader(Exchange.CONTENT_TYPE, "text/plain");
             in.setBody(emailBody);

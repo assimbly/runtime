@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -51,8 +50,6 @@ public final class TransformUtil {
 
             outputXML = writer.toString();
 
-            writer.close();
-
         } catch (TransformerConfigurationException tce) {
             log.error(
                     "XSLT Transformation of XML failed due to a TransformerConfigurationException",
@@ -63,8 +60,6 @@ public final class TransformUtil {
                     "XSLT Transformation of XML failed due to a TransformerException",
                     te
             );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
         return outputXML;
