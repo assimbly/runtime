@@ -138,7 +138,7 @@ public class FlowManager {
 
         try {
 
-            initializeSecurity(properties);
+            initializeSecurity(flowId, properties);
             createConnections(properties);
 
             // Block consumers when adding into an already-started context
@@ -234,14 +234,15 @@ public class FlowManager {
         }
     }
 
-    private void initializeSecurity(TreeMap<String, String> properties) throws Exception {
+    // A flow whose security can't be set up fails to load, instead of running without it
+    private void initializeSecurity(String flowId, TreeMap<String, String> properties) throws Exception {
         if (properties.containsKey("security.as2")) {
             log.info("Initialize AS2 Inbound security");
-            initializeAs2InboundSecurity(properties);
+            initializeAs2InboundSecurity(flowId, properties);
         }
         if (properties.containsKey("security.email")) {
             log.info("Initialize oauth2 email authenticator");
-            initializeOAuth2EmailAuthenticator(properties);
+            initializeOAuth2EmailAuthenticator(flowId, properties);
         }
         if (properties.containsKey("security.mutualtls")) {
             log.info("Initialize Mutual TLS");
@@ -286,7 +287,8 @@ public class FlowManager {
                     log.info("Skipping flow not in installed index: {}", flowId);
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // one flow that can't be restored doesn't stop the others
+                log.error("Restore flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -301,7 +303,7 @@ public class FlowManager {
                 loadFlow(flowId, flowProps);
                 log.info("Restarted flow: {}", flowId);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Restart flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -316,7 +318,7 @@ public class FlowManager {
                 stopFlow(flowId, 250, false);
                 log.info("Stopped flow: {}", flowId);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Stop flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -431,7 +433,8 @@ public class FlowManager {
         List<Route> routeList = getRoutesByFlowId(flowId);
 
         for (Route route : routeList) {
-            if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
+            ServiceStatus routeStatus = routeController.getRouteStatus(route.getId());
+            if (routeStatus == null || !routeStatus.isSuspendable()) {
                 return finishReport(report, flowId, "pause", "Flow isn't suspendable (Step " + route.getId() + ")", "error","failed");
             }
         }
@@ -466,8 +469,9 @@ public class FlowManager {
             List<Route> routeList = getRoutesByFlowId(flowId);
 
             // Restored paused routes are Stopped, not Suspended
-            boolean needsStart = routeList.stream().anyMatch(route ->
-                    routeController.getRouteStatus(route.getId()).isStopped());
+            boolean needsStart = routeList.stream()
+                    .map(route -> routeController.getRouteStatus(route.getId()))
+                    .anyMatch(routeStatus -> routeStatus != null && routeStatus.isStopped());
 
             if (needsStart) {
                 FlowLoaderReport startReport = startFlow(flowId, flowProperties, STOP_TIMEOUT);
@@ -479,7 +483,8 @@ public class FlowManager {
 
             for (Route route : routeList) {
                 String routeId = route.getId();
-                if (routeController.getRouteStatus(routeId).isSuspended()) {
+                ServiceStatus routeStatus = routeController.getRouteStatus(routeId);
+                if (routeStatus != null && routeStatus.isSuspended()) {
                     routeController.resumeRoute(routeId);
                     log.info("Resumed flow  | flowid={} | stepid={}", flowId, routeId);
                 }
@@ -557,7 +562,7 @@ public class FlowManager {
 
             for (Route route : routes) {
                 serviceStatus = routeController.getRouteStatus(route.getId());
-                if (!serviceStatus.isStarted()) {
+                if (serviceStatus == null || !serviceStatus.isStarted()) {
                     return false;
                 }
             }
@@ -989,30 +994,23 @@ public class FlowManager {
             return routes;
         }
 
-        return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).toList();
+        return context.getRoutes().stream().filter(r -> isRouteOfFlow(r, id)).toList();
 
+    }
+
+    // A route id is <flowId>-<stepId>. Matching on the flow id as prefix alone would also match flow 10 for flow 1.
+    private static boolean isRouteOfFlow(Route route, String flowId) {
+        String routeId = route.getId();
+        return flowId.equals(route.getGroup()) || routeId.equals(flowId) || routeId.startsWith(flowId + "-");
     }
 
     private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id) {
         List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();
-        return routeStartupOrder.stream().filter(r -> r.getRoute().getId().startsWith(id)).toList();
+        return routeStartupOrder.stream().filter(r -> isRouteOfFlow(r.getRoute(), id)).toList();
     }
 
     private List<String> getAllRoutesByFlowId(String id) {
-
-        List<Route> routes = context.getRoutesByGroup(id);
-
-        if(routes != null && !routes.isEmpty()){
-            return routes
-                    .stream()
-                    .map(Route::getId)
-                    .toList();
-        }
-
-        return context.getRoutes().stream()
-                .map(Route::getId)
-                .filter(routeId -> routeId.startsWith(id))
-                .toList();
+        return getRoutesByFlowId(id).stream().map(Route::getId).toList();
     }
 
     public Component getComponent(List<Class<?>> classes, String scheme) {
@@ -1086,20 +1084,16 @@ public class FlowManager {
         return null;
     }
 
-    private void initializeOAuth2EmailAuthenticator(TreeMap<String, String> properties) {
+    private void initializeOAuth2EmailAuthenticator(String flowId, TreeMap<String, String> properties) throws Exception {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (isRouteTemplate(entry, "smtp-action") || isRouteTemplate(entry, "imaps-source")) {
-                try {
-                    configureOAuth2EmailAuthenticator(entry);
-                } catch (Exception e) {
-                    log.error("initializeOAuth2EmailAuthenticator failed.", e);
-                }
+                configureOAuth2EmailAuthenticator(flowId, entry);
             }
         }
     }
 
-    private void configureOAuth2EmailAuthenticator(Map.Entry<String, String> entry) throws Exception {
+    private void configureOAuth2EmailAuthenticator(String flowId, Map.Entry<String, String> entry) throws Exception {
 
         boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
 
@@ -1129,7 +1123,8 @@ public class FlowManager {
         // ---------- Build & bind the Authenticator ----------
         // Token is resolved lazily (per connection attempt) so refresh works without
         // rebuilding the bean - see OAuth2MailAuthenticator below.
-        String beanId = "mailAuth-" + UUID.randomUUID();
+        // The same id on every load of the flow, so a restart replaces the bean instead of adding one
+        String beanId = "mailAuth-" + flowId + "-" + entry.getKey();
 
         MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
         context.getRegistry().bind(beanId, authenticator);
@@ -1218,20 +1213,16 @@ public class FlowManager {
         }
     }
 
-    private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
+    private void initializeAs2InboundSecurity(String flowId, TreeMap<String, String> properties) throws Exception {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (isRouteTemplate(entry, "as2-source")) {
-                try {
-                    configureAs2InboundSecurity(entry);
-                } catch (Exception e) {
-                    log.error("initializeAs2InboundSecurity failed.", e);
-                }
+                configureAs2InboundSecurity(flowId, entry);
             }
         }
     }
 
-    private void configureAs2InboundSecurity(Map.Entry<String, String> entry) throws Exception {
+    private void configureAs2InboundSecurity(String flowId, Map.Entry<String, String> entry) throws Exception {
 
         Document doc = parseXml(entry.getValue());
         Element templatedRoute = findTemplatedRoute(doc);
@@ -1240,7 +1231,9 @@ public class FlowManager {
         }
 
         Map<String, Element> paramElements = collectParameterElements(templatedRoute);
-        Map<String, String> boundParams = bindAs2SecurityParams(readParameterValues(paramElements));
+        // The same bean ids on every load of the flow, so a restart replaces the keys instead of adding them
+        String beanSuffix = flowId + "-" + entry.getKey();
+        Map<String, String> boundParams = bindAs2SecurityParams(readParameterValues(paramElements), beanSuffix);
 
         String escapedQuery = buildAs2Query(boundParams).replace("&", "&amp;");
 
@@ -1268,18 +1261,17 @@ public class FlowManager {
         entry.setValue(serializeXml(doc));
     }
 
-    private Map<String, String> bindAs2SecurityParams(Map<String, String> allParams) throws Exception {
+    private Map<String, String> bindAs2SecurityParams(Map<String, String> allParams, String beanSuffix) throws Exception {
 
         String password = cleanRaw(allParams.get("password"));
         String alias = cleanRaw(allParams.get("alias"));
 
-        String uniqueId = UUID.randomUUID().toString();
         Map<String, String> boundParams = new LinkedHashMap<>();
 
         for (Map.Entry<String, String> e : allParams.entrySet()) {
             String key = e.getKey();
             if (AS2_SECURITY_PARAMS.contains(key)) {
-                String beanId = key + "-" + uniqueId;
+                String beanId = key + "-" + beanSuffix;
                 URI uri = new URI(cleanRaw(e.getValue()));
                 context.getRegistry().bind(beanId, loadAs2Key(key, uri, password, alias, boundParams));
                 boundParams.put(key, "#" + beanId);

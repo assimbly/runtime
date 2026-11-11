@@ -74,14 +74,7 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	public TreeMap<String,String> getFlowConfiguration(String flowId) {
-		TreeMap<String,String> flowConf = null;
-		for (TreeMap<String, String> props : getFlowConfigurations()) {
-			if (props.get("id").equals(flowId)) {
-				flowConf = props;
-			}
-		}
-		
-		return flowConf;
+		return dilStore != null ? dilStore.getFlow(flowId) : null;
 	}	
 
 	public String getLastError() {

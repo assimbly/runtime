@@ -51,6 +51,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.IntStream;
 
@@ -67,11 +68,14 @@ public class CamelIntegration extends BaseIntegration {
     private final ConfigManager configManager;
     private final StartupManager startupManager = new StartupManager();
     private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
-    private boolean started;
+    private volatile boolean started;
     private RouteController routeController;
     private Properties encryptionProperties;
-    private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
-    private ConcurrentMap<String, String> collectorsMap;
+    // empty until setCaching() loads the store
+    private ConcurrentMap<String, TreeMap<String, String>> flowsMap = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, String> collectorsMap = new ConcurrentHashMap<>();
+    // one lock per flow: install, start, stop, pause, ... of the same flow never run at the same time
+    private final ConcurrentMap<String, Object> flowLocks = new ConcurrentHashMap<>();
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -137,7 +141,7 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    public void start() {
+    public synchronized void start() {
 
         // start Camel context
         if (!started) {
@@ -155,8 +159,10 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    public void stop() throws Exception {
-        super.getFlowConfigurations().clear();
+    public synchronized void stop() throws Exception {
+        if (dilStore != null) {
+            super.getFlowConfigurations().clear();
+        }
         configManager.stopTriggerMisfireWatchdog();
         if (context != null) {
             for (Route route : context.getRoutes()) {
@@ -176,6 +182,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String installFlow(String flowId, long timeout, String mediaType, String configuration) {
+        synchronized (flowLock(flowId)) {
+            return installFlowLocked(flowId, timeout, mediaType, configuration);
+        }
+    }
+
+    private String installFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
@@ -204,12 +216,26 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        super.removeFlowConfiguration(flowId);
-        installedFlowsManager.unregister(flowId);
-        return flowManager.stopFlow(flowId, timeout);
+        synchronized (flowLock(flowId)) {
+            super.removeFlowConfiguration(flowId);
+            installedFlowsManager.unregister(flowId);
+            return flowManager.stopFlow(flowId, timeout);
+        }
     }
 
     public String testFlow(String flowId, long timeout, String mediaType, String configuration) {
+        synchronized (flowLock(flowId)) {
+            // a test doesn't change what is installed: the stored configuration of the flow is put back afterwards
+            TreeMap<String, String> installedConfiguration = super.getFlowConfiguration(flowId);
+            try {
+                return testFlowLocked(flowId, timeout, mediaType, configuration);
+            } finally {
+                restoreFlowConfiguration(flowId, installedConfiguration);
+            }
+        }
+    }
+
+    private String testFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
@@ -367,11 +393,24 @@ public class CamelIntegration extends BaseIntegration {
         return exchange;
     }
 
-    private TreeMap<String, String> getProperties(String flowId) {
-        return super.getFlowConfigurations().stream()
-                .filter(properties -> flowId.equals(properties.get("id")))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Flow not found"));
+    private Object flowLock(String flowId) {
+        return flowLocks.computeIfAbsent(flowId, _ -> new Object());
+    }
+
+    private String notInstalledReport(String flowId, String event) {
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
+        return flowManager.finishReport(report, flowId, event, "Flow is not installed", "error", "failed").getReport();
+    }
+
+    private void restoreFlowConfiguration(String flowId, TreeMap<String, String> previous) {
+        if (dilStore == null) {
+            return;
+        }
+        if (previous != null) {
+            super.setFlowConfiguration(flowId, previous);
+        } else {
+            super.removeFlowConfiguration(flowId);
+        }
     }
 
     @Override
@@ -972,54 +1011,68 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String startFlow(String flowId, long timeout) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        if(flowProperties.isEmpty()){
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
-            String errorMessage = "XXX Flow is not installed";
-            return flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed").getReport();
-        }
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "start");
+            }
 
-
-        FlowLoaderReport report = flowManager.startFlow(flowId, flowProperties, timeout);
-        if (report.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            FlowLoaderReport report = flowManager.startFlow(flowId, flowProperties, timeout);
+            if (report.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return report.getReport();
         }
-        return report.getReport();
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        FlowLoaderReport report = flowManager.restartFlow(flowId, flowProperties, timeout);
-        if (report.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "restart");
+            }
+
+            FlowLoaderReport report = flowManager.restartFlow(flowId, flowProperties, timeout);
+            if (report.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return report.getReport();
         }
-        return report.getReport();
     }
 
     @Override
     public String stopFlow(String flowId, long timeout) {
-        return flowManager.stopFlow(flowId, timeout);
+        synchronized (flowLock(flowId)) {
+            return flowManager.stopFlow(flowId, timeout);
+        }
     }
 
     @Override
     public String resumeFlow(String flowId) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
-        if (flowLoaderReport.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "resume");
+            }
+
+            FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
+            if (flowLoaderReport.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return flowLoaderReport.getReport();
         }
-        return flowLoaderReport.getReport();
     }
 
     @Override
     public String pauseFlow(String flowId) {
-        FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
-        if(flowLoaderReport.isStatusSuccess()) {
-            TreeMap<String, String> flowProperties = getProperties(flowId);
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+        synchronized (flowLock(flowId)) {
+            FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
+            if (flowLoaderReport.isStatusSuccess()) {
+                registerInstalledFlow(flowId, super.getFlowConfiguration(flowId), InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+            }
+            return flowLoaderReport.getReport();
         }
-        return flowLoaderReport.getReport();
     }
 
     @Override
