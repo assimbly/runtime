@@ -66,17 +66,18 @@ public class SqlProcessor implements Processor {
 
             List<Map<String, Object>> rows = message.getBody(List.class);
 
-            int rowCount;
+            // The row count headers are absent when the query gave no rows or generated no keys
+            Integer rowCount;
             if(rows == null || rows.isEmpty()){
                 rows = message.getHeader("CamelSqlGeneratedKeyRows",List.class);
-                rowCount= message.getHeader("CamelSqlGeneratedKeysRowCount",int.class);
+                rowCount= message.getHeader("CamelSqlGeneratedKeysRowCount",Integer.class);
 
             }else{
-                rowCount= message.getHeader("CamelSqlRowCount",int.class);
+                rowCount= message.getHeader("CamelSqlRowCount",Integer.class);
             }
 
             if (rows != null) {
-                appendResultSize(doc, rootElement, rowCount);
+                appendResultSize(doc, rootElement, rowCount != null ? rowCount : rows.size());
                 for (Map<String, Object> row : rows) {
                     results.appendChild(buildResultRow(doc, row));
                 }

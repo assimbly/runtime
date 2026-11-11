@@ -109,7 +109,7 @@ public class XMLFileConfiguration {
 
 	public TreeMap<String, String> getFlowConfiguration(String flowId, String xml) throws Exception {
 
-		log.info("Configuration File: {}", xml);
+		log.debug("Configuration File: {}", xml);
 
 		if(!xml.endsWith("</dil>")){
 			Transform transform = new Transform("transform-to-dil.xsl");
@@ -124,7 +124,7 @@ public class XMLFileConfiguration {
 
 	public String getRouteConfiguration(String xml) throws Exception {
 
-        log.info("Route Configuration File: {}", xml);
+        log.debug("Route Configuration File: {}", xml);
 
 		Transform transform = new Transform("transform-to-route.xsl");
 		return transform.transformToDil(xml);
@@ -224,7 +224,7 @@ public class XMLFileConfiguration {
 		URL schemaUrl = this.getClass().getResource("/" + "dil.xsd");
 		Schema schema = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1").newSchema(schemaUrl);
 
-		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory docBuilderFactory = newDocumentBuilderFactory();
 
 		docBuilderFactory.setSchema(schema);
 
@@ -250,12 +250,21 @@ public class XMLFileConfiguration {
 		return docBuilder;
 	}
 
-	private static List<String> getFlowIds(String integrationId, Document doc)  throws Exception {
+	// A flow configuration never needs a DOCTYPE; disallowing it prevents XXE
+	static DocumentBuilderFactory newDocumentBuilderFactory() throws ParserConfigurationException {
+		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+		docBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		return docBuilderFactory;
+	}
+
+	static List<String> getFlowIds(String integrationId, Document doc)  throws Exception {
 
 		// Create XPath object
 		XPathFactory xpathFactory = XPathFactory.newInstance();
 		XPath xpath = xpathFactory.newXPath();
-		XPathExpression expr = xpath.compile("/dil/integrations/integration[id=" + integrationId +"]/flows/flow/id/text()");
+		// The id is bound as a variable, so it can't change the expression (XPath injection)
+		xpath.setXPathVariableResolver(_ -> integrationId);
+		XPathExpression expr = xpath.compile("/dil/integrations/integration[id=$integrationId]/flows/flow/id/text()");
 
 		// Create list of Ids
 		List<String> list = new ArrayList<>();

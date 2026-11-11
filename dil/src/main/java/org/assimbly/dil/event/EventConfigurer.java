@@ -250,8 +250,11 @@ public class EventConfigurer {
 
     private void removeLogger(LogCollector logCollector){
         logCollector.stop();
-        ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(logCollector.getName());
-        logbackLogger.detachAppender(logCollector.getName());
+        // The collector is attached to the loggers of its events (see addLogger), not to a logger with its own name
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        for (ch.qos.logback.classic.Logger logbackLogger : loggerContext.getLoggerList()) {
+            logbackLogger.detachAppender(logCollector);
+        }
     }
 
 }
