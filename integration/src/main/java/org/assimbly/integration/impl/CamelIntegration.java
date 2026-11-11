@@ -611,7 +611,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     private String getKameletSchema(String componentType, String type) {
-        if (StringUtils.isBlank(type)) {
+        if (!ConfigManager.isResourceName(componentType) || !ConfigManager.isResourceName(type)) {
             return null;
         }
 

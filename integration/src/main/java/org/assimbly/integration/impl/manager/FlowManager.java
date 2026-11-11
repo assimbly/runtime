@@ -60,6 +60,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.cert.Certificate;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -653,19 +654,31 @@ public class FlowManager {
     }
 
     public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception {
+        return readFlowLog("alerts", id, numberOfEntries);
+    }
+
+    // Reads today's log of a flow: <base>/<type>/<flowId>/<date>_<type>.log
+    private String readFlowLog(String type, String flowId, Integer numberOfEntries) throws IOException {
 
         String today = LocalDate.now(ZoneId.systemDefault()).format(LOG_FILE_DATE);
-        File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
+        Path logDirectory = Path.of(baseDir, type).normalize();
+        Path logFile = logDirectory.resolve(flowId).resolve(today + "_" + type + ".log").normalize();
 
-        if (file.exists()) {
-            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-            if (numberOfEntries != null && numberOfEntries < lines.size()) {
-                lines = lines.subList(lines.size() - numberOfEntries, lines.size());
-            }
-            return StringUtils.join(lines, ',');
-        } else {
+        // the flow id comes from the caller and must not point outside the log directory
+        if (!logFile.startsWith(logDirectory)) {
+            throw new IllegalArgumentException("Invalid flow id: " + flowId);
+        }
+
+        File file = logFile.toFile();
+        if (!file.exists()) {
             return "0";
         }
+
+        List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
+        if (numberOfEntries != null && numberOfEntries < lines.size()) {
+            lines = lines.subList(lines.size() - numberOfEntries, lines.size());
+        }
+        return StringUtils.join(lines, ',');
     }
 
     public TreeMap<String, String> getIntegrationAlertsCount(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -698,19 +711,7 @@ public class FlowManager {
     }
 
     public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception {
-
-        String today = LocalDate.now(ZoneId.systemDefault()).format(LOG_FILE_DATE);
-        File file = new File(baseDir + "/events/" + id + "/" + today + "_events.log");
-
-        if (file.exists()) {
-            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-            if (numberOfEntries != null && numberOfEntries < lines.size()) {
-                lines = lines.subList(lines.size() - numberOfEntries, lines.size());
-            }
-            return StringUtils.join(lines, ',');
-        } else {
-            return "0";
-        }
+        return readFlowLog("events", id, numberOfEntries);
     }
 
     public Set<String> getListOfFlowIds(String filter) {
@@ -943,12 +944,14 @@ public class FlowManager {
         String flowId = "";
         Document doc = StringConverter.stringToDoc(configurationUTF8);
         XPath xPath = XPathFactory.newInstance().newXPath();
+        // The file name is bound as a variable, so it can't change the expression (XPath injection)
+        xPath.setXPathVariableResolver(_ -> filename);
 
         String root = doc.getDocumentElement().getTagName();
 
         switch (root) {
             case "dil", "integrations", "flows", "flow" -> {
-                flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id", doc);
+                flowId = xPath.evaluate("//flows/flow[id=$filename]/id", doc);
                 if (flowId == null || flowId.isEmpty()) {
                     flowId = xPath.evaluate("//flow[1]/id", doc);
                 }
@@ -1144,9 +1147,11 @@ public class FlowManager {
                 && entry.getValue().contains("routeTemplateRef=\"" + templateRef + "\"");
     }
 
-    private static Document parseXml(String xml) throws ParserConfigurationException, SAXException, IOException {
+    static Document parseXml(String xml) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
+        // A route template never needs a DOCTYPE; disallowing it prevents XXE
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         return dbf.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
     }
 
@@ -1198,13 +1203,19 @@ public class FlowManager {
         }
     }
 
+    // The token itself is never logged
     private @Nullable String decryptAccessToken(String accessToken) {
-        try {
-            accessToken = encryptionUtil.get().decrypt(accessToken);
-        } catch (Exception e) {
-            log.error("ERROR to decrypt accessToken - "+accessToken, e);
+        EncryptionUtil decryptor = encryptionUtil.get();
+        if (decryptor == null) {
+            log.warn("No encryption key is set, using the accessToken as is");
+            return accessToken;
         }
-        return accessToken;
+        try {
+            return decryptor.decrypt(accessToken);
+        } catch (Exception e) {
+            log.error("Could not decrypt the accessToken, using it as is", e);
+            return accessToken;
+        }
     }
 
     private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {

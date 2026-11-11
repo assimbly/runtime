@@ -222,14 +222,14 @@ public class SSLManager {
     }
 
     public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         CertificatesUtil util = new CertificatesUtil();
         return util.getCertificate(keystorePath, keystorePassword, certificateName);
     }
 
     public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         File file = new File(keystorePath);
 
         if (file.exists()) {
@@ -241,7 +241,7 @@ public class SSLManager {
 
     public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         File file = new File(keystorePath);
 
         if (file.exists()) {
@@ -253,14 +253,24 @@ public class SSLManager {
 
     public Map<String, Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
     }
 
     public boolean deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         CertificatesUtil util = new CertificatesUtil();
         return util.deleteCertificate(keystorePath, keystorePassword, certificateName);
+    }
+
+    // The keystore name comes from the caller and must not point outside the security directory
+    private String keystorePath(String keystoreName) {
+        Path securityPath = Paths.get(baseDir, SECURITY_PATH).normalize();
+        Path keystorePath = securityPath.resolve(keystoreName).normalize();
+        if (!keystorePath.startsWith(securityPath) || keystorePath.equals(securityPath)) {
+            throw new IllegalArgumentException("Invalid keystore name: " + keystoreName);
+        }
+        return keystorePath.toString();
     }
 
     private Path prepareSecurityDirectory() throws IOException {

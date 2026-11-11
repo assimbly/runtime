@@ -408,7 +408,16 @@ public class ConfigManager {
 
     }
 
+    /** A name of a classpath resource (such as a step template) without a path in it. */
+    public static boolean isResourceName(String name) {
+        return name != null && !name.isBlank() && !name.contains("/") && !name.contains("\\") && !name.contains("..");
+    }
+
     public String getStepTemplate(String mediaType, String stepName) throws Exception {
+
+        if (!isResourceName(stepName)) {
+            throw new IllegalArgumentException("Invalid step template name: " + stepName);
+        }
 
         String resourceName = "kamelets/" + stepName + ".kamelet.yaml";
         URL url = Resources.getResource(resourceName);
