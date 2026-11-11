@@ -4,16 +4,24 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mail.MailAuthenticator;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.PluginHelper;
 import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.util.IntegrationUtil;
+import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXParseException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -209,6 +217,90 @@ class IntegrationReviewRegressionTest {
         } finally {
             integration.stop();
         }
+    }
+
+    @Test
+    void topThreadsAreTheOnesThatUsedMostCpu() throws Exception {
+        try (CamelContext context = new DefaultCamelContext()) {
+            StatsManager statsManager = new StatsManager(context, new FlowManager(context));
+
+            JSONArray threads = new JSONArray(statsManager.getThreads("application/json", "", 3));
+
+            assertEquals(3, threads.length());
+            for (int i = 1; i < threads.length(); i++) {
+                assertTrue(threads.getJSONObject(i - 1).getLong("cpuTime") >= threads.getJSONObject(i).getLong("cpuTime"), threads.toString());
+            }
+            assertEquals(0, new JSONArray(statsManager.getThreads("application/json", "no-thread-has-this-name", 3)).length());
+        }
+    }
+
+    @Test
+    void unknownComponentIsAnsweredAsUnknown() throws Exception {
+        CamelIntegration integration = new CamelIntegration(false);
+
+        assertEquals("Unknown component", integration.getDocumentation("no-such-component", "application/json"));
+        assertEquals("Unknown component", integration.getComponentParameters("no-such-component", "application/json"));
+    }
+
+    @Test
+    void headerValueIsAConstantUnlessItNamesALanguage() throws Exception {
+        CamelIntegration integration = new CamelIntegration(false);
+        Exchange exchange = new DefaultExchange(integration.getContext());
+        exchange.getIn().setBody("body");
+
+        TreeMap<String, Object> headers = new TreeMap<>();
+        headers.put("plain", "text");
+        headers.put("constant", "constant(fixed)");
+        headers.put("simple", "simple(${body})");
+        integration.setHeaders(exchange, headers);
+
+        assertEquals("text", exchange.getIn().getHeader("plain"));
+        assertEquals("fixed", exchange.getIn().getHeader("constant"));
+        assertEquals("body", exchange.getIn().getHeader("simple"));
+    }
+
+    @Test
+    void everyRepeatedSendStartsFromTheSameMessage() throws Exception {
+        CamelIntegration integration = new CamelIntegration(false);
+        CamelContext context = integration.getContext();
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:repeat").setBody(simple("${body}x")).to("mock:repeat");
+            }
+        });
+        context.start();
+        try {
+            integration.sendWithHeaders("direct:repeat", "a", new TreeMap<>(Map.of("h", "v")), 2);
+
+            MockEndpoint mock = context.getEndpoint("mock:repeat", MockEndpoint.class);
+            assertEquals(List.of("ax", "ax"),
+                    mock.getReceivedExchanges().stream().map(received -> received.getIn().getBody(String.class)).toList());
+        } finally {
+            context.stop();
+        }
+    }
+
+    @Test
+    void installedFlowsIndexIsKeptInMemoryAndNeverReplacedWhenUnreadable(@TempDir Path directory) throws Exception {
+        Path indexFile = directory.resolve("installed-flows.index");
+        InstalledFlowsManager index = new InstalledFlowsManager(indexFile);
+        index.register("1", "2", "tenant", "paused");
+        assertTrue(new InstalledFlowsManager(indexFile).get("1").isPaused());
+
+        // read once: the file is not needed again to answer
+        Files.delete(indexFile);
+        assertTrue(index.get("1").isPaused());
+        assertEquals(1, index.getAll().size());
+
+        // an index that can't be read is left as it is
+        Path unreadable = directory.resolve("unreadable.index");
+        Files.createDirectory(unreadable);
+        InstalledFlowsManager broken = new InstalledFlowsManager(unreadable);
+        broken.register("1", "2", "tenant");
+        assertTrue(broken.getAll().isEmpty());
+        assertNull(broken.get("1"));
+        assertTrue(Files.isDirectory(unreadable));
     }
 
     @Test

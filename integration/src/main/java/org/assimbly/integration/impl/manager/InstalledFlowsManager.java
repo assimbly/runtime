@@ -21,9 +21,15 @@ public class InstalledFlowsManager {
     private final Path indexFile;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    // The index is read from disk once and then kept here; every change is written through to the file
+    private Map<String, FlowEntry> entries;
+
     public InstalledFlowsManager() {
-        Path cacheDir = Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache");
-        this.indexFile = Paths.get(cacheDir.toString(), FILE_NAME);
+        this(Path.of(BaseDirectory.getInstance().getBaseDirectory(), "cache", FILE_NAME));
+    }
+
+    InstalledFlowsManager(Path indexFile) {
+        this.indexFile = indexFile;
     }
 
     public synchronized void register(String flowId, String version, String tenant) {
@@ -31,29 +37,36 @@ public class InstalledFlowsManager {
     }
 
     public synchronized void register(String flowId, String version, String tenant, String status) {
-        Map<String, FlowEntry> entries = readAll();
-        entries.put(flowId, new FlowEntry(flowId, version, tenant, normalizeStatus(status)));
-        writeAll(entries);
+        Map<String, FlowEntry> loaded = load();
+        if (loaded == null) {
+            // writing now would replace the unread index with this one flow
+            log.error("Flow {} is not registered as {}: the installed-flows index can't be read", flowId, status);
+            return;
+        }
+        loaded.put(flowId, new FlowEntry(flowId, version, tenant, normalizeStatus(status)));
+        writeAll(loaded);
     }
 
     public synchronized void unregister(String flowId) {
-        Map<String, FlowEntry> entries = readAll();
-        if (entries.remove(flowId) != null) {
-            writeAll(entries);
+        Map<String, FlowEntry> loaded = load();
+        if (loaded != null && loaded.remove(flowId) != null) {
+            writeAll(loaded);
         }
     }
 
     public synchronized Map<String, FlowEntry> getAll() {
-        return Collections.unmodifiableMap(readAll());
+        Map<String, FlowEntry> loaded = load();
+        return loaded == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(loaded));
     }
 
     public synchronized FlowEntry get(String flowId) {
-        return readAll().get(flowId);
+        Map<String, FlowEntry> loaded = load();
+        return loaded == null ? null : loaded.get(flowId);
     }
 
     public synchronized Map<String, FlowEntry> getByTenant(String tenant) {
         Map<String, FlowEntry> result = new LinkedHashMap<>();
-        readAll().forEach((flowId, entry) -> {
+        getAll().forEach((flowId, entry) -> {
             if (tenant.equals(entry.getTenant())) {
                 result.put(flowId, entry);
             }
@@ -61,7 +74,19 @@ public class InstalledFlowsManager {
         return result;
     }
 
-    private Map<String, FlowEntry> readAll() {
+    // null when the index can't be read; the next call tries again
+    private Map<String, FlowEntry> load() {
+        if (entries == null) {
+            try {
+                entries = readAll();
+            } catch (IOException e) {
+                log.error("Failed to read installed-flows index", e);
+            }
+        }
+        return entries;
+    }
+
+    private Map<String, FlowEntry> readAll() throws IOException {
         Map<String, FlowEntry> result = new LinkedHashMap<>();
 
         if (!Files.exists(indexFile)) {
@@ -75,8 +100,6 @@ public class InstalledFlowsManager {
                 if (line.isEmpty()) continue;
                 parseLine(line, result);
             }
-        } catch (IOException e) {
-            log.error("Failed to read installed-flows index", e);
         }
 
         return result;

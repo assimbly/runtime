@@ -11,13 +11,12 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
-import net.sf.saxon.xpath.XPathFactoryImpl;
 
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
-import org.apache.camel.language.xpath.XPathBuilder;
+
 import org.apache.camel.model.Model;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.support.DefaultExchange;
@@ -44,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.xml.xpath.XPathFactory;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -332,8 +331,9 @@ public class CamelIntegration extends BaseIntegration {
                 template.send(uri, exchange);
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
-                Exchange finalExchange = exchange;
-                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, finalExchange));
+                // every send gets its own copy, as a route changes the exchange it processes
+                Exchange original = exchange;
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, original.copy()));
             }
         }
 
@@ -370,22 +370,20 @@ public class CamelIntegration extends BaseIntegration {
     public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders) {
         for (Map.Entry<String, Object> messageHeader : messageHeaders.entrySet()) {
 
+            // A header value is language(expression), such as simple(${body}) or constant(text). Without it, it is a constant.
             String key = messageHeader.getKey();
-            String value = StringUtils.substringBetween(messageHeader.getValue().toString(), "(", ")");
-            String language = StringUtils.substringBefore(messageHeader.getValue().toString(), "(");
-            String result;
+            String header = String.valueOf(messageHeader.getValue());
+            String value = StringUtils.substringBetween(header, "(", ")");
+            String language = StringUtils.substringBefore(header, "(");
 
-            if (value.startsWith("constant")) {
+            if (value == null) {
+                exchange.getIn().setHeader(key, header);
+            } else if (language.equals("constant")) {
                 exchange.getIn().setHeader(key, value);
-            } else if (value.startsWith("xpath")) {
-                XPathFactory fac = new XPathFactoryImpl();
-                result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
-                exchange.getIn().setHeader(key, result);
             } else {
                 Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
                 Expression expression = resolvedLanguage.createExpression(value);
-                result = expression.evaluate(exchange, String.class);
-                exchange.getIn().setHeader(key, result);
+                exchange.getIn().setHeader(key, expression.evaluate(exchange, String.class));
             }
 
         }
@@ -588,7 +586,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String doc = catalog.componentJSonSchema(componentType);
 
-        if (doc.isEmpty()) {
+        if (doc == null || doc.isEmpty()) {
             doc = "Unknown component";
         }
 
@@ -738,7 +736,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String parameters = catalog.componentJSonSchema(componentType);
 
-        if (parameters.isEmpty()) {
+        if (parameters == null || parameters.isEmpty()) {
             parameters = "Unknown component";
         } else if (mediaType.contains("xml")) {
             parameters = DocConverter.jsonToXml(parameters);

@@ -1,6 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
@@ -379,12 +381,16 @@ public class ConfigManager {
 
     private List<String> getKamelets() {
         try (InputStream is = getClass().getResourceAsStream("/kamelets/index.txt")) {
-            assert is != null;
+            if (is == null) {
+                log.warn("No kamelets are loaded: the index /kamelets/index.txt is not on the classpath");
+                return Collections.emptyList();
+            }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
                 return reader.lines().toList();
             }
-        } catch (Exception _) {
+        } catch (IOException | UncheckedIOException e) {
+            log.warn("No kamelets are loaded: the index /kamelets/index.txt can't be read", e);
             return Collections.emptyList();
         }
     }

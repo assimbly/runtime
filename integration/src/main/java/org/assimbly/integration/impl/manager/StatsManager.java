@@ -36,6 +36,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.concurrent.ConcurrentMap;
 
 public class StatsManager {
@@ -235,7 +236,9 @@ public class StatsManager {
 
             for (Route route : routes) {
                 ManagedRouteMBean managedRoute = managedContext.getManagedRoute(route.getId());
-                managedRoute.reset();
+                if (managedRoute != null) {
+                    managedRoute.reset();
+                }
             }
 
         }
@@ -605,44 +608,29 @@ public class StatsManager {
 
     public String getThreads(String mediaType, String filter, int topEntries) {
 
-        List<JSONObject> jsonObjectList = new ArrayList<>();
-        ThreadInfo[] threadInfoArray = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true, 1);
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        List<JSONObject> threads = new ArrayList<>();
 
-        for (ThreadInfo threadInfo : threadInfoArray) {
+        for (ThreadInfo threadInfo : threadMXBean.dumpAllThreads(true, true, 1)) {
+            if (filter != null && !threadInfo.getThreadName().contains(filter)) {
+                continue;
+            }
             JSONObject thread = new JSONObject();
             thread.put("id", threadInfo.getThreadId());
             thread.put("name", threadInfo.getThreadName());
             thread.put("status", threadInfo.getThreadState().name());
-            thread.put("cpuTime", ManagementFactory.getThreadMXBean().getThreadCpuTime(threadInfo.getThreadId()));
-            jsonObjectList.add(thread);
+            thread.put("cpuTime", threadMXBean.getThreadCpuTime(threadInfo.getThreadId()));
+            threads.add(thread);
         }
 
-        // Filter by name
-        if (!filter.isEmpty()) {
+        // The CPU time is in nanoseconds (a long). Sorted first, so the top entries are the threads that used most CPU.
+        threads.sort(Comparator.comparingLong((JSONObject thread) -> thread.getLong("cpuTime")).reversed());
 
-            jsonObjectList = jsonObjectList.stream()
-                    .filter(obj -> obj.getString("name").contains(filter))
-                    .toList();
+        if (topEntries >= 1 && topEntries < threads.size()) {
+            threads = threads.subList(0, topEntries);
         }
 
-
-        // Filter by top entries
-        if (topEntries >= 1) {
-            if (topEntries > jsonObjectList.size()) {
-                jsonObjectList = jsonObjectList.subList(0, jsonObjectList.size());
-            }else{
-                jsonObjectList = jsonObjectList.subList(0, topEntries);
-            }
-        }
-
-        // Sort by cpuTime
-        List<JSONObject> sortedList = jsonObjectList.stream()
-                .sorted(Comparator.comparingInt((JSONObject o) -> o.getInt("cpuTime")).reversed())
-                .toList();
-
-        // Rebuild the JSONArray from the sorted and filtered list
-        JSONArray jsonArray = new JSONArray(sortedList);
-        String result = jsonArray.toString();
+        String result = new JSONArray(threads).toString();
 
         return applyMediaType(result, "json", mediaType);
 
@@ -655,6 +643,11 @@ public class StatsManager {
 
         long maxMemory = heapMemoryUsage.getMax(); // Maximum available memory
         long usedMemory = heapMemoryUsage.getUsed(); // Currently used memory
+
+        // the maximum is -1 when the JVM has no heap limit defined
+        if (maxMemory <= 0) {
+            return 0;
+        }
 
         double memoryUsagePercentage = ((double) usedMemory / maxMemory) * 100;
 
@@ -794,8 +787,7 @@ public class StatsManager {
             ManagedRouteMBean managedRoute = managedContext.getManagedRoute(routeId);
 
             if (filter != null && !filter.isEmpty()) {
-                String serviceStatus = managedRoute.getState();
-                if (serviceStatus.equalsIgnoreCase(filter)) {
+                if (managedRoute != null && filter.equalsIgnoreCase(managedRoute.getState())) {
                     stepIds.add(routeId);
                 }
             } else {
