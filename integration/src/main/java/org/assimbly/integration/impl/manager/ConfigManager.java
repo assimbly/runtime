@@ -28,7 +28,7 @@ import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import org.quartz.Scheduler;
 import tools.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
-import com.google.gson.Gson;
+
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,7 +50,7 @@ import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.apache.commons.text.StringEscapeUtils;
+
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.assimbly.cookies.CookieStore;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
@@ -72,6 +72,8 @@ import javax.xml.xpath.XPathFactory;
 public class ConfigManager {
 
     protected static final Logger log = LoggerFactory.getLogger(ConfigManager.class);
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final CamelContext context;
     private final SimpleRegistry registry;
@@ -449,7 +451,6 @@ public class ConfigManager {
             configuration = DocConverter.yamlToJson(configuration);
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         Collection[] collections = mapper.readValue(configuration, Collection[].class);
 
         for (Collection collection : collections) {
@@ -480,7 +481,6 @@ public class ConfigManager {
             configuration = DocConverter.yamlToJson(configuration);
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         Collection[] collections = mapper.readValue(configuration, Collection[].class);
 
         for (Collection collection : collections) {
@@ -501,11 +501,6 @@ public class ConfigManager {
 
 
 
-    public String serialize(String json) {
-        Gson gson = new Gson();
-        String g = gson.toJson(json);
-        return StringEscapeUtils.escapeEcmaScript(g);
-    }
 
     public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) {
 
@@ -630,33 +625,16 @@ public class ConfigManager {
 
         CamelCatalog catalog = new DefaultCamelCatalog();
 
-        String result;
-
-        switch (schema) {
-            case "component":
-                result = catalog.componentJSonSchema(name);
-                break;
-            case "language":
-                result = catalog.languageJSonSchema(name);
-                break;
-            case "dataformat":
-                result = catalog.dataFormatJSonSchema(name);
-                break;
-            case "main":
-                result = catalog.mainJsonSchema();
-                break;
-            case "model":
-                result = catalog.modelJSonSchema(name);
-                break;
-            case "transformer":
-                result = catalog.transformerJSonSchema(name);
-                break;
-            case "other":
-                result = catalog.otherJSonSchema(name);
-                break;
-            default:
-                result = "{}";
-        }
+        String result = switch (schema) {
+            case "component" -> catalog.componentJSonSchema(name);
+            case "language" -> catalog.languageJSonSchema(name);
+            case "dataformat" -> catalog.dataFormatJSonSchema(name);
+            case "main" -> catalog.mainJsonSchema();
+            case "model" -> catalog.modelJSonSchema(name);
+            case "transformer" -> catalog.transformerJSonSchema(name);
+            case "other" -> catalog.otherJSonSchema(name);
+            default -> "{}";
+        };
 
         if (mediaType.contains("xml")) {
             result = DocConverter.jsonToXml(result);

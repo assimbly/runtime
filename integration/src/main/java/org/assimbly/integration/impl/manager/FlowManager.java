@@ -89,6 +89,8 @@ public class FlowManager {
 
     private static final DateTimeFormatter LOG_FILE_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    private static final JsonMapper mapper = JsonMapper.builder().build();
+
     private static final Set<String> AS2_SECURITY_PARAMS = Set.of(
             "signingPrivateKey",
             "decryptingPrivateKey",
@@ -898,7 +900,6 @@ public class FlowManager {
 
     private String errorEventMessageToJson(Collection<BacklogErrorEventMessage> errorEventMessages) {
 
-        JsonMapper mapper = JsonMapper.builder().build();
         ArrayNode arrayNode = mapper.createArrayNode();
 
         for (BacklogErrorEventMessage errorEventMessage : errorEventMessages) {
@@ -931,16 +932,7 @@ public class FlowManager {
 
     public String setFlowId(String filename, String configuration) throws Exception {
 
-        String configurationUTF8 = new String(configuration.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-
-        String flowId;
-        if (IntegrationUtil.isXML(configurationUTF8)) {
-            flowId = getFlowId(filename, configurationUTF8);
-        } else {
-            flowId = filename;
-        }
-
-        return flowId;
+        return IntegrationUtil.isXML(configuration) ? getFlowId(filename, configuration) : filename;
 
     }
 

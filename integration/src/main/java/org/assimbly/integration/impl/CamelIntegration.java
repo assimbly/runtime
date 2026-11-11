@@ -59,6 +59,8 @@ public class CamelIntegration extends BaseIntegration {
 
     protected static final Logger log = LoggerFactory.getLogger(CamelIntegration.class);
 
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     private final CamelContext context;
     private final SimpleRegistry registry = new SimpleRegistry();
     private final FlowManager flowManager;
@@ -1227,11 +1229,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     private String toJson(List<Map<String, String>> result) {
-        try {
-            return new ObjectMapper().writeValueAsString(result);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return mapper.writeValueAsString(result);
     }
     @Override
     public String getInstalledFlowsIndex() {
@@ -1245,7 +1243,7 @@ public class CamelIntegration extends BaseIntegration {
                 entry.put("status", flowEntry.getStatus());
                 result.add(entry);
             });
-            return new ObjectMapper().writeValueAsString(result);
+            return mapper.writeValueAsString(result);
         } catch (Exception e) {
             log.error("Failed to serialize installed flows index", e);
             return "[]";
@@ -1281,8 +1279,6 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     private String mergeJson(String flowJson, String testJson) {
-
-        ObjectMapper mapper = new ObjectMapper();
 
         // Parse both strings into JsonNode trees
         JsonNode flowNode = mapper.readTree(flowJson);

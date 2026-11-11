@@ -22,7 +22,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.CertificatesUtil;
@@ -44,7 +44,7 @@ public class SSLManager {
     private static final String SERVER_IDENTITY_FILE = "server-identity.p12";
     private static final String OUTBOUND_TRUSTSTORE_FILE = "outbound-truststore.p12";
 
-    private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
+
     private static final String RESOURCE_PROP = "resource";
     private static final String AUTH_PASSWORD_PROP = "authPassword";
 
@@ -204,11 +204,7 @@ public class SSLManager {
     }
 
     private String getKeystorePassword() {
-        String keystorePwd = System.getenv(KEYSTORE_PWD);
-        if (StringUtils.isEmpty(keystorePwd)) {
-            return "supersecret";
-        }
-        return keystorePwd;
+        return CertificatesUtil.runtimeKeystorePassword();
     }
 
     public Certificate[] getCertificates(String url) {

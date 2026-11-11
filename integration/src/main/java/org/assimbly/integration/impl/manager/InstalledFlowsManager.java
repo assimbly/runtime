@@ -1,6 +1,6 @@
 package org.assimbly.integration.impl.manager;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.assimbly.util.BaseDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
