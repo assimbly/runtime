@@ -518,12 +518,12 @@ public class FlowManager {
 
             test.put("body",message.getBody(String.class));
             test.put("headers",headers);
-            test.put("passed ",true);
+            test.put("passed",true);
 
 
         } catch (Exception e) {
-            test.put("passed ",false);
-            test.put("message ",e.getMessage());
+            test.put("passed",false);
+            test.put("message",e.getMessage());
             log.error("Test flow failed. | flowid={}", flowId, e);
         }
 

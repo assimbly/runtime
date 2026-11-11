@@ -56,10 +56,10 @@ public class HealthIntegrationRuntime {
         try {
             String stats = integration.getStats(mediaType);
             boolean isPlainResponse = !stats.startsWith("Error") && !stats.startsWith("Warning");
-            return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/health/flow", stats, isPlainResponse);
+            return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/health/backend/flows", stats, isPlainResponse);
         } catch (Exception e) {
             log.error("Get flow failed", e);
-            return ResponseUtil.createFailureResponse(connectorId, mediaType, "/health/flow", e.getMessage());
+            return ResponseUtil.createFailureResponse(connectorId, mediaType, "/health/backend/flows", e.getMessage());
         }
     }
 
@@ -102,10 +102,10 @@ public class HealthIntegrationRuntime {
             }
 
             String jsonOutput = MAPPER.writeValueAsString(backendResponse);
-            return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/health/jvm", jsonOutput, true);
+            return ResponseUtil.createSuccessResponse(connectorId, mediaType, "/health/backend/jvm", jsonOutput, true);
         } catch (Exception e) {
             log.error("Get jvm failed", e);
-            return ResponseUtil.createFailureResponse(connectorId, mediaType, "/health/jvm", e.getMessage());
+            return ResponseUtil.createFailureResponse(connectorId, mediaType, "/health/backend/jvm", e.getMessage());
         }
     }
 

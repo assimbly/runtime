@@ -70,10 +70,10 @@ public class FlowConfigurerRuntime {
 
 		try {
 			boolean hasFlow = integration.hasFlow(flowId);
-			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow", Boolean.toString(hasFlow));
+			return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/isconfigured", Boolean.toString(hasFlow));
 		} catch (Exception e) {
             log.error("Check if integration has flow with id={} failed", flowId, e);
-			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/hasflow",e.getMessage());
+			return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/isconfigured",e.getMessage());
 		}
 
 	}

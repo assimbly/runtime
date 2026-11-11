@@ -89,10 +89,10 @@ public class MessageManagerRuntime {
                 integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
             }
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send","Sent successfully");
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send/{numberOfTimes}","Sent successfully");
         } catch (Exception e) {
             log.error("Send message to {} failed", uri, e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send/{numberOfTimes}","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
 

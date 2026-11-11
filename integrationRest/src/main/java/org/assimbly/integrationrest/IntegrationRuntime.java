@@ -226,7 +226,7 @@ public class IntegrationRuntime {
 
         try {
             String flowsDetails = integration.getListOfFlowsDetails(filter, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows",flowsDetails,true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows/details",flowsDetails,true);
         } catch (Exception e) {
             log.error("Get list of flows failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/flows/details",e.getMessage());
@@ -266,10 +266,10 @@ public class IntegrationRuntime {
 
         try {
             String flows = integration.getListOfSoapActions(url, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/soap/actions",flows,true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/soap/action",flows,true);
         } catch (Exception e) {
             log.error("Get list of soap actions failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/soap/actions",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/soap/action",e.getMessage());
         }
 
     }
@@ -325,10 +325,10 @@ public class IntegrationRuntime {
         try {
             TreeMap<String,String> numberOfEntriesList = integration.getIntegrationAlertsCount();
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/failedlog}",numberOfEntriesList.toString());
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/numberofalerts",numberOfEntriesList.toString());
         } catch (Exception e) {
             log.error("Get number of alerts failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/failedmessages",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/numberofalerts",e.getMessage());
         }
     }
 
@@ -408,10 +408,10 @@ public class IntegrationRuntime {
 
         try {
             String result = integration.removeCollectorsConfiguration(mediaType, configuration);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collector/remove", result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/remove", result);
         } catch (Exception e) {
             log.error("Remove collectors failed", e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/remove", e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/remove", e.getMessage());
         }
 
     }
@@ -567,11 +567,11 @@ public class IntegrationRuntime {
 
             String result = integration.getCatalogList(mediaType, list);
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/{list}/", result, true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/list/{listType}", result, true);
 
         } catch (Exception e) {
             log.error("Get catalog list for {} failed", list, e);
-            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/{list}/", e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/list/{listType}", e.getMessage());
         }
     }
 

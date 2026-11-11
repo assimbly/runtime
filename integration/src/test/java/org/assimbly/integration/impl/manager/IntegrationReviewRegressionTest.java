@@ -15,6 +15,7 @@ import org.assimbly.dil.loader.FlowLoaderReport;
 import org.assimbly.integration.impl.CamelIntegration;
 import org.assimbly.util.IntegrationUtil;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
@@ -301,6 +302,21 @@ class IntegrationReviewRegressionTest {
         assertTrue(broken.getAll().isEmpty());
         assertNull(broken.get("1"));
         assertTrue(Files.isDirectory(unreadable));
+    }
+
+    @Test
+    void testReportHasKeysWithoutTrailingSpace() throws Exception {
+        try (CamelContext context = new DefaultCamelContext()) {
+            JSONObject test = new JSONObject(new FlowManager(context).testFlow("not-installed")).getJSONObject("test");
+
+            assertFalse(test.getBoolean("passed"));
+            assertTrue(test.has("message"));
+        }
+    }
+
+    @Test
+    void lastErrorOfTheIntegrationIsNotAStackTrace() throws Exception {
+        assertEquals("0", new CamelIntegration(false).getLastError());
     }
 
     @Test

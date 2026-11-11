@@ -321,7 +321,7 @@ public class ValidationRuntime {
             String flowValidation = integration.validateFlow(uri);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/uri",flowValidation);
         } catch (Exception e) {
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/urizx",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/uri",e.getMessage());
         }
     }
 
@@ -383,10 +383,10 @@ public class ValidationRuntime {
 
         try {
             String testConnectionResult = integration.testConnection(host, port, timeout);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",testConnectionResult);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/connection/{host}/{port}/{timeout}",testConnectionResult);
         } catch (Exception e) {
             log.error("Test connection failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/connection/{host}/{port}/{timeout}",e.getMessage());
         }
 
     }

@@ -145,7 +145,7 @@ public class FlowManagerRuntime {
             }
 
             if (report.contains("successfully")) {
-                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/route/{flowId}/install",report,true);
+                return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/route/{routeId}/install",report,true);
             } else {
                 log.error("FlowManager Report:\n\n{}", report);
                 return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/route/{routeId}/install", report, true);
@@ -319,10 +319,10 @@ public class FlowManagerRuntime {
 
         try {
             String errors = integration.getStepErrors(flowId, stepId, maxNumberOfEntries, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",errors,true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/errors",errors,true);
         } catch (Exception e) {
             log.error("Get list of errors",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/error",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/{flowId}/step/{stepId}/errors",e.getMessage());
         }
 
     }

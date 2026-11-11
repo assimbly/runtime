@@ -45,10 +45,10 @@ public class HealthRuntime {
         try {
             String health = integration.getHealth(type, mediaType);
             if(health.startsWith("Error")||health.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/Health",health,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/health",health,plainResponse);
         } catch (Exception e) {
             log.error("Get health failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/Health",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/health",e.getMessage());
         }
     }
 
