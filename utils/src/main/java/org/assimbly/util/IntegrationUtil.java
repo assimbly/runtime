@@ -316,13 +316,8 @@ public final class IntegrationUtil {
 
 	public static void printTreemap(TreeMap<String, String> treeMap) {
 
-		IO.println("print treemap: \n");
-
 		for (Map.Entry<String, String> entry : treeMap.entrySet()) {
-			IO.println(
-					"key: " + entry.getKey()
-							+ "; value: " + entry.getValue()
-			);
+			log.info("key: {}; value: {}", entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -347,7 +342,7 @@ public final class IntegrationUtil {
 		String configuration =
 				convertTreemapToString(treeMap, items);
 
-		IO.println(configuration);
+		log.info(configuration);
 	}
 
 	public static String convertTreemapToString(

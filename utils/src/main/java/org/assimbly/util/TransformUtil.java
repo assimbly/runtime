@@ -33,13 +33,9 @@ public final class TransformUtil {
         String outputXML = null;
 
         try {
-            System.setProperty(
-                    "javax.xml.transform.TransformerFactory",
-                    "net.sf.saxon.TransformerFactoryImpl"
-            );
-
+            // Saxon for this transformation only; the factory of the rest of the JVM stays as it is.
             TransformerFactory factory =
-                    createSecureTransformerFactory();
+                    secure(TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null));
 
             StreamSource sourceXsl = new StreamSource(xslFile);
             Transformer transformer =
@@ -164,7 +160,7 @@ public final class TransformUtil {
 
         try {
             TransformerFactory factory =
-                    createSecureTransformerFactory();
+                    secure(TransformerFactory.newInstance());
 
             Transformer transformer =
                     factory.newTransformer();
@@ -195,14 +191,11 @@ public final class TransformUtil {
     }
 
     /**
-     * Creates a securely configured TransformerFactory.
+     * Configures a TransformerFactory securely.
      * Prevents external DTDs and external stylesheets from being accessed.
      */
-    private static TransformerFactory createSecureTransformerFactory()
+    private static TransformerFactory secure(TransformerFactory factory)
             throws TransformerConfigurationException {
-
-        TransformerFactory factory =
-                TransformerFactory.newInstance();
 
         // Enable secure XML processing.
         factory.setFeature(

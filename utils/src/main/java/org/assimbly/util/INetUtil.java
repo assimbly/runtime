@@ -3,7 +3,6 @@ package org.assimbly.util;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class INetUtil {
 
@@ -23,8 +22,9 @@ public class INetUtil {
 
             return true;
         }
-        catch(UnknownHostException _)
+        catch(IOException _)
         {
+            // unknown host, refused or timed out: the host is not available
             return false;
         }
     }

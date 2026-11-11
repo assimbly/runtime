@@ -33,8 +33,8 @@ public class AttachmentAttacher implements Processor {
 
             InputStream is = in.getBody(InputStream.class);
 
-            // read ONCE
-            byte[] fileBytes = IOUtils.toByteArray(is);
+            // read ONCE; a message without body gives an empty attachment
+            byte[] fileBytes = is == null ? new byte[0] : IOUtils.toByteArray(is);
 
             // detect using fresh stream
             if (mimeType == null) {
@@ -44,8 +44,8 @@ public class AttachmentAttacher implements Processor {
             }
 
             if (fileName == null) {
-                in.setHeader(Exchange.FILE_NAME,
-                        LocalDateTime.now(ZoneId.systemDefault()).format(TS_FORMAT) + MimeTypeHelper.findFileExtension(mimeType));
+                fileName = generatedFileName(mimeType, LocalDateTime.now(ZoneId.systemDefault()));
+                in.setHeader(Exchange.FILE_NAME, fileName);
             }
 
             String emailBody = in.getHeader("EmailBody", String.class);
@@ -67,5 +67,11 @@ public class AttachmentAttacher implements Processor {
             in.setBody(emailBody);
 
         }
+    }
+
+    /** The name of an attachment that comes without one: the time, with the extension of the mime type when that is known. */
+    static String generatedFileName(String mimeType, LocalDateTime now) {
+        String extension = MimeTypeHelper.findFileExtension(mimeType);
+        return now.format(TS_FORMAT) + (extension == null ? "" : extension);
     }
 }

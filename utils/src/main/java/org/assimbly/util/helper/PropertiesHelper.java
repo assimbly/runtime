@@ -40,10 +40,14 @@ public final class PropertiesHelper {
     private static Properties loadProperties() throws IOException {
         ClassLoader loader = PropertiesHelper.class.getClassLoader();
 
-        InputStream resourceStream = loader.getResourceAsStream(PropertiesHelper.FILE_NAME);
-
         Properties props = new Properties();
-        props.load(resourceStream);
+
+        try (InputStream resourceStream = loader.getResourceAsStream(PropertiesHelper.FILE_NAME)) {
+            // without a config file there are no properties
+            if (resourceStream != null) {
+                props.load(resourceStream);
+            }
+        }
 
         return props;
     }
