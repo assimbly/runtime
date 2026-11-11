@@ -30,25 +30,29 @@ public class ManagedBrokerRuntime {
     }
 
     //Broker manage
+    // Start, stop and restart of one broker run one at a time, so two requests can't both start it
     public String start(String brokerType, String brokerConfigurationType) throws Exception {
 
         Broker broker = getBroker(brokerType);
-        String status = broker.status();
-        log.info("Current ActiveMQ broker status: {} (type={},configurationtype={})", status, brokerType, brokerConfigurationType);
 
-        if(status.equals("stopped")) {
-            log.info("Starting ActiveMQ {} broker", brokerType);
-            if (brokerConfigurationType.equals("file")) {
-                status = broker.start();
-            }else if (brokerConfigurationType.equals("embedded")) {
-                status = broker.startEmbedded();
+        synchronized (broker) {
+            String status = broker.status();
+            log.info("Current ActiveMQ broker status: {} (type={},configurationtype={})", status, brokerType, brokerConfigurationType);
+
+            if(status.equals("stopped")) {
+                log.info("Starting ActiveMQ {} broker", brokerType);
+                if (brokerConfigurationType.equals("file")) {
+                    status = broker.start();
+                }else if (brokerConfigurationType.equals("embedded")) {
+                    status = broker.startEmbedded();
+                }
+
+                log.info("ActiveMQ {} broker {}", brokerType, status);
+
             }
 
-            log.info("ActiveMQ {} broker {}", brokerType, status);
-
+            return status;
         }
-
-        return status;
 
     }
 
@@ -56,33 +60,39 @@ public class ManagedBrokerRuntime {
     public String restart(String brokerType, String brokerConfigurationType) throws Exception {
 
         Broker broker = getBroker(brokerType);
-        String status = broker.status();
 
-        if(status.startsWith("started")) {
-            log.info("Restarting ActiveMQ broker");
-            if (brokerConfigurationType.equals("file")) {
-                status = broker.restart();
-            }else if (brokerConfigurationType.equals("embedded")) {
-                status = broker.restartEmbedded();
+        synchronized (broker) {
+            String status = broker.status();
+
+            if(status.startsWith("started")) {
+                log.info("Restarting ActiveMQ broker");
+                if (brokerConfigurationType.equals("file")) {
+                    status = broker.restart();
+                }else if (brokerConfigurationType.equals("embedded")) {
+                    status = broker.restartEmbedded();
+                }
+                log.info("Restarted ActiveMQ broker");
             }
-            log.info("Restarted ActiveMQ broker");
-        }
 
-        return status;
+            return status;
+        }
     }
 
 
     public String stop(String brokerType) throws Exception {
 
         Broker broker = getBroker(brokerType);
-        String status = broker.status();
 
-        if(status.startsWith("started")) {
-             log.info("Stopping ActiveMQ broker");
-             status = broker.stop();
+        synchronized (broker) {
+            String status = broker.status();
+
+            if(status.startsWith("started")) {
+                 log.info("Stopping ActiveMQ broker");
+                 status = broker.stop();
+            }
+
+            return status;
         }
-
-        return status;
 
     }
 

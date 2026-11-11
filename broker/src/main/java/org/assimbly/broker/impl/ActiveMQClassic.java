@@ -43,6 +43,7 @@ public class ActiveMQClassic implements Broker {
     private final File brokerFile = new File(baseDir + "/broker/activemq.xml");
     private BrokerService broker;
     private BrokerViewMBean brokerViewMBean;
+    private static final Pattern MAXIMUM_CONNECTIONS = Pattern.compile("maximumConnections=(\\d+)");
 
     public void setBaseDirectory(String baseDirectory) {
         BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -175,6 +176,10 @@ public class ActiveMQClassic implements Broker {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         String resolvedConfiguration;
 
+        if (brokerConfiguration == null) {
+            brokerConfiguration = "";
+        }
+
         if (brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 
             URL schemaFile = classloader.getResource("spring-beans.xsd");
@@ -228,13 +233,16 @@ public class ActiveMQClassic implements Broker {
 
             BrokerView adminView = broker.getAdminView();
 
-            String query = broker.getBroker().getBrokerService().getTransportConnectorByName("openwire").getConnectUri().getQuery();
-            Pattern pattern = Pattern.compile("maximumConnections=(\\d+)");
-            Matcher matcher = pattern.matcher(query);
+            // Stays 0 when the configuration has no openwire connector or no connection limit
             int maxConnections = 0;
+            TransportConnector openwire = broker.getTransportConnectorByName("openwire");
+            String query = openwire == null ? null : openwire.getConnectUri().getQuery();
 
-            if(matcher.find())
-                maxConnections = Integer.parseInt(matcher.group(1));
+            if(query != null) {
+                Matcher matcher = MAXIMUM_CONNECTIONS.matcher(query);
+                if(matcher.find())
+                    maxConnections = Integer.parseInt(matcher.group(1));
+            }
 
             return Map.of(
                     "openConnections", adminView.getCurrentConnectionsCount(),
@@ -260,7 +268,7 @@ public class ActiveMQClassic implements Broker {
 
     public String deleteQueue(String queueName) throws Exception {
         brokerViewMBean.removeQueue(queueName);
-        return null;
+        return "success";
     }
 
     public String getQueue(String queueName) throws Exception {
@@ -411,6 +419,15 @@ public class ActiveMQClassic implements Broker {
     }
 
 
+    // Moving and purging messages only exists for queues
+    private void checkIfQueueExist(String endpointName) throws EndpointNotFoundException {
+
+        if (!getEndpointType(endpointName).equals("Queue")) {
+            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
+        }
+
+    }
+
     private boolean endpointExist(String endpointName) {
 
         ObjectName[] queues = brokerViewMBean.getQueues();
@@ -427,7 +444,7 @@ public class ActiveMQClassic implements Broker {
         for (Object topic : topics) {
             String endpointAsString = StringUtils.substringAfter(topic.toString(), "destinationName=");
             if(endpointName.equals(endpointAsString)){
-                return false;
+                return true;
             }
         }
 
@@ -440,9 +457,9 @@ public class ActiveMQClassic implements Broker {
 
     public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
 
-        String endpointType = checkIfEndpointExist(sourceQueueName);
+        checkIfQueueExist(sourceQueueName);
 
-        QueueViewMBean queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
+        QueueViewMBean queueViewMbean = getQueueViewMBean("Queue", sourceQueueName);
 
         boolean result = queueViewMbean.moveMessageTo(messageId,targetQueueName);
 
@@ -451,9 +468,9 @@ public class ActiveMQClassic implements Broker {
 
     public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
 
-        String endpointType = checkIfEndpointExist(sourceQueueName);
+        checkIfQueueExist(sourceQueueName);
 
-        QueueViewMBean queueViewMbean = getQueueViewMBean(endpointType, sourceQueueName);
+        QueueViewMBean queueViewMbean = getQueueViewMBean("Queue", sourceQueueName);
 
         int result = queueViewMbean.moveMatchingMessagesTo("",targetQueueName);
 
@@ -462,11 +479,7 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessage(String endpointName, String messageId) throws Exception {
 
-        String endpointType = getEndpointType(endpointName);
-
-        if (!endpointType.equalsIgnoreCase("queue")) {
-            throw new EndpointNotFoundException("Endpoint " + endpointName + " not found");
-        }
+        checkIfQueueExist(endpointName);
 
         QueueViewMBean queueViewMbean = getQueueViewMBean("Queue", endpointName);
 
@@ -476,9 +489,9 @@ public class ActiveMQClassic implements Broker {
 
     public String removeMessages(String endpointName) throws Exception {
 
-        String endpointType = checkIfEndpointExist(endpointName);
+        checkIfQueueExist(endpointName);
 
-        QueueViewMBean queueViewMbean = getQueueViewMBean(endpointType, endpointName);
+        QueueViewMBean queueViewMbean = getQueueViewMBean("Queue", endpointName);
         long queueSize = queueViewMbean.getQueueSize();
         queueViewMbean.purge();
 
@@ -490,7 +503,8 @@ public class ActiveMQClassic implements Broker {
 
         String endpointType = checkIfEndpointExist(endpointName);
 
-        String messageIdKey = "JMSMessageID='" + messageId + "'";
+        // A quote in the id would otherwise end the string and change the selector
+        String messageIdKey = "JMSMessageID='" + messageId.replace("'", "''") + "'";
 
         DestinationViewMBean destinationViewMBean = getDestinationViewMBean(endpointType, endpointName);
 
@@ -619,9 +633,8 @@ public class ActiveMQClassic implements Broker {
 
         Connection[] connections = broker.getRegionBroker().getClients();
 
-        JSONObject connectionDetails = new JSONObject();
-
         for(Connection connection: connections){
+            JSONObject connectionDetails = new JSONObject();
             connectionDetails.put("connectionID", connection.getConnectionId());
             connectionDetails.put("clientAddress", connection.getRemoteAddress());
             connectionDetails.put("creationTime", Long.toString(connection.getStatistics().getStartTime()));
@@ -636,6 +649,10 @@ public class ActiveMQClassic implements Broker {
     }
 
     private CompositeData[] getMessagesByPage(CompositeData[] messages, Integer page, Integer numberOfMessages){
+
+        if(page < 1 || numberOfMessages < 1){
+            throw new IllegalArgumentException("page and numberOfMessages must be 1 or higher");
+        }
 
         List<CompositeData> list = Arrays.asList(messages);
 

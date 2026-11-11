@@ -48,7 +48,6 @@ public class ActiveMQArtemis implements Broker {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 	private final File brokerFile = new File(baseDir + "/broker/broker.xml");
 	private final File aioFile = new File(baseDir + "/broker/linux-x86_64/libartemis-native-64.so");
-	private ActiveMQServerControlImpl manageBroker;
 
 	public void setBaseDirectory(String baseDirectory) {
 		BaseDirectory.getInstance().setBaseDirectory(baseDirectory);
@@ -76,8 +75,6 @@ public class ActiveMQArtemis implements Broker {
 
 			broker.start();
 
-			setManageBroker();
-
 			log.info("event=StartBroker status={}",status());
 
 			return status();
@@ -86,12 +83,25 @@ public class ActiveMQArtemis implements Broker {
 
             log.error("event=StartBroker status=failed reason={}",e.getMessage(), e);
 
+			stopAfterFailedStart();
+
 			return "failed";
 
 		}
 
 	}
 
+
+	// A broker that failed halfway keeps its ports and files until it is stopped
+	private void stopAfterFailedStart() {
+		try {
+			if (broker != null) {
+				broker.stop();
+			}
+		} catch (Exception e) {
+			log.warn("event=StartBroker status=failed reason=Could not stop the broker that failed to start", e);
+		}
+	}
 
 	public String startEmbedded() throws Exception {
 
@@ -207,7 +217,11 @@ public class ActiveMQArtemis implements Broker {
 	public String setFileConfiguration(String brokerConfiguration) throws IOException {
 		
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		
+
+		if(brokerConfiguration == null) {
+			brokerConfiguration = "";
+		}
+
 		if(brokerFile.exists() || !brokerConfiguration.isEmpty()) {
 
 			URL schemaFile = classloader.getResource("broker.xsd");
@@ -339,12 +353,12 @@ public class ActiveMQArtemis implements Broker {
 
 	//Manage queues
 	public String createQueue(String queueName) throws Exception {
-		manageBroker.createQueue(queueName, "ANYCAST", queueName,"",true,-1,false,true );
+		manageBroker().createQueue(queueName, "ANYCAST", queueName,"",true,-1,false,true );
 		return "success";
 	}
 
 	public String deleteQueue(String queueName) throws Exception {
-		manageBroker.deleteAddress(queueName,true);
+		manageBroker().deleteAddress(queueName,true);
 		return "success";
 	}
 
@@ -363,10 +377,10 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointsInfo  = new JSONObject();
 		JSONObject endpointInfo = new JSONObject();
 
-		if(manageBroker!=null && status().equalsIgnoreCase("started")){
+		if(status().equalsIgnoreCase("started")){
 
 			try {
-				String[] endpoints = manageBroker.getQueueNames("ANYCAST");
+				String[] endpoints = manageBroker().getQueueNames("ANYCAST");
 				endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
 				for (String endpoint : endpoints) {
@@ -399,7 +413,7 @@ public class ActiveMQArtemis implements Broker {
 
 		Queue queue;
 
-		for (String queueName : manageBroker.getQueueNames("ANYCAST")) {
+		for (String queueName : manageBroker().getQueueNames("ANYCAST")) {
 			queue = activeBroker.locateQueue(queueName);
 			if (queue != null) {
 				queue.deleteAllReferences();
@@ -411,12 +425,12 @@ public class ActiveMQArtemis implements Broker {
 
 	//Manage topics
 	public String deleteTopic(String topicName) throws Exception {
-		manageBroker.deleteAddress(topicName,true);
+		manageBroker().deleteAddress(topicName,true);
 		return "success";
 	}
 
 	public String createTopic(String topicName) throws Exception {
-		manageBroker.createQueue(topicName, "MULTICAST", topicName,"",true,-1,false,true );
+		manageBroker().createQueue(topicName, "MULTICAST", topicName,"",true,-1,false,true );
 		return "success";
 	}
 
@@ -438,7 +452,7 @@ public class ActiveMQArtemis implements Broker {
 
 		Queue queue;
 
-		for (String queueName : manageBroker.getQueueNames("MULTICAST")) {
+		for (String queueName : manageBroker().getQueueNames("MULTICAST")) {
 			queue = activeBroker.locateQueue(queueName);
 			if (queue != null) {
 				queue.deleteAllReferences();
@@ -469,7 +483,7 @@ public class ActiveMQArtemis implements Broker {
 		JSONObject endpointsInfo  = new JSONObject();
 		JSONObject endpointInfo = new JSONObject();
 
-		String[] endpoints = manageBroker.getQueueNames("MULTICAST");
+		String[] endpoints = manageBroker().getQueueNames("MULTICAST");
 		endpoints = Arrays.stream(endpoints).distinct().toArray(String[]::new);
 
 		for(String endpoint: endpoints){
@@ -612,7 +626,7 @@ public class ActiveMQArtemis implements Broker {
 
 			if(endpointExist(endpointName)){
 				QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
-				numberOfMessages = queueControl.getMessageCount();
+				numberOfMessages += queueControl.getMessageCount();
 			}
 
 		}
@@ -667,8 +681,6 @@ public class ActiveMQArtemis implements Broker {
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
 
 		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
-
-		queueControl.getFirstMessageAsJSON();
 
 		CompositeData[] messages = queueControl.browse();
 
@@ -764,7 +776,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	public String getConsumers() throws Exception {
-		String consumersList = manageBroker.listAllConsumersAsJSON();
+		String consumersList = manageBroker().listAllConsumersAsJSON();
 
 		JSONObject consumers = new JSONObject();
 		consumers.put("consumers",new JSONArray(consumersList));
@@ -773,7 +785,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	public String getConnections() throws Exception {
-		String connectionsList = manageBroker.listConnectionsAsJSON();
+		String connectionsList = manageBroker().listConnectionsAsJSON();
 
 		JSONObject connections = new JSONObject();
 		connections.put("connections",new JSONArray(connectionsList));
@@ -786,11 +798,8 @@ public class ActiveMQArtemis implements Broker {
 		return broker;
 	}
 
-	private void setManageBroker(){
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-        manageBroker = activeBroker.getActiveMQServerControl();
-
+	private ActiveMQServerControlImpl manageBroker(){
+		return broker.getActiveMQServer().getActiveMQServerControl();
 	}
 
 }
