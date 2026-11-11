@@ -11,7 +11,7 @@ import org.apache.activemq.artemis.core.management.impl.ActiveMQServerControlImp
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-import org.apache.commons.io.FileUtils;
+
 import org.assimbly.broker.Broker;
 import org.assimbly.broker.converter.CompositeDataConverter;
 import org.assimbly.util.BaseDirectory;
@@ -32,10 +32,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -43,6 +44,7 @@ import static java.util.Arrays.stream;
 public class ActiveMQArtemis implements Broker {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -125,13 +127,13 @@ public class ActiveMQArtemis implements Broker {
 	
 	public String stop() throws Exception {
 
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
+		ActiveMQServer activeBroker = broker == null ? null : broker.getActiveMQServer();
 		
 		if(activeBroker!=null) {
 			String nodeID= String.valueOf(activeBroker.getNodeID());
             log.info("event=StopBroker status=stopping id='{}' uptime={} ", nodeID, activeBroker.getUptime());
 			broker.stop();
-            log.info("event=StopBroker status=stopping id='{}'", nodeID);
+            log.info("event=StopBroker status=stopped id='{}'", nodeID);
 		}
 		
 		return status();
@@ -161,13 +163,9 @@ public class ActiveMQArtemis implements Broker {
 
 		String status = "stopped";
 
-		if(broker==null) {
-			broker = new EmbeddedActiveMQ();
-		}
+		ActiveMQServer activeBroker = broker == null ? null : broker.getActiveMQServer();
 
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		if(activeBroker!=null && (activeBroker.isActive() || activeBroker.getState().name().equals("STARTED"))) {
+		if(activeBroker!=null && (activeBroker.isActive() || activeBroker.getState() == ActiveMQServer.SERVER_STATE.STARTED)) {
 			status = "started";
 		}
 
@@ -203,14 +201,10 @@ public class ActiveMQArtemis implements Broker {
 	public String getFileConfiguration() throws IOException {
 
 		if(!brokerFile.exists()) {
-			try {
-				writeDefaultConfiguration();
-			} catch (IOException e) {
-				log.error("event=GetFileConfiguration status=failed config=broker.xml reason={}", e.getMessage(), e);
-			}
+			writeDefaultConfiguration();
 		}
-    	
-		return FileUtils.readFileToString(brokerFile, StandardCharsets.UTF_8);
+
+		return Files.readString(brokerFile.toPath());
 					
 	}
 	
@@ -229,7 +223,7 @@ public class ActiveMQArtemis implements Broker {
 			if(!xmlValidation.equals("xml is valid")) {
 				return xmlValidation;
 			} 
-			FileUtils.writeStringToFile(brokerFile, brokerConfiguration,StandardCharsets.UTF_8);
+			writeConfiguration(brokerConfiguration);
 		}else {
 			writeDefaultConfiguration();
 		}
@@ -255,8 +249,13 @@ public class ActiveMQArtemis implements Broker {
 				"<cluster-password>admin</cluster-password>",
 				"<cluster-password>" + randomPassword() + "</cluster-password>");
 
-		FileUtils.writeStringToFile(brokerFile, configuration, StandardCharsets.UTF_8);
+		writeConfiguration(configuration);
 
+	}
+
+	private void writeConfiguration(String configuration) throws IOException {
+		Files.createDirectories(brokerFile.toPath().getParent());
+		Files.writeString(brokerFile.toPath(), configuration);
 	}
 
 	private static String randomPassword() {
@@ -464,19 +463,14 @@ public class ActiveMQArtemis implements Broker {
 
 	public String getTopic(String endpointName) throws Exception {
 
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-		Queue queue = activeBroker.locateQueue(endpointName);
+		checkIfEndpointExist(endpointName);
 
 		JSONObject endpointInfo = new JSONObject();
+		JSONObject endpoint = getEndpoint(endpointName);
+		endpointInfo.put("topic",endpoint);
 
-		if (queue == null) {
-			endpointInfo.put("topic","Endpoint " + endpointName + " not found");
-		}else{
-			JSONObject endpoint = getEndpoint(endpointName);
-			endpointInfo.put("topic",endpoint);
-		}
-
-		return endpointInfo.toString();	}
+		return endpointInfo.toString();
+	}
 
 	public String getTopics() throws Exception {
 
@@ -521,6 +515,14 @@ public class ActiveMQArtemis implements Broker {
 
 	}
 
+	private QueueControl getQueueControl(String endpointName) throws EndpointNotFoundException {
+
+		checkIfEndpointExist(endpointName);
+
+		return broker.getActiveMQServer().getManagementService().getQueueControl(endpointName);
+
+	}
+
 	private boolean endpointExist(String endpointName) {
 
 		ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -534,11 +536,7 @@ public class ActiveMQArtemis implements Broker {
 	//Manage Messages
 	public String moveMessage(String sourceQueueName, String targetQueueName, String messageId) throws Exception {
 
-		checkIfEndpointExist(sourceQueueName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(sourceQueueName);
+		QueueControl queueControl = getQueueControl(sourceQueueName);
 
 		boolean result = queueControl.moveMessage(Long.parseLong(messageId),targetQueueName);
 
@@ -548,11 +546,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String moveMessages(String sourceQueueName, String targetQueueName) throws Exception {
 
-		checkIfEndpointExist(sourceQueueName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(sourceQueueName);
+		QueueControl queueControl = getQueueControl(sourceQueueName);
 
 		int result = queueControl.moveMessages("", targetQueueName);
 
@@ -562,11 +556,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String removeMessage(String endpointName, String messageId) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		boolean result = queueControl.removeMessage(Long.parseLong(messageId));
 
@@ -577,11 +567,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String removeMessages(String endpointName) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		int result = queueControl.removeAllMessages();
 
@@ -591,11 +577,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String listMessages(String endpointName, String filter) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		JSONObject messagesInfo = new JSONObject();
 		JSONObject messageInfo = new JSONObject();
@@ -638,11 +620,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String countMessages(String endpointName) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		long numberOfMessages = queueControl.getMessageCount();
 
@@ -652,11 +630,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String countDelayedMessages(String endpointName) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		long numberOfMessages = queueControl.getScheduledCount();
 
@@ -668,19 +642,14 @@ public class ActiveMQArtemis implements Broker {
 
 		Map<String, Long> flowIdsMessageCountMap = getFlowIdsMessageCountMap(excludeEmptyQueues);
 
-		ObjectMapper objectMapper = new ObjectMapper();
-		return objectMapper.writeValueAsString(flowIdsMessageCountMap);
+		return OBJECT_MAPPER.writeValueAsString(flowIdsMessageCountMap);
 	}
 
 
 
 	public String browseMessage(String endpointName, String messageId, boolean excludeBody) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		CompositeData[] messages = queueControl.browse();
 
@@ -692,11 +661,7 @@ public class ActiveMQArtemis implements Broker {
 
 	public String browseMessages(String endpointName, Integer page, Integer numberOfMessages, boolean excludeBody) throws Exception {
 
-		checkIfEndpointExist(endpointName);
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		CompositeData[] messages;
 
@@ -707,7 +672,7 @@ public class ActiveMQArtemis implements Broker {
 			long countMessages = queueControl.countMessages();
 
 			if(countMessages > 10000){
-				throw new RuntimeException("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
+				throw new IllegalStateException("Maximum returned messages is 10000. Use paging when there are more than 10000 on the queue");
 			}else{
 				messages = queueControl.browse();
 			}
@@ -719,7 +684,7 @@ public class ActiveMQArtemis implements Broker {
 	}
 
 	private Map<String, Long> getFlowIdsMessageCountMap(boolean excludeEmptyQueues) {
-		Map<String, Long> destinationMessageCounts = new ConcurrentHashMap<>();
+		Map<String, Long> destinationMessageCounts = new HashMap<>();
 
 		try {
 			ActiveMQServer activeBroker = broker.getActiveMQServer();
@@ -735,13 +700,8 @@ public class ActiveMQArtemis implements Broker {
 					// Get the message count for the current queue
 					long messageCount = queueControl.getMessageCount();
 
-					if(destinationMessageCounts.containsKey(queueName)) {
-						messageCount += destinationMessageCounts.get(queueName);
-					}
-
 					if(messageCount > 0 || !excludeEmptyQueues) {
-						// Add queue name and message count to the map
-						destinationMessageCounts.put(queueName, messageCount);
+						destinationMessageCounts.merge(queueName, messageCount, Long::sum);
 					}
 
 				}
@@ -757,19 +717,15 @@ public class ActiveMQArtemis implements Broker {
 
 	public String sendMessage(String endpointName, Map<String,Object> messageHeaders, String messageBody) throws Exception {
 
-		checkIfEndpointExist(endpointName);
+		QueueControl queueControl = getQueueControl(endpointName);
 
 		String userName = broker.getActiveMQServer().getConfiguration().getClusterUser();
 		String password = broker.getActiveMQServer().getConfiguration().getClusterPassword();
 
 		Map<String, Object> headers = messageHeaders == null ? Map.of() : messageHeaders;
 		Map<String,String> messageHeadersAsString = headers.entrySet().stream()
+				.filter(e -> e.getValue() != null)
 				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
-
-
-		ActiveMQServer activeBroker = broker.getActiveMQServer();
-
-		QueueControl queueControl = activeBroker.getManagementService().getQueueControl(endpointName);
 
 		return queueControl.sendMessage(messageHeadersAsString, Message.TEXT_TYPE, messageBody, true, userName, password);
 

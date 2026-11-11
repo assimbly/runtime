@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
+import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -73,14 +74,14 @@ public class BrokerConfigurerRuntime {
        	try {
        		final String result = broker.setConfiguration(brokerType, brokerConfiguration);
             if(result.equals("success")) {
-            	return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/configure", result);
+            	return ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/configure", result);
             }else {
                 log.error("event=setConfiguration type=POST id={} type={} reason={}", id, brokerType, result);
-                return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/configure", result);
+                return ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/configure", result);
             }
    		} catch (Exception e) {
             log.error("event=setConfiguration type=POST id={} type={} reason={}", id, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/configure", e.getMessage());
+            return ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/configure", e.getMessage());
    		}
 
     }

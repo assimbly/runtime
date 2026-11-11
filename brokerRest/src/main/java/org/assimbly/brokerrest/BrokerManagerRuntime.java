@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -19,8 +20,6 @@ import org.springframework.http.ResponseEntity;
 public class BrokerManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-
-    private static final long ID = 0L;
 
     private final ManagedBrokerRuntime broker;
 
@@ -101,10 +100,10 @@ public class BrokerManagerRuntime {
 
         try {
    			final String status = broker.start(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/start", status);
+            return ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/start", status);
         } catch (Exception e) {
             log.error("event=startBroker type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
+            return ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/start", e.getMessage());
         }
 
     }
@@ -128,10 +127,10 @@ public class BrokerManagerRuntime {
 
         try {
             final String status = broker.restart(brokerType,brokerConfigurationType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", status);
+            return ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/restart", status);
         } catch (Exception e) {
             log.error("event=restartBroker type=GET id={} type={} brokerConfigurationType={} reason={}", id, brokerType, brokerConfigurationType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
+            return ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/restart", e.getMessage());
         }
 
     }
@@ -154,10 +153,10 @@ public class BrokerManagerRuntime {
 
         try {
             final String status = broker.stop(brokerType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", status);
+            return ResponseUtil.createSuccessResponse(id, "text", "/brokers/{id}/stop", status);
         } catch (Exception e) {
             log.error("event=stopBroker type=GET id={} type={} reason={}", id, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/stop", e.getMessage());
+            return ResponseUtil.createFailureResponse(id, "text", "/brokers/{id}/stop", e.getMessage());
     	}
 
     }
@@ -180,13 +179,8 @@ public class BrokerManagerRuntime {
 
         log.debug("event=getConnections type=GET message=Get list of all broker connections type={}", brokerType);
 
-        try {
-            final String result = broker.getConnections(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
-        } catch (Exception e) {
-            log.error("event=getConnections type=GET type={} reason={}", brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/connections",
+                () -> broker.getConnections(brokerType, mediaType), brokerType);
 
     }
 
@@ -208,13 +202,8 @@ public class BrokerManagerRuntime {
 
         log.debug("event=getConsumers type=GET message=Get list of all broker consumers type={}", brokerType);
 
-        try {
-            final String result = broker.getConsumers(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/consumers", result);
-        } catch (Exception e) {
-            log.error("event=getConsumers type=GET type={} reason={}", brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/consumers", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/consumers",
+                () -> broker.getConsumers(brokerType, mediaType), brokerType);
 
     }
 

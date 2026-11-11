@@ -19,6 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -175,6 +176,74 @@ class BrokerReviewRegressionTest {
         }
         assertTrue(directory.resolve("broker/activemq.xml").toFile().exists());
         assertTrue(directory.resolve("broker/broker.xml").toFile().exists());
+    }
+
+    @Test
+    void brokersThatWereNeverStartedAreStoppedAndCanBeStopped() throws Exception {
+        for (Broker broker : new Broker[]{new ActiveMQClassic(), new ActiveMQArtemis()}) {
+            assertEquals("stopped", broker.status());
+            assertEquals("stopped", broker.stop());
+            assertNull(broker.getBroker());
+        }
+    }
+
+    @Test
+    void classicReturnsTheRequestedPage() throws Exception {
+        ActiveMQClassic classic = classic();
+        classic.createQueue("queue");
+        for (int i = 0; i < 3; i++) {
+            classic.sendMessage("queue", null, "body");
+        }
+
+        assertEquals(2, messages(classic.browseMessages("queue", 1, 2, false)).length());
+        assertEquals(1, messages(classic.browseMessages("queue", 2, 2, false)).length());
+        assertEquals(0, messages(classic.browseMessages("queue", 3, 2, false)).length());
+        assertEquals(0, messages(classic.browseMessages("queue", Integer.MAX_VALUE, Integer.MAX_VALUE, false)).length());
+    }
+
+    @Test
+    void artemisRejectsUnknownTopicAndSkipsHeadersWithoutValue(@TempDir Path directory) throws Exception {
+        ActiveMQArtemis artemis = artemis(directory, "queue");
+        var headers = new HashMap<String, Object>();
+        headers.put("empty", null);
+        headers.put("custom", "value");
+
+        assertThrows(EndpointNotFoundException.class, () -> artemis.getTopic("unknown"));
+        assertNotNull(artemis.sendMessage("queue", headers, "body"));
+        assertEquals("1", artemis.countMessages("queue"));
+    }
+
+    @Test
+    void unknownConfigurationTypeIsRejected() throws Exception {
+        var runtime = new ManagedBrokerRuntime();
+        Broker stopped = (Broker) Proxy.newProxyInstance(Broker.class.getClassLoader(), new Class<?>[]{Broker.class},
+                (object, method, args) -> "stopped");
+        setField(runtime, ManagedBrokerRuntime.class, "classic", stopped);
+
+        assertThrows(IllegalArgumentException.class, () -> runtime.start("classic", "unknown"));
+    }
+
+    @Test
+    void controllersAnswerWithTheResultOrTheReasonOfTheFailure() {
+        var controller = new QueueManagerRuntime(new ManagedBrokerRuntime() {
+            @Override
+            public String createQueue(String brokerType, String queueName) {
+                return "success";
+            }
+
+            @Override
+            public String deleteQueue(String brokerType, String queueName) throws Exception {
+                throw new EndpointNotFoundException("Endpoint " + queueName + " not found");
+            }
+        });
+
+        var created = controller.createQueue("classic", "queue", "text/plain");
+        var deleted = controller.deleteQueue("classic", "queue", "text/plain");
+
+        assertEquals(200, created.getStatusCode().value());
+        assertEquals("success", created.getBody());
+        assertEquals(400, deleted.getStatusCode().value());
+        assertEquals("Endpoint queue not found", deleted.getBody());
     }
 
     private ActiveMQArtemis artemis(Path directory, String... queues) throws Exception {

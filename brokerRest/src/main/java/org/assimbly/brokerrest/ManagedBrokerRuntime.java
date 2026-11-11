@@ -45,6 +45,8 @@ public class ManagedBrokerRuntime {
                     status = broker.start();
                 }else if (brokerConfigurationType.equals("embedded")) {
                     status = broker.startEmbedded();
+                }else{
+                    throw new IllegalArgumentException("Unknown brokerConfigurationType: valid values are file or embedded");
                 }
 
                 log.info("ActiveMQ {} broker {}", brokerType, status);
@@ -70,6 +72,8 @@ public class ManagedBrokerRuntime {
                     status = broker.restart();
                 }else if (brokerConfigurationType.equals("embedded")) {
                     status = broker.restartEmbedded();
+                }else{
+                    throw new IllegalArgumentException("Unknown brokerConfigurationType: valid values are file or embedded");
                 }
                 log.info("Restarted ActiveMQ broker");
             }
@@ -114,24 +118,12 @@ public class ManagedBrokerRuntime {
     public String getConnections(String brokerType, String mediaType) throws Exception {
         Broker broker = getBroker(brokerType);
 
-        String result = broker.getConnections();
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getConnections(), mediaType);
     }
 
     public String getConsumers(String brokerType, String mediaType) throws Exception {
         Broker broker = getBroker(brokerType);
-        String result = broker.getConsumers();
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getConsumers(), mediaType);
     }
 
     //Manage queues
@@ -147,25 +139,13 @@ public class ManagedBrokerRuntime {
 
     public String getQueue(String brokerType, String queueName, String mediaType) throws Exception {
         Broker broker = getBroker(brokerType);
-        String result = broker.getQueue(queueName);
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getQueue(queueName), mediaType);
     }
 
     public String getQueues(String brokerType, String mediaType) throws Exception {
         Broker broker = getBroker(brokerType);
 
-        String result = broker.getQueues();
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getQueues(), mediaType);
     }
 
     public String clearQueue(String brokerType, String queueName) throws Exception {
@@ -201,37 +181,19 @@ public class ManagedBrokerRuntime {
 
     public String getTopic(String brokerType, String topicName, String mediaType) throws Exception{
         Broker broker = getBroker(brokerType);
-        String result = broker.getTopic(topicName);
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getTopic(topicName), mediaType);
     }
 
     public String getTopics(String brokerType, String mediaType) throws Exception{
         Broker broker = getBroker(brokerType);
-        String result = broker.getTopics();
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.getTopics(), mediaType);
     }
 
     //manage messages
     public String listMessages(String brokerType, String endpointName, String filter, String mediaType) throws Exception {
 
         Broker broker = getBroker(brokerType);
-        String result = broker.listMessages(endpointName, filter);
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.listMessages(endpointName, filter), mediaType);
     }
 
     public String countMessagesFromList(String brokerType, String endpointNames) throws Exception {
@@ -264,24 +226,12 @@ public class ManagedBrokerRuntime {
 
     public String browseMessage(String brokerType, String endpointName, String messageId, String mediaType, boolean excludeBody) throws Exception{
         Broker broker = getBroker(brokerType);
-        String result = broker.browseMessage(endpointName, messageId, excludeBody);
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.browseMessage(endpointName, messageId, excludeBody), mediaType);
     }
 
     public String browseMessages(String brokerType, String endpointName, Integer page, Integer numberOfMessages, String mediaType, boolean excludeBody) throws Exception{
         Broker broker = getBroker(brokerType);
-        String result = broker.browseMessages(endpointName, page, numberOfMessages, excludeBody);
-
-        if(mediaType.equalsIgnoreCase("application/xml")){
-            result = DocConverter.jsonToXml(result);
-        }
-
-        return result;
+        return inMediaType(broker.browseMessages(endpointName, page, numberOfMessages, excludeBody), mediaType);
     }
 
     public String removeMessage(String brokerType, String endpointName, String messageId) throws Exception{
@@ -305,6 +255,10 @@ public class ManagedBrokerRuntime {
     }
 
     //private methods
+    private String inMediaType(String json, String mediaType) throws Exception {
+        return mediaType.equalsIgnoreCase("application/xml") ? DocConverter.jsonToXml(json) : json;
+    }
+
 	private Broker getBroker(String brokerType) {
         if (brokerType.equalsIgnoreCase("classic")) {
             return classic;
