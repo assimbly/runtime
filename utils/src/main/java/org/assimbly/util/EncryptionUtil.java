@@ -20,6 +20,8 @@ public final class EncryptionUtil {
     private static final int SALT_LENGTH = 16; // Length of the salt in bytes
     private static final int IV_LENGTH = 12; // GCM recommended nonce length in bytes
     private static final int GCM_TAG_LENGTH_BITS = 128;
+    // Why: same marker as the tenantvariables component, so both write and read one format.
+    private static final String GCM_MARKER = "GCM";
     private final String password;
 
     public static final String CIPHER_ALGORITHM = "AES";
@@ -80,7 +82,7 @@ public final class EncryptionUtil {
         String encodedEncryptedText = encoder.encodeToString(encryptedBytes);
 
         // Concatenate and return
-        return String.format("%s%s|%s|%s%s", ENCODE_PREFIX, encodedSalt, encodedIv, encodedEncryptedText, ENCODE_SUFFIX);
+        return String.format("%s%s|%s|%s|%s%s", ENCODE_PREFIX, GCM_MARKER, encodedSalt, encodedIv, encodedEncryptedText, ENCODE_SUFFIX);
     }
 
     public String decrypt(String encryptedText) {
@@ -91,20 +93,25 @@ public final class EncryptionUtil {
 
         String contents = encryptedText.substring(4, encryptedText.length() - 1);
         String[] parts = contents.split("\\|");
-        if (parts.length != 3) {
+
+        // Current format: ENC(GCM|salt|iv|ciphertext). Unmarked format: ENC(salt|iv|ciphertext)
+        boolean marked = parts.length == 4 && GCM_MARKER.equals(parts[0]);
+        if (!marked && parts.length != 3) {
             throw new IllegalArgumentException("Invalid encrypted text format.");
         }
+        int offset = marked ? 1 : 0;
 
         Base64.Decoder decoder = Base64.getDecoder();
-        byte[] salt = decoder.decode(parts[0]);
-        byte[] iv = decoder.decode(parts[1]);
-        byte[] encryptedBytes = decoder.decode(parts[2]);
+        byte[] salt = decoder.decode(parts[offset]);
+        byte[] iv = decoder.decode(parts[offset + 1]);
+        byte[] encryptedBytes = decoder.decode(parts[offset + 2]);
 
         // Generate key from password and salt
         SecretKeySpec secretKey = new SecretKeySpec(generateKey(password, salt), CIPHER_ALGORITHM);
 
-        // Decrypt the encrypted text
-        return decryptWithIv(secretKey, iv, encryptedBytes);
+        // Why: unmarked values are either legacy AES/CBC (16-byte IV) or AES/GCM written before the marker existed (12-byte IV).
+        boolean gcm = marked || iv.length == IV_LENGTH;
+        return decryptWithIv(secretKey, iv, encryptedBytes, gcm);
     }
 
 
@@ -128,17 +135,11 @@ public final class EncryptionUtil {
         }
     }
 
-    private String decryptWithIv(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes) {
+    private String decryptWithIv(SecretKeySpec secretKey, byte[] iv, byte[] encryptedBytes, boolean gcm) {
         try {
-            return decryptGcm(secretKey, iv, encryptedBytes);
-        } catch (GeneralSecurityException gcmFailure) {
-            try {
-                return decryptLegacyCbc(secretKey, iv, encryptedBytes);
-            } catch (GeneralSecurityException cbcFailure) {
-                IllegalStateException failure = new IllegalStateException("Decryption failed.", cbcFailure);
-                failure.addSuppressed(gcmFailure);
-                throw failure;
-            }
+            return gcm ? decryptGcm(secretKey, iv, encryptedBytes) : decryptLegacyCbc(secretKey, iv, encryptedBytes);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("Decryption failed.", e);
         }
     }
 
