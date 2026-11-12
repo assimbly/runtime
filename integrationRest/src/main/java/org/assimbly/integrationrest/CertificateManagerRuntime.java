@@ -407,6 +407,47 @@ public class CertificateManagerRuntime {
         return storeIdentity(mediaType, certificateName, p12, password, keystoreName, keystorePassword, true);
     }
 
+    /** A PKCS12 file (base64 encoded, optionally as a data URL) with its password, so that the password isn't sent as a header. */
+    public record IdentityFile(String p12, String password) {}
+
+    @Operation(
+            summary = "Import a server identity (private key + certificate chain) into the keystore",
+            description = "As the text/plain import, with the PKCS12 file and its password in a JSON body: {\"p12\": \"...\", \"password\": \"...\"}."
+    )
+    @PostMapping(
+            path = "/certificates/identity/{certificateName}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> importIdentityFile(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestBody IdentityFile identity,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return storeIdentity(mediaType, certificateName, identity.p12(), identity.password(), keystoreName, keystorePassword, false);
+    }
+
+    @Operation(
+            summary = "Create or replace (renew) a server identity in the keystore",
+            description = "As the text/plain replace, with the PKCS12 file and its password in a JSON body: {\"p12\": \"...\", \"password\": \"...\"}."
+    )
+    @PutMapping(
+            path = "/certificates/identity/{certificateName}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> replaceIdentityFile(
+            @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
+            @PathVariable(value = "certificateName") String certificateName,
+            @RequestBody IdentityFile identity,
+            @RequestHeader(value = "keystoreName", required = false, defaultValue = IDENTITY_STORE) String keystoreName,
+            @RequestHeader(value = "keystorePassword", required = false) String keystorePassword
+    ) {
+        return storeIdentity(mediaType, certificateName, identity.p12(), identity.password(), keystoreName, keystorePassword, true);
+    }
+
     @Operation(summary = "Delete an identity from the keystore")
     @DeleteMapping(
             path = "/certificates/identity/{certificateName}",
