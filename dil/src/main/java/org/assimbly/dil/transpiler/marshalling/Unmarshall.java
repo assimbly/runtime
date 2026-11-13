@@ -354,7 +354,8 @@ public class Unmarshall {
 
 	private void createResources() {
 
-		// getProperty() returns a single String for one resource, a Collection for several, null for none.
+		// getProperty() reads content raw: no ${...} interpolation or comma splitting, so Groovy
+		// script bodies are stored verbatim. It yields a String for one resource, a Collection for many.
 		Object resources = conf.getProperty("core/resources/resource/content");
 		int resourceCount = switch (resources) {
 			case null -> 0;
@@ -372,8 +373,6 @@ public class Unmarshall {
 				id = name;
 			}
 
-			// Read content raw: unlike getString()/getStringArray(), getProperty() applies no ${...}
-			// interpolation or comma splitting, so Groovy script bodies are stored verbatim.
 			Object content = conf.getProperty("core/resources/resource[" + i + "]/content");
 			properties.put("resource." + id, content == null ? null : content.toString());
 

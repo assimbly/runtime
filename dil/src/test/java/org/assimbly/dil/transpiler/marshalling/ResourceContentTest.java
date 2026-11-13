@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  */
 class ResourceContentTest {
 
-    // Contains a GString method call and commas: both would be mangled by interpolation / splitting.
     private static final String SCRIPT = "result = \"n=${users.size()}, line=${entries.join('\\n')}\"";
 
     private static final String DIL = """
