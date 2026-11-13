@@ -1,7 +1,7 @@
 package org.assimbly.util.mail;
 
 import jakarta.activation.DataHandler;
-import org.apache.axiom.attachments.ByteArrayDataSource;
+import jakarta.activation.DataSource;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.attachment.AttachmentMessage;
@@ -9,7 +9,9 @@ import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +40,7 @@ public class AttachmentAttacher implements Processor {
             // detect using fresh stream
             if (mimeType == null) {
                 mimeType = MimeTypeHelper
-                        .detectMimeType(new java.io.ByteArrayInputStream(fileBytes))
+                        .detectMimeType(new ByteArrayInputStream(fileBytes))
                         .toString();
             }
 
@@ -54,11 +56,35 @@ public class AttachmentAttacher implements Processor {
             }
 
             log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
-            in.addAttachment(fileName, new DataHandler(new ByteArrayDataSource(fileBytes, mimeType)));
+            in.addAttachment(fileName, new DataHandler(new BytesDataSource(fileBytes, mimeType)));
 
             in.setHeader(Exchange.CONTENT_TYPE, "text/plain");
             in.setBody(emailBody);
 
+        }
+    }
+
+    /** An attachment that is held in memory. */
+    private record BytesDataSource(byte[] bytes, String contentType) implements DataSource {
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            throw new UnsupportedOperationException("An attachment is read-only");
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType;
+        }
+
+        @Override
+        public String getName() {
+            return "";
         }
     }
 

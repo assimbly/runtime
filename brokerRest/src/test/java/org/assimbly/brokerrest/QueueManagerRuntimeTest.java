@@ -5,13 +5,13 @@ import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.util.api.AssertUtils;
 import org.assimbly.util.api.HttpUtil;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -70,7 +70,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+QUEUE_TEST), null, null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -96,7 +96,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+QUEUE_TEST), null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -120,7 +120,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queues"), null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -147,7 +147,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+QUEUE_TEST+"/clear"), null, null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -171,7 +171,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queues/clear"), null, null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -194,7 +194,7 @@ class QueueManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.deleteRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/queue/"+QUEUE_TEST), null, null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());

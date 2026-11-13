@@ -1,41 +1,35 @@
 package org.assimbly.util.helper;
 
-import org.apache.commons.codec.binary.Base64;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public final class Base64Helper {
 
     private Base64Helper() {}
 
     public static String unmarshal(String base64, Charset charset) {
-        byte[] decoded = Base64.decodeBase64(base64);
-
-        return new String(decoded, charset);
+        return new String(unmarshal(base64), charset);
     }
 
+    // Lenient: accepts the standard and the URL-safe alphabet, with or without padding, and skips line breaks
     public static byte[] unmarshal(String base64) {
-        return Base64.decodeBase64(base64);
+        return Base64.getMimeDecoder().decode(base64.replace('-', '+').replace('_', '/'));
     }
 
     public static String marshal(String string){
-        byte[] encoded = Base64.encodeBase64(string.getBytes(StandardCharsets.UTF_8));
-        return new String(encoded, StandardCharsets.UTF_8);
+        return marshal(string.getBytes(StandardCharsets.UTF_8));
     }
 
     public static String marshal(byte[] bytes){
-        byte[] encoded = Base64.encodeBase64(bytes);
-        return new String(encoded, StandardCharsets.UTF_8);
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     public static String marshal(byte[] bytes, Charset charset){
-        byte[] encoded = Base64.encodeBase64(bytes);
-        return new String(encoded, charset);
+        return new String(Base64.getEncoder().encode(bytes), charset);
     }
 
     public static String marshal(char[] bytes){
-        byte[] encoded = Base64.encodeBase64(new String(bytes).getBytes(StandardCharsets.UTF_8));
-        return new String(encoded, StandardCharsets.UTF_8);
+        return marshal(new String(bytes));
     }
 }

@@ -5,13 +5,13 @@ import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.util.api.AssertUtils;
 import org.assimbly.util.api.HttpUtil;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -45,7 +45,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/connections"), null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode responseJson = objectMapper.readTree(response.body());
@@ -67,7 +67,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/"+BROKER_TYPE+"/consumers"), null, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("n/a");
@@ -90,7 +90,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/info"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         AssertUtils.assertBrokerInfoResponse(response.body(), "ActiveMQ Classic");
@@ -113,7 +113,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/status"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("started");
@@ -136,7 +136,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/stop"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("stopped");
@@ -160,7 +160,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/start"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("started");
@@ -184,7 +184,7 @@ class BrokerManagerRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/restart"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("started");

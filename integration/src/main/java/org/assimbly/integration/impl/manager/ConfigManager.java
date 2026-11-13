@@ -27,9 +27,7 @@ import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import org.quartz.Scheduler;
 import tools.jackson.databind.ObjectMapper;
-import com.google.common.io.Resources;
 
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -421,6 +419,18 @@ public class ConfigManager {
         return name != null && !name.isBlank() && !name.contains("/") && !name.contains("\\") && !name.contains("..");
     }
 
+    /** Reads a classpath resource as text; fails when the resource does not exist. */
+    public static String readResource(String resourceName) throws IOException {
+        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = contextLoader != null ? contextLoader : ConfigManager.class.getClassLoader();
+        try (InputStream is = loader.getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new IllegalArgumentException("resource " + resourceName + " not found.");
+            }
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     public String getStepTemplate(String mediaType, String stepName) throws Exception {
 
         if (!isResourceName(stepName)) {
@@ -428,8 +438,7 @@ public class ConfigManager {
         }
 
         String resourceName = "kamelets/" + stepName + ".kamelet.yaml";
-        URL url = Resources.getResource(resourceName);
-        String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+        String resourceAsString = readResource(resourceName);
 
         if (mediaType.contains("xml")) {
             resourceAsString = DocConverter.yamlToXml(resourceAsString);

@@ -3,7 +3,6 @@ package org.assimbly.brokerrest;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.util.api.HttpUtil;
 import org.assimbly.util.api.ApiUtils;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,6 +11,7 @@ import org.springframework.http.MediaType;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BrokerConfigureRuntimeTest {
@@ -44,7 +44,7 @@ class BrokerConfigureRuntimeTest {
         HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo(ApiUtils.readFileAsStringFromResources("container/broker/activemq.xml"));
@@ -70,7 +70,7 @@ class BrokerConfigureRuntimeTest {
         HttpResponse<String> response = HttpUtil.postRequest(container.buildBrokerApiPath("/api/brokers/1/configure"), brokerConfig, params, headers);
 
         // assert http status
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
         assertThat(response.body()).isEqualTo("success");

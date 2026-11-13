@@ -3,13 +3,14 @@ package org.assimbly.dil.blocks.beans.enrich.json;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConversionException;
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JsonEnrichStrategy implements AggregationStrategy {
 
-    static final Logger log = Logger.getLogger(JsonEnrichStrategy.class);
+    static final Logger log = LoggerFactory.getLogger(JsonEnrichStrategy.class);
 
     @Override
     public Exchange aggregate(Exchange original, Exchange resource) {
@@ -57,7 +58,7 @@ public class JsonEnrichStrategy implements AggregationStrategy {
                return exchange.getContext().getTypeConverter().convertTo(String.class, body);
             } catch (TypeConversionException e) {
                if(body!=null) {
-                   log.error("Failed to enrich message body of type: " + body.getClass().getName() + " | Error:" + e.getMessage());
+                   log.error("Failed to enrich message body of type: {} | Error:{}", body.getClass().getName(), e.getMessage());
                }
                throw e;
             }

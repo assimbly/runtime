@@ -10,7 +10,6 @@ import org.assimbly.integration.impl.manager.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import com.google.common.io.Resources;
 
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
@@ -36,7 +35,6 @@ import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.JsonHelper;
 import org.jasypt.properties.EncryptableProperties;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -47,7 +45,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
 import java.util.concurrent.ConcurrentHashMap;
@@ -609,8 +606,7 @@ public class CamelIntegration extends BaseIntegration {
         String components = catalog.listComponentsAsJson();
 
         if (includeCustomComponents) {
-            URL url = Resources.getResource("custom-steps.json");
-            String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
+            String customComponent = ConfigManager.readResource("custom-steps.json");
             components = JsonHelper.mergeJsonArray(components, customComponent, "name");
         }
 
@@ -655,8 +651,7 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         try {
-            URL url = Resources.getResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
-            String kamelet = Resources.toString(url, StandardCharsets.UTF_8);
+            String kamelet = ConfigManager.readResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
             return retrieveKameletOptions(kamelet, componentType);
         } catch (Exception e) {
             log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
@@ -1260,7 +1255,6 @@ public class CamelIntegration extends BaseIntegration {
         installedFlowsManager.register(flowId, version, tenant, status);
     }
 
-    @NotNull
     private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
         Map<String, String> flow = new HashMap<>();
         flow.put("id", flowId);
