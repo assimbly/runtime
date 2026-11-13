@@ -14,6 +14,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -353,9 +354,15 @@ public class Unmarshall {
 
 	private void createResources() {
 
-		String[] resources = conf.getStringArray("core/resources/resource/content");
+		// getProperty() returns a single String for one resource, a Collection for several, null for none.
+		Object resources = conf.getProperty("core/resources/resource/content");
+		int resourceCount = switch (resources) {
+			case null -> 0;
+			case Collection<?> c -> c.size();
+			default -> 1;
+		};
 
-		for (int i = 1; i < resources.length + 1; i++) {
+		for (int i = 1; i <= resourceCount; i++) {
 			String id = conf.getString("core/resources/resource[" + i + "]/id");
 			String name = conf.getString("core/resources/resource[" + i + "]/name");
 
@@ -365,8 +372,10 @@ public class Unmarshall {
 				id = name;
 			}
 
-			String content = conf.getString("core/resources/resource[" + i	+ "]/content");
-			properties.put("resource." + id, content);
+			// Read content raw: unlike getString()/getStringArray(), getProperty() applies no ${...}
+			// interpolation or comma splitting, so Groovy script bodies are stored verbatim.
+			Object content = conf.getProperty("core/resources/resource[" + i + "]/content");
+			properties.put("resource." + id, content == null ? null : content.toString());
 
 		}
 
