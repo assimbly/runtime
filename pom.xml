@@ -37,13 +37,13 @@
         <activemq-artemis.version>2.57.0</activemq-artemis.version>
         <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
         <angus.mail.version>2.0.5</angus.mail.version>
-        <bouncycastle.version>1.86</bouncycastle.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
         <camel.version>4.23.0</camel.version>
         <commons-beanutils>1.11.0</commons-beanutils>
         <commons-cli.version>1.11.0</commons-cli.version>
         <commons-configuration2.version>2.15.1</commons-configuration2.version>
         <commons-jxpath.version>1.4.0</commons-jxpath.version>
-        <commons-lang3.version>3.21.0</commons-lang3.version>
+        <commons-lang3.version>3.22.0</commons-lang3.version>
         <commons-text.version>1.15.0</commons-text.version>
         <docconverter.version>3.0.3</docconverter.version>
         <dropwizard-metrics.version>4.2.40</dropwizard-metrics.version>
@@ -66,7 +66,7 @@
         <kamelet.version>4.23.0</kamelet.version>
         <langchain4j.version>1.23.0</langchain4j.version>
         <langchain4j-tavily.version>1.19.0-beta29</langchain4j-tavily.version>
-        <logback-classic.version>1.6.6</logback-classic.version>
+        <logback-classic.version>1.6.7</logback-classic.version>
         <mapdb.version>3.1.0</mapdb.version>
         <slf4j.version>2.0.20</slf4j.version>
         <spring-ai.version>2.0.2</spring-ai.version>
