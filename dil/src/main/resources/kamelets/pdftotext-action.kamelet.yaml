@@ -10,11 +10,6 @@ spec:
     description: "PDF to text in message"
     type: "object"
     properties:
-      routeId:
-        title: "routeId"
-        description: "ID of the step"
-        type: "string"
-        default: "dummy"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -27,6 +22,14 @@ spec:
         title: "Sink"
         type: "boolean"
         default: false
+      routeId:
+        title: "routeId"
+        description: "ID of the step"
+        type: "string"
+        default: "dummy"
+      stepId:
+        title: "Step ID"
+        type: "string"
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"

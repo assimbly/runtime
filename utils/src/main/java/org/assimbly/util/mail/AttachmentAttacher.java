@@ -1,16 +1,17 @@
 package org.assimbly.util.mail;
 
 import jakarta.activation.DataHandler;
-import org.apache.axiom.attachments.ByteArrayDataSource;
+import jakarta.activation.DataSource;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.attachment.AttachmentMessage;
-import org.apache.commons.io.IOUtils;
 import org.assimbly.util.helper.MimeTypeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -33,19 +34,19 @@ public class AttachmentAttacher implements Processor {
 
             InputStream is = in.getBody(InputStream.class);
 
-            // read ONCE
-            byte[] fileBytes = IOUtils.toByteArray(is);
+            // read ONCE; a message without body gives an empty attachment
+            byte[] fileBytes = is == null ? new byte[0] : is.readAllBytes();
 
             // detect using fresh stream
             if (mimeType == null) {
                 mimeType = MimeTypeHelper
-                        .detectMimeType(new java.io.ByteArrayInputStream(fileBytes))
+                        .detectMimeType(new ByteArrayInputStream(fileBytes))
                         .toString();
             }
 
             if (fileName == null) {
-                in.setHeader(Exchange.FILE_NAME,
-                        LocalDateTime.now(ZoneId.systemDefault()).format(TS_FORMAT) + MimeTypeHelper.findFileExtension(mimeType));
+                fileName = generatedFileName(mimeType, LocalDateTime.now(ZoneId.systemDefault()));
+                in.setHeader(Exchange.FILE_NAME, fileName);
             }
 
             String emailBody = in.getHeader("EmailBody", String.class);
@@ -54,18 +55,42 @@ public class AttachmentAttacher implements Processor {
                 emailBody = "";
             }
 
-            AttachmentMessage attMsg = exchange.getIn(AttachmentMessage.class);
-
-            if(attMsg!=null) {
-                log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
-                attMsg.addAttachment(fileName, new DataHandler(new ByteArrayDataSource(fileBytes, mimeType)));
-            }else {
-                log.warn("Adding attachment '{}' with mime type: '{}' failed as attachement is null", fileName, mimeType);
-            }
+            log.info("Adding attachment '{}' with mime type: '{}'", fileName, mimeType);
+            in.addAttachment(fileName, new DataHandler(new BytesDataSource(fileBytes, mimeType)));
 
             in.setHeader(Exchange.CONTENT_TYPE, "text/plain");
             in.setBody(emailBody);
 
         }
+    }
+
+    /** An attachment that is held in memory. */
+    private record BytesDataSource(byte[] bytes, String contentType) implements DataSource {
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            throw new UnsupportedOperationException("An attachment is read-only");
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType;
+        }
+
+        @Override
+        public String getName() {
+            return "";
+        }
+    }
+
+    /** The name of an attachment that comes without one: the time, with the extension of the mime type when that is known. */
+    static String generatedFileName(String mimeType, LocalDateTime now) {
+        String extension = MimeTypeHelper.findFileExtension(mimeType);
+        return now.format(TS_FORMAT) + (extension == null ? "" : extension);
     }
 }

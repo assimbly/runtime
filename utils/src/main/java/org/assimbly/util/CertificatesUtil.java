@@ -11,7 +11,6 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.client5.http.utils.DateUtils;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
@@ -72,7 +71,6 @@ public final class CertificatesUtil {
 	public static final String TRUSTSTORE_FILE = "outbound-truststore.p12";
 	/** The keystore with the server identities (private key + certificate chain). */
 	public static final String IDENTITY_STORE_FILE = "server-identity.p12";
-	private static final String SERVER_IDENTITY_FILE = IDENTITY_STORE_FILE;
 	private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
 	private static final String DEFAULT_KEYSTORE_PWD = "supersecret";
 	private static final Pattern NON_ALIAS_CHARACTERS = Pattern.compile("[^a-z0-9]+");
@@ -86,8 +84,6 @@ public final class CertificatesUtil {
 	private static final Set<String> CERTIFICATE_TYPES = Set.of(CERTIFICATE_TYPE_ROOT, CERTIFICATE_TYPE_INTERMEDIATE, CERTIFICATE_TYPE_LEAF, CERTIFICATE_TYPE_ALL);
 
 	public Certificate[] downloadCertificates(String url) throws Exception {
-
-		IO.println("Start downloading certificates (url=" + url + ")");
 
 		Certificate[] peerCertificates;
 
@@ -143,14 +139,7 @@ public final class CertificatesUtil {
 
 			if (peerCertificates != null) {
 				for (Certificate certificate : peerCertificates) {
-					X509Certificate real = (X509Certificate) certificate;
-					IO.println("----------------------------------------");
-					IO.println("Type: " + real.getType());
-					IO.println("Signing Algorithm: " + real.getSigAlgName());
-					IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-					IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-					IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-					IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
+					logCertificate((X509Certificate) certificate);
 				}
 			} else {
 				log.error("Certificates not found. URL: {}", url);
@@ -160,17 +149,19 @@ public final class CertificatesUtil {
 		return peerCertificates;
 	}
 
+	private static void logCertificate(X509Certificate certificate) {
+		log.debug("Certificate type={} signatureAlgorithm={} issuer={} subject={} notBefore={} notAfter={}",
+				certificate.getType(), certificate.getSigAlgName(), certificate.getIssuerX500Principal(), certificate.getSubjectX500Principal(),
+				certificate.getNotBefore().toInstant(), certificate.getNotAfter().toInstant());
+	}
+
 	public Certificate getCertificate(String keyStorePath, String keystorePassword, String certificateName) {
 
 		try {
 			//load keystore
 			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-			Certificate certificate = keystore.getCertificate(certificateName);
-
-			storeKeystore(keyStorePath,keystorePassword,keystore);
-
-			return certificate;
+			return keystore.getCertificate(certificateName);
 
 		}catch (Exception e) {
 			log.error("Get certificate for keystore {} with name {} failed", keyStorePath, certificateName, e);
@@ -184,25 +175,17 @@ public final class CertificatesUtil {
 
 		try {
 
-			//load keystore
-			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
+			synchronized (CertificatesUtil.class) {
+				//load keystore
+				KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-			// Add the certificate to the store
-			X509Certificate real = (X509Certificate) certificate;
-            IO.println("----------------------------------------");
-            IO.println("Type: " + real.getType());
-            IO.println("Signing Algorithm: " + real.getSigAlgName());
-            IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-            IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-            IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-            IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));
-			keystore.setCertificateEntry(certificateName, certificate);
-            IO.println("Original alias: " + certificateName);
-            IO.println("Cert alias: " + keystore.getCertificateAlias(certificate));
-			IO.println("----------------------------------------");
+				// Add the certificate to the store
+				logCertificate((X509Certificate) certificate);
+				keystore.setCertificateEntry(certificateName, certificate);
 
-			// Save the new keystore contents
-			storeKeystore(keyStorePath,keystorePassword,keystore);
+				// Save the new keystore contents
+				storeKeystore(keyStorePath,keystorePassword,keystore);
+			}
 
 		}catch (Exception e) {
 			log.error("Import certificate for keystore {} with name {} failed", keyStorePath, certificateName, e);
@@ -214,33 +197,24 @@ public final class CertificatesUtil {
 
 	public Map<String,Certificate> storeCertificates(String keyStorePath, String keystorePassword, Certificate[] certificates) {
 
-        IO.println("Importing certificates");
 		Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
 
 		try {
-			//load keystore
-			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
+			synchronized (CertificatesUtil.class) {
+				//load keystore
+				KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-			// Add the certificate to the store
-			for (Certificate certificate : certificates){
-				X509Certificate real = (X509Certificate) certificate;
-                IO.println("----------------------------------------");
-                IO.println("Type: " + real.getType());
-                IO.println("Signing Algorithm: " + real.getSigAlgName());
-                IO.println("IssuerDN Principal: " + real.getIssuerX500Principal());
-                IO.println("SubjectDN Principal: " + real.getSubjectX500Principal());
-                IO.println("Not After: " + DateUtils.formatStandardDate(real.getNotAfter().toInstant()));
-                IO.println("Not Before: " + DateUtils.formatStandardDate(real.getNotBefore().toInstant()));				String alias = UUID.randomUUID().toString();
-				certificateMap.put(alias, certificate);
-				keystore.setCertificateEntry(alias, certificate);
-                IO.println("Original alias:" + alias);
-                IO.println("Cert alias" + keystore.getCertificateAlias(certificate));
-				IO.println("----------------------------------------");
+				// Add the certificate to the store
+				for (Certificate certificate : certificates){
+					logCertificate((X509Certificate) certificate);
+					String alias = UUID.randomUUID().toString();
+					certificateMap.put(alias, certificate);
+					keystore.setCertificateEntry(alias, certificate);
+				}
 
+				// Save the new keystore contents
+				storeKeystore(keyStorePath,keystorePassword,keystore);
 			}
-
-			// Save the new keystore contents
-			storeKeystore(keyStorePath,keystorePassword,keystore);
 
 		}catch (Exception e) {
 			log.error("Import certificates for keystore {} failed", keyStorePath, e);
@@ -308,7 +282,10 @@ public final class CertificatesUtil {
 
 	/** Lowercase, with every run of characters other than a-z and 0-9 replaced by a hyphen. */
 	private static String toAlias(String name) {
-		return NON_ALIAS_CHARACTERS.matcher(name.toLowerCase(Locale.ROOT)).replaceAll("-").replaceAll("^-+|-+$", "");
+		String alias = NON_ALIAS_CHARACTERS.matcher(name.toLowerCase(Locale.ROOT)).replaceAll("-");
+		int start = alias.startsWith("-") ? 1 : 0;
+		int end = alias.length() > start && alias.endsWith("-") ? alias.length() - 1 : alias.length();
+		return alias.substring(start, end);
 	}
 
 	/**
@@ -326,70 +303,95 @@ public final class CertificatesUtil {
 
 	static Map<String, Certificate> selectCertificates(String url, Certificate[] chain, String certificateType, X509Certificate[] trustAnchors) throws CertificateException {
 
-		String type = certificateType == null || certificateType.isBlank() ? CERTIFICATE_TYPE_ROOT : certificateType.trim().toLowerCase(Locale.ROOT);
-		if (!CERTIFICATE_TYPES.contains(type)) {
-			throw new IllegalArgumentException("Unknown certificateType '" + certificateType + "' (expected root, intermediate, leaf or all)");
-		}
+		String type = certificateType(certificateType);
 
 		if (chain == null || chain.length == 0) {
 			throw new CertificateException("No certificates downloaded from " + url);
 		}
 
 		String prefix = certificateAliasPrefix(url);
-
-		X509Certificate leaf = (X509Certificate) chain[0];
-		X509Certificate root = null;
-		List<X509Certificate> intermediates = new ArrayList<>();
-
-		for (int i = 1; i < chain.length; i++) {
-			X509Certificate certificate = (X509Certificate) chain[i];
-			if (root == null && isSelfSigned(certificate)) {
-				root = certificate;
-			} else {
-				intermediates.add(certificate);
-			}
-		}
+		DownloadedChain downloaded = DownloadedChain.of(chain);
 
 		boolean includeRoot = type.equals(CERTIFICATE_TYPE_ROOT) || type.equals(CERTIFICATE_TYPE_ALL);
 		boolean includeIntermediates = type.equals(CERTIFICATE_TYPE_INTERMEDIATE) || type.equals(CERTIFICATE_TYPE_ALL);
 		boolean includeLeaf = type.equals(CERTIFICATE_TYPE_LEAF) || type.equals(CERTIFICATE_TYPE_ALL);
 
-		if (root == null && includeRoot) {
-			if (intermediates.isEmpty() && isSelfSigned(leaf)) {
-				root = leaf;
-			} else {
-				// servers usually don't send the root: find the trusted issuer of the chain, walking up from the leaf
-				X509Certificate[] anchors = trustAnchors != null ? trustAnchors : defaultTrustAnchors();
-				for (int i = 0; i < chain.length && root == null; i++) {
-					root = findTrustAnchor((X509Certificate) chain[i], anchors);
-				}
-			}
-		}
-
 		Map<String, Certificate> selected = new LinkedHashMap<>();
 
+		X509Certificate root = null;
 		if (includeRoot) {
-			if (root == null) {
-				throw new CertificateException("Root certificate for " + prefix + " was not sent by the server and was not found in the JVM default truststore");
-			}
+			root = rootOf(downloaded, trustAnchors, prefix);
 			selected.put(prefix + "-root-ca", root);
 		}
 
 		if (includeIntermediates) {
-			if (intermediates.isEmpty() && !type.equals(CERTIFICATE_TYPE_ALL)) {
+			if (downloaded.intermediates().isEmpty() && !type.equals(CERTIFICATE_TYPE_ALL)) {
 				throw new CertificateException("The server of " + url + " didn't send any intermediate certificates");
 			}
-			for (int i = 0; i < intermediates.size(); i++) {
-				selected.put(prefix + "-intermediate-ca" + (i == 0 ? "" : "-" + (i + 1)), intermediates.get(i));
-			}
+			putIntermediates(selected, prefix, downloaded.intermediates());
 		}
 
 		// a self-signed leaf is its own root, store it only once
-		if (includeLeaf && !(includeRoot && leaf.equals(root))) {
-			selected.put(prefix + "-leaf", leaf);
+		if (includeLeaf && !downloaded.leaf().equals(root)) {
+			selected.put(prefix + "-leaf", downloaded.leaf());
 		}
 
 		return selected;
+	}
+
+	/** The peer certificates split into the leaf, the root when the server sent it (the first self-signed one) and the others. */
+	private record DownloadedChain(X509Certificate leaf, X509Certificate root, List<X509Certificate> intermediates) {
+
+		static DownloadedChain of(Certificate[] chain) {
+			X509Certificate root = null;
+			List<X509Certificate> intermediates = new ArrayList<>();
+			for (int i = 1; i < chain.length; i++) {
+				X509Certificate certificate = (X509Certificate) chain[i];
+				if (root == null && isSelfSigned(certificate)) {
+					root = certificate;
+				} else {
+					intermediates.add(certificate);
+				}
+			}
+			return new DownloadedChain((X509Certificate) chain[0], root, intermediates);
+		}
+	}
+
+	private static String certificateType(String certificateType) {
+		String type = certificateType == null || certificateType.isBlank() ? CERTIFICATE_TYPE_ROOT : certificateType.trim().toLowerCase(Locale.ROOT);
+		if (!CERTIFICATE_TYPES.contains(type)) {
+			throw new IllegalArgumentException("Unknown certificateType '" + certificateType + "' (expected root, intermediate, leaf or all)");
+		}
+		return type;
+	}
+
+	private static X509Certificate rootOf(DownloadedChain chain, X509Certificate[] trustAnchors, String prefix) throws CertificateException {
+		if (chain.root() != null) {
+			return chain.root();
+		}
+		if (chain.intermediates().isEmpty() && isSelfSigned(chain.leaf())) {
+			return chain.leaf();
+		}
+
+		// servers usually don't send the root: find the trusted issuer of the chain, walking up from the leaf
+		X509Certificate[] anchors = trustAnchors != null ? trustAnchors : defaultTrustAnchors();
+		List<X509Certificate> certificates = new ArrayList<>();
+		certificates.add(chain.leaf());
+		certificates.addAll(chain.intermediates());
+		for (X509Certificate certificate : certificates) {
+			X509Certificate root = findTrustAnchor(certificate, anchors);
+			if (root != null) {
+				return root;
+			}
+		}
+
+		throw new CertificateException("Root certificate for " + prefix + " was not sent by the server and was not found in the JVM default truststore");
+	}
+
+	private static void putIntermediates(Map<String, Certificate> selected, String prefix, List<X509Certificate> intermediates) {
+		for (int i = 0; i < intermediates.size(); i++) {
+			selected.put(prefix + "-intermediate-ca" + (i == 0 ? "" : "-" + (i + 1)), intermediates.get(i));
+		}
 	}
 
 	/**
@@ -498,7 +500,7 @@ public final class CertificatesUtil {
 	 * @return the imported certificates by alias
 	 * @throws AliasExistsException when one of the names holds a different certificate or a private key; nothing is stored then
 	 */
-	public static Map<String, Certificate> importTrustedCertificates(String keyStorePath, String keystorePassword, List<X509Certificate> certificates, String name) throws Exception {
+	public static synchronized Map<String, Certificate> importTrustedCertificates(String keyStorePath, String keystorePassword, List<X509Certificate> certificates, String name) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -525,7 +527,7 @@ public final class CertificatesUtil {
 	 *
 	 * @throws AliasExistsException when the name holds a private key (an identity)
 	 */
-	public static Map<String, Certificate> putTrustedCertificate(String keyStorePath, String keystorePassword, String name, X509Certificate certificate) throws Exception {
+	public static synchronized Map<String, Certificate> putTrustedCertificate(String keyStorePath, String keystorePassword, String name, X509Certificate certificate) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -568,23 +570,25 @@ public final class CertificatesUtil {
 			throw new IllegalArgumentException("Replacing identity '" + name + "' needs a PKCS12 file with one private key, this one has " + keyAliases.size());
 		}
 
-		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
+		synchronized (CertificatesUtil.class) {
+			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-		Map<String, Certificate> imported = new LinkedHashMap<>();
-		for (int i = 0; i < keyAliases.size(); i++) {
-			String alias = i == 0 ? name : name + "-" + (i + 1);
-			if (!replace && keystore.containsAlias(alias)) {
-				throw new AliasExistsException("Identity '" + alias + "' already exists, use PUT to replace it");
+			Map<String, Certificate> imported = new LinkedHashMap<>();
+			for (int i = 0; i < keyAliases.size(); i++) {
+				String alias = i == 0 ? name : name + "-" + (i + 1);
+				if (!replace && keystore.containsAlias(alias)) {
+					throw new AliasExistsException("Identity '" + alias + "' already exists, use PUT to replace it");
+				}
+				String p12Alias = keyAliases.get(i);
+				Certificate[] chain = p12Store.getCertificateChain(p12Alias);
+				keystore.setKeyEntry(alias, p12Store.getKey(p12Alias, p12Password.toCharArray()), keystorePassword.toCharArray(), chain);
+				imported.put(alias, chain[0]);
 			}
-			String p12Alias = keyAliases.get(i);
-			Certificate[] chain = p12Store.getCertificateChain(p12Alias);
-			keystore.setKeyEntry(alias, p12Store.getKey(p12Alias, p12Password.toCharArray()), keystorePassword.toCharArray(), chain);
-			imported.put(alias, chain[0]);
+
+			storeKeystore(keyStorePath, keystorePassword, keystore);
+
+			return imported;
 		}
-
-		storeKeystore(keyStorePath, keystorePassword, keystore);
-
-		return imported;
 	}
 
 	/**
@@ -594,7 +598,7 @@ public final class CertificatesUtil {
 	 * @return the certificate of the identity by alias
 	 * @throws AliasExistsException when the name exists
 	 */
-	public static Map<String, Certificate> generateIdentity(String keyStorePath, String keystorePassword, String cn, String name) throws Exception {
+	public static synchronized Map<String, Certificate> generateIdentity(String keyStorePath, String keystorePassword, String cn, String name) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -628,44 +632,48 @@ public final class CertificatesUtil {
 	/** Decodes base64 content, ignoring line breaks and a data URL prefix (data:...;base64,). */
 	static byte[] decodeBase64(String content) {
 		String base64 = content.trim();
-		if (base64.startsWith("data:") && base64.indexOf(',') > 0) {
-			base64 = base64.substring(base64.indexOf(',') + 1);
+		int comma = base64.indexOf(',');
+		if (base64.startsWith("data:") && comma >= 0) {
+			base64 = base64.substring(comma + 1);
 		}
 		return Base64.getMimeDecoder().decode(base64);
 	}
 
 	public Map<String,Certificate> importP12Certificate(String keyStorePath, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
 
-		KeyStore serverIdentity = loadKeyStore(keyStorePath, keystorePassword, null);
+		synchronized (CertificatesUtil.class) {
+			KeyStore serverIdentity = loadKeyStore(keyStorePath, keystorePassword, null);
 
-		KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
+			KeyStore p12Store = loadKeystoreFromString(p12Certificate, p12Password, "pkcs12");
 
-		Enumeration<String> aliases = p12Store.aliases();
+			Enumeration<String> aliases = p12Store.aliases();
 
-		Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
+			Map<String,Certificate> certificateMap = new ConcurrentHashMap<>();
 
 
-		while (aliases.hasMoreElements()) {
+			while (aliases.hasMoreElements()) {
 
-			String alias = aliases.nextElement();
+				String alias = aliases.nextElement();
 
-			if (p12Store.isKeyEntry(alias)) {
-                IO.println("Adding key for alias " + alias);
-				Key key = p12Store.getKey(alias, p12Password.toCharArray());
+				Certificate[] chain = p12Store.isKeyEntry(alias) ? p12Store.getCertificateChain(alias) : null;
 
-				Certificate[] chain = p12Store.getCertificateChain(alias);
+				// a key without certificate (a secret key) is not an identity
+				if (chain != null && chain.length > 0) {
+					log.debug("Adding key for alias {}", alias);
+					Key key = p12Store.getKey(alias, p12Password.toCharArray());
 
-				serverIdentity.setKeyEntry(alias, key, keystorePassword.toCharArray(), chain);
+					serverIdentity.setKeyEntry(alias, key, keystorePassword.toCharArray(), chain);
 
-				// the identity's own certificate is the first of its chain
-				certificateMap.put(alias, chain[0]);
+					// the identity's own certificate is the first of its chain
+					certificateMap.put(alias, chain[0]);
 
+				}
 			}
+
+			storeKeystore(keyStorePath,keystorePassword,serverIdentity);
+
+			return certificateMap;
 		}
-
-		storeKeystore(keyStorePath,keystorePassword,serverIdentity);
-
-		return certificateMap;
 
 	}
 
@@ -676,18 +684,20 @@ public final class CertificatesUtil {
 	 */
 	public boolean deleteCertificate(String keyStorePath, String keystorePassword, String certificateName) throws Exception {
 
-		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
+		synchronized (CertificatesUtil.class) {
+			KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
-		if (!keystore.containsAlias(certificateName)) {
-			log.warn("Certificate {} not found in keystore {}", certificateName, keyStorePath);
-			return false;
+			if (!keystore.containsAlias(certificateName)) {
+				log.warn("Certificate {} not found in keystore {}", certificateName, keyStorePath);
+				return false;
+			}
+
+			keystore.deleteEntry(certificateName);
+
+			storeKeystore(keyStorePath, keystorePassword, keystore);
+
+			return true;
 		}
-
-		keystore.deleteEntry(certificateName);
-
-		storeKeystore(keyStorePath, keystorePassword, keystore);
-
-		return true;
 
 	}
 
@@ -747,7 +757,7 @@ public final class CertificatesUtil {
 	 * @return the stored certificates by alias
 	 * @throws AliasExistsException when replace is false and the domain has certificates; nothing is stored then
 	 */
-	public static Map<String, Certificate> storeDomainCertificates(String keyStorePath, String keystorePassword, String prefix, Map<String, Certificate> selected, boolean replace) throws Exception {
+	public static synchronized Map<String, Certificate> storeDomainCertificates(String keyStorePath, String keystorePassword, String prefix, Map<String, Certificate> selected, boolean replace) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -787,7 +797,7 @@ public final class CertificatesUtil {
 	 * @param prefix the alias prefix of the domain (see certificateAliasPrefix)
 	 * @return the deleted certificates by alias
 	 */
-	public static Map<String, X509Certificate> deleteDomainCertificates(String keyStorePath, String keystorePassword, String prefix) throws Exception {
+	public static synchronized Map<String, X509Certificate> deleteDomainCertificates(String keyStorePath, String keystorePassword, String prefix) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -813,7 +823,7 @@ public final class CertificatesUtil {
 	 *
 	 * @return the deleted certificates by alias
 	 */
-	public static Map<String, X509Certificate> deleteExpiredCertificates(String keyStorePath, String keystorePassword, Instant now) throws Exception {
+	public static synchronized Map<String, X509Certificate> deleteExpiredCertificates(String keyStorePath, String keystorePassword, Instant now) throws Exception {
 
 		KeyStore keystore = loadKeyStore(keyStorePath, keystorePassword, null);
 
@@ -892,7 +902,7 @@ public final class CertificatesUtil {
 	}
 
 
-	public static KeyStore loadKeyStore(String keyStorePath, String keystorePassword, String keystoreType) throws Exception {
+	public static synchronized KeyStore loadKeyStore(String keyStorePath, String keystorePassword, String keystoreType) throws Exception {
 
 		File file = new File(keyStorePath);
 
@@ -905,17 +915,14 @@ public final class CertificatesUtil {
 		}
 
 		if (file.exists()) {
-			InputStream is = Files.newInputStream(file.toPath());
-			keystore.load(is, keystorePassword.toCharArray());
-			is.close();
+			try (InputStream is = Files.newInputStream(file.toPath())) {
+				keystore.load(is, keystorePassword.toCharArray());
+			}
 		} else {
 
 			createKeystoreFile(file);
 			keystore.load(null, keystorePassword.toCharArray());
-
-			OutputStream os = Files.newOutputStream(file.toPath());
-			keystore.store(os, keystorePassword.toCharArray());
-			os.close();
+			storeKeystore(keyStorePath, keystorePassword, keystore);
 		}
 
 		return keystore;
@@ -940,13 +947,23 @@ public final class CertificatesUtil {
 		return keystore;
 	}
 
-	public static void storeKeystore(String keyStorePath, String keystorePassword, KeyStore keystore)  throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+	/**
+	 * Saves the keystore. The contents are written to a temporary file that then replaces the keystore file,
+	 * so a failed write leaves the existing keystore as it was.
+	 */
+	public static synchronized void storeKeystore(String keyStorePath, String keystorePassword, KeyStore keystore)  throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
-		// Save the new keystore contents
-		File file = new File(keyStorePath);
-		OutputStream out = Files.newOutputStream(file.toPath());
-		keystore.store(out, keystorePassword.toCharArray());
-		out.close();
+		Path path = Path.of(keyStorePath).toAbsolutePath();
+		Path temporary = Files.createTempFile(path.getParent(), path.getFileName().toString(), ".tmp");
+
+		try {
+			try (OutputStream out = Files.newOutputStream(temporary)) {
+				keystore.store(out, keystorePassword.toCharArray());
+			}
+			Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} finally {
+			Files.deleteIfExists(temporary);
+		}
 
 	}
 
@@ -958,20 +975,20 @@ public final class CertificatesUtil {
 		if (!securityPath.exists()) {
 			boolean dirsCreated = securityPath.mkdirs();
 			if(!dirsCreated){
-                IO.println("Keystore Directory: " + securityPath.getAbsolutePath() + " couldn't be created.");
+				log.warn("Keystore directory {} couldn't be created", securityPath.getAbsolutePath());
 			}
 		}
 
 		boolean newFile = file.createNewFile();
 		if(!newFile){
-            IO.println("Keystore File: " + file.getAbsolutePath() + " couldn't be created.");
+			log.warn("Keystore file {} couldn't be created", file.getAbsolutePath());
 		}
 
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		InputStream is = classloader.getResourceAsStream(SERVER_IDENTITY_FILE);
-		if (is != null) {
-			Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
-			is.close();
+		try (InputStream is = classloader.getResourceAsStream(IDENTITY_STORE_FILE)) {
+			if (is != null) {
+				Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
 	}
@@ -1022,18 +1039,14 @@ public final class CertificatesUtil {
 		Provider bcProvider = new BouncyCastleProvider();
 		Security.addProvider(bcProvider);
 
-		long now = System.currentTimeMillis();
-		Date startDate = new Date(now);
+		Instant now = Instant.now();
+		ZoneId zone = ZoneId.systemDefault();
+		Date startDate = Date.from(now);
 
 		X500Name dnName = new X500Name("CN=" + subjectDN);
-		BigInteger certSerialNumber = new BigInteger(Long.toString(now)); // <-- Using the current timestamp as the certificate serial number
+		BigInteger certSerialNumber = BigInteger.valueOf(now.toEpochMilli()); // <-- Using the current timestamp as the certificate serial number
 
-		Date endDate = Date.from(startDate.toInstant()
-				.atZone(ZoneId.systemDefault())
-				.toLocalDate()
-				.plusYears(2)
-				.atStartOfDay(ZoneId.systemDefault())
-				.toInstant());
+		Date endDate = Date.from(now.atZone(zone).toLocalDate().plusYears(2).atStartOfDay(zone).toInstant());
 
 		String signatureAlgorithm = "SHA256WithRSA"; // <-- Use appropriate signature algorithm based on your keyPair algorithm.
 

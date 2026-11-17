@@ -17,14 +17,11 @@ import org.springframework.http.ResponseEntity;
  * Resource to return information about the health of flows.
  */
 @Tag(name = "Health", description = "Health checks of flows and steps")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class HealthRuntime {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
-
-    private boolean plainResponse;
 
     private final Integration integration;
 
@@ -43,15 +40,15 @@ public class HealthRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestHeader(defaultValue = "route", value = "Type") String type) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String health = integration.getHealth(type, mediaType);
             if(health.startsWith("Error")||health.startsWith("Warning")) {plainResponse = false;}
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/Health",health,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/health",health,plainResponse);
         } catch (Exception e) {
             log.error("Get health failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/Health",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/health",e.getMessage());
         }
     }
 
@@ -66,7 +63,7 @@ public class HealthRuntime {
             @RequestHeader(defaultValue = "route", value = "Type") String type
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String health = integration.getHealthByFlowIds(flowIds, type, mediaType);
@@ -94,7 +91,7 @@ public class HealthRuntime {
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeDetails") boolean includeDetails
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String flowHealth = integration.getFlowHealth(flowId, type, includeSteps, includeError, includeDetails, mediaType);
@@ -121,7 +118,7 @@ public class HealthRuntime {
             @RequestHeader(required = false, defaultValue = "false", value = "IncludeDetails") boolean includeDetails
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String flowHealth = integration.getFlowStepHealth(flowId, stepId, type, includeError, includeDetails, mediaType);

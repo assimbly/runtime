@@ -14,6 +14,7 @@ spec:
         title: "Language"
         description: "Language"
         type: "string"
+        default: "simple"
       expression:
         title: "Expression"
         description: "Expression"
@@ -52,7 +53,7 @@ spec:
       out:
         title: "Sink Endpoint"
         type: "string"
-        default: "kamelet:sink"
+        default: "mock:sink"
       routeId:
         title: "Route ID"
         type: "string"

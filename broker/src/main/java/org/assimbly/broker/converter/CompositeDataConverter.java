@@ -112,7 +112,7 @@ public final class CompositeDataConverter {
     }
 
     private static void parsePropertiesText(Object propertiesTextObject, JSONObject headers, JSONObject jmsHeaders) {
-        if (!(propertiesTextObject instanceof String propertiesText)) return;
+        if (!(propertiesTextObject instanceof String propertiesText) || propertiesText.length() < 2) return;
 
         String cleanedText = propertiesText.substring(1, propertiesText.length() - 1);
         String[] properties = cleanedText.split(", ");

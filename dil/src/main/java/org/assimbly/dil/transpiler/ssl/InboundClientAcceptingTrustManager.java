@@ -20,7 +20,9 @@ import java.security.cert.X509Certificate;
 /**
  * Trust manager for the global SSL context.
  *
- * Server certificates (outbound calls) are validated against the outbound truststore, which is reloaded when the file changes.
+ * Server certificates (outbound calls) are trusted when the JDK's default CAs (cacerts) or the outbound truststore trust them.
+ * With trustDefaultCas set to false (the strictOutbound context) only the outbound truststore trusts them.
+ * The outbound truststore is reloaded when the file changes.
  * Client certificates (inbound calls) are accepted during the TLS handshake. The TLS handshake still proves that the client
  * owns the private key of the certificate, the certificate itself is validated per flow by the MutualTlsHandler.
  */
@@ -32,13 +34,20 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
 
     private final Path truststorePath;
     private final String truststorePassword;
+    private final boolean trustDefaultCas;
 
+    private X509ExtendedTrustManager defaultTrustManager;
     private X509ExtendedTrustManager delegate;
     private FileTime delegateLastModified;
 
     public InboundClientAcceptingTrustManager(String truststorePath, String truststorePassword) {
+        this(truststorePath, truststorePassword, true);
+    }
+
+    public InboundClientAcceptingTrustManager(String truststorePath, String truststorePassword, boolean trustDefaultCas) {
         this.truststorePath = Paths.get(truststorePath);
         this.truststorePassword = truststorePassword;
+        this.trustDefaultCas = trustDefaultCas;
     }
 
     @Override
@@ -58,17 +67,47 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
 
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        getDelegate().checkServerTrusted(chain, authType);
+        checkServerTrusted(trustManager -> trustManager.checkServerTrusted(chain, authType));
     }
 
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
-        getDelegate().checkServerTrusted(chain, authType, socket);
+        checkServerTrusted(trustManager -> trustManager.checkServerTrusted(chain, authType, socket));
     }
 
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
-        getDelegate().checkServerTrusted(chain, authType, engine);
+        checkServerTrusted(trustManager -> trustManager.checkServerTrusted(chain, authType, engine));
+    }
+
+    private void checkServerTrusted(ServerCheck check) throws CertificateException {
+        if (!trustDefaultCas) {
+            X509ExtendedTrustManager outbound = getDelegate();
+            if (outbound == null) {
+                throw new CertificateException("Server certificate is not trusted: outbound truststore " + truststorePath + " has no certificates");
+            }
+            check.run(outbound);
+            return;
+        }
+        try {
+            check.run(getDefaultTrustManager());
+        } catch (CertificateException defaultException) {
+            X509ExtendedTrustManager outbound = getDelegate();
+            if (outbound == null) {
+                throw defaultException;
+            }
+            try {
+                check.run(outbound);
+            } catch (CertificateException outboundException) {
+                outboundException.addSuppressed(defaultException);
+                throw outboundException;
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface ServerCheck {
+        void run(X509ExtendedTrustManager trustManager) throws CertificateException;
     }
 
     // An empty list of accepted issuers lets clients send a certificate from any CA when a client certificate is requested
@@ -84,10 +123,24 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
         }
     }
 
+    private synchronized X509ExtendedTrustManager getDefaultTrustManager() throws CertificateException {
+        if (defaultTrustManager == null) {
+            try {
+                defaultTrustManager = createTrustManager(null);
+            } catch (CertificateException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new CertificateException("Can't load the default truststore of the JDK", e);
+            }
+        }
+        return defaultTrustManager;
+    }
+
+    // Returns null when the outbound truststore has no certificates
     private synchronized X509ExtendedTrustManager getDelegate() throws CertificateException {
         try {
             FileTime lastModified = Files.getLastModifiedTime(truststorePath);
-            if (delegate == null || !lastModified.equals(delegateLastModified)) {
+            if (!lastModified.equals(delegateLastModified)) {
                 delegate = loadDelegate();
                 delegateLastModified = lastModified;
             }
@@ -105,6 +158,18 @@ public class InboundClientAcceptingTrustManager extends X509ExtendedTrustManager
         try (InputStream is = Files.newInputStream(truststorePath)) {
             truststore.load(is, truststorePassword.toCharArray());
         }
+
+        // An empty truststore can't validate anything ("the trustAnchors parameter must be non-empty")
+        if (truststore.size() == 0) {
+            return null;
+        }
+
+        return createTrustManager(truststore);
+
+    }
+
+    // A null truststore gives the JDK's default trusted CAs
+    private X509ExtendedTrustManager createTrustManager(KeyStore truststore) throws Exception {
 
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         tmf.init(truststore);

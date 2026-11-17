@@ -3,10 +3,13 @@ package org.assimbly.util.helper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class PropertiesHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(PropertiesHelper.class);
 
     private static final String FILE_NAME = "config.properties";
 
@@ -25,7 +28,7 @@ public final class PropertiesHelper {
             Properties props = loadProperties();
             return props.getProperty(key);
         } catch (IOException e) {
-            Logger.getLogger(PropertiesHelper.class.getName()).log(Level.SEVERE, null, e);
+            log.error("Loading {} failed", FILE_NAME, e);
         }
 
         return "";
@@ -40,10 +43,14 @@ public final class PropertiesHelper {
     private static Properties loadProperties() throws IOException {
         ClassLoader loader = PropertiesHelper.class.getClassLoader();
 
-        InputStream resourceStream = loader.getResourceAsStream(PropertiesHelper.FILE_NAME);
-
         Properties props = new Properties();
-        props.load(resourceStream);
+
+        try (InputStream resourceStream = loader.getResourceAsStream(PropertiesHelper.FILE_NAME)) {
+            // without a config file there are no properties
+            if (resourceStream != null) {
+                props.load(resourceStream);
+            }
+        }
 
         return props;
     }

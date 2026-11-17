@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class HealthRuntimeTest {
@@ -57,105 +56,93 @@ class HealthRuntimeTest {
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowHealthById() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/health"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/health"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetFlowStepHealthById() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/health"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/flow/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name())+"/step/"+schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())+"/health"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode stepJson = responseJson.get("step");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode stepJson = responseJson.get("step");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulHealthResponse(stepJson, "%s-%s".formatted(schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), schedulerCamelContextProp.get(TestApplicationContext.DILField.STEP_ID_1.name())));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetHealth() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/health"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/integration/health"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get(0).get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get(0).get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
     @Test
     @Tag("NeedsSchedulerFlowInstalled")
     void shouldGetHealthByFlowIds() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/healthbyflowids"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.postRequest(container.buildGatewayHeadlessApiPath("/api/integration/healthbyflowids"), (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode flowJson = responseJson.get(0).get("flow");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode flowJson = responseJson.get(0).get("flow");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertSuccessfulHealthResponse(flowJson, (String)schedulerCamelContextProp.get(TestApplicationContext.DILField.ID.name()));
+
     }
 
 }

@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 import java.net.URISyntaxException;
 import java.util.Properties;
@@ -22,10 +21,9 @@ import java.util.TreeMap;
 
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to control the integration and to list its flows, errors and catalog.
  */
 @Tag(name = "Integration", description = "Control the integration and list flows, errors and the catalog")
-@Component
 @RestController
 @RequestMapping("/api")
 public class IntegrationRuntime {
@@ -33,10 +31,6 @@ public class IntegrationRuntime {
     protected Logger log = LoggerFactory.getLogger(getClass());
 
     private final Integration integration = new CamelIntegration(true);
-
-    private boolean plainResponse;
-
-    private boolean integrationIsStarting;
 
     public IntegrationRuntime() throws Exception {
         // Empty constructor needed because of Exception.
@@ -146,7 +140,7 @@ public class IntegrationRuntime {
 
         try {
             String error = integration.getLastError();
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/lasterror",error,plainResponse);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/lasterror",error,true);
         } catch (Exception e) {
             log.error("Get last error for integration failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/lasterror",e.getMessage());
@@ -161,7 +155,7 @@ public class IntegrationRuntime {
     )
     public ResponseEntity<String> getBaseDirectory(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             String directory = integration.getBaseDirectory();
@@ -184,7 +178,7 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
             integration.setBaseDirectory(directory);
@@ -228,7 +222,7 @@ public class IntegrationRuntime {
 
         try {
             String flowsDetails = integration.getListOfFlowsDetails(filter, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows",flowsDetails,true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows/details",flowsDetails,true);
         } catch (Exception e) {
             log.error("Get list of flows failed",e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/flows/details",e.getMessage());
@@ -268,10 +262,10 @@ public class IntegrationRuntime {
 
         try {
             String flows = integration.getListOfSoapActions(url, mediaType);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/soap/actions",flows,true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/soap/action",flows,true);
         } catch (Exception e) {
             log.error("Get list of soap actions failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/soap/actions",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/soap/action",e.getMessage());
         }
 
     }
@@ -327,10 +321,10 @@ public class IntegrationRuntime {
         try {
             TreeMap<String,String> numberOfEntriesList = integration.getIntegrationAlertsCount();
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/flow/failedlog}",numberOfEntriesList.toString());
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/numberofalerts",numberOfEntriesList.toString());
         } catch (Exception e) {
             log.error("Get number of alerts failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/flow/failedmessages",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/numberofalerts",e.getMessage());
         }
     }
 
@@ -378,7 +372,7 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Add collectors. Configuration: \n\n{}\n", configuration);
+        log.info("Add collectors");
 
         try {
             String result = integration.addCollectorsConfiguration(mediaType, configuration);
@@ -406,14 +400,14 @@ public class IntegrationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Remove collectors. Configuration: \n\n{}\n", configuration);
+        log.info("Remove collectors");
 
         try {
             String result = integration.removeCollectorsConfiguration(mediaType, configuration);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collector/remove", result);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/collectors/remove", result);
         } catch (Exception e) {
             log.error("Remove collectors failed", e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collector/remove", e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/collectors/remove", e.getMessage());
         }
 
     }
@@ -511,7 +505,7 @@ public class IntegrationRuntime {
 
     public void initIntegration(){
 
-        if(!integration.isStarted() && !integrationIsStarting){
+        if(!integration.isStarted()){
             try {
 
                 //add notifier before starting integration
@@ -569,11 +563,11 @@ public class IntegrationRuntime {
 
             String result = integration.getCatalogList(mediaType, list);
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/{list}/", result, true);
+            return ResponseUtil.createSuccessResponse(1L, mediaType, "/integration/catalog/list/{listType}", result, true);
 
         } catch (Exception e) {
             log.error("Get catalog list for {} failed", list, e);
-            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/{list}/", e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/integration/catalog/list/{listType}", e.getMessage());
         }
     }
 

@@ -4,7 +4,6 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.assimbly.dil.validation.beans.FtpSettings;
@@ -13,14 +12,10 @@ import org.assimbly.util.error.ValidationErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class FtpValidator {
 
@@ -29,15 +24,21 @@ public class FtpValidator {
     private static final int TIMEOUT = 3000;
     private static final ValidationErrorMessage UNREACHABLE_ERROR =
             new ValidationErrorMessage("Cannot login into FTP Server!");
+    private static final ValidationErrorMessage INSECURE_PROTOCOL_ERROR =
+            new ValidationErrorMessage("FTP is an insecure protocol and is not supported. Use SFTP or FTPS.");
 
-    public ValidationErrorMessage validate(FtpSettings ftpSettings) throws IOException {
+    public ValidationErrorMessage validate(FtpSettings ftpSettings) {
 
-        if (ftpSettings.getProtocol().equalsIgnoreCase("ftp"))
-            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), false, false);
-        else if (ftpSettings.getProtocol().equalsIgnoreCase("ftps"))
-            return checkFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), true, ftpSettings.getImplicit());
-        else
+        String protocol = ftpSettings.getProtocol();
+
+        if ("sftp".equalsIgnoreCase(protocol))
             return checkSFtpConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), ftpSettings.getPkf(), ftpSettings.getPkfd());
+        else if ("ftps".equalsIgnoreCase(protocol))
+            return checkFtpsConnection(ftpSettings.getUser(), ftpSettings.getPwd(), ftpSettings.getHost(), ftpSettings.getPort(), ftpSettings.getImplicit());
+        else if ("ftp".equalsIgnoreCase(protocol))
+            return INSECURE_PROTOCOL_ERROR;
+        else
+            return new ValidationErrorMessage("Unsupported protocol: " + protocol + ". Use SFTP or FTPS.");
     }
 
     private Session setupDefaultSession(JSch jsch, String userName, String host, int port) throws JSchException {
@@ -48,10 +49,9 @@ public class FtpValidator {
         return session;
     }
 
-    private ValidationErrorMessage checkSFtpConnection(String userName, String password, String host, int port, String privateKeyFilePath, String privateKeyFileData) throws IOException {
+    private ValidationErrorMessage checkSFtpConnection(String userName, String password, String host, int port, String privateKeyFilePath, String privateKeyFileData) {
         Session session = null;
         Channel channel = null;
-        File tempFile = null;
         JSch jsch;
 
         try {
@@ -62,13 +62,8 @@ public class FtpValidator {
             if (password != null && !password.isEmpty())
                 session.setPassword(password);
 
-            if (privateKeyFileData != null && !privateKeyFileData.isEmpty()) {
-                tempFile = File.createTempFile("temp", "");
-                try (BufferedWriter writer = Files.newBufferedWriter(Path.of(tempFile.toURI()), StandardCharsets.UTF_8)){
-                    writer.write(privateKeyFileData);
-                }
-                jsch.addIdentity(tempFile.getAbsolutePath());
-            }
+            if (privateKeyFileData != null && !privateKeyFileData.isEmpty())
+                jsch.addIdentity("validation", privateKeyFileData.getBytes(StandardCharsets.UTF_8), null, null);
             else if (privateKeyFilePath != null && !privateKeyFilePath.isEmpty())
                 jsch.addIdentity(privateKeyFilePath);
 
@@ -87,9 +82,6 @@ public class FtpValidator {
                 channel.disconnect();
             if (session != null)
                 session.disconnect();
-            if (tempFile != null) {
-                Files.delete(tempFile.toPath());
-            }
         }
 
         return null;
@@ -125,16 +117,11 @@ public class FtpValidator {
         }
     }
 
-    private ValidationErrorMessage checkFtpConnection(String userName, String password, String host, int port, boolean secure, boolean implicitMode) {
-        FTPClient ftp = null;
+    private ValidationErrorMessage checkFtpsConnection(String userName, String password, String host, int port, boolean implicitMode) {
+        FTPSClient ftp = null;
 
         try {
-            if(secure) {
-                ftp = new FTPSClient(implicitMode);
-            } else {
-                ftp = new FTPClient();
-            }
-
+            ftp = new FTPSClient(implicitMode);
             ftp.connect(host, port);
 
             // After connection attempt, you should check the reply code to verify success.

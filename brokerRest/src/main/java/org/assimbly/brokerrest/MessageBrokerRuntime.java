@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * REST controller for managing messages on the broker.
@@ -25,6 +24,8 @@ import java.util.Optional;
 public class MessageBrokerRuntime {
 
     private static final long ID = 0L;
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -47,7 +48,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object listMessages(
+    public ResponseEntity<String> listMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
@@ -56,18 +57,13 @@ public class MessageBrokerRuntime {
 
         log.debug("event=listMessages type=GET message=Get a list of messages by endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            final String result = broker.listMessages(brokerType, endpointName, filter, mediaType);
-            return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}", result);
-        } catch (Exception e) {
-            log.error("event=listMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/messages/{endpointName}",
+                () -> broker.listMessages(brokerType, endpointName, filter, mediaType), endpointName, brokerType);
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/messages/count : count number of messages.
+     * POST  /brokers/{brokerType}/messages/count : count the messages of the listed endpoints.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointNames, the name of the queue
@@ -78,7 +74,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object countMessagesFromList(
+    public ResponseEntity<String> countMessagesFromList(
             @PathVariable(value = "brokerType") String brokerType,
             @RequestBody String endpointNames,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
@@ -86,18 +82,13 @@ public class MessageBrokerRuntime {
 
         log.debug("event=countMessagesFromList type=POST message=Count number of messages names={} type={}", endpointNames, brokerType);
 
-        try {
-            final String result = broker.countMessagesFromList(brokerType, endpointNames);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", result);
-        } catch (Exception e) {
-            log.error("event=countMessagesFromList type=POST names={} type={} reason={}", endpointNames, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/count", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/messages/count",
+                () -> broker.countMessagesFromList(brokerType, endpointNames), endpointNames, brokerType);
 
     }
 
     /**
-     * GET  /brokers/{brokerType}/flows/messages/count : get a list of number of messages for each flow.
+     * GET  /brokers/{brokerType}/flows/message/count : get a list of number of messages for each flow.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @return list of flows with status 200 (OK) or with status 404 (Not Found)
@@ -107,19 +98,19 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/flows/message/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object getFlowsMessageCountList(
+    public ResponseEntity<String> getFlowsMessageCountList(
             @PathVariable(value = "brokerType") String brokerType,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
-            @RequestParam(value = "excludeEmptyQueues", required = false) Optional<Boolean> excludeEmptyQueues
+            @RequestParam(value = "excludeEmptyQueues", defaultValue = "false") boolean excludeEmptyQueues
     ) {
 
         log.debug("event=getFlowsMessageCountList type=GET message=Get a list of number of messages for each flow excludeEmptyQueues={} type={}", excludeEmptyQueues, brokerType);
 
         try {
-            final String result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues.orElse(false));
+            final String result = broker.getFlowMessageCountsList(brokerType, excludeEmptyQueues);
             return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", result, true);
         } catch (Exception e) {
-            log.error("event=getFlowsMessageCountList type=POST type={} reason={}", brokerType, e.getMessage(), e);
+            log.error("event=getFlowsMessageCountList type=GET type={} reason={}", brokerType, e.getMessage(), e);
             return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/flows/message/count", e.getMessage());
         }
 
@@ -137,7 +128,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object countMessages(
+    public ResponseEntity<String> countMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
@@ -145,13 +136,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=countMessages type=GET message=Count the number of messages on an endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            final String result = broker.countMessages(brokerType, endpointName);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", result);
-        } catch (Exception e) {
-            log.error("event=countMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/count", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/messages/{endpointName}/count",
+                () -> broker.countMessages(brokerType, endpointName), endpointName, brokerType);
 
     }
 
@@ -167,7 +153,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/delayedmessages/{endpointName}/count",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object countDelayedMessages(
+    public ResponseEntity<String> countDelayedMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
@@ -175,13 +161,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=countDelayedMessages type=GET message=Count the number of delayed messages on an endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            final String result = broker.countDelayedMessages(brokerType, endpointName);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", result);
-        } catch (Exception e) {
-            log.error("event=countDelayedMessagesByEndpoint type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/delayedmessages/{endpointName}/count",
+                () -> broker.countDelayedMessages(brokerType, endpointName), endpointName, brokerType);
 
     }
 
@@ -198,23 +179,18 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object browseMessage(
+    public ResponseEntity<String> browseMessage(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @PathVariable(value = "messageId") String messageId,
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType,
-            @RequestParam(value = "excludeBody", required = false) Optional<Boolean> excludeBody
+            @RequestParam(value = "excludeBody", defaultValue = "false") boolean excludeBody
     ) {
 
         log.debug("event=browseMessage type=GET message=Browse message name={} messageId={} type={}", endpointName, messageId, brokerType);
 
-        try {
-            final String result = broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody.orElse(false));
-            return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", result);
-        } catch (Exception e) {
-            log.error("event=browseMessage type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/message/{endpointName}/browse/{messageId}",
+                () -> broker.browseMessage(brokerType, endpointName, messageId, mediaType, excludeBody), endpointName, brokerType);
 
     }
 
@@ -230,29 +206,24 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}/browse",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object browseMessages(
+    public ResponseEntity<String> browseMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "numberOfMessages", required = false) Integer numberOfMessages,
-            @RequestParam(value = "excludeBody", required = false) Optional<Boolean> excludeBody
+            @RequestParam(value = "excludeBody", defaultValue = "false") boolean excludeBody
     ) {
 
         log.debug("event=browseMessages type=GET message=List of messages on the specified endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            final String result = broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody.orElse(false));
-            return ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/messages/{endpointName}/browse", result);
-        } catch (Exception e) {
-            log.error("event=browseMessages type=GET name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}/browse", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/messages/{endpointName}/browse",
+                () -> broker.browseMessages(brokerType,endpointName, page, numberOfMessages, mediaType, excludeBody), endpointName, brokerType);
 
     }
 
     /**
-     * POST  /brokers/{brokerType}/message/{endpointName}/send/{messageHeaders} : send a message.
+     * POST  /brokers/{brokerType}/message/{endpointName}/send : send a message.
      *
      * @param brokerType, the type of broker: classic or artemis
      * @param endpointName, the name of the endpoint (queue or topic)
@@ -265,7 +236,7 @@ public class MessageBrokerRuntime {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object sendMessage(
+    public ResponseEntity<String> sendMessage(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @RequestBody String messageBody,
@@ -275,18 +246,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=sendMessageToEndpoint type=POST message=Send message specified endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            Map<String, Object> messageHeadersMap = messageHeaders == null ? Map.of()
-                    : new ObjectMapper().readValue(messageHeaders, new TypeReference<>() {});
-            if (messageHeadersMap == null) {
-                messageHeadersMap = Map.of();
-            }
-            final String result = broker.sendMessage(brokerType,endpointName,messageHeadersMap,messageBody);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", result);
-        } catch (Exception e) {
-            log.error("event=sendMessages type=POST name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/send/{messageHeaders}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/message/{endpointName}/send",
+                () -> broker.sendMessage(brokerType, endpointName, toHeaders(messageHeaders), messageBody), endpointName, brokerType);
 
     }
 
@@ -311,13 +272,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=removeMessage type=DELETE message=Remove message on an endpoint name={} messageId={} type={}", endpointName, messageId, brokerType);
 
-        try {
-            final String result = broker.removeMessage(brokerType,endpointName, messageId);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", result);
-        } catch (Exception e) {
-            log.error("event=removeMessage type=DELETE name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/message/{endpointName}/{messageId}",
+                () -> broker.removeMessage(brokerType,endpointName, messageId), endpointName, brokerType);
 
     }
 
@@ -333,7 +289,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{endpointName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object removeMessages(
+    public ResponseEntity<String> removeMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "endpointName") String endpointName,
             @Parameter(hidden = true) @RequestHeader("Accept") String mediaType
@@ -341,13 +297,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=removeMessages type=DELETE message=Remove all messages on a endpoint name={} type={}", endpointName, brokerType);
 
-        try {
-            final String result = broker.removeMessages(brokerType,endpointName);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", result);
-        } catch (Exception e) {
-            log.error("event=removeMessages type=DELETE name={} type={} reason={}", endpointName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{endpointName}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/messages/{endpointName}",
+                () -> broker.removeMessages(brokerType,endpointName), endpointName, brokerType);
 
     }
 
@@ -364,7 +315,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object moveMessage(
+    public ResponseEntity<String> moveMessage(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "sourceQueueName") String sourceQueueName,
             @PathVariable(value = "targetQueueName") String targetQueueName,
@@ -374,13 +325,8 @@ public class MessageBrokerRuntime {
 
         log.debug("event=moveMessage type=POST message=Move messages by id sourceName={} targetName={} messageId={} type={}", sourceQueueName, targetQueueName, messageId, brokerType);
 
-        try {
-            final String result = broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", result);
-        } catch (Exception e) {
-            log.error("event=moveMessage type=POST sourceName={} targetName={} messageId={} type={} reason={}", sourceQueueName, targetQueueName, messageId, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId}",
+                () -> broker.moveMessage(brokerType,sourceQueueName, targetQueueName, messageId), sourceQueueName, targetQueueName, messageId, brokerType);
 
     }
 
@@ -397,7 +343,7 @@ public class MessageBrokerRuntime {
             path = "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
     )
-    public Object moveMessages(
+    public ResponseEntity<String> moveMessages(
             @PathVariable(value = "brokerType") String brokerType,
             @PathVariable(value = "sourceQueueName") String sourceQueueName,
             @PathVariable(value = "targetQueueName") String targetQueueName,
@@ -406,14 +352,15 @@ public class MessageBrokerRuntime {
 
         log.debug("event=moveMessages type=POST message=Move all messages sourceName={} targetName={} type={}", sourceQueueName, targetQueueName, brokerType);
 
-        try {
-            final String result = broker.moveMessages(brokerType,sourceQueueName, targetQueueName);
-            return ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", result);
-        } catch (Exception e) {
-            log.error("event=moveMessages type=POST sourceName={} targetName={} type={} reason={}", sourceQueueName, targetQueueName, brokerType, e.getMessage(), e);
-            return ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName}",
+                () -> broker.moveMessages(brokerType,sourceQueueName, targetQueueName), sourceQueueName, targetQueueName, brokerType);
 
+    }
+
+    private static Map<String, Object> toHeaders(String messageHeaders) {
+        Map<String, Object> headers = messageHeaders == null ? null
+                : OBJECT_MAPPER.readValue(messageHeaders, new TypeReference<>() {});
+        return headers == null ? Map.of() : headers;
     }
 
 }

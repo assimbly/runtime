@@ -22,5 +22,8 @@ spec:
       from:
         uri: "ai-tool:weather?description=Returns+a+placeholder+weather+forecast+for+a+given+city&tags=weather"
         steps:
-          - setBody:
-              simple: "Weather for ${header.city} is sunny with 25°C temperature."
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - setBody:
+                    simple: "Weather for ${header.city} is sunny with 25°C temperature."

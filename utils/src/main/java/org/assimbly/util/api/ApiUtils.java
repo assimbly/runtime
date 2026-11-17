@@ -128,8 +128,9 @@ public final class ApiUtils {
         XPathFactory xPathFactory = XPathFactory.newInstance();
         XPath xpath = xPathFactory.newXPath();
 
-        // XPath expression to find the route with the specific id.
-        String expression = "//route[@id='" + routeId + "']";
+        // The route id is a variable, so it is always compared as a value and never read as part of the expression.
+        xpath.setXPathVariableResolver(_ -> routeId);
+        String expression = "//route[@id=$routeId]";
 
         // Execute XPath to find the route element.
         NodeList routeNodes = (NodeList) xpath.evaluate(

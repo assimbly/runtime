@@ -348,6 +348,7 @@ public class Marshall {
 	private Document getDocument(String xml) throws Exception {
 
         DocumentBuilderFactory dbFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+        dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         DocumentBuilder builder = dbFactory.newDocumentBuilder();
         return builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 

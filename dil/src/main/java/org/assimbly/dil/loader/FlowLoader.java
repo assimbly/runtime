@@ -113,7 +113,6 @@ public class FlowLoader extends RouteBuilder {
 			}
 		}
 
-		IntegrationUtil.printTreemap(props);
 
 		if(useErrorHandler) {
 			log.info("ErrorHandler is set. uri={}",errorUri);
@@ -149,7 +148,7 @@ public class FlowLoader extends RouteBuilder {
 
 				String id = props.get(key + ".id");
 
-				loadStep(key, "routeTemplate definition", id, null);
+				loadStep(prop.getValue(), "routeTemplate definition", id, null);
 
 			}
 		}
@@ -219,7 +218,9 @@ public class FlowLoader extends RouteBuilder {
 
 			String resolvedStep = decryptStepIfNeeded(step);
 
-			log.info("Load step:\n\n{}", resolvedStep);
+			// Only the step as configured is logged: the resolved step holds decrypted values
+			log.info("Load step: id={} type={}", id, type);
+			log.debug("Step:\n\n{}", step);
 
 			loader.loadRoutes(IntegrationUtil.setResource(resolvedStep));
 
@@ -292,6 +293,10 @@ public class FlowLoader extends RouteBuilder {
 
 		if (step == null || !step.contains(EncryptionUtil.ENCODE_PREFIX)) {
 			return step;
+		}
+
+		if (encryptionUtil == null) {
+			throw new IllegalStateException("The Flow has encrypted values, but no encryption key is set (ASSIMBLY_ENCRYPTION_SECRET)");
 		}
 
 		Pattern pattern = Pattern.compile(EncryptionUtil.ENCODE_PREFIX_REGEX);

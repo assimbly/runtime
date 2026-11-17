@@ -28,7 +28,7 @@ public class ValidationErrorMessage {
 
         ValidationErrorMessage that = (ValidationErrorMessage) o;
 
-        return (!Objects.equals(error, that.error));
+        return Objects.equals(error, that.error);
 
     }
 

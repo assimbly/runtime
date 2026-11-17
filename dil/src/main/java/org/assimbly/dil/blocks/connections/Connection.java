@@ -9,7 +9,6 @@ import org.assimbly.dil.blocks.connections.auth.MutualSSL;
 import org.assimbly.dil.blocks.connections.broker.*;
 
 import org.apache.camel.CamelContext;
-import org.apache.commons.collections4.MapUtils;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
 import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
@@ -127,7 +126,7 @@ public class Connection {
                 propertyValue = encryptionUtil.decrypt(propertyValue);
             }
 
-            MapUtils.safeAddToMap(encryptableProperties, propertyKey, propertyValue);
+            encryptableProperties.put(propertyKey, propertyValue == null ? "" : propertyValue);
         }
 
         return encryptableProperties;

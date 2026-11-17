@@ -14,6 +14,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -32,6 +33,7 @@ public class Unmarshall {
 			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
 			"amqp", "amqps", "queue", "queue-async", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
 	};
+	private final List<String> jmsConnectionTypes = Arrays.asList("activemq", "amazonmq", "jms", "sjms", "sjms2");
 
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{
@@ -130,7 +132,27 @@ public class Unmarshall {
 			setRouteTemplate(index, stepId, type);
 		} else {
 			setBlocks(stepElement, stepId, type);
+			setRouteConnectionFactory(stepId, type);
 		}
+	}
+
+	// A Route Step with a JMS connection uses that connection for the JMS endpoints in its route
+	private void setRouteConnectionFactory(String stepId, String type) {
+
+		String routeKey = type + "." + stepId + ".route";
+		String route = properties.get(routeKey);
+		String connectionId = properties.get(type + "." + stepId + ".connection.id");
+
+		if (route == null || connectionId == null) {
+			return;
+		}
+
+		String connectionType = properties.get("connection." + connectionId + ".type");
+
+		if (connectionType != null && jmsConnectionTypes.contains(connectionType.toLowerCase())) {
+			properties.put(routeKey, Route.addConnectionFactory(route, connectionId));
+		}
+
 	}
 
 	private void setUri(String uri, String stepId, String type, int index) {
@@ -332,9 +354,16 @@ public class Unmarshall {
 
 	private void createResources() {
 
-		String[] resources = conf.getStringArray("core/resources/resource/content");
+		// getProperty() reads content raw: no ${...} interpolation or comma splitting, so Groovy
+		// script bodies are stored verbatim. It yields a String for one resource, a Collection for many.
+		Object resources = conf.getProperty("core/resources/resource/content");
+		int resourceCount = switch (resources) {
+			case null -> 0;
+			case Collection<?> c -> c.size();
+			default -> 1;
+		};
 
-		for (int i = 1; i < resources.length + 1; i++) {
+		for (int i = 1; i <= resourceCount; i++) {
 			String id = conf.getString("core/resources/resource[" + i + "]/id");
 			String name = conf.getString("core/resources/resource[" + i + "]/name");
 
@@ -344,8 +373,8 @@ public class Unmarshall {
 				id = name;
 			}
 
-			String content = conf.getString("core/resources/resource[" + i	+ "]/content");
-			properties.put("resource." + id, content);
+			Object content = conf.getProperty("core/resources/resource[" + i + "]/content");
+			properties.put("resource." + id, content == null ? null : content.toString());
 
 		}
 

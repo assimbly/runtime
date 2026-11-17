@@ -7,30 +7,32 @@ import tools.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+
 import org.assimbly.integration.Integration;
 import org.assimbly.util.rest.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.NativeWebRequest;
+
 import tools.jackson.core.JacksonException;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to send messages to a step.
  */
 @Tag(name = "Messages", description = "Send messages to a step")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class MessageManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Integration integration;
 
@@ -67,6 +69,11 @@ public class MessageManagerRuntime {
         TreeMap<String, Object> headerMap = new TreeMap<>();
 
         try {
+            requireUri(uri);
+            if (numberOfTimes < 1) {
+                throw new IllegalArgumentException("numberOfTimes must be 1 or more");
+            }
+
             if(serviceId != null && !serviceId.isBlank()) {
                 serviceMap = toStringTreeMap(getMap(serviceKeys));
                 serviceMap.put("to." + stepId + ".uri",uri);
@@ -84,10 +91,10 @@ public class MessageManagerRuntime {
                 integration.sendWithHeaders(uri, body, headerMap, numberOfTimes);
             }
 
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send","Sent successfully");
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/send/{numberOfTimes}","Sent successfully");
         } catch (Exception e) {
             log.error("Send message to {} failed", uri, e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send","Error: " + e.getMessage() + " Cause: " + e.getCause());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/send/{numberOfTimes}","Error: " + e.getMessage() + " Cause: " + e.getCause());
         }
     }
 
@@ -120,6 +127,8 @@ public class MessageManagerRuntime {
         TreeMap<String, Object> headerMap = new TreeMap<>();
 
         try {
+            requireUri(uri);
+
             if(serviceId != null && !serviceId.isBlank()) {
                 serviceMap = toStringTreeMap(getMap(serviceKeys));
                 serviceMap.put("to." + stepId + ".uri",uri);
@@ -139,37 +148,37 @@ public class MessageManagerRuntime {
 
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/sendrequest",result);
         } catch (Exception e) {
-            log.error("Send reuqest message to {} failed", uri, e);
+            log.error("Send request message to {} failed", uri, e);
             return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/sendrequest",e.getMessage());
         }
     }
 
 
-    // Generates a generic error response (exceptions outside try catch):
-    @ExceptionHandler({Exception.class})
-    public ResponseEntity<String> integrationErrorHandler(Exception error, NativeWebRequest request) {
-
-        HttpServletRequest httpServletRequest = request.getNativeRequest(HttpServletRequest.class);
-        String mediaType = httpServletRequest != null ? httpServletRequest.getHeader("ACCEPT") : "application/json";
-        String path = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
-        String message = error.getMessage();
-
-        return ResponseUtil.createFailureResponse(1L, mediaType, path, message);
+    // Missing or impossible input is answered with what is wrong, instead of the text of a NullPointerException
+    private static void requireUri(String uri) {
+        if (uri == null || uri.isBlank()) {
+            throw new IllegalArgumentException("The uri header is required");
+        }
     }
 
     private  TreeMap<String, Object> getMap(String message) throws JacksonException {
 
-        return new ObjectMapper().readValue(message, new TypeReference<>() {
+        if (message == null || message.isBlank()) {
+            return new TreeMap<>();
+        }
+
+        return MAPPER.readValue(message, new TypeReference<>() {
         });
 
     }
 
-    private  TreeMap<String, String> toStringTreeMap(TreeMap<String, Object> map) {
+    static TreeMap<String, String> toStringTreeMap(TreeMap<String, Object> map) {
 
         TreeMap<String,String> newMap =new TreeMap<>();
 
         for(Map.Entry<String,Object> entry : map.entrySet()) {
-            newMap.put(entry.getKey(), (String) entry.getValue());
+            // a number or boolean in the JSON is a valid value too
+            newMap.put(entry.getKey(), Objects.toString(entry.getValue(), null));
         }
 
         return newMap;

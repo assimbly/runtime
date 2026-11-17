@@ -38,6 +38,9 @@ public final class IntegrationUtil {
 	private static final Logger log =
 			LoggerFactory.getLogger("org.assimbly.util.IntegrationUtil");
 
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+	private static final ObjectMapper YAML_MAPPER = new YAMLMapper();
+
 	private IntegrationUtil() {
 		throw new UnsupportedOperationException("Utility class");
 	}
@@ -53,8 +56,7 @@ public final class IntegrationUtil {
 
 	public static boolean isYaml(String yaml) {
 		try {
-			final ObjectMapper mapper = new YAMLMapper();
-			mapper.readTree(yaml);
+			YAML_MAPPER.readTree(yaml);
 			return true;
 		} catch (JacksonException _) {
 			return false;
@@ -63,8 +65,7 @@ public final class IntegrationUtil {
 
 	public static boolean isJson(String json) {
 		try {
-			final ObjectMapper mapper = new ObjectMapper();
-			mapper.readTree(json);
+			JSON_MAPPER.readTree(json);
 			return true;
 		} catch (JacksonException _) {
 			return false;
@@ -288,7 +289,7 @@ public final class IntegrationUtil {
 	private static void setAttributeIfSupported(DocumentBuilderFactory factory, String attribute) {
 		try {
 			factory.setAttribute(attribute, "");
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException _) {
 			// The parser doesn't support this property.
 		}
 	}
@@ -316,13 +317,8 @@ public final class IntegrationUtil {
 
 	public static void printTreemap(TreeMap<String, String> treeMap) {
 
-		IO.println("print treemap: \n");
-
 		for (Map.Entry<String, String> entry : treeMap.entrySet()) {
-			IO.println(
-					"key: " + entry.getKey()
-							+ "; value: " + entry.getValue()
-			);
+			log.info("key: {}; value: {}", entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -347,7 +343,7 @@ public final class IntegrationUtil {
 		String configuration =
 				convertTreemapToString(treeMap, items);
 
-		IO.println(configuration);
+		log.info(configuration);
 	}
 
 	public static String convertTreemapToString(

@@ -54,11 +54,14 @@ spec:
       from:
         uri: "{{in}}"
         steps:
-          - log:
-              logName: "org.assimbly.runtime.{{flowId}}"
-              logLanguage: "{{language}}"
-              loggingLevel: "{{loggingLevel}}"
-              message: "{{expression}}"
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - log:
+                    logName: "org.assimbly.runtime.{{flowId}}"
+                    logLanguage: "{{language}}"
+                    loggingLevel: "{{loggingLevel}}"
+                    message: "{{expression}}"
           - to:
               disabled: "{{sink}}"
               uri: "{{out}}"

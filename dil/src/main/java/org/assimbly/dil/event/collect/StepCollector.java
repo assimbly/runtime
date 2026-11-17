@@ -98,8 +98,6 @@ public class StepCollector extends EventNotifierSupport {
             // Cast to Camel event to retrieve the StepEvent
             CamelEvent.StepEvent stepEvent = (CamelEvent.StepEvent) event;
 
-
-
             // Get the stepId
             String stepId = StringUtils.substringAfter(stepEvent.getStepId(), "step-");
 

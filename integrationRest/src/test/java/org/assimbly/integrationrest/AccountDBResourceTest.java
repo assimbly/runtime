@@ -12,7 +12,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AccountDBResourceTest {
@@ -32,27 +31,24 @@ class AccountDBResourceTest {
 
     @Test
     void shouldAuthenticateAndGenerateDBToken() {
-        try {
-            // create user on mongodb
-            MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
-            headers.put("db", TestApplicationContext.db);
+        // create user on mongodb
+        MongoUtil.createUser(container.getMongoContainer().getReplicaSetUrl(), TestApplicationContext.firstNameUser, TestApplicationContext.lastNameUser, TestApplicationContext.emailUser, TestApplicationContext.passwordUser);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/db/authenticate"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", ApiUtils.buildAuth(TestApplicationContext.emailUser, TestApplicationContext.passwordUser));
+        headers.put("db", TestApplicationContext.db);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/db/authenticate"), null, headers);
 
-            // asserts contents
-            assertThat(response.body()).isNotEmpty();
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(response.body()).isNotEmpty();
+
     }
 
 }

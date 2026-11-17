@@ -10,18 +10,18 @@ import org.assimbly.integration.impl.manager.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import com.google.common.io.Resources;
-import net.sf.saxon.xpath.XPathFactoryImpl;
 
-import org.apache.camel.api.management.ManagedCamelContext;
-import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.catalog.EndpointValidationResult;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.engine.ExplicitCamelContextNameStrategy;
-import org.apache.camel.language.xpath.XPathBuilder;
+
+import org.apache.camel.model.Model;
+import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.SimpleRegistry;
+import org.apache.camel.xml.LwModelToXMLDumper;
 import org.apache.commons.lang3.StringUtils;
 
 import org.assimbly.dil.loader.FlowLoaderReport;
@@ -35,20 +35,19 @@ import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.error.ValidationErrorMessage;
 import org.assimbly.util.helper.JsonHelper;
 import org.jasypt.properties.EncryptableProperties;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.xml.xpath.XPathFactory;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.IntStream;
 
@@ -56,6 +55,8 @@ import java.util.stream.IntStream;
 public class CamelIntegration extends BaseIntegration {
 
     protected static final Logger log = LoggerFactory.getLogger(CamelIntegration.class);
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final CamelContext context;
     private final SimpleRegistry registry = new SimpleRegistry();
@@ -65,12 +66,14 @@ public class CamelIntegration extends BaseIntegration {
     private final ConfigManager configManager;
     private final StartupManager startupManager = new StartupManager();
     private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
-    private boolean started;
+    private volatile boolean started;
     private RouteController routeController;
-    private ManagedCamelContext managed;
     private Properties encryptionProperties;
-    private ConcurrentMap<String, TreeMap<String, String>> flowsMap;
-    private ConcurrentMap<String, String> collectorsMap;
+    // empty until setCaching() loads the store
+    private ConcurrentMap<String, TreeMap<String, String>> flowsMap = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, String> collectorsMap = new ConcurrentHashMap<>();
+    // one lock per flow: install, start, stop, pause, ... of the same flow never run at the same time
+    private final ConcurrentMap<String, Object> flowLocks = new ConcurrentHashMap<>();
 
     public CamelIntegration(boolean useDefaultSettings) throws Exception {
         super();
@@ -136,7 +139,7 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    public void start() {
+    public synchronized void start() {
 
         // start Camel context
         if (!started) {
@@ -147,15 +150,18 @@ public class CamelIntegration extends BaseIntegration {
             // Keep index-paused flows stopped after context start
             flowManager.enforceDesiredPausedFlows();
 
-            configManager.setTriggerMisfireLoggingListener();
+            configManager.setTriggerMisfireWatchdog();
 
             log.info("Integration Runtime started");
         }
 
     }
 
-    public void stop() throws Exception {
-        super.getFlowConfigurations().clear();
+    public synchronized void stop() throws Exception {
+        if (dilStore != null) {
+            super.getFlowConfigurations().clear();
+        }
+        configManager.stopTriggerMisfireWatchdog();
         if (context != null) {
             for (Route route : context.getRoutes()) {
                 routeController.stopRoute(route.getId());
@@ -174,6 +180,12 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String installFlow(String flowId, long timeout, String mediaType, String configuration) {
+        synchronized (flowLock(flowId)) {
+            return installFlowLocked(flowId, timeout, mediaType, configuration);
+        }
+    }
+
+    private String installFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
@@ -202,12 +214,26 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     public String uninstallFlow(String flowId, long timeout) {
-        super.removeFlowConfiguration(flowId);
-        installedFlowsManager.unregister(flowId);
-        return flowManager.stopFlow(flowId, timeout);
+        synchronized (flowLock(flowId)) {
+            super.removeFlowConfiguration(flowId);
+            installedFlowsManager.unregister(flowId);
+            return flowManager.stopFlow(flowId, timeout);
+        }
     }
 
     public String testFlow(String flowId, long timeout, String mediaType, String configuration) {
+        synchronized (flowLock(flowId)) {
+            // a test doesn't change what is installed: the stored configuration of the flow is put back afterwards
+            TreeMap<String, String> installedConfiguration = super.getFlowConfiguration(flowId);
+            try {
+                return testFlowLocked(flowId, timeout, mediaType, configuration);
+            } finally {
+                restoreFlowConfiguration(flowId, installedConfiguration);
+            }
+        }
+    }
+
+    private String testFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
@@ -304,8 +330,9 @@ public class CamelIntegration extends BaseIntegration {
                 template.send(uri, exchange);
             } else {
                 log.info("Sending {} messages to {}", numberOfTimes, uri);
-                Exchange finalExchange = exchange;
-                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, finalExchange));
+                // every send gets its own copy, as a route changes the exchange it processes
+                Exchange original = exchange;
+                IntStream.range(0, numberOfTimes).forEach(_ -> template.send(uri, original.copy()));
             }
         }
 
@@ -342,22 +369,20 @@ public class CamelIntegration extends BaseIntegration {
     public Exchange setHeaders(Exchange exchange, TreeMap<String, Object> messageHeaders) {
         for (Map.Entry<String, Object> messageHeader : messageHeaders.entrySet()) {
 
+            // A header value is language(expression), such as simple(${body}) or constant(text). Without it, it is a constant.
             String key = messageHeader.getKey();
-            String value = StringUtils.substringBetween(messageHeader.getValue().toString(), "(", ")");
-            String language = StringUtils.substringBefore(messageHeader.getValue().toString(), "(");
-            String result;
+            String header = String.valueOf(messageHeader.getValue());
+            String value = StringUtils.substringBetween(header, "(", ")");
+            String language = StringUtils.substringBefore(header, "(");
 
-            if (value.startsWith("constant")) {
+            if (value == null) {
+                exchange.getIn().setHeader(key, header);
+            } else if (language.equals("constant")) {
                 exchange.getIn().setHeader(key, value);
-            } else if (value.startsWith("xpath")) {
-                XPathFactory fac = new XPathFactoryImpl();
-                result = XPathBuilder.xpath(key).factory(fac).evaluate(exchange, String.class);
-                exchange.getIn().setHeader(key, result);
             } else {
                 Language resolvedLanguage = exchange.getContext().resolveLanguage(language);
                 Expression expression = resolvedLanguage.createExpression(value);
-                result = expression.evaluate(exchange, String.class);
-                exchange.getIn().setHeader(key, result);
+                exchange.getIn().setHeader(key, expression.evaluate(exchange, String.class));
             }
 
         }
@@ -365,11 +390,24 @@ public class CamelIntegration extends BaseIntegration {
         return exchange;
     }
 
-    private TreeMap<String, String> getProperties(String flowId) {
-        return super.getFlowConfigurations().stream()
-                .filter(properties -> flowId.equals(properties.get("id")))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Flow not found"));
+    private Object flowLock(String flowId) {
+        return flowLocks.computeIfAbsent(flowId, _ -> new Object());
+    }
+
+    private String notInstalledReport(String flowId, String event) {
+        FlowLoaderReport report = new FlowLoaderReport(flowId, flowId, "0");
+        return flowManager.finishReport(report, flowId, event, "Flow is not installed", "error", "failed").getReport();
+    }
+
+    private void restoreFlowConfiguration(String flowId, TreeMap<String, String> previous) {
+        if (dilStore == null) {
+            return;
+        }
+        if (previous != null) {
+            super.setFlowConfiguration(flowId, previous);
+        } else {
+            super.removeFlowConfiguration(flowId);
+        }
     }
 
     @Override
@@ -381,6 +419,7 @@ public class CamelIntegration extends BaseIntegration {
 
         registry.bind("encryptableProperties", encryptableProperties);
         registry.bind("encryptionUtil", EncryptionUtil.class, encryptionUtil);
+        flowManager.setFallbackEncryptionUtil(encryptionUtil);
 
         try {
             setCaching();
@@ -485,15 +524,23 @@ public class CamelIntegration extends BaseIntegration {
 
     public String getCamelRouteConfiguration(String id, String mediaType) throws Exception {
 
-        Pattern xmlDeclarationPattern = Pattern.compile("<\\?xml(.+?)\\?>");
         StringBuilder buf = new StringBuilder();
+        // dumped from the route model, so it also works without JMX management
+        Model model = context.getCamelContextExtension().getContextPlugin(Model.class);
+        // the light-weight dumper, as the JAXB dumper loses every step of a route from a route template (a Kamelet)
+        // when it resolves placeholders. Each route is dumped on its own, so that it gets its own template parameters.
+        ModelToXMLDumper dumper = new LwModelToXMLDumper();
 
         for (Route route : context.getRoutes()) {
             if (route.getId().equals(id) || route.getId().startsWith(id + "-")) {
-                ManagedRouteMBean managedRoute = managed.getManagedRoute(route.getId());
-                String xmlConfiguration = managedRoute.dumpRouteAsXml(true);
-                xmlConfiguration = xmlDeclarationPattern.matcher(xmlConfiguration).replaceAll("").trim();
-                buf.append(xmlConfiguration);
+                RouteDefinition definition = model.getRouteDefinition(route.getId());
+                if (definition == null) {
+                    continue;
+                }
+                String xmlConfiguration = dumper.dumpModelAsXml(context, definition, true, false, false)
+                        .replaceFirst(" xmlns=\"http://camel.apache.org/schema/xml-io\"", "")
+                        .trim();
+                buf.append(xmlConfiguration.indent(4));
             }
         }
 
@@ -502,7 +549,7 @@ public class CamelIntegration extends BaseIntegration {
         if (camelRouteConfiguration.isEmpty()) {
             camelRouteConfiguration = "0";
         } else {
-            camelRouteConfiguration = "<routes xmlns=\"http://camel.apache.org/schema/spring\">" +
+            camelRouteConfiguration = "<routes xmlns=\"http://camel.apache.org/schema/spring\">\n" +
                     camelRouteConfiguration +
                     "</routes>";
             if (mediaType.contains("json")) {
@@ -538,7 +585,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String doc = catalog.componentJSonSchema(componentType);
 
-        if (doc.isEmpty()) {
+        if (doc == null || doc.isEmpty()) {
             doc = "Unknown component";
         }
 
@@ -559,9 +606,8 @@ public class CamelIntegration extends BaseIntegration {
         String components = catalog.listComponentsAsJson();
 
         if (includeCustomComponents) {
-            URL url = Resources.getResource("custom-steps.json");
-            String customComponent = Resources.toString(url, StandardCharsets.UTF_8);
-            components = JsonHelper.mergeJsonArray(components, customComponent);
+            String customComponent = ConfigManager.readResource("custom-steps.json");
+            components = JsonHelper.mergeJsonArray(components, customComponent, "name");
         }
 
         if (mediaType.contains("xml")) {
@@ -577,16 +623,17 @@ public class CamelIntegration extends BaseIntegration {
         DefaultCamelCatalog catalog = new DefaultCamelCatalog();
         String schema = null;
 
-        if (catalog.findComponentNames().contains(componentType)) {
+        boolean catalogComponent = catalog.findComponentNames().contains(componentType);
+
+        // A producer-only catalog component (such as http) has no consumer options, so its Source kamelet describes them
+        boolean kameletSource = catalogComponent && "source".equalsIgnoreCase(type) && catalog.componentModel(componentType).isProducerOnly();
+
+        if (!catalogComponent || kameletSource) {
+            schema = getKameletSchema(componentType, type);
+        }
+
+        if (schema == null && catalogComponent) {
             schema = catalog.componentJSonSchema(componentType);
-        } else if (StringUtils.isNotBlank(type)) {
-            try {
-                URL url = Resources.getResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
-                String kamelet = Resources.toString(url, StandardCharsets.UTF_8);
-                schema = retrieveKameletOptions(kamelet, componentType);
-            } catch (Exception e) {
-                log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
-            }
         }
 
         if (schema == null || schema.isEmpty()) {
@@ -596,6 +643,20 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         return schema;
+    }
+
+    private String getKameletSchema(String componentType, String type) {
+        if (!ConfigManager.isResourceName(componentType) || !ConfigManager.isResourceName(type)) {
+            return null;
+        }
+
+        try {
+            String kamelet = ConfigManager.readResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
+            return retrieveKameletOptions(kamelet, componentType);
+        } catch (Exception e) {
+            log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -672,7 +733,7 @@ public class CamelIntegration extends BaseIntegration {
 
         String parameters = catalog.componentJSonSchema(componentType);
 
-        if (parameters.isEmpty()) {
+        if (parameters == null || parameters.isEmpty()) {
             parameters = "Unknown component";
         } else if (mediaType.contains("xml")) {
             parameters = DocConverter.jsonToXml(parameters);
@@ -752,33 +813,58 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowMessages(String flowId, boolean includeSteps, String mediaType) {
-        return statsManager.getFlowMessages(flowId, includeSteps, mediaType, flowsMap);
+    public String getFlowExchanges(String flowId, boolean includeSteps, String mediaType) {
+        return statsManager.getFlowExchanges(flowId, includeSteps, mediaType);
     }
 
     @Override
-    public String getFlowTotalMessages(String flowId) {
-        return statsManager.getFlowTotalMessages(flowId);
+    public String getFlowTransactions(String flowId, String mediaType) {
+        return statsManager.getFlowTransactions(flowId, mediaType);
     }
 
     @Override
-    public String getFlowCompletedMessages(String flowId) {
-        return statsManager.getFlowCompletedMessages(flowId);
+    public String getFlowTotalExchanges(String flowId) {
+        return statsManager.getFlowTotalExchanges(flowId);
     }
 
     @Override
-    public String getFlowFailedMessages(String flowId) {
-        return statsManager.getFlowFailedMessages(flowId);
+    public String getFlowCompletedExchanges(String flowId) {
+        return statsManager.getFlowCompletedExchanges(flowId);
     }
 
     @Override
-    public String getFlowPendingMessages(String flowId) {
-        return statsManager.getFlowPendingMessages(flowId);
+    public String getFlowFailedExchanges(String flowId) {
+        return statsManager.getFlowFailedExchanges(flowId);
     }
 
     @Override
-    public String getStepMessages(String flowId, String stepId, String mediaType) {
-        return statsManager.getStepMessages(flowId, stepId, mediaType);
+    public String getFlowPendingExchanges(String flowId) {
+        return statsManager.getFlowPendingExchanges(flowId);
+    }
+
+    @Override
+    public String getFlowTotalTransactions(String flowId) {
+        return statsManager.getFlowTotalTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowCompletedTransactions(String flowId) {
+        return statsManager.getFlowCompletedTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowFailedTransactions(String flowId) {
+        return statsManager.getFlowFailedTransactions(flowId);
+    }
+
+    @Override
+    public String getFlowPendingTransactions(String flowId) {
+        return statsManager.getFlowPendingTransactions(flowId);
+    }
+
+    @Override
+    public String getStepExchanges(String flowId, String stepId, String mediaType) {
+        return statsManager.getStepExchanges(flowId, stepId, mediaType);
     }
 
     @Override
@@ -920,54 +1006,68 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public String startFlow(String flowId, long timeout) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        if(flowProperties.isEmpty()){
-            FlowLoaderReport report = new FlowLoaderReport(flowId, flowId,"0");
-            String errorMessage = "XXX Flow is not installed";
-            return flowManager.finishReport(report, flowId, "error", errorMessage, "error","failed").getReport();
-        }
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "start");
+            }
 
-
-        FlowLoaderReport report = flowManager.startFlow(flowId, flowProperties, timeout);
-        if (report.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            FlowLoaderReport report = flowManager.startFlow(flowId, flowProperties, timeout);
+            if (report.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return report.getReport();
         }
-        return report.getReport();
     }
 
     @Override
     public String restartFlow(String flowId, long timeout) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        FlowLoaderReport report = flowManager.restartFlow(flowId, flowProperties, timeout);
-        if (report.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "restart");
+            }
+
+            FlowLoaderReport report = flowManager.restartFlow(flowId, flowProperties, timeout);
+            if (report.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return report.getReport();
         }
-        return report.getReport();
     }
 
     @Override
     public String stopFlow(String flowId, long timeout) {
-        return flowManager.stopFlow(flowId, timeout);
+        synchronized (flowLock(flowId)) {
+            return flowManager.stopFlow(flowId, timeout);
+        }
     }
 
     @Override
     public String resumeFlow(String flowId) {
-        TreeMap<String, String> flowProperties = getProperties(flowId);
-        FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
-        if (flowLoaderReport.isStatusSuccess()) {
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+        synchronized (flowLock(flowId)) {
+            TreeMap<String, String> flowProperties = super.getFlowConfiguration(flowId);
+            if (flowProperties == null) {
+                return notInstalledReport(flowId, "resume");
+            }
+
+            FlowLoaderReport flowLoaderReport = flowManager.resumeFlow(flowId, flowProperties);
+            if (flowLoaderReport.isStatusSuccess()) {
+                registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_STARTED);
+            }
+            return flowLoaderReport.getReport();
         }
-        return flowLoaderReport.getReport();
     }
 
     @Override
     public String pauseFlow(String flowId) {
-        FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
-        if(flowLoaderReport.isStatusSuccess()) {
-            TreeMap<String, String> flowProperties = getProperties(flowId);
-            registerInstalledFlow(flowId, flowProperties, InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+        synchronized (flowLock(flowId)) {
+            FlowLoaderReport flowLoaderReport = flowManager.pauseFlow(flowId);
+            if (flowLoaderReport.isStatusSuccess()) {
+                registerInstalledFlow(flowId, super.getFlowConfiguration(flowId), InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+            }
+            return flowLoaderReport.getReport();
         }
-        return flowLoaderReport.getReport();
     }
 
     @Override
@@ -986,13 +1086,8 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFlowsStats(String mediaType) {
-        return statsManager.getFlowsStats(mediaType, flowsMap);
-    }
-
-    @Override
-    public String getMessages(String mediaType) {
-        return statsManager.getMessages(mediaType, flowsMap);
+    public String getFlowsStats(boolean fullStats, String mediaType) {
+        return statsManager.getFlowsStats(fullStats, mediaType, flowsMap);
     }
 
     @Override
@@ -1129,11 +1224,7 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     private String toJson(List<Map<String, String>> result) {
-        try {
-            return new ObjectMapper().writeValueAsString(result);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return mapper.writeValueAsString(result);
     }
     @Override
     public String getInstalledFlowsIndex() {
@@ -1147,7 +1238,7 @@ public class CamelIntegration extends BaseIntegration {
                 entry.put("status", flowEntry.getStatus());
                 result.add(entry);
             });
-            return new ObjectMapper().writeValueAsString(result);
+            return mapper.writeValueAsString(result);
         } catch (Exception e) {
             log.error("Failed to serialize installed flows index", e);
             return "[]";
@@ -1164,7 +1255,6 @@ public class CamelIntegration extends BaseIntegration {
         installedFlowsManager.register(flowId, version, tenant, status);
     }
 
-    @NotNull
     private static Map<String, String> buildFlowInfoMap(String flowId, TreeMap<String, String> config) {
         Map<String, String> flow = new HashMap<>();
         flow.put("id", flowId);
@@ -1183,8 +1273,6 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     private String mergeJson(String flowJson, String testJson) {
-
-        ObjectMapper mapper = new ObjectMapper();
 
         // Parse both strings into JsonNode trees
         JsonNode flowNode = mapper.readTree(flowJson);

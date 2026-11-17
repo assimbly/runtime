@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 
 public class Transform {
 
@@ -19,18 +21,24 @@ public class Transform {
 
     public Transform(String stylesheet) throws SaxonApiException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        InputStream is = classloader.getResourceAsStream(stylesheet);
         processor = new Processor(false);
-        XsltCompiler compiler = processor.newXsltCompiler();
-        XsltExecutable executable = compiler.compile(new StreamSource(is));
-        transformer = executable.load();
+        try (InputStream is = classloader.getResourceAsStream(stylesheet)) {
+            if (is == null) {
+                throw new IllegalStateException("Stylesheet " + stylesheet + " is not found on the classpath");
+            }
+            XsltCompiler compiler = processor.newXsltCompiler();
+            XsltExecutable executable = compiler.compile(new StreamSource(is));
+            transformer = executable.load();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to close stylesheet " + stylesheet, e);
+        }
     }
 
     public String transformToDil(String xml) throws Exception {
 
         String dilXml = transformXML(xml, transformer, processor);
 
-        log.info("DIL format:\n\n{}", dilXml);
+        log.debug("DIL format:\n\n{}", dilXml);
 
         return dilXml;
 

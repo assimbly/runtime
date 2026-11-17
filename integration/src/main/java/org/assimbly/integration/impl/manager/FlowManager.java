@@ -1,6 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
 import org.apache.camel.*;
+
+import java.time.ZoneId;
 import java.util.*;
 
 import org.apache.camel.api.management.ManagedCamelContext;
@@ -35,29 +37,36 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.nio.file.Path;
+import java.security.cert.Certificate;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class FlowManager {
@@ -65,7 +74,11 @@ public class FlowManager {
     protected static final Logger log = LoggerFactory.getLogger(FlowManager.class);
 
     private static final String ASSIMBLY_ENCRYPTION_SECRET = System.getenv("ASSIMBLY_ENCRYPTION_SECRET");
-    private final EncryptionUtil encryptionUtil = new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET);
+
+    // Decrypts the ENC(...) values in a Flow: with ASSIMBLY_ENCRYPTION_SECRET when it is set, otherwise with the key
+    // the embedding application passes through setFallbackEncryptionUtil (null until then).
+    private final AtomicReference<EncryptionUtil> encryptionUtil =
+            new AtomicReference<>(hasEncryptionSecret() ? new EncryptionUtil(ASSIMBLY_ENCRYPTION_SECRET) : null);
 
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
@@ -73,6 +86,19 @@ public class FlowManager {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
+
+    private static final DateTimeFormatter LOG_FILE_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private static final JsonMapper mapper = JsonMapper.builder().build();
+
+    private static final Set<String> AS2_SECURITY_PARAMS = Set.of(
+            "signingPrivateKey",
+            "decryptingPrivateKey",
+            "signingCertificateChain",
+            "validateSigningCertificateChain"
+    );
+
+    private static final Set<String> AS2_SENSITIVE_PARAMS = Set.of("password", "alias");
 
     public static final String PROPERTY_FLOW_ENVIRONMENT = "flow.environment";
     public static final String PROPERTY_FLOW_NAME = "flow.name";
@@ -90,6 +116,17 @@ public class FlowManager {
         this.installedFlowsManager = installedFlowsManager;
     }
 
+    /** Uses this key for ENC(...) values when ASSIMBLY_ENCRYPTION_SECRET isn't set; with it set, this does nothing. */
+    public void setFallbackEncryptionUtil(EncryptionUtil fallback) {
+        if (!hasEncryptionSecret()) {
+            encryptionUtil.set(fallback);
+        }
+    }
+
+    private static boolean hasEncryptionSecret() {
+        return ASSIMBLY_ENCRYPTION_SECRET != null && !ASSIMBLY_ENCRYPTION_SECRET.isEmpty();
+    }
+
     public FlowLoaderReport loadFlow(String flowId, TreeMap<String, String> properties) {
         return loadFlow(flowId, properties, true);
     }
@@ -103,7 +140,7 @@ public class FlowManager {
 
         try {
 
-            initializeSecurity(properties);
+            initializeSecurity(flowId, properties);
             createConnections(properties);
 
             // Block consumers when adding into an already-started context
@@ -114,7 +151,7 @@ public class FlowManager {
             }
 
             try {
-                FlowLoader flow = new FlowLoader(properties, report, encryptionUtil);
+                FlowLoader flow = new FlowLoader(properties, report, encryptionUtil.get());
                 flow.addRoutesToCamelContext(context);
 
                 if (!flow.isFlowLoaded()) {
@@ -199,14 +236,15 @@ public class FlowManager {
         }
     }
 
-    private void initializeSecurity(TreeMap<String, String> properties) throws Exception {
+    // A flow whose security can't be set up fails to load, instead of running without it
+    private void initializeSecurity(String flowId, TreeMap<String, String> properties) throws Exception {
         if (properties.containsKey("security.as2")) {
             log.info("Initialize AS2 Inbound security");
-            initializeAs2InboundSecurity(properties);
+            initializeAs2InboundSecurity(flowId, properties);
         }
         if (properties.containsKey("security.email")) {
             log.info("Initialize oauth2 email authenticator");
-            initializeOAuth2EmailAuthenticator(properties);
+            initializeOAuth2EmailAuthenticator(flowId, properties);
         }
         if (properties.containsKey("security.mutualtls")) {
             log.info("Initialize Mutual TLS");
@@ -251,7 +289,8 @@ public class FlowManager {
                     log.info("Skipping flow not in installed index: {}", flowId);
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // one flow that can't be restored doesn't stop the others
+                log.error("Restore flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -266,7 +305,7 @@ public class FlowManager {
                 loadFlow(flowId, flowProps);
                 log.info("Restarted flow: {}", flowId);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Restart flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -281,7 +320,7 @@ public class FlowManager {
                 stopFlow(flowId, 250, false);
                 log.info("Stopped flow: {}", flowId);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Stop flow failed | flowid={}", flowId, e);
             }
         });
 
@@ -396,7 +435,8 @@ public class FlowManager {
         List<Route> routeList = getRoutesByFlowId(flowId);
 
         for (Route route : routeList) {
-            if (!routeController.getRouteStatus(route.getId()).isSuspendable()) {
+            ServiceStatus routeStatus = routeController.getRouteStatus(route.getId());
+            if (routeStatus == null || !routeStatus.isSuspendable()) {
                 return finishReport(report, flowId, "pause", "Flow isn't suspendable (Step " + route.getId() + ")", "error","failed");
             }
         }
@@ -431,8 +471,9 @@ public class FlowManager {
             List<Route> routeList = getRoutesByFlowId(flowId);
 
             // Restored paused routes are Stopped, not Suspended
-            boolean needsStart = routeList.stream().anyMatch(route ->
-                    routeController.getRouteStatus(route.getId()).isStopped());
+            boolean needsStart = routeList.stream()
+                    .map(route -> routeController.getRouteStatus(route.getId()))
+                    .anyMatch(routeStatus -> routeStatus != null && routeStatus.isStopped());
 
             if (needsStart) {
                 FlowLoaderReport startReport = startFlow(flowId, flowProperties, STOP_TIMEOUT);
@@ -444,7 +485,8 @@ public class FlowManager {
 
             for (Route route : routeList) {
                 String routeId = route.getId();
-                if (routeController.getRouteStatus(routeId).isSuspended()) {
+                ServiceStatus routeStatus = routeController.getRouteStatus(routeId);
+                if (routeStatus != null && routeStatus.isSuspended()) {
                     routeController.resumeRoute(routeId);
                     log.info("Resumed flow  | flowid={} | stepid={}", flowId, routeId);
                 }
@@ -478,12 +520,12 @@ public class FlowManager {
 
             test.put("body",message.getBody(String.class));
             test.put("headers",headers);
-            test.put("passed ",true);
+            test.put("passed",true);
 
 
         } catch (Exception e) {
-            test.put("passed ",false);
-            test.put("message ",e.getMessage());
+            test.put("passed",false);
+            test.put("message",e.getMessage());
             log.error("Test flow failed. | flowid={}", flowId, e);
         }
 
@@ -522,7 +564,7 @@ public class FlowManager {
 
             for (Route route : routes) {
                 serviceStatus = routeController.getRouteStatus(route.getId());
-                if (!serviceStatus.isStarted()) {
+                if (serviceStatus == null || !serviceStatus.isStarted()) {
                     return false;
                 }
             }
@@ -619,20 +661,31 @@ public class FlowManager {
     }
 
     public String getFlowAlertsLog(String id, Integer numberOfEntries) throws Exception {
+        return readFlowLog("alerts", id, numberOfEntries);
+    }
 
-        Date date = new Date();
-        String today = new SimpleDateFormat("yyyyMMdd").format(date);
-        File file = new File(baseDir + "/alerts/" + id + "/" + today + "_alerts.log");
+    // Reads today's log of a flow: <base>/<type>/<flowId>/<date>_<type>.log
+    private String readFlowLog(String type, String flowId, Integer numberOfEntries) throws IOException {
 
-        if (file.exists()) {
-            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-            if (numberOfEntries != null && numberOfEntries < lines.size()) {
-                lines = lines.subList(lines.size() - numberOfEntries, lines.size());
-            }
-            return StringUtils.join(lines, ',');
-        } else {
+        String today = LocalDate.now(ZoneId.systemDefault()).format(LOG_FILE_DATE);
+        Path logDirectory = Path.of(baseDir, type).normalize();
+        Path logFile = logDirectory.resolve(flowId).resolve(today + "_" + type + ".log").normalize();
+
+        // the flow id comes from the caller and must not point outside the log directory
+        if (!logFile.startsWith(logDirectory)) {
+            throw new IllegalArgumentException("Invalid flow id: " + flowId);
+        }
+
+        File file = logFile.toFile();
+        if (!file.exists()) {
             return "0";
         }
+
+        List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
+        if (numberOfEntries != null && numberOfEntries < lines.size()) {
+            lines = lines.subList(lines.size() - numberOfEntries, lines.size());
+        }
+        return StringUtils.join(lines, ',');
     }
 
     public TreeMap<String, String> getIntegrationAlertsCount(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -665,20 +718,7 @@ public class FlowManager {
     }
 
     public String getFlowEventsLog(String id, Integer numberOfEntries) throws Exception {
-
-        Date date = new Date();
-        String today = new SimpleDateFormat("yyyyMMdd").format(date);
-        File file = new File(baseDir + "/events/" + id + "/" + today + "_events.log");
-
-        if (file.exists()) {
-            List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-            if (numberOfEntries != null && numberOfEntries < lines.size()) {
-                lines = lines.subList(lines.size() - numberOfEntries, lines.size());
-            }
-            return StringUtils.join(lines, ',');
-        } else {
-            return "0";
-        }
+        return readFlowLog("events", id, numberOfEntries);
     }
 
     public Set<String> getListOfFlowIds(String filter) {
@@ -860,7 +900,6 @@ public class FlowManager {
 
     private String errorEventMessageToJson(Collection<BacklogErrorEventMessage> errorEventMessages) {
 
-        JsonMapper mapper = JsonMapper.builder().build();
         ArrayNode arrayNode = mapper.createArrayNode();
 
         for (BacklogErrorEventMessage errorEventMessage : errorEventMessages) {
@@ -873,6 +912,16 @@ public class FlowManager {
             node.put("timestamp", errorEventMessage.getTimestamp());
             node.put("exceptionMessage", errorEventMessage.getExceptionMessage());
             node.put("exceptionType", errorEventMessage.getExceptionType());
+            // the Camel node that failed (not the onException handling it) and its source location
+            node.put("nodeId", errorEventMessage.getToNode());
+            node.put("location", errorEventMessage.getLocation());
+            node.put("endpointUri", errorEventMessage.getEndpointUri());
+            node.put("exchangeId", errorEventMessage.getExchangeId());
+            node.put("handled", errorEventMessage.isHandled());
+            // identical errors are collapsed into one entry
+            node.put("repeatCount", errorEventMessage.getRepeatCount());
+            node.put("repeatFirstTimestamp", errorEventMessage.getRepeatFirstTimestamp());
+            node.put("repeatLastTimestamp", errorEventMessage.getRepeatLastTimestamp());
 
             arrayNode.add(node);
         }
@@ -883,16 +932,7 @@ public class FlowManager {
 
     public String setFlowId(String filename, String configuration) throws Exception {
 
-        String configurationUTF8 = new String(configuration.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-
-        String flowId;
-        if (IntegrationUtil.isXML(configurationUTF8)) {
-            flowId = getFlowId(filename, configurationUTF8);
-        } else {
-            flowId = filename;
-        }
-
-        return flowId;
+        return IntegrationUtil.isXML(configuration) ? getFlowId(filename, configuration) : filename;
 
     }
 
@@ -901,12 +941,14 @@ public class FlowManager {
         String flowId = "";
         Document doc = StringConverter.stringToDoc(configurationUTF8);
         XPath xPath = XPathFactory.newInstance().newXPath();
+        // The file name is bound as a variable, so it can't change the expression (XPath injection)
+        xPath.setXPathVariableResolver(_ -> filename);
 
         String root = doc.getDocumentElement().getTagName();
 
         switch (root) {
             case "dil", "integrations", "flows", "flow" -> {
-                flowId = xPath.evaluate("//flows/flow[id='" + filename + "']/id", doc);
+                flowId = xPath.evaluate("//flows/flow[id=$filename]/id", doc);
                 if (flowId == null || flowId.isEmpty()) {
                     flowId = xPath.evaluate("//flow[1]/id", doc);
                 }
@@ -944,30 +986,23 @@ public class FlowManager {
             return routes;
         }
 
-        return context.getRoutes().stream().filter(r -> r.getId().startsWith(id)).toList();
+        return context.getRoutes().stream().filter(r -> isRouteOfFlow(r, id)).toList();
 
+    }
+
+    // A route id is <flowId>-<stepId>. Matching on the flow id as prefix alone would also match flow 10 for flow 1.
+    private static boolean isRouteOfFlow(Route route, String flowId) {
+        String routeId = route.getId();
+        return flowId.equals(route.getGroup()) || routeId.equals(flowId) || routeId.startsWith(flowId + "-");
     }
 
     private List<RouteStartupOrder> getRoutesStartupOrderByFlowId(String id) {
         List<RouteStartupOrder> routeStartupOrder = context.getCamelContextExtension().getRouteStartupOrder();
-        return routeStartupOrder.stream().filter(r -> r.getRoute().getId().startsWith(id)).toList();
+        return routeStartupOrder.stream().filter(r -> isRouteOfFlow(r.getRoute(), id)).toList();
     }
 
     private List<String> getAllRoutesByFlowId(String id) {
-
-        List<Route> routes = context.getRoutesByGroup(id);
-
-        if(routes != null && !routes.isEmpty()){
-            return routes
-                    .stream()
-                    .map(Route::getId)
-                    .toList();
-        }
-
-        return context.getRoutes().stream()
-                .map(Route::getId)
-                .filter(routeId -> routeId.startsWith(id))
-                .toList();
+        return getRoutesByFlowId(id).stream().map(Route::getId).toList();
     }
 
     public Component getComponent(List<Class<?>> classes, String scheme) {
@@ -1041,90 +1076,104 @@ public class FlowManager {
         return null;
     }
 
-    private void initializeOAuth2EmailAuthenticator(TreeMap<String, String> properties) {
+    private void initializeOAuth2EmailAuthenticator(String flowId, TreeMap<String, String> properties) throws Exception {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (!entry.getKey().endsWith(".routetemplate") ||
-                    (!entry.getValue().contains("routeTemplateRef=\"smtp-action\"") &&
-                    !entry.getValue().contains("routeTemplateRef=\"imaps-source\""))
-            ) {
-                continue;
-            }
-
-            boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
-
-            try {
-                // ---------- Parse XML ----------
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                dbf.setNamespaceAware(true);
-                DocumentBuilder db = dbf.newDocumentBuilder();
-
-                Document doc = db.parse(new InputSource(new StringReader(entry.getValue())));
-
-                Element root = doc.getDocumentElement();
-                Element templatedRoute = (Element)
-                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
-
-                if (templatedRoute == null) {
-                    continue;
-                }
-
-                // ---------- Collect parameter elements ----------
-                Map<String, Element> paramElements = new LinkedHashMap<>();
-                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
-
-                for (int i = 0; i < params.getLength(); i++) {
-                    Element p = (Element) params.item(i);
-                    paramElements.put(p.getAttribute("name"), p);
-                }
-
-                Map<String, String> allParams = new LinkedHashMap<>();
-                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
-                    String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
-                    allParams.put(e.getKey(), value);
-                }
-
-                String username = cleanRaw(allParams.get("username"));
-                String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
-
-                String accessToken = allParams.get("accessToken");
-                if (accessToken != null && accessToken.startsWith("RAW(") && accessToken.endsWith(")")) {
-                    accessToken = accessToken.substring(4, accessToken.length() - 1);
-                }
-                accessToken = decryptAccessToken(accessToken);
-
-                if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
-                    log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
-                    continue;
-                }
-
-                // ---------- Build & bind the Authenticator ----------
-                // Token is resolved lazily (per connection attempt) so refresh works without
-                // rebuilding the bean - see OAuth2MailAuthenticator below.
-                String beanId = "mailAuth-" + UUID.randomUUID();
-
-                MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
-                context.getRegistry().bind(beanId, authenticator);
-
-                // ---------- Wire it in as a real Kamelet property, not into "options" ----------
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
-                setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
-
-                // ---------- Serialize XML back ----------
-                Transformer tf = TransformerFactory.newInstance().newTransformer();
-                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-
-                StringWriter sw = new StringWriter();
-                tf.transform(new DOMSource(doc), new StreamResult(sw));
-
-                entry.setValue(sw.toString());
-
-            } catch (Exception e) {
-                log.error("initializeOAuth2EmailAuthenticator failed.", e);
+            if (isRouteTemplate(entry, "smtp-action") || isRouteTemplate(entry, "imaps-source")) {
+                configureOAuth2EmailAuthenticator(flowId, entry);
             }
         }
+    }
+
+    private void configureOAuth2EmailAuthenticator(String flowId, Map.Entry<String, String> entry) throws Exception {
+
+        boolean isConsumer = entry.getValue().contains("routeTemplateRef=\"imaps-source\"");
+
+        Document doc = parseXml(entry.getValue());
+        Element templatedRoute = findTemplatedRoute(doc);
+        if (templatedRoute == null) {
+            return;
+        }
+
+        Map<String, Element> paramElements = collectParameterElements(templatedRoute);
+        Map<String, String> allParams = readParameterValues(paramElements);
+
+        String username = cleanRaw(allParams.get("username"));
+        String tenantDbName = cleanRaw(allParams.get("tenantDbName"));
+
+        String accessToken = allParams.get("accessToken");
+        if (accessToken != null && accessToken.startsWith("RAW(") && accessToken.endsWith(")")) {
+            accessToken = accessToken.substring(4, accessToken.length() - 1);
+        }
+        accessToken = decryptAccessToken(accessToken);
+
+        if (StringUtils.isAnyEmpty(username, accessToken, tenantDbName)) {
+            log.warn("Skipped OAuth2 email authenticator, missing username/accessToken/tenantDbName | key={}", entry.getKey());
+            return;
+        }
+
+        // ---------- Build & bind the Authenticator ----------
+        // Token is resolved lazily (per connection attempt) so refresh works without
+        // rebuilding the bean - see OAuth2MailAuthenticator below.
+        // The same id on every load of the flow, so a restart replaces the bean instead of adding one
+        String beanId = "mailAuth-" + flowId + "-" + entry.getKey();
+
+        MailAuthenticator authenticator = new OAuth2MailAuthenticator(username, accessToken, tenantDbName, isConsumer);
+        context.getRegistry().bind(beanId, authenticator);
+
+        // ---------- Wire it in as a real Kamelet property, not into "options" ----------
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authenticator", "#" + beanId);
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authMechanisms", "XOAUTH2");
+        setOrCreateParameter(doc, templatedRoute, paramElements, "authEnabled", "true");
+
+        entry.setValue(serializeXml(doc));
+    }
+
+    private static boolean isRouteTemplate(Map.Entry<String, String> entry, String templateRef) {
+        return entry.getKey().endsWith(".routetemplate")
+                && entry.getValue().contains("routeTemplateRef=\"" + templateRef + "\"");
+    }
+
+    static Document parseXml(String xml) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        // A route template never needs a DOCTYPE; disallowing it prevents XXE
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return dbf.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+    }
+
+    private static Element findTemplatedRoute(Document doc) {
+        return (Element) doc.getDocumentElement().getElementsByTagNameNS("*", "templatedRoute").item(0);
+    }
+
+    private static Map<String, Element> collectParameterElements(Element templatedRoute) {
+        Map<String, Element> paramElements = new LinkedHashMap<>();
+        NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
+
+        for (int i = 0; i < params.getLength(); i++) {
+            Element p = (Element) params.item(i);
+            paramElements.put(p.getAttribute("name"), p);
+        }
+        return paramElements;
+    }
+
+    private static Map<String, String> readParameterValues(Map<String, Element> paramElements) {
+        Map<String, String> allParams = new LinkedHashMap<>();
+        for (Map.Entry<String, Element> e : paramElements.entrySet()) {
+            String value = e.getValue().getAttribute("value").replace("&amp;", "&").trim();
+            allParams.put(e.getKey(), value);
+        }
+        return allParams;
+    }
+
+    private static String serializeXml(Document doc) throws TransformerException {
+        Transformer tf = TransformerFactory.newInstance().newTransformer();
+        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+        StringWriter sw = new StringWriter();
+        tf.transform(new DOMSource(doc), new StreamResult(sw));
+        return sw.toString();
     }
 
     private void setOrCreateParameter(Document doc, Element templatedRoute,
@@ -1141,176 +1190,109 @@ public class FlowManager {
         }
     }
 
+    // The token itself is never logged
     private @Nullable String decryptAccessToken(String accessToken) {
-        try {
-            accessToken = encryptionUtil.decrypt(accessToken);
-        } catch (Exception e) {
-            log.error("ERROR to decrypt accessToken - "+accessToken, e);
+        EncryptionUtil decryptor = encryptionUtil.get();
+        if (decryptor == null) {
+            log.warn("No encryption key is set, using the accessToken as is");
+            return accessToken;
         }
-        return accessToken;
+        try {
+            return decryptor.decrypt(accessToken);
+        } catch (Exception e) {
+            log.error("Could not decrypt the accessToken, using it as is", e);
+            return accessToken;
+        }
     }
 
-    private void initializeAs2InboundSecurity(TreeMap<String, String> properties) {
+    private void initializeAs2InboundSecurity(String flowId, TreeMap<String, String> properties) throws Exception {
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (!entry.getKey().endsWith(".routetemplate") || !entry.getValue().contains("routeTemplateRef=\"as2-source\"")) {
-                continue;
-            }
-
-            try {
-                // ---------- Parse XML ----------
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                dbf.setNamespaceAware(true);
-                DocumentBuilder db = dbf.newDocumentBuilder();
-
-                Document doc = db.parse(
-                        new InputSource(new StringReader(entry.getValue()))
-                );
-
-                Element root = doc.getDocumentElement();
-                Element templatedRoute = (Element)
-                        root.getElementsByTagNameNS("*", "templatedRoute").item(0);
-
-                if (templatedRoute == null) {
-                    continue;
-                }
-
-                // ---------- Collect parameter elements ----------
-                Map<String, Element> paramElements = new LinkedHashMap<>();
-                NodeList params = templatedRoute.getElementsByTagNameNS("*", "parameter");
-
-                for (int i = 0; i < params.getLength(); i++) {
-                    Element p = (Element) params.item(i);
-                    paramElements.put(p.getAttribute("name"), p);
-                }
-
-                // ---------- Extract parameter values ----------
-                Map<String, String> allParams = new LinkedHashMap<>();
-                for (Map.Entry<String, Element> e : paramElements.entrySet()) {
-                    String value = e.getValue()
-                            .getAttribute("value")
-                            .replace("&amp;", "&")
-                            .trim();
-                    allParams.put(e.getKey(), value);
-                }
-
-                // ---------- Extract password & alias ----------
-                String password = cleanRaw(allParams.get("password"));
-                String alias = cleanRaw(allParams.get("alias"));
-
-                // ---------- Bind keys and rebuild params ----------
-                Set<String> securityParams = Set.of(
-                        "signingPrivateKey",
-                        "decryptingPrivateKey",
-                        "signingCertificateChain",
-                        "validateSigningCertificateChain"
-                );
-
-                String uniqueId = UUID.randomUUID().toString();
-                Map<String, String> boundParams = new LinkedHashMap<>();
-
-                for (Map.Entry<String, String> e : allParams.entrySet()) {
-                    String key = e.getKey();
-                    String value = e.getValue();
-
-                    if (securityParams.contains(key)) {
-
-                        String beanId = key + "-" + uniqueId;
-                        String cleanedValue = cleanRaw(value);
-                        Object keyObject;
-
-                        switch (key) {
-                            case "signingCertificateChain":
-                                keyObject = AS2KeyProcessor.getSigningCertificateChain(
-                                        new URI(cleanedValue), password, alias);
-                                boundParams.put(
-                                        "signingAlgorithm",
-                                        AS2KeyProcessor.getSigningAlgorithm(
-                                                (java.security.cert.Certificate[]) keyObject));
-                                break;
-
-                            case "signingPrivateKey":
-                                keyObject = AS2KeyProcessor.getSigningPrivateKey(
-                                        new URI(cleanedValue), password, alias);
-                                break;
-
-                            case "decryptingPrivateKey":
-                                keyObject = AS2KeyProcessor.getDecryptingPrivateKey(
-                                        new URI(cleanedValue), password, alias);
-                                break;
-
-                            default:
-                                keyObject = AS2KeyProcessor.getValidateSigningCertificateChain(
-                                        new URI(cleanedValue));
-                        }
-
-                        context.getRegistry().bind(beanId, keyObject);
-                        boundParams.put(key, "#" + beanId);
-
-                    } else {
-                        boundParams.put(key, value);
-                    }
-                }
-
-                // ---------- Rebuild query ----------
-                StringBuilder newQuery = new StringBuilder();
-                boolean first = true;
-
-                for (Map.Entry<String, String> e : boundParams.entrySet()) {
-                    String key = e.getKey();
-
-                    if (key.equals("password") || key.equals("alias")) {
-                        continue;
-                    }
-
-                    if (!first) newQuery.append('&');
-                    newQuery.append(key).append('=').append(e.getValue());
-                    first = false;
-                }
-
-                String escapedQuery = newQuery.toString().replace("&", "&amp;");
-
-                // ---------- Write back to XML ----------
-                if (paramElements.containsKey("uri")) {
-                    paramElements.get("uri")
-                            .setAttribute("value", "as2?" + escapedQuery);
-                }
-
-                if (paramElements.containsKey("options")) {
-                    paramElements.get("options")
-                            .setAttribute("value", escapedQuery);
-                }
-
-                for (String sec : securityParams) {
-                    if (paramElements.containsKey(sec)) {
-                        paramElements.get(sec)
-                                .setAttribute("value",
-                                        boundParams.get(sec).replace("&", "&amp;"));
-                    }
-                }
-
-                // Remove sensitive parameters
-                if (paramElements.containsKey("password")) {
-                    templatedRoute.removeChild(paramElements.get("password"));
-                }
-                if (paramElements.containsKey("alias")) {
-                    templatedRoute.removeChild(paramElements.get("alias"));
-                }
-
-                // ---------- Serialize XML ----------
-                Transformer tf = TransformerFactory.newInstance().newTransformer();
-                tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-
-                StringWriter sw = new StringWriter();
-                tf.transform(new DOMSource(doc), new StreamResult(sw));
-
-                entry.setValue(sw.toString());
-
-            } catch (Exception e) {
-                log.error("initializeAs2InboundSecurity failed.", e);
+            if (isRouteTemplate(entry, "as2-source")) {
+                configureAs2InboundSecurity(flowId, entry);
             }
         }
+    }
+
+    private void configureAs2InboundSecurity(String flowId, Map.Entry<String, String> entry) throws Exception {
+
+        Document doc = parseXml(entry.getValue());
+        Element templatedRoute = findTemplatedRoute(doc);
+        if (templatedRoute == null) {
+            return;
+        }
+
+        Map<String, Element> paramElements = collectParameterElements(templatedRoute);
+        // The same bean ids on every load of the flow, so a restart replaces the keys instead of adding them
+        String beanSuffix = flowId + "-" + entry.getKey();
+        Map<String, String> boundParams = bindAs2SecurityParams(readParameterValues(paramElements), beanSuffix);
+
+        String escapedQuery = buildAs2Query(boundParams).replace("&", "&amp;");
+
+        // ---------- Write back to XML ----------
+        if (paramElements.containsKey("uri")) {
+            paramElements.get("uri").setAttribute("value", "as2?" + escapedQuery);
+        }
+
+        if (paramElements.containsKey("options")) {
+            paramElements.get("options").setAttribute("value", escapedQuery);
+        }
+
+        for (String sec : AS2_SECURITY_PARAMS) {
+            if (paramElements.containsKey(sec)) {
+                paramElements.get(sec).setAttribute("value", boundParams.get(sec).replace("&", "&amp;"));
+            }
+        }
+
+        for (String sensitive : AS2_SENSITIVE_PARAMS) {
+            if (paramElements.containsKey(sensitive)) {
+                templatedRoute.removeChild(paramElements.get(sensitive));
+            }
+        }
+
+        entry.setValue(serializeXml(doc));
+    }
+
+    private Map<String, String> bindAs2SecurityParams(Map<String, String> allParams, String beanSuffix) throws Exception {
+
+        String password = cleanRaw(allParams.get("password"));
+        String alias = cleanRaw(allParams.get("alias"));
+
+        Map<String, String> boundParams = new LinkedHashMap<>();
+
+        for (Map.Entry<String, String> e : allParams.entrySet()) {
+            String key = e.getKey();
+            if (AS2_SECURITY_PARAMS.contains(key)) {
+                String beanId = key + "-" + beanSuffix;
+                URI uri = new URI(cleanRaw(e.getValue()));
+                context.getRegistry().bind(beanId, loadAs2Key(key, uri, password, alias, boundParams));
+                boundParams.put(key, "#" + beanId);
+            } else {
+                boundParams.put(key, e.getValue());
+            }
+        }
+        return boundParams;
+    }
+
+    private static Object loadAs2Key(String key, URI uri, String password, String alias,
+                                     Map<String, String> boundParams) throws Exception {
+        return switch (key) {
+            case "signingCertificateChain" -> {
+                Certificate[] chain = AS2KeyProcessor.getSigningCertificateChain(uri, password, alias);
+                boundParams.put("signingAlgorithm", AS2KeyProcessor.getSigningAlgorithm(chain));
+                yield chain;
+            }
+            case "signingPrivateKey" -> AS2KeyProcessor.getSigningPrivateKey(uri, password, alias);
+            case "decryptingPrivateKey" -> AS2KeyProcessor.getDecryptingPrivateKey(uri, password, alias);
+            default -> AS2KeyProcessor.getValidateSigningCertificateChain(uri);
+        };
+    }
+
+    private static String buildAs2Query(Map<String, String> boundParams) {
+        return boundParams.entrySet().stream()
+                .filter(e -> !AS2_SENSITIVE_PARAMS.contains(e.getKey()))
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining("&"));
     }
 
     private String cleanRaw(String value) {

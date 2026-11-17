@@ -31,17 +31,19 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Resource to return information about the currently running Spring profiles.
+ * REST controller to validate expressions, connections, scripts and more.
  */
 @Tag(name = "Validation", description = "Validate expressions, connections, scripts and more")
-@ControllerAdvice
 @RestController
 @RequestMapping("/api")
 public class ValidationRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private boolean plainResponse;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper NON_NULL_MAPPER = JsonMapper.builder()
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .build();
 
     private final Integration integration;
 
@@ -61,7 +63,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -69,8 +71,7 @@ public class ValidationRuntime {
 
             if(cronResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, cronResp);
+                MAPPER.writeValue(out, cronResp);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/cron", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);
@@ -92,7 +93,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -100,8 +101,7 @@ public class ValidationRuntime {
 
             if(certificateResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, certificateResp);
+                MAPPER.writeValue(out, certificateResp);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/certificate", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/certificate", "", plainResponse);
@@ -122,7 +122,7 @@ public class ValidationRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
@@ -130,8 +130,7 @@ public class ValidationRuntime {
 
             if(urlResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, urlResp);
+                MAPPER.writeValue(out, urlResp);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/url", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);
@@ -156,13 +155,13 @@ public class ValidationRuntime {
             @RequestHeader(value = "IsPredicate", defaultValue = "false") boolean isPredicate
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
             List<ValidationExpression> expressionsList = null;
             if(body!=null){
-                expressionsList = new ObjectMapper().readValue(body, new TypeReference<>() {
+                expressionsList = MAPPER.readValue(body, new TypeReference<>() {
                 });
             }
 
@@ -170,10 +169,7 @@ public class ValidationRuntime {
 
             if(expressions!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = JsonMapper.builder()
-                        .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                        .build();
-                mapper.writeValue(out, expressions);
+                NON_NULL_MAPPER.writeValue(out, expressions);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/expression", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);
@@ -181,7 +177,8 @@ public class ValidationRuntime {
 
         } catch (Exception e) {
             log.error("Error",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/expression", e.getMessage(), plainResponse);
+            String errorBody = MAPPER.writeValueAsString(new BadRequestResponse(e.getMessage()));
+            return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/expression", errorBody, plainResponse);
         }
 
     }
@@ -198,21 +195,20 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
             FtpSettings ftpSettings = null;
             if(body!=null){
-                ftpSettings = new ObjectMapper().readValue(body, FtpSettings.class);
+                ftpSettings = MAPPER.readValue(body, FtpSettings.class);
             }
 
             ValidationErrorMessage ftpResp = integration.validateFtp(ftpSettings);
 
             if(ftpResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
-                mapper.writeValue(out, ftpResp);
+                MAPPER.writeValue(out, ftpResp);
                 return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/ftp", out.toString(StandardCharsets.UTF_8), plainResponse);
             } else {
                 return ResponseUtil.createNoContentResponse(1L, mediaType);
@@ -237,13 +233,13 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
             Regex regex = null;
             if(body!=null){
-                regex = new ObjectMapper().readValue(body, Regex.class);
+                regex = MAPPER.readValue(body, Regex.class);
             }
 
             AbstractMap.SimpleEntry<Integer, String> regexResp = integration.validateRegex(regex);
@@ -278,25 +274,24 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        plainResponse = true;
+        boolean plainResponse = true;
 
         try {
 
             EvaluationRequest scriptRequest = null;
             if(body!=null){
-                scriptRequest = new ObjectMapper().readValue(body, EvaluationRequest.class);
+                scriptRequest = MAPPER.readValue(body, EvaluationRequest.class);
             }
 
             EvaluationResponse scriptResp = integration.validateScript(scriptRequest);
 
             if(scriptResp!=null) {
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                final ObjectMapper mapper = new ObjectMapper();
                 if(scriptResp.getCode() == 1) {
-                    mapper.writeValue(out, scriptResp);
+                    MAPPER.writeValue(out, scriptResp);
                     return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 } else {
-                    mapper.writeValue(out, new BadRequestResponse(scriptResp.getResult()));
+                    MAPPER.writeValue(out, new BadRequestResponse(scriptResp.getResult()));
                     return ResponseUtil.createFailureResponse(1L, mediaType, "/validation/script", out.toString(StandardCharsets.UTF_8), plainResponse);
                 }
             } else {
@@ -323,7 +318,7 @@ public class ValidationRuntime {
             String flowValidation = integration.validateFlow(uri);
             return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/uri",flowValidation);
         } catch (Exception e) {
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/urizx",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/uri",e.getMessage());
         }
     }
 
@@ -338,14 +333,14 @@ public class ValidationRuntime {
             @RequestHeader(value = "StopTest", defaultValue = "false") boolean stopTest
     ) {
 
-        try {
+        boolean plainResponse = true;
 
-            plainResponse = true;
+        try {
 
             HashMap<String,String> paramList;
 
             if(body!=null){
-                paramList = new ObjectMapper().readValue(body, new TypeReference<>() {
+                paramList = MAPPER.readValue(body, new TypeReference<>() {
                 });
 
                 List<ValidationErrorMessage> expressionResp = integration.validateXslt(
@@ -355,8 +350,7 @@ public class ValidationRuntime {
 
                 if(expressionResp!=null) {
                     final ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    final ObjectMapper mapper = new ObjectMapper();
-                    mapper.writeValue(out, expressionResp);
+                    MAPPER.writeValue(out, expressionResp);
                     return ResponseUtil.createSuccessResponse(1L, mediaType, "/validation/xslt", out.toString(StandardCharsets.UTF_8), plainResponse);
                 }
 
@@ -385,10 +379,10 @@ public class ValidationRuntime {
 
         try {
             String testConnectionResult = integration.testConnection(host, port, timeout);
-            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",testConnectionResult);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/validation/connection/{host}/{port}/{timeout}",testConnectionResult);
         } catch (Exception e) {
             log.error("Test connection failed",e);
-            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/testconnection/{host}/{port}/{timeout}",e.getMessage());
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/validation/connection/{host}/{port}/{timeout}",e.getMessage());
         }
 
     }

@@ -5,15 +5,14 @@ import tools.jackson.databind.ObjectMapper;
 import org.assimbly.brokerrest.testcontainers.AssimblyGatewayBrokerContainer;
 import org.assimbly.util.api.AssertUtils;
 import org.assimbly.util.api.HttpUtil;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 class HealthBrokerResourceTest {
 
@@ -32,55 +31,49 @@ class HealthBrokerResourceTest {
 
     @Test
     void shouldGetEngineDataInfo() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/engine"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/engine"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
-            // asserts contents
-            AssertUtils.assertEngineHealthResponse(responseJson);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertEngineHealthResponse(responseJson);
+
     }
 
     @Test
     void shouldGetJvmBrokerInfo() {
-        try {
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/jvm"), null, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildBrokerApiPath("/health/broker/jvm"), null, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            JsonNode jvmJson = responseJson.get("jvm");
-            JsonNode memoryJson = responseJson.get("memory");
-            JsonNode threadsJson = responseJson.get("threads");
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
-            // asserts contents
-            AssertUtils.assertJvmHealthResponse(jvmJson);
-            AssertUtils.assertMemoryHealthResponse(memoryJson);
-            AssertUtils.assertThreadsHealthResponse(threadsJson);
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
+        JsonNode jvmJson = responseJson.get("jvm");
+        JsonNode memoryJson = responseJson.get("memory");
+        JsonNode threadsJson = responseJson.get("threads");
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        AssertUtils.assertJvmHealthResponse(jvmJson);
+        AssertUtils.assertMemoryHealthResponse(memoryJson);
+        AssertUtils.assertThreadsHealthResponse(threadsJson);
+
     }
 
 }

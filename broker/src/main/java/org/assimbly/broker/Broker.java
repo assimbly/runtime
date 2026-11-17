@@ -254,11 +254,11 @@ public interface Broker {
     String listMessages(String endpointName, String filter) throws Exception;
 
 	/**
-	 * list all messages on the broker
+	 * count the messages on the listed endpoints
 	 *
 	 * @param  endpointNames (List of names of queue or topic comma separated)
-	 * @return List of all messages
-	 * @throws Exception if list can't be retrieved
+	 * @return Total number of messages on the endpoints that exist
+	 * @throws Exception if the messages can't be counted
 	 */
     String countMessagesFromList(String endpointNames) throws Exception;
 

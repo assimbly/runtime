@@ -22,7 +22,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+
 import org.assimbly.dil.transpiler.ssl.SSLConfiguration;
 import org.assimbly.util.BaseDirectory;
 import org.assimbly.util.CertificatesUtil;
@@ -44,7 +44,7 @@ public class SSLManager {
     private static final String SERVER_IDENTITY_FILE = "server-identity.p12";
     private static final String OUTBOUND_TRUSTSTORE_FILE = "outbound-truststore.p12";
 
-    private static final String KEYSTORE_PWD = "KEYSTORE_PWD";
+
     private static final String RESOURCE_PROP = "resource";
     private static final String AUTH_PASSWORD_PROP = "authPassword";
 
@@ -59,6 +59,9 @@ public class SSLManager {
 
         //generic SSL Context
         registerSSLContext(context, registry, sslConfiguration, securityPath);
+
+        //SSL Context for flows that only trust the outbound truststore (step option sslContextParameters=strictOutbound)
+        registerStrictOutboundSSLContext(registry, sslConfiguration, securityPath);
 
         //Register the sslConfiguration globally
         sslConfiguration.setUseGlobalSslContextParameters(context, SSL_COMPONENTS);
@@ -104,6 +107,20 @@ public class SSLManager {
                     e.getMessage()
             );
         }
+    }
+
+    private void registerStrictOutboundSSLContext(SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath) {
+
+        String serverIdentityPath = securityPath.resolve(SERVER_IDENTITY_FILE).toString();
+
+        String outboundTrustPath = securityPath.resolve(OUTBOUND_TRUSTSTORE_FILE).toString();
+
+        registry.bind("strictOutbound", sslConfiguration.createStrictOutboundSSLContextParameters(
+                serverIdentityPath,
+                getKeystorePassword(),
+                outboundTrustPath,
+                getKeystorePassword()
+        ));
     }
 
     private void registerMutualSSLContext(String contextId, SimpleRegistry registry, SSLConfiguration sslConfiguration, Path securityPath, String keystoreResource, String keystorePassword) throws Exception {
@@ -187,11 +204,7 @@ public class SSLManager {
     }
 
     private String getKeystorePassword() {
-        String keystorePwd = System.getenv(KEYSTORE_PWD);
-        if (StringUtils.isEmpty(keystorePwd)) {
-            return "supersecret";
-        }
-        return keystorePwd;
+        return CertificatesUtil.runtimeKeystorePassword();
     }
 
     public Certificate[] getCertificates(String url) {
@@ -205,14 +218,14 @@ public class SSLManager {
     }
 
     public Certificate getCertificateFromKeystore(String keystoreName, String keystorePassword, String certificateName) {
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         CertificatesUtil util = new CertificatesUtil();
         return util.getCertificate(keystorePath, keystorePassword, certificateName);
     }
 
     public String importCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName, Certificate certificate) {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         File file = new File(keystorePath);
 
         if (file.exists()) {
@@ -224,7 +237,7 @@ public class SSLManager {
 
     public Map<String, Certificate> downloadCertificatesInKeystore(String keystoreName, String keystorePassword, Certificate[] certificates) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         File file = new File(keystorePath);
 
         if (file.exists()) {
@@ -236,14 +249,24 @@ public class SSLManager {
 
     public Map<String, Certificate> importP12CertificateInKeystore(String keystoreName, String keystorePassword, String p12Certificate, String p12Password) throws Exception {
         CertificatesUtil util = new CertificatesUtil();
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         return util.importP12Certificate(keystorePath, keystorePassword, p12Certificate, p12Password);
     }
 
     public boolean deleteCertificateInKeystore(String keystoreName, String keystorePassword, String certificateName) throws Exception {
-        String keystorePath = baseDir + SEP + SECURITY_PATH + SEP + keystoreName;
+        String keystorePath = keystorePath(keystoreName);
         CertificatesUtil util = new CertificatesUtil();
         return util.deleteCertificate(keystorePath, keystorePassword, certificateName);
+    }
+
+    // The keystore name comes from the caller and must not point outside the security directory
+    private String keystorePath(String keystoreName) {
+        Path securityPath = Paths.get(baseDir, SECURITY_PATH).normalize();
+        Path keystorePath = securityPath.resolve(keystoreName).normalize();
+        if (!keystorePath.startsWith(securityPath) || keystorePath.equals(securityPath)) {
+            throw new IllegalArgumentException("Invalid keystore name: " + keystoreName);
+        }
+        return keystorePath.toString();
     }
 
     private Path prepareSecurityDirectory() throws IOException {

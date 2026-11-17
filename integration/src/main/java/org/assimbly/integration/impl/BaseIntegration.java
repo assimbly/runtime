@@ -74,26 +74,12 @@ public abstract class BaseIntegration implements Integration {
 	}
 
 	public TreeMap<String,String> getFlowConfiguration(String flowId) {
-		TreeMap<String,String> flowConf = null;
-		for (TreeMap<String, String> props : getFlowConfigurations()) {
-			if (props.get("id").equals(flowId)) {
-				flowConf = props;
-			}
-		}
-		
-		return flowConf;
+		return dilStore != null ? dilStore.getFlow(flowId) : null;
 	}	
 
+	// No error is kept for the integration as a whole ("0" = none, like getFlowLastError); errors are per flow
 	public String getLastError() {
-		
-		String error = "0";
-		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-		
-		if(stackTrace.length > 0) {
-			error = Arrays.toString(stackTrace);
-		}
-		
-		return error;
+		return "0";
 	}
 	
 	public List<TreeMap<String, String>> convertXMLToConfiguration(String integrationid, String configuration) throws Exception {

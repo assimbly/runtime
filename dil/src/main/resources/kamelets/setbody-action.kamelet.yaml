@@ -14,7 +14,7 @@ spec:
         title: "Language"
         description: "Set the expression language"
         type: "string"
-        default: "constant"
+        default: "simple"
       expression:
         title: "Expression"
         description: "Set the content of the body"

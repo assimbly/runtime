@@ -2,13 +2,16 @@ package org.assimbly.util.domain;
 
 import org.assimbly.util.exception.FlowNotFoundException;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public final class FlowRegistry {
 
     private static final FlowRegistry INSTANCE = new FlowRegistry();
 
-    private static final HashMap<String, FlowInfo> registeredFlows = new HashMap<>();
+    // flows are registered and looked up from several threads
+    private static final Map<String, FlowInfo> registeredFlows = Collections.synchronizedMap(new HashMap<>());
 
     private FlowRegistry() {}
 
@@ -22,7 +25,7 @@ public final class FlowRegistry {
         if(flowInfo == null)
             return false;
 
-        return flowInfo.getTenantName().equals(tenant);
+        return tenant != null && tenant.equals(flowInfo.getTenantName());
     }
 
     public String findTenant(String flowId) throws FlowNotFoundException {
@@ -38,7 +41,11 @@ public final class FlowRegistry {
         return registeredFlows.get(flowId);
     }
 
-    public HashMap<String, FlowInfo> getRegisteredFlows() { return new HashMap<>(registeredFlows); }
+    public HashMap<String, FlowInfo> getRegisteredFlows() {
+        synchronized (registeredFlows) {
+            return new HashMap<>(registeredFlows);
+        }
+    }
 
     public void unregister(String flowId) { registeredFlows.remove(flowId); }
 

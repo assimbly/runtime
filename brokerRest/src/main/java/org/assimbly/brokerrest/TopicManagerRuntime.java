@@ -20,8 +20,6 @@ public class TopicManagerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final long ID = 0L;
-
     private final ManagedBrokerRuntime broker;
 
     public TopicManagerRuntime(ManagedBrokerRuntime broker) {
@@ -48,13 +46,8 @@ public class TopicManagerRuntime {
 
         log.debug("event=createTopic type=POST message=Create new topic name={} type={}", topicName, brokerType);
 
-        try {
-            final String result = broker.createTopic(brokerType, topicName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", result);
-        } catch (Exception e) {
-            log.error("event=createTopic type=POST name={} type={} reason={}", topicName, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/topic/{topicName}",
+                () -> broker.createTopic(brokerType, topicName), topicName, brokerType);
 
     }
 
@@ -76,15 +69,10 @@ public class TopicManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.debug("event=deleteTopic type=DELETE message=Create new topic name={} type={}", topicName, brokerType);
+        log.debug("event=deleteTopic type=DELETE message=Delete topic name={} type={}", topicName, brokerType);
 
-        try {
-            final String result = broker.deleteTopic(brokerType,topicName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}", result);
-        } catch (Exception e) {
-            log.error("event=deleteTopic type=DELETE name={} type={} reason={}", topicName, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/queue/{queueName}", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/topic/{topicName}",
+                () -> broker.deleteTopic(brokerType,topicName), topicName, brokerType);
 
     }
 
@@ -106,15 +94,10 @@ public class TopicManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.debug("event=getTopic type=POST message=get topic name={} type={}", topicName, brokerType);
+        log.debug("event=getTopic type=GET message=Get topic name={} type={}", topicName, brokerType);
 
-        try {
-            final String result = broker.getTopic(brokerType,topicName, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topic/{topicName}", result);
-        } catch (Exception e) {
-            log.error("event=getTopic type=GET name={} type={} reason={}", topicName, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/topic/{topicName}",
+                () -> broker.getTopic(brokerType,topicName, mediaType), topicName, brokerType);
 
     }
 
@@ -137,13 +120,8 @@ public class TopicManagerRuntime {
 
         log.debug("event=getTopics type=GET message=Get list of topics type={}", brokerType);
 
-        try {
-            final String result = broker.getTopics(brokerType, mediaType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, "text", "/brokers/{brokerType}/topics", result);
-        } catch (Exception e) {
-            log.error("event=getTopics type=GET type={} reason={}", brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics", e.getMessage());
-        }
+        return BrokerResponse.respondConverted(mediaType, "/brokers/{brokerType}/topics",
+                () -> broker.getTopics(brokerType, mediaType), brokerType);
 
     }
 
@@ -167,13 +145,8 @@ public class TopicManagerRuntime {
 
         log.debug("event=clearTopic type=POST message=Clear topic name={} type={}", topicName, brokerType);
 
-        try {
-            final String result = broker.clearTopic(brokerType,topicName);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", result);
-        } catch (Exception e) {
-            log.error("event=clearTopic type=POST name={} type={} reason={}", topicName, brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topic/{topicName}/clear", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/topic/{topicName}/clear",
+                () -> broker.clearTopic(brokerType,topicName), topicName, brokerType);
 
     }
 
@@ -195,13 +168,8 @@ public class TopicManagerRuntime {
 
         log.debug("event=clearTopics type=POST message=Removes all topic messages on the broker type={}", brokerType);
 
-        try {
-            final String result = broker.clearTopics(brokerType);
-            return org.assimbly.util.rest.ResponseUtil.createSuccessResponse(ID, mediaType, "/brokers/{brokerType}/topics/clear", result);
-        } catch (Exception e) {
-            log.error("event=clearTopics type=POST type={} reason={}", brokerType, e.getMessage(), e);
-            return org.assimbly.util.rest.ResponseUtil.createFailureResponse(ID, mediaType, "/brokers/{brokerType}/topics/clear", e.getMessage());
-        }
+        return BrokerResponse.respond(mediaType, "/brokers/{brokerType}/topics/clear",
+                () -> broker.clearTopics(brokerType), brokerType);
 
     }
 

@@ -1,6 +1,8 @@
 package org.assimbly.integration.impl.manager;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
@@ -19,15 +21,13 @@ import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.assimbly.dil.blocks.beans.*;
 import org.assimbly.dil.blocks.processors.*;
 
-import org.assimbly.dil.listener.TriggerMisfireLoggingListener;
+import org.assimbly.dil.listener.TriggerMisfireWatchdog;
 import org.assimbly.util.mail.AttachmentAttacher;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.util.thread.VirtualThreadPool;
 import org.quartz.Scheduler;
 import tools.jackson.databind.ObjectMapper;
-import com.google.common.io.Resources;
-import com.google.gson.Gson;
-import java.net.URL;
+
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -48,7 +48,7 @@ import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.apache.commons.text.StringEscapeUtils;
+
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.assimbly.cookies.CookieStore;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
@@ -71,10 +71,14 @@ public class ConfigManager {
 
     protected static final Logger log = LoggerFactory.getLogger(ConfigManager.class);
 
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     private final CamelContext context;
     private final SimpleRegistry registry;
 
     ConcurrentMap<String, String> collectorsMap;
+
+    private TriggerMisfireWatchdog triggerMisfireWatchdog;
 
     public ConfigManager(CamelContext context, SimpleRegistry registry) {
         this.context = context;
@@ -82,20 +86,29 @@ public class ConfigManager {
 
     }
 
-    public void setTriggerMisfireLoggingListener() {
+    public void setTriggerMisfireWatchdog() {
         try {
 
             QuartzComponent quartzComponent = context.getComponent("quartz", QuartzComponent.class);
             Scheduler scheduler = quartzComponent.getScheduler();
 
             if (scheduler != null) {
-                scheduler.getListenerManager().addTriggerListener(
-                        new TriggerMisfireLoggingListener()
-                );
+                long misfireThresholdMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000"));
+                long watchdogIntervalMs = Long.parseLong(System.getenv().getOrDefault("QUARTZ_MISFIRE_WATCHDOG_INTERVAL", "5000"));
+                stopTriggerMisfireWatchdog();
+                triggerMisfireWatchdog = new TriggerMisfireWatchdog(scheduler, misfireThresholdMs, watchdogIntervalMs);
+                triggerMisfireWatchdog.start();
             }
 
         } catch (Exception e) {
-            log.warn("setTriggerMisfireLoggingListener failed",e);
+            log.warn("setTriggerMisfireWatchdog failed",e);
+        }
+    }
+
+    public void stopTriggerMisfireWatchdog() {
+        if (triggerMisfireWatchdog != null) {
+            triggerMisfireWatchdog.stop();
+            triggerMisfireWatchdog = null;
         }
     }
 
@@ -205,6 +218,12 @@ public class ConfigManager {
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
         context.addComponent("activemq", new JmsComponent());
 
+        QuartzComponent quartz = context.getComponent("quartz", QuartzComponent.class);
+        quartz.setProperties(Map.of(
+                "org.quartz.threadPool.threadCount", System.getenv().getOrDefault("QUARTZ_THREAD_COUNT", "10"),
+                "org.quartz.jobStore.misfireThreshold", System.getenv().getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000")
+        ));
+
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());
         registry.bind("AS2KeyProcessor", new AS2KeyProcessor());
@@ -231,6 +250,7 @@ public class ConfigManager {
         registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
         registry.bind("SetPatternProcessor", new SetPatternProcessor());
         registry.bind("SqlProcessor", new SqlProcessor());
+        registry.bind("UblSchemaValidationProcessor", new UblSchemaValidationProcessor());
         registry.bind("Unzip", new UnzipProcessor());
         registry.bind("uuid-function", new UuidExtensionFunction());
         registry.bind("XmlAggregateStrategy", new XmlAggregateStrategy());
@@ -361,12 +381,16 @@ public class ConfigManager {
 
     private List<String> getKamelets() {
         try (InputStream is = getClass().getResourceAsStream("/kamelets/index.txt")) {
-            assert is != null;
+            if (is == null) {
+                log.warn("No kamelets are loaded: the index /kamelets/index.txt is not on the classpath");
+                return Collections.emptyList();
+            }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
                 return reader.lines().toList();
             }
-        } catch (Exception _) {
+        } catch (IOException | UncheckedIOException e) {
+            log.warn("No kamelets are loaded: the index /kamelets/index.txt can't be read", e);
             return Collections.emptyList();
         }
     }
@@ -382,7 +406,7 @@ public class ConfigManager {
             }
         }
 
-        Collections.sort(kamelets);
+        kamelets.sort(Comparator.naturalOrder());
 
         JSONArray jsonArray = new JSONArray(kamelets);
 
@@ -390,11 +414,31 @@ public class ConfigManager {
 
     }
 
+    /** A name of a classpath resource (such as a step template) without a path in it. */
+    public static boolean isResourceName(String name) {
+        return name != null && !name.isBlank() && !name.contains("/") && !name.contains("\\") && !name.contains("..");
+    }
+
+    /** Reads a classpath resource as text; fails when the resource does not exist. */
+    public static String readResource(String resourceName) throws IOException {
+        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = contextLoader != null ? contextLoader : ConfigManager.class.getClassLoader();
+        try (InputStream is = loader.getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new IllegalArgumentException("resource " + resourceName + " not found.");
+            }
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     public String getStepTemplate(String mediaType, String stepName) throws Exception {
 
+        if (!isResourceName(stepName)) {
+            throw new IllegalArgumentException("Invalid step template name: " + stepName);
+        }
+
         String resourceName = "kamelets/" + stepName + ".kamelet.yaml";
-        URL url = Resources.getResource(resourceName);
-        String resourceAsString = Resources.toString(url, StandardCharsets.UTF_8);
+        String resourceAsString = readResource(resourceName);
 
         if (mediaType.contains("xml")) {
             resourceAsString = DocConverter.yamlToXml(resourceAsString);
@@ -416,7 +460,6 @@ public class ConfigManager {
             configuration = DocConverter.yamlToJson(configuration);
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         Collection[] collections = mapper.readValue(configuration, Collection[].class);
 
         for (Collection collection : collections) {
@@ -447,7 +490,6 @@ public class ConfigManager {
             configuration = DocConverter.yamlToJson(configuration);
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         Collection[] collections = mapper.readValue(configuration, Collection[].class);
 
         for (Collection collection : collections) {
@@ -468,11 +510,6 @@ public class ConfigManager {
 
 
 
-    public String serialize(String json) {
-        Gson gson = new Gson();
-        String g = gson.toJson(json);
-        return StringEscapeUtils.escapeEcmaScript(g);
-    }
 
     public String addCollectorConfiguration(String collectorId, String mediaType, String configuration) {
 
@@ -597,33 +634,16 @@ public class ConfigManager {
 
         CamelCatalog catalog = new DefaultCamelCatalog();
 
-        String result;
-
-        switch (schema) {
-            case "component":
-                result = catalog.componentJSonSchema(name);
-                break;
-            case "language":
-                result = catalog.languageJSonSchema(name);
-                break;
-            case "dataformat":
-                result = catalog.dataFormatJSonSchema(name);
-                break;
-            case "main":
-                result = catalog.mainJsonSchema();
-                break;
-            case "model":
-                result = catalog.modelJSonSchema(name);
-                break;
-            case "transformer":
-                result = catalog.transformerJSonSchema(name);
-                break;
-            case "other":
-                result = catalog.otherJSonSchema(name);
-                break;
-            default:
-                result = "{}";
-        }
+        String result = switch (schema) {
+            case "component" -> catalog.componentJSonSchema(name);
+            case "language" -> catalog.languageJSonSchema(name);
+            case "dataformat" -> catalog.dataFormatJSonSchema(name);
+            case "main" -> catalog.mainJsonSchema();
+            case "model" -> catalog.modelJSonSchema(name);
+            case "transformer" -> catalog.transformerJSonSchema(name);
+            case "other" -> catalog.otherJSonSchema(name);
+            default -> "{}";
+        };
 
         if (mediaType.contains("xml")) {
             result = DocConverter.jsonToXml(result);

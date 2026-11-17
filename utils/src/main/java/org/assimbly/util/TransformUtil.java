@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -33,13 +32,9 @@ public final class TransformUtil {
         String outputXML = null;
 
         try {
-            System.setProperty(
-                    "javax.xml.transform.TransformerFactory",
-                    "net.sf.saxon.TransformerFactoryImpl"
-            );
-
+            // Saxon for this transformation only; the factory of the rest of the JVM stays as it is.
             TransformerFactory factory =
-                    createSecureTransformerFactory();
+                    secure(TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", null));
 
             StreamSource sourceXsl = new StreamSource(xslFile);
             Transformer transformer =
@@ -55,8 +50,6 @@ public final class TransformUtil {
 
             outputXML = writer.toString();
 
-            writer.close();
-
         } catch (TransformerConfigurationException tce) {
             log.error(
                     "XSLT Transformation of XML failed due to a TransformerConfigurationException",
@@ -67,8 +60,6 @@ public final class TransformUtil {
                     "XSLT Transformation of XML failed due to a TransformerException",
                     te
             );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
         return outputXML;
@@ -164,7 +155,7 @@ public final class TransformUtil {
 
         try {
             TransformerFactory factory =
-                    createSecureTransformerFactory();
+                    secure(TransformerFactory.newInstance());
 
             Transformer transformer =
                     factory.newTransformer();
@@ -195,14 +186,11 @@ public final class TransformUtil {
     }
 
     /**
-     * Creates a securely configured TransformerFactory.
+     * Configures a TransformerFactory securely.
      * Prevents external DTDs and external stylesheets from being accessed.
      */
-    private static TransformerFactory createSecureTransformerFactory()
+    private static TransformerFactory secure(TransformerFactory factory)
             throws TransformerConfigurationException {
-
-        TransformerFactory factory =
-                TransformerFactory.newInstance();
 
         // Enable secure XML processing.
         factory.setFeature(

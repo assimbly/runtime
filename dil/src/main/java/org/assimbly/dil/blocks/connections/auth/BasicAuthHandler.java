@@ -72,7 +72,7 @@ public class BasicAuthHandler extends Handler.Wrapper {
                         return super.handle(request, response, callback);
                     }
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 // Malformed Base64: fall through to the normal 401 challenge
                 log.debug("Basic Authentication for connection {}: malformed Base64 credentials", connectionId);
             }

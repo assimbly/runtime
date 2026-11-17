@@ -31,10 +31,16 @@ spec:
         default: "kamelet:source"
       out:
         type: "string"
-        default: "kamelet:sink"
-      stepId:
-        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
       routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
         type: "string"
       routeConfigurationId:
         type: "string"
@@ -45,12 +51,16 @@ spec:
       from:
         uri: "{{in}}"
         steps:
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - to:
+                    uri: "openai:{{operation}}"
+                    parameters:
+                      apiKey: "{{apiKey}}"
+                      conversationMemory: "{{conversationMemory}}"
+                      model: "{{model}}"
+                      systemMessage: "{{?systemMessage}}"
           - to:
-              uri: "openai:{{operation}}"
-              parameters:
-                apiKey: "{{apiKey}}"
-                conversationMemory: "{{conversationMemory}}"
-                model: "{{model}}"
-                systemMessage: "{{?systemMessage}}"
-          - to:
+              disabled: "{{sink}}"
               uri: "{{out}}"

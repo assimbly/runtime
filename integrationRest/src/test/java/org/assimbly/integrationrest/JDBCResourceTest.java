@@ -12,7 +12,6 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class JDBCResourceTest {
@@ -32,77 +31,71 @@ class JDBCResourceTest {
 
     @Test
     void shouldValidateJdbcConnection() {
-        try {
-            // params
-            HashMap<String, String> params = new HashMap<>();
-            params.put("type", "MYSQL");
-            params.put("user", "anonymous");
-            params.put("host", "ensembldb.ensembl.org");
-            params.put("instance", "");
-            params.put("pwd", "");
-            params.put("port", "3306");
-            params.put("useSSL", "false");
-            params.put("enabledTLSProtocols", "false");
-            params.put("escapeChars", "false");
-            params.put("database", "PERCONA_SCHEMA");
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        // params
+        HashMap<String, String> params = new HashMap<>();
+        params.put("type", "MYSQL");
+        params.put("user", "anonymous");
+        params.put("host", "ensembldb.ensembl.org");
+        params.put("instance", "");
+        params.put("pwd", "");
+        params.put("port", "3306");
+        params.put("useSSL", "false");
+        params.put("enabledTLSProtocols", "false");
+        params.put("escapeChars", "false");
+        params.put("database", "PERCONA_SCHEMA");
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
-            // asserts contents
-            assertThat(response.body()).isEmpty();
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(response.body()).isEmpty();
+
     }
 
     @Test
     void shouldValidateJdbcConnectionWithError() {
-        try {
-            // params
-            HashMap<String, String> params = new HashMap<>();
-            params.put("type", "MYSQL");
-            params.put("user", "anonymous");
-            params.put("host", "ensembldb.ensembl.org");
-            params.put("instance", "");
-            params.put("pwd", "123");
-            params.put("port", "3306");
-            params.put("useSSL", "false");
-            params.put("enabledTLSProtocols", "false");
-            params.put("escapeChars", "false");
-            params.put("database", "PERCONA_SCHEMA");
 
-            // headers
-            HashMap<String, String> headers = new HashMap<>();
-            headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
-            headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
+        // params
+        HashMap<String, String> params = new HashMap<>();
+        params.put("type", "MYSQL");
+        params.put("user", "anonymous");
+        params.put("host", "ensembldb.ensembl.org");
+        params.put("instance", "");
+        params.put("pwd", "123");
+        params.put("port", "3306");
+        params.put("useSSL", "false");
+        params.put("enabledTLSProtocols", "false");
+        params.put("escapeChars", "false");
+        params.put("database", "PERCONA_SCHEMA");
 
-            // endpoint call
-            HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
+        // headers
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.put("Content-type", MediaType.APPLICATION_JSON_VALUE);
 
-            // assert http status
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
+        // endpoint call
+        HttpResponse<String> response = HttpUtil.getRequest(container.buildGatewayHeadlessApiPath("/api/validation/jdbc"), params, headers);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode responseJson = objectMapper.readTree(response.body());
+        // assert http status
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.OK_200);
 
-            // asserts contents
-            assertThat(responseJson.get("error").asString())
-                    .startsWith("Access denied for user")
-                    .endsWith("(using password: YES)");
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseJson = objectMapper.readTree(response.body());
 
-        } catch (Exception e) {
-            fail("Test failed due to unexpected exception: " + e.getMessage(), e);
-        }
+        // asserts contents
+        assertThat(responseJson.get("error").asString())
+                .startsWith("Access denied for user")
+                .endsWith("(using password: YES)");
+
     }
 
 }
