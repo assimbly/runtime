@@ -162,6 +162,14 @@ public class ConfigManager {
 
     }
 
+    // Quartz scheduler settings, overridable through QUARTZ_THREAD_COUNT and QUARTZ_MISFIRE_THRESHOLD (ms)
+    static Map<String, String> quartzProperties(Map<String, String> env) {
+        return Map.of(
+                "org.quartz.threadPool.threadCount", env.getOrDefault("QUARTZ_THREAD_COUNT", "10"),
+                "org.quartz.jobStore.misfireThreshold", env.getOrDefault("QUARTZ_MISFIRE_THRESHOLD", "60000")
+        );
+    }
+
     public void setDefaultBlocks() throws Exception {
 
         //Add services
@@ -204,6 +212,9 @@ public class ConfigManager {
         context.addComponent("jetty", jettyHttpComponent12);
         context.addComponent("rabbitmq", new SpringRabbitMQComponent());
         context.addComponent("activemq", new JmsComponent());
+
+        QuartzComponent quartz = context.getComponent("quartz", QuartzComponent.class);
+        quartz.setProperties(quartzProperties(System.getenv()));
 
         // Add bean/processors and other custom classes to the registry
         registry.bind("AggregateStrategy", new AggregateStrategy());
