@@ -1,28 +1,28 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: telegram-sink
+  name: "telegram-action"
   labels:
-    camel.apache.org/kamelet.type: "sink"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "Telegram Sink"
-    description: Send a message to a Telegram chat by using your Telegram bot as sender.
+    title: "Telegram Action"
+    description: "Send messages to a Telegram chat."
     required:
       - authorizationToken
-    type: object
+    type: "object"
     properties:
       authorizationToken:
-        title: Token
-        description: "The token to access your bot on Telegram. You you can obtain it from the Telegram @botfather."
-        type: string
-        format: password
+        title: "Token"
+        description: "Bot token obtained from Telegram @BotFather."
+        type: "string"
+        format: "password"
         x-descriptors:
         - urn:camel:group:credentials
       chatId:
-        title: Chat ID
-        description: The Chat ID to where you want to send messages by default.
-        type: string
+        title: "Chat ID"
+        description: "Default Chat ID to send messages to."
+        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -44,10 +44,10 @@ spec:
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
-        default: "0"        
+        default: "0"
   types:
     out:
-      mediaType: application/json
+      mediaType: "application/json"
   dependencies:
     - "camel:core"
     - "camel:jackson"
@@ -56,12 +56,12 @@ spec:
   template:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
-      from:      
+      from:
         uri: "{{in}}"
         steps:
         - step:
             id: "step-{{stepId}}"
-            steps:            
+            steps:
             - choice:
                 when:
                 - simple: "${header[Content-Type]} == 'image/png'"
@@ -69,15 +69,15 @@ spec:
                   - convertBodyTo:
                       type: "byte[]"
                   - setHeader:
-                      name: CamelTelegramMediaType
-                      constant: PHOTO_PNG
+                      name: "CamelTelegramMediaType"
+                      constant: "PHOTO_PNG"
                 - simple: "${header[Content-Type]} == 'image/jpeg'"
                   steps:
                   - convertBodyTo:
                       type: "byte[]"
                   - setHeader:
-                      name: CamelTelegramMediaType
-                      constant: PHOTO_JPG
+                      name: "CamelTelegramMediaType"
+                      constant: "PHOTO_JPG"
                 otherwise:
                   steps:
                   - convertBodyTo:
@@ -87,30 +87,32 @@ spec:
                 - simple: "${header[text]}"
                   steps:
                   - setHeader:
-                      name: CamelTelegramMediaTitleCaption
+                      name: "CamelTelegramMediaTitleCaption"
                       simple: "${header[text]}"
                 - simple: "${header[ce-text]}"
                   steps:
                   - setHeader:
-                      name: CamelTelegramMediaTitleCaption
+                      name: "CamelTelegramMediaTitleCaption"
                       simple: "${header[ce-text]}"
             - choice:
                 when:
                 - simple: "${header[chat-id]}"
                   steps:
                   - setHeader:
-                      name: CamelTelegramChatId
+                      name: "CamelTelegramChatId"
                       simple: "${header[chat-id]}"
                 - simple: "${header[ce-chatid]}"
                   steps:
                   - setHeader:
-                      name: CamelTelegramChatId
+                      name: "CamelTelegramChatId"
                       simple: "${header[ce-chatid]}"
             - to:
                 uri: "telegram:bots"
                 parameters:
                   authorizationToken: "{{authorizationToken}}"
                   chatId: "{{?chatId}}"
+            - marshal:
+                json: {}
             - to:
                 disabled: "{{sink}}"
                 uri: "{{out}}"

@@ -1,0 +1,121 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "slack-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Slack Source"
+    description: "Receive messages from a Slack channel."
+    required:
+      - channel
+      - token
+    type: "object"
+    properties:
+      serverUrl:
+        title: "Server URL"
+        description: "Slack API server endpoint URL."
+        type: "string"
+        default: "https://slack.com"
+        example: "https://slack.com"
+      channel:
+        title: "Channel"
+        description: "Slack channel to receive messages from."
+        type: "string"
+        example: "#myroom"
+      token:
+        title: "Token"
+        description: "Bot User OAuth Access Token to access Slack."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      delay:
+        title: "Delay"
+        description: "Delay between polls (default unit is milliseconds)."
+        type: "string"
+        default: "60000"
+        example: "60s or 6000 or 1m"
+      naturalOrder:
+        title: "Natural Order"
+        description: "Create exchanges in natural order (oldest to newest)."
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dataTypes:
+    out:
+      default: "json"
+      types:
+        json:
+          format: "application-json"
+          description: "JSON mapping of a Slack API message."
+          mediaType: "application/json"
+        cloudevents:
+          format: "slack:application-cloudevents"
+          description: "Slack channel messages as CloudEvent V1."
+          headers:
+            CamelCloudEventID:
+              title: "CloudEvent ID"
+              description: "Camel exchange ID set as event ID."
+              type: "string"
+            CamelCloudEventType:
+              title: "CloudEvent Type"
+              description: "Event type."
+              default: "org.apache.camel.event.slack.consume"
+              type: "string"
+            CamelCloudEventSource:
+              title: "CloudEvent Source"
+              description: "Event source (Slack App ID with prefix slack.)."
+              type: "string"
+            CamelCloudEventSubject:
+              title: "CloudEvent Subject"
+              description: "Slack channel name."
+              type: "string"
+            CamelCloudEventTime:
+              title: "CloudEvent Time"
+              description: "Exchange creation timestamp as event time."
+              type: "string"
+  types:
+    out:
+      mediaType: "application/json"
+  dependencies:
+    - "camel:gson"
+    - "camel:slack"
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "slack:{{channel}}"
+        parameters:
+          serverUrl: "{{serverUrl}}"
+          token: "{{token}}"
+          delay: "{{delay}}"
+          naturalOrder: "{{naturalOrder}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - marshal:
+                json:
+                  library: "Gson"
+            - to:
+                uri: "{{out}}"

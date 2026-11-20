@@ -1,0 +1,98 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "encrypt-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "encrypt action"
+    description: "Encrypts a message body using PGP (Pretty Good Privacy)"
+    required:
+      - keyFileName
+      - keyUserid
+    type: "object"
+    properties:
+      keyFileName:
+        title: "Public Key"
+        description: "Location of the PGP public key or keyring (e.g. ref:<registryId>, file:<path>, classpath:<path>, or base64:<key>)"
+        type: "string"
+      keyUserid:
+        title: "Key User ID"
+        description: "User ID (or part of it, such as an email address) of the public key used for encryption"
+        type: "string"
+      armored:
+        title: "ASCII Armored"
+        description: "Base64-encode the encrypted output as ASCII-armored text"
+        type: "boolean"
+        default: false
+      integrity:
+        title: "Integrity Check"
+        description: "Add an integrity check packet to the encrypted output"
+        type: "boolean"
+        default: true
+      algorithm:
+        title: "Encryption Algorithm"
+        description: "Symmetric key encryption algorithm (Bouncy Castle SymmetricKeyAlgorithmTags: 9 = AES-256, 7 = AES-128, 3 = CAST5)"
+        type: "integer"
+        default: 9
+      signatureKeyFileName:
+        title: "Signature Key"
+        description: "Optional secret keyring location for signing the message during encryption (e.g. ref:<registryId>, file:<path>, classpath:<path>)"
+        type: "string"
+      signatureKeyUserid:
+        title: "Signature Key User ID"
+        description: "Optional User ID of the private key used for signing during encryption"
+        type: "string"
+      signaturePassword:
+        title: "Signature Password"
+        description: "Optional passphrase used when opening the private key for signing"
+        type: "string"
+        format: "password"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  - "camel:crypto-pgp"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - marshal:
+                pgp:
+                  keyFileName: "{{keyFileName}}"
+                  keyUserid: "{{keyUserid}}"
+                  armored: "{{armored}}"
+                  integrity: "{{integrity}}"
+                  algorithm: "{{algorithm}}"
+                  signatureKeyFileName: "{{?signatureKeyFileName}}"
+                  signatureKeyUserid: "{{?signatureKeyUserid}}"
+                  signaturePassword: "{{?signaturePassword}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

@@ -1,23 +1,22 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: telegram-source
+  name: "telegram-source"
   labels:
     camel.apache.org/kamelet.type: "source"
 spec:
   definition:
     title: "Telegram Source"
-    description: Receive all messages that people send to your Telegram bot.
-
+    description: "Receive messages sent to a Telegram bot."
     required:
       - authorizationToken
-    type: object
+    type: "object"
     properties:
       authorizationToken:
-        title: Token
-        description: "The token to access your bot on Telegram. You can obtain it from the Telegram @botfather."
-        type: string
-        format: password
+        title: "Token"
+        description: "Bot token obtained from Telegram @BotFather."
+        type: "string"
+        format: "password"
         x-descriptors:
         - urn:camel:group:credentials
       in:
@@ -37,10 +36,10 @@ spec:
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
-        default: "0"        
+        default: "0"
   types:
     out:
-      mediaType: application/json
+      mediaType: "application/json"
   dependencies:
     - "camel:jackson"
     - "camel:kamelet"
@@ -50,18 +49,20 @@ spec:
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
-        uri: telegram:bots
+        uri: "telegram:bots"
         parameters:
           authorizationToken: "{{authorizationToken}}"
         steps:
         - step:
             id: "step-{{stepId}}"
-            steps:         
-             - setHeader:
-                 name: chat-id
-                 simple: "${header[CamelTelegramChatId]}"
-             - setHeader:
-                 name: ce-chatid
-                 simple: "${header[CamelTelegramChatId]}"
-             - to: "{out}}"
-       
+            steps:
+            - setHeader:
+                name: "chat-id"
+                simple: "${header[CamelTelegramChatId]}"
+            - setHeader:
+                name: "ce-chatid"
+                simple: "${header[CamelTelegramChatId]}"
+            - marshal:
+                json: {}
+            - to:
+                uri: "{{out}}"

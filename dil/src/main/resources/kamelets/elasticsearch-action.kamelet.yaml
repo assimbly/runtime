@@ -1,55 +1,55 @@
-apiVersion: camel.apache.org/v1
-kind: Kamelet
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
 metadata:
-  name: elasticsearch-sink
+  name: "elasticsearch-action"
   labels:
-    camel.apache.org/kamelet.type: "sink"
+    camel.apache.org/kamelet.type: "action"
 spec:
   definition:
-    title: "ElasticSearch Sink"
-    description: Stores JSON-formatted data into ElasticSearch.
+    title: "ElasticSearch Action"
+    description: "Store JSON data in ElasticSearch."
     required:
       - clusterName
       - hostAddresses
-    type: object
+    type: "object"
     properties:
       user:
-        title: Username
-        description: The username to connect to ElasticSearch.
-        type: string
+        title: "Username"
+        description: "Username to connect to ElasticSearch."
+        type: "string"
         x-descriptors:
         - urn:camel:group:credentials
       password:
-        title: Password
-        description: The password to connect to ElasticSearch.
-        type: string
-        format: password
+        title: "Password"
+        description: "Password to connect to ElasticSearch."
+        type: "string"
+        format: "password"
         x-descriptors:
         - urn:camel:group:credentials
       enableSSL:
-        title: Enable SSL
-        description: Specifies to connect by using SSL.
-        type: boolean
+        title: "Enable SSL"
+        description: "Connect using SSL."
+        type: "boolean"
         default: true
       hostAddresses:
-        title: Host Addresses
-        description: A comma-separated list of remote transport addresses in `ip:port format`.
-        type: string
-        example: quickstart-es-http:9200
+        title: "Host Addresses"
+        description: "Comma-separated list of remote transport addresses in ip:port format."
+        type: "string"
+        example: "quickstart-es-http:9200"
       clusterName:
-        title: ElasticSearch Cluster Name
-        description: The name of the ElasticSearch cluster.
-        type: string
-        example: quickstart
+        title: "ElasticSearch Cluster Name"
+        description: "Name of the ElasticSearch cluster."
+        type: "string"
+        example: "quickstart"
       indexName:
-        title: Index in ElasticSearch
-        description: The name of the ElasticSearch index.
-        type: string
-        example: data
+        title: "Index in ElasticSearch"
+        description: "Name of the ElasticSearch index."
+        type: "string"
+        example: "data"
       certificate:
-        title: Certificate 
-        description: The Certificate for accessing the Elasticsearch cluster. You must encode this value in base64.
-        type: string
+        title: "Certificate"
+        description: "Base64-encoded certificate for accessing the ElasticSearch cluster."
+        type: "string"
       in:
         title: "Source Endpoint"
         type: "string"
@@ -71,12 +71,12 @@ spec:
       routeConfigurationId:
         title: "Route Configuration ID"
         type: "string"
-        default: "0"        
+        default: "0"
   types:
     out:
-      mediaType: text/plain
+      mediaType: "text/plain"
     in:
-      mediaType: application/json
+      mediaType: "application/json"
   dependencies:
     - "camel:core"
     - "camel:jackson"
@@ -86,11 +86,11 @@ spec:
     - "camel:bean"
   template:
     beans:
-      - name: local-es
+      - name: "local-es"
         type: "#class:org.apache.camel.component.es.ElasticsearchComponent"
         properties:
-            user: "{{?user}}"
-            password: "{{?password}}"
+          user: "{{?user}}"
+          password: "{{?password}}"
     route:
       routeConfigurationId: "{{routeConfigurationId}}"
       from:
@@ -98,31 +98,33 @@ spec:
         steps:
         - step:
             id: "step-{{stepId}}"
-            steps:        
+            steps:
             - choice:
                 when:
                 - simple: "${header[indexId]}"
                   steps:
                   - setHeader:
-                      name: "indexId"
+                      name: "CamelElasticsearchIndexId"
                       simple: "${header[indexId]}"
                 - simple: "${header[ce-indexid]}"
                   steps:
                   - setHeader:
-                      name: "indexId"
+                      name: "CamelElasticsearchIndexId"
                       simple: "${header[ce-indexid]}"
             - choice:
                 when:
                 - simple: "${header[indexName]}"
                   steps:
                   - setHeader:
-                      name: "indexName"
+                      name: "CamelElasticsearchIndexName"
                       simple: "${header[indexName]}"
                 - simple: "${header[ce-indexname]}"
                   steps:
                   - setHeader:
-                      name: "indexName"
+                      name: "CamelElasticsearchIndexName"
                       simple: "${header[ce-indexname]}"
+            - unmarshal:
+                json: {}
             - to:
                 uri: "{{local-es}}:{{clusterName}}"
                 parameters:

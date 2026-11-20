@@ -1,0 +1,61 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "once-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "once source"
+    description: "Triggers a single message once at startup (based on camel-once)"
+    type: "object"
+    properties:
+      body:
+        title: "Body"
+        description: "The data to use as message body. You can externalize the data by using file: or classpath: as prefix and specify the location of the file."
+        type: "string"
+      headers:
+        title: "Headers"
+        description: "Reference to a Map of message headers (for example #myHeaders)"
+        type: "string"
+      delay:
+        title: "Delay"
+        description: "The number of milliseconds to wait before triggering. Use 0 or negative to fire as soon as possible."
+        type: "integer"
+        default: 1000
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+  - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "once:{{stepId}}"
+        parameters:
+          body: "RAW({{?body}})"
+          headers: "{{?headers}}"
+          delay: "{{delay}}"
+          bridgeErrorHandler: true
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
