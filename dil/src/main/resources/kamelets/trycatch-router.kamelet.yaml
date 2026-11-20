@@ -1,0 +1,59 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "trycatch-router"
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "trycatch-router"
+    description: "Routes message to the catch branch when a later sync step fails, instead of to the error handler"
+    type: "object"
+    properties:
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                # Marks the try scope: step routes then pass exceptions back here (see TryCatchRouteConfiguration)
+                - setProperty:
+                    name: "AssimblyTryCatch"
+                    constant: "true"
+                - doTry:
+                    steps:
+                      - to:
+                          uri: "{{out_default}}"
+                    doCatch:
+                      - exception:
+                          - "java.lang.Exception"
+                        steps:
+                          - process:
+                              ref: "TryCatchResetProcessor"
+                          - to:
+                              uri: "{{out_catch}}"
+                - removeProperty:
+                    name: "AssimblyTryCatch"

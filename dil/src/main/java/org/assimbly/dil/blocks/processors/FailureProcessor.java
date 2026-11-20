@@ -4,6 +4,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.assimbly.dil.blocks.errorhandler.TryCatchRouteConfiguration;
 import org.assimbly.dil.event.domain.FlowEvent;
 import org.assimbly.util.BaseDirectory;
 
@@ -22,6 +23,11 @@ public class FailureProcessor implements Processor {
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     public void process(Exchange exchange) throws Exception {
+
+        // Inside a try-catch step the flow handles the failure itself, so no alert is written
+        if (exchange.getProperty(TryCatchRouteConfiguration.PROPERTY, false, Boolean.class)) {
+            return;
+        }
 
         // Write alert to disk
         ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());

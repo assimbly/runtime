@@ -54,6 +54,7 @@ import org.assimbly.cookies.CookieStore;
 import org.assimbly.dil.blocks.beans.enrich.EnrichStrategy;
 import org.assimbly.dil.blocks.beans.json.JsonAggregateStrategy;
 import org.assimbly.dil.blocks.beans.xml.XmlAggregateStrategy;
+import org.assimbly.dil.blocks.errorhandler.TryCatchRouteConfiguration;
 import org.assimbly.dil.event.EventConfigurer;
 import org.assimbly.dil.event.domain.Collection;
 import org.assimbly.dil.transpiler.marshalling.catalog.CustomKameletCatalog;
@@ -197,6 +198,9 @@ public class ConfigManager {
         context.addComponent("sync", directComponent);
         context.addComponent("async", new SedaComponent());
 
+        //lets exceptions in sync steps reach a try-catch step instead of the dead letter channel
+        context.addRoutes(new TryCatchRouteConfiguration());
+
         KameletComponent kameletComponent = new KameletComponent();
         kameletComponent.setLocation("classpath:kamelets");
         context.addComponent("function", kameletComponent);
@@ -250,6 +254,7 @@ public class ConfigManager {
         registry.bind("SetHeadersProcessor", new SetHeadersProcessor());
         registry.bind("SetPatternProcessor", new SetPatternProcessor());
         registry.bind("SqlProcessor", new SqlProcessor());
+        registry.bind("TryCatchResetProcessor", new TryCatchResetProcessor());
         registry.bind("UblSchemaValidationProcessor", new UblSchemaValidationProcessor());
         registry.bind("Unzip", new UnzipProcessor());
         registry.bind("uuid-function", new UuidExtensionFunction());
