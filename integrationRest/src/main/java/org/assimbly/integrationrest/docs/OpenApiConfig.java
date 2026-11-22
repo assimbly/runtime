@@ -1,11 +1,11 @@
 package org.assimbly.integrationrest.docs;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.core.util.Json;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springdoc.core.customizers.ParameterCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.core.JacksonException;
 
 import java.util.Map;
 
@@ -125,7 +125,7 @@ public class OpenApiConfig {
         if (!APPLICATION_JSON_VALUE.equals(mediaType)) return text;
         try {
             return Json.mapper().readTree(text);
-        } catch (JsonProcessingException _) {
+        } catch (JacksonException _) {
             return text;
         }
     }
