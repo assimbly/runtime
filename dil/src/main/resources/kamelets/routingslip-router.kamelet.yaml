@@ -1,0 +1,86 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "routingslip-router"
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "routingslip router"
+    description: "Routes a message sequentially through a dynamic list of target endpoints resolved by an expression"
+    required:
+      - expression
+    type: "object"
+    properties:
+      language:
+        title: "Language"
+        description: "Expression language used to resolve the routing slip (e.g. simple, groovy, xpath, jsonpath)"
+        type: "string"
+        default: "simple"
+      expression:
+        title: "Expression"
+        description: "Expression that resolves to a delimited list of target endpoint URIs"
+        type: "string"
+      uriDelimiter:
+        title: "URI Delimiter"
+        description: "Delimiter used to split target endpoint URIs"
+        type: "string"
+        default: ","
+      ignoreInvalidEndpoints:
+        title: "Ignore Invalid Endpoints"
+        description: "Ignore invalid endpoint exception when trying to create a producer with that endpoint"
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - choice:
+                    when:
+                      - expression:
+                          simple:
+                            expression: "'{{language}}' =~ 'xpath'"
+                        steps:
+                          - routingSlip:
+                              expression:
+                                xpath:
+                                  expression: "{{expression}}"
+                                  resultType: "java.lang.String"
+                                  saxon: true
+                                  preCompile: false
+                              uriDelimiter: "{{uriDelimiter}}"
+                              ignoreInvalidEndpoints: "{{ignoreInvalidEndpoints}}"
+                    otherwise:
+                      steps:
+                        - routingSlip:
+                            expression:
+                              language:
+                                language: "{{language}}"
+                                expression: "{{expression}}"
+                            uriDelimiter: "{{uriDelimiter}}"
+                            ignoreInvalidEndpoints: "{{ignoreInvalidEndpoints}}"

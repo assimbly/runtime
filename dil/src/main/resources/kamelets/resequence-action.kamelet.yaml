@@ -1,0 +1,187 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "resequence-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "resequence action"
+    description: "Reorders messages based on a sequence key expression using batch or stream resequencing"
+    required:
+      - expression
+    type: "object"
+    properties:
+      language:
+        title: "Language"
+        description: "Expression language used to determine the sequence key (e.g. simple, groovy, xpath, jsonpath)"
+        type: "string"
+        default: "simple"
+      expression:
+        title: "Expression"
+        description: "Expression that resolves to the sequence key"
+        type: "string"
+      mode:
+        title: "Mode"
+        description: "Resequencing mode: batch (default) or stream"
+        type: "string"
+        default: "batch"
+        enum: ["batch", "stream"]
+      batchSize:
+        title: "Batch Size"
+        description: "Number of messages in a batch before sending (batch mode)"
+        type: "integer"
+        default: 100
+      batchTimeout:
+        title: "Batch Timeout"
+        description: "Timeout in milliseconds for collecting a batch (batch mode)"
+        type: "integer"
+        default: 1000
+      allowDuplicates:
+        title: "Allow Duplicates"
+        description: "Whether to allow duplicates in the batch (batch mode)"
+        type: "boolean"
+        default: false
+      reverse:
+        title: "Reverse"
+        description: "Whether to reverse the ordering (batch mode)"
+        type: "boolean"
+        default: false
+      capacity:
+        title: "Capacity"
+        description: "Maximum number of messages held in the stream resequencer buffer (stream mode)"
+        type: "integer"
+        default: 1000
+      timeout:
+        title: "Timeout"
+        description: "Minimum time in milliseconds to wait for missing out-of-order messages (stream mode)"
+        type: "integer"
+        default: 1000
+      deliveryAttemptInterval:
+        title: "Delivery Attempt Interval"
+        description: "Interval in milliseconds between delivery attempts (stream mode)"
+        type: "integer"
+        default: 1000
+      rejectOld:
+        title: "Reject Old"
+        description: "Whether to reject messages older than the last delivered message (stream mode)"
+        type: "boolean"
+        default: false
+      ignoreInvalidExchanges:
+        title: "Ignore Invalid Exchanges"
+        description: "Whether to ignore exchanges that cannot be evaluated by the sequence expression"
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - choice:
+                    when:
+                      - expression:
+                          simple:
+                            expression: "'{{mode}}' =~ 'stream' && '{{language}}' =~ 'xpath'"
+                        steps:
+                          - resequence:
+                              expression:
+                                xpath:
+                                  expression: "{{expression}}"
+                                  resultType: "java.lang.String"
+                                  saxon: true
+                                  preCompile: false
+                              streamConfig:
+                                capacity: "{{capacity}}"
+                                timeout: "{{timeout}}"
+                                deliveryAttemptInterval: "{{deliveryAttemptInterval}}"
+                                ignoreInvalidExchanges: "{{ignoreInvalidExchanges}}"
+                                rejectOld: "{{rejectOld}}"
+                              steps:
+                                - to:
+                                    disabled: "{{sink}}"
+                                    uri: "{{out}}"
+                      - expression:
+                          simple:
+                            expression: "'{{mode}}' =~ 'stream'"
+                        steps:
+                          - resequence:
+                              expression:
+                                language:
+                                  language: "{{language}}"
+                                  expression: "{{expression}}"
+                              streamConfig:
+                                capacity: "{{capacity}}"
+                                timeout: "{{timeout}}"
+                                deliveryAttemptInterval: "{{deliveryAttemptInterval}}"
+                                ignoreInvalidExchanges: "{{ignoreInvalidExchanges}}"
+                                rejectOld: "{{rejectOld}}"
+                              steps:
+                                - to:
+                                    disabled: "{{sink}}"
+                                    uri: "{{out}}"
+                      - expression:
+                          simple:
+                            expression: "'{{language}}' =~ 'xpath'"
+                        steps:
+                          - resequence:
+                              expression:
+                                xpath:
+                                  expression: "{{expression}}"
+                                  resultType: "java.lang.String"
+                                  saxon: true
+                                  preCompile: false
+                              batchConfig:
+                                batchSize: "{{batchSize}}"
+                                batchTimeout: "{{batchTimeout}}"
+                                allowDuplicates: "{{allowDuplicates}}"
+                                reverse: "{{reverse}}"
+                                ignoreInvalidExchanges: "{{ignoreInvalidExchanges}}"
+                              steps:
+                                - to:
+                                    disabled: "{{sink}}"
+                                    uri: "{{out}}"
+                    otherwise:
+                      steps:
+                        - resequence:
+                            expression:
+                              language:
+                                language: "{{language}}"
+                                expression: "{{expression}}"
+                            batchConfig:
+                              batchSize: "{{batchSize}}"
+                              batchTimeout: "{{batchTimeout}}"
+                              allowDuplicates: "{{allowDuplicates}}"
+                              reverse: "{{reverse}}"
+                              ignoreInvalidExchanges: "{{ignoreInvalidExchanges}}"
+                            steps:
+                              - to:
+                                  disabled: "{{sink}}"
+                                  uri: "{{out}}"
