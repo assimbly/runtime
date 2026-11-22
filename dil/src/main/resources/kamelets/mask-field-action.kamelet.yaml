@@ -1,0 +1,72 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "mask-field-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "Mask Fields Action"
+    description: "Mask fields with a constant value in the message in transit."
+    required:
+      - fields
+      - replacement
+    type: "object"
+    properties:
+      fields:
+        title: "Fields"
+        description: "Comma separated list of fields to mask"
+        type: "string"
+      replacement:
+        title: "Replacement"
+        description: "Replacement for the fields to be masked"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - setProperty:
+                name: "fields"
+                expression:
+                  constant:
+                    expression: "{{fields}}"
+            - setProperty:
+                name: "replacement"
+                expression:
+                  constant:
+                    expression: "{{replacement}}"
+            - bean:
+                beanType: "org.assimbly.dil.blocks.processors.MaskFieldProcessor"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

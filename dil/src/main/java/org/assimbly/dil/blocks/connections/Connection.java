@@ -10,6 +10,7 @@ import org.assimbly.dil.blocks.connections.broker.*;
 
 import org.apache.camel.CamelContext;
 import org.assimbly.dil.blocks.connections.database.JDBCConnection;
+import org.assimbly.dil.blocks.connections.database.MongoDBConnection;
 import org.assimbly.util.EncryptionUtil;
 import org.jasypt.properties.EncryptableProperties;
 import org.slf4j.Logger;
@@ -64,7 +65,7 @@ public class Connection {
 
         switch (connectionType) {
 
-            case "activemq", "amazonmq", "jms", "sjms", "sjms2" ->
+            case "activemq", "amazonmq", "artemis", "jms", "sjms", "sjms2" ->
                     new JMSConnection(context, decryptedProperties, connectionId, connectionType).start();
 
             case "amqp", "amqps" ->
@@ -81,6 +82,12 @@ public class Connection {
 
             case "jdbc" ->
                     new JDBCConnection(context, decryptedProperties, connectionId).start(stepType, stepId);
+
+            case "mongodb", "mongo" ->
+                    new MongoDBConnection(context, decryptedProperties, connectionId).start();
+
+            case "pulsar" ->
+                    new PulsarConnection(context, decryptedProperties, connectionId).start();
 
             case "basic" ->
                     new BasicAuthentication(context, decryptedProperties, connectionId, stepType, String.valueOf(stepId)).start();

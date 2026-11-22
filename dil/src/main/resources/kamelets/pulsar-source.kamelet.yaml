@@ -1,0 +1,150 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "pulsar-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Pulsar Source"
+    description: "Consume messages from an Apache Pulsar topic."
+    required:
+      - topicName
+    type: "object"
+    properties:
+      persistence:
+        title: "Persistence"
+        description: "Whether the Pulsar topic is persistent or non-persistent."
+        type: "string"
+        enum: ["persistent", "non-persistent"]
+        default: "persistent"
+      tenant:
+        title: "Tenant"
+        description: "Pulsar tenant name."
+        type: "string"
+        default: "public"
+      namespace:
+        title: "Namespace"
+        description: "Pulsar namespace name."
+        type: "string"
+        default: "default"
+      topicName:
+        title: "Topic Name"
+        description: "Pulsar topic name or regular expression pattern."
+        type: "string"
+      serviceUrl:
+        title: "Service URL"
+        description: "Pulsar broker service URL (optional when configured via a DIL Pulsar connection)."
+        type: "string"
+        example: "pulsar://localhost:6650"
+      authenticationClass:
+        title: "Authentication Class"
+        description: "Authentication plugin FQCN used when creating the Pulsar client from URI."
+        type: "string"
+      authenticationParams:
+        title: "Authentication Params"
+        description: "Authentication parameters used when creating the Pulsar client from URI."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      subscriptionName:
+        title: "Subscription Name"
+        description: "Name of the Pulsar subscription."
+        type: "string"
+        default: "subs"
+      subscriptionType:
+        title: "Subscription Type"
+        description: "Pulsar subscription type."
+        type: "string"
+        enum: ["EXCLUSIVE", "SHARED", "FAILOVER", "KEY_SHARED"]
+        default: "EXCLUSIVE"
+      subscriptionInitialPosition:
+        title: "Subscription Initial Position"
+        description: "Initial position for a newly created subscription."
+        type: "string"
+        enum: ["EARLIEST", "LATEST"]
+        default: "LATEST"
+      subscriptionMode:
+        title: "Subscription Mode"
+        description: "Subscription durability mode."
+        type: "string"
+        enum: ["DURABLE", "NON_DURABLE"]
+        default: "DURABLE"
+      consumerName:
+        title: "Consumer Name"
+        description: "Consumer name for EXCLUSIVE subscriptions."
+        type: "string"
+      numberOfConsumers:
+        title: "Number Of Consumers"
+        description: "Number of consumers to create."
+        type: "integer"
+        default: 1
+      readCompacted:
+        title: "Read Compacted"
+        description: "Enable compacted topic reading."
+        type: "boolean"
+        default: false
+      topicsPattern:
+        title: "Topics Pattern"
+        description: "Treat topicName as a regular expression pattern."
+        type: "boolean"
+        default: false
+      deadLetterTopic:
+        title: "Dead Letter Topic"
+        description: "Topic name for messages exceeding maxRedeliverCount."
+        type: "string"
+      maxRedeliverCount:
+        title: "Max Redeliver Count"
+        description: "Maximum redeliveries before routing to the dead letter topic."
+        type: "integer"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    out:
+      mediaType: "application/octet-stream"
+  dependencies:
+    - "camel:pulsar"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "pulsar:{{persistence}}://{{tenant}}/{{namespace}}/{{topicName}}"
+        parameters:
+          serviceUrl: "{{?serviceUrl}}"
+          authenticationClass: "{{?authenticationClass}}"
+          authenticationParams: "{{?authenticationParams}}"
+          subscriptionName: "{{subscriptionName}}"
+          subscriptionType: "{{subscriptionType}}"
+          subscriptionInitialPosition: "{{subscriptionInitialPosition}}"
+          subscriptionMode: "{{subscriptionMode}}"
+          consumerName: "{{?consumerName}}"
+          numberOfConsumers: "{{numberOfConsumers}}"
+          readCompacted: "{{readCompacted}}"
+          topicsPattern: "{{topicsPattern}}"
+          deadLetterTopic: "{{?deadLetterTopic}}"
+          maxRedeliverCount: "{{?maxRedeliverCount}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

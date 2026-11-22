@@ -1,0 +1,66 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "activemq-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "activemq source"
+    description: "Consume messages from an external ActiveMQ queue or topic"
+    type: "object"
+    properties:
+      path:
+        title: "Destination"
+        description: "Queue or topic destination name (e.g. myQueue, queue:myQueue, or topic:myTopic)"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory to ActiveMQ"
+        type: "string"
+      synchronous:
+        title: "Synchronous"
+        description: "Sets whether synchronous processing should be strictly used"
+        type: "boolean"
+        default: true
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern: InOnly or InOut"
+        type: "string"
+        enum: ["InOnly", "InOut"]
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:jms"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "activemq:{{path}}"
+        parameters:
+          connectionFactory: "{{?connectionFactory}}"
+          synchronous: "{{synchronous}}"
+          exchangePattern: "{{?exchangePattern}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

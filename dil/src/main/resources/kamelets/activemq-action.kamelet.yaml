@@ -1,0 +1,80 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "activemq-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "activemq action"
+    description: "Send messages to an external ActiveMQ queue or topic"
+    type: "object"
+    properties:
+      path:
+        title: "Destination"
+        description: "Queue or topic destination name (e.g. myQueue, queue:myQueue, or topic:myTopic)"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory to ActiveMQ"
+        type: "string"
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern: InOnly or InOut"
+        type: "string"
+        default: "InOut"
+        enum: ["InOnly", "InOut"]
+      synchronous:
+        title: "Synchronous"
+        description: "Sets whether synchronous processing should be strictly used"
+        type: "boolean"
+        default: true
+      timeToLive:
+        title: "TimeToLive"
+        description: "Time in milliseconds that a message stays on the queue when it's not consumed"
+        type: "integer"
+        default: 86400000
+      requestTimeout:
+        title: "Request Timeout"
+        description: "Timeout in milliseconds that is waited until a reply arrives"
+        type: "integer"
+        default: 20000
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:jms"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - toD:
+                uri: "activemq:{{path}}?connectionFactory={{?connectionFactory}}&exchangePattern={{exchangePattern}}&synchronous={{synchronous}}&timeToLive={{timeToLive}}&requestTimeout={{requestTimeout}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

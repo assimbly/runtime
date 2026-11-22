@@ -1,0 +1,90 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "whatsapp-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "WhatsApp Action"
+    description: "Send messages via the WhatsApp Business Cloud API."
+    required:
+      - phoneNumberId
+      - authorizationToken
+    type: "object"
+    properties:
+      phoneNumberId:
+        title: "Phone Number ID"
+        description: "Phone Number ID from the WhatsApp Meta for Developers dashboard."
+        type: "string"
+      authorizationToken:
+        title: "Authorization Token"
+        description: "Access token from the WhatsApp Meta for Developers dashboard."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      apiVersion:
+        title: "API Version"
+        description: "Facebook Graph API version."
+        type: "string"
+        default: "v13.0"
+        example: "v18.0"
+      baseUri:
+        title: "Base URI"
+        description: "Base URI for the WhatsApp Cloud API (can be overridden for testing)."
+        type: "string"
+        default: "https://graph.facebook.com"
+      lazyStartProducer:
+        title: "Lazy Start Producer"
+        description: "Start the producer lazily on the first message."
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    in:
+      mediaType: "application/json"
+  dependencies:
+    - "camel:whatsapp"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "whatsapp:{{phoneNumberId}}"
+                parameters:
+                  authorizationToken: "{{authorizationToken}}"
+                  apiVersion: "{{apiVersion}}"
+                  baseUri: "{{baseUri}}"
+                  lazyStartProducer: "{{lazyStartProducer}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

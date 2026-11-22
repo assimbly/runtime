@@ -30,10 +30,10 @@ public class Unmarshall {
 	private String options;
 	private final List<String> routeTemplateList = Arrays.asList("source", "action", "router", "sink", "message", "script");
 	private final String[] connectionTypes = {
-			"activemq", "amazonmq", "amq", "jms", "sjms", "sjms2",
+			"activemq", "amazonmq", "amq", "artemis", "jms", "sjms", "sjms2",
 			"amqp", "amqps", "queue", "queue-async", "rabbitmq", "spring-rabbitmq", "rabbitmqenrich", "flowlink"
 	};
-	private final List<String> jmsConnectionTypes = Arrays.asList("activemq", "amazonmq", "jms", "sjms", "sjms2");
+	private final List<String> jmsConnectionTypes = Arrays.asList("activemq", "amazonmq", "artemis", "jms", "sjms", "sjms2");
 
 
 	public TreeMap<String, String> getProperties(XMLConfiguration configuration, String flowId) throws Exception{

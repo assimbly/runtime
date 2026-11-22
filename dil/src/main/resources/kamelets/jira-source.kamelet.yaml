@@ -1,0 +1,140 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "jira-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Jira Source"
+    description: "Poll issues, comments, or issue updates from Jira."
+    required:
+      - jiraUrl
+    type: "object"
+    properties:
+      jiraUrl:
+        title: "Jira URL"
+        description: "Base URL of the Jira server."
+        type: "string"
+        example: "https://your-domain.atlassian.net"
+      type:
+        title: "Type"
+        description: "Jira consumer operation type."
+        type: "string"
+        enum: ["newIssues", "newComments", "watchUpdates"]
+        default: "newIssues"
+      jql:
+        title: "JQL"
+        description: "Jira Query Language expression to filter issues."
+        type: "string"
+        example: "project=MYP"
+      delay:
+        title: "Delay"
+        description: "Delay in milliseconds between polls."
+        type: "integer"
+        default: 6000
+      maxResults:
+        title: "Max Results"
+        description: "Maximum number of issues to retrieve per poll."
+        type: "integer"
+        default: 50
+      watchedFields:
+        title: "Watched Fields"
+        description: "Comma-separated list of fields to watch for changes (watchUpdates)."
+        type: "string"
+        default: "Status,Priority"
+      sendOnlyUpdatedField:
+        title: "Send Only Updated Field"
+        description: "Send only changed fields in exchange body (watchUpdates)."
+        type: "boolean"
+        default: true
+      username:
+        title: "Username"
+        description: "Username for Jira Basic authentication."
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: "Password"
+        description: "Password or API token for Jira Basic authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      accessToken:
+        title: "Access Token"
+        description: "OAuth or Personal Access Token for Jira authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      verificationCode:
+        title: "Verification Code"
+        description: "OAuth verification code generated during Jira authorization."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      consumerKey:
+        title: "Consumer Key"
+        description: "OAuth consumer key from Jira settings."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      privateKey:
+        title: "Private Key"
+        description: "OAuth private key used to sign requests."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    out:
+      mediaType: "application/json"
+  dependencies:
+    - "camel:jira"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "jira:{{type}}"
+        parameters:
+          jiraUrl: "{{jiraUrl}}"
+          jql: "{{?jql}}"
+          delay: "{{delay}}"
+          maxResults: "{{maxResults}}"
+          watchedFields: "{{watchedFields}}"
+          sendOnlyUpdatedField: "{{sendOnlyUpdatedField}}"
+          username: "{{?username}}"
+          password: "{{?password}}"
+          accessToken: "{{?accessToken}}"
+          verificationCode: "{{?verificationCode}}"
+          consumerKey: "{{?consumerKey}}"
+          privateKey: "{{?privateKey}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

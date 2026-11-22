@@ -1,0 +1,105 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "artemis-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "artemis action"
+    description: "Send messages to an Apache ActiveMQ Artemis queue or topic using SJMS"
+    type: "object"
+    properties:
+      path:
+        title: "Destination"
+        description: "Queue or topic destination name (e.g. myQueue, queue:myQueue, or topic:myTopic)"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory to ActiveMQ Artemis"
+        type: "string"
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern: InOnly or InOut"
+        type: "string"
+        default: "InOnly"
+        enum: ["InOnly", "InOut"]
+      deliveryPersistent:
+        title: "Delivery Persistent"
+        description: "Specifies whether persistent delivery is used by default"
+        type: "boolean"
+        default: true
+      timeToLive:
+        title: "TimeToLive"
+        description: "Time in milliseconds that a message stays on the queue when it's not consumed (-1 disables TTL)"
+        type: "integer"
+        default: -1
+      requestTimeout:
+        title: "Request Timeout"
+        description: "Timeout in milliseconds that is waited until a reply arrives"
+        type: "integer"
+        default: 20000
+      transacted:
+        title: "Transacted"
+        description: "Specifies whether to use transacted mode"
+        type: "boolean"
+        default: false
+      synchronous:
+        title: "Synchronous"
+        description: "Sets whether synchronous processing should be strictly used"
+        type: "boolean"
+        default: false
+      explicitQosEnabled:
+        title: "Explicit QoS Enabled"
+        description: "Whether deliveryMode, priority, or timeToLive QoS settings should be applied explicitly"
+        type: "boolean"
+        default: false
+      priority:
+        title: "Priority"
+        description: "Message priority (1 lowest to 9 highest) when explicitQosEnabled is true"
+        type: "integer"
+        default: 4
+      replyTo:
+        title: "Reply To"
+        description: "Explicit ReplyTo destination for request/reply messaging"
+        type: "string"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:sjms"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - toD:
+                uri: "sjms:{{path}}?connectionFactory={{?connectionFactory}}&deliveryPersistent={{deliveryPersistent}}&timeToLive={{timeToLive}}&requestTimeout={{requestTimeout}}&transacted={{transacted}}&synchronous={{synchronous}}&explicitQosEnabled={{explicitQosEnabled}}&priority={{priority}}&replyTo={{?replyTo}}"
+                pattern: "{{exchangePattern}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

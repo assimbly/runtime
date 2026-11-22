@@ -1,0 +1,117 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "mock-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "mock action"
+    description: "Send messages to a Camel Mock endpoint for testing outbound connectors"
+    type: "object"
+    properties:
+      path:
+        title: "Name"
+        description: "Name of the mock endpoint"
+        type: "string"
+        default: "result"
+      log:
+        title: "Log"
+        description: "To turn on logging when the mock receives an incoming message (default: false)"
+        type: "boolean"
+      reportGroup:
+        title: "Report Group"
+        description: "A number that is used to turn on throughput logging based on groups of the size"
+        type: "integer"
+      expectedCount:
+        title: "Expected Count"
+        description: "Specifies the expected number of message exchanges that should be received by this mock (default: -1)"
+        type: "integer"
+      assertPeriod:
+        title: "Assert Period"
+        description: "Grace period in milliseconds after which the mock re-asserts expectations"
+        type: "integer"
+      resultWaitTime:
+        title: "Result Wait Time"
+        description: "Maximum amount of time in milliseconds to wait until expectations are satisfied"
+        type: "integer"
+      resultMinimumWaitTime:
+        title: "Result Minimum Wait Time"
+        description: "Minimum expected amount of time in milliseconds to wait until expectations are satisfied"
+        type: "integer"
+      sleepForEmptyTest:
+        title: "Sleep For Empty Test"
+        description: "Sleep period in milliseconds to verify mock remains empty when expecting 0 messages"
+        type: "integer"
+      retainFirst:
+        title: "Retain First"
+        description: "Specifies to only retain the first N received exchanges (default: -1, retain all)"
+        type: "integer"
+      retainLast:
+        title: "Retain Last"
+        description: "Specifies to only retain the last N received exchanges (default: -1, retain all)"
+        type: "integer"
+      copyOnExchange:
+        title: "Copy On Exchange"
+        description: "Sets whether to make a deep copy of the incoming Exchange (default: true)"
+        type: "boolean"
+      failFast:
+        title: "Fail Fast"
+        description: "Sets whether assertIsSatisfied fails fast at the first detected failed expectation (default: true)"
+        type: "boolean"
+      browseLimit:
+        title: "Browse Limit"
+        description: "Maximum number of messages to keep in memory available for browsing, 0 for unlimited (default: 100)"
+        type: "integer"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:mock"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "mock:{{path}}"
+                parameters:
+                  log: "{{?log}}"
+                  reportGroup: "{{?reportGroup}}"
+                  expectedCount: "{{?expectedCount}}"
+                  assertPeriod: "{{?assertPeriod}}"
+                  resultWaitTime: "{{?resultWaitTime}}"
+                  resultMinimumWaitTime: "{{?resultMinimumWaitTime}}"
+                  sleepForEmptyTest: "{{?sleepForEmptyTest}}"
+                  retainFirst: "{{?retainFirst}}"
+                  retainLast: "{{?retainLast}}"
+                  copyOnExchange: "{{?copyOnExchange}}"
+                  failFast: "{{?failFast}}"
+                  browseLimit: "{{?browseLimit}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

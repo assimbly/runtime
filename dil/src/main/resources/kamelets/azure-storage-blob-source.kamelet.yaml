@@ -1,0 +1,142 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "azure-storage-blob-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Azure Storage Blob Source"
+    description: "Consume blobs from an Azure Storage Blob container."
+    required:
+      - accountName
+      - containerName
+    type: "object"
+    properties:
+      accountName:
+        title: "Account Name"
+        description: "Azure Storage account name."
+        type: "string"
+      containerName:
+        title: "Container Name"
+        description: "Azure Storage Blob container name."
+        type: "string"
+      blobName:
+        title: "Blob Name"
+        description: "Optional specific blob name to consume from the container."
+        type: "string"
+      prefix:
+        title: "Prefix"
+        description: "Filter to return only blobs whose names begin with the specified prefix."
+        type: "string"
+      regex:
+        title: "Regex"
+        description: "Filter to return only blobs whose names match the regular expression."
+        type: "string"
+      credentialType:
+        title: "Credential Type"
+        description: "Authentication strategy to use."
+        type: "string"
+        enum: ["SHARED_ACCOUNT_KEY", "SHARED_KEY_CREDENTIAL", "AZURE_IDENTITY", "AZURE_SAS"]
+        default: "SHARED_ACCOUNT_KEY"
+      accessKey:
+        title: "Access Key"
+        description: "Access key for the Azure Storage account (SHARED_ACCOUNT_KEY)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      sasToken:
+        title: "SAS Token"
+        description: "Shared Access Signature token (AZURE_SAS)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureClientId:
+        title: "Azure Client ID"
+        description: "Azure Client ID for Azure Identity authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureClientSecret:
+        title: "Azure Client Secret"
+        description: "Azure Client Secret for Azure Identity authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureTenantId:
+        title: "Azure Tenant ID"
+        description: "Azure Tenant ID for Azure Identity authentication."
+        type: "string"
+      deleteAfterRead:
+        title: "Delete After Read"
+        description: "Delete blobs from Azure after they have been retrieved."
+        type: "boolean"
+        default: false
+      moveAfterRead:
+        title: "Move After Read"
+        description: "Move blobs to another container after they have been retrieved."
+        type: "boolean"
+        default: false
+      destinationContainer:
+        title: "Destination Container"
+        description: "Destination container when moveAfterRead is true."
+        type: "string"
+      delay:
+        title: "Delay"
+        description: "Milliseconds before the next poll."
+        type: "integer"
+        default: 500
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    out:
+      mediaType: "application/octet-stream"
+  dependencies:
+    - "camel:azure-storage-blob"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "azure-storage-blob:{{accountName}}/{{containerName}}"
+        parameters:
+          blobName: "{{?blobName}}"
+          prefix: "{{?prefix}}"
+          regex: "{{?regex}}"
+          credentialType: "{{credentialType}}"
+          accessKey: "{{?accessKey}}"
+          sasToken: "{{?sasToken}}"
+          azureClientId: "{{?azureClientId}}"
+          azureClientSecret: "{{?azureClientSecret}}"
+          azureTenantId: "{{?azureTenantId}}"
+          deleteAfterRead: "{{deleteAfterRead}}"
+          moveAfterRead: "{{moveAfterRead}}"
+          destinationContainer: "{{?destinationContainer}}"
+          delay: "{{delay}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

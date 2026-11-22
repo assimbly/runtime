@@ -1,0 +1,114 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "jira-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "Jira Action"
+    description: "Create, update, comment on, transition, or fetch Jira issues."
+    required:
+      - jiraUrl
+    type: "object"
+    properties:
+      jiraUrl:
+        title: "Jira URL"
+        description: "Base URL of the Jira server."
+        type: "string"
+        example: "https://your-domain.atlassian.net"
+      type:
+        title: "Type"
+        description: "Jira producer operation type."
+        type: "string"
+        enum: ["addIssue", "addComment", "attach", "deleteIssue", "updateIssue", "transitionIssue", "watchers", "addIssueLink", "addWorkLog", "fetchIssue", "fetchComments"]
+        default: "addIssue"
+      username:
+        title: "Username"
+        description: "Username for Jira Basic authentication."
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: "Password"
+        description: "Password or API token for Jira Basic authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      accessToken:
+        title: "Access Token"
+        description: "OAuth or Personal Access Token for Jira authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      verificationCode:
+        title: "Verification Code"
+        description: "OAuth verification code generated during Jira authorization."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      consumerKey:
+        title: "Consumer Key"
+        description: "OAuth consumer key from Jira settings."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      privateKey:
+        title: "Private Key"
+        description: "OAuth private key used to sign requests."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:jira"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "jira:{{type}}"
+                parameters:
+                  jiraUrl: "{{jiraUrl}}"
+                  username: "{{?username}}"
+                  password: "{{?password}}"
+                  accessToken: "{{?accessToken}}"
+                  verificationCode: "{{?verificationCode}}"
+                  consumerKey: "{{?consumerKey}}"
+                  privateKey: "{{?privateKey}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

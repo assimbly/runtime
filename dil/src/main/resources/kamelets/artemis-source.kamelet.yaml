@@ -1,0 +1,106 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "artemis-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "artemis source"
+    description: "Consume messages from an Apache ActiveMQ Artemis queue or topic using SJMS"
+    type: "object"
+    properties:
+      path:
+        title: "Destination"
+        description: "Queue or topic destination name (e.g. myQueue, queue:myQueue, or topic:myTopic)"
+        type: "string"
+      connectionFactory:
+        title: "Connection Factory"
+        description: "Connection Factory to ActiveMQ Artemis"
+        type: "string"
+      acknowledgementMode:
+        title: "Acknowledgement Mode"
+        description: "The JMS acknowledgement mode"
+        type: "string"
+        default: "AUTO_ACKNOWLEDGE"
+        enum: ["SESSION_TRANSACTED", "CLIENT_ACKNOWLEDGE", "AUTO_ACKNOWLEDGE", "DUPS_OK_ACKNOWLEDGE"]
+      transacted:
+        title: "Transacted"
+        description: "Specifies whether to use transacted mode"
+        type: "boolean"
+        default: false
+      concurrentConsumers:
+        title: "Concurrent Consumers"
+        description: "Number of concurrent consumers when consuming from JMS"
+        type: "integer"
+        default: 1
+      asyncConsumer:
+        title: "Async Consumer"
+        description: "Whether the consumer processes exchanges asynchronously"
+        type: "boolean"
+        default: false
+      synchronous:
+        title: "Synchronous"
+        description: "Sets whether synchronous processing should be strictly used"
+        type: "boolean"
+        default: false
+      durableSubscriptionName:
+        title: "Durable Subscription Name"
+        description: "Durable subscriber name for durable topic subscriptions"
+        type: "string"
+      clientId:
+        title: "Client ID"
+        description: "JMS client ID to use"
+        type: "string"
+      messageSelector:
+        title: "Message Selector"
+        description: "JMS message selector syntax"
+        type: "string"
+      exchangePattern:
+        title: "Exchange Pattern"
+        description: "Exchange Pattern: InOnly or InOut"
+        type: "string"
+        enum: ["InOnly", "InOut"]
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+    - "camel:sjms"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "sjms:{{path}}"
+        parameters:
+          connectionFactory: "{{?connectionFactory}}"
+          acknowledgementMode: "{{acknowledgementMode}}"
+          transacted: "{{transacted}}"
+          concurrentConsumers: "{{concurrentConsumers}}"
+          asyncConsumer: "{{asyncConsumer}}"
+          synchronous: "{{synchronous}}"
+          durableSubscriptionName: "{{?durableSubscriptionName}}"
+          clientId: "{{?clientId}}"
+          messageSelector: "{{?messageSelector}}"
+          exchangePattern: "{{?exchangePattern}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

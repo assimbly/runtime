@@ -54,6 +54,9 @@ public class JMSConnection {
         password = properties.getProperty("connection." + connectionId + ".password");
         pooled = properties.getProperty("connection." + connectionId + ".pooled");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");
+        if (jmsProvider == null && "artemis".equalsIgnoreCase(componentName)) {
+            jmsProvider = "artemis";
+        }
 
     }
 
@@ -86,8 +89,8 @@ public class JMSConnection {
         }
 
         switch (componentName) {
-            case "jms", "activemq", "artemis" -> createJmsComponent(connectionFactory);
-            case "sjms", "amazonmq" -> createSjmsComponent(connectionFactory);
+            case "jms", "activemq" -> createJmsComponent(connectionFactory);
+            case "sjms", "amazonmq", "artemis" -> createSjmsComponent(connectionFactory);
             case "sjms2" -> createSjms2Component(connectionFactory);
             default -> throw new Exception("Unknown component name: " + componentName);
         }
@@ -184,7 +187,8 @@ public class JMSConnection {
 
     private void createSjmsComponent(ConnectionFactory connectionFactory) {
 
-        SjmsComponent sjmsComponent = context.getComponent(componentName, SjmsComponent.class);
+        String sjmsComponentName = "artemis".equalsIgnoreCase(componentName) ? "sjms" : componentName;
+        SjmsComponent sjmsComponent = context.getComponent(sjmsComponentName, SjmsComponent.class);
         sjmsComponent.setHeaderFilterStrategy(new ClassicJmsHeaderFilterStrategy());
         sjmsComponent.setBridgeErrorHandler(true);
 

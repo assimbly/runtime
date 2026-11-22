@@ -1,0 +1,114 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "dropbox-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "Dropbox Source"
+    description: "Download or search files from Dropbox."
+    required:
+      - accessToken
+      - apiKey
+      - apiSecret
+      - refreshToken
+      - expireIn
+    type: "object"
+    properties:
+      operation:
+        title: "Operation"
+        description: "Dropbox consumer operation (get or search)."
+        type: "string"
+        enum: ["get", "search"]
+        default: "get"
+      accessToken:
+        title: "Access Token"
+        description: "OAuth 2.0 access token for the Dropbox user."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      clientIdentifier:
+        title: "Client Identifier"
+        description: "Name of the Dropbox app registered to make API requests."
+        type: "string"
+      remotePath:
+        title: "Remote Path"
+        description: "File or folder path on Dropbox."
+        type: "string"
+        example: "/folder/file.txt"
+      query:
+        title: "Query"
+        description: "Space-separated substrings to search for when operation is search."
+        type: "string"
+      apiKey:
+        title: "API Key"
+        description: "Dropbox app API key for token refresh."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      apiSecret:
+        title: "API Secret"
+        description: "Dropbox app API secret for token refresh."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      refreshToken:
+        title: "Refresh Token"
+        description: "OAuth refresh token to renew the access token."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      expireIn:
+        title: "Expire In"
+        description: "Expiration timestamp in milliseconds for the access token."
+        type: "integer"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    out:
+      mediaType: "application/octet-stream"
+  dependencies:
+    - "camel:dropbox"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "dropbox:{{operation}}"
+        parameters:
+          accessToken: "{{accessToken}}"
+          clientIdentifier: "{{?clientIdentifier}}"
+          remotePath: "{{?remotePath}}"
+          query: "{{?query}}"
+          apiKey: "{{apiKey}}"
+          apiSecret: "{{apiSecret}}"
+          refreshToken: "{{refreshToken}}"
+          expireIn: "{{expireIn}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"

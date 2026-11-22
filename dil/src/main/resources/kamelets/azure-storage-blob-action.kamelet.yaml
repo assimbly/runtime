@@ -1,0 +1,158 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "azure-storage-blob-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "Azure Storage Blob Action"
+    description: "Upload, download, list, copy, or delete blobs in Azure Storage Blob Service."
+    required:
+      - accountName
+      - containerName
+    type: "object"
+    properties:
+      accountName:
+        title: "Account Name"
+        description: "Azure Storage account name."
+        type: "string"
+      containerName:
+        title: "Container Name"
+        description: "Azure Storage Blob container name."
+        type: "string"
+      operation:
+        title: "Operation"
+        description: "Azure Storage Blob producer operation to execute."
+        type: "string"
+        enum: ["listBlobContainers", "findBlobsByTags", "createBlobContainer", "deleteBlobContainer", "listBlobs", "listBlobVersions", "getBlob", "deleteBlob", "downloadBlobToFile", "downloadLink", "uploadBlockBlob", "uploadBlockBlobChunked", "stageBlockBlobList", "commitBlobBlockList", "getBlobBlockList", "createAppendBlob", "commitAppendBlob", "createPageBlob", "uploadPageBlob", "resizePageBlob", "clearPageBlob", "getPageBlobRanges", "getChangeFeed", "copyBlob", "createBlobSnapshot", "setBlobTags", "getBlobTags", "setBlobLegalHold", "setBlobImmutabilityPolicy", "undeleteBlob", "setBlobTier"]
+        default: "uploadBlockBlob"
+      blobName:
+        title: "Blob Name"
+        description: "Target blob name for blob-level operations."
+        type: "string"
+      blobType:
+        title: "Blob Type"
+        description: "Blob type (blockblob, appendblob, or pageblob)."
+        type: "string"
+        enum: ["blockblob", "appendblob", "pageblob"]
+        default: "blockblob"
+      prefix:
+        title: "Prefix"
+        description: "Filter to return only blobs whose names begin with the specified prefix."
+        type: "string"
+      regex:
+        title: "Regex"
+        description: "Filter to return only blobs whose names match the regular expression."
+        type: "string"
+      credentialType:
+        title: "Credential Type"
+        description: "Authentication strategy to use."
+        type: "string"
+        enum: ["SHARED_ACCOUNT_KEY", "SHARED_KEY_CREDENTIAL", "AZURE_IDENTITY", "AZURE_SAS"]
+        default: "SHARED_ACCOUNT_KEY"
+      accessKey:
+        title: "Access Key"
+        description: "Access key for the Azure Storage account (SHARED_ACCOUNT_KEY)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      sasToken:
+        title: "SAS Token"
+        description: "Shared Access Signature token (AZURE_SAS)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureClientId:
+        title: "Azure Client ID"
+        description: "Azure Client ID for Azure Identity authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureClientSecret:
+        title: "Azure Client Secret"
+        description: "Azure Client Secret for Azure Identity authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      azureTenantId:
+        title: "Azure Tenant ID"
+        description: "Azure Tenant ID for Azure Identity authentication."
+        type: "string"
+      createAppendBlob:
+        title: "Create Append Blob"
+        description: "Create the append blob when committing append blocks."
+        type: "boolean"
+        default: true
+      createPageBlob:
+        title: "Create Page Blob"
+        description: "Create the page blob when uploading page blobs."
+        type: "boolean"
+        default: true
+      commitBlockListLater:
+        title: "Commit Block List Later"
+        description: "Whether staged blocks should not be committed immediately."
+        type: "boolean"
+        default: true
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    in:
+      mediaType: "application/octet-stream"
+  dependencies:
+    - "camel:azure-storage-blob"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "azure-storage-blob:{{accountName}}/{{containerName}}"
+                parameters:
+                  operation: "{{operation}}"
+                  blobName: "{{?blobName}}"
+                  blobType: "{{blobType}}"
+                  prefix: "{{?prefix}}"
+                  regex: "{{?regex}}"
+                  credentialType: "{{credentialType}}"
+                  accessKey: "{{?accessKey}}"
+                  sasToken: "{{?sasToken}}"
+                  azureClientId: "{{?azureClientId}}"
+                  azureClientSecret: "{{?azureClientSecret}}"
+                  azureTenantId: "{{?azureTenantId}}"
+                  createAppendBlob: "{{createAppendBlob}}"
+                  createPageBlob: "{{createPageBlob}}"
+                  commitBlockListLater: "{{commitBlockListLater}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

@@ -1,0 +1,152 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "mongodb-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "MongoDB Action"
+    description: "Perform operations on MongoDB documents and collections."
+    required:
+      - database
+      - collection
+    type: "object"
+    properties:
+      connectionBean:
+        title: "Connection Bean"
+        description: "Name of the MongoClient bean in the Camel registry (used when hosts and connectionUriString are not set)."
+        type: "string"
+        default: "mongoClient"
+      connectionUriString:
+        title: "Connection URI"
+        description: "Full MongoDB connection string URI (e.g., mongodb://... or mongodb+srv://...)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      hosts:
+        title: "Hosts"
+        description: "Comma-separated list of MongoDB host addresses in host:port format."
+        type: "string"
+        example: "localhost:27017"
+      database:
+        title: "Database"
+        description: "Name of the MongoDB database."
+        type: "string"
+      collection:
+        title: "Collection"
+        description: "Name of the MongoDB collection."
+        type: "string"
+      operation:
+        title: "Operation"
+        description: "MongoDB operation to execute."
+        type: "string"
+        enum: ["findById", "findOneAndDelete", "findOneAndReplace", "findOneAndUpdate", "findOneByQuery", "findAll", "findDistinct", "insert", "save", "update", "remove", "bulkWrite", "aggregate", "getDbStats", "getColStats", "count", "command"]
+        default: "insert"
+      username:
+        title: "Username"
+        description: "Username for MongoDB authentication."
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: "Password"
+        description: "Password for MongoDB authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      authSource:
+        title: "Auth Source"
+        description: "Database name associated with the user's credentials."
+        type: "string"
+      tls:
+        title: "TLS"
+        description: "Enable TLS for the MongoDB connection."
+        type: "boolean"
+        default: false
+      createCollection:
+        title: "Create Collection"
+        description: "Create the collection during initialization if it does not exist."
+        type: "boolean"
+        default: true
+      writeConcern:
+        title: "Write Concern"
+        description: "Level of acknowledgment requested from MongoDB for write operations."
+        type: "string"
+        enum: ["ACKNOWLEDGED", "W1", "W2", "W3", "UNACKNOWLEDGED", "JOURNALED", "MAJORITY"]
+        default: "ACKNOWLEDGED"
+      dynamicity:
+        title: "Dynamicity"
+        description: "Allow overriding target database and collection via exchange headers."
+        type: "boolean"
+        default: false
+      outputType:
+        title: "Output Type"
+        description: "Convert producer output to DocumentList, Document, or MongoIterable."
+        type: "string"
+        enum: ["DocumentList", "Document", "MongoIterable"]
+      writeResultAsHeader:
+        title: "Write Result As Header"
+        description: "Keep the incoming body and attach write results as a header."
+        type: "boolean"
+        default: false
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    in:
+      mediaType: "application/json"
+  dependencies:
+    - "camel:mongodb"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "mongodb:{{connectionBean}}"
+                parameters:
+                  connectionUriString: "{{?connectionUriString}}"
+                  hosts: "{{?hosts}}"
+                  database: "{{database}}"
+                  collection: "{{collection}}"
+                  operation: "{{operation}}"
+                  username: "{{?username}}"
+                  password: "{{?password}}"
+                  authSource: "{{?authSource}}"
+                  tls: "{{tls}}"
+                  createCollection: "{{createCollection}}"
+                  writeConcern: "{{writeConcern}}"
+                  dynamicity: "{{dynamicity}}"
+                  outputType: "{{?outputType}}"
+                  writeResultAsHeader: "{{writeResultAsHeader}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

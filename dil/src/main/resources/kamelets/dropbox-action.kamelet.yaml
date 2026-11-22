@@ -1,0 +1,138 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "dropbox-action"
+  labels:
+    camel.apache.org/kamelet.type: "action"
+spec:
+  definition:
+    title: "Dropbox Action"
+    description: "Upload, download, search, move, or delete files on Dropbox."
+    required:
+      - accessToken
+      - apiKey
+      - apiSecret
+      - refreshToken
+      - expireIn
+    type: "object"
+    properties:
+      operation:
+        title: "Operation"
+        description: "Dropbox producer operation (put, get, del, move, or search)."
+        type: "string"
+        enum: ["put", "get", "del", "move", "search"]
+        default: "put"
+      accessToken:
+        title: "Access Token"
+        description: "OAuth 2.0 access token for the Dropbox user."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      clientIdentifier:
+        title: "Client Identifier"
+        description: "Name of the Dropbox app registered to make API requests."
+        type: "string"
+      remotePath:
+        title: "Remote Path"
+        description: "Target or source file or folder path on Dropbox."
+        type: "string"
+        example: "/folder/file.txt"
+      newRemotePath:
+        title: "New Remote Path"
+        description: "Destination path on Dropbox when operation is move."
+        type: "string"
+      localPath:
+        title: "Local Path"
+        description: "Optional local file or folder path to upload (uses message body if omitted)."
+        type: "string"
+      uploadMode:
+        title: "Upload Mode"
+        description: "Conflict behavior on put (add renames, force overwrites)."
+        type: "string"
+        enum: ["add", "force"]
+        default: "add"
+      query:
+        title: "Query"
+        description: "Space-separated substrings to search for when operation is search."
+        type: "string"
+      apiKey:
+        title: "API Key"
+        description: "Dropbox app API key for token refresh."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      apiSecret:
+        title: "API Secret"
+        description: "Dropbox app API secret for token refresh."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      refreshToken:
+        title: "Refresh Token"
+        description: "OAuth refresh token to renew the access token."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      expireIn:
+        title: "Expire In"
+        description: "Expiration timestamp in milliseconds for the access token."
+        type: "integer"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      sink:
+        title: "Sink"
+        type: "boolean"
+        default: false
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    in:
+      mediaType: "application/octet-stream"
+  dependencies:
+    - "camel:dropbox"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "dropbox:{{operation}}"
+                parameters:
+                  accessToken: "{{accessToken}}"
+                  clientIdentifier: "{{?clientIdentifier}}"
+                  remotePath: "{{?remotePath}}"
+                  newRemotePath: "{{?newRemotePath}}"
+                  localPath: "{{?localPath}}"
+                  uploadMode: "{{uploadMode}}"
+                  query: "{{?query}}"
+                  apiKey: "{{apiKey}}"
+                  apiSecret: "{{apiSecret}}"
+                  refreshToken: "{{refreshToken}}"
+                  expireIn: "{{expireIn}}"
+            - to:
+                disabled: "{{sink}}"
+                uri: "{{out}}"

@@ -1,0 +1,142 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "mongodb-source"
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  definition:
+    title: "MongoDB Source"
+    description: "Consume documents from a MongoDB collection using tailable cursors or change streams."
+    required:
+      - database
+      - collection
+    type: "object"
+    properties:
+      connectionBean:
+        title: "Connection Bean"
+        description: "Name of the MongoClient bean in the Camel registry (used when hosts and connectionUriString are not set)."
+        type: "string"
+        default: "mongoClient"
+      connectionUriString:
+        title: "Connection URI"
+        description: "Full MongoDB connection string URI (e.g., mongodb://... or mongodb+srv://...)."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      hosts:
+        title: "Hosts"
+        description: "Comma-separated list of MongoDB host addresses in host:port format."
+        type: "string"
+        example: "localhost:27017"
+      database:
+        title: "Database"
+        description: "Name of the MongoDB database."
+        type: "string"
+      collection:
+        title: "Collection"
+        description: "Name of the MongoDB collection."
+        type: "string"
+      username:
+        title: "Username"
+        description: "Username for MongoDB authentication."
+        type: "string"
+        x-descriptors:
+        - urn:camel:group:credentials
+      password:
+        title: "Password"
+        description: "Password for MongoDB authentication."
+        type: "string"
+        format: "password"
+        x-descriptors:
+        - urn:camel:group:credentials
+      authSource:
+        title: "Auth Source"
+        description: "Database name associated with the user's credentials."
+        type: "string"
+      tls:
+        title: "TLS"
+        description: "Enable TLS for the MongoDB connection."
+        type: "boolean"
+        default: false
+      consumerType:
+        title: "Consumer Type"
+        description: "MongoDB consumer mode (tailable cursor or change streams)."
+        type: "string"
+        enum: ["tailable", "changeStreams"]
+        default: "tailable"
+      persistentTailTracking:
+        title: "Persistent Tail Tracking"
+        description: "Track the last consumed record across restarts (tailable consumer)."
+        type: "boolean"
+        default: false
+      persistentId:
+        title: "Persistent ID"
+        description: "Unique tracker identifier for persistent tail tracking."
+        type: "string"
+      tailTrackIncreasingField:
+        title: "Tail Track Increasing Field"
+        description: "Top-level increasing field used to position the tailable cursor."
+        type: "string"
+      streamFilter:
+        title: "Stream Filter"
+        description: "Filter condition for the change streams consumer."
+        type: "string"
+      fullDocument:
+        title: "Full Document"
+        description: "Whether change streams include the full document on updates."
+        type: "string"
+        enum: ["default", "updateLookup", "required", "whenAvailable"]
+        default: "default"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  types:
+    out:
+      mediaType: "application/json"
+  dependencies:
+    - "camel:mongodb"
+    - "camel:kamelet"
+    - "camel:core"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "mongodb:{{connectionBean}}"
+        parameters:
+          connectionUriString: "{{?connectionUriString}}"
+          hosts: "{{?hosts}}"
+          database: "{{database}}"
+          collection: "{{collection}}"
+          username: "{{?username}}"
+          password: "{{?password}}"
+          authSource: "{{?authSource}}"
+          tls: "{{tls}}"
+          consumerType: "{{consumerType}}"
+          persistentTailTracking: "{{persistentTailTracking}}"
+          persistentId: "{{?persistentId}}"
+          tailTrackIncreasingField: "{{?tailTrackIncreasingField}}"
+          streamFilter: "{{?streamFilter}}"
+          fullDocument: "{{fullDocument}}"
+        steps:
+        - step:
+            id: "step-{{stepId}}"
+            steps:
+            - to:
+                uri: "{{out}}"
