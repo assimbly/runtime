@@ -1,0 +1,69 @@
+apiVersion: "camel.apache.org/v1"
+kind: "Kamelet"
+metadata:
+  name: "switch-router"
+  labels:
+    camel.apache.org/kamelet.type: "router"
+spec:
+  definition:
+    title: "switch-router"
+    description: "Routes a message to a destination by matching the result of a selector expression (simple, groovy, xpath, jsonpath, etc.) against literal case values. When transpiled from DIL with multiple cases, this router is generated as a Camel switch route."
+    type: "object"
+    properties:
+      language:
+        title: "Language"
+        description: "Selector expression language (e.g. simple, groovy, xpath, jsonpath)"
+        type: "string"
+        default: "simple"
+      expression:
+        title: "Expression"
+        description: "Selector expression to evaluate"
+        type: "string"
+      value:
+        title: "Value"
+        description: "Literal value to match"
+        type: "string"
+      out_default:
+        title: "Out Default Endpoint"
+        description: "Default endpoint when no case matches"
+        type: "string"
+        default: "mock:0"
+      in:
+        title: "Source Endpoint"
+        type: "string"
+        default: "kamelet:source"
+      out:
+        title: "Sink Endpoint"
+        type: "string"
+        default: "mock:sink"
+      routeId:
+        title: "Route ID"
+        type: "string"
+      stepId:
+        title: "Step ID"
+        type: "string"
+      routeConfigurationId:
+        title: "Route Configuration ID"
+        type: "string"
+        default: "0"
+  dependencies:
+    - "camel:kamelet"
+  template:
+    route:
+      routeConfigurationId: "{{routeConfigurationId}}"
+      from:
+        uri: "{{in}}"
+        steps:
+          - step:
+              id: "step-{{stepId}}"
+              steps:
+                - switch:
+                    selector:
+                      language:
+                        language: "{{language}}"
+                        expression: "{{expression}}"
+                    case:
+                      - value: "{{value}}"
+                        uri: "{{out}}"
+                    otherwise:
+                      uri: "{{out_default}}"

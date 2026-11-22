@@ -77,11 +77,16 @@ public class RouteTemplate {
                 customRouteDoc = new DocumentImpl();
             }
             createCustomRoute(links, stepXPath, type, stepId,"contentrouter");
-        }else if(baseUri.equalsIgnoreCase("switch") && type.equalsIgnoreCase("router") ) {
+        }else if(scheme.equalsIgnoreCase("switch") && type.equalsIgnoreCase("router") ) {
             if (customRouteDoc == null) {
                 customRouteDoc = new DocumentImpl();
             }
             createCustomRoute(links, stepXPath, type, stepId,"switchrouter");
+        }else if(scheme.equalsIgnoreCase("switchbyheader") && type.equalsIgnoreCase("router") ) {
+            if (customRouteDoc == null) {
+                customRouteDoc = new DocumentImpl();
+            }
+            createCustomRoute(links, stepXPath, type, stepId,"switchbyheaderrouter");
         }else if(baseUri.startsWith("setheaders")) {
             if (customRouteDoc == null) {
                 customRouteDoc = new DocumentImpl();
@@ -141,6 +146,10 @@ public class RouteTemplate {
             Element switchElement = customRouteDoc.createElement("switch");
             switchElement = createNamespace(stepXPath, switchElement);
             switchElement = createSwitch(links, stepXPath, switchElement);
+            step.appendChild(switchElement);
+        }else if (customType.equalsIgnoreCase("switchbyheaderrouter")){
+            Element switchElement = customRouteDoc.createElement("switch");
+            switchElement = createSwitchByHeader(links, stepXPath, switchElement);
             step.appendChild(switchElement);
         }else if (customType.equalsIgnoreCase("setheaders")){
             Element setHeaders = customRouteDoc.createElement("setHeaders");
@@ -307,7 +316,7 @@ public class RouteTemplate {
     }
 
     // Switch dispatches on literal values: the selector comes from the step options,
-    // each out link with a rule is a case (rule = value), an out link without a rule is the otherwise
+    // each out link with a rule (or value option) is a case, an out link without one is the otherwise
     public Element createSwitch(String[] links, String stepXPath, Element switchElement) {
 
         String language = Objects.toString(conf.getProperty(stepXPath + "options/language"), "simple");
@@ -316,14 +325,37 @@ public class RouteTemplate {
         Element selector = customRouteDoc.createElement("selector");
         Element languageElement = customRouteDoc.createElement(language);
         languageElement.setTextContent(expression);
-        if(language.equals("jsonpath")){
+        if(language.equalsIgnoreCase("jsonpath")){
             languageElement.setAttribute("resultType","java.lang.String");
-        } else if (language.equals("xpath")) {
+        } else if (language.equalsIgnoreCase("xpath")) {
             languageElement.setAttribute("resultType","java.lang.String");
             languageElement.setAttribute("saxon","true");
         }
         selector.appendChild(languageElement);
         switchElement.appendChild(selector);
+
+        return appendSwitchCases(links, stepXPath, switchElement, false);
+    }
+
+    // SwitchByHeader hardcodes the <header> selector using headerName (or URI path),
+    // each out link with a rule (or headerValue/value option) is a case, an out link without one is the otherwise
+    public Element createSwitchByHeader(String[] links, String stepXPath, Element switchElement) {
+
+        String headerName = Objects.toString(conf.getProperty(stepXPath + "options/headerName"), null);
+        if (headerName == null || headerName.isEmpty()) {
+            headerName = (path != null && !path.isEmpty()) ? path : Objects.toString(conf.getProperty(stepXPath + "options/expression"), null);
+        }
+
+        Element selector = customRouteDoc.createElement("selector");
+        Element headerElement = customRouteDoc.createElement("header");
+        headerElement.setTextContent(headerName);
+        selector.appendChild(headerElement);
+        switchElement.appendChild(selector);
+
+        return appendSwitchCases(links, stepXPath, switchElement, true);
+    }
+
+    private Element appendSwitchCases(String[] links, String stepXPath, Element switchElement, boolean byHeader) {
 
         Element otherwise = null;
 
@@ -336,7 +368,7 @@ public class RouteTemplate {
             String linkTransport = createLinkTransport(linkXPath);
             String pattern = Objects.toString(conf.getProperty(linkXPath + "pattern"), null);
             String id = Objects.toString(conf.getProperty(linkXPath + "id"), null);
-            String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+            String caseValue = resolveSwitchCaseValue(linkXPath, byHeader);
             options = createLinkOptions(linkXPath, bound, linkTransport, pattern);
             String endpoint = createLinkEndpoint(linkTransport, id);
 
@@ -344,9 +376,9 @@ public class RouteTemplate {
                 continue;
             }
 
-            if(rule != null) {
+            if(caseValue != null && !caseValue.isEmpty()) {
                 Element switchCase = customRouteDoc.createElement("case");
-                switchCase.setAttribute("value", rule);
+                switchCase.setAttribute("value", caseValue);
                 switchCase.setAttribute("uri", endpoint);
                 switchElement.appendChild(switchCase);
             } else {
@@ -362,6 +394,20 @@ public class RouteTemplate {
         }
 
         return switchElement;
+    }
+
+    private String resolveSwitchCaseValue(String linkXPath, boolean byHeader) {
+        String rule = Objects.toString(conf.getProperty(linkXPath + "rule"), null);
+        if (rule != null && !rule.isEmpty()) {
+            return rule;
+        }
+        if (byHeader) {
+            String headerValue = Objects.toString(conf.getProperty(linkXPath + "options/headerValue"), null);
+            if (headerValue != null && !headerValue.isEmpty()) {
+                return headerValue;
+            }
+        }
+        return Objects.toString(conf.getProperty(linkXPath + "options/value"), null);
     }
 
     public Element createHeaders( String stepXPath, Element setHeaders) {
