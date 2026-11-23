@@ -208,6 +208,21 @@ class MessagingKameletsTest {
     }
 
     @Test
+    void connectionDispatchesActiveMqWithoutJmsProviderAndBindsActiveMqConnectionFactory() throws Exception {
+        bindEncryptionHelpers();
+
+        TreeMap<String, String> props = new TreeMap<>();
+        props.put("source.1.connection.id", "activemqConn");
+        props.put("connection.activemqConn.type", "activemq");
+        props.put("connection.activemqConn.url", "tcp://localhost:61616");
+
+        new Connection(context, props, "source.1.connection.id").start();
+
+        Object bound = context.getRegistry().lookupByName("activemqConn");
+        assertInstanceOf(ActiveMQConnectionFactory.class, bound);
+    }
+
+    @Test
     void resolvesActiveMqAndArtemisSourceEndpoints() throws Exception {
         ConnectionFactory activemqCf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         context.getRegistry().bind("amqConn", activemqCf);

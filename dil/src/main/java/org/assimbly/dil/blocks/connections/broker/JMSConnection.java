@@ -54,8 +54,9 @@ public class JMSConnection {
         password = properties.getProperty("connection." + connectionId + ".password");
         pooled = properties.getProperty("connection." + connectionId + ".pooled");
         jmsProvider = properties.getProperty("connection." + connectionId + ".jmsprovider");
-        if (jmsProvider == null && "artemis".equalsIgnoreCase(componentName)) {
-            jmsProvider = "artemis";
+        // The ActiveMQ and Artemis connection types name their provider already
+        if (jmsProvider == null && ("artemis".equalsIgnoreCase(componentName) || "activemq".equalsIgnoreCase(componentName))) {
+            jmsProvider = componentName;
         }
 
     }
