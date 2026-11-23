@@ -52,4 +52,14 @@ class CamelIntegrationComponentsTest {
         assertTrue(schema.getJSONObject("properties").has("httpUri"));
     }
 
+    @Test
+    void sinkHasTheSameOptionsAsItsActionKamelet() throws Exception {
+        String actionSchema = integration.getComponentSchema("setbody", "action", "application/json");
+        String sinkSchema = integration.getComponentSchema("setbody", "sink", "application/json");
+
+        assertEquals(actionSchema, sinkSchema);
+        assertTrue(new JSONObject(sinkSchema).getJSONObject("properties").has("language"));
+        assertTrue(new JSONObject(sinkSchema).getJSONObject("properties").has("expression"));
+    }
+
 }

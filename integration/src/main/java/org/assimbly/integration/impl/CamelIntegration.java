@@ -652,8 +652,11 @@ public class CamelIntegration extends BaseIntegration {
             return null;
         }
 
+        // a Sink runs the Action kamelet (with sink=true), like the transpiler does, so it has the same options
+        String kameletType = "sink".equalsIgnoreCase(type) ? "action" : type;
+
         try {
-            String kamelet = ConfigManager.readResource("kamelets/" + componentType + "-" + type + ".kamelet.yaml");
+            String kamelet = ConfigManager.readResource("kamelets/" + componentType + "-" + kameletType + ".kamelet.yaml");
             return retrieveKameletOptions(kamelet, componentType);
         } catch (Exception e) {
             log.debug("Kamelet schema not found for {}-{}: {}", componentType, type, e.getMessage());
