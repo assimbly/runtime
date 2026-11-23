@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.UnaryOperator;
 
 import org.apache.camel.builder.ThreadPoolProfileBuilder;
 import org.apache.camel.component.direct.DirectComponent;
@@ -42,6 +43,7 @@ import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.springrabbit.SpringRabbitMQComponent;
 import org.apache.camel.jsonpath.JsonPathLanguage;
 import org.apache.camel.language.xpath.XPathLanguage;
+import org.apache.camel.support.ExpressionAdapter;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.SimpleRegistry;
@@ -304,6 +306,35 @@ public class ConfigManager {
 
         Expression environment = simpleLanguage.createExpression("${variable:group:${routeGroup}:MetaData.EnvironmentName}");
         simpleFunctionRegistry.addFunction("environment", environment);
+
+    }
+
+    /** Adds simple functions, like ${xmltojson}, that convert the message body from one format to another. */
+    public void setDocConverterSimpleFunctions() {
+
+        Map<String, UnaryOperator<String>> converters = Map.ofEntries(
+                Map.entry("xmltojson", DocConverter::xmlToJson),
+                Map.entry("xmltoyaml", DocConverter::xmlToYaml),
+                Map.entry("xmltocsv", DocConverter::xmlToCsv),
+                Map.entry("jsontoxml", DocConverter::jsonToXml),
+                Map.entry("jsontoyaml", DocConverter::jsonToYaml),
+                Map.entry("jsontocsv", DocConverter::jsonToCsv),
+                Map.entry("yamltoxml", DocConverter::yamlToXml),
+                Map.entry("yamltojson", DocConverter::yamlToJson),
+                Map.entry("yamltocsv", DocConverter::yamlToCsv),
+                Map.entry("csvtoxml", DocConverter::csvToXml),
+                Map.entry("csvtojson", DocConverter::csvToJson),
+                Map.entry("csvtoyaml", DocConverter::csvToYaml)
+        );
+
+        SimpleFunctionRegistry simpleFunctionRegistry = PluginHelper.getSimpleFunctionRegistry(context);
+
+        converters.forEach((name, converter) -> simpleFunctionRegistry.addFunction(name, new ExpressionAdapter() {
+            @Override
+            public Object evaluate(Exchange exchange) {
+                return converter.apply(exchange.getMessage().getBody(String.class));
+            }
+        }));
 
     }
 

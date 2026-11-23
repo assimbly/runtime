@@ -115,6 +115,8 @@ public class CamelIntegration extends BaseIntegration {
 
         configManager.setSimpleFunctions();
 
+        configManager.setDocConverterSimpleFunctions();
+
         configManager.setDefaultThreadProfile(10, 50, 5000);
 
         configManager.setThreadProfile("wiretapProfile", 0, 20, 2500);
