@@ -101,19 +101,20 @@ public class JMSConnection {
 
         ConnectionFactory connectionFactory;
 
-        if (jmsProvider.equalsIgnoreCase("amq") || jmsProvider.equalsIgnoreCase("artemis") || jmsProvider.equalsIgnoreCase("activemq artemis")) {
+        // "activemq artemis" is the legacy provider name, still present in stored flows
+        if (jmsProvider.equalsIgnoreCase("amq") ||jmsProvider.equalsIgnoreCase("artemis") || jmsProvider.equalsIgnoreCase("activemq artemis")) {
             
-            connectionFactory = setActiveMQArtemisConnectionFactory();
+            connectionFactory = setArtemisConnectionFactory();
         } else {
             
-            connectionFactory = setActiveMQClassicConnectionFactory();
+            connectionFactory = setActiveMQConnectionFactory();
         }
 
         return connectionFactory;
 
     }
 
-    private ConnectionFactory setActiveMQArtemisConnectionFactory() {
+    private ConnectionFactory setArtemisConnectionFactory() {
 
         org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory connectionFactory;
 
@@ -133,7 +134,7 @@ public class JMSConnection {
 
     }
 
-    private ConnectionFactory setActiveMQClassicConnectionFactory() {
+    private ConnectionFactory setActiveMQConnectionFactory() {
 
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
 

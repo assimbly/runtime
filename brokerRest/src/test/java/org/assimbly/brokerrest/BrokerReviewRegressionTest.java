@@ -7,8 +7,8 @@ import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.BrokerService;
 import org.assimbly.broker.Broker;
-import org.assimbly.broker.impl.ActiveMQArtemis;
-import org.assimbly.broker.impl.ActiveMQClassic;
+import org.assimbly.broker.impl.Artemis;
+import org.assimbly.broker.impl.ActiveMQ;
 import org.assimbly.broker.impl.EndpointNotFoundException;
 import org.assimbly.util.BaseDirectory;
 import org.json.JSONArray;
@@ -20,7 +20,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,15 +31,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class BrokerReviewRegressionTest {
 
     private EmbeddedActiveMQ embeddedArtemis;
-    private BrokerService classicService;
+    private BrokerService activemqService;
 
     @AfterEach
     void stopBrokers() throws Exception {
         if (embeddedArtemis != null) {
             embeddedArtemis.stop();
         }
-        if (classicService != null) {
-            classicService.stop();
+        if (activemqService != null) {
+            activemqService.stop();
         }
     }
 
@@ -52,7 +51,7 @@ class BrokerReviewRegressionTest {
         var firstStartEntered = new CountDownLatch(1);
         var secondStartEntered = new CountDownLatch(2);
         var resumeStart = new CountDownLatch(1);
-        Broker classic = (Broker) Proxy.newProxyInstance(Broker.class.getClassLoader(), new Class<?>[]{Broker.class},
+        Broker activemq = (Broker) Proxy.newProxyInstance(Broker.class.getClassLoader(), new Class<?>[]{Broker.class},
                 (object, method, args) -> switch (method.getName()) {
                     case "status" -> started.get() ? "started" : "stopped";
                     case "start" -> {
@@ -65,11 +64,11 @@ class BrokerReviewRegressionTest {
                     }
                     default -> throw new AssertionError(method.getName());
                 });
-        setField(runtime, ManagedBrokerRuntime.class, "classic", classic);
+        setField(runtime, ManagedBrokerRuntime.class, "activemq", activemq);
 
         try (var executor = Executors.newFixedThreadPool(2)) {
-            var first = executor.submit(() -> runtime.start("classic", "file"));
-            var second = executor.submit(() -> runtime.start("classic", "file"));
+            var first = executor.submit(() -> runtime.start("activemq", "file"));
+            var second = executor.submit(() -> runtime.start("activemq", "file"));
             try {
                 assertTrue(firstStartEntered.await(5, TimeUnit.SECONDS));
                 assertFalse(secondStartEntered.await(300, TimeUnit.MILLISECONDS), "Second request started the broker again");
@@ -84,7 +83,7 @@ class BrokerReviewRegressionTest {
 
     @Test
     void artemisManagesQueuesWhenNotStartedFromFile(@TempDir Path directory) throws Exception {
-        ActiveMQArtemis artemis = artemis(directory);
+        Artemis artemis = artemis(directory);
 
         assertEquals("success", artemis.createQueue("created"));
         assertTrue(artemis.getQueues().contains("created"));
@@ -92,7 +91,7 @@ class BrokerReviewRegressionTest {
 
     @Test
     void artemisCountsMessagesOfAllListedQueues(@TempDir Path directory) throws Exception {
-        ActiveMQArtemis artemis = artemis(directory, "first", "second");
+        Artemis artemis = artemis(directory, "first", "second");
         artemis.sendMessage("first", null, "body");
         artemis.sendMessage("second", null, "body");
         artemis.sendMessage("second", null, "body");
@@ -102,7 +101,7 @@ class BrokerReviewRegressionTest {
 
     @Test
     void artemisBrowsesMessageById(@TempDir Path directory) throws Exception {
-        ActiveMQArtemis artemis = artemis(directory, "queue");
+        Artemis artemis = artemis(directory, "queue");
         artemis.sendMessage("queue", null, "first");
         artemis.sendMessage("queue", null, "second");
         JSONArray listed = messages(artemis.listMessages("queue", null));
@@ -115,46 +114,46 @@ class BrokerReviewRegressionTest {
     }
 
     @Test
-    void classicTreatsTopicsAsEndpointsButMovesAndPurgesQueuesOnly() throws Exception {
-        ActiveMQClassic classic = classic();
-        classic.createQueue("queue");
-        classic.createTopic("topic");
+    void activemqTreatsTopicsAsEndpointsButMovesAndPurgesQueuesOnly() throws Exception {
+        ActiveMQ activemq = activemq();
+        activemq.createQueue("queue");
+        activemq.createTopic("topic");
 
-        assertEquals("success", classic.sendMessage("topic", null, "body"));
-        assertEquals("0", classic.countMessagesFromList("topic"));
-        assertThrows(EndpointNotFoundException.class, () -> classic.moveMessages("topic", "queue"));
-        assertThrows(EndpointNotFoundException.class, () -> classic.removeMessages("topic"));
-        assertThrows(EndpointNotFoundException.class, () -> classic.countMessages("unknown"));
-        assertEquals("success", classic.deleteQueue("queue"));
+        assertEquals("success", activemq.sendMessage("topic", null, "body"));
+        assertEquals("0", activemq.countMessagesFromList("topic"));
+        assertThrows(EndpointNotFoundException.class, () -> activemq.moveMessages("topic", "queue"));
+        assertThrows(EndpointNotFoundException.class, () -> activemq.removeMessages("topic"));
+        assertThrows(EndpointNotFoundException.class, () -> activemq.countMessages("unknown"));
+        assertEquals("success", activemq.deleteQueue("queue"));
     }
 
     @Test
-    void classicBrowsesOnlyTheRequestedMessageAndRejectsInvalidPages() throws Exception {
-        ActiveMQClassic classic = classic();
-        classic.createQueue("queue");
-        classic.sendMessage("queue", null, "body");
+    void activemqBrowsesOnlyTheRequestedMessageAndRejectsInvalidPages() throws Exception {
+        ActiveMQ activemq = activemq();
+        activemq.createQueue("queue");
+        activemq.sendMessage("queue", null, "body");
 
-        assertEquals(1, messages(classic.browseMessages("queue", 1, 10, false)).length());
-        assertEquals(0, messages(classic.browseMessage("queue", "x' OR '1'='1", false)).length());
-        assertThrows(IllegalArgumentException.class, () -> classic.browseMessages("queue", 0, 10, false));
-        assertThrows(IllegalArgumentException.class, () -> classic.browseMessages("queue", 1, 0, false));
+        assertEquals(1, messages(activemq.browseMessages("queue", 1, 10, false)).length());
+        assertEquals(0, messages(activemq.browseMessage("queue", "x' OR '1'='1", false)).length());
+        assertThrows(IllegalArgumentException.class, () -> activemq.browseMessages("queue", 0, 10, false));
+        assertThrows(IllegalArgumentException.class, () -> activemq.browseMessages("queue", 1, 0, false));
     }
 
     @Test
-    void classicStatsWorkWithoutOpenwireConnector() throws Exception {
-        assertEquals(0, classic().stats().get("maxConnections"));
+    void activemqStatsWorkWithoutOpenwireConnector() throws Exception {
+        assertEquals(0, activemq().stats().get("maxConnections"));
     }
 
     @Test
-    void classicListsEveryConnection() throws Exception {
-        ActiveMQClassic classic = classic();
-        var factory = new ActiveMQConnectionFactory("vm://" + classicService.getBrokerName() + "?create=false");
+    void activemqListsEveryConnection() throws Exception {
+        ActiveMQ activemq = activemq();
+        var factory = new ActiveMQConnectionFactory("vm://" + activemqService.getBrokerName() + "?create=false");
 
         try (Connection first = factory.createConnection(); Connection second = factory.createConnection()) {
             first.start();
             second.start();
 
-            JSONArray connections = new JSONObject(classic.getConnections())
+            JSONArray connections = new JSONObject(activemq.getConnections())
                     .getJSONObject("connections").getJSONArray("connection");
 
             assertEquals(2, connections.length());
@@ -169,8 +168,8 @@ class BrokerReviewRegressionTest {
         String previous = baseDirectory.getBaseDirectory();
         baseDirectory.setBaseDirectory(directory.toString());
         try {
-            assertEquals("success", new ActiveMQClassic().setFileConfiguration(null));
-            assertEquals("success", new ActiveMQArtemis().setFileConfiguration(null));
+            assertEquals("success", new ActiveMQ().setFileConfiguration(null));
+            assertEquals("success", new Artemis().setFileConfiguration(null));
         } finally {
             baseDirectory.setBaseDirectory(previous);
         }
@@ -180,7 +179,7 @@ class BrokerReviewRegressionTest {
 
     @Test
     void brokersThatWereNeverStartedAreStoppedAndCanBeStopped() throws Exception {
-        for (Broker broker : new Broker[]{new ActiveMQClassic(), new ActiveMQArtemis()}) {
+        for (Broker broker : new Broker[]{new ActiveMQ(), new Artemis()}) {
             assertEquals("stopped", broker.status());
             assertEquals("stopped", broker.stop());
             assertNull(broker.getBroker());
@@ -188,22 +187,22 @@ class BrokerReviewRegressionTest {
     }
 
     @Test
-    void classicReturnsTheRequestedPage() throws Exception {
-        ActiveMQClassic classic = classic();
-        classic.createQueue("queue");
+    void activemqReturnsTheRequestedPage() throws Exception {
+        ActiveMQ activemq = activemq();
+        activemq.createQueue("queue");
         for (int i = 0; i < 3; i++) {
-            classic.sendMessage("queue", null, "body");
+            activemq.sendMessage("queue", null, "body");
         }
 
-        assertEquals(2, messages(classic.browseMessages("queue", 1, 2, false)).length());
-        assertEquals(1, messages(classic.browseMessages("queue", 2, 2, false)).length());
-        assertEquals(0, messages(classic.browseMessages("queue", 3, 2, false)).length());
-        assertEquals(0, messages(classic.browseMessages("queue", Integer.MAX_VALUE, Integer.MAX_VALUE, false)).length());
+        assertEquals(2, messages(activemq.browseMessages("queue", 1, 2, false)).length());
+        assertEquals(1, messages(activemq.browseMessages("queue", 2, 2, false)).length());
+        assertEquals(0, messages(activemq.browseMessages("queue", 3, 2, false)).length());
+        assertEquals(0, messages(activemq.browseMessages("queue", Integer.MAX_VALUE, Integer.MAX_VALUE, false)).length());
     }
 
     @Test
     void artemisRejectsUnknownTopicAndSkipsHeadersWithoutValue(@TempDir Path directory) throws Exception {
-        ActiveMQArtemis artemis = artemis(directory, "queue");
+        Artemis artemis = artemis(directory, "queue");
         var headers = new HashMap<String, Object>();
         headers.put("empty", null);
         headers.put("custom", "value");
@@ -218,9 +217,14 @@ class BrokerReviewRegressionTest {
         var runtime = new ManagedBrokerRuntime();
         Broker stopped = (Broker) Proxy.newProxyInstance(Broker.class.getClassLoader(), new Class<?>[]{Broker.class},
                 (object, method, args) -> "stopped");
-        setField(runtime, ManagedBrokerRuntime.class, "classic", stopped);
+        setField(runtime, ManagedBrokerRuntime.class, "activemq", stopped);
 
-        assertThrows(IllegalArgumentException.class, () -> runtime.start("classic", "unknown"));
+        assertThrows(IllegalArgumentException.class, () -> runtime.start("activemq", "unknown"));
+    }
+
+    @Test
+    void legacyClassicBrokerTypeIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> new ManagedBrokerRuntime().getStatus("classic"));
     }
 
     @Test
@@ -237,8 +241,8 @@ class BrokerReviewRegressionTest {
             }
         });
 
-        var created = controller.createQueue("classic", "queue", "text/plain");
-        var deleted = controller.deleteQueue("classic", "queue", "text/plain");
+        var created = controller.createQueue("activemq", "queue", "text/plain");
+        var deleted = controller.deleteQueue("activemq", "queue", "text/plain");
 
         assertEquals(200, created.getStatusCode().value());
         assertEquals("success", created.getBody());
@@ -246,7 +250,7 @@ class BrokerReviewRegressionTest {
         assertEquals("Endpoint queue not found", deleted.getBody());
     }
 
-    private ActiveMQArtemis artemis(Path directory, String... queues) throws Exception {
+    private Artemis artemis(Path directory, String... queues) throws Exception {
         embeddedArtemis = new EmbeddedActiveMQ().setConfiguration(new ConfigurationImpl()
                 .setPersistenceEnabled(false)
                 .setSecurityEnabled(false)
@@ -259,20 +263,20 @@ class BrokerReviewRegressionTest {
         for (String queue : queues) {
             embeddedArtemis.getActiveMQServer().createQueue(QueueConfiguration.of(queue));
         }
-        var artemis = new ActiveMQArtemis();
-        setField(artemis, ActiveMQArtemis.class, "broker", embeddedArtemis);
+        var artemis = new Artemis();
+        setField(artemis, Artemis.class, "broker", embeddedArtemis);
         return artemis;
     }
 
-    private ActiveMQClassic classic() throws Exception {
-        classicService = new BrokerService();
-        classicService.setBrokerName("review-" + System.nanoTime());
-        classicService.setPersistent(false);
-        classicService.start();
-        var classic = new ActiveMQClassic();
-        setField(classic, ActiveMQClassic.class, "broker", classicService);
-        classic.setBrokerViewMBean();
-        return classic;
+    private ActiveMQ activemq() throws Exception {
+        activemqService = new BrokerService();
+        activemqService.setBrokerName("review-" + System.nanoTime());
+        activemqService.setPersistent(false);
+        activemqService.start();
+        var activemq = new ActiveMQ();
+        setField(activemq, ActiveMQ.class, "broker", activemqService);
+        activemq.setBrokerViewMBean();
+        return activemq;
     }
 
     private static JSONArray messages(String json) {

@@ -129,7 +129,7 @@ class MessagingKameletsTest {
                 <links><link><id>5914-5998</id><bound>in</bound><transport>sync</transport></link></links></step>\
                 </steps></flow></flows></integration></integrations><core><connections>\
                 <connection><id>amq1</id><name>ExternalActiveMQ</name><type>activemq</type>\
-                <keys><url>tcp://localhost:61616</url><jmsprovider>ActiveMQ Classic</jmsprovider></keys></connection>\
+                <keys><url>tcp://localhost:61616</url><jmsprovider>ActiveMQ</jmsprovider></keys></connection>\
                 </connections><messages/><routes/><routeConfigurations/></core></dil>""";
 
         TreeMap<String, String> props = unmarshallWithCatalog(dil);
@@ -167,7 +167,7 @@ class MessagingKameletsTest {
                 <links><link><id>5914-5998</id><bound>in</bound><transport>sync</transport></link></links></step>\
                 </steps></flow></flows></integration></integrations><core><connections>\
                 <connection><id>art1</id><name>ExternalArtemis</name><type>artemis</type>\
-                <keys><url>tcp://localhost:61616</url><jmsprovider>ActiveMQ Artemis</jmsprovider></keys></connection>\
+                <keys><url>tcp://localhost:61616</url><jmsprovider>Artemis</jmsprovider></keys></connection>\
                 </connections><messages/><routes/><routeConfigurations/></core></dil>""";
 
         TreeMap<String, String> props = unmarshallWithCatalog(dil);
@@ -209,8 +209,8 @@ class MessagingKameletsTest {
 
     @Test
     void resolvesActiveMqAndArtemisSourceEndpoints() throws Exception {
-        ConnectionFactory classicCf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
-        context.getRegistry().bind("amqConn", classicCf);
+        ConnectionFactory activemqCf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        context.getRegistry().bind("amqConn", activemqCf);
 
         ConnectionFactory artemisCf = new org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory("tcp://localhost:61616");
         context.getRegistry().bind("artConn", artemisCf);
@@ -237,7 +237,7 @@ class MessagingKameletsTest {
         Endpoint amqEndpoint = context.getEndpoint("activemq:orders.in?connectionFactory=#amqConn&synchronous=true");
         JmsEndpoint jmsEndpoint = assertInstanceOf(JmsEndpoint.class, amqEndpoint);
         assertEquals("orders.in", jmsEndpoint.getDestinationName());
-        assertSame(classicCf, jmsEndpoint.getConfiguration().getConnectionFactory());
+        assertSame(activemqCf, jmsEndpoint.getConfiguration().getConnectionFactory());
         assertTrue(jmsEndpoint.getConfiguration().isSynchronous());
 
         Endpoint artEndpoint = context.getEndpoint(

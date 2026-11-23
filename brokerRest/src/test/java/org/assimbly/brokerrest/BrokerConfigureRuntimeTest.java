@@ -34,7 +34,7 @@ class BrokerConfigureRuntimeTest {
 
         // params
         HashMap<String, String> params = new HashMap<>();
-        params.put("brokerType", "classic");
+        params.put("brokerType", "activemq");
 
         // headers
         HashMap<String, String> headers = new HashMap<>();
@@ -56,7 +56,7 @@ class BrokerConfigureRuntimeTest {
 
         // params
         HashMap<String, String> params = new HashMap<>();
-        params.put("brokerType", "classic");
+        params.put("brokerType", "activemq");
         params.put("brokerConfigurationType", ""); // the following param is not used internally
 
         // headers

@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BrokerManagerRuntimeTest {
 
-    private static final String BROKER_TYPE = "classic";
+    private static final String BROKER_TYPE = "activemq";
     private static final String BROKER_CONFIGURATION_TYPE = "file";
 
     private static AssimblyGatewayBrokerContainer container;
@@ -93,7 +93,7 @@ class BrokerManagerRuntimeTest {
         assertThat(response.statusCode()).isEqualTo(HTTP_OK);
 
         // asserts contents
-        AssertUtils.assertBrokerInfoResponse(response.body(), "ActiveMQ Classic");
+        AssertUtils.assertBrokerInfoResponse(response.body(), "ActiveMQ");
 
     }
 

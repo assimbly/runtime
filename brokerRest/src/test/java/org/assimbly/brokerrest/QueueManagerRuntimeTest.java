@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class QueueManagerRuntimeTest {
 
-    private static final String BROKER_TYPE = "classic";
+    private static final String BROKER_TYPE = "activemq";
 
     private static final String QUEUE_TEST = "queue_test";
 

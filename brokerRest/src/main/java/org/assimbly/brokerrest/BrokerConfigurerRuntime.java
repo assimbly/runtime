@@ -30,7 +30,7 @@ public class BrokerConfigurerRuntime {
      * GET  /brokers/:id : get the broker configuration by "id".
      *
      * @param id the id of the brokerDTO to retrieve
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Get the broker configuration")
@@ -57,7 +57,7 @@ public class BrokerConfigurerRuntime {
      * POST  /brokers/:id : set the broker configuration by "id" and "configurationFile".
      *
      * @param id the id of the brokerDTO to retrieve
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Set the broker configuration")

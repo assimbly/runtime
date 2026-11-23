@@ -31,46 +31,46 @@
 
     <dependencies>
 
-        <!-- activemq classic dependencies -->
+        <!-- activemq dependencies -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-broker</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-pool</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-kahadb-store</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-amqp</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-spring</artifactId>
-            <version>${activemq-classic.version}</version>
+            <version>${activemq.version}</version>
         </dependency>
 
-        <!-- activemq artemis native dependencies -->
+        <!-- artemis native dependencies -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-artemis-native</artifactId>
-            <version>${activemq-artemis-native.version}</version>
+            <version>${artemis-native.version}</version>
         </dependency>
 
-        <!-- activemq artemis dependencies -->
+        <!-- artemis dependencies -->
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-server</artifactId>

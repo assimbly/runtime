@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import static jakarta.jms.DeliveryMode.NON_PERSISTENT;
 import static jakarta.jms.DeliveryMode.PERSISTENT;
 
-public class ActiveMQClassic implements Broker {
+public class ActiveMQ implements Broker {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -205,7 +205,7 @@ public class ActiveMQClassic implements Broker {
                     + ",nodeId=" + adminView.getBrokerId()
                     + ",state=" + broker.isStarted()
                     + ",version=" + adminView.getBrokerVersion()
-                    + ",type=ActiveMQ Classic";
+                    + ",type=ActiveMQ";
         }else {
             return "no info. broker not running";
         }

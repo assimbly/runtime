@@ -7,7 +7,7 @@ metadata:
 spec:
   definition:
     title: "artemis action"
-    description: "Send messages to an Apache ActiveMQ Artemis queue or topic using SJMS"
+    description: "Send messages to an Apache Artemis queue or topic using SJMS"
     type: "object"
     properties:
       path:
@@ -16,7 +16,7 @@ spec:
         type: "string"
       connectionFactory:
         title: "Connection Factory"
-        description: "Connection Factory to ActiveMQ Artemis"
+        description: "Connection Factory to Artemis"
         type: "string"
       exchangePattern:
         title: "Exchange Pattern"

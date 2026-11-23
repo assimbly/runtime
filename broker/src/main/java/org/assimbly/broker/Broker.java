@@ -361,7 +361,7 @@ public interface Broker {
 
 
 	/**
-	* Get the broker (can be used to access extended methods by the implementation (ActiveMQ classic, ActiveMQ artemis)
+	* Get the broker (can be used to access extended methods by the implementation (ActiveMQ, Artemis)
 	* Note: You need to cast the object based on the implementation you are calling. And...calling this you're on your own :)
 	*
 	* @return returns broker as object

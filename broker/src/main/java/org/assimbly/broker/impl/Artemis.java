@@ -41,10 +41,11 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
-public class ActiveMQArtemis implements Broker {
+public class Artemis implements Broker {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private EmbeddedActiveMQ broker;
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
@@ -189,7 +190,7 @@ public class ActiveMQArtemis implements Broker {
 					 + ",nodeId=" + activeBroker.getNodeID()
 					 + ",state=" + activeBroker.getState()
 					 + ",version=" + activeBroker.getVersion().getFullVersion()
-					 + ",type=ActiveMQ Artemis";
+					 + ",type=Artemis";
 		}else {
 			return "no info. broker not running";
 		}
@@ -260,7 +261,7 @@ public class ActiveMQArtemis implements Broker {
 
 	private static String randomPassword() {
 		byte[] bytes = new byte[18];
-		new SecureRandom().nextBytes(bytes);
+		SECURE_RANDOM.nextBytes(bytes);
 		return HexFormat.of().formatHex(bytes);
 	}
 

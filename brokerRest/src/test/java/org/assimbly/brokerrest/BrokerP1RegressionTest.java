@@ -6,8 +6,8 @@ import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.assimbly.broker.Broker;
-import org.assimbly.broker.impl.ActiveMQArtemis;
-import org.assimbly.broker.impl.ActiveMQClassic;
+import org.assimbly.broker.impl.Artemis;
+import org.assimbly.broker.impl.ActiveMQ;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.ResponseEntity;
@@ -32,13 +32,13 @@ class BrokerP1RegressionTest {
         var runtime = new ManagedBrokerRuntime();
         var checkingStatus = new CountDownLatch(1);
         var resumeStart = new CountDownLatch(1);
-        Broker classic = proxy(Broker.class, (object, method, args) -> switch (method.getName()) {
+        Broker activemq = proxy(Broker.class, (object, method, args) -> switch (method.getName()) {
             case "status" -> {
                 checkingStatus.countDown();
                 assertTrue(resumeStart.await(5, TimeUnit.SECONDS));
                 yield "stopped";
             }
-            case "start" -> "classic-started";
+            case "start" -> "activemq-started";
             default -> throw new AssertionError(method.getName());
         });
         Broker artemis = proxy(Broker.class, (object, method, args) -> switch (method.getName()) {
@@ -46,18 +46,18 @@ class BrokerP1RegressionTest {
             case "start" -> throw new AssertionError("Started the wrong broker");
             default -> throw new AssertionError(method.getName());
         });
-        setField(runtime, ManagedBrokerRuntime.class, "classic", classic);
+        setField(runtime, ManagedBrokerRuntime.class, "activemq", activemq);
         setField(runtime, ManagedBrokerRuntime.class, "artemis", artemis);
 
         try (var executor = Executors.newSingleThreadExecutor()) {
-            var started = executor.submit(() -> runtime.start("classic", "file"));
+            var started = executor.submit(() -> runtime.start("activemq", "file"));
             try {
                 assertTrue(checkingStatus.await(5, TimeUnit.SECONDS));
                 assertEquals("stopped", runtime.getStatus("artemis"));
             } finally {
                 resumeStart.countDown();
             }
-            assertEquals("classic-started", started.get(5, TimeUnit.SECONDS));
+            assertEquals("activemq-started", started.get(5, TimeUnit.SECONDS));
         }
     }
 
@@ -73,7 +73,7 @@ class BrokerP1RegressionTest {
         });
 
         for (String headers : new String[]{null, "{}", "null"}) {
-            var response = (ResponseEntity<?>) controller.sendMessage("classic", "queue", "body", "text/plain", headers);
+            var response = (ResponseEntity<?>) controller.sendMessage("activemq", "queue", "body", "text/plain", headers);
             assertEquals(200, response.getStatusCode().value());
             assertEquals("success", response.getBody());
             assertEquals(Map.of(), received.get());
@@ -89,19 +89,19 @@ class BrokerP1RegressionTest {
             }
         });
 
-        var response = (ResponseEntity<?>) controller.sendMessage("classic", "queue", "body", "text/plain", "{");
+        var response = (ResponseEntity<?>) controller.sendMessage("activemq", "queue", "body", "text/plain", "{");
         assertEquals(400, response.getStatusCode().value());
     }
 
     @Test
-    void classicSupportsAbsentAndImmutableHeadersWithoutMutatingTheCaller() throws Exception {
+    void activemqSupportsAbsentAndImmutableHeadersWithoutMutatingTheCaller() throws Exception {
         var sentHeaders = new AtomicReference<Object>();
         DestinationViewMBean destination = proxy(DestinationViewMBean.class, (object, method, args) -> {
             assertEquals("sendTextMessage", method.getName());
             sentHeaders.set(args[0]);
             return "message-id";
         });
-        var classic = new ActiveMQClassic() {
+        var activemq = new ActiveMQ() {
             @Override
             public DestinationViewMBean getDestinationViewMBean(String type, String name) {
                 return destination;
@@ -111,15 +111,15 @@ class BrokerP1RegressionTest {
             assertEquals("getQueues", method.getName());
             return new ObjectName[]{new ObjectName("test:destinationName=queue")};
         });
-        setField(classic, ActiveMQClassic.class, "brokerViewMBean", view);
+        setField(activemq, ActiveMQ.class, "brokerViewMBean", view);
 
-        assertEquals("success", classic.sendMessage("queue", null, "body"));
+        assertEquals("success", activemq.sendMessage("queue", null, "body"));
         assertEquals(Map.of("JMSDeliveryMode", PERSISTENT), sentHeaders.get());
-        classic.sendMessage("queue", Map.of(), "body");
+        activemq.sendMessage("queue", Map.of(), "body");
         assertEquals(Map.of("JMSDeliveryMode", PERSISTENT), sentHeaders.get());
 
         Map<String, Object> original = Map.of("JMSDeliveryMode", "PERSISTENT", "JMSTimestamp", 123L, "custom", "value");
-        classic.sendMessage("queue", original, "body");
+        activemq.sendMessage("queue", original, "body");
         assertEquals(Map.of("JMSDeliveryMode", PERSISTENT, "custom", "value"), sentHeaders.get());
         assertEquals("PERSISTENT", original.get("JMSDeliveryMode"));
         assertEquals(123L, original.get("JMSTimestamp"));
@@ -138,8 +138,8 @@ class BrokerP1RegressionTest {
         try {
             embedded.start();
             embedded.getActiveMQServer().createQueue(QueueConfiguration.of("queue"));
-            var artemis = new ActiveMQArtemis();
-            setField(artemis, ActiveMQArtemis.class, "broker", embedded);
+            var artemis = new Artemis();
+            setField(artemis, Artemis.class, "broker", embedded);
 
             assertNotNull(artemis.sendMessage("queue", null, "body"));
             assertNotNull(artemis.sendMessage("queue", Map.of(), "body"));

@@ -16,7 +16,7 @@ Do the three checks below **in this order**, and **do not restart anything until
 Ask the broker for its status (replace `<id>` with the broker id used by the gateway):
 
 ```
-GET /api/brokers/<id>/status?brokerType=classic
+GET /api/brokers/<id>/status?brokerType=activemq
 ```
 
 | Answer | Meaning | Next step |
@@ -33,7 +33,7 @@ If it is `stopped`:
 3. Restart the broker:
 
 ```
-GET /api/brokers/<id>/restart?brokerType=classic
+GET /api/brokers/<id>/restart?brokerType=activemq
 ```
 
 The integration reconnects by itself within about 5 seconds. If it does **not**, restart the integration too and
@@ -56,7 +56,7 @@ Write down what you find and add it to the incident report.
 The broker can be "running" and still refuse new clients. Check:
 
 - **Number of connections:** the broker allows at most **5000**. Look at `currentConnections` in the broker info
-  (`GET /api/brokers/<id>/info?brokerType=classic`) or on the broker page. A number close to 5000 means connections are leaking
+  (`GET /api/brokers/<id>/info?brokerType=activemq`) or on the broker page. A number close to 5000 means connections are leaking
   and the broker rejects new ones (the broker log then has a WARN: `Exceeded the maximum number of allowed client connections`).
 - **Memory / storage usage:** if the broker reports store, memory or temp usage near 100%, it slows down or blocks senders.
 - **Is the process stuck?** Heavy memory use or very long pauses make the broker look alive but unresponsive.

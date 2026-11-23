@@ -33,9 +33,9 @@
 
         <!-- Manage the versions of all main dependencies here -->
         <assimbly.version>6.1.0</assimbly.version>
-        <activemq-classic.version>6.4.0</activemq-classic.version>
-        <activemq-artemis.version>2.57.0</activemq-artemis.version>
-        <activemq-artemis-native.version>2.0.0</activemq-artemis-native.version>
+        <activemq.version>6.4.0</activemq.version>
+        <artemis.version>2.57.0</artemis.version>
+        <artemis-native.version>2.0.0</artemis-native.version>
         <angus.mail.version>2.0.5</angus.mail.version>
         <bouncycastle.version>1.87</bouncycastle.version>
         <camel.version>4.23.0</camel.version>
@@ -92,7 +92,7 @@
             <dependency>
                 <groupId>org.apache.artemis</groupId>
                 <artifactId>artemis-bom</artifactId>
-                <version>${activemq-artemis.version}</version>
+                <version>${artemis.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

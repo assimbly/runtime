@@ -31,7 +31,7 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : get the broker status by "id".
      *
      * @param id, the id of the broker to retrieve
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Get the broker status")
@@ -59,7 +59,7 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : get the broker info by "id".
      *
      * @param id, the id of the broker to retrieve
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Get broker information")
@@ -85,7 +85,7 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : start the broker by "id".
      *
      * @param id the id of the broker
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @Operation(summary = "Start the broker")
@@ -112,7 +112,7 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : restart the broker by "id".
      *
      * @param id the id of the broker
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @Operation(summary = "Restart the broker")
@@ -139,7 +139,7 @@ public class BrokerManagerRuntime {
      * GET  /brokers/:id : stop the broker by "id".
      *
      * @param id the id of the broker
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the ResponseEntity with status 200 (OK) and with body the brokerDTO, or with status 404 (Not Found)
      */
     @Operation(summary = "Stop the broker")
@@ -164,7 +164,7 @@ public class BrokerManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/connections: get list of all broker connections.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return list of connections with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "List broker connections")
@@ -187,7 +187,7 @@ public class BrokerManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/consumers : list of all broker consumers.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return list of consumers with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "List broker consumers")

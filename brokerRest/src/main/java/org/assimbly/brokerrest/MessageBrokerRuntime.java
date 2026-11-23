@@ -38,7 +38,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/messages/{endpointName}: get a list of messages by endpoint.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue
      * @param filter, the filter
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
@@ -65,7 +65,7 @@ public class MessageBrokerRuntime {
     /**
      * POST  /brokers/{brokerType}/messages/count : count the messages of the listed endpoints.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointNames, the name of the queue
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
@@ -90,7 +90,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/flows/message/count : get a list of number of messages for each flow.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return list of flows with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Count messages per flow")
@@ -119,7 +119,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/messages/{endpointName}/count : count the number of messages on an endpoint.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
@@ -144,7 +144,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/delayedmessages/{endpointName}/count : count the number of messages on endpoint.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue or topic
      * @return list of messages with status 200 (OK) or with status 404 (Not Found)
      */
@@ -169,7 +169,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/message/{endpointName}/browse/{messageId} : get a message on an endpoint by messageId.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue
      * @param messageId, the messageId (retrieved to listMessages)
      * @return The message (body and headers) with status 200 (OK) or with status 404 (Not Found)
@@ -197,7 +197,7 @@ public class MessageBrokerRuntime {
     /**
      * GET  /brokers/{brokerType}/messages/{endpointName}/browse : list of messages on the specified endpoint
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue
      * @return list of messages (body or headers) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -225,7 +225,7 @@ public class MessageBrokerRuntime {
     /**
      * POST  /brokers/{brokerType}/message/{endpointName}/send : send a message.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the endpoint (queue or topic)
      * @param messageHeaders, the message headers (json map)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
@@ -254,7 +254,7 @@ public class MessageBrokerRuntime {
     /**
      * DELETE /brokers/{brokerType}/message/{endpointName}/{messageId} : remove a message on an endpoint by Messageid.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the queue or topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -280,7 +280,7 @@ public class MessageBrokerRuntime {
     /**
      * DELETE  /brokers/{brokerType}/messages/{endpointName} : remove all messages on a endpoint.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param endpointName, the name of the endpoint (topic or queue)
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -305,7 +305,7 @@ public class MessageBrokerRuntime {
     /**
      * POST /brokers/{brokerType}/message/{sourceQueueName}/{targetQueueName}/{messageId} : move a message by messagId to another queue
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param sourceQueueName, the name of the source queue
      * @param targetQueueName, the name of the target queue
      * @return the status (source) with status 200 (OK) or with status 404 (Not Found)
@@ -333,7 +333,7 @@ public class MessageBrokerRuntime {
     /**
      * POST  /brokers/{brokerType}/messages/{sourceQueueName}/{targetQueueName} : move all messages to another queue.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param sourceQueueName, the name of the source queue
      * @param targetQueueName, the name of the target queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)

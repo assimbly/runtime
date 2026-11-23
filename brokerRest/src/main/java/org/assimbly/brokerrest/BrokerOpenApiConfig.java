@@ -26,7 +26,7 @@ public class BrokerOpenApiConfig {
     }
 
     private static final Map<String, Doc> PARAMETERS = Map.ofEntries(
-            entry("brokerType", new Doc("Type of broker", "classic", List.of("classic", "artemis"))),
+            entry("brokerType", new Doc("Type of broker", "activemq", List.of("activemq", "artemis"))),
             entry("brokerConfigurationType", new Doc("Where the broker configuration comes from", "file")),
             entry("id", new Doc("Id of the broker", "1")),
             entry("queueName", new Doc("Name of the queue", "flow.1.step.1")),

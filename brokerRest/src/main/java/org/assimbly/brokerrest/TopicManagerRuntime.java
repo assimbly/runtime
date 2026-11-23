@@ -29,7 +29,7 @@ public class TopicManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/topic/{topicName} : creates a new topic.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param topicName, the name of the topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -54,7 +54,7 @@ public class TopicManagerRuntime {
     /**
      * DELETE  /brokers/{brokerType}/topic/{topicName} : delete a topic.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param topicName, the name of the topic
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -79,7 +79,7 @@ public class TopicManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/topic/{topicName} : get information details on specified topic.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param topicName, the name of the topic
      * @return topics with details with status 200 (OK) or with status 404 (Not Found)
      */
@@ -105,7 +105,7 @@ public class TopicManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/topics : get information details on all topics.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return list of topics with details 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "List topics with details")
@@ -128,7 +128,7 @@ public class TopicManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/topic/{topicName}/clear : clears queue (deletes all messages on specified queue).
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param topicName, the name of the topic
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -153,7 +153,7 @@ public class TopicManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/topics/clear : clears all queue (deletes all topic messages on the broker).
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Remove all messages of all topics")

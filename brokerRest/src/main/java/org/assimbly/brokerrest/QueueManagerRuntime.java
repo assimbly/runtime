@@ -29,7 +29,7 @@ public class QueueManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/queue/{queueName} : creates a queue on the broker.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param queueName, the name of the queue
      * @return the status (success or failed) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -54,7 +54,7 @@ public class QueueManagerRuntime {
     /**
      * DELETE  /brokers/{brokerType}/queue/{queueName} : delete the queue on the broker
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param queueName, the name of the queue
      * @return the status (success) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -79,7 +79,7 @@ public class QueueManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/queue/{queueName} : get information details on the specified queue.
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param queueName, the name of the queue
      * @return Queue destination details
      */
@@ -104,7 +104,7 @@ public class QueueManagerRuntime {
     /**
      * GET  /brokers/{brokerType}/queues : get information on all queues on the broker
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "List queues with details")
@@ -127,7 +127,7 @@ public class QueueManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/queue/{queueName}/clear : clears queue (deletes all messages on specified queue).
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @param queueName, the name of the queue
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
@@ -152,7 +152,7 @@ public class QueueManagerRuntime {
     /**
      * POST  /brokers/{brokerType}/queues/clear : clears all queue (deletes all messages on the broker).
      *
-     * @param brokerType, the type of broker: classic or artemis
+     * @param brokerType, the type of broker: activemq or artemis
      * @return the status (stopped or started) with status 200 (OK) or with status 404 (Not Found)
      */
     @Operation(summary = "Remove all messages of all queues")

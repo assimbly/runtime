@@ -67,7 +67,7 @@ class RouteStepTest {
                 <step><id>5999</id><type>error</type><uri/></step>\
                 <step><id>5998</id><type>route</type><uri/><blocks><block><id>5998</id><type>route</type></block><block><id>1251</id><type>connection</type></block></blocks></step>\
                 </steps></flow></flows></integration></integrations><core><connections><connection><id>1251</id><name>EmbeddedBroker</name><type>%s</type>\
-                <keys><url>tcp://localhost:61616</url><jmsprovider>ActiveMQ Artemis</jmsprovider></keys></connection></connections><messages/>\
+                <keys><url>tcp://localhost:61616</url><jmsprovider>Artemis</jmsprovider></keys></connection></connections><messages/>\
                 <routes>%s</routes><routeConfigurations/></core></dil>""".formatted(connectionType, route);
 
         // XMLFileConfiguration does the same, but also validates against the DIL schema

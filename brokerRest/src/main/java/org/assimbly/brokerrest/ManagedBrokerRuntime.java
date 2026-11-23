@@ -1,8 +1,8 @@
 package org.assimbly.brokerrest;
 
 import org.assimbly.broker.Broker;
-import org.assimbly.broker.impl.ActiveMQArtemis;
-import org.assimbly.broker.impl.ActiveMQClassic;
+import org.assimbly.broker.impl.Artemis;
+import org.assimbly.broker.impl.ActiveMQ;
 import org.assimbly.docconverter.DocConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +14,8 @@ import java.util.Map;
 public class ManagedBrokerRuntime {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
-    private final Broker classic = new ActiveMQClassic();
-	private final Broker artemis = new ActiveMQArtemis();
+    private final Broker activemq = new ActiveMQ();
+	private final Broker artemis = new Artemis();
 
 
     //Broker configuration
@@ -255,17 +255,17 @@ public class ManagedBrokerRuntime {
     }
 
     //private methods
-    private String inMediaType(String json, String mediaType) throws Exception {
+    private String inMediaType(String json, String mediaType) {
         return mediaType.equalsIgnoreCase("application/xml") ? DocConverter.jsonToXml(json) : json;
     }
 
 	private Broker getBroker(String brokerType) {
-        if (brokerType.equalsIgnoreCase("classic")) {
-            return classic;
+        if (brokerType.equalsIgnoreCase("activemq")) {
+            return activemq;
         }else if (brokerType.equalsIgnoreCase("artemis")) {
             return artemis;
         }else{
-            throw new IllegalArgumentException("Unknown brokerType: valid values are classic or artemis");
+            throw new IllegalArgumentException("Unknown brokerType: valid values are activemq or artemis");
         }
     }
 }
