@@ -1,9 +1,5 @@
 package org.assimbly.integration.impl.manager;
 
-import org.assimbly.docconverter.DocConverter;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -36,28 +32,5 @@ public class FailedFlows {
 
     public List<FailedFlow> getAll() {
         return flows.values().stream().sorted(Comparator.comparing(FailedFlow::failedAt)).toList();
-    }
-
-    public String toString(String mediaType) {
-        JSONArray array = new JSONArray();
-        for (FailedFlow flow : getAll()) {
-            JSONObject json = new JSONObject();
-            json.put("id", flow.flowId());
-            json.put("name", flow.name());
-            json.put("version", flow.version());
-            json.put("tenant", flow.tenant());
-            json.put("message", flow.message());
-            json.put("failedAt", flow.failedAt().toString());
-            array.put(json);
-        }
-
-        if (mediaType != null && mediaType.contains("xml")) {
-            JSONObject flowObject = new JSONObject();
-            flowObject.put("flow", array);
-            JSONObject flowsObject = new JSONObject();
-            flowsObject.put("flows", flowObject);
-            return DocConverter.jsonToXml(flowsObject.toString());
-        }
-        return array.toString();
     }
 }

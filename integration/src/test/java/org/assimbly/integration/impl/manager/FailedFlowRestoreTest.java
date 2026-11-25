@@ -3,14 +3,13 @@ package org.assimbly.integration.impl.manager;
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.ModelCamelContext;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,14 +59,14 @@ class FailedFlowRestoreTest {
         // it stays installed, so the next start tries it again
         assertEquals("started", index.get("bad").getStatus());
 
-        JSONArray failed = new JSONArray(flowManager.getFailedFlows().toString("application/json"));
-        assertEquals(1, failed.length(), failed.toString());
-        JSONObject flow = failed.getJSONObject(0);
-        assertEquals("bad", flow.getString("id"));
-        assertEquals("Bad flow", flow.getString("name"));
-        assertEquals("9", flow.getString("version"));
-        assertEquals("tenant", flow.getString("tenant"));
-        assertTrue(flow.getString("message").contains("unknowncomponent"), flow.toString());
+        List<FailedFlows.FailedFlow> failed = flowManager.getFailedFlows().getAll();
+        assertEquals(1, failed.size(), failed.toString());
+        FailedFlows.FailedFlow flow = failed.getFirst();
+        assertEquals("bad", flow.flowId());
+        assertEquals("Bad flow", flow.name());
+        assertEquals("9", flow.version());
+        assertEquals("tenant", flow.tenant());
+        assertTrue(flow.message().contains("unknowncomponent"), flow.toString());
     }
 
     @Test

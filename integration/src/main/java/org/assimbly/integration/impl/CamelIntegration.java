@@ -1025,11 +1025,6 @@ public class CamelIntegration extends BaseIntegration {
     }
 
     @Override
-    public String getFailedFlows(String mediaType) {
-        return flowManager.getFailedFlows().toString(mediaType);
-    }
-
-    @Override
     public String restartAllFlows() {
         return flowManager.restartAllFlows(flowsMap);
     }

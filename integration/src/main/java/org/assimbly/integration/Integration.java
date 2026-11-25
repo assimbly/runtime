@@ -297,15 +297,6 @@ public interface Integration {
     String getListOfFlowsDetails(String filter, String mediaType) throws Exception;
 
 	/**
-	 * Gets the installed flows that failed to restore from the cache when the integration started.
-	 * They stay installed and are tried again at the next start; installing or uninstalling one clears it.
-	 *
-	 * @param  mediaType (xml or json)
-	 * @return returns an array of flows with id, name, version, tenant, message and failedAt
-	 */
-    String getFailedFlows(String mediaType);
-
-	/**
 	 * Gets the soap actions for a SOAP service (WSDL)
 	 *
 	 * @param  mediaType (xml or json)
