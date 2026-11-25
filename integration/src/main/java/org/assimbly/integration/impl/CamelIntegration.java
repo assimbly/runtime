@@ -288,6 +288,7 @@ public class CamelIntegration extends BaseIntegration {
                 restoreCachedFlows();
             } else {
                 log.info("Found {} cached flows. Restoring them when the integration starts.", flowsMap.size());
+                flowManager.markToRestore(flowsMap.keySet());
                 flowsRestorePending = true;
             }
         }
@@ -297,13 +298,19 @@ public class CamelIntegration extends BaseIntegration {
     /** Restores the cached flows one by one; one that fails is logged and left out, and the others go on. */
     private void restoreCachedFlows() {
         log.info("Restoring {} cached flows...", flowsMap.size());
+        List<String> flowIds = List.copyOf(flowsMap.keySet());
+        flowManager.markToRestore(flowIds);
         List<String> failed = new ArrayList<>();
-        for (String flowId : List.copyOf(flowsMap.keySet())) {
+        for (String flowId : flowIds) {
             synchronized (flowLock(flowId)) {
-                TreeMap<String, String> flowProps = flowsMap.get(flowId);
-                // uninstalled meanwhile
-                if (flowProps != null && !flowManager.restoreFlow(flowId, flowProps)) {
-                    failed.add(flowId);
+                try {
+                    TreeMap<String, String> flowProps = flowsMap.get(flowId);
+                    // uninstalled meanwhile
+                    if (flowProps != null && !flowManager.restoreFlow(flowId, flowProps)) {
+                        failed.add(flowId);
+                    }
+                } finally {
+                    flowManager.restoreDone(flowId);
                 }
             }
         }

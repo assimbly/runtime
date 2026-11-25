@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -86,6 +87,29 @@ class FailedFlowRestoreTest {
 
         assertTrue(flowManager.hasFlow("flow"));
         assertEquals("suspended", flowManager.getFlowStatus("flow"));
+    }
+
+    @Test
+    void flowWaitingToBeRestoredIsRestarting() {
+        index.register("flow", "1", "tenant");
+        flowManager.markToRestore(List.of("flow"));
+
+        assertEquals("restarting", flowManager.getFlowStatus("flow"));
+
+        flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow"));
+        flowManager.restoreDone("flow");
+        assertEquals("started", flowManager.getFlowStatus("flow"));
+    }
+
+    @Test
+    void flowThatFailedToRestoreIsNoLongerRestarting() {
+        index.register("flow", "1", "tenant");
+        flowManager.markToRestore(List.of("flow"));
+
+        flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere"));
+        flowManager.restoreDone("flow");
+
+        assertEquals("unconfigured", flowManager.getFlowStatus("flow"));
     }
 
     private static TreeMap<String, String> flow(String id, String name, String toUri) {

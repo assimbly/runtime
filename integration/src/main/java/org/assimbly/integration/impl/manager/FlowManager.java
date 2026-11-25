@@ -64,6 +64,7 @@ import java.nio.file.Path;
 import java.security.cert.Certificate;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,6 +84,8 @@ public class FlowManager {
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
+    // cached flows waiting to be restored after a restart; they show as "restarting"
+    private final Set<String> flowsToRestore = ConcurrentHashMap.newKeySet();
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -277,6 +280,16 @@ public class FlowManager {
 
         return !routes.isEmpty();
 
+    }
+
+    /** Marks cached flows as waiting to be restored, so they show as "restarting" until they are. */
+    public void markToRestore(Collection<String> flowIds) {
+        flowsToRestore.addAll(flowIds);
+    }
+
+    /** The flow is restored, failed, or no longer cached: it no longer shows as "restarting". */
+    public void restoreDone(String flowId) {
+        flowsToRestore.remove(flowId);
     }
 
     /** Restores one cached flow; a flow that fails is logged and left out. Returns false when it failed. */
@@ -633,6 +646,8 @@ public class FlowManager {
                 flowStatus = FlowStatus.ERROR.toString();
             }
 
+        } else if (flowsToRestore.contains(id)) {
+            flowStatus = FlowStatus.RESTARTING.toString();
         } else {
             flowStatus = FlowStatus.UNCONFIGURED.toString();
         }
@@ -1371,6 +1386,7 @@ public class FlowManager {
         PAUSED("paused"),
         RESUMED("started"),
         RESTARTED("restarted"),
+        RESTARTING("restarting"),
         UNCONFIGURED("unconfigured"),
         ERROR("error");
 
