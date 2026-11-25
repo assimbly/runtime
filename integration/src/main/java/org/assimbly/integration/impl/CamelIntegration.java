@@ -151,8 +151,7 @@ public class CamelIntegration extends BaseIntegration {
             context.start();
             started = true;
 
-            // Only now, so each flow is created and started on its own: a flow that fails is left out
-            // instead of failing the start of the context, and with it every other flow
+            // Restore the cached flows after the context has started, so one failing flow doesn't stop the others
             if (flowsRestorePending) {
                 flowsRestorePending = false;
                 restoreCachedFlows();
