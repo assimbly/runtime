@@ -10,7 +10,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,14 +40,12 @@ class FailedFlowRestoreTest {
 
     @Test
     void failingFlowIsLeftOutAndTheOthersStart() {
-        ConcurrentHashMap<String, TreeMap<String, String>> flows = new ConcurrentHashMap<>();
-        // an endpoint that can't be created, like an AS2 client whose partner doesn't answer
-        flows.put("bad", flow("bad", "Bad flow", "unknowncomponent:nowhere"));
-        flows.put("good", flow("good", "Good flow", "direct:good"));
         index.register("bad", "9", "tenant");
         index.register("good", "1", "tenant");
 
-        flowManager.startAllFlows(flows, index);
+        // an endpoint that can't be created, like an AS2 client whose partner doesn't answer
+        assertFalse(flowManager.restoreFlow("bad", flow("bad", "Bad flow", "unknowncomponent:nowhere")));
+        assertTrue(flowManager.restoreFlow("good", flow("good", "Good flow", "direct:good")));
 
         assertEquals("started", flowManager.getFlowStatus("good"));
         assertFalse(flowManager.hasFlow("bad"));
@@ -78,6 +75,17 @@ class FailedFlowRestoreTest {
         assertTrue(flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere")));
 
         assertEquals("started", flowManager.getFlowStatus("flow"));
+    }
+
+    @Test
+    void pausedFlowIsRestoredWithoutStarting() {
+        index.register("flow", "1", "tenant", InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+
+        // restored into a context that already runs, so its routes must not start
+        assertTrue(flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow")));
+
+        assertTrue(flowManager.hasFlow("flow"));
+        assertEquals("suspended", flowManager.getFlowStatus("flow"));
     }
 
     private static TreeMap<String, String> flow(String id, String name, String toUri) {

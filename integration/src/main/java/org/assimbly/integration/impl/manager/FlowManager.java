@@ -279,16 +279,6 @@ public class FlowManager {
 
     }
 
-    /** Restore cached flows; honor index status (missing entry = legacy paused). */
-    public void startAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap,
-                              InstalledFlowsManager installedFlowsManager) {
-
-        log.info("Starting all flows");
-
-        flowsMap.forEach(this::restoreFlow);
-
-    }
-
     /** Restores one cached flow; a flow that fails is logged and left out. Returns false when it failed. */
     public boolean restoreFlow(String flowId, TreeMap<String, String> flowProps) {
 
