@@ -67,7 +67,6 @@ public class CamelIntegration extends BaseIntegration {
     private final StartupManager startupManager = new StartupManager();
     private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
     private volatile boolean started;
-    // the cached flows wait for the context to start (see start())
     private volatile boolean flowsRestorePending;
     private RouteController routeController;
     private Properties encryptionProperties;
@@ -151,7 +150,7 @@ public class CamelIntegration extends BaseIntegration {
             context.start();
             started = true;
 
-            // Restore the cached flows after the context has started, so one failing flow doesn't stop the others
+            // Restore the cached flows after a restart
             if (flowsRestorePending) {
                 flowsRestorePending = false;
                 restoreCachedFlows();
