@@ -64,7 +64,6 @@ import java.nio.file.Path;
 import java.security.cert.Certificate;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,9 +84,6 @@ public class FlowManager {
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
 
-    // installed flows that failed to restore from the cache; they stay installed, show as "failed",
-    // and the next start of the runtime tries them again
-    private final Set<String> failedFlowIds = ConcurrentHashMap.newKeySet();
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -296,14 +292,17 @@ public class FlowManager {
 
     /**
      * Restores one cached flow; honors its index status (missing entry = legacy paused). A flow that fails is
-     * logged, shown as failed (see {@link #getFailedFlowIds()}) and left out, so one flow can't keep the others from starting.
-     * A flow that already runs (installed again meanwhile) is left as it is.
+     * logged and left out, so one flow can't keep the others from starting. It stays in the installed-flows
+     * index, so the next start of the runtime tries it again. A flow that already runs (installed again
+     * meanwhile) is left as it is.
+     *
+     * @return false when the flow failed to restore
      */
-    public void restoreFlow(String flowId, TreeMap<String, String> flowProps) {
+    public boolean restoreFlow(String flowId, TreeMap<String, String> flowProps) {
 
         if (hasFlow(flowId)) {
             log.info("Flow already runs, not restoring it | flowid={}", flowId);
-            return;
+            return true;
         }
 
         try {
@@ -328,34 +327,24 @@ public class FlowManager {
                 }
             } else {
                 log.info("Skipping flow not in installed index: {}", flowId);
-                return;
+                return true;
             }
 
-            if (report.isStatusSuccess()) {
-                failedFlowIds.remove(flowId);
-            } else {
-                recordFailedFlow(flowId, flowProps, report.getErrorMessage());
+            if (!report.isStatusSuccess()) {
+                logFailedRestore(flowId, flowProps, report.getErrorMessage());
+                return false;
             }
+            return true;
         } catch (Exception e) {
-            recordFailedFlow(flowId, flowProps, e.getMessage());
+            logFailedRestore(flowId, flowProps, e.getMessage());
+            return false;
         }
 
     }
 
-    private void recordFailedFlow(String flowId, TreeMap<String, String> flowProps, @Nullable String message) {
+    private void logFailedRestore(String flowId, TreeMap<String, String> flowProps, @Nullable String message) {
         log.error("Restore flow failed, the flow is left out | flowid={} | name={} | error={}",
                 flowId, flowProps.getOrDefault(PROPERTY_FLOW_NAME, flowId), StringUtils.defaultIfEmpty(message, "unknown error"));
-        failedFlowIds.add(flowId);
-    }
-
-    /** The ids of the cached flows that failed to restore, since this runtime started. */
-    public Set<String> getFailedFlowIds() {
-        return Set.copyOf(failedFlowIds);
-    }
-
-    /** Forgets a failed restore, when the flow is installed or uninstalled. */
-    public void clearFailedFlow(String flowId) {
-        failedFlowIds.remove(flowId);
     }
 
     public String restartAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -662,8 +651,6 @@ public class FlowManager {
                 flowStatus = FlowStatus.ERROR.toString();
             }
 
-        } else if (failedFlowIds.contains(id)) {
-            flowStatus = FlowStatus.FAILED.toString();
         } else {
             flowStatus = FlowStatus.UNCONFIGURED.toString();
         }
@@ -1403,8 +1390,6 @@ public class FlowManager {
         RESUMED("started"),
         RESTARTED("restarted"),
         UNCONFIGURED("unconfigured"),
-        // installed, but it failed to restore from the cache when the runtime started
-        FAILED("failed"),
         ERROR("error");
 
         private final String value;

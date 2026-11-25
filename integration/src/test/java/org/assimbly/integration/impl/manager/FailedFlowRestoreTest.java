@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** A cached flow that fails to restore is recorded as failed and left out; the other flows still start. */
+/** A cached flow that fails to restore is left out; the other flows still start. */
 class FailedFlowRestoreTest {
 
     @TempDir
@@ -52,25 +51,21 @@ class FailedFlowRestoreTest {
         flowManager.startAllFlows(flows, index);
 
         assertEquals("started", flowManager.getFlowStatus("good"));
-        assertEquals("failed", flowManager.getFlowStatus("bad"));
         assertFalse(flowManager.hasFlow("bad"));
         // nothing of the failed flow is left in the context
         assertTrue(((ModelCamelContext) context).getRouteDefinitions().stream().noneMatch(d -> "bad".equals(d.getGroup())));
         // it stays installed, so the next start tries it again
         assertEquals("started", index.get("bad").getStatus());
-
-        assertEquals(Set.of("bad"), flowManager.getFailedFlowIds());
     }
 
     @Test
-    void flowThatRestoresIsNoLongerFailed() {
+    void failedFlowRestoresOnALaterTry() {
         index.register("flow", "1", "tenant");
 
-        flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere"));
-        assertTrue(flowManager.getFailedFlowIds().contains("flow"));
+        assertFalse(flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere")));
+        assertFalse(flowManager.hasFlow("flow"));
 
-        flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow"));
-        assertFalse(flowManager.getFailedFlowIds().contains("flow"));
+        assertTrue(flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow")));
         assertEquals("started", flowManager.getFlowStatus("flow"));
     }
 
@@ -80,10 +75,9 @@ class FailedFlowRestoreTest {
         flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow"));
 
         // restoring again (for example after the flow was installed meanwhile) doesn't touch it
-        flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere"));
+        assertTrue(flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere")));
 
         assertEquals("started", flowManager.getFlowStatus("flow"));
-        assertFalse(flowManager.getFailedFlowIds().contains("flow"));
     }
 
     private static TreeMap<String, String> flow(String id, String name, String toUri) {

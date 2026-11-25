@@ -198,9 +198,6 @@ public class CamelIntegration extends BaseIntegration {
 
     private String installFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
-        // installing replaces a failed restore: the install reports itself
-        flowManager.clearFailedFlow(flowId);
-
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
         } catch (Exception e) {
@@ -231,7 +228,6 @@ public class CamelIntegration extends BaseIntegration {
         synchronized (flowLock(flowId)) {
             super.removeFlowConfiguration(flowId);
             installedFlowsManager.unregister(flowId);
-            flowManager.clearFailedFlow(flowId);
             return flowManager.stopFlow(flowId, timeout);
         }
     }
@@ -300,19 +296,19 @@ public class CamelIntegration extends BaseIntegration {
 
     }
 
-    /** Restores the cached flows one by one; one that fails is recorded as failed and the others go on. */
+    /** Restores the cached flows one by one; one that fails is logged and left out, and the others go on. */
     private void restoreCachedFlows() {
         log.info("Restoring {} cached flows...", flowsMap.size());
+        List<String> failed = new ArrayList<>();
         for (String flowId : List.copyOf(flowsMap.keySet())) {
             synchronized (flowLock(flowId)) {
                 TreeMap<String, String> flowProps = flowsMap.get(flowId);
                 // uninstalled meanwhile
-                if (flowProps != null) {
-                    flowManager.restoreFlow(flowId, flowProps);
+                if (flowProps != null && !flowManager.restoreFlow(flowId, flowProps)) {
+                    failed.add(flowId);
                 }
             }
         }
-        Set<String> failed = flowManager.getFailedFlowIds();
         if (failed.isEmpty()) {
             log.info("Restored flows from cache.");
         } else {
