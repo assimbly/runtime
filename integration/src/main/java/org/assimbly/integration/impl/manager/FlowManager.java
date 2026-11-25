@@ -62,6 +62,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.cert.Certificate;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentMap;
@@ -83,6 +84,8 @@ public class FlowManager {
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
+
+    private final FailedFlows failedFlows = new FailedFlows();
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -155,7 +158,7 @@ public class FlowManager {
                 flow.addRoutesToCamelContext(context);
 
                 if (!flow.isFlowLoaded()) {
-                    stopFlow(flowId, STOP_TIMEOUT);
+                    removeFlowLeftovers(flowId);
                     return finishReport(report, flowId, "start", "Start flow failed", "error","failed");
                 }
 
@@ -174,9 +177,28 @@ public class FlowManager {
 
         } catch (Exception e) {
             log.error("Load flow failed: ", e);
+            removeFlowLeftovers(flowId);
             return finishReport(report, flowId, "start", e.getMessage(), "error","failed");
         }
 
+    }
+
+    /** Removes what a flow that failed to load left in the context: its routes and their definitions. */
+    private void removeFlowLeftovers(String flowId) {
+        try {
+            if (hasFlow(flowId)) {
+                stopFlow(flowId, STOP_TIMEOUT, false);
+            }
+            ModelCamelContext modelContext = (ModelCamelContext) context;
+            List<RouteDefinition> definitions = modelContext.getRouteDefinitions().stream()
+                    .filter(definition -> belongsToFlow(definition, flowId))
+                    .toList();
+            if (!definitions.isEmpty()) {
+                modelContext.removeRouteDefinitions(definitions);
+            }
+        } catch (Exception e) {
+            log.warn("Removing the routes of a flow that failed to load failed | flowid={}", flowId, e);
+        }
     }
 
     /** Mark route definitions autoStartup=false (live routes may not exist yet). */
@@ -266,34 +288,73 @@ public class FlowManager {
 
         log.info("Starting all flows");
 
-        Map<String, InstalledFlowsManager.FlowEntry> index =
-                installedFlowsManager != null ? installedFlowsManager.getAll() : Map.of();
+        flowsMap.forEach(this::restoreFlow);
 
-        flowsMap.forEach((flowId, flowProps) -> {
-            try {
-                InstalledFlowsManager.FlowEntry entry = index.get(flowId);
-                if (entry != null) {
-                    boolean autoStart = !entry.isPaused();
-                    loadFlow(flowId, flowProps, autoStart);
+    }
+
+    /**
+     * Restores one cached flow; honors its index status (missing entry = legacy paused). A flow that fails is
+     * recorded in {@link #getFailedFlows()} and left out, so one flow can't keep the others from starting.
+     * A flow that already runs (installed again meanwhile) is left as it is.
+     */
+    public void restoreFlow(String flowId, TreeMap<String, String> flowProps) {
+
+        if (hasFlow(flowId)) {
+            log.info("Flow already runs, not restoring it | flowid={}", flowId);
+            return;
+        }
+
+        try {
+            InstalledFlowsManager.FlowEntry entry = installedFlowsManager != null ? installedFlowsManager.get(flowId) : null;
+            FlowLoaderReport report;
+            if (entry != null) {
+                boolean autoStart = !entry.isPaused();
+                report = loadFlow(flowId, flowProps, autoStart);
+                if (report.isStatusSuccess()) {
                     log.info(autoStart ? "Started flow: {}" : "Restored paused flow: {}", flowId);
-                } else if (installedFlowsManager != null) {
-                    // Legacy pause: in cache but not in index
-                    loadFlow(flowId, flowProps, false);
-                    installedFlowsManager.register(
-                            flowId,
-                            flowProps.getOrDefault(PROPERTY_FLOW_VERSION, "0"),
-                            flowProps.getOrDefault(PROPERTY_FLOW_TENANT, "0"),
-                            InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
-                    log.info("Restored legacy paused flow: {}", flowId);
-                } else {
-                    log.info("Skipping flow not in installed index: {}", flowId);
                 }
-            } catch (Exception e) {
-                // one flow that can't be restored doesn't stop the others
-                log.error("Restore flow failed | flowid={}", flowId, e);
+            } else if (installedFlowsManager != null) {
+                // Legacy pause: in cache but not in index
+                report = loadFlow(flowId, flowProps, false);
+                installedFlowsManager.register(
+                        flowId,
+                        flowProps.getOrDefault(PROPERTY_FLOW_VERSION, "0"),
+                        flowProps.getOrDefault(PROPERTY_FLOW_TENANT, "0"),
+                        InstalledFlowsManager.FlowEntry.STATUS_PAUSED);
+                if (report.isStatusSuccess()) {
+                    log.info("Restored legacy paused flow: {}", flowId);
+                }
+            } else {
+                log.info("Skipping flow not in installed index: {}", flowId);
+                return;
             }
-        });
 
+            if (report.isStatusSuccess()) {
+                failedFlows.remove(flowId);
+            } else {
+                recordFailedFlow(flowId, flowProps, report.getErrorMessage());
+            }
+        } catch (Exception e) {
+            recordFailedFlow(flowId, flowProps, e.getMessage());
+        }
+
+    }
+
+    private void recordFailedFlow(String flowId, TreeMap<String, String> flowProps, @Nullable String message) {
+        String reason = StringUtils.defaultIfEmpty(message, "unknown error");
+        log.error("Restore flow failed, the flow is left out | flowid={} | error={}", flowId, reason);
+        failedFlows.add(new FailedFlows.FailedFlow(
+                flowId,
+                flowProps.getOrDefault(PROPERTY_FLOW_NAME, flowId),
+                flowProps.getOrDefault(PROPERTY_FLOW_VERSION, "0"),
+                flowProps.getOrDefault(PROPERTY_FLOW_TENANT, "0"),
+                reason,
+                Instant.now()));
+    }
+
+    /** The cached flows that failed to restore, since this runtime started. */
+    public FailedFlows getFailedFlows() {
+        return failedFlows;
     }
 
     public String restartAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -600,6 +661,8 @@ public class FlowManager {
                 flowStatus = FlowStatus.ERROR.toString();
             }
 
+        } else if (failedFlows.contains(id)) {
+            flowStatus = FlowStatus.FAILED.toString();
         } else {
             flowStatus = FlowStatus.UNCONFIGURED.toString();
         }
@@ -1339,6 +1402,8 @@ public class FlowManager {
         RESUMED("started"),
         RESTARTED("restarted"),
         UNCONFIGURED("unconfigured"),
+        // installed, but it failed to restore from the cache when the runtime started
+        FAILED("failed"),
         ERROR("error");
 
         private final String value;

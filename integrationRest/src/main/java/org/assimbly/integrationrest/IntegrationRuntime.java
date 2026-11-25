@@ -210,6 +210,23 @@ public class IntegrationRuntime {
 
     }
 
+    @Operation(summary = "List the installed flows that failed to restore from the cache at startup, with the reason")
+    @GetMapping(
+            path = "/integration/list/flows/failed",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_PLAIN_VALUE}
+    )
+    public ResponseEntity<String> getFailedFlows(@Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType) {
+
+        try {
+            String flows = integration.getFailedFlows(mediaType);
+            return ResponseUtil.createSuccessResponse(1L, mediaType,"/integration/list/flows/failed",flows,true);
+        } catch (Exception e) {
+            log.error("Get list of failed flows failed",e);
+            return ResponseUtil.createFailureResponse(1L, mediaType,"/integration/list/flows/failed",e.getMessage());
+        }
+
+    }
+
     @Operation(summary = "List flows with details")
     @GetMapping(
             path = "/integration/list/flows/details",
