@@ -199,7 +199,7 @@ public class CamelIntegration extends BaseIntegration {
     private String installFlowLocked(String flowId, long timeout, String mediaType, String configuration) {
 
         // installing replaces a failed restore: the install reports itself
-        flowManager.getFailedFlows().remove(flowId);
+        flowManager.clearFailedFlow(flowId);
 
         try {
             super.setFlowConfiguration(flowId, mediaType, configuration);
@@ -231,7 +231,7 @@ public class CamelIntegration extends BaseIntegration {
         synchronized (flowLock(flowId)) {
             super.removeFlowConfiguration(flowId);
             installedFlowsManager.unregister(flowId);
-            flowManager.getFailedFlows().remove(flowId);
+            flowManager.clearFailedFlow(flowId);
             return flowManager.stopFlow(flowId, timeout);
         }
     }
@@ -312,12 +312,11 @@ public class CamelIntegration extends BaseIntegration {
                 }
             }
         }
-        List<FailedFlows.FailedFlow> failed = flowManager.getFailedFlows().getAll();
+        Set<String> failed = flowManager.getFailedFlowIds();
         if (failed.isEmpty()) {
             log.info("Restored flows from cache.");
         } else {
-            log.error("Restored flows from cache; {} failed and are left out: {}", failed.size(),
-                    failed.stream().map(FailedFlows.FailedFlow::flowId).toList());
+            log.error("Restored flows from cache; {} failed and are left out: {}", failed.size(), failed);
         }
     }
 

@@ -62,9 +62,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.cert.Certificate;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,7 +85,9 @@ public class FlowManager {
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
 
-    private final FailedFlows failedFlows = new FailedFlows();
+    // installed flows that failed to restore from the cache; they stay installed, show as "failed",
+    // and the next start of the runtime tries them again
+    private final Set<String> failedFlowIds = ConcurrentHashMap.newKeySet();
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -294,7 +296,7 @@ public class FlowManager {
 
     /**
      * Restores one cached flow; honors its index status (missing entry = legacy paused). A flow that fails is
-     * recorded in {@link #getFailedFlows()} and left out, so one flow can't keep the others from starting.
+     * logged, shown as failed (see {@link #getFailedFlowIds()}) and left out, so one flow can't keep the others from starting.
      * A flow that already runs (installed again meanwhile) is left as it is.
      */
     public void restoreFlow(String flowId, TreeMap<String, String> flowProps) {
@@ -330,7 +332,7 @@ public class FlowManager {
             }
 
             if (report.isStatusSuccess()) {
-                failedFlows.remove(flowId);
+                failedFlowIds.remove(flowId);
             } else {
                 recordFailedFlow(flowId, flowProps, report.getErrorMessage());
             }
@@ -341,20 +343,19 @@ public class FlowManager {
     }
 
     private void recordFailedFlow(String flowId, TreeMap<String, String> flowProps, @Nullable String message) {
-        String reason = StringUtils.defaultIfEmpty(message, "unknown error");
-        log.error("Restore flow failed, the flow is left out | flowid={} | error={}", flowId, reason);
-        failedFlows.add(new FailedFlows.FailedFlow(
-                flowId,
-                flowProps.getOrDefault(PROPERTY_FLOW_NAME, flowId),
-                flowProps.getOrDefault(PROPERTY_FLOW_VERSION, "0"),
-                flowProps.getOrDefault(PROPERTY_FLOW_TENANT, "0"),
-                reason,
-                Instant.now()));
+        log.error("Restore flow failed, the flow is left out | flowid={} | name={} | error={}",
+                flowId, flowProps.getOrDefault(PROPERTY_FLOW_NAME, flowId), StringUtils.defaultIfEmpty(message, "unknown error"));
+        failedFlowIds.add(flowId);
     }
 
-    /** The cached flows that failed to restore, since this runtime started. */
-    public FailedFlows getFailedFlows() {
-        return failedFlows;
+    /** The ids of the cached flows that failed to restore, since this runtime started. */
+    public Set<String> getFailedFlowIds() {
+        return Set.copyOf(failedFlowIds);
+    }
+
+    /** Forgets a failed restore, when the flow is installed or uninstalled. */
+    public void clearFailedFlow(String flowId) {
+        failedFlowIds.remove(flowId);
     }
 
     public String restartAllFlows(ConcurrentMap<String, TreeMap<String, String>> flowsMap) {
@@ -661,7 +662,7 @@ public class FlowManager {
                 flowStatus = FlowStatus.ERROR.toString();
             }
 
-        } else if (failedFlows.contains(id)) {
+        } else if (failedFlowIds.contains(id)) {
             flowStatus = FlowStatus.FAILED.toString();
         } else {
             flowStatus = FlowStatus.UNCONFIGURED.toString();

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,14 +59,7 @@ class FailedFlowRestoreTest {
         // it stays installed, so the next start tries it again
         assertEquals("started", index.get("bad").getStatus());
 
-        List<FailedFlows.FailedFlow> failed = flowManager.getFailedFlows().getAll();
-        assertEquals(1, failed.size(), failed.toString());
-        FailedFlows.FailedFlow flow = failed.getFirst();
-        assertEquals("bad", flow.flowId());
-        assertEquals("Bad flow", flow.name());
-        assertEquals("9", flow.version());
-        assertEquals("tenant", flow.tenant());
-        assertTrue(flow.message().contains("unknowncomponent"), flow.toString());
+        assertEquals(Set.of("bad"), flowManager.getFailedFlowIds());
     }
 
     @Test
@@ -74,10 +67,10 @@ class FailedFlowRestoreTest {
         index.register("flow", "1", "tenant");
 
         flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere"));
-        assertTrue(flowManager.getFailedFlows().contains("flow"));
+        assertTrue(flowManager.getFailedFlowIds().contains("flow"));
 
         flowManager.restoreFlow("flow", flow("flow", "Flow", "direct:flow"));
-        assertFalse(flowManager.getFailedFlows().contains("flow"));
+        assertFalse(flowManager.getFailedFlowIds().contains("flow"));
         assertEquals("started", flowManager.getFlowStatus("flow"));
     }
 
@@ -90,7 +83,7 @@ class FailedFlowRestoreTest {
         flowManager.restoreFlow("flow", flow("flow", "Flow", "unknowncomponent:nowhere"));
 
         assertEquals("started", flowManager.getFlowStatus("flow"));
-        assertFalse(flowManager.getFailedFlows().contains("flow"));
+        assertFalse(flowManager.getFailedFlowIds().contains("flow"));
     }
 
     private static TreeMap<String, String> flow(String id, String name, String toUri) {
