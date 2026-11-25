@@ -83,7 +83,6 @@ public class FlowManager {
     private final CamelContext context;
     private final ManagedCamelContext managedContext;
     private final InstalledFlowsManager installedFlowsManager;
-
     private final String baseDir = BaseDirectory.getInstance().getBaseDirectory();
 
     private static final long STOP_TIMEOUT = 300;
@@ -290,14 +289,7 @@ public class FlowManager {
 
     }
 
-    /**
-     * Restores one cached flow; honors its index status (missing entry = legacy paused). A flow that fails is
-     * logged and left out, so one flow can't keep the others from starting. It stays in the installed-flows
-     * index, so the next start of the runtime tries it again. A flow that already runs (installed again
-     * meanwhile) is left as it is.
-     *
-     * @return false when the flow failed to restore
-     */
+    /** Restores one cached flow; a flow that fails is logged and left out. Returns false when it failed. */
     public boolean restoreFlow(String flowId, TreeMap<String, String> flowProps) {
 
         if (hasFlow(flowId)) {
