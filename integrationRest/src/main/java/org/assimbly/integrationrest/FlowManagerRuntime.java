@@ -132,7 +132,7 @@ public class FlowManagerRuntime {
             @Parameter(hidden = true) @RequestHeader(value = "Accept") String mediaType
     ) {
 
-        log.info("Install routeId: {}", routeId);
+        log.info("Install routeId: {}. Configuration:\n\n{}", routeId, route);
 
         try {
 
@@ -174,7 +174,8 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        log.info("Install flowId: {}", flowId);
+        // Secrets arrive encrypted (ENC(...)) and are only decrypted when a step is loaded, so the DIL as received is safe to log
+        log.info("Install flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
         String report = integration.installFlow(flowId, timeout, contentType, configuration);
 
@@ -213,7 +214,7 @@ public class FlowManagerRuntime {
             @RequestHeader(required = false, defaultValue = "3000", value = "timeout") long timeout
     ) {
 
-        log.info("Test flowId: {}", flowId);
+        log.info("Test flowId: {}. Configuration:\n\n{}", flowId, configuration);
 
         String report = integration.testFlow(flowId, timeout, contentType, configuration);
 
