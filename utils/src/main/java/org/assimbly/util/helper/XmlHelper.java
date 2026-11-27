@@ -235,7 +235,9 @@ public final class XmlHelper {
     private static TransformerFactory createSecureTransformerFactory()
             throws TransformerException {
 
-        TransformerFactory factory = TransformerFactory.newInstance();
+        // The JDK implementation, not whichever provider is on the classpath:
+        // Saxon (camel-saxon) would be picked otherwise, and it serializes CDATA sections as escaped text.
+        TransformerFactory factory = TransformerFactory.newDefaultInstance();
 
         // Enable secure XML processing.
         factory.setFeature(
