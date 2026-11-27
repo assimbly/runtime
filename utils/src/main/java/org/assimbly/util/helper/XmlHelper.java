@@ -235,7 +235,8 @@ public final class XmlHelper {
     private static TransformerFactory createSecureTransformerFactory()
             throws TransformerException {
 
-        TransformerFactory factory = TransformerFactory.newInstance();
+        // JDK transformer, because Saxon drops CDATA sections.
+        TransformerFactory factory = TransformerFactory.newDefaultInstance();
 
         // Enable secure XML processing.
         factory.setFeature(
