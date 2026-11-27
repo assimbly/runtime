@@ -10,6 +10,7 @@ import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.support.PluginHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.assimbly.dil.blocks.errorhandler.ErrorHandler;
 import org.assimbly.util.EncryptionUtil;
 import org.assimbly.util.IntegrationUtil;
@@ -307,7 +308,8 @@ public class FlowLoader extends RouteBuilder {
 		while (matcher.find()) {
 			String encrypted = matcher.group();
 
-			String decrypted = encryptionUtil.decrypt(encrypted);
+			// The step is XML, so a decrypted value with & < or " would otherwise break it
+			String decrypted = StringEscapeUtils.escapeXml10(encryptionUtil.decrypt(encrypted));
 
 			matcher.appendReplacement(result,
 					Matcher.quoteReplacement(decrypted));

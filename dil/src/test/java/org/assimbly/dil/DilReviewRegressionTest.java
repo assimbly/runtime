@@ -118,6 +118,39 @@ class DilReviewRegressionTest {
     }
 
     @Test
+    void decryptedValueWithXmlCharactersIsLoaded() throws Exception {
+        EncryptionUtil encryptionUtil = new EncryptionUtil("regression-test-key");
+        String secret = "pa&ss<word>\"'";
+
+        TreeMap<String, String> props = new TreeMap<>();
+        props.put("id", "flow1");
+        props.put("action.1.routetemplatedefinition.id", "flow1-template");
+        props.put("action.1.routetemplatedefinition", """
+                <routeTemplates xmlns="http://camel.apache.org/schema/xml-io">
+                  <routeTemplate id="flow1-template">
+                    <templateParameter name="password"/>
+                    <route><from uri="direct:in"/><setBody><constant>{{password}}</constant></setBody></route>
+                  </routeTemplate>
+                </routeTemplates>""");
+        props.put("action.1.routetemplate.id", "flow1-route");
+        props.put("action.1.routetemplate", """
+                <templatedRoutes xmlns="http://camel.apache.org/schema/spring">
+                  <templatedRoute routeTemplateRef="flow1-template" routeId="flow1-route">
+                    <parameter name="password" value="%s"/>
+                  </templatedRoute>
+                </templatedRoutes>""".formatted(encryptionUtil.encrypt(secret)));
+
+        try (CamelContext context = new DefaultCamelContext()) {
+            FlowLoader flowLoader = new FlowLoader(props, new FlowLoaderReport("flow1", "flow", "1"), encryptionUtil);
+            context.addRoutes(flowLoader);
+            context.start();
+
+            assertTrue(flowLoader.isFlowLoaded(), flowLoader.getReport());
+            assertEquals(secret, context.createProducerTemplate().requestBody("direct:in", "", String.class));
+        }
+    }
+
+    @Test
     void zipEnrichAddsTheFileAndKeepsTheOthers() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
             Exchange original = new DefaultExchange(context);
