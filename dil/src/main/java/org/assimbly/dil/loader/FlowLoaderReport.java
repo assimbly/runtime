@@ -151,4 +151,15 @@ public class FlowLoaderReport {
 		return status != null && status.equalsIgnoreCase(STATUS_FAILED);
 	}
 
+	/** Why the flow failed: the first step that failed to load, else the message the report was finished with. */
+	public String getErrorMessage(){
+		for (int i = 0; i < steps.length(); i++) {
+			JSONObject step = steps.getJSONObject(i);
+			if ("error".equals(step.optString("status")) && StringUtils.isNotEmpty(step.optString("message"))) {
+				return step.getString("message");
+			}
+		}
+		return flow.optString("message", "");
+	}
+
 }

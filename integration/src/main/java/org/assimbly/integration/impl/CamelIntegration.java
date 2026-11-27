@@ -67,6 +67,7 @@ public class CamelIntegration extends BaseIntegration {
     private final StartupManager startupManager = new StartupManager();
     private final InstalledFlowsManager installedFlowsManager = new InstalledFlowsManager();
     private volatile boolean started;
+    private volatile boolean flowsRestorePending;
     private RouteController routeController;
     private Properties encryptionProperties;
     // empty until setCaching() loads the store
@@ -148,6 +149,12 @@ public class CamelIntegration extends BaseIntegration {
 
             context.start();
             started = true;
+
+            // Restore the cached flows after a restart
+            if (flowsRestorePending) {
+                flowsRestorePending = false;
+                restoreCachedFlows();
+            }
 
             // Keep index-paused flows stopped after context start
             flowManager.enforceDesiredPausedFlows();
@@ -277,11 +284,41 @@ public class CamelIntegration extends BaseIntegration {
         }
 
         if(!flowsMap.isEmpty()) {
-            log.info("Found {} cached flows. Restoring flows...", flowsMap.size());
-            flowManager.startAllFlows(flowsMap, installedFlowsManager);
-            log.info("Restored flows from cache.");
+            if (started) {
+                restoreCachedFlows();
+            } else {
+                log.info("Found {} cached flows. Restoring them when the integration starts.", flowsMap.size());
+                flowManager.markToRestore(flowsMap.keySet());
+                flowsRestorePending = true;
+            }
         }
 
+    }
+
+    /** Restores the cached flows one by one; one that fails is logged and left out, and the others go on. */
+    private void restoreCachedFlows() {
+        log.info("Restoring {} cached flows...", flowsMap.size());
+        List<String> flowIds = List.copyOf(flowsMap.keySet());
+        flowManager.markToRestore(flowIds);
+        List<String> failed = new ArrayList<>();
+        for (String flowId : flowIds) {
+            synchronized (flowLock(flowId)) {
+                try {
+                    TreeMap<String, String> flowProps = flowsMap.get(flowId);
+                    // uninstalled meanwhile
+                    if (flowProps != null && !flowManager.restoreFlow(flowId, flowProps)) {
+                        failed.add(flowId);
+                    }
+                } finally {
+                    flowManager.restoreDone(flowId);
+                }
+            }
+        }
+        if (failed.isEmpty()) {
+            log.info("Restored flows from cache.");
+        } else {
+            log.error("Restored flows from cache; {} failed and are left out: {}", failed.size(), failed);
+        }
     }
 
     public CamelContext getContext() {
@@ -984,7 +1021,7 @@ public class CamelIntegration extends BaseIntegration {
 
     @Override
     public void startAllFlows() {
-        flowManager.startAllFlows(flowsMap, installedFlowsManager);
+        restoreCachedFlows();
     }
 
     @Override
